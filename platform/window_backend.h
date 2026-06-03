@@ -24,12 +24,7 @@ SDL_Window *WndBackend_SDL(void);
 // running. Fails if the window already exists.
 std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS);
 
-#ifdef WIN32_VINTAGE
-#include <windows.h>
 
-// Returns the Win32 handle of the current window.
-HWND WndBackend_Win32(void);
-#endif
 
 void WndBackend_Cleanup(void);
 // --------------

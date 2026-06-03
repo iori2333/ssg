@@ -1,28 +1,12 @@
 {
-	// See https://go.microsoft.com/fwlink/?LinkId=733558
-	// for the documentation about the tasks.json format
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build (everything)",
+			"label": "CMake: Configure (Release)",
 			"type": "shell",
-			"command": "build_windows.bat",
+			"command": "cmake -B build -S . -G \"Ninja\" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl",
 			"group": "build",
-			"problemMatcher": "$msCompile",
-			"options": {
-				// CMD most likely starts up much faster than PowerShell.
-				"shell": {
-					"executable": "cmd",
-					"args": ["/d", "/c"]
-				}
-			}
-		},
-		{
-			"label": "Build regular binary (Debug)",
-			"type": "shell",
-			"command": "build_windows.bat bin/GIAN07d.exe",
-			"group": "build",
-			"problemMatcher": "$msCompile",
+			"problemMatcher": [],
 			"options": {
 				"shell": {
 					"executable": "cmd",
@@ -31,9 +15,9 @@
 			}
 		},
 		{
-			"label": "Build regular binary (Release)",
+			"label": "CMake: Build (Release)",
 			"type": "shell",
-			"command": "build_windows.bat bin/GIAN07.exe",
+			"command": "cmake --build build --config Release",
 			"group": "build",
 			"problemMatcher": "$msCompile",
 			"options": {
@@ -44,11 +28,11 @@
 			}
 		},
 		{
-			"label": "Build Windows 98 binary (Debug)",
+			"label": "CMake: Configure (Debug)",
 			"type": "shell",
-			"command": "build_windows.bat bin/GIAN07_win98d.exe",
+			"command": "cmake -B build -S . -G \"Ninja\" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl",
 			"group": "build",
-			"problemMatcher": "$msCompile",
+			"problemMatcher": [],
 			"options": {
 				"shell": {
 					"executable": "cmd",
@@ -57,9 +41,9 @@
 			}
 		},
 		{
-			"label": "Build Windows 98 binary (Release)",
+			"label": "CMake: Build (Debug)",
 			"type": "shell",
-			"command": "build_windows.bat bin/GIAN07_win98.exe",
+			"command": "cmake --build build --config Debug",
 			"group": "build",
 			"problemMatcher": "$msCompile",
 			"options": {

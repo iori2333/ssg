@@ -54,22 +54,13 @@ extern constinit const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs = [] {
 }();
 
 static constexpr auto FONT_MODERN = L"msgothic.ttc";
-static constexpr auto FONT_VINTAGE = "msgothic.ttf";
 
 void TextBackend_GDIInit(void) {
-#ifdef WIN32_VINTAGE
-  AddFontResourceA(FONT_VINTAGE);
-#else
   AddFontResourceExW(FONT_MODERN, FR_PRIVATE, 0);
-#endif
 }
 
 void TextBackend_GDICleanup(void) {
-#ifdef WIN32_VINTAGE
-  RemoveFontResourceA(FONT_VINTAGE);
-#else
   RemoveFontResourceExW(FONT_MODERN, FR_PRIVATE, 0);
-#endif
 }
 #elif defined(LINUX)
 #define GOTHIC "MS Gothic,IPAMonaGothic "

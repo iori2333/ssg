@@ -1,5 +1,6 @@
-.tup/
 .vscode/settings.json
 bin/
-obj/
-tup.config
+obj/*
+!obj/version.h.in
+build/
+

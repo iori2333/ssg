@@ -140,15 +140,10 @@ bool GrpSurface_GDIText_Update(const PIXEL_LTWH &r) noexcept;
 // Vertex types
 // ------------
 
-#ifdef WIN32_VINTAGE
-using VERTEX_COORD = WINDOW_COORD;
-#else
 using VERTEX_COORD = float;
-#endif
 
 using VERTEX_XY = WINDOW_POINT_BASE<VERTEX_COORD>;
 
-#ifndef WIN32_VINTAGE
 struct VERTEX_RGBA {
   float r;
   float g;
@@ -161,9 +156,6 @@ struct VERTEX_RGBA {
   VERTEX_RGBA(const RGBA &o)
       : r(o.r / 255.0f), g(o.g / 255.0f), b(o.b / 255.0f), a(o.a / 255.0f) {}
 };
-#else
-using VERTEX_RGBA = RGBA;
-#endif
 
 template <size_t N = std::dynamic_extent>
 using VERTEX_XY_SPAN = std::span<const VERTEX_XY, N>;
@@ -298,8 +290,4 @@ void GrpBackend_PixelAccessEdit(auto func) {
 }
 /// ------------------------------------
 
-#ifdef WIN32_VINTAGE
-#include "platform/windows_vintage/DD_UTY.H"
-#else
 #include "platform/sdl/graphics_sdl.h"
-#endif

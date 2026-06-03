@@ -112,8 +112,6 @@ HelpSetFullscreenMode(SDL_Window *window, GRAPHICS_FULLSCREEN_FLAGS fs) {
   return fs;
 }
 
-#ifndef WIN32_VINTAGE
-
 int8_t WndBackend_ValidateRenderDriver(const std::u8string_view hint) {
   const auto id = GrpBackend_APIID(hint);
   if (id >= 0) {
@@ -163,14 +161,11 @@ std::u8string_view WndBackend_SDLRendererName(int8_t id) {
   return GrpBackend_APIString(id);
 }
 
-#endif
-
 SDL_Window *WndBackend_SDL(void) { return Window; }
 
 std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   assert(Window == nullptr);
 
-#ifndef WIN32_VINTAGE
   // The driver/API parameter takes precedence over the environment variable,
   // which is a bad idea in case the user is stuck on an API that might
   // initialize successfully but refuses to render properly. Let's reverse
@@ -227,9 +222,6 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, maj);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, min);
   }
-#else
-  constexpr uint32_t flags = 0;
-#endif
 
   if ((params.left != 0) || (params.top != 0)) {
     TopleftBeforeFullscreen = {params.left, params.top};
@@ -281,22 +273,6 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   SDL_ShowWindow(Window);
   return params;
 }
-
-#ifdef WIN32_VINTAGE
-HWND WndBackend_Win32(void) {
-  if (!Window) {
-    return nullptr;
-  }
-  HWND ret = nullptr;
-  ret = static_cast<HWND>(
-      SDL_GetPointerProperty(SDL_GetWindowProperties(Window),
-                             SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
-  if (!ret) {
-    Log_Fail(LOG_CAT, "Error retrieving window handle");
-  }
-  return ret;
-}
-#endif
 
 void WndBackend_Cleanup(void) {
   if (Window) {
