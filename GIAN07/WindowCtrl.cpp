@@ -832,7 +832,7 @@ static void Main::Cfg::Dif::SetItem(bool) {
       "Lunatic",
   };
   static constexpr const char *const practice[3] = {
-      "   Off  ", "AutoBomb", "Invinble",
+      " Off ", "AutoB", "Invin",
   };
   /*
           {Title[3], "[DebugMode] 画面に情報を表示するか", FnMsgDisplay,0,0},
