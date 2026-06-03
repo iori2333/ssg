@@ -1108,6 +1108,22 @@ void WeaponSelectProc(bool &) {
       Key_Data = 0;
   }
 
+  int forceStage = 0;
+  if (Key_Data & KEY_STAGE1)
+    forceStage = 1;
+  else if (Key_Data & KEY_STAGE2)
+    forceStage = 2;
+  else if (Key_Data & KEY_STAGE3)
+    forceStage = 3;
+  else if (Key_Data & KEY_STAGE4)
+    forceStage = 4;
+  else if (Key_Data & KEY_STAGE5)
+    forceStage = 5;
+  else if (Key_Data & KEY_STAGE6)
+    forceStage = 6;
+  Key_Data &= ~(KEY_STAGE1 | KEY_STAGE2 | KEY_STAGE3 | KEY_STAGE4 | KEY_STAGE5 |
+                KEY_STAGE6);
+
   switch (Key_Data) {
   case (KEY_RIGHT):
     if (spd < 0) {
@@ -1147,7 +1163,10 @@ void WeaponSelectProc(bool &) {
     Snd_SEPlay(SOUND_ID_SELECT);
     if (GameStage != GRAPH_ID_EXSTAGE) {
 #ifdef PBG_DEBUG
-      GameStage = DebugDat.StgSelect;
+      if (forceStage)
+        GameStage = forceStage;
+      else
+        GameStage = DebugDat.StgSelect;
       if (GameStage == 2)
         Viv.exp = 160;
       if (GameStage >= 3)
@@ -1155,8 +1174,13 @@ void WeaponSelectProc(bool &) {
       if (DebugDat.DemoSave)
         DemoplayInit();
 #else
-      // リプレイ用の処理を追加 //
-      if (ConfigDat.StageSelect.v) {
+      if (forceStage) {
+        GameStage = forceStage;
+        if (GameStage == 2)
+          Viv.exp = 160;
+        if (GameStage >= 3)
+          Viv.exp = 255;
+      } else if (ConfigDat.StageSelect.v) {
         GameStage = ConfigDat.StageSelect.v;
         if (GameStage == 2)
           Viv.exp = 160;
