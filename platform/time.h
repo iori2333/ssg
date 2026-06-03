@@ -3,15 +3,15 @@
  *
  */
 
-import std.compat;
+#include <cstdint>
 
 struct TIME_OF_DAY {
-	uint32_t year;
-	uint8_t month;	// 1-based
-	uint8_t day;	// 1-based
-	uint8_t hour;
-	uint8_t minute;
-	uint8_t second;
+  uint32_t year;
+  uint8_t month; // 1-based
+  uint8_t day;   // 1-based
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
 };
 
 // Returns some kind of steady system tick value in milliseconds.

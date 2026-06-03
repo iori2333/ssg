@@ -30,6 +30,5 @@ int8_t WndBackend_ValidateRenderDriver(const std::u8string_view hint);
 std::u8string_view WndBackend_SDLRendererName(int8_t id);
 
 // Returns the new active fullscreen flags if the mode change was successful.
-[[nodiscard]] std::optional<GRAPHICS_FULLSCREEN_FLAGS> HelpSetFullscreenMode(
-	SDL_Window *window, GRAPHICS_FULLSCREEN_FLAGS fs
-);
+[[nodiscard]] std::optional<GRAPHICS_FULLSCREEN_FLAGS>
+HelpSetFullscreenMode(SDL_Window *window, GRAPHICS_FULLSCREEN_FLAGS fs);

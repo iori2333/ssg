@@ -6,10 +6,11 @@
 #pragma once
 
 #include "game/input.h"
+#include <optional>
 
 // 関数プロトタイプ宣言 //
-bool Key_Start(void);	// キー入力開始
-void Key_End(void);	// キー入力終了
+bool Key_Start(void); // キー入力開始
+void Key_End(void);   // キー入力終了
 
 void Key_Read(void);
 

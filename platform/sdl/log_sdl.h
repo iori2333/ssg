@@ -5,7 +5,7 @@
 
 #pragma once
 
-import std;
+// (only uses built-in types char8_t and SDL types from the included SDL_log.h)
 
 #include <SDL3/SDL_log.h>
 

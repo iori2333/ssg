@@ -5,18 +5,16 @@ if "%VCINSTALLDIR%" == "" (
 	exit 1
 )
 
-sh ./version_from_git.sh
-sh ./submodules_check.sh ^
-	libs/9xcompat ^
-	libs/BLAKE3 ^
-	libs/dr_libs ^
-	libs/libogg ^
-	libs/libvorbis ^
-	libs/libwebp_lossless ^
-	libs/miniaudio ^
-	libs/SDL3 ^
-	libs/tupblocks
+:: Ensure submodules are initialized
+git submodule update --init --recursive
+
+:: Configure and build (CMake generates version header from git)
+cmake -B build -S . -G "Ninja" ^
+	-DCMAKE_BUILD_TYPE=Release ^
+	-DCMAKE_C_COMPILER=cl ^
+	-DCMAKE_CXX_COMPILER=cl
+
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-tup %*
+cmake --build build --config Release
 exit /b

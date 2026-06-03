@@ -9,4 +9,4 @@
 bool MusicRoomInit(void);
 
 // 音楽室
-void MusicRoomProc(bool&);
+void MusicRoomProc(bool &);

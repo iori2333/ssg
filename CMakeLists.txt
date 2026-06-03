@@ -1,0 +1,434 @@
+cmake_minimum_required(VERSION 3.21)
+project(GIAN07 VERSION 1.0.0 LANGUAGES C CXX)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# ============================================================
+# Generate version header from git
+# ============================================================
+find_package(Git QUIET)
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_TAG
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --short=4 HEAD
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMMIT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} diff-files --quiet
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE GIT_DIRTY
+        ERROR_QUIET
+    )
+    if(GIT_DIRTY OR (GIT_TAG STREQUAL ""))
+        if(GIT_TAG STREQUAL "")
+            set(GIT_TAG "(unknown)")
+        endif()
+        set(VERSION_TAG "WIP (${GIT_TAG}^${GIT_COMMIT})")
+    else()
+        set(VERSION_TAG "${GIT_TAG}")
+    endif()
+else()
+    set(VERSION_TAG "(unknown)")
+endif()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/obj/version.h.in
+               ${CMAKE_CURRENT_BINARY_DIR}/obj/version.h @ONLY)
+
+# Generate platform constants header from environment variables
+set(PLATFORM_CONSTANTS_DEFINES "")
+foreach(VARNAME APP_ID PATH_SKELETON)
+    if(DEFINED ENV{${VARNAME}})
+        string(APPEND PLATFORM_CONSTANTS_DEFINES
+            "#define ${VARNAME} \"$ENV{${VARNAME}}\"\n")
+    else()
+        string(APPEND PLATFORM_CONSTANTS_DEFINES "#undef ${VARNAME}\n")
+    endif()
+endforeach()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/obj/platform_constants.h.in
+               ${CMAKE_CURRENT_BINARY_DIR}/obj/platform_constants.h @ONLY)
+
+# ============================================================
+# Platform-specific settings
+# ============================================================
+if(WIN32)
+    set(SSG_PLATFORM_WINDOWS TRUE)
+
+    if(MSVC)
+        add_compile_options(
+            $<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>
+            $<$<COMPILE_LANGUAGE:CXX>:/EHsc>
+            /utf-8
+        )
+
+        # Since we're building SDL3 as a shared library, use dynamic CRT
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
+        # SDL3 DLL settings
+        set(SDL3_DISABLE_SDL2_COMPAT ON CACHE BOOL "" FORCE)
+        set(SDL3_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+        set(SDL3_TESTS OFF CACHE BOOL "" FORCE)
+        set(SDL3_EXAMPLES OFF CACHE BOOL "" FORCE)
+        add_subdirectory(libs/SDL3 EXCLUDE_FROM_ALL)
+
+        # Build BLAKE3 from source
+        set(BLAKE3_EXAMPLES OFF CACHE BOOL "" FORCE)
+        set(BLAKE3_TESTING OFF CACHE BOOL "" FORCE)
+        add_subdirectory(libs/BLAKE3/c EXCLUDE_FROM_ALL)
+
+        # Windows system libraries
+        set(WIN32_SYSTEM_LIBS
+            advapi32 imm32 gdi32 kernel32 ole32 oleaut32
+            setupapi user32 uuid version winmm shell32
+        )
+    endif()
+elseif(UNIX)
+    set(SSG_PLATFORM_LINUX TRUE)
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(-pthread)
+    endif()
+
+    # On Linux, try to use system SDL3, fall back to submodule
+    find_package(SDL3 QUIET)
+    if(NOT SDL3_FOUND)
+        set(SDL3_DISABLE_SDL2_COMPAT ON CACHE BOOL "" FORCE)
+        set(SDL3_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+        set(SDL3_TESTS OFF CACHE BOOL "" FORCE)
+        set(SDL3_EXAMPLES OFF CACHE BOOL "" FORCE)
+        add_subdirectory(libs/SDL3 EXCLUDE_FROM_ALL)
+    endif()
+
+    # On Linux, try system BLAKE3, fall back to submodule
+    find_package(blake3 QUIET)
+    if(NOT blake3_FOUND)
+        set(BLAKE3_EXAMPLES OFF CACHE BOOL "" FORCE)
+        set(BLAKE3_TESTING OFF CACHE BOOL "" FORCE)
+        add_subdirectory(libs/BLAKE3/c EXCLUDE_FROM_ALL)
+    endif()
+
+    # System libraries for Linux
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(PANGO REQUIRED IMPORTED_TARGET pangocairo)
+    pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
+endif()
+
+# ============================================================
+# dr_libs - header-only audio codec libraries
+# ============================================================
+add_library(dr_libs INTERFACE)
+target_include_directories(dr_libs INTERFACE libs/dr_libs)
+
+# ============================================================
+# libogg - Ogg container library
+# ============================================================
+add_library(ogg STATIC
+    libs/libogg/src/bitwise.c
+    libs/libogg/src/framing.c
+)
+target_include_directories(ogg
+    PUBLIC
+        libs/libogg/include
+        ${CMAKE_CURRENT_BINARY_DIR}/libogg
+)
+# Generate minimal config_types.h
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/libogg/config_types.h
+    "// Auto-generated by CMake\n"
+)
+if(WIN32)
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/libogg/config_types.h
+        "#include <stdint.h>\n"
+        "typedef int16_t ogg_int16_t;\n"
+        "typedef uint16_t ogg_uint16_t;\n"
+        "typedef int32_t ogg_int32_t;\n"
+        "typedef uint32_t ogg_uint32_t;\n"
+        "typedef int64_t ogg_int64_t;\n"
+        "typedef uint64_t ogg_uint64_t;\n"
+    )
+else()
+    # config_types.h.in from libogg handles Unix
+    file(READ libs/libogg/include/ogg/config_types.h.in OGG_CONFIG_TYPES)
+    string(CONFIGURE "${OGG_CONFIG_TYPES}" OGG_CONFIG_TYPES)
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/libogg/config_types.h
+        "${OGG_CONFIG_TYPES}"
+    )
+endif()
+
+# ============================================================
+# libvorbis - Vorbis audio codec
+# ============================================================
+add_library(vorbis STATIC
+    libs/libvorbis/lib/analysis.c
+    libs/libvorbis/lib/bitrate.c
+    libs/libvorbis/lib/block.c
+    libs/libvorbis/lib/codebook.c
+    libs/libvorbis/lib/envelope.c
+    libs/libvorbis/lib/floor0.c
+    libs/libvorbis/lib/floor1.c
+    libs/libvorbis/lib/info.c
+    libs/libvorbis/lib/lookup.c
+    libs/libvorbis/lib/lpc.c
+    libs/libvorbis/lib/lsp.c
+    libs/libvorbis/lib/mapping0.c
+    libs/libvorbis/lib/mdct.c
+    libs/libvorbis/lib/psy.c
+    libs/libvorbis/lib/registry.c
+    libs/libvorbis/lib/res0.c
+    libs/libvorbis/lib/sharedbook.c
+    libs/libvorbis/lib/smallft.c
+    libs/libvorbis/lib/synthesis.c
+    libs/libvorbis/lib/vorbisfile.c
+    libs/libvorbis/lib/window.c
+)
+target_include_directories(vorbis
+    PUBLIC
+        libs/libvorbis/include
+        libs/libvorbis/lib
+)
+target_link_libraries(vorbis PUBLIC ogg)
+if(MSVC)
+    target_compile_definitions(vorbis PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()
+
+# ============================================================
+# libwebp_lossless - WebP lossless encoder subset
+# ============================================================
+set(LIBWEBP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/libwebp_lossless)
+
+add_library(webp_lossless STATIC)
+target_include_directories(webp_lossless
+    PUBLIC ${LIBWEBP_ROOT}/src
+    PRIVATE ${LIBWEBP_ROOT}
+)
+target_compile_definitions(webp_lossless PRIVATE
+    WEBP_DISABLE_STATS
+    WEBP_NEAR_LOSSLESS=0
+    WEBP_REDUCE_SIZE
+)
+
+file(GLOB LIBWEBP_ALPHA_SRC    CONFIGURE_DEPENDS "${LIBWEBP_ROOT}/src/dsp/alpha_processing*.c")
+file(GLOB LIBWEBP_CPU_SRC      CONFIGURE_DEPENDS "${LIBWEBP_ROOT}/src/dsp/cpu.c")
+file(GLOB LIBWEBP_ENC_SRC      CONFIGURE_DEPENDS "${LIBWEBP_ROOT}/src/dsp/enc*.c")
+file(GLOB LIBWEBP_LOSSLESS_SRC CONFIGURE_DEPENDS "${LIBWEBP_ROOT}/src/dsp/lossless*.c")
+file(GLOB LIBWEBP_ENC_DIR      CONFIGURE_DEPENDS "${LIBWEBP_ROOT}/src/enc/*.c")
+file(GLOB LIBWEBP_UTILS_SRC    CONFIGURE_DEPENDS "${LIBWEBP_ROOT}/src/utils/*.c")
+
+# Remove files not needed (near-lossless, PSNR, decoder-only utils)
+list(FILTER LIBWEBP_ENC_DIR EXCLUDE REGEX "picture_psnr_enc\\.c$")
+list(FILTER LIBWEBP_ENC_DIR EXCLUDE REGEX "near_lossless_enc\\.c$")
+list(FILTER LIBWEBP_UTILS_SRC EXCLUDE REGEX "bit_reader_utils\\.c$")
+list(FILTER LIBWEBP_UTILS_SRC EXCLUDE REGEX "filters_utils\\.c$")
+list(FILTER LIBWEBP_UTILS_SRC EXCLUDE REGEX "huffman_utils\\.c$")
+list(FILTER LIBWEBP_UTILS_SRC EXCLUDE REGEX "rescaler_utils\\.c$")
+list(FILTER LIBWEBP_UTILS_SRC EXCLUDE REGEX "quant_levels_dec_utils\\.c$")
+list(FILTER LIBWEBP_UTILS_SRC EXCLUDE REGEX "random_utils\\.c$")
+# Remove ARM/MIPS-specific files
+list(FILTER LIBWEBP_ALPHA_SRC    EXCLUDE REGEX "_neon\\.c$|_mips.*\\.c$|_msa\\.c$")
+list(FILTER LIBWEBP_ENC_SRC      EXCLUDE REGEX "_neon\\.c$|_mips.*\\.c$|_msa\\.c$")
+list(FILTER LIBWEBP_LOSSLESS_SRC EXCLUDE REGEX "_neon\\.c$|_mips.*\\.c$|_msa\\.c$")
+
+# Separate x86 SIMD files for special compilation flags
+set(LIBWEBP_SIMD_SRC)
+foreach(pattern "_sse2\\.c$" "_sse41\\.c$" "_avx2\\.c$")
+    foreach(src ${LIBWEBP_ALPHA_SRC} ${LIBWEBP_ENC_SRC} ${LIBWEBP_LOSSLESS_SRC})
+        if(src MATCHES "${pattern}")
+            list(APPEND LIBWEBP_SIMD_SRC ${src})
+            list(REMOVE_ITEM LIBWEBP_ALPHA_SRC ${LIBWEBP_ENC_SRC} ${LIBWEBP_LOSSLESS_SRC} ${src})
+        endif()
+    endforeach()
+endforeach()
+# More precise: actually remove from the right variables
+list(FILTER LIBWEBP_ALPHA_SRC    EXCLUDE REGEX "_sse2\\.c$|_sse41\\.c$|_avx2\\.c$")
+list(FILTER LIBWEBP_ENC_SRC      EXCLUDE REGEX "_sse2\\.c$|_sse41\\.c$|_avx2\\.c$")
+list(FILTER LIBWEBP_LOSSLESS_SRC EXCLUDE REGEX "_sse2\\.c$|_sse41\\.c$|_avx2\\.c$")
+
+file(GLOB LIBWEBP_SIMD_FILES
+    "${LIBWEBP_ROOT}/src/dsp/*_sse2.c"
+    "${LIBWEBP_ROOT}/src/dsp/*_sse41.c"
+    "${LIBWEBP_ROOT}/src/dsp/*_avx2.c"
+)
+
+target_sources(webp_lossless PRIVATE
+    ${LIBWEBP_ALPHA_SRC}
+    ${LIBWEBP_CPU_SRC}
+    ${LIBWEBP_ENC_SRC}
+    ${LIBWEBP_LOSSLESS_SRC}
+    ${LIBWEBP_ENC_DIR}
+    ${LIBWEBP_UTILS_SRC}
+)
+
+if(MSVC)
+    add_library(webp_lossless_simd OBJECT ${LIBWEBP_SIMD_FILES})
+    target_include_directories(webp_lossless_simd PRIVATE
+        ${LIBWEBP_ROOT}/src ${LIBWEBP_ROOT}
+    )
+    target_compile_definitions(webp_lossless_simd PRIVATE
+        WEBP_DISABLE_STATS WEBP_NEAR_LOSSLESS=0 WEBP_REDUCE_SIZE
+    )
+    target_compile_options(webp_lossless_simd PRIVATE /arch:SSE2)
+    target_sources(webp_lossless PRIVATE $<TARGET_OBJECTS:webp_lossless_simd>)
+endif()
+
+if(WIN32 AND WEBP_USE_THREAD)
+    target_compile_definitions(webp_lossless PRIVATE WEBP_USE_THREAD)
+endif()
+
+# ============================================================
+# Main executable sources
+# ============================================================
+
+# --- pbg original game code ---
+file(GLOB PBG_SRC CONFIGURE_DEPENDS
+    "GIAN07/*.cpp"
+    "GIAN07/*.CPP"
+)
+
+# --- Modern game layer ---
+file(GLOB GAME_SRC CONFIGURE_DEPENDS
+    "game/*.cpp"
+    "game/codecs/*.cpp"
+)
+
+# --- SDL3 platform backend (all platforms) ---
+file(GLOB PLATFORM_SDL_SRC CONFIGURE_DEPENDS
+    "platform/sdl/*.cpp"
+)
+
+# --- miniaudio sound backend ---
+file(GLOB PLATFORM_MINIAUDIO_SRC CONFIGURE_DEPENDS
+    "platform/miniaudio/*.cpp"
+)
+
+# ============================================================
+# Create the executable
+# ============================================================
+add_executable(GIAN07
+    ${PBG_SRC}
+    ${GAME_SRC}
+    ${PLATFORM_SDL_SRC}
+    ${PLATFORM_MINIAUDIO_SRC}
+)
+
+if(WIN32)
+    target_sources(GIAN07 PRIVATE
+        platform/windows/file.cpp
+        platform/windows/midi_backend_winmm.cpp
+        platform/windows/surface_gdi.cpp
+        platform/windows/text_gdi.cpp
+        platform/windows/time.cpp
+        platform/miniaudio/miniaudio.c
+    )
+    # Compile miniaudio.c as C++ on MSVC
+    if(MSVC)
+        set_source_files_properties(
+            platform/miniaudio/miniaudio.c
+            PROPERTIES LANGUAGE CXX
+        )
+    endif()
+
+    # Windows resource file
+    target_sources(GIAN07 PRIVATE GIAN07/GIAN07.rc)
+
+    if(MSVC)
+        set_target_properties(GIAN07 PROPERTIES
+            LINK_FLAGS "/SUBSYSTEM:WINDOWS"
+        )
+    endif()
+
+    target_compile_definitions(GIAN07 PRIVATE WIN32)
+    target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})
+elseif(UNIX)
+    target_sources(GIAN07 PRIVATE
+        platform/c/file.cpp
+        platform/c/time.cpp
+        platform/pangocairo/text_pangocairo.cpp
+        platform/miniaudio/miniaudio.c
+    )
+    target_compile_definitions(GIAN07 PRIVATE LINUX SDL3=1)
+    target_link_libraries(GIAN07 PRIVATE
+        PkgConfig::PANGO
+        PkgConfig::FONTCONFIG
+        pthread dl m
+    )
+endif()
+
+# ============================================================
+# Include directories
+# ============================================================
+target_include_directories(GIAN07 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
+)
+
+# Include generated version header
+target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+# ============================================================
+# Link libraries
+# ============================================================
+target_link_libraries(GIAN07 PRIVATE
+    ogg vorbis webp_lossless dr_libs
+)
+
+# BLAKE3 (target name varies between system and submodule build)
+if(TARGET blake3)
+    target_link_libraries(GIAN07 PRIVATE blake3)
+elseif(TARGET BLAKE3::blake3)
+    target_link_libraries(GIAN07 PRIVATE BLAKE3::blake3)
+endif()
+
+# SDL3
+if(TARGET SDL3::SDL3)
+    target_link_libraries(GIAN07 PRIVATE SDL3::SDL3)
+else()
+    target_link_libraries(GIAN07 PRIVATE SDL3-shared)
+endif()
+
+# ============================================================
+# Platform-specific compile definitions
+# ============================================================
+if(WIN32 AND MSVC)
+    # Debug define for pbg code
+    target_compile_definitions(GIAN07 PRIVATE $<$<CONFIG:Debug>:PBG_DEBUG>)
+
+    # Disable some MSVC warnings for the legacy pbg code
+    # (relaxed analysis from the original Tupfile.win32.lua)
+    # These are applied project-wide for simplicity
+    # If more granular control is needed, separate the pbg sources into a library
+endif()
+
+# ============================================================
+# MSVC: Enable multiprocessor compilation
+# ============================================================
+if(MSVC)
+    target_compile_options(GIAN07 PRIVATE /MP)
+endif()
+
+# ============================================================
+# Output directories
+# ============================================================
+set_target_properties(GIAN07 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+# ============================================================
+# Copy SDL3 DLL to output directory (Windows)
+if(WIN32)
+    add_custom_command(TARGET GIAN07 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:SDL3-shared>
+            "${CMAKE_BINARY_DIR}/bin/"
+        COMMENT "Copying SDL3 DLL to output directory"
+    )
+endif()
