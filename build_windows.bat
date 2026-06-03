@@ -8,10 +8,7 @@ if "%VCINSTALLDIR%" == "" (
 :: Ensure submodules are initialized
 git submodule update --init --recursive
 
-:: Generate version header
-sh ./version_from_git.sh
-
-:: Configure and build
+:: Configure and build (CMake generates version header from git)
 cmake -B build -S . -G "Ninja" ^
 	-DCMAKE_BUILD_TYPE=Release ^
 	-DCMAKE_C_COMPILER=cl ^

@@ -25,7 +25,7 @@
 #include "obj/version.h"
 #include "platform/sdl/log_sdl.h"
 #include "platform/window_backend.h"
-#include "strings/title.h"
+#include "GIAN07/constants.h"
 
 #define UTF8_(S) u8##S
 #define UTF8(S) UTF8_(S)

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(GIAN07 VERSION 1.0.0 LANGUAGES C CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -43,6 +44,19 @@ else()
 endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/obj/version.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/obj/version.h @ONLY)
+
+# Generate platform constants header from environment variables
+set(PLATFORM_CONSTANTS_DEFINES "")
+foreach(VARNAME APP_ID PATH_SKELETON)
+    if(DEFINED ENV{${VARNAME}})
+        string(APPEND PLATFORM_CONSTANTS_DEFINES
+            "#define ${VARNAME} \"$ENV{${VARNAME}}\"\n")
+    else()
+        string(APPEND PLATFORM_CONSTANTS_DEFINES "#undef ${VARNAME}\n")
+    endif()
+endforeach()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/obj/platform_constants.h.in
+               ${CMAKE_CURRENT_BINARY_DIR}/obj/platform_constants.h @ONLY)
 
 # ============================================================
 # Platform-specific settings
@@ -289,7 +303,6 @@ file(GLOB GAME_SRC CONFIGURE_DEPENDS
 file(GLOB PLATFORM_SDL_SRC CONFIGURE_DEPENDS
     "platform/sdl/*.cpp"
 )
-list(APPEND PLATFORM_SDL_SRC "MAIN/main_sdl.cpp")
 
 # --- miniaudio sound backend ---
 file(GLOB PLATFORM_MINIAUDIO_SRC CONFIGURE_DEPENDS
@@ -358,7 +371,7 @@ target_include_directories(GIAN07 PRIVATE
 )
 
 # Include generated version header
-target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/obj)
+target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 # ============================================================
 # Link libraries
