@@ -199,9 +199,16 @@ const struct VERSION_03 {
                ConfigDat.WindowTop, ConfigDat.ScreenshotEffort);
 } VERSION_03;
 
+const struct VERSION_04 {
+  static constexpr auto FN = u8"SSG_V04.CFG";
+
+  static constexpr auto Options =
+      std::tie(VERSION_03.Options, ConfigDat.PracticeMode);
+} VERSION_04;
+
 // Must be sorted from the newest to the oldest version.
-const auto VERSIONS = std::make_tuple(VERSION_03, VERSION_02, VERSION_01,
-                                      VERSION_00, VERSION_ORIGINAL);
+const auto VERSIONS = std::make_tuple(VERSION_04, VERSION_03, VERSION_02,
+                                      VERSION_01, VERSION_00, VERSION_ORIGINAL);
 
 bool VersionLoad(const VERSION auto &version) {
   SDL_IOStream *f = SDL_IOFromFile(version.FN, "rb");

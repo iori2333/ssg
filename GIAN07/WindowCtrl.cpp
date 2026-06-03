@@ -96,6 +96,7 @@ namespace Dif {
 static void FnPlayerStock(int_fast8_t delta);
 static void FnBombStock(int_fast8_t delta);
 static void FnDifficulty(int_fast8_t delta);
+static void FnPracticeMode(int_fast8_t delta);
 #ifdef PBG_DEBUG
 static void FnMsgDisplay(int_fast8_t delta);
 static void FnStgSelect(int_fast8_t delta);
@@ -104,17 +105,18 @@ static void FnDemo(int_fast8_t delta);
 #endif
 static void SetItem(bool tick = true);
 
-char Title[7][20];
+char Title[8][20];
 WINDOW_CHOICE Item[] = {
     {Title[0], "残り人数?を設定します", FnPlayerStock},
     {Title[1], "ボムの数を設定します", FnBombStock},
     {Title[2], "難易度を設定します", FnDifficulty},
+    {Title[3], "练习模式を設定します", FnPracticeMode},
 #ifdef PBG_DEBUG
     HRuleItemForArray,
-    {Title[3], "[DebugMode] 画面に情報を表示するか", FnMsgDisplay},
-    {Title[4], "[DebugMode] ステージセレクト", FnStgSelect},
-    {Title[5], "[DebugMode] 当たり判定", FnHit},
-    {Title[6], "[DebugMode] デモプレイセーブ", FnDemo},
+    {Title[4], "[DebugMode] 画面に情報を表示するか", FnMsgDisplay},
+    {Title[5], "[DebugMode] ステージセレクト", FnStgSelect},
+    {Title[6], "[DebugMode] 当たり判定", FnHit},
+    {Title[7], "[DebugMode] デモプレイセーブ", FnDemo},
 #endif
     SubmenuExitItemForArray,
 };
@@ -465,6 +467,10 @@ static void Main::Cfg::Dif::FnBombStock(int_fast8_t delta) {
 
 static void Main::Cfg::Dif::FnDifficulty(int_fast8_t delta) {
   RingStep(ConfigDat.GameLevel.v, delta, GAME_EASY, GAME_LUNATIC);
+}
+
+static void Main::Cfg::Dif::FnPracticeMode(int_fast8_t delta) {
+  RingStep(ConfigDat.PracticeMode.v, delta, PRACTICE_OFF, PRACTICE_INVINCIBLE);
 }
 
 #ifdef PBG_DEBUG
@@ -825,6 +831,9 @@ static void Main::Cfg::Dif::SetItem(bool) {
       " Hard  ",
       "Lunatic",
   };
+  static constexpr const char *const practice[3] = {
+      "   Off  ", "AutoBomb", "Invinble",
+  };
   /*
           {Title[3], "[DebugMode] 画面に情報を表示するか", FnMsgDisplay,0,0},
           {Title[4], "[DebugMode] ステージセレクト", FnStgSelect,0,0},
@@ -834,12 +843,13 @@ static void Main::Cfg::Dif::SetItem(bool) {
   sprintf(Title[0], "PlayerStock [ %d ]", (ConfigDat.PlayerStock.v + 1));
   sprintf(Title[1], "BombStock   [ %d ]", ConfigDat.BombStock.v);
   sprintf(Title[2], "Difficulty[%s]", dif[ConfigDat.GameLevel.v]);
+  sprintf(Title[3], "PracticeMode[%s]", practice[ConfigDat.PracticeMode.v]);
 
 #ifdef PBG_DEBUG
-  sprintf(Title[3], "DebugOut  %s", CHOICE_OFF_ON[DebugDat.MsgDisplay]);
-  sprintf(Title[4], "StgSelect [  %d  ]", DebugDat.StgSelect);
-  sprintf(Title[5], "Hit       %s", CHOICE_OFF_ON[DebugDat.Hit]);
-  sprintf(Title[6], "DemoSave  %s", CHOICE_OFF_ON[DebugDat.DemoSave]);
+  sprintf(Title[4], "DebugOut  %s", CHOICE_OFF_ON[DebugDat.MsgDisplay]);
+  sprintf(Title[5], "StgSelect [  %d  ]", DebugDat.StgSelect);
+  sprintf(Title[6], "Hit       %s", CHOICE_OFF_ON[DebugDat.Hit]);
+  sprintf(Title[7], "DemoSave  %s", CHOICE_OFF_ON[DebugDat.DemoSave]);
 #endif
 }
 
