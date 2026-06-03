@@ -7,12 +7,6 @@
 
 #include "platform/buffer.h"
 
-void* SDL_malloc_wrap(size_t size)
-{
-	return SDL_malloc(size);
-}
+void *SDL_malloc_wrap(size_t size) { return SDL_malloc(size); }
 
-void SDL_FREE_DELETER::operator()(void *p)
-{
-	SDL_free(p);
-}
+void SDL_FREE_DELETER::operator()(void *p) { SDL_free(p); }

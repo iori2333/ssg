@@ -45,9 +45,9 @@ PIXEL_SIZE GrpBackend_DisplaySize(bool fullscreen);
 //
 // If [maybe_prev] is valid, this call is supposed to reinitialize an already
 // running backend with new parameters.
-std::optional<GRAPHICS_INIT_RESULT> GrpBackend_Init(
-	std::optional<const GRAPHICS_PARAMS> maybe_prev, GRAPHICS_PARAMS params
-);
+std::optional<GRAPHICS_INIT_RESULT>
+GrpBackend_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
+                GRAPHICS_PARAMS params);
 
 // いつも通りに(ただし失敗したら異常終了)
 void GrpBackend_Cleanup(void);
@@ -58,13 +58,11 @@ void GrpBackend_Cleanup(void);
 
 // Clears the backbuffer with the given palettized or channeled color,
 // depending on the mode.
-void GrpBackend_Clear(
-	uint8_t col_palettized = RGB216{ 0, 0, 0 }.PaletteIndex(),
-	RGB col_channeled = RGB{ 0, 0, 0 }
-);
+void GrpBackend_Clear(uint8_t col_palettized = RGB216{0, 0, 0}.PaletteIndex(),
+                      RGB col_channeled = RGB{0, 0, 0});
 
 // Sets the clipping rectangle.
-void GrpBackend_SetClip(const WINDOW_LTRB& rect);
+void GrpBackend_SetClip(const WINDOW_LTRB &rect);
 
 // Returns the currently active rendering API.
 std::u8string_view GrpBackend_APIString(void);
@@ -73,10 +71,10 @@ std::u8string_view GrpBackend_APIString(void);
 PIXELFORMAT GrpBackend_PixelFormat(void);
 
 // Retrieves the current backbuffer palette. Does nothing in channeled mode.
-void GrpBackend_PaletteGet(PALETTE& pal);
+void GrpBackend_PaletteGet(PALETTE &pal);
 
 // Sets the current backbuffer palette. Does nothing in channeled mode.
-bool GrpBackend_PaletteSet(const PALETTE& pal);
+bool GrpBackend_PaletteSet(const PALETTE &pal);
 
 struct FILE_STREAM_WRITE;
 void GrpBackend_Flip(bool take_screenshot);
@@ -88,24 +86,20 @@ struct BMP_OWNED;
 
 // (Re-)creates the texture in the given surface slot with the given size and
 // format, and with undefined initial contents.
-bool GrpSurface_CreateUninitialized(
-	SURFACE_ID sid, const PIXEL_SIZE& size, PIXELFORMAT format
-);
+bool GrpSurface_CreateUninitialized(SURFACE_ID sid, const PIXEL_SIZE &size,
+                                    PIXELFORMAT format);
 
 // Consumes the given .BMP file and sets the given surface to its contents,
 // re-creating it in the correct size if necessary.
-bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED&& bmp);
+bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp);
 
 bool GrpSurface_PaletteApplyToBackend(SURFACE_ID sid);
 
 // Uploads [pixels] (consisting of a pointer and a row pitch) to a [subrect] of
 // [sid]. [subrect] can be a `nullptr` to overwrite the entire texture. The
 // [pixels] have to match the surface's format.
-bool GrpSurface_Update(
-	SURFACE_ID sid,
-	const PIXEL_LTWH* subrect,
-	std::tuple<const std::byte *, size_t> pixels
-) noexcept;
+bool GrpSurface_Update(SURFACE_ID sid, const PIXEL_LTWH *subrect,
+                       std::tuple<const std::byte *, size_t> pixels) noexcept;
 
 // Returns the size of the given surface.
 PIXEL_SIZE GrpSurface_Size(SURFACE_ID sid);
@@ -113,14 +107,12 @@ PIXEL_SIZE GrpSurface_Size(SURFACE_ID sid);
 // Blits the given [src] rectangle inside [sid] to the given top-left point
 // on the backbuffer while clipping the destination rectangle to the clipping
 // area. Returns `true` if any part of the sprite was blitted.
-bool GrpSurface_Blit(
-	WINDOW_POINT topleft, SURFACE_ID sid, const PIXEL_LTRB& src
-);
+bool GrpSurface_Blit(WINDOW_POINT topleft, SURFACE_ID sid,
+                     const PIXEL_LTRB &src);
 
 // Like GrpSurface_Blit(), but ignores [sid]'s color key.
-void GrpSurface_BlitOpaque(
-	WINDOW_POINT topleft, SURFACE_ID sid, const PIXEL_LTRB& src
-);
+void GrpSurface_BlitOpaque(WINDOW_POINT topleft, SURFACE_ID sid,
+                           const PIXEL_LTRB &src);
 
 #ifdef WIN32
 // Win32 GDI text rendering bridge
@@ -128,7 +120,7 @@ void GrpSurface_BlitOpaque(
 class SURFACE_GDI;
 
 // Returns a reference to the backend's designated GDI text surface.
-SURFACE_GDI& GrpSurface_GDIText_Surface(void) noexcept;
+SURFACE_GDI &GrpSurface_GDIText_Surface(void) noexcept;
 
 // (Re-)creates the backend's designated GDI text surface with the given size
 // and undefined initial contents. [w] and [h] have already been validated to
@@ -137,7 +129,7 @@ SURFACE_GDI& GrpSurface_GDIText_Surface(void) noexcept;
 // the backend.
 bool GrpSurface_GDIText_Create(int32_t w, int32_t h, RGB colorkey);
 
-bool GrpSurface_GDIText_Update(const PIXEL_LTWH& r) noexcept;
+bool GrpSurface_GDIText_Update(const PIXEL_LTWH &r) noexcept;
 // -------------------------------
 #endif
 /// --------
@@ -158,35 +150,27 @@ using VERTEX_XY = WINDOW_POINT_BASE<VERTEX_COORD>;
 
 #ifndef WIN32_VINTAGE
 struct VERTEX_RGBA {
-	float r;
-	float g;
-	float b;
-	float a;
+  float r;
+  float g;
+  float b;
+  float a;
 
-	VERTEX_RGBA() = default;
-	VERTEX_RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
-		r(r / 255.0f), g(g / 255.0f), b(b / 255.0f), a(a / 255.0f) {
-	}
-	VERTEX_RGBA(const RGBA& o) :
-		r(o.r / 255.0f), g(o.g / 255.0f), b(o.b / 255.0f), a(o.a / 255.0f) {
-	}
+  VERTEX_RGBA() = default;
+  VERTEX_RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+      : r(r / 255.0f), g(g / 255.0f), b(b / 255.0f), a(a / 255.0f) {}
+  VERTEX_RGBA(const RGBA &o)
+      : r(o.r / 255.0f), g(o.g / 255.0f), b(o.b / 255.0f), a(o.a / 255.0f) {}
 };
 #else
 using VERTEX_RGBA = RGBA;
 #endif
 
-template <size_t N = std::dynamic_extent> using VERTEX_XY_SPAN = std::span<
-	const VERTEX_XY, N
->;
-template <size_t N = std::dynamic_extent> using VERTEX_RGBA_SPAN = std::span<
-	const VERTEX_RGBA, N
->;
+template <size_t N = std::dynamic_extent>
+using VERTEX_XY_SPAN = std::span<const VERTEX_XY, N>;
+template <size_t N = std::dynamic_extent>
+using VERTEX_RGBA_SPAN = std::span<const VERTEX_RGBA, N>;
 
-enum class TRIANGLE_PRIMITIVE : uint8_t {
-	FAN,
-	STRIP,
-	COUNT
-};
+enum class TRIANGLE_PRIMITIVE : uint8_t { FAN, STRIP, COUNT };
 // ------------
 
 // Base interface for geometry draw calls that can be implemented differently
@@ -198,49 +182,48 @@ enum class TRIANGLE_PRIMITIVE : uint8_t {
 //   have [GrpGeom] be an instance of that single subclass.
 class GRAPHICS_GEOMETRY {
 public:
-	// Rendering state
-	// ---------------
-	// SetColor() should only affect Draw*() calls, and SetAlpha() should only
-	// affect Draw*A() calls. Backends with equally stateful handling of alpha
-	// blending must implement this as follows:
-	//
-	// • Leave alpha blending deactivated for all non-*A() calls. If the
-	//   backend requires RGBA color values for vertices of those calls as
-	//   well, set their alpha component to 0xFF.
-	// • Selectively activate alpha blending only during *A() calls and
-	//   immediately disable it before returning.
+  // Rendering state
+  // ---------------
+  // SetColor() should only affect Draw*() calls, and SetAlpha() should only
+  // affect Draw*A() calls. Backends with equally stateful handling of alpha
+  // blending must implement this as follows:
+  //
+  // • Leave alpha blending deactivated for all non-*A() calls. If the
+  //   backend requires RGBA color values for vertices of those calls as
+  //   well, set their alpha component to 0xFF.
+  // • Selectively activate alpha blending only during *A() calls and
+  //   immediately disable it before returning.
 
-	virtual void Lock(void) = 0;	// 図形描画の準備をする
-	virtual void Unlock(void) = 0;	// 図形描画を完了する
+  virtual void Lock(void) = 0;   // 図形描画の準備をする
+  virtual void Unlock(void) = 0; // 図形描画を完了する
 
-	virtual void SetColor(RGB216 col) = 0;	// 色セット
+  virtual void SetColor(RGB216 col) = 0; // 色セット
 
-	// Enables regular alpha blending.
-	// dstRGB = (srcRGB * [a]) + (dstRGB * (1 - [a]))
-	virtual void SetAlphaNorm(uint8_t a) = 0;
+  // Enables regular alpha blending.
+  // dstRGB = (srcRGB * [a]) + (dstRGB * (1 - [a]))
+  virtual void SetAlphaNorm(uint8_t a) = 0;
 
-	// Enables additive blending with a fixed alpha factor of 1.
-	// dstRGB = (srcRGB * 1) + dstRGB
-	virtual void SetAlphaOne(void) = 0;
-	// ---------------
+  // Enables additive blending with a fixed alpha factor of 1.
+  // dstRGB = (srcRGB * 1) + dstRGB
+  virtual void SetAlphaOne(void) = 0;
+  // ---------------
 
-	// Draw calls
-	// ----------
+  // Draw calls
+  // ----------
 
-	// 直線
-	virtual void DrawLine(int x1, int y1, int x2, int y2) = 0;
+  // 直線
+  virtual void DrawLine(int x1, int y1, int x2, int y2) = 0;
 
-	// 長方形
-	virtual void DrawBox(int x1, int y1, int x2, int y2) = 0;
+  // 長方形
+  virtual void DrawBox(int x1, int y1, int x2, int y2) = 0;
 
-	// α長方形
-	virtual void DrawBoxA(int x1, int y1, int x2, int y2) = 0;
+  // α長方形
+  virtual void DrawBoxA(int x1, int y1, int x2, int y2) = 0;
 
-	virtual void DrawTriangleFan(VERTEX_XY_SPAN<>) = 0;
-	// ----------
+  virtual void DrawTriangleFan(VERTEX_XY_SPAN<>) = 0;
+  // ----------
 
-	virtual ~GRAPHICS_GEOMETRY() {
-	}
+  virtual ~GRAPHICS_GEOMETRY() {}
 };
 
 // Interface for geometry draw calls that require true-color polygon rendering.
@@ -248,29 +231,25 @@ public:
 // • empty or omitted (which will render all vertices using the last SetColor()
 //   and SetAlpha*() value), or
 // • have as many elements as [points].
-template <class T> concept GRAPHICS_GEOMETRY_POLY = requires(
-	T t,
-	WINDOW_COORD coord,
-	TRIANGLE_PRIMITIVE tp,
-	VERTEX_XY_SPAN<> points,
-	VERTEX_RGBA_SPAN<> colors,
-	RGB rgb
-) {
-	t.DrawLineStrip(points);
-	t.DrawTriangles(tp, points, colors);
-	t.DrawTrianglesA(tp, points, colors);
+template <class T>
+concept GRAPHICS_GEOMETRY_POLY =
+    requires(T t, WINDOW_COORD coord, TRIANGLE_PRIMITIVE tp,
+             VERTEX_XY_SPAN<> points, VERTEX_RGBA_SPAN<> colors, RGB rgb) {
+      t.DrawLineStrip(points);
+      t.DrawTriangles(tp, points, colors);
+      t.DrawTrianglesA(tp, points, colors);
 
-	// スペアな用グラデーションライン
-	t.DrawGrdLineEx(coord, coord, rgb, coord, rgb);
-};
+      // スペアな用グラデーションライン
+      t.DrawGrdLineEx(coord, coord, rgb, coord, rgb);
+    };
 
 // Interface for framebuffer-exclusive geometry draw calls.
-template <class T> concept GRAPHICS_GEOMETRY_FB = requires(
-	T t, WINDOW_COORD coord, WINDOW_POINT p
-) {
-	t.DrawPoint(p);
-	t.DrawHLine(coord, coord, coord);
-};
+template <class T>
+concept GRAPHICS_GEOMETRY_FB =
+    requires(T t, WINDOW_COORD coord, WINDOW_POINT p) {
+      t.DrawPoint(p);
+      t.DrawHLine(coord, coord, coord);
+    };
 /// --------
 
 /// Software rendering with pixel access
@@ -299,24 +278,23 @@ std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock(void);
 void GrpBackend_PixelAccessUnlock(void);
 
 // Calls [func] with a locked backbuffer.
-void GrpBackend_PixelAccessEdit(auto func)
-{
-	const auto [pixels, pitch] = GrpBackend_PixelAccessLock();
-	if(pitch == 0) {
-		return;
-	}
-	switch(GrpBackend_PixelFormat().PixelSize()) {
-	case PIXELFORMAT::SIZE8:
-		func.template operator()<uint8_t>(pixels, pitch);
-		break;
-	case PIXELFORMAT::SIZE16:
-		func.template operator()<uint16_t>(pixels, pitch);
-		break;
-	case PIXELFORMAT::SIZE32:
-		func.template operator()<uint32_t>(pixels, pitch);
-		break;
-	}
-	GrpBackend_PixelAccessUnlock();
+void GrpBackend_PixelAccessEdit(auto func) {
+  const auto [pixels, pitch] = GrpBackend_PixelAccessLock();
+  if (pitch == 0) {
+    return;
+  }
+  switch (GrpBackend_PixelFormat().PixelSize()) {
+  case PIXELFORMAT::SIZE8:
+    func.template operator()<uint8_t>(pixels, pitch);
+    break;
+  case PIXELFORMAT::SIZE16:
+    func.template operator()<uint16_t>(pixels, pitch);
+    break;
+  case PIXELFORMAT::SIZE32:
+    func.template operator()<uint32_t>(pixels, pitch);
+    break;
+  }
+  GrpBackend_PixelAccessUnlock();
 }
 /// ------------------------------------
 

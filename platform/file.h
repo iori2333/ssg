@@ -8,8 +8,7 @@
 #include "platform/buffer.h"
 
 struct SDL_IOStream;
-struct FILE_TIMESTAMPS {
-};
+struct FILE_TIMESTAMPS {};
 
 // Retrieves the system-specific timestamps of the given file if it exists, or
 // a `nullptr` otherwise.
@@ -18,8 +17,7 @@ std::unique_ptr<FILE_TIMESTAMPS> File_TimestampsGet(const char8_t *fn);
 // Closes [context] and applies the given timestamps to the on-disk file if
 // they are a valid pointer.
 bool File_CloseWithTimestamps(
-	SDL_IOStream *&& context, std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps
-);
+    SDL_IOStream *&&context, std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps);
 
 // SDL wrappers
 // ------------

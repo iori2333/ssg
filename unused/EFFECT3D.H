@@ -3,14 +3,14 @@
  *
  */
 
-typedef struct tagTriangle3D{
-	Point3D	Current;
-	Point3D	Speed;
+typedef struct tagTriangle3D {
+  Point3D Current;
+  Point3D Speed;
 
-	WINDOW_POINT	Grp[3];
+  WINDOW_POINT Grp[3];
 
-	uint8_t	deg_x,deg_y,deg_z;
-	char	roll_x,roll_y,roll_z;
+  uint8_t deg_x, deg_y, deg_z;
+  char roll_x, roll_y, roll_z;
 } Triangle3D;
 
 void InitTriangle(void);

@@ -5,7 +5,9 @@
 
 #pragma once
 
-import std.compat;
+#include <cstdint>
+#include <optional>
+#include <utility>
 struct GRAPHICS_PARAMS;
 
 // Initialization

@@ -10,18 +10,15 @@
 #include "game/hash.h"
 
 static_assert(
-	(sizeof(HASH) == BLAKE3_OUT_LEN),
-	"hardcoded hash size in header must match algorithm's output size"
-);
+    (sizeof(HASH) == BLAKE3_OUT_LEN),
+    "hardcoded hash size in header must match algorithm's output size");
 
-HASH Hash(const BYTE_BUFFER_BORROWED& buffer)
-{
-	HASH ret;
-	blake3_hasher h;
-	blake3_hasher_init(&h);
-	blake3_hasher_update(&h, buffer.data(), buffer.size_bytes());
-	blake3_hasher_finalize(
-		&h, std::bit_cast<uint8_t *>(ret.data()), BLAKE3_OUT_LEN
-	);
-	return ret;
+HASH Hash(const BYTE_BUFFER_BORROWED &buffer) {
+  HASH ret;
+  blake3_hasher h;
+  blake3_hasher_init(&h);
+  blake3_hasher_update(&h, buffer.data(), buffer.size_bytes());
+  blake3_hasher_finalize(&h, std::bit_cast<uint8_t *>(ret.data()),
+                         BLAKE3_OUT_LEN);
+  return ret;
 }

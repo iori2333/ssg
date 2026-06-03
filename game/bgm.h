@@ -5,10 +5,12 @@
 
 #pragma once
 
-import std.compat;
 #include "game/hash.h"
 #include "game/narrow.h"
 #include "platform/buffer.h"
+#include <chrono>
+#include <cstdint>
+#include <string_view>
 
 // Loads the BGM with the given 0-based [id] from the game's original BGM data
 // source.
@@ -18,7 +20,7 @@ extern bool (*const BGM_MidLoadOriginal)(unsigned int id);
 extern bool (*const BGM_MidLoadBuffer)(BYTE_BUFFER_OWNED);
 
 // Loads the source MIDI via its hash from the game's original BGM data source.
-extern bool (*const BGM_MidLoadByHash)(const HASH& hash);
+extern bool (*const BGM_MidLoadByHash)(const HASH &hash);
 
 bool BGM_Init(void);
 void BGM_Cleanup(void);
@@ -27,9 +29,9 @@ void BGM_Cleanup(void);
 // ---------------
 
 enum class BGM_PLAYING {
-	NONE,
-	WAVEFORM,
-	MIDI,
+  NONE,
+  WAVEFORM,
+  MIDI,
 };
 
 bool BGM_Enabled(void);
@@ -77,12 +79,12 @@ void BGM_FadeOut(uint8_t speed);
 // Tempo control
 // -------------
 
-static constexpr uint8_t BGM_TEMPO_DENOM = (1 << 7);	// 標準のテンポ
+static constexpr uint8_t BGM_TEMPO_DENOM = (1 << 7); // 標準のテンポ
 static constexpr int8_t BGM_TEMPO_MIN = -100;
-static constexpr int8_t BGM_TEMPO_MAX =  100;
+static constexpr int8_t BGM_TEMPO_MAX = 100;
 
 int8_t BGM_GetTempo(void);
-void BGM_SetTempo(int8_t tempo);	// テンポを変更する
+void BGM_SetTempo(int8_t tempo); // テンポを変更する
 // -------------
 
 // BGM pack management

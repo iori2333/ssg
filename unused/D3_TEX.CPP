@@ -3,68 +3,63 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "DD_UTY.H"
 #include "D3_TEX.H"
+#include "DD_UTY.H"
 #include "platform/file.h"
 #pragma message(PBGWIN_D3_TEX_H)
-
 
 // ヘッダファイル //
 #include "DX_TYPE.H"
 
-
 // 構造体 //
-typedef struct tagDXTEXTURE{
-	D3DTEXTUREHANDLE	hTexture;
-	GRP					surf;
+typedef struct tagDXTEXTURE {
+  D3DTEXTUREHANDLE hTexture;
+  GRP surf;
 } DXTEXTURE;
-
 
 // グローバル変数 //
 extern DXTEXTURE DxTex[TEXTURE_MAX];
 
+IINT TexGetWidth(BYTE *img) {
+  BITMAPFILEHEADER *BMP_file;
+  BITMAPINFOHEADER *BMP_info;
+  int width, temp;
 
-IINT TexGetWidth(BYTE *img)
-{
-	BITMAPFILEHEADER		*BMP_file;
-	BITMAPINFOHEADER		*BMP_info;
-	int						width,temp;
+  BMP_file = (BITMAPFILEHEADER *)img;
+  BMP_info = (BITMAPINFOHEADER *)((BMP_file) + 1);
 
-	BMP_file = (BITMAPFILEHEADER *)img;
-	BMP_info = (BITMAPINFOHEADER *)((BMP_file) +   1);
+  width = (BMP_info->biWidth + 3) & (~3); // DWORD に揃える(いらないか...)
+  for (temp = 1; temp < width; temp <<= 1)
+    ; // Power of 2 なサイズを作る
 
-	width = (BMP_info->biWidth+3)&(~3);		// DWORD に揃える(いらないか...)
-	for(temp=1;temp<width;temp<<=1);		// Power of 2 なサイズを作る
-
-	return min(temp,256);		// 大きすぎると扱えないので...
+  return min(temp, 256); // 大きすぎると扱えないので...
 }
 
-IINT TexGetHeight(BYTE *img)
-{
-	BITMAPFILEHEADER		*BMP_file;
-	BITMAPINFOHEADER		*BMP_info;
-	int						height,temp;
+IINT TexGetHeight(BYTE *img) {
+  BITMAPFILEHEADER *BMP_file;
+  BITMAPINFOHEADER *BMP_info;
+  int height, temp;
 
-	BMP_file = (BITMAPFILEHEADER *)img;
-	BMP_info = (BITMAPINFOHEADER *)((BMP_file) +   1);
+  BMP_file = (BITMAPFILEHEADER *)img;
+  BMP_info = (BITMAPINFOHEADER *)((BMP_file) + 1);
 
-	height = (BMP_info->biHeight);
-	for(temp=1;temp<height;temp<<=1);		// Power of 2 なサイズを作る
+  height = (BMP_info->biHeight);
+  for (temp = 1; temp < height; temp <<= 1)
+    ; // Power of 2 なサイズを作る
 
-	return min(temp,256);		// 大きすぎると扱えないので...
+  return min(temp, 256); // 大きすぎると扱えないので...
 }
 
 // 列挙用コールバック関数 //
-static HRESULT CALLBACK TextureEnum(DDSURFACEDESC *ddsd,VOID *param);
+static HRESULT CALLBACK TextureEnum(DDSURFACEDESC *ddsd, VOID *param);
 
-static DWORD TexDepth(DWORD col);						// ビット深度を調べる
+static DWORD TexDepth(DWORD col); // ビット深度を調べる
 
 // テクスチャ用 Surface を作成する //
-static GRP CreateTexSurface(int width,int height,DWORD MemCaps);
+static GRP CreateTexSurface(int width, int height, DWORD MemCaps);
 
 // システムメモリなテクスチャに画像イメージを転送 //
-static BOOL BMP2SysMem(GRP surf,BYTE *img);
-
+static BOOL BMP2SysMem(GRP surf, BYTE *img);
 
 // ローカル変数 //
 static DDPIXELFORMAT TextureFormat;
@@ -72,201 +67,212 @@ static DDPIXELFORMAT TextureFormat;
 // グローバル変数 //
 DXTEXTURE DxTex[TEXTURE_MAX];
 
+FBOOL TexInit(void) {
+  HRESULT dxret;
+  BOOL flag = FALSE;
 
-FBOOL TexInit(void)
-{
-	HRESULT dxret;
-	BOOL	flag = FALSE;
+  // DebugSetup("TexInfo.txt");
+  dxret = DxObj.D3Dev->EnumTextureFormats(TextureEnum, (LPVOID)&flag);
+  if (dxret != D3D_OK)
+    return FALSE;
+  // DebugCleanup();
 
-	//DebugSetup("TexInfo.txt");
-	dxret = DxObj.D3Dev->EnumTextureFormats(TextureEnum,(LPVOID)&flag);
-	if(dxret!=D3D_OK) return FALSE;
-	//DebugCleanup();
+  memset(DxTex, 0, TEXTURE_MAX * sizeof(DXTEXTURE));
 
-	memset(DxTex,0,TEXTURE_MAX*sizeof(DXTEXTURE));
-
-	return flag;
+  return flag;
 }
 
-FBOOL TexCreateTexture(char *filename,DWORD txid)
-{
-	HRESULT				dxret;
-	DXTEXTURE			*p;
-	GRP					temp = NULL;
-	int					width,height;
-	LPDIRECT3DTEXTURE2	DevTexture = NULL;
-	LPDIRECT3DTEXTURE2	MemTexture = NULL;
+FBOOL TexCreateTexture(char *filename, DWORD txid) {
+  HRESULT dxret;
+  DXTEXTURE *p;
+  GRP temp = NULL;
+  int width, height;
+  LPDIRECT3DTEXTURE2 DevTexture = NULL;
+  LPDIRECT3DTEXTURE2 MemTexture = NULL;
 
+  if (txid >= TEXTURE_MAX)
+    return FALSE;
 
-	if(txid>=TEXTURE_MAX) return FALSE;
+  try {
+    // すでに作成されている場合 //
+    p = &DxTex[txid];
+    if (p->surf)
+      throw("作成済み");
 
-	try{
-		// すでに作成されている場合 //
-		p = &DxTex[txid];
-		if(p->surf) throw("作成済み");
+    // ＢＭＰイメージをメモリに送る //
+    const auto img = FileLoad(filename);
+    if (!img)
+      throw("ファイルにゃい");
 
-		// ＢＭＰイメージをメモリに送る //
-		const auto img = FileLoad(filename);
-		if(!img) throw("ファイルにゃい");
+    width = TexGetWidth(img.get());
+    height = TexGetHeight(img.get());
 
-		width  = TexGetWidth(img.get());
-		height = TexGetHeight(img.get());
+    // 作業用 Surface //
+    temp = CreateTexSurface(width, height, DDSCAPS_SYSTEMMEMORY);
+    if (temp == 0)
+      throw("CTexSurf");
+    if (!BMP2SysMem(temp, img.get()))
+      throw("BMP->MEM");
 
-		// 作業用 Surface //
-		temp = CreateTexSurface(width,height,DDSCAPS_SYSTEMMEMORY);
-		if(temp==0) throw("CTexSurf");
-		if(!BMP2SysMem(temp,img.get())) throw("BMP->MEM");
+    // テクスチャ用 Surface //
+    p->surf = CreateTexSurface(width, height, DDSCAPS_VIDEOMEMORY);
+    if (p->surf == 0)
+      throw("CTexSurf(VRAM)");
 
-		// テクスチャ用 Surface //
-		p->surf = CreateTexSurface(width,height,DDSCAPS_VIDEOMEMORY);
-		if(p->surf==0) throw("CTexSurf(VRAM)");
+    dxret = temp->QueryInterface(IID_IDirect3DTexture2, (void **)&MemTexture);
+    if (dxret != DD_OK)
+      throw("QI(Mem)");
 
-		dxret = temp->QueryInterface(IID_IDirect3DTexture2,(void **)&MemTexture);
-		if(dxret!=DD_OK) throw("QI(Mem)");
+    dxret =
+        p->surf->QueryInterface(IID_IDirect3DTexture2, (void **)&DevTexture);
+    if (dxret != DD_OK)
+      throw("QI");
 
-		dxret = p->surf->QueryInterface(IID_IDirect3DTexture2,(void **)&DevTexture);
-		if(dxret!=DD_OK) throw("QI");
+    // ＶＲＡＭのほうにＬＯＡＤする //
+    dxret = DevTexture->Load(MemTexture);
+    if (dxret != D3D_OK)
+      throw("TexなLoad");
 
-		// ＶＲＡＭのほうにＬＯＡＤする //
-		dxret = DevTexture->Load(MemTexture);
-		if(dxret!=D3D_OK) throw("TexなLoad");
+    dxret = DevTexture->GetHandle(DxObj.D3Dev, &(p->hTexture));
+    if (dxret != D3D_OK)
+      throw("GetHandle");
 
-		dxret = DevTexture->GetHandle(DxObj.D3Dev,&(p->hTexture));
-		if(dxret!=D3D_OK) throw("GetHandle");
+    RELEASE(MemTexture);
+    RELEASE(DevTexture);
+    RELEASE(temp);
+  } catch (char *error) {
+    RELEASE(MemTexture);
+    RELEASE(DevTexture);
+    RELEASE(temp);
+    RELEASE(p->surf);
 
-		RELEASE(MemTexture);
-		RELEASE(DevTexture);
-		RELEASE(temp);
-	}
-	catch(char *error){
-		RELEASE(MemTexture);
-		RELEASE(DevTexture);
-		RELEASE(temp);
-		RELEASE(p->surf);
+    DebugOut(error);
+    return FALSE;
+  }
 
-		DebugOut(error);
-		return FALSE;
-	}
-
-	return TRUE;
+  return TRUE;
 }
 
-FVOID TexReleaseTexture(DWORD txid)
-{
-	DXTEXTURE *p;
+FVOID TexReleaseTexture(DWORD txid) {
+  DXTEXTURE *p;
 
-	p = &DxTex[txid];
+  p = &DxTex[txid];
 
-	RELEASE(p->surf);		// テクスチャ用Surface 解放
-	p->hTexture = NULL;		// ハンドルを使用不能にする(というか上の奴ですでに使用できない)
+  RELEASE(p->surf); // テクスチャ用Surface 解放
+  p->hTexture =
+      NULL; // ハンドルを使用不能にする(というか上の奴ですでに使用できない)
 }
 
-FVOID TexSetTexture(DWORD txid)
-{
-	if(DxTex[txid].hTexture)
-		DxObj.D3Dev->SetRenderState(D3DRENDERSTATE_TEXTUREHANDLE,DxTex[txid].hTexture);
+FVOID TexSetTexture(DWORD txid) {
+  if (DxTex[txid].hTexture)
+    DxObj.D3Dev->SetRenderState(D3DRENDERSTATE_TEXTUREHANDLE,
+                                DxTex[txid].hTexture);
 }
 
-static DWORD TexDepth(DWORD col)
-{
-	DWORD temp = 0;
+static DWORD TexDepth(DWORD col) {
+  DWORD temp = 0;
 
-	if(!col) return 0;
+  if (!col)
+    return 0;
 
-	while((col & 0x01)==0) col>>=1;
-	while((col & 0x01)==1) col>>=1,temp++;
+  while ((col & 0x01) == 0)
+    col >>= 1;
+  while ((col & 0x01) == 1)
+    col >>= 1, temp++;
 
-	return temp;
+  return temp;
 }
 
-static HRESULT CALLBACK TextureEnum(DDSURFACEDESC *ddsd,VOID *param)
-{
-	DDPIXELFORMAT	ddpf = ddsd->ddpfPixelFormat;
-	DWORD			r,g,b,a;
+static HRESULT CALLBACK TextureEnum(DDSURFACEDESC *ddsd, VOID *param) {
+  DDPIXELFORMAT ddpf = ddsd->ddpfPixelFormat;
+  DWORD r, g, b, a;
 
-	if(!(ddpf.dwFlags&DDPF_RGB)) return DDENUMRET_OK;
+  if (!(ddpf.dwFlags & DDPF_RGB))
+    return DDENUMRET_OK;
 
-	r = TexDepth(ddpf.dwRBitMask);
-	g = TexDepth(ddpf.dwGBitMask);
-	b = TexDepth(ddpf.dwBBitMask);
-	a = TexDepth(ddpf.dwRGBAlphaBitMask);
-	//char buf[1000];
-	//sprintf(buf,"R:%2d  G:%2d  B:%2d  A:%2d",r,g,b,a);
-	//DebugOut(buf);
+  r = TexDepth(ddpf.dwRBitMask);
+  g = TexDepth(ddpf.dwGBitMask);
+  b = TexDepth(ddpf.dwBBitMask);
+  a = TexDepth(ddpf.dwRGBAlphaBitMask);
+  // char buf[1000];
+  // sprintf(buf,"R:%2d  G:%2d  B:%2d  A:%2d",r,g,b,a);
+  // DebugOut(buf);
 
-	// 手抜き判定処理 //
-	if(a==0 && ddpf.dwRGBBitCount>8){
-		TextureFormat = ddpf;
-		*(BOOL *)param = TRUE;
-		return DDENUMRET_CANCEL;
-	}
+  // 手抜き判定処理 //
+  if (a == 0 && ddpf.dwRGBBitCount > 8) {
+    TextureFormat = ddpf;
+    *(BOOL *)param = TRUE;
+    return DDENUMRET_CANCEL;
+  }
 
-	return DDENUMRET_OK;
+  return DDENUMRET_OK;
 }
 
-static GRP CreateTexSurface(int width,int height,DWORD MemCaps)
-{
-	DDSURFACEDESC	ddsd;
-	HRESULT			dxret;
-	GRP				temp;
+static GRP CreateTexSurface(int width, int height, DWORD MemCaps) {
+  DDSURFACEDESC ddsd;
+  HRESULT dxret;
+  GRP temp;
 
-	ZEROMEM(ddsd);
-	ddsd.dwSize  = sizeof(ddsd);
-	ddsd.dwFlags = DDSD_CAPS|DDSD_HEIGHT|DDSD_WIDTH|DDSD_PIXELFORMAT;
+  ZEROMEM(ddsd);
+  ddsd.dwSize = sizeof(ddsd);
+  ddsd.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
 
-	// ハードウェアなら DDSCAPS_VIDEOMEMORY そうでなければ DDSCAPS_SYSTEMMEMORY を加える //
-	ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE|DDSCAPS_ALLOCONLOAD|MemCaps;
+  // ハードウェアなら DDSCAPS_VIDEOMEMORY そうでなければ DDSCAPS_SYSTEMMEMORY
+  // を加える //
+  ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_ALLOCONLOAD | MemCaps;
 
-	ddsd.ddpfPixelFormat = TextureFormat;
-	ddsd.dwWidth  = width;
-	ddsd.dwHeight = height;
+  ddsd.ddpfPixelFormat = TextureFormat;
+  ddsd.dwWidth = width;
+  ddsd.dwHeight = height;
 
-	dxret = DxObj.DD->CreateSurface(&ddsd,&temp,NULL);
+  dxret = DxObj.DD->CreateSurface(&ddsd, &temp, NULL);
 
-	return (dxret==DD_OK) ? temp : NULL;
+  return (dxret == DD_OK) ? temp : NULL;
 }
 
-static BOOL BMP2SysMem(GRP surf,BYTE *img)
-{
-	HRESULT					ddrval;
-	BITMAPFILEHEADER		*BMP_file;
-	BITMAPINFOHEADER		*BMP_info;
-	RGBQUAD					*pal;
-	//PALETTEENTRY			pe[256];
-	int						width,height;
-	BYTE					*image;
-	HDC						hdc,hdcmem;
-	HBITMAP					hbmp;
+static BOOL BMP2SysMem(GRP surf, BYTE *img) {
+  HRESULT ddrval;
+  BITMAPFILEHEADER *BMP_file;
+  BITMAPINFOHEADER *BMP_info;
+  RGBQUAD *pal;
+  // PALETTEENTRY			pe[256];
+  int width, height;
+  BYTE *image;
+  HDC hdc, hdcmem;
+  HBITMAP hbmp;
 
+  BMP_file = (BITMAPFILEHEADER *)img;
+  BMP_info = (BITMAPINFOHEADER *)((BMP_file) + 1);
+  pal = (RGBQUAD *)((BMP_info) + 1);
+  image = (BYTE *)((pal) + 256);
 
-	BMP_file = (BITMAPFILEHEADER *)img;
-	BMP_info = (BITMAPINFOHEADER *)((BMP_file) +   1);
-	pal      = (RGBQUAD          *)((BMP_info) +   1);
-	image    = (BYTE             *)((pal)      + 256);
+  // ヘッダチェッカ //
+  if (BMP_file->bfType != MAKEWORD('B', 'M'))
+    return FALSE;
+  if (BMP_info->biBitCount != 8)
+    return FALSE;
 
-	// ヘッダチェッカ //
-	if(BMP_file->bfType != MAKEWORD('B','M')) return FALSE;
-	if(BMP_info->biBitCount != 8) return FALSE;
+  width = (BMP_info->biWidth + 3) & (~3);
+  height = BMP_info->biHeight;
 
-	width  = (BMP_info->biWidth+3)&(~3);
-	height = BMP_info->biHeight;
+  // DIB から DC を作成 //
+  ddrval = surf->GetDC(&hdc);
+  if (ddrval != DD_OK)
+    return FALSE;
+  hbmp = CreateDIBitmap(hdc, BMP_info, CBM_INIT, image, (BITMAPINFO *)BMP_info,
+                        DIB_RGB_COLORS);
+  hdcmem = CreateCompatibleDC(hdc);
+  SelectObject(hdcmem, hbmp);
 
-	// DIB から DC を作成 //
-	ddrval = surf->GetDC(&hdc);
-	if(ddrval!=DD_OK) return FALSE;
-	hbmp   = CreateDIBitmap(hdc,BMP_info,CBM_INIT,image,(BITMAPINFO *)BMP_info,DIB_RGB_COLORS);
-	hdcmem = CreateCompatibleDC(hdc);
-	SelectObject(hdcmem,hbmp);
+  BitBlt(hdc, 0, 0, width, height, hdcmem, 0, 0, SRCCOPY);
 
-	BitBlt(hdc,0,0,width,height,hdcmem,0,0,SRCCOPY);
-
-	// 後始末 //
-	surf->ReleaseDC(hdc);
-	DeleteDC(hdcmem);
-	DeleteObject(hbmp);
-/*
-	// カラーキーをセットする //
-	SetColorKey(surf);
-*/
-	return TRUE;
+  // 後始末 //
+  surf->ReleaseDC(hdc);
+  DeleteDC(hdcmem);
+  DeleteObject(hbmp);
+  /*
+          // カラーキーをセットする //
+          SetColorKey(surf);
+  */
+  return TRUE;
 }

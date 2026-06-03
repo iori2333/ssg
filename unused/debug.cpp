@@ -32,22 +32,22 @@
 
 // ＥＣＬデバッグ用マクロ //
 #ifdef _DEBUG
-	#define ECL_DEBUG(s,param)				\
-	{										\
-		char _ECL_Debug[1000];				\
-		sprintf(_ECL_Debug,s,param);		\
-		GrpPut16(10,10+16*10,_ECL_Debug);	\
-	}
+#define ECL_DEBUG(s, param)                                                    \
+  {                                                                            \
+    char _ECL_Debug[1000];                                                     \
+    sprintf(_ECL_Debug, s, param);                                             \
+    GrpPut16(10, 10 + 16 * 10, _ECL_Debug);                                    \
+  }
 #else
-	#define ECL_DEBUG(s,param)
+#define ECL_DEBUG(s, param)
 #endif
 
 // デバッグ用マクロ //
 #ifdef _DEBUG
-	#define SCL_DEBUG(s)					\
-	{										\
-		GrpPut16(10,10+16*11,s);			\
-	}
+#define SCL_DEBUG(s)                                                           \
+  {                                                                            \
+    GrpPut16(10, 10 + 16 * 11, s);                                             \
+  }
 #else
-	#define SCL_DEBUG(s)
+#define SCL_DEBUG(s)
 #endif

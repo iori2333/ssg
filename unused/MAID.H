@@ -3,4 +3,4 @@
  *
  */
 
-extern DWORD		EvadeRate[256];			// かすり得点レート
+extern DWORD EvadeRate[256]; // かすり得点レート

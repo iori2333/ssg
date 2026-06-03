@@ -8,53 +8,53 @@
 
 #pragma once
 
-import std.compat;
+#include <bit>
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
 
 template <typename T, bool Big> class ENDIAN_VALUE {
-	std::byte v[sizeof(T)];
+  std::byte v[sizeof(T)];
 
-	using UT = std::make_unsigned_t<T>;
-	static constexpr UT ShiftOffset(uint8_t byte) {
-		return ((Big ? (sizeof(T) - 1 - byte) : byte) * 8);
-	}
+  using UT = std::make_unsigned_t<T>;
+  static constexpr UT ShiftOffset(uint8_t byte) {
+    return ((Big ? (sizeof(T) - 1 - byte) : byte) * 8);
+  }
 
 public:
-	ENDIAN_VALUE() noexcept {
-		*this = 0;
-	}
+  ENDIAN_VALUE() noexcept { *this = 0; }
 
-	ENDIAN_VALUE(const T& other) noexcept {
-		*this = other;
-	}
+  ENDIAN_VALUE(const T &other) noexcept { *this = other; }
 
-	constexpr operator T() const noexcept {
-		T ret = 0;
-		for(uint8_t byte = 0; byte < sizeof(T); byte++) {
-			ret |= (std::to_integer<const UT>(v[byte]) << ShiftOffset(byte));
-		}
-		return ret;
-	}
+  constexpr operator T() const noexcept {
+    T ret = 0;
+    for (uint8_t byte = 0; byte < sizeof(T); byte++) {
+      ret |= (std::to_integer<const UT>(v[byte]) << ShiftOffset(byte));
+    }
+    return ret;
+  }
 
-	const T& operator =(const T& other) noexcept {
-		for(uint8_t byte = 0; byte < sizeof(T); byte++) {
-			v[byte] = static_cast<std::byte>(
-				static_cast<UT>(other) >> ShiftOffset(byte)
-			);
-		}
-		return other;
-	}
+  const T &operator=(const T &other) noexcept {
+    for (uint8_t byte = 0; byte < sizeof(T); byte++) {
+      v[byte] =
+          static_cast<std::byte>(static_cast<UT>(other) >> ShiftOffset(byte));
+    }
+    return other;
+  }
 };
 
 template <typename T> using ENDIAN_LITTLE = ENDIAN_VALUE<T, false>;
 template <typename T> using ENDIAN_BIG = ENDIAN_VALUE<T, true>;
 
 // Let's help the optimizer a bit.
-template <typename T> using ENDIAN_SELECT_LITTLE = std::conditional_t<
-	(std::endian::native == std::endian::little), T, ENDIAN_LITTLE<T>
->;
-template <typename T> using ENDIAN_SELECT_BIG = std::conditional_t<
-	(std::endian::native == std::endian::big), T, ENDIAN_BIG<T>
->;
+template <typename T>
+using ENDIAN_SELECT_LITTLE =
+    std::conditional_t<(std::endian::native == std::endian::little), T,
+                       ENDIAN_LITTLE<T>>;
+template <typename T>
+using ENDIAN_SELECT_BIG =
+    std::conditional_t<(std::endian::native == std::endian::big), T,
+                       ENDIAN_BIG<T>>;
 
 using I16LE = ENDIAN_SELECT_LITTLE<int16_t>;
 using U16LE = ENDIAN_SELECT_LITTLE<uint16_t>;

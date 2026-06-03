@@ -11,8 +11,10 @@
 
 #ifdef SUPPORT_MIDI_BACKEND
 
-import std.compat;
 #include "game/narrow.h"
+#include <cstdint>
+#include <optional>
+#include <span>
 
 // Initializes the backend with a default output device.
 bool MidBackend_Init(void); // ＭＩＤＩ関連初期化

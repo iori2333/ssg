@@ -5,23 +5,22 @@
 
 #pragma once
 
-
 // ヘッダファイル //
+#include "constants.h"
 #include "game/enum_flags.h"
 #include "game/volume.h"
 #include "platform/buffer.h"
-#include "constants.h"
 
 // 定数＆マクロ //
 using SND_INSTANCE_ID = uint8_t;
 
-#define SND_OBJ_MAX			30				// 効果音の種類の最大数
+#define SND_OBJ_MAX 30 // 効果音の種類の最大数
 
-extern const uint8_t& Snd_BGMTempoNum;
-extern const uint8_t& Snd_BGMTempoDenom;
+extern const uint8_t &Snd_BGMTempoNum;
+extern const uint8_t &Snd_BGMTempoDenom;
 
-extern const VOLUME& Snd_VolumeBGM;
-extern const VOLUME& Snd_VolumeSE;
+extern const VOLUME &Snd_VolumeBGM;
+extern const VOLUME &Snd_VolumeSE;
 
 void Snd_Cleanup(void);
 void Snd_UpdateVolumes(void);

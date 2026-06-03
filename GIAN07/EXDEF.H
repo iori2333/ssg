@@ -4,19 +4,15 @@
 /*                                                                           */
 
 #ifndef PBGWIN_EXDEF_H
-#define PBGWIN_EXDEF_H		"EXDEF : Version 0.01 : Update 2000/09/04"
-//#pragma message(PBGWIN_EXDEF_H)
+#define PBGWIN_EXDEF_H "EXDEF : Version 0.01 : Update 2000/09/04"
+// #pragma message(PBGWIN_EXDEF_H)
 
-
-import std.compat;
-
+#include <cstdint>
 
 // 角度付き座標の管理用構造体 //
-typedef struct tagDegPoint{
-	int		x,y;	// 座標
-	uint8_t	d;	// 角度
+typedef struct tagDegPoint {
+  int x, y;  // 座標
+  uint8_t d; // 角度
 } DegPoint;
-
-
 
 #endif
