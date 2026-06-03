@@ -43,10 +43,15 @@ constexpr uint8_t DBGF_DISPLAYINFO = 0x01; // デバッグ情報を出力する
 constexpr uint8_t DBGF_HIT_ON = 0x02;      // 当たり判定が有効
 
 // Limits //
-constexpr const auto STOCK_PLAYER_MAX = 4;
-constexpr const auto STOCK_BOMB_MAX = 2;
+constexpr const auto STOCK_PLAYER_MAX = 6;
+constexpr const auto STOCK_BOMB_MAX = 6;
 constexpr const auto FPS_DIVISOR_MAX = 3;
 constexpr const auto STAGE_MAX = 6; // ステージ数
+
+// 练习模式
+constexpr const auto PRACTICE_OFF = 0;
+constexpr const auto PRACTICE_AUTOBOMB = 1;
+constexpr const auto PRACTICE_INVINCIBLE = 2;
 
 bool ValidateAlways(auto v) { return true; };
 template <typename T, T Max> constexpr bool ValidateBelow(T v) {
@@ -106,6 +111,9 @@ struct CONFIG_DATA {
   // 初期ボム数
   // Quirk: Off by 1?
   OPTION<uint8_t> BombStock = {2, U8Below<(STOCK_BOMB_MAX + 1)>};
+
+  // 练习模式 OFF/AUTOBOMB/INVINCIBLE
+  OPTION<uint8_t> PracticeMode = {PRACTICE_OFF, U8Below<PRACTICE_INVINCIBLE>};
   // ---------- //
 
   // グラフィック関連 //

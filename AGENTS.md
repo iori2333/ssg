@@ -4,14 +4,9 @@
 
 ```bash
 # Prerequisites: Visual Studio 2022+, Git, CMake 3.21+, Ninja
-# Must run from x64_x86 Cross Tools Command Prompt
-git submodule update --init --recursive
-cmake -B build -S . -G "Ninja" -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
+./build_windows.bat
 # Output: build/bin/GIAN07.exe + build/bin/SDL3.dll
 ```
-
-Use `build_windows.bat` as a shortcut. VSCode tasks are in `.vscode/tasks.json`.
 
 ## Architecture
 

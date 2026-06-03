@@ -478,9 +478,19 @@ extern void MaidDead(void) {
     return;
 #endif
 
-  // 自動ボム：Bomb キーが押されておらず、かつ Bomb 残量がある場合、
+  if (ConfigDat.PracticeMode.v == PRACTICE_INVINCIBLE) {
+    fragment_set(Viv.x, Viv.y, FRG_FATCIRCLE);
+    for (i = 0; i < 50; i++)
+      fragment_set(Viv.x, Viv.y, FRG_HEART);
+    Snd_SEPlay(SOUND_ID_DEAD);
+    Viv.muteki = 30;
+    return;
+  }
+
+  // 自動ボム：练习模式为自动Bomb以上时，Bomb キーが押されておらず、かつ Bomb 残量がある場合、
   // 死亡の代わりに自動で Bomb を発動する
-  if (!(Key_Data & KEY_BOMB) && (Viv.bomb_time == 0) && (Viv.bomb > 0) &&
+  if (ConfigDat.PracticeMode.v >= PRACTICE_AUTOBOMB &&
+      !(Key_Data & KEY_BOMB) && (Viv.bomb_time == 0) && (Viv.bomb > 0) &&
       (SclInfo.MsgFlag == false)) {
     static constexpr uint8_t bomb_time[4] = {60 * 4, 60 * 3, 60 * 2, 0};
     Viv.bomb_time = bomb_time[Viv.weapon & 3];
