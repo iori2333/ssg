@@ -7,6 +7,7 @@
 #include <numeric>
 
 #include "CONFIG.H"
+#include "DEMOPLAY.H"
 #include "ENTRY.H"
 #include "GAMEMAIN.H"
 #include "LEVEL.H"
@@ -20,11 +21,15 @@
 #include "game/string_format.h"
 #include "platform/input.h"
 #include "platform/midi_backend.h"
+#include <SDL3/SDL_filesystem.h>
 
 using namespace std::chrono_literals;
 
 static bool ExitFnYes(INPUT_BITS key);
 static bool ExitFnNo(INPUT_BITS key);
+static bool ExitFnSaveExit(INPUT_BITS key);
+static bool GameOverSaveFnYes(INPUT_BITS key);
+static bool GameOverSaveFnNo(INPUT_BITS key);
 
 static bool ContinueFnYes(INPUT_BITS key);
 static bool ContinueFnNo(INPUT_BITS key);
@@ -79,6 +84,20 @@ static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
 static bool Handle(INPUT_BITS key, size_t selected);
 // ----------------
 } // namespace BGMPack
+
+namespace ReplayFiles {
+void Open(void);
+
+constexpr Narrow::string_view TITLE = "    Replay Files";
+char TitleBuf[64] = {};
+WINDOW_LABEL TitleItem = {TitleBuf};
+
+std::vector<std::u8string> Files;
+
+static size_t ListSize(void) { return (Files.size() > 0 ? Files.size() + 1 : 2); }
+static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
+static bool Handle(INPUT_BITS key, size_t selected);
+} // namespace ReplayFiles
 
 constexpr auto HELP_SUBMENU_EXIT = "一つ前のメニューにもどります";
 constexpr auto HELP_API_DEFAULT = "Let the backend choose a graphics API";
@@ -372,6 +391,13 @@ WINDOW_CHOICE Item[] = {
 WINDOW_MENU Menu = {std::span(Item)};
 } // namespace Rep
 
+static bool ReplayFilesMenuOpen(INPUT_BITS key) {
+  if (Input_IsOK(key)) {
+    ReplayFiles::Open();
+  }
+  return true;
+}
+
 static bool FnGameStart(INPUT_BITS key);
 static bool FnExStart(INPUT_BITS key);
 static bool FnMusic(INPUT_BITS key);
@@ -384,35 +410,50 @@ WINDOW_CHOICE Item[] = {
     {"   Game  Start", "ゲームを開始します", FnGameStart},
     {"   Extra Start", "ゲームを開始します(Extra)", FnExStart},
     {"   Replay", "リプレイを開始します", Rep::Menu},
+    {"   Replay Files", "リプレイファイルの管理", ReplayFilesMenuOpen},
     {"   Config", "各種設定を変更します", Cfg::Menu},
     {"   Score", "スコアの表示をします", FnScore},
     {"   Music", "音楽室に入ります", FnMusic},
     {"   Exit", "ゲームを終了します", CWinExitFn},
 };
 WINDOW_MENU Menu = {std::span(Item), SetItem, &Title};
-static auto &ItemMusic = Item[5];
+static auto &ItemMusic = Item[6];
 } // namespace Main
 
 WINDOW_LABEL ExitTitle = {"    終了するの？"};
-WINDOW_CHOICE ExitYesNoItem[] = {{"   お っ け ～ ", "", ExitFnYes},
-                                 {"   だ め だ め", "", ExitFnNo}};
-WINDOW_MENU ExitMenu = {std::span(ExitYesNoItem), [](bool) {}, &ExitTitle};
+WINDOW_CHOICE ExitItems[] = {{"  Save && Exit  ", "", ExitFnSaveExit},
+                              {"   お っ け ～ ", "", ExitFnYes},
+                              {"   だ め だ め", "", ExitFnNo}};
+WINDOW_MENU ExitMenu = {std::span(ExitItems), [](bool) {}, &ExitTitle};
 
 WINDOW_LABEL ContinueTitle = {" Ｃｏｎｔｉｎｕｅ？"};
 WINDOW_CHOICE ContinueYesNoItem[] = {{"   お っ け ～", "", ContinueFnYes},
-                                     {"   や だ や だ", "", ContinueFnNo}};
+                                      {"   や だ や だ", "", ContinueFnNo}};
 WINDOW_MENU ContinueMenu = {std::span(ContinueYesNoItem), [](bool) {},
                             &ContinueTitle};
+
+WINDOW_LABEL GameOverSaveTitle = {"  Save Replay?"};
+WINDOW_CHOICE GameOverSaveItems[] = {
+    {"   お っ け ～ ", "", GameOverSaveFnYes},
+    {"   や だ や だ", "", GameOverSaveFnNo}};
+WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](bool) {},
+                                 &GameOverSaveTitle};
 
 WINDOW_MENU_SCROLL<BGMPack::TitleItem, BGMPack::ListSize, BGMPack::Generate,
                    BGMPack::Handle>
     BGMPackMenu;
+
+WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, ReplayFiles::ListSize,
+                   ReplayFiles::Generate, ReplayFiles::Handle>
+    ReplayFilesMenu;
 
 ///// [グローバル変数(公開)] /////
 WINDOW_SYSTEM MainWindow = {Main::Menu};
 WINDOW_SYSTEM ExitWindow = {ExitMenu};
 WINDOW_SYSTEM ContinueWindow = {ContinueMenu};
 WINDOW_SYSTEM BGMPackWindow = {BGMPackMenu.Menu};
+WINDOW_SYSTEM GameOverSaveWindow = {GameOverSaveMenu};
+WINDOW_SYSTEM ReplayFilesWindow = {ReplayFilesMenu.Menu};
 
 // メインメニューの初期化 //
 void InitMainWindow(void) {
@@ -453,7 +494,14 @@ void InitMainWindow(void) {
   }
 }
 
-void InitExitWindow(void) { ExitWindow.Init(140); }
+void InitExitWindow(void) {
+  ExitMenu.NumItems = 3;
+  ExitMenu.ItemPtr[0] = &ExitItems[0];
+  ExitMenu.ItemPtr[1] = &ExitItems[1];
+  ExitMenu.ItemPtr[2] = &ExitItems[2];
+  ExitWindow.Init(140);
+  GameOverSaveWindow.Init(140);
+}
 
 void InitContinueWindow(void) { ContinueWindow.Init(140); }
 
@@ -684,6 +732,72 @@ static bool Handle(INPUT_BITS key, size_t selected) {
 }
 } // namespace BGMPack
 
+namespace ReplayFiles {
+static void ScanFiles(void) {
+  Files.clear();
+  SDL_EnumerateDirectory(
+      ".",
+      [](void *ctx, const char * /*dir*/, const char *name) {
+        if (strstr(name, "replay_") == name && strstr(name, ".DAT")) {
+          auto &files = *static_cast<decltype(Files) *>(ctx);
+          files.push_back(std::u8string(reinterpret_cast<const char8_t *>(name)));
+        }
+        return SDL_ENUM_CONTINUE;
+      },
+      &Files);
+  std::ranges::sort(Files, std::greater{});
+}
+
+static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
+  if (generated == (ListSize() - 1)) {
+    ret.Title = " Exit";
+    ret.Help = HELP_SUBMENU_EXIT;
+  } else if (generated < Files.size()) {
+    ret.Title = reinterpret_cast<const char *>(Files[generated].c_str());
+    ret.Help = "Play replay file";
+  } else {
+    ret.Title = " No replays found";
+    ret.Help = "";
+  }
+  ret.Flags = WINDOW_FLAGS::NONE;
+  if (generated == selected) {
+    if (selected < Files.size()) {
+      strcpy(TitleBuf, reinterpret_cast<const char *>(Files[selected].c_str()));
+    } else {
+      strcpy(TitleBuf, TITLE.data());
+    }
+  }
+}
+
+static bool Handle(INPUT_BITS key, size_t selected) {
+  if (Input_IsOK(key)) {
+    if (selected == (ListSize() - 1)) {
+      return false;
+    }
+    if (selected < Files.size()) {
+      ::PendingReplayFile = Files[selected];
+      return false;
+    }
+  }
+  return true;
+}
+
+void Open(void) {
+  ScanFiles();
+
+  PIXEL_COORD w = CWinItemExtent(TITLE).w;
+  for (const auto &f : Files) {
+    w = (std::max)(w, CWinItemExtent(f).w);
+  }
+  w = (std::max)(w, CWinItemExtent(" Exit").w);
+  w = (std::min)(w, GRP_RES.w);
+
+  ReplayFilesMenu.Init(ReplayFilesWindow, 0, &MainWindow);
+  ReplayFilesWindow.Init(w);
+  ReplayFilesWindow.OpenCentered(w, ReplayFilesWindow.Select[0]);
+}
+} // namespace ReplayFiles
+
 static void Main::Cfg::Snd::Mid::FnDev(int_fast8_t delta) {
   if (BGM_Enabled()) {
     BGM_ChangeMIDIDevice(delta);
@@ -758,6 +872,8 @@ static bool Main::FnMusic(INPUT_BITS key) {
 
 static bool ExitFnYes(INPUT_BITS key) {
   if (Input_IsOK(key)) {
+    DemoplaySaveAllEnable = false;
+    DemoplaySaveEnable = false;
     GameExit();
     return false;
   }
@@ -767,6 +883,34 @@ static bool ExitFnYes(INPUT_BITS key) {
 static bool ExitFnNo(INPUT_BITS key) {
   if (Input_IsOK(key)) {
     GameRestart();
+    return false;
+  }
+  return true;
+}
+
+static bool ExitFnSaveExit(INPUT_BITS key) {
+  if (Input_IsOK(key)) {
+    DemoplaySaveReplayAll();
+    GameExit();
+    return false;
+  }
+  return true;
+}
+
+static bool GameOverSaveFnYes(INPUT_BITS key) {
+  if (Input_IsOK(key)) {
+    DemoplaySaveReplayAll();
+    GameExit(true);
+    return false;
+  }
+  return true;
+}
+
+static bool GameOverSaveFnNo(INPUT_BITS key) {
+  if (Input_IsOK(key)) {
+    DemoplaySaveAllEnable = false;
+    DemoplaySaveEnable = false;
+    GameExit(true);
     return false;
   }
   return true;

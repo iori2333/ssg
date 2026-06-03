@@ -370,24 +370,38 @@ static void enemy_set(void) {
       break;
 
     case (SCL_STAGECLEAR): // ステージクリア
+      if (DemoplaySaveAllEnable) {
+        DemoplayFlushStage();
+        GameNextStage();
+        return;
+      }
       if (ConfigDat.StageSelect.v) {
         DemoplaySaveReplay();
         GameExit(true);
         return;
       }
-      if (DemoplayLoadEnable)
+      if (DemoplayLoadEnable || DemoplayLoadAllEnable) {
+        if (DemoplayLoadAllEnable && GameStage < PlaybackMaxStage) {
+          GameNextStage();
+        }
         return;
+      }
       // ステージクリア処理をここに記述 //
       GameNextStage(); // 本当はエラーチェックが必要!!
       return;
 
     case (SCL_GAMECLEAR):
+      if (DemoplaySaveAllEnable) {
+        DemoplayFlushStage();
+        DemoplaySaveReplayAll();
+        // Fall through to normal ending logic
+      }
       if (ConfigDat.StageSelect.v) {
         DemoplaySaveReplay();
         GameExit(true);
         return;
       }
-      if (DemoplayLoadEnable)
+      if (DemoplayLoadEnable || DemoplayLoadAllEnable)
         return;
 
       if (GameStage == STAGE_MAX)
@@ -410,10 +424,14 @@ static void enemy_set(void) {
       return;
 
     case (SCL_EXTRACLEAR):
+      if (DemoplaySaveAllEnable) {
+        DemoplayFlushStage();
+        DemoplaySaveReplayAll(true);
+      }
       if (ConfigDat.StageSelect.v) {
         DemoplaySaveReplay(); // 終了はしない
       }
-      if (DemoplayLoadEnable)
+      if (DemoplayLoadEnable || DemoplayLoadAllEnable)
         return;
 
       NameRegistInit(true);

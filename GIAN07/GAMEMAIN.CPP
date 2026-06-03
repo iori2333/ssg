@@ -90,6 +90,8 @@ void DemoProc(bool &);       // デモプレイ
 void NameRegistProc(bool &); // お名前入力
 
 void ReplayProc(bool &);
+void ReplayProcAll(bool &);
+void GameOverSaveProc(bool &);
 
 bool SProjectInit(void);   // 西方Ｐｒｏｊｅｃｔ初期化部
 void SProjectProc(bool &); // 西方Ｐｒｏｊｅｃｔ表示動作部
@@ -685,6 +687,96 @@ extern bool GameReplayInit(int Stage) {
   return GameInit(ReplayProc);
 }
 
+// マルチステージ・リプレイ用の初期化を行う //
+extern bool GameReplayInitAll(const char8_t *fn) {
+  MaidSet();
+
+  if (!DemoplayLoadReplayAll(fn)) {
+    return false;
+  }
+
+  GameStage = MultiPlayInfo.Stages[0];
+
+  PlayRankReset();
+
+  GrpBackend_Clear();
+  Grp_Flip();
+  GameSTD_Init();
+
+  if (!LoadGraph(GameStage)) {
+    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DemoplayCleanup();
+    DemoplayLoadAllEnable = false;
+    return false;
+  }
+  if (!LoadStageData(GameStage)) {
+    DebugOut(u8"ENEMY.DAT が破壊されています");
+    DemoplayCleanup();
+    DemoplayLoadAllEnable = false;
+    return false;
+  }
+
+  if (GameStage == GRAPH_ID_EXSTAGE) {
+    Viv.credit = 0;
+  }
+
+  return GameInit(ReplayProcAll);
+}
+
+// Multi-stage replay playback
+void ReplayProcAll(bool &) {
+  static uint8_t ExTimer = 0;
+
+  ExTimer = (ExTimer + 1) % 128;
+
+  if (Key_Data != KEY_ESC) {
+    Key_Data = DemoplayMove();
+  }
+
+  if (Key_Data & KEY_ESC) {
+    DemoplayCleanup();
+    DemoplayLoadAllEnable = false;
+    GameExit();
+    return;
+  }
+
+  GameMove();
+
+  if (GameMain != ReplayProcAll) {
+    DemoplayCleanup();
+    DemoplayLoadAllEnable = false;
+    GameExit();
+    return;
+  }
+
+  // If DemoplayLoadEnable was set to false by DemoplayMove (end of all frames),
+  // it means the replay is done
+  if (!DemoplayLoadEnable) {
+    DemoplayCleanup();
+    DemoplayLoadAllEnable = false;
+    GameExit();
+    return;
+  }
+
+  if (IsDraw()) {
+    GameDraw();
+
+    constexpr PIXEL_LTWH rc = {312, 80, 32, 8};
+    GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, rc);
+    if (ExTimer < 64 + 32) {
+      GrpGeom->Lock();
+      GrpGeom->SetAlphaNorm(128);
+      GrpGeom->SetColor({0, 0, 0});
+      GrpGeom->DrawBoxA((128 + 45 - 3), (470 + 4 - 1), (128 + 45 + 72),
+                        (470 + 4 + 5));
+      GrpGeom->Unlock();
+      constexpr PIXEL_LTWH rc = {312, 88, 72, 8};
+      GrpSurface_Blit({(128 + 45), (470 + 4)}, SURFACE_ID::SYSTEM, rc);
+    }
+    Grp_Flip();
+  }
+}
+
 void ReplayProc(bool &) {
   static uint8_t ExTimer = 0;
 
@@ -914,24 +1006,28 @@ extern void GameContinue(void) {
 }
 
 void GameProc(bool &) {
+  // Record current input (always-on multi-stage or legacy single-stage)
+  const auto replay_over = DemoplayRecord(Key_Data);
+
 #ifdef PBG_DEBUG
-  if (DebugDat.DemoSave && DemoplayRecord(Key_Data)) {
+  if (DebugDat.DemoSave && replay_over) {
     DemoplaySaveDemo();
   }
 #endif
 
-  // リプレイ時の保存処理 //
-  if (ConfigDat.StageSelect.v && DemoplayRecord(Key_Data)) {
+  // Legacy single-stage recording: save and exit when buffer full
+  if (ConfigDat.StageSelect.v && replay_over && !DemoplaySaveAllEnable) {
     DemoplaySaveReplay();
   }
 
   if (Key_Data & KEY_ESC) {
-    if (ConfigDat.StageSelect.v) {
+    if (ConfigDat.StageSelect.v && !DemoplaySaveAllEnable) {
       DemoplaySaveReplay();
       GameExit(true);
       return;
     }
 
+    // Show exit dialog (3-option if recording, 2-option otherwise)
     ExitWindow.Open({250, 150}, 1);
     GameMain = PauseProc;
     return;
@@ -984,6 +1080,13 @@ void GameOverProc0(bool &) {
       break;
     }
 
+    // Multi-stage recording: show Save Replay dialog
+    if (DemoplayHasRecordedStages()) {
+      GameOverSaveWindow.Open({250, 200}, 0);
+      GameMain = GameOverSaveProc;
+      return;
+    }
+
     // ステージセレクトが有効な場合 //
     if (ConfigDat.StageSelect.v) {
       DemoplaySaveReplay();
@@ -1008,6 +1111,20 @@ void GameOverProc0(bool &) {
 
   if (IsDraw()) {
     GameDraw();
+    Grp_Flip();
+  }
+}
+
+// Save Replay dialog for Game Over
+void GameOverSaveProc(bool &) {
+  CWinMove(&GameOverSaveWindow);
+  if (GameMain != GameOverSaveProc) {
+    return;
+  }
+
+  if (IsDraw()) {
+    GameDraw();
+    CWinDraw(&GameOverSaveWindow);
     Grp_Flip();
   }
 }
@@ -1171,8 +1288,6 @@ void WeaponSelectProc(bool &) {
         Viv.exp = 160;
       if (GameStage >= 3)
         Viv.exp = 255;
-      if (DebugDat.DemoSave)
-        DemoplayInit();
 #else
       if (forceStage) {
         GameStage = forceStage;
@@ -1186,7 +1301,6 @@ void WeaponSelectProc(bool &) {
           Viv.exp = 160;
         if (GameStage >= 3)
           Viv.exp = 255;
-        DemoplayInit();
       } else {
         GameStage = 1;
       }
@@ -1195,10 +1309,9 @@ void WeaponSelectProc(bool &) {
       Viv.credit = 0;
       Viv.left = EXTRA_LIVES;
       Viv.exp = 255;
-      if (ConfigDat.StageSelect.v) {
-        DemoplayInit();
-      }
     }
+
+    DemoplayInit();
 
     if (!LoadGraph(GameStage)) {
       DebugOut(u8"GRAPH.DAT が破壊されています");
@@ -1357,10 +1470,21 @@ void TitleProc(bool &quit) {
   }
 
   auto *window_active =
-      ((BGMPackWindow.State != CWIN_DEAD) ? &BGMPackWindow : &MainWindow);
+      ((ReplayFilesWindow.State != CWIN_DEAD)   ? &ReplayFilesWindow
+       : (BGMPackWindow.State != CWIN_DEAD) ? &BGMPackWindow
+                                            : &MainWindow);
   CWinMove(window_active);
   MWinHelp(window_active);
   MWinMove();
+
+  // Start pending replay after menu closes
+  if (!PendingReplayFile.empty()) {
+    auto fn = PendingReplayFile;
+    PendingReplayFile.clear();
+    GameReplayInitAll(fn.c_str());
+    return;
+  }
+
   if (GameMain != TitleProc)
     return;
 

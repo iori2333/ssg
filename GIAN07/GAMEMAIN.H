@@ -32,7 +32,8 @@ extern bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
 extern void GameOverInit(void);                  // ゲームオーバーの前処理
 extern void GameContinue(void);                  // コンティニューを行う場合
 
-extern bool GameReplayInit(int Stage); // リプレイ用の初期化を行う
+extern bool GameReplayInit(int Stage);       // リプレイ用の初期化を行う(単一ステージ)
+extern bool GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
 
 extern bool SProjectInit(void); // 西方Ｐｒｏｊｅｃｔ表示の初期化
 
