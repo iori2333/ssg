@@ -431,6 +431,9 @@ extern void MaidSet(void) {
   Viv.left = ConfigDat.PlayerStock.v;
   Viv.credit = 4; // 5;
 
+  Viv.miss_count = 0;
+  Viv.bomb_used = 0;
+
   Viv.bomb_time = 0;
   Viv.evade_c = Viv.evade = 0;
   Viv.evadesc = 0;
@@ -496,6 +499,7 @@ extern void MaidDead(void) {
     Viv.bomb_time = bomb_time[Viv.weapon & 3];
     Viv.muteki = BOMBMUTEKI_VAL;
     Viv.bomb--;
+    Viv.bomb_used++;
     PlayRankAdd(-25); // 自动Bomb降低Rank
     tama_clear();
     laser_clear();
@@ -531,6 +535,7 @@ extern void MaidDead(void) {
   if (Viv.left) {
     // 残機の残っている場合 //
     Viv.left -= 1;
+    Viv.miss_count++;
   } else {
     // 残機の残っていない場合 //
     Viv.bGameOver = true;
