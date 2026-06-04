@@ -1,6 +1,4 @@
 .vscode/settings.json
 bin/
 obj/*
-!obj/version.h.in
 build/
-
