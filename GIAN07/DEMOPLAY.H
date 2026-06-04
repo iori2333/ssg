@@ -54,35 +54,26 @@ struct MULTI_REPLAY_INFO {
 void DemoplayInit(void); // デモプレイデータの準備
 
 // デモプレイデータを保存する
-// Returns `true` if the replay is over and should be saved via either
-// DemoplaySave() or ReplaySave().
 bool DemoplayRecord(INPUT_BITS key);
 
 void DemoplaySaveDemo(void);   // デモプレイデータをファイルに書き込む
-void DemoplaySaveReplay(void); // リプレイデータをファイルに書き込む
 
 bool DemoplayLoadDemo(int stage);   // デモプレイデータをロードする
-bool DemoplayLoadReplay(int stage); // リプレイデータをロードする
 INPUT_BITS DemoplayMove(void);      // Key_Data を返す
 void DemoplayCleanup(void);         // デモプレイロードの事後処理
 
 // Multi-stage replay
-void DemoplayFlushStage(void);  // Save current stage's recorded frames
-void DemoplaySaveReplayAll(bool exstg = false); // Write multi-stage replay file
-bool DemoplayLoadReplayAll(const char8_t *fn);  // Load multi-stage replay file
-INPUT_BITS DemoplayMoveAll(void);               // Get next frame for multi-stage playback
-bool DemoplayHasRecordedStages(void);           // Returns true if at least one stage recorded
-
-// Replay file scanning
-std::u8string ReplayAllFN(bool exstg = false); // Generate replay filename with timestamp
+void DemoplayFlushStage(void);
+void DemoplaySaveReplayAll(bool exstg = false);
+bool DemoplayLoadReplayAll(const char8_t *fn);
+bool DemoplayHasRecordedStages(void);
 
 ///// [ 変数 ] /////
-extern bool DemoplaySaveEnable;    // デモプレイのセーブが動作しているか(obsolete single-stage)
-extern bool DemoplayLoadEnable;    // デモプレイのロードが動作しているか
+extern bool DemoplayLoadEnable;    // リプレイのロードが動作しているか
 extern bool DemoplaySaveAllEnable; // Multi-stage recording active
 extern bool DemoplayLoadAllEnable; // Multi-stage playback active
-extern MULTI_REPLAY_INFO MultiPlayInfo;   // Currently loaded multi-stage replay info
-extern uint8_t PlaybackMaxStage;          // Max stage number in loaded replay
-extern std::u8string PendingReplayFile;   // Deferred replay start from menu
+extern MULTI_REPLAY_INFO MultiPlayInfo;
+extern uint8_t PlaybackMaxStage;
+extern std::u8string PendingReplayFile;
 
 #endif

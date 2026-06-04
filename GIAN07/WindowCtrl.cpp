@@ -348,48 +348,15 @@ WINDOW_CHOICE Item[] = {
 WINDOW_MENU Menu = {std::span(Item), SetItem};
 } // namespace Inp
 
-namespace Rep {
-static void FnStgSelect(int_fast8_t delta);
-static void FnSave(int_fast8_t delta);
-static void SetItem(bool tick = true);
-
-char Title[2][23];
-
-WINDOW_CHOICE Item[] = {
-    {Title[0], "リプレイ用データの保存", FnSave},
-    {Title[1], "ステージセレクト", FnStgSelect},
-    SubmenuExitItemForArray,
-};
-WINDOW_MENU Menu = {std::span(Item), SetItem};
-} // namespace Rep
-
 WINDOW_CHOICE Item[] = {
     {" Difficulty", "難易度に関する設定", Dif::Menu},
     {" Graphic", "グラフィックに関する設定", Grp::Menu},
     {" Sound / Music", "ＳＥ／ＢＧＭに関する設定", Snd::Menu},
     {" Input", "入力デバイスに関する設定", Inp::Menu},
-    {" Replay", "リプレイに関する設定", Rep::Menu},
     {" Exit", HELP_SUBMENU_EXIT, CWinExitFn},
 };
 WINDOW_MENU Menu = {std::span(Item)};
 } // namespace Cfg
-
-namespace Rep {
-template <int Stage> bool FnStg(INPUT_BITS key);
-
-constexpr auto FnStgEx = FnStg<GRAPH_ID_EXSTAGE>;
-WINDOW_CHOICE Item[] = {
-    {" Stage 1 デモ再生", "ステージ１のリプレイ", FnStg<1>},
-    {" Stage 2 デモ再生", "ステージ２のリプレイ", FnStg<2>},
-    {" Stage 3 デモ再生", "ステージ３のリプレイ", FnStg<3>},
-    {" Stage 4 デモ再生", "ステージ４のリプレイ", FnStg<4>},
-    {" Stage 5 デモ再生", "ステージ５のリプレイ", FnStg<5>},
-    {" Stage 6 デモ再生", "ステージ６のリプレイ", FnStg<6>},
-    {" ExStage デモ再生", "エキストラステージのリプレイ", FnStgEx},
-    {" Exit", HELP_SUBMENU_EXIT, CWinExitFn},
-};
-WINDOW_MENU Menu = {std::span(Item)};
-} // namespace Rep
 
 static bool ReplayFilesMenuOpen(INPUT_BITS key) {
   if (Input_IsOK(key)) {
@@ -409,7 +376,6 @@ WINDOW_CHOICE Item[] = {
     // { "   Game  Start",	"ゲームを開始します(使用不可)" },
     {"   Game  Start", "ゲームを開始します", FnGameStart},
     {"   Extra Start", "ゲームを開始します(Extra)", FnExStart},
-    {"   Replay", "リプレイを開始します", Rep::Menu},
     {"   Replay Files", "リプレイファイルの管理", ReplayFilesMenuOpen},
     {"   Config", "各種設定を変更します", Cfg::Menu},
     {"   Score", "スコアの表示をします", FnScore},
@@ -417,7 +383,7 @@ WINDOW_CHOICE Item[] = {
     {"   Exit", "ゲームを終了します", CWinExitFn},
 };
 WINDOW_MENU Menu = {std::span(Item), SetItem, &Title};
-static auto &ItemMusic = Item[6];
+static auto &ItemMusic = Item[5];
 } // namespace Main
 
 WINDOW_LABEL ExitTitle = {"    終了するの？"};
@@ -482,16 +448,6 @@ void InitMainWindow(void) {
 #endif
 
   MainWindow.Init(140);
-
-  // エキストラステージが選択できる場合には発生！ //
-  if (ConfigDat.ExtraStgFlags.v) {
-    Cfg::Menu.NumItems = 6;
-    Cfg::Menu.ItemPtr[4] = &Cfg::Item[4];
-    Cfg::Menu.ItemPtr[5] = &Cfg::Item[5];
-  } else {
-    Cfg::Menu.NumItems = 5;
-    Cfg::Menu.ItemPtr[4] = &Cfg::Item[5];
-  }
 }
 
 void InitExitWindow(void) {
@@ -732,6 +688,8 @@ static bool Handle(INPUT_BITS key, size_t selected) {
 }
 } // namespace BGMPack
 
+static void Main::SetItem(bool) { ItemMusic.SetActive(BGM_Enabled()); }
+
 namespace ReplayFiles {
 static void ScanFiles(void) {
   Files.clear();
@@ -825,19 +783,6 @@ static void Main::Cfg::Inp::FnZSpeedDown(int_fast8_t) {
   }
 }
 
-static bool RFnStg(int stage, INPUT_BITS key) {
-  if ((key == KEY_BOMB) || (key == KEY_ESC)) {
-    return false;
-  } else if (Input_IsOK(key)) {
-    GameReplayInit(stage);
-  }
-  return true;
-}
-
-template <int Stage> bool Main::Rep::FnStg(INPUT_BITS key) {
-  return RFnStg(Stage, key);
-}
-
 static bool Main::FnGameStart(INPUT_BITS key) {
   if (Input_IsOK(key)) {
     // EndingInit();
@@ -873,7 +818,6 @@ static bool Main::FnMusic(INPUT_BITS key) {
 static bool ExitFnYes(INPUT_BITS key) {
   if (Input_IsOK(key)) {
     DemoplaySaveAllEnable = false;
-    DemoplaySaveEnable = false;
     GameExit();
     return false;
   }
@@ -909,7 +853,6 @@ static bool GameOverSaveFnYes(INPUT_BITS key) {
 static bool GameOverSaveFnNo(INPUT_BITS key) {
   if (Input_IsOK(key)) {
     DemoplaySaveAllEnable = false;
-    DemoplaySaveEnable = false;
     GameExit(true);
     return false;
   }
@@ -946,26 +889,6 @@ static bool InpFnPad(INPUT_PAD_BUTTON &config_pad, INPUT_BITS key) {
 template <INPUT_PAD_BUTTON &ConfigPad>
 bool Main::Cfg::Inp::Pad::Fn(INPUT_BITS key) {
   return InpFnPad(ConfigPad, key);
-}
-
-static void Main::Cfg::Rep::FnStgSelect(int_fast8_t delta) {
-  RingStep(ConfigDat.StageSelect.v, delta, 1, STAGE_MAX);
-}
-
-static void Main::Cfg::Rep::FnSave(int_fast8_t) {
-  ConfigDat.StageSelect.v = ((ConfigDat.StageSelect.v) ? 0 : 1);
-}
-
-static void Main::SetItem(bool) { ItemMusic.SetActive(BGM_Enabled()); }
-
-static void Main::Cfg::Rep::SetItem(bool) {
-  if (0 == ConfigDat.StageSelect.v) {
-    sprintf(Title[0], "ReplaySave  %s", CHOICE_OFF_ON[false]);
-    strcpy(Title[1], "StageSelect [無 効]");
-  } else {
-    sprintf(Title[0], "ReplaySave  %s", CHOICE_OFF_ON[true]);
-    sprintf(Title[1], "StageSelect [  %d  ]", ConfigDat.StageSelect.v);
-  }
 }
 
 static void Main::Cfg::Dif::SetItem(bool) {

@@ -373,13 +373,8 @@ static void enemy_set(void) {
         GameNextStage();
         return;
       }
-      if (ConfigDat.StageSelect.v) {
-        DemoplaySaveReplay();
-        GameExit(true);
-        return;
-      }
-      if (DemoplayLoadEnable || DemoplayLoadAllEnable) {
-        if (DemoplayLoadAllEnable && GameStage < PlaybackMaxStage) {
+      if (DemoplayLoadAllEnable) {
+        if (GameStage < PlaybackMaxStage) {
           GameNextStage();
         }
         return;
@@ -394,12 +389,7 @@ static void enemy_set(void) {
         DemoplaySaveReplayAll();
         // Fall through to normal ending logic
       }
-      if (ConfigDat.StageSelect.v) {
-        DemoplaySaveReplay();
-        GameExit(true);
-        return;
-      }
-      if (DemoplayLoadEnable || DemoplayLoadAllEnable)
+      if (DemoplayLoadAllEnable)
         return;
 
       if (GameStage == STAGE_MAX)
@@ -426,10 +416,7 @@ static void enemy_set(void) {
         DemoplayFlushStage();
         DemoplaySaveReplayAll(true);
       }
-      if (ConfigDat.StageSelect.v) {
-        DemoplaySaveReplay(); // 終了はしない
-      }
-      if (DemoplayLoadEnable || DemoplayLoadAllEnable)
+      if (DemoplayLoadAllEnable)
         return;
 
       NameRegistInit(true);
