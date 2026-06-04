@@ -22,6 +22,8 @@ extern struct tagWINDOW_SYSTEM MainWindow;
 extern struct tagWINDOW_SYSTEM BGMPackWindow;
 extern struct tagWINDOW_SYSTEM ExitWindow;
 extern struct tagWINDOW_SYSTEM ContinueWindow;
+extern struct tagWINDOW_SYSTEM GameOverSaveWindow;
+extern struct tagWINDOW_SYSTEM ReplayFilesWindow;
 
 ///// [関数] /////
 void InitMainWindow(void);     // メインメニューの初期化

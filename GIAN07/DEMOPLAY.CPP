@@ -10,11 +10,14 @@
 #include "game/input.h"
 #include "game/ut_math.h"
 #include "platform/file.h"
+#include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
 #include <chrono>
+#include <ctime>
 
-bool DemoplaySaveEnable = false;    // デモプレイのセーブが動作しているか
 bool DemoplayLoadEnable = false;    // デモプレイのロードが動作しているか
+bool DemoplaySaveAllEnable = false; // Multi-stage recording active
+bool DemoplayLoadAllEnable = false; // Multi-stage playback active
 DEMOPLAY_INFO DemoInfo;             // デモプレイ情報
 INPUT_BITS DemoBuffer[DEMOBUF_MAX]; // デモプレイ用バッファ
 static uint32_t DemoFrameCur;
@@ -24,16 +27,34 @@ struct {
   uint8_t InputFlags;
 } ConfigTemp; // コンフィグのデータ一時保存用
 
-// DWORD RndBuf[RNDBUF_MAX];
+// Multi-stage recording state
+static std::vector<std::vector<INPUT_BITS>> StageRecordBufs;
+static uint8_t MultiStageCount = 0;
+static uint8_t MultiStageNums[REPLAY_STAGE_MAX] = {};
+static uint32_t MultiStageFrames[REPLAY_STAGE_MAX] = {};
 
-std::u8string ReplayFN(uint8_t stage) {
-  if (stage == GRAPH_ID_EXSTAGE) {
-    return std::u8string{u8"秋霜りぷEx.DAT"};
+// Multi-stage playback state
+static std::vector<INPUT_BITS> AllPlaybackBuf;
+MULTI_REPLAY_INFO MultiPlayInfo;
+uint8_t PlaybackMaxStage = 0;
+std::u8string PendingReplayFile;
+
+std::u8string ReplayAllFN(bool exstg) {
+  const auto now = std::chrono::system_clock::now();
+  const auto time = std::chrono::system_clock::to_time_t(now);
+  struct tm tm;
+  localtime_s(&tm, &time);
+  char buf[64];
+  if (exstg) {
+    sprintf_s(buf, "replay_ex_%04d%02d%02d_%02d%02d%02d.DAT",
+              tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+              tm.tm_hour, tm.tm_min, tm.tm_sec);
+  } else {
+    sprintf_s(buf, "replay_%04d%02d%02d_%02d%02d%02d.DAT",
+              tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+              tm.tm_hour, tm.tm_min, tm.tm_sec);
   }
-
-  auto ret = std::u8string{u8"秋霜りぷ_.DAT"};
-  ret[ret.size() - 5] = ('0' + GameStage);
-  return ret;
+  return std::u8string(reinterpret_cast<const char8_t *>(buf));
 }
 
 void DemoplayInit(void) {
@@ -50,7 +71,32 @@ void DemoplayInit(void) {
   DemoInfo.CfgDat.InputFlags = ConfigDat.InputFlags.v;
 
   DemoFrameCur = 0;
-  DemoplaySaveEnable = true;
+  DemoplaySaveAllEnable = true;
+  MultiStageCount = 0;
+  StageRecordBufs.clear();
+}
+
+bool DemoplayHasRecordedStages(void) {
+  return (DemoplaySaveAllEnable && (MultiStageCount > 0 || DemoFrameCur > 0));
+}
+
+void DemoplayFlushStage(void) {
+  if (!DemoplaySaveAllEnable)
+    return;
+  if (DemoFrameCur == 0)
+    return;
+
+  if (MultiStageCount < REPLAY_STAGE_MAX) {
+    MultiStageNums[MultiStageCount] = GameStage;
+    MultiStageFrames[MultiStageCount] = DemoFrameCur;
+
+    std::vector<INPUT_BITS> stage_data(DemoBuffer, DemoBuffer + DemoFrameCur);
+    StageRecordBufs.push_back(std::move(stage_data));
+
+    MultiStageCount++;
+  }
+
+  DemoFrameCur = 0;
 }
 
 bool DemoplayLoadSetup() {
@@ -83,7 +129,7 @@ bool DemoplayLoadSetup() {
 }
 
 bool DemoplayRecord(INPUT_BITS key) {
-  if (!DemoplaySaveEnable) {
+  if (!DemoplaySaveAllEnable) {
     return false;
   }
 
@@ -98,7 +144,7 @@ bool DemoplayRecord(INPUT_BITS key) {
 }
 
 void DemoplaySaveDemo(void) {
-  if (!DemoplaySaveEnable)
+  if (!DemoplaySaveAllEnable)
     return;
 
   DemoBuffer[DemoFrameCur] = KEY_ESC;
@@ -113,8 +159,6 @@ void DemoplaySaveDemo(void) {
     SDL_WriteIO(f, DemoBuffer, (sizeof(DemoBuffer[0]) * DemoInfo.FrameCount));
     SDL_CloseIO(f);
   }
-
-  DemoplaySaveEnable = false;
 }
 
 bool DemoplayLoadDemo(int stage) {
@@ -146,9 +190,10 @@ INPUT_BITS DemoplayMove(void) {
   const auto ptr = DemoFrameCur;
   if (ptr >= DemoInfo.FrameCount) {
     DemoplayLoadEnable = false;
-  } else
-    DemoFrameCur++;
+    return KEY_ESC;
+  }
 
+  DemoFrameCur++;
   return DemoBuffer[ptr];
 }
 
@@ -158,81 +203,91 @@ void DemoplayCleanup(void) {
   ConfigDat.InputFlags.v = ConfigTemp.InputFlags;
 
   DemoplayLoadEnable = false;
+  DemoplayLoadAllEnable = false;
 }
 
-void DemoplaySaveReplay(void) {
-  if (!DemoplaySaveEnable)
+void DemoplaySaveReplayAll(bool exstg) {
+  if (!DemoplaySaveAllEnable)
     return;
 
-  // すぐさま、無効化する //
-  DemoplaySaveEnable = false;
+  // Flush current stage data if any (not yet flushed by stage clear)
+  if (DemoFrameCur > 0 && MultiStageCount < REPLAY_STAGE_MAX) {
+    MultiStageNums[MultiStageCount] = GameStage;
+    MultiStageFrames[MultiStageCount] = DemoFrameCur;
+    StageRecordBufs.emplace_back(DemoBuffer, DemoBuffer + DemoFrameCur);
+    MultiStageCount++;
+    DemoFrameCur = 0;
+  }
 
-  DemoBuffer[DemoFrameCur] = KEY_ESC;
-  DemoInfo.FrameCount = (DemoFrameCur + 1);
+  DemoplaySaveAllEnable = false;
 
-  PACKFILE_WRITE out = {{
-      std::span(&DemoInfo, 1),
-      std::span(DemoBuffer, DemoInfo.FrameCount),
-  }};
+  MULTI_REPLAY_INFO info = {};
+  info.RndSeed = DemoInfo.RndSeed;
+  info.StageCount = MultiStageCount;
+  info.CfgDat = DemoInfo.CfgDat;
+  info.Exp = DemoInfo.Exp;
+  info.Weapon = DemoInfo.Weapon;
+  for (int i = 0; i < MultiStageCount; i++) {
+    info.Stages[i] = MultiStageNums[i];
+    info.FrameCounts[i] = MultiStageFrames[i];
+  }
 
-  const auto fn = ReplayFN(GameStage);
+  PACKFILE_WRITE out;
+  out.files.push_back(
+      {reinterpret_cast<const uint8_t *>(&info), sizeof(info)});
+  for (auto &buf : StageRecordBufs) {
+    out.files.push_back(
+        {reinterpret_cast<const uint8_t *>(buf.data()),
+         buf.size() * sizeof(INPUT_BITS)});
+  }
+
+  const auto fn = ReplayAllFN(exstg);
   out.Write(fn.c_str());
+
+  StageRecordBufs.clear();
+  MultiStageCount = 0;
 }
 
-bool DemoplayLoadReplay(int stage) {
-  BYTE_BUFFER_OWNED temp;
-
-  const auto fn = ReplayFN(stage);
-  const auto in = FilStartR(fn.c_str());
-
-  // ヘッダの格納先は０番である //
-  temp = in.MemExpand(0);
-  if (nullptr == temp) {
+bool DemoplayLoadReplayAll(const char8_t *fn) {
+  const auto in = FilStartR(fn);
+  if (!in)
     return false;
-  }
-  memcpy(&DemoInfo, temp.get(), sizeof(DEMOPLAY_INFO));
 
-  // データの格納先は１番ですね //
-  temp = in.MemExpand(1);
-  if (nullptr == temp) {
+  BYTE_BUFFER_OWNED temp = in.MemExpand(0);
+  if (nullptr == temp)
     return false;
-  }
-  memcpy(DemoBuffer, temp.get(), (sizeof(INPUT_BITS) * DemoInfo.FrameCount));
+  memcpy(&MultiPlayInfo, temp.get(), sizeof(MULTI_REPLAY_INFO));
 
-  // Repair any replay-related bugs from earlier builds
-  // --------------------------------------------------
-
-  bool repair = false;
-  const auto file_level = DemoInfo.CfgDat.GameLevel;
-  const auto file_lives = DemoInfo.CfgDat.PlayerStock;
-
-  // ≥P0295 was writing the configured difficulty and starting lives for the
-  // regular 6 stages instead of the fixed values for the Extra Stage.
-  // MODDERS: If this bug doesn't apply to you because you modded an earlier
-  // build, mark the affected files as read-only to skip this patch.
-  if ((stage == GRAPH_ID_EXSTAGE) &&
-      ((file_level != EXTRA_LEVEL) || (file_lives != EXTRA_LIVES))) {
-    DemoInfo.CfgDat.GameLevel = EXTRA_LEVEL;
-    DemoInfo.CfgDat.PlayerStock = EXTRA_LIVES;
-    repair = true;
+  // Compute max stage for stage transition gating
+  PlaybackMaxStage = 0;
+  for (uint8_t i = 0; i < MultiPlayInfo.StageCount; i++) {
+    if (MultiPlayInfo.Stages[i] > PlaybackMaxStage)
+      PlaybackMaxStage = MultiPlayInfo.Stages[i];
   }
 
-  // ≥P0217 was writing twice as many frames as recorded.
-  if (temp.size() != (sizeof(INPUT_BITS) * DemoInfo.FrameCount)) {
-    repair = true;
+  AllPlaybackBuf.clear();
+  uint32_t total_frames = 0;
+  for (uint8_t i = 0; i < MultiPlayInfo.StageCount; i++) {
+    temp = in.MemExpand(i + 1);
+    if (nullptr == temp)
+      return false;
+    uint32_t n_frames = MultiPlayInfo.FrameCounts[i];
+    const auto src = reinterpret_cast<const INPUT_BITS *>(temp.get());
+    AllPlaybackBuf.insert(AllPlaybackBuf.end(), src, src + n_frames);
+    total_frames += n_frames;
   }
 
-  if (repair) {
-    PACKFILE_WRITE out = {{
-        std::span(&DemoInfo, 1),
-        std::span(DemoBuffer, DemoInfo.FrameCount),
-    }};
-    if (!out.Write(fn.c_str(), File_TimestampsGet(fn.c_str()))) {
-      // Repair denied by file being read-only? OK, bro, you're the boss!
-      DemoInfo.CfgDat.GameLevel = file_level;
-      DemoInfo.CfgDat.PlayerStock = file_lives;
-    }
-  }
-  // --------------------------------------------------
+  // Copy combined data into DemoBuffer for DemoplayMove()
+  if (total_frames > DEMOBUF_MAX)
+    total_frames = DEMOBUF_MAX;
+  memcpy(DemoBuffer, AllPlaybackBuf.data(),
+         total_frames * sizeof(INPUT_BITS));
+  DemoInfo.FrameCount = total_frames;
+  DemoInfo.RndSeed = MultiPlayInfo.RndSeed;
+  DemoInfo.CfgDat = MultiPlayInfo.CfgDat;
+  DemoInfo.Exp = MultiPlayInfo.Exp;
+  DemoInfo.Weapon = MultiPlayInfo.Weapon;
+
+  DemoplayLoadAllEnable = true;
   return DemoplayLoadSetup();
 }

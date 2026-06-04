@@ -140,6 +140,8 @@ static PBGMAP *ScBeforeLine(PBGMAP *p) {
 }
 
 // p:SCL_ENEMY以降の敵配置データ //
+int SclKeyWaitCount = 0;
+
 static void enemy_set(void) {
   bool bFlag = true;
   //	BIT_DEVICE	*in;				// やばやば...
@@ -149,23 +151,21 @@ static void enemy_set(void) {
     const auto *cmd = SCL_Now;
     switch (cmd[0]) {
     case (SCL_KEY): // キー入力待ち
+      if ((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) ||
+          ++SclKeyWaitCount >= 180) {
+        SCL_Now++;
+        SclKeyWaitCount = 0;
+      } else {
+        bFlag = false;
+      }
       break;
 
     case (SCL_TIME): {
       const auto temp = U32LEAt(&cmd[1]);
       // メッセージウィンドウがオープンしている場合 //
       if (SclInfo.MsgFlag) {
-        if ((DemoplaySaveEnable || DemoplayLoadEnable) ||
-            (ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) ||
-            (SystemKey_Data & SYSKEY_SKIP)) {
-          CtrlFlag = true;
-        }
-
-        if (CtrlFlag)
-          GameCount += (temp - GameCount) / 3;
-        else if ((Key_Data & KEY_RETURN) ||
-                 ((Key_Data & KEY_TAMA) &&
-                  (ConfigDat.InputFlags.v & INPF_Z_MSKIP_ENABLE))) {
+        if ((Key_Data & KEY_TAMA) || (Key_Data & KEY_RETURN) ||
+            (Key_Data & KEY_BOMB)) {
           if (!SclInfo.ReturnFlag) {
             GameCount = temp;
             SclInfo.ReturnFlag = true;
@@ -213,8 +213,7 @@ static void enemy_set(void) {
       break;
 
     case (SCL_MWOPEN): // メッセージウィンドウを開く
-      if (!(DemoplaySaveEnable || DemoplayLoadEnable ||
-            (ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE))) {
+      if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE)) {
         MWinOpen();
       }
       SclInfo.MsgFlag = true;
@@ -222,8 +221,7 @@ static void enemy_set(void) {
       break;
 
     case (SCL_MWCLOSE): // メッセージウィンドウを閉じる
-      if (!(DemoplaySaveEnable || DemoplayLoadEnable ||
-            (ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE))) {
+      if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE)) {
         MWinClose();
       }
       SclInfo.MsgFlag = false;
@@ -370,24 +368,28 @@ static void enemy_set(void) {
       break;
 
     case (SCL_STAGECLEAR): // ステージクリア
-      if (ConfigDat.StageSelect.v) {
-        DemoplaySaveReplay();
-        GameExit(true);
+      if (DemoplaySaveAllEnable) {
+        DemoplayFlushStage();
+        GameNextStage();
         return;
       }
-      if (DemoplayLoadEnable)
+      if (DemoplayLoadAllEnable) {
+        if (GameStage < PlaybackMaxStage) {
+          GameNextStage();
+        }
         return;
+      }
       // ステージクリア処理をここに記述 //
       GameNextStage(); // 本当はエラーチェックが必要!!
       return;
 
     case (SCL_GAMECLEAR):
-      if (ConfigDat.StageSelect.v) {
-        DemoplaySaveReplay();
-        GameExit(true);
-        return;
+      if (DemoplaySaveAllEnable) {
+        DemoplayFlushStage();
+        DemoplaySaveReplayAll();
+        // Fall through to normal ending logic
       }
-      if (DemoplayLoadEnable)
+      if (DemoplayLoadAllEnable)
         return;
 
       if (GameStage == STAGE_MAX)
@@ -410,10 +412,11 @@ static void enemy_set(void) {
       return;
 
     case (SCL_EXTRACLEAR):
-      if (ConfigDat.StageSelect.v) {
-        DemoplaySaveReplay(); // 終了はしない
+      if (DemoplaySaveAllEnable) {
+        DemoplayFlushStage();
+        DemoplaySaveReplayAll(true);
       }
-      if (DemoplayLoadEnable)
+      if (DemoplayLoadAllEnable)
         return;
 
       NameRegistInit(true);
