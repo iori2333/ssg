@@ -6,45 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ============================================================
-# Generate version header from git
-# ============================================================
-find_package(Git QUIET)
-if(GIT_FOUND)
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_TAG
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} rev-parse --short=4 HEAD
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_COMMIT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} diff-files --quiet
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        RESULT_VARIABLE GIT_DIRTY
-        ERROR_QUIET
-    )
-    if(GIT_DIRTY OR (GIT_TAG STREQUAL ""))
-        if(GIT_TAG STREQUAL "")
-            set(GIT_TAG "(unknown)")
-        endif()
-        set(VERSION_TAG "WIP (${GIT_TAG}^${GIT_COMMIT})")
-    else()
-        set(VERSION_TAG "${GIT_TAG}")
-    endif()
-else()
-    set(VERSION_TAG "(unknown)")
-endif()
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/obj/version.h.in
-               ${CMAKE_CURRENT_BINARY_DIR}/obj/version.h @ONLY)
-
 # Generate platform constants header from environment variables
 set(PLATFORM_CONSTANTS_DEFINES "")
 foreach(VARNAME APP_ID PATH_SKELETON)

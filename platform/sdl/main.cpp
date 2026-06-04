@@ -22,7 +22,6 @@
 #include "GIAN07/ENTRY.H"
 #include "game/defer.h"
 #include "obj/platform_constants.h"
-#include "obj/version.h"
 #include "platform/sdl/log_sdl.h"
 #include "platform/window_backend.h"
 #include "GIAN07/constants.h"

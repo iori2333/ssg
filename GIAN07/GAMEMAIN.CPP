@@ -20,7 +20,6 @@
 #include "game/input.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
-#include "obj/version.h"
 #include "platform/text_backend.h"
 #include "platform/time.h"
 #include <chrono>
