@@ -1,7 +1,7 @@
 [submodule "libs/SDL3"]
 	path = libs/SDL3
-	url = https://github.com/nmlgc/SDL
-	branch = SDL3_win9x
+	url = https://github.com/libsdl-org/SDL
+	branch = main
 	shallow = true
 [submodule "libs/miniaudio"]
 	path = libs/miniaudio
@@ -24,7 +24,7 @@
 	path = libs/libvorbis
 	url = https://github.com/xiph/vorbis
 	shallow = true
-[submodule "libs/libwebp_lossless"]
-	path = libs/libwebp_lossless
-	url = https://github.com/nmlgc/libwebp_lossless
+[submodule "libs/libwebp"]
+	path = libs/libwebp
+	url = https://github.com/webmproject/libwebp
 	shallow = true
