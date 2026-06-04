@@ -540,6 +540,7 @@ bool NameRegistInit(bool bNeedChgMusic) {
 
 // ゲームを立ち上げる際に必ず行う初期化関数群 //
 void GameSTD_Init(void) {
+  SclKeyWaitCount = 0;
   MWinForceClose();
   // GrpBackend_Clear();
   // Grp_Flip();
@@ -603,7 +604,8 @@ bool GameInit(void (*NextProc)(bool &quit)) {
     BGM_FadeOut(240);
     MTitleInit();
   }
-  if (NextProc == GameProc) {
+  if (NextProc == GameProc || NextProc == ReplayProc ||
+      NextProc == ReplayProcAll) {
     // ウィンドウの表示位置を設定する //
     // Replays don't show dialog, so this is the only place where we need
     // to do this.
@@ -614,9 +616,10 @@ bool GameInit(void (*NextProc)(bool &quit)) {
       MWinInit({128, 400, (640 - 128), 480}, flags);
     }
 
-    // These windows can also only show up outside of replays.
-    InitExitWindow();
-    InitContinueWindow();
+    if (NextProc == GameProc) {
+      InitExitWindow();
+      InitContinueWindow();
+    }
   }
   GrpBackend_SetClip(PLAYFIELD_CLIP);
   GameMain = NextProc;
@@ -729,33 +732,35 @@ void ReplayProcAll(bool &) {
 
   ExTimer = (ExTimer + 1) % 128;
 
-  if (Key_Data != KEY_ESC) {
-    Key_Data = DemoplayMove();
-  }
+  const int speed = (SystemKey_Data & SYSKEY_SKIP) ? 6 : 1;
 
-  if (Key_Data & KEY_ESC) {
-    DemoplayCleanup();
-    DemoplayLoadAllEnable = false;
-    GameExit();
-    return;
-  }
+  for (int i = 0; i < speed; i++) {
+    if (Key_Data != KEY_ESC) {
+      Key_Data = DemoplayMove();
+    }
 
-  GameMove();
+    if (Key_Data & KEY_ESC) {
+      DemoplayCleanup();
+      DemoplayLoadAllEnable = false;
+      GameExit();
+      return;
+    }
 
-  if (GameMain != ReplayProcAll) {
-    DemoplayCleanup();
-    DemoplayLoadAllEnable = false;
-    GameExit();
-    return;
-  }
+    GameMove();
 
-  // If DemoplayLoadEnable was set to false by DemoplayMove (end of all frames),
-  // it means the replay is done
-  if (!DemoplayLoadEnable) {
-    DemoplayCleanup();
-    DemoplayLoadAllEnable = false;
-    GameExit();
-    return;
+    if (GameMain != ReplayProcAll) {
+      DemoplayCleanup();
+      DemoplayLoadAllEnable = false;
+      GameExit();
+      return;
+    }
+
+    if (!DemoplayLoadEnable) {
+      DemoplayCleanup();
+      DemoplayLoadAllEnable = false;
+      GameExit();
+      return;
+    }
   }
 
   if (IsDraw()) {
@@ -782,23 +787,27 @@ void ReplayProc(bool &) {
 
   ExTimer = (ExTimer + 1) % 128;
 
-  if (Key_Data != KEY_ESC) {
-    Key_Data = DemoplayMove();
-  }
+  const int speed = (SystemKey_Data & SYSKEY_SKIP) ? 6 : 1;
 
-  // ＥＳＣが押されたら即、終了 //
-  if (Key_Data & KEY_ESC) {
-    DemoplayCleanup();
-    GameExit();
-    return;
-  }
+  for (int i = 0; i < speed; i++) {
+    if (Key_Data != KEY_ESC) {
+      Key_Data = DemoplayMove();
+    }
 
-  GameMove();
+    // ＥＳＣが押されたら即、終了 //
+    if (Key_Data & KEY_ESC) {
+      DemoplayCleanup();
+      GameExit();
+      return;
+    }
 
-  if (GameMain != ReplayProc) {
-    DemoplayCleanup(); // 後始末
-    GameExit();        // 強制終了させる(ゲームオーバー対策)
-    return;
+    GameMove();
+
+    if (GameMain != ReplayProc) {
+      DemoplayCleanup(); // 後始末
+      GameExit();        // 強制終了させる(ゲームオーバー対策)
+      return;
+    }
   }
 
   if (IsDraw()) {
