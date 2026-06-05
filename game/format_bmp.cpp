@@ -9,7 +9,7 @@
 #include "platform/file.h"
 #include <assert.h>
 
-constexpr uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {
+uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {
   const auto ret = [bpp]() -> uint16_t {
     if (bpp <= 4) {
       return (1 << 4);

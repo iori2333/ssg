@@ -56,6 +56,9 @@ typedef struct {
   uint8_t left;   // 残りサボテン数
   uint8_t credit; // のこりクレジット
 
+  uint16_t miss_count; // ミス回数
+  uint16_t bomb_used;  // ボム使用回数
+
   uint8_t GrpID; // 表示すべきグラフィック
 
   uint16_t bomb_time;   // ボムウェイト用

@@ -16,6 +16,8 @@ uint32_t GameCount;
 uint8_t GameStage;
 uint8_t GameLevel;
 
+extern MAID Viv;
+
 ///// [ 関数(非公開) ] /////
 extern void StdStatusOutput(void) {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
@@ -45,22 +47,18 @@ extern void StdStatusOutput(void) {
 
   // ---- RANK 表示 ----
   {
-    const char *const DiffName[5] = {"Easy", "Norm", "Hard", "Luna", "Extr"};
-
-    static constexpr int RANK_MIN[4] = {0, 16 * 256, 32 * 256, 40 * 256};
-    static constexpr int RANK_MAX[4] = {24 * 256, 40 * 256, 48 * 256, 64 * 256};
-
+    const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
+                                     "Extra"};
     const auto lv = (GameStage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameLevel;
-    const auto actual_lv = (lv == GAME_EXTRA) ? GAME_EXTRA : PlayRank.GameLevel;
-    const auto rmin = (lv < 4) ? RANK_MIN[lv] : RANK_MIN[GAME_HARD];
-    const auto rmax = (lv < 4) ? RANK_MAX[lv] : RANK_MAX[GAME_LUNATIC];
 
     sprintf(buf, "RK  %5d", PlayRank.Rank);
     GrpPut16(0, 34, buf);
-    sprintf(buf, "LV   %s", (lv < 5) ? DiffName[lv] : "????");
+    sprintf(buf, "LV%7s", (lv < 5) ? DiffName[lv] : "????");
     GrpPut16(0, 50, buf);
-    sprintf(buf, "Real %s", (actual_lv < 5) ? DiffName[actual_lv] : "????");
-    GrpPut16(0, 66, buf);
+    sprintf(buf, "Miss%5d", Viv.miss_count);
+    GrpPut16(0, 82, buf);
+    sprintf(buf, "Bomb%5d", Viv.bomb_used);
+    GrpPut16(0, 98, buf);
   }
 
 #ifdef PBG_DEBUG

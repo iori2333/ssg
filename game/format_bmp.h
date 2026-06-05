@@ -61,7 +61,7 @@ struct BMP_OWNED {
 constexpr uint16_t BMP_PALETTE_SIZE_MAX = 256;
 
 // Returns a value between 0 and [BMP_PALETTE_SIZE_MAX].
-constexpr uint16_t BMPPaletteSizeFromBPP(uint8_t bpp);
+uint16_t BMPPaletteSizeFromBPP(uint8_t bpp);
 
 std::optional<BMP_OWNED> BMPLoad(BYTE_BUFFER_OWNED buffer);
 

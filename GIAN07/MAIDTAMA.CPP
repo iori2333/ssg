@@ -121,6 +121,7 @@ void MaidTamaSet(void) {
     Viv.bomb_time = MaidBombTime[Viv.weapon & 3]; // 装備ごとに変更せよ
     Viv.muteki = BOMBMUTEKI_VAL;
     Viv.bomb--;
+    Viv.bomb_used++;
     PlayRankAdd(-25); // 難易度ダウン
   }
 
