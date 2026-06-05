@@ -56,7 +56,7 @@ bool MidBackend_Init(void) {
 
   // デバイス名格納用のメモリ確保＆セット //
   for (decltype(Mid_WinMM.nDevice) i = 0; i < Mid_WinMM.nDevice; i++) {
-    [[gsl::suppress(type.5)]] MIDIOUTCAPS caps;
+    MIDIOUTCAPS caps;
     midiOutGetDevCaps((i - 1), &caps, sizeof(MIDIOUTCAPS));
     std::ranges::copy(caps.szPname, Mid_WinMM.name[i].begin());
   }

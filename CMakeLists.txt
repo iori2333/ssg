@@ -106,22 +106,9 @@ if(WIN32)
         platform/windows/time.cpp
         platform/miniaudio/miniaudio.c
     )
-    # Compile miniaudio.c as C++ on MSVC
-    if(MSVC)
-        set_source_files_properties(
-            platform/miniaudio/miniaudio.c
-            PROPERTIES LANGUAGE CXX
-        )
-    endif()
 
     # Windows resource file
     target_sources(GIAN07 PRIVATE GIAN07/GIAN07.rc)
-
-    if(MSVC)
-        set_target_properties(GIAN07 PROPERTIES
-            LINK_FLAGS "/SUBSYSTEM:WINDOWS"
-        )
-    endif()
 
     target_compile_definitions(GIAN07 PRIVATE WIN32)
     target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})
@@ -157,26 +144,6 @@ target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GIAN07 PRIVATE
     vorbis vorbisfile webp dr_libs BLAKE3::blake3 SDL3::SDL3-static
 )
-
-# ============================================================
-# Platform-specific compile definitions
-# ============================================================
-if(WIN32 AND MSVC)
-    # Debug define for pbg code
-    target_compile_definitions(GIAN07 PRIVATE $<$<CONFIG:Debug>:PBG_DEBUG>)
-
-    # Disable some MSVC warnings for the legacy pbg code
-    # (relaxed analysis from the original Tupfile.win32.lua)
-    # These are applied project-wide for simplicity
-    # If more granular control is needed, separate the pbg sources into a library
-endif()
-
-# ============================================================
-# MSVC: Enable multiprocessor compilation
-# ============================================================
-if(MSVC)
-    target_compile_options(GIAN07 PRIVATE /MP)
-endif()
 
 # ============================================================
 # Output directories
