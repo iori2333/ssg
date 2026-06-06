@@ -3,6 +3,8 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <cstdio>
 #include "game/GIAN.h"
 #include "entity/MAID.h"
 #include "game/LEVEL.h"
@@ -12,8 +14,6 @@
 #include "game/PRankCtrl.h"
 #include "platform/time.h"
 #include "ui/FONTUTY.h"
-#include <cstdint>
-#include <cstdio>
 
 ///// [グローバル変数] /////
 // HIGH_SCORE		*HighScore;

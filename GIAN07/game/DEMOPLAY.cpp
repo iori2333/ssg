@@ -3,16 +3,6 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "game/DEMOPLAY.h"
-#include "entity/MAID.h"
-#include "game/CONFIG.h"
-#include "game/GIAN.h"
-#include "game/LOADER.h"
-#include "game/LZ_UTY.h"
-#include "game/cast.h"
-#include "game/input.h"
-#include "game/ut_math.h"
-#include "platform/file.h"
 #include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <chrono>
@@ -23,6 +13,16 @@
 #include <stdio.h>
 #include <utility>
 #include <vector>
+#include "game/DEMOPLAY.h"
+#include "entity/MAID.h"
+#include "game/CONFIG.h"
+#include "game/GIAN.h"
+#include "game/LOADER.h"
+#include "game/LZ_UTY.h"
+#include "game/cast.h"
+#include "game/input.h"
+#include "game/ut_math.h"
+#include "platform/file.h"
 
 bool DemoplayLoadEnable = false;    // デモプレイのロードが動作しているか
 bool DemoplaySaveAllEnable = false; // Multi-stage recording active

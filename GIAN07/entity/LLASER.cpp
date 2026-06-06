@@ -3,6 +3,14 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <algorithm>
+#include <iterator>
+#include <cmath>
+#include <cstddef>
+#include <array>
+#include <ranges>
+#include <cstdlib>
 #include "entity/LLASER.h"
 #include "ecl/ecl_opcodes.h"
 #include "effect/GEOMETRY.h"
@@ -12,15 +20,7 @@
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
-#include <cstdint>
-#include <algorithm>
-#include <iterator>
-#include <cmath>
-#include <cstddef>
-#include <array>
 #include "platform/sdl/graphics_sdl.h"
-#include <ranges>
-#include <cstdlib>
 
 //// レーザー変数２ → laser_manager.cpp に移動
 // LLaser[], LLaserCmd は laser_manager.cpp で定義

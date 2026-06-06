@@ -5,9 +5,9 @@
 
 #pragma once
 
+#include <array>
 #include "game/endian.h"
 #include "platform/file.h"
-#include <array>
 
 // Format
 // ------

@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "enemy/ENEMY.h"
-#include "platform/buffer.h"
 #include <array>
 #include <cstdint>
+#include "enemy/ENEMY.h"
+#include "platform/buffer.h"
 
 struct EnemyManager {
   // --- 敵データ ---

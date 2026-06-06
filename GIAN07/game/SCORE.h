@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "game/string_format.h"
 #include <cstdint>
+#include "game/string_format.h"
 
 ///// [ 定数 ] /////
 inline constexpr auto NR_NAME_LEN = 9; // ネームレジストの名前の長さ('\0' 含む)

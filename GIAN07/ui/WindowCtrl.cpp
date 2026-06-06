@@ -16,6 +16,13 @@
 #include <chrono>
 #include <numeric>
 
+#include <SDL3/SDL_filesystem.h>
+#include <vector>
+#include <string>
+#include <span>
+#include <ranges>
+#include <utility>
+#include <tuple>
 #include "game/CONFIG.h"
 #include "game/DEMOPLAY.h"
 #include "game/ENTRY.h"
@@ -40,13 +47,6 @@
 #include "platform/midi_backend.h"
 #include "ui/WindowCtrl.h"
 #include "ui/WindowSys.h"
-#include <SDL3/SDL_filesystem.h>
-#include <vector>
-#include <string>
-#include <span>
-#include <ranges>
-#include <utility>
-#include <tuple>
 
 using namespace std::chrono_literals;
 

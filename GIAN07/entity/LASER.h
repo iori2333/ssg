@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "game/coords.h"
 #include <cstdint>
+#include "game/coords.h"
 
 ///// [更新履歴] /////
 

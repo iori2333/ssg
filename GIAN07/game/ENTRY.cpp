@@ -3,6 +3,9 @@
  *
  */
 
+#include <SDL3/SDL_filesystem.h>
+#include <chrono>
+#include <filesystem>
 #include "GIAN07/game/ENTRY.h"
 #include "GIAN07/game/CONFIG.h"
 #include "GIAN07/game/GAMEMAIN.h"
@@ -18,9 +21,6 @@
 #include "platform/path.h"
 #include "platform/text_backend.h"
 #include "platform/window_backend.h"
-#include <SDL3/SDL_filesystem.h>
-#include <chrono>
-#include <filesystem>
 
 // Screenshots
 // -----------

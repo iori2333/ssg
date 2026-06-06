@@ -3,15 +3,15 @@
  *
  */
 
-#include "effect/GEOMETRY.h"
-#include "game/coords.h"
-#include "game/ut_math.h"
 #include <cstdint>
 #include <span>
-#include "platform/graphics_backend.h"
 #include <cmath>
 #include <ranges>
 #include <utility>
+#include "effect/GEOMETRY.h"
+#include "game/coords.h"
+#include "game/ut_math.h"
+#include "platform/graphics_backend.h"
 #include "platform/sdl/graphics_sdl.h"
 
 namespace Geometry {

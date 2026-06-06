@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include <cstdint>
 #include "ecl/scl_opcodes.h"
 #include "game/endian.h"
-#include <cstdint>
 
 // --- Tag type for Decode dispatch ---
 template <Scmd Cmd> struct ScmdTag {};

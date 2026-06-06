@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include "game/coords.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include "game/coords.h"
 
 ///// [構造体] /////
 

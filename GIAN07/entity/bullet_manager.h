@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "entity/TAMA.h"
 #include <array>
 #include <cstdint>
+#include "entity/TAMA.h"
 
 struct BulletManager {
   // --- 弾データ ---

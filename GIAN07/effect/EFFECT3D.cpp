@@ -3,6 +3,11 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <cmath>
+#include <span>
+#include <ranges>
+#include <utility>
 #include "effect/EFFECT3D.h"
 #include "game/GIAN.h"
 #include "game/cast.h"
@@ -10,12 +15,7 @@
 #include "game/constants.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
-#include <cstdint>
-#include <cmath>
 #include "platform/sdl/graphics_sdl.h"
-#include <span>
-#include <ranges>
-#include <utility>
 
 static constexpr auto CIRCLE_MAX = 40;
 static constexpr auto CUBE_MAX = 8;

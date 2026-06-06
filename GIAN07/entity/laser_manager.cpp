@@ -2,10 +2,10 @@
  *   LaserManager — centralized laser system state
  */
 
-#include "entity/laser_manager.h"
-#include "entity/LASER.h"
 #include <cstdint>
 #include <array>
+#include "entity/laser_manager.h"
+#include "entity/LASER.h"
 #include "entity/LLASER.h"
 #include "entity/HOMINGL.h"
 

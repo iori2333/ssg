@@ -6,14 +6,16 @@
 
 #pragma once
 
+#include <cassert>
+#include <cstdint>
+#include <utility>
+
 #include "game/coords.h"
+
 #define GAME_ORG "rec98"
 #define GAME_APP "sh01"
 #define GAME_TITLE "秋霜玉"
 #define VERSION_TAG "v1.0"
-#include <assert.h>
-#include <cstdint>
-#include <utility>
 
 // The game's native resolution.
 constexpr WINDOW_SIZE GRP_RES = {640, 480};

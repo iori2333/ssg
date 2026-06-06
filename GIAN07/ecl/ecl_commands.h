@@ -11,9 +11,9 @@
 
 #pragma once
 
+#include <cstdint>
 #include "ecl/ecl_opcodes.h"
 #include "game/endian.h"
-#include <cstdint>
 
 // --- Tag type for Decode dispatch ---
 template <EclOp Op> struct EclOpTag {};

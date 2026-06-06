@@ -3,14 +3,14 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include <cstdint>
+#include <cmath>
 #include "effect/FRAGMENT.h"
 #include "effect/GEOMETRY.h"
 #include "game/coords.h"
 #include "game/constants.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
-#include <cstdint>
-#include <cmath>
 #include "platform/sdl/graphics_sdl.h"
 
 FRAGMENT_DATA Fragment[FRAGMENT_MAX]; // 破片データ管理用構造体

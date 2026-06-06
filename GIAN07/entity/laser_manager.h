@@ -4,11 +4,11 @@
 
 #pragma once
 
+#include <array>
+#include <cstdint>
 #include "entity/HOMINGL.h"
 #include "entity/LASER.h"
 #include "entity/LLASER.h"
-#include <array>
-#include <cstdint>
 
 struct LaserManager {
   // --- 反射レーザー ---

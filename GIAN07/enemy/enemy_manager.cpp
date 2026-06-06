@@ -2,10 +2,10 @@
  *   EnemyManager — centralized enemy system state
  */
 
-#include "enemy/enemy_manager.h"
 #include <array>
-#include "enemy/ENEMY.h"
 #include <cstdint>
+#include "enemy/enemy_manager.h"
+#include "enemy/ENEMY.h"
 #include "platform/sdl/buffer.h"
 
 // --- グローバルインスタンス ---

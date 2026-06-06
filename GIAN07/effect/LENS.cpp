@@ -3,21 +3,21 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "effect/LENS.h"
-#include "game/cast.h"
-#include "game/constants.h"
-#include "game/coords.h"
-#include "game/ut_math.h"
-#include "platform/graphics_backend.h"
 #include <cassert>
-
 #include <optional>
 #include <cstdint>
 #include <memory>
 #include <cstddef>
 #include <new>
 #include <span>
+
 #include <utility>
+#include "effect/LENS.h"
+#include "game/cast.h"
+#include "game/constants.h"
+#include "game/coords.h"
+#include "game/ut_math.h"
+#include "platform/graphics_backend.h"
 
 // 半径:r  出っ張り:m  のレンズを作成 //
 std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {

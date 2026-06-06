@@ -3,6 +3,17 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstdint>
+#include <string_view>
+#include <string>
+#include <cstddef>
+#include <ranges>
+#include <span>
+#include <utility>
+#include <vector>
 #include "game/LOADER.h"
 #include "ecl/ecl_vm.h"
 #include "ecl/scl_vm.h"
@@ -19,6 +30,7 @@
 #include "game/hash.h"
 #include "game/input.h"
 #include "game/midi.h"
+
 #include "game/narrow.h"
 #include "game/snd.h"
 #include "platform/file.h"
@@ -27,18 +39,6 @@
 #include "platform/sdl/buffer.h"
 #include "platform/sdl/thread_sdl.h"
 #include "ui/WindowSys.h"
-#include <algorithm>
-#include <array>
-#include <cassert>
-
-#include <cstdint>
-#include <string_view>
-#include <string>
-#include <cstddef>
-#include <ranges>
-#include <span>
-#include <utility>
-#include <vector>
 
 // Hardcoded loop points for ZUN's original MIDI files
 // ---------------------------------------------------

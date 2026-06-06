@@ -89,4 +89,5 @@ SDL3, BLAKE3, libogg, libvorbis, libwebp — built as static libs. `dr_libs` is 
 
 - **Compilation**: After making changes, ensure the project compiles successfully. Run the appropriate build command for the current platform (see [Build](#build) above).
 - **Git safety**: Never run destructive git commands (`git reset --hard`, `git clean -fd`, `git push --force`, etc.) unless explicitly instructed by the user.
+- **Include order**: Follow the standard C++ convention — standard library headers first (`<cstdint>`, `<vector>`, etc.), then third-party/system headers (`<SDL3/...>`, `<windows.h>`, etc.), then project headers (`"game/..."`, `"platform/..."`, etc.). Within each group, sort alphabetically. For conditional includes (e.g., `<windows.h>` inside `#ifdef WIN32`), the same ordering applies within the conditional block.
 - **Formatting**: After making changes, format the modified code with clang-format. The project uses an LLVM-based `.clang-format` at the repo root. Run `clang-format -i <file>` on each changed file.

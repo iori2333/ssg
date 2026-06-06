@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "game/narrow.h"
 #include <cstdint>
+#include "game/narrow.h"
 
 ///// [更新履歴] /////
 // 2000/04/28 : 円エフェクトを作成

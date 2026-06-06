@@ -2,10 +2,10 @@
  *   BulletManager — centralized bullet system state
  */
 
-#include "entity/bullet_manager.h"
 #include <array>
-#include "entity/TAMA.h"
 #include <cstdint>
+#include "entity/bullet_manager.h"
+#include "entity/TAMA.h"
 
 // --- グローバルインスタンス ---
 BulletManager Bullets;

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "game/cast.h"
 #include <cstdint>
+#include "game/cast.h"
 
 ///// [ 定数 ] /////
 

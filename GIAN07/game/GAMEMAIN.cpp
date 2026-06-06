@@ -2,6 +2,15 @@
 /*   GameMain.cpp   ウィンドウシステム切り替えなどの処理                     */
 /*                                                                           */
 /*                                                                           */
+#include <algorithm>
+#include <string_view>
+#include <cstdint>
+#include <span>
+#include <cstring>
+#include <optional>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include "game/GAMEMAIN.h"
 #include "effect/BOMBEFC.h" // 爆発エフェクト処理
 #include "effect/EFFECT.h"
@@ -44,15 +53,6 @@
 #include "ui/FONTUTY.h"
 #include "ui/WindowCtrl.h" // ウィンドウ定義
 #include "ui/WindowSys.h"
-#include <algorithm>
-#include <string_view>
-#include <cstdint>
-#include <span>
-#include <cstring>
-#include <optional>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
 

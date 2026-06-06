@@ -11,10 +11,10 @@
 
 #pragma once
 
-#include "GIAN07/game/entity.h" // for Indsort
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include "GIAN07/game/entity.h" // for Indsort
 
 template <typename T, size_t N> struct EntityPool {
   std::array<T, N> entities;

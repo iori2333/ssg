@@ -2,6 +2,9 @@
  *   SclVM — Stage Control Language virtual machine
  */
 
+#include <optional>
+#include <cstdint>
+#include <cstring>
 #include "ecl/scl_vm.h"
 #include "ecl/scl_commands.h"
 #include "ecl/scl_opcodes.h"
@@ -25,9 +28,6 @@
 #include "game/snd.h"
 #include "platform/graphics_backend.h"
 #include "ui/WindowSys.h"
-#include <optional>
-#include <cstdint>
-#include <cstring>
 
 // --- Global instance ---
 std::optional<SclVM> SclVM::s_instance;

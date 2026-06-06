@@ -5,10 +5,6 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include "game/SCORE.h"
-#include "game/LEVEL.h"
-#include "game/LZ_UTY.h"
-#include "game/defer.h"
 #include <cinttypes> // for PRId64
 #include <cstdint>
 #include <memory>
@@ -21,6 +17,10 @@
 #include <ranges>
 #include <span>
 #include <utility>
+#include "game/SCORE.h"
+#include "game/LEVEL.h"
+#include "game/LZ_UTY.h"
+#include "game/defer.h"
 
 using NR_SCORE_LIST = std::span<NR_NAME_DATA, NR_RANK_MAX>;
 using NR_CONST_SCORE_LIST = std::span<const NR_NAME_DATA, NR_RANK_MAX>;

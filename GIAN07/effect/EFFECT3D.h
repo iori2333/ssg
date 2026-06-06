@@ -9,9 +9,9 @@
 // 2000/05/31 : 開発開始
 
 ///// [ヘッダファイル] /////
-#include "game/coords.h"
 #include <cstdint>
 #include <span>
+#include "game/coords.h"
 
 ///// [ 定数 ] /////
 inline constexpr auto STG4ROCK_STDMOVE = 0;  // 普通のスクロールね
