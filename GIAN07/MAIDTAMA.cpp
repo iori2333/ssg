@@ -329,10 +329,12 @@ static void MTamaSet(void) {
   }
 }
 
-#define IsMainShot(t)                                                          \
-  ((t) == MAID_MAIN_SHOT || (t) == MAID_MAIN_SHOT * 2 ||                       \
-   (t) == MAID_MAIN_SHOT * 3)
-#define IsSubShot(t) (((t) == 0 || (t) == MAID_SUB_SHOT) && Viv.bomb_time == 0)
+inline bool IsMainShot(uint16_t t) {
+  return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 || t == MAID_MAIN_SHOT * 3);
+}
+inline bool IsSubShot(uint16_t t) {
+  return (t == 0 || t == MAID_SUB_SHOT) && Viv.bomb_time == 0;
+}
 
 void MLaserSet(uint16_t time) {
   if (Viv.bomb_time || Viv.muteki > MAID_MOVE_DISABLE_TIME) {

@@ -540,16 +540,16 @@ void MoveStg3Cloud(void)
 // ３面の雲を描画する //
 void DrawStg3Cloud(void)
 {
-#define _RsetMacro(x, y, w, h)		{(x), (y), ((x)+(w)), ((y)+(h))}
+constexpr auto RsetMacro(int x, int y, int w, int h) -> PIXEL_LTRB { return {x, y, x + w, y + h}; }
         static PIXEL_LTRB Data[6] = {
-                _RsetMacro(  0, 288, 144, 160),			// Large_1
-                _RsetMacro(144, 288, 144, 112),			// Large_2
-                _RsetMacro(288, 288, 144, 176),			// Large_3
+                RsetMacro(  0, 288, 144, 160),			// Large_1
+                RsetMacro(144, 288, 144, 112),			// Large_2
+                RsetMacro(288, 288, 144, 176),			// Large_3
 
-                //_RsetMacro(480, 288,  32,  48),			//
-Small_1 _RsetMacro(144, 400,  32,  48),			// Small_2
-                _RsetMacro(176, 400,  48,  32),			// Small_3
-                _RsetMacro(224, 400,  48,  48),			// Small_4
+                //RsetMacro(480, 288,  32,  48),			//
+Small_1 RsetMacro(144, 400,  32,  48),			// Small_2
+                RsetMacro(176, 400,  48,  32),			// Small_3
+                RsetMacro(224, 400,  48,  48),			// Small_4
         };
 #undef _RsetMacro
 

@@ -20,11 +20,6 @@
  *
  */
 
-// 左右反転用マクロ //
-#define ABS_DEGRL(d) ((e->flag & EF_RLCHG) ? (128 - (d)) : (d))
-#define ABS_VXRL(vx) ((e->flag & EF_RLCHG) ? (-(vx)) : (vx))
-#define REL_DEGRL(d) ((e->flag & EF_RLCHG) ? (-(d)) : (d))
-
 // ＥＣＬデバッグ用マクロ //
 static void ECL_DEBUG(const char *s, auto param) {
 #ifdef SCRIPT_TRACE
@@ -498,6 +493,11 @@ static void _EnemyDrawBomb(int x, int y, uint32_t count) {
 }
 
 void parse_ECL(EnemyData *e) {
+  // 左右反転用ラムダ（旧マクロ ABS_DEGRL/ABS_VXRL/REL_DEGRL）
+  auto AbsDegRL = [e](uint8_t d) -> uint8_t { return (e->flag & EF_RLCHG) ? (128 - d) : d; };
+  auto AbsVxRL  = [e](int vx)            { return (e->flag & EF_RLCHG) ? (-vx) : vx; };
+  auto RelDegRL = [e](int8_t d) -> int8_t { return (e->flag & EF_RLCHG) ? static_cast<int8_t>(-d) : d; };
+
   bool bRetFlag; // 実行クロック０命令の場合はfalseにすること
   int RegCmp;
   HLaserInfo HInfo;
@@ -913,7 +913,7 @@ ECL_HEAD:
     ECL_DEBUG("ECL_ROL : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 1]) + 1);
-      e->vd = REL_DEGRL(Cast::sign<int8_t>(cmd[1]));
+      e->vd = RelDegRL(Cast::sign<int8_t>(cmd[1]));
     }
     if ((--e->cmd_c) != 0) {
       e->x += cosl(e->d, e->v);
@@ -928,9 +928,9 @@ ECL_HEAD:
     ECL_DEBUG("ECL_LROL : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 9]) + 1);
-      e->vx = ABS_VXRL(I32LEAt(&cmd[1]));
+      e->vx = AbsVxRL(I32LEAt(&cmd[1]));
       e->vy = I32LEAt(&cmd[1 + 4]);
-      e->vd = REL_DEGRL((char)cmd[1 + 8]);
+      e->vd = RelDegRL((char)cmd[1 + 8]);
     }
     if ((--e->cmd_c) != 0) {
       e->x += (cosl(e->d, e->v) + e->vx);
@@ -945,7 +945,7 @@ ECL_HEAD:
     ECL_DEBUG("ECL_WAVX : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 6]) + 1);
-      e->vx = ABS_VXRL(I32LEAt(&cmd[1]));
+      e->vx = AbsVxRL(I32LEAt(&cmd[1]));
       e->vy = e->y;
       e->amp = cmd[1 + 4];
       e->vd = Cast::sign<int8_t>(cmd[1 + 5]);
@@ -1098,13 +1098,13 @@ ECL_HEAD:
 
   case (ECL_DEGA): // ＠角度絶対指定
     ECL_DEBUG("ECL_DEGA : %u", cmd[1]);
-    e->d = ABS_DEGRL(cmd[1]);
+    e->d = AbsDegRL(cmd[1]);
     bRetFlag = false;
     break;
 
   case (ECL_DEGR): // ＠角度相対指定
     ECL_DEBUG("ECL_DEGR : %d", Cast::sign<int8_t>(cmd[1]));
-    e->d += REL_DEGRL(Cast::sign<int8_t>(cmd[1]));
+    e->d += RelDegRL(Cast::sign<int8_t>(cmd[1]));
     bRetFlag = false;
     break;
 

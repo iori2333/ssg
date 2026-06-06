@@ -466,11 +466,8 @@ void tama_draw(void) {
 }
 
 // 弾をエフェクトとして描画？ //
+namespace { constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB { return {x, y, x + w, y + w}; } }
 void _TamaEffectDraw(const TAMA_DATA *t) {
-#define RCSET(x, y, w)                                                         \
-  {                                                                            \
-    (x), (y), (x + w), (y + w)                                                 \
-  }
 
   static constexpr PIXEL_LTRB Data[6][5] = {
       // [色][パターン]
