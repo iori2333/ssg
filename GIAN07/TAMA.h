@@ -101,7 +101,7 @@ inline constexpr auto TF_EVADE = 0x02;  // 一回かすっている場合
 inline constexpr auto TF_DELETE = 0x80; // その弾を消去する
 
 ////弾コマンド構造体(安全性アップ)////
-typedef struct {
+struct BulletCommand {
   int x, y; // 弾の発射位置
 
   uint8_t d;  // 発射角
@@ -118,10 +118,10 @@ typedef struct {
   uint8_t cmd;    // 弾コマンド＆エフェクト
   uint8_t type;   // 弾の種類
   uint8_t option; // 弾の属性(バイブレーション,反射,炸裂,ボム)
-} TAMA_CMD;
+};
 
 ////弾データ構造体////
-typedef struct {
+struct Bullet {
   int x, y;   // 現在の<表示>座標
   int tx, ty; // 振動系エフェクト使用時の演算用座標
   int vx, vy; // 速度の(X,Y)成分
@@ -143,11 +143,15 @@ typedef struct {
 
   uint16_t count; // フレームカウンタ
   uint8_t flag;   // 弾消去要請フラグ
-} TAMA_DATA;
+};
+
+// 後方互換用エイリアス
+using TAMA_CMD = BulletCommand;
+using TAMA_DATA = Bullet;
 
 ////弾の各種変数たち////
-extern TAMA_CMD TamaCmd;                     // 標準・弾コマンド構造体
-extern std::array<TAMA_DATA, TAMA_MAX> Tama; // 弾の格納用構造体
+extern BulletCommand TamaCmd;                // 標準・弾コマンド構造体
+extern std::array<Bullet, TAMA_MAX> Tama;    // 弾の格納用構造体
 extern std::array<uint16_t, TAMA_MAX>
     Tama1Ind; // 小型弾の順番を維持するための配列
 extern std::array<uint16_t, TAMA_MAX>

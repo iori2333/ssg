@@ -12,8 +12,8 @@
 #include "platform/graphics_backend.h"
 
 ////グローバル変数////
-TAMA_CMD TamaCmd;                        // 標準・弾コマンド構造体
-std::array<TAMA_DATA, TAMA_MAX> Tama;    // 弾の格納用構造体
+BulletCommand TamaCmd;                   // 標準・弾コマンド構造体
+std::array<Bullet, TAMA_MAX> Tama;       // 弾の格納用構造体
 std::array<uint16_t, TAMA_MAX> Tama1Ind; // 小型弾の順番を維持するための配列
 std::array<uint16_t, TAMA_MAX> Tama2Ind; // 特殊弾の順番を維持するための配列
 uint16_t Tama1Now;                       // 小型弾の弾数
