@@ -13,7 +13,7 @@
 #include <cstdint>
 
 // --- Tag type for Decode dispatch ---
-template <uint8_t Cmd> struct ScmdTag {};
+template <Scmd Cmd> struct ScmdTag {};
 
 // ===================================================================
 // Command parameter structs (opcode byte NOT included)
@@ -68,11 +68,11 @@ struct SclCmdMusic {
 struct SclCmdDelenemy {}; // op only
 
 struct SclCmdEfc {
-  uint8_t efc_id;
+  Sefc efc_id;
 };
 
 struct SclCmdWaitex {
-  uint8_t cond;
+  Swait cond;
   uint32_t value;
 };
 
@@ -86,51 +86,51 @@ struct SclCmdEnemypalette {}; // op only
 // SclCmdLength — instruction length lookup
 // ===================================================================
 
-inline constexpr uint8_t SclCmdLength(uint8_t cmd) {
+inline constexpr uint8_t SclCmdLength(Scmd cmd) {
   switch (cmd) {
-  case SCL_TIME:
+  case Scmd::TIME:
     return 5;
-  case SCL_ENEMY:
+  case Scmd::ENEMY:
     return 6;
-  case SCL_BOSS:
+  case Scmd::BOSS:
     return 6;
-  case SCL_BOSSDEAD:
+  case Scmd::BOSSDEAD:
     return 1;
-  case SCL_MWOPEN:
+  case Scmd::MWOPEN:
     return 1;
-  case SCL_MWCLOSE:
+  case Scmd::MWCLOSE:
     return 1;
-  case SCL_MSG:
+  case Scmd::MSG:
     return 0; // variable length, handled specially
-  case SCL_FACE:
+  case Scmd::FACE:
     return 2;
-  case SCL_LOADFACE:
+  case Scmd::LOADFACE:
     return 3;
-  case SCL_NPG:
+  case Scmd::NPG:
     return 1;
-  case SCL_END:
+  case Scmd::END:
     return 1;
-  case SCL_KEY:
+  case Scmd::KEY:
     return 1;
-  case SCL_SSP:
+  case Scmd::SSP:
     return 3;
-  case SCL_MUSIC:
+  case Scmd::MUSIC:
     return 2;
-  case SCL_DELENEMY:
+  case Scmd::DELENEMY:
     return 1;
-  case SCL_EFC:
+  case Scmd::EFC:
     return 2;
-  case SCL_WAITEX:
+  case Scmd::WAITEX:
     return 6;
-  case SCL_STAGECLEAR:
+  case Scmd::STAGECLEAR:
     return 1;
-  case SCL_GAMECLEAR:
+  case Scmd::GAMECLEAR:
     return 1;
-  case SCL_EXTRACLEAR:
+  case Scmd::EXTRACLEAR:
     return 1;
-  case SCL_MAPPALETTE:
+  case Scmd::MAPPALETTE:
     return 1;
-  case SCL_ENEMYPALETTE:
+  case Scmd::ENEMYPALETTE:
     return 1;
   default:
     return 1;
@@ -141,56 +141,64 @@ inline constexpr uint8_t SclCmdLength(uint8_t cmd) {
 // Decode — tag-dispatched bytecode → typed command struct
 // ===================================================================
 
-inline SclCmdTime Decode(ScmdTag<SCL_TIME>, const uint8_t *raw) {
+inline SclCmdTime Decode(ScmdTag<Scmd::TIME>, const uint8_t *raw) {
   return {U32LEAt(&raw[1])};
 }
 
-inline SclCmdEnemy Decode(ScmdTag<SCL_ENEMY>, const uint8_t *raw) {
+inline SclCmdEnemy Decode(ScmdTag<Scmd::ENEMY>, const uint8_t *raw) {
   return {static_cast<int16_t>(U16LEAt(&raw[1])),
           static_cast<int16_t>(U16LEAt(&raw[3])), raw[5]};
 }
 
-inline SclCmdBoss Decode(ScmdTag<SCL_BOSS>, const uint8_t *raw) {
+inline SclCmdBoss Decode(ScmdTag<Scmd::BOSS>, const uint8_t *raw) {
   return {static_cast<int16_t>(U16LEAt(&raw[1])),
           static_cast<int16_t>(U16LEAt(&raw[3])), raw[5]};
 }
 
-inline SclCmdFace Decode(ScmdTag<SCL_FACE>, const uint8_t *raw) {
+inline SclCmdFace Decode(ScmdTag<Scmd::FACE>, const uint8_t *raw) {
   return {raw[1]};
 }
 
-inline SclCmdLoadface Decode(ScmdTag<SCL_LOADFACE>, const uint8_t *raw) {
+inline SclCmdLoadface Decode(ScmdTag<Scmd::LOADFACE>, const uint8_t *raw) {
   return {raw[1], raw[2]};
 }
 
-inline SclCmdSsp Decode(ScmdTag<SCL_SSP>, const uint8_t *raw) {
+inline SclCmdSsp Decode(ScmdTag<Scmd::SSP>, const uint8_t *raw) {
   return {static_cast<int16_t>(U16LEAt(&raw[1]))};
 }
 
-inline SclCmdMusic Decode(ScmdTag<SCL_MUSIC>, const uint8_t *raw) {
+inline SclCmdMusic Decode(ScmdTag<Scmd::MUSIC>, const uint8_t *raw) {
   return {raw[1]};
 }
 
-inline SclCmdEfc Decode(ScmdTag<SCL_EFC>, const uint8_t *raw) {
-  return {raw[1]};
+inline SclCmdEfc Decode(ScmdTag<Scmd::EFC>, const uint8_t *raw) {
+  return {static_cast<Sefc>(raw[1])};
 }
 
-inline SclCmdWaitex Decode(ScmdTag<SCL_WAITEX>, const uint8_t *raw) {
-  return {raw[1], U32LEAt(&raw[2])};
+inline SclCmdWaitex Decode(ScmdTag<Scmd::WAITEX>, const uint8_t *raw) {
+  return {static_cast<Swait>(raw[1]), U32LEAt(&raw[2])};
 }
 
 // Single-byte (no-param) commands all decode to empty struct
-inline SclCmdEnd Decode(ScmdTag<SCL_BOSSDEAD>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_MWOPEN>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_MWCLOSE>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_NPG>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_END>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_KEY>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_DELENEMY>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_STAGECLEAR>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_GAMECLEAR>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_EXTRACLEAR>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_MAPPALETTE>, const uint8_t *) { return {}; }
-inline SclCmdEnd Decode(ScmdTag<SCL_ENEMYPALETTE>, const uint8_t *) {
+inline SclCmdEnd Decode(ScmdTag<Scmd::BOSSDEAD>, const uint8_t *) { return {}; }
+inline SclCmdEnd Decode(ScmdTag<Scmd::MWOPEN>, const uint8_t *) { return {}; }
+inline SclCmdEnd Decode(ScmdTag<Scmd::MWCLOSE>, const uint8_t *) { return {}; }
+inline SclCmdEnd Decode(ScmdTag<Scmd::NPG>, const uint8_t *) { return {}; }
+inline SclCmdEnd Decode(ScmdTag<Scmd::END>, const uint8_t *) { return {}; }
+inline SclCmdEnd Decode(ScmdTag<Scmd::KEY>, const uint8_t *) { return {}; }
+inline SclCmdEnd Decode(ScmdTag<Scmd::DELENEMY>, const uint8_t *) { return {}; }
+inline SclCmdEnd Decode(ScmdTag<Scmd::STAGECLEAR>, const uint8_t *) {
+  return {};
+}
+inline SclCmdEnd Decode(ScmdTag<Scmd::GAMECLEAR>, const uint8_t *) {
+  return {};
+}
+inline SclCmdEnd Decode(ScmdTag<Scmd::EXTRACLEAR>, const uint8_t *) {
+  return {};
+}
+inline SclCmdEnd Decode(ScmdTag<Scmd::MAPPALETTE>, const uint8_t *) {
+  return {};
+}
+inline SclCmdEnd Decode(ScmdTag<Scmd::ENEMYPALETTE>, const uint8_t *) {
   return {};
 }

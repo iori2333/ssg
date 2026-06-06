@@ -44,7 +44,7 @@ SclVM &SclVM::Instance() { return *s_instance; }
 
 bool SclVM::IsInitialized() { return s_instance.has_value(); }
 
-// --- Spawn a single enemy from SCL_ENEMY data ---
+// --- Spawn a single enemy from Scmd::ENEMY data ---
 void SclVM::SpawnEnemy(const SclCmdEnemy &c) {
   if (Enemies.count + 1 >= ENEMY_MAX)
     return;
@@ -61,19 +61,19 @@ bool SclVM::Execute() {
 
   while (bFlag) {
     const auto *cmd = m_pc;
-    switch (cmd[0]) {
-    case SCL_KEY:
+    switch (static_cast<Scmd>(cmd[0])) {
+    case Scmd::KEY:
       if ((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) ||
           ++SclKeyWaitCount >= 180) {
-        m_pc += SclCmdLength(cmd[0]);
+        m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
         SclKeyWaitCount = 0;
       } else {
         bFlag = false;
       }
       break;
 
-    case SCL_TIME: {
-      auto c = Decode(ScmdTag<SCL_TIME>{}, cmd);
+    case Scmd::TIME: {
+      auto c = Decode(ScmdTag<Scmd::TIME>{}, cmd);
       if (SclInfo.MsgFlag) {
         if ((Key_Data & KEY_TAMA) || (Key_Data & KEY_RETURN) ||
             (Key_Data & KEY_BOMB)) {
@@ -88,75 +88,75 @@ bool SclVM::Execute() {
       if (c.time > GameCount) {
         bFlag = false;
       } else {
-        m_pc += SclCmdLength(SCL_TIME);
+        m_pc += SclCmdLength(Scmd::TIME);
       }
     } break;
 
-    case SCL_ENEMY: {
-      auto c = Decode(ScmdTag<SCL_ENEMY>{}, cmd);
+    case Scmd::ENEMY: {
+      auto c = Decode(ScmdTag<Scmd::ENEMY>{}, cmd);
       if (BossNow == 0)
         SpawnEnemy(c);
-      m_pc += SclCmdLength(SCL_ENEMY);
+      m_pc += SclCmdLength(Scmd::ENEMY);
     } break;
 
-    case SCL_BOSS: {
-      auto c = Decode(ScmdTag<SCL_BOSS>{}, cmd);
+    case Scmd::BOSS: {
+      auto c = Decode(ScmdTag<Scmd::BOSS>{}, cmd);
       BossSet(c.x, c.y, c.id);
-      m_pc += SclCmdLength(SCL_BOSS);
+      m_pc += SclCmdLength(Scmd::BOSS);
     } break;
 
-    case SCL_BOSSDEAD:
+    case Scmd::BOSSDEAD:
       BossKillAll();
-      m_pc += SclCmdLength(cmd[0]);
+      m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
       break;
 
-    case SCL_MWOPEN:
+    case Scmd::MWOPEN:
       if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE))
         MWinOpen();
       SclInfo.MsgFlag = true;
-      m_pc += SclCmdLength(cmd[0]);
+      m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
       break;
 
-    case SCL_MWCLOSE:
+    case Scmd::MWCLOSE:
       if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE))
         MWinClose();
       SclInfo.MsgFlag = false;
-      m_pc += SclCmdLength(cmd[0]);
+      m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
       break;
 
-    case SCL_MSG:
+    case Scmd::MSG:
       MWinMsg(reinterpret_cast<const char *>(cmd + 1));
       m_pc += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
       break;
 
-    case SCL_FACE: {
-      auto c = Decode(ScmdTag<SCL_FACE>{}, cmd);
+    case Scmd::FACE: {
+      auto c = Decode(ScmdTag<Scmd::FACE>{}, cmd);
       MWinFace(c.face_id);
-      m_pc += SclCmdLength(SCL_FACE);
+      m_pc += SclCmdLength(Scmd::FACE);
     } break;
 
-    case SCL_LOADFACE: {
-      auto c = Decode(ScmdTag<SCL_LOADFACE>{}, cmd);
+    case Scmd::LOADFACE: {
+      auto c = Decode(ScmdTag<Scmd::LOADFACE>{}, cmd);
       LoadFace(c.surf_id, c.file_no);
-      m_pc += SclCmdLength(SCL_LOADFACE);
+      m_pc += SclCmdLength(Scmd::LOADFACE);
     } break;
 
-    case SCL_NPG:
+    case Scmd::NPG:
       MWinCmd(MWCMD_NEWPAGE);
-      m_pc += SclCmdLength(cmd[0]);
+      m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
       break;
 
-    case SCL_END:
+    case Scmd::END:
       return true;
 
-    case SCL_SSP: {
-      auto c = Decode(ScmdTag<SCL_SSP>{}, cmd);
+    case Scmd::SSP: {
+      auto c = Decode(ScmdTag<Scmd::SSP>{}, cmd);
       ScrollSpeed(c.speed);
-      m_pc += SclCmdLength(SCL_SSP);
+      m_pc += SclCmdLength(Scmd::SSP);
     } break;
 
-    case SCL_MUSIC: {
-      auto c = Decode(ScmdTag<SCL_MUSIC>{}, cmd);
+    case Scmd::MUSIC: {
+      auto c = Decode(ScmdTag<Scmd::MUSIC>{}, cmd);
       if (!IsDemoplay) {
         BGM_Stop();
         if (BGM_Switch(c.track)) {
@@ -166,95 +166,95 @@ bool SclVM::Execute() {
             SetMusicTitle(460, mtitle);
         }
       }
-      m_pc += SclCmdLength(SCL_MUSIC);
+      m_pc += SclCmdLength(Scmd::MUSIC);
     } break;
 
-    case SCL_DELENEMY:
+    case Scmd::DELENEMY:
       enemyind_set();
-      m_pc += SclCmdLength(cmd[0]);
+      m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
       break;
 
-    case SCL_EFC: {
-      auto c = Decode(ScmdTag<SCL_EFC>{}, cmd);
-      switch (c.efc_id) {
-      case SEFC_WARN:
+    case Scmd::EFC: {
+      auto c = Decode(ScmdTag<Scmd::EFC>{}, cmd);
+      switch (static_cast<Sefc>(c.efc_id)) {
+      case Sefc::WARN:
         Snd_SEPlay(8, GX_MID, true);
         WarningEffectSet();
         break;
-      case SEFC_WARNSTOP:
+      case Sefc::WARNSTOP:
         Snd_SEStop(8);
         break;
-      case SEFC_MUSICFADE:
+      case Sefc::MUSICFADE:
         BGM_FadeOut(120);
         break;
-      case SEFC_STG2BOSS:
+      case Sefc::STG2BOSS:
         ScrollCommand(SCMD_STG2BOSS);
         break;
-      case SEFC_RASTERON:
+      case Sefc::RASTERON:
         ScrollCommand(SCMD_RASTER_ON);
         break;
-      case SEFC_RASTEROFF:
+      case Sefc::RASTEROFF:
         ScrollCommand(SCMD_RASTER_OFF);
         break;
-      case SEFC_STG3BOSS:
+      case Sefc::STG3BOSS:
         ScrollCommand(SCMD_STG3BOSS);
         break;
-      case SEFC_STG3RESET:
+      case Sefc::STG3RESET:
         ScrollCommand(SCMD_STG3RESET);
         break;
-      case SEFC_CFADEIN:
+      case Sefc::CFADEIN:
         ScreenEffectSet(SCNEFC_CFADEIN);
         break;
-      case SEFC_CFADEOUT:
+      case Sefc::CFADEOUT:
         ScreenEffectSet(SCNEFC_CFADEOUT);
         break;
-      case SEFC_STG6CUBE:
+      case Sefc::STG6CUBE:
         ScrollCommand(SCMD_STG6CUBE);
         break;
-      case SEFC_STG6RNDECL:
+      case Sefc::STG6RNDECL:
         ScrollCommand(SCMD_STG6RNDECL);
         break;
-      case SEFC_STG4ROCK:
+      case Sefc::STG4ROCK:
         ScrollCommand(SCMD_STG4ROCK);
         break;
-      case SEFC_STG4LEAVE:
+      case Sefc::STG4LEAVE:
         ScrollCommand(SCMD_STG4LEAVE);
         break;
-      case SEFC_WHITEIN:
+      case Sefc::WHITEIN:
         ScreenEffectSet(SCNEFC_WHITEIN);
         break;
-      case SEFC_WHITEOUT:
+      case Sefc::WHITEOUT:
         ScreenEffectSet(SCNEFC_WHITEOUT);
         break;
-      case SEFC_LOADEX01:
+      case Sefc::LOADEX01:
         LoadGraph(GRAPH_ID_EXBOSS1);
         break;
-      case SEFC_LOADEX02:
+      case Sefc::LOADEX02:
         LoadGraph(GRAPH_ID_EXBOSS2);
         break;
-      case SEFC_STG6RASTER:
+      case Sefc::STG6RASTER:
         ScrollCommand(SCMD_STG6RASTER);
         break;
       }
-      m_pc += SclCmdLength(SCL_EFC);
+      m_pc += SclCmdLength(Scmd::EFC);
     } break;
 
-    case SCL_WAITEX: {
-      auto c = Decode(ScmdTag<SCL_WAITEX>{}, cmd);
-      switch (c.cond) {
-      case SWAIT_BOSSHP:
+    case Scmd::WAITEX: {
+      auto c = Decode(ScmdTag<Scmd::WAITEX>{}, cmd);
+      switch (static_cast<Swait>(c.cond)) {
+      case Swait::BOSSHP:
         if (GetBossHPSum() <= c.value)
           break;
         return false;
-      case SWAIT_BOSSLEFT:
+      case Swait::BOSSLEFT:
         if (BossNow <= c.value)
           break;
         return false;
       }
-      m_pc += SclCmdLength(SCL_WAITEX);
+      m_pc += SclCmdLength(Scmd::WAITEX);
     } break;
 
-    case SCL_STAGECLEAR:
+    case Scmd::STAGECLEAR:
       if (DemoplaySaveAllEnable) {
         DemoplayFlushStage();
         GameNextStage();
@@ -268,7 +268,7 @@ bool SclVM::Execute() {
       GameNextStage();
       return true;
 
-    case SCL_GAMECLEAR:
+    case Scmd::GAMECLEAR:
       if (DemoplaySaveAllEnable) {
         DemoplayFlushStage();
         DemoplaySaveReplayAll();
@@ -294,7 +294,7 @@ bool SclVM::Execute() {
       EndingInit();
       return true;
 
-    case SCL_EXTRACLEAR:
+    case Scmd::EXTRACLEAR:
       if (DemoplaySaveAllEnable) {
         DemoplayFlushStage();
         DemoplaySaveReplayAll(true);
@@ -304,14 +304,14 @@ bool SclVM::Execute() {
       NameRegistInit(true);
       return true;
 
-    case SCL_MAPPALETTE:
+    case Scmd::MAPPALETTE:
       GrpSurface_PaletteApplyToBackend(SURFACE_ID::MAPCHIP);
-      m_pc += SclCmdLength(cmd[0]);
+      m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
       break;
 
-    case SCL_ENEMYPALETTE:
+    case Scmd::ENEMYPALETTE:
       LoadPaletteFromEnemy();
-      m_pc += SclCmdLength(cmd[0]);
+      m_pc += SclCmdLength(static_cast<Scmd>(cmd[0]));
       break;
 
     default:

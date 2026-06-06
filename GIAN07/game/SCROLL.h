@@ -104,4 +104,4 @@ bool ScrollInit(void); // マップデータを初期化する
 ///// [ 変数 ] /////
 extern ScrollState &ScrollInfo; // スクロールに関する情報
 extern SceneState &SclInfo;     // ＳＣＬに関する情報
-extern int &SclKeyWaitCount;    // SCL_KEY frame counter
+extern int &SclKeyWaitCount;    // Scmd::KEY frame counter

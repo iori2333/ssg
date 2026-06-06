@@ -332,8 +332,8 @@ void EndingSCLDecode() {
 
   while (bFlag) {
     const uint8_t *cmd = SCL_Now;
-    switch (cmd[0]) {
-    case (SCL_TIME): {
+    switch (static_cast<Scmd>(cmd[0])) {
+    case (Scmd::TIME): {
       const auto temp = I32LEAt(&cmd[1]);
       if (temp > GameCount) {
         bFlag = false;
@@ -343,7 +343,7 @@ void EndingSCLDecode() {
       break;
     }
 
-    case (SCL_MSG): { // メッセージを出力する
+    case (Scmd::MSG): { // メッセージを出力する
       const auto *line_p = std::bit_cast<const char *>(cmd + 1);
       const Narrow::string_view line = line_p;
       EText.Text[EText.NumText++] = line;
@@ -353,7 +353,7 @@ void EndingSCLDecode() {
       break;
     }
 
-    case (SCL_FACE): // 顔を表示する
+    case (Scmd::FACE): // 顔を表示する
       switch (cmd[1]) {
       case 0:
         EGrpInfo.fadein = 0;
@@ -392,7 +392,7 @@ void EndingSCLDecode() {
       SCL_Now += 2;
       break;
 
-    case (SCL_STAFF): // わかりにくいが、１２８を加えると、役割名指定ね
+    case (Scmd::STAFF): // わかりにくいが、１２８を加えると、役割名指定ね
       if (cmd[1] >= 128) {
         switch (cmd[1] - 128) {
         case 0:
@@ -435,23 +435,23 @@ void EndingSCLDecode() {
       SCL_Now += 2;
       break;
 
-    case (SCL_NPG): // 新しいページに変更する
+    case (Scmd::NPG): // 新しいページに変更する
       EText.Blank();
       SCL_Now++;
       break;
 
-    case (SCL_END): // カウントも変更させずにリターンするのだ
+    case (Scmd::END): // カウントも変更させずにリターンするのだ
       EGrpInfo.bWantDisp = false;
       EStfTask.bWantDisp = false;
       NameRegistInit(false);
       return;
 
-    case (SCL_MUSIC):
+    case (Scmd::MUSIC):
       BGM_Switch(cmd[1]);
       SCL_Now += 2;
       break;
 
-    case (SCL_EFC):
+    case (Scmd::EFC):
       switch (cmd[1]) {
       case 0:
         FlashState = 256 * 2;
@@ -461,12 +461,13 @@ void EndingSCLDecode() {
       SCL_Now += 2;
       break;
 
-    case (SCL_STAGECLEAR): // ステージクリア
+    case (
+        Scmd::STAGECLEAR): // ステージクリア
                            // ステージクリア処理をここに記述 //
                            // GameNextStage();	// 本当はエラーチェックが必要!!
       return;
 
-    case (SCL_GAMECLEAR):
+    case (Scmd::GAMECLEAR):
       // if(GameStage == 6) GameStage = 7;
       // NameRegistInit();
       return;

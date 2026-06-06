@@ -133,7 +133,7 @@ static PBGMAP *ScBeforeLine(PBGMAP *p) {
   return p;
 }
 
-// p:SCL_ENEMY以降の敵配置データ //
+// p:Scmd::ENEMY以降の敵配置データ //
 // SclKeyWaitCount → scroll_manager.cpp の Scroller に移動
 
 static void enemy_set(void) {

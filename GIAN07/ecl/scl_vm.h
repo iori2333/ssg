@@ -21,8 +21,8 @@ public:
   // SclVM does NOT take ownership.
   explicit SclVM(const uint8_t *scl_data) : m_base(scl_data), m_pc(scl_data) {}
 
-  // Execute until a blocking command (SCL_KEY, SCL_TIME, SCL_WAITEX).
-  // Returns true if SCL finished (SCL_END reached).
+  // Execute until a blocking command (Scmd::KEY, Scmd::TIME, Scmd::WAITEX).
+  // Returns true if SCL finished (Scmd::END reached).
   bool Execute();
 
   // Current program counter (for syncing with SCROLL's SCL_Now)
