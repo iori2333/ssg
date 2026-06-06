@@ -15,7 +15,7 @@ struct PlayRankState {
 using PlayRankInfo = PlayRankState;
 
 ///// [グローバル変数] /////
-extern PlayRankInfo PlayRank;
+extern PlayRankState& PlayRank;
 
 ///// [ 関数 ] /////
 void PlayRankAdd(int n);  // 難易度の許容範囲内でプレイランクを増減する

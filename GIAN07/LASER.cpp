@@ -93,10 +93,9 @@ typedef struct {
 } LASER_DATA;
 
 ////グローバル変数////
-LASER_CMD LaserCmd;                       // 標準レーザーコマンド構造体
+// LaserCmd, LaserNow → laser_manager.cpp に移動
 std::array<LASER_DATA, LASER_MAX> Laser;  // レーザー格納用構造体
 std::array<uint16_t, LASER_MAX> LaserInd; // レーザー順番維持用配列
-uint16_t LaserNow;                        // レーザーの本数
 // REFLECTOR		Reflector[RT_MAX]; // 反射物_構造体
 //  uint16_t	ReflectorNow;		// 反射物の個数
 
@@ -184,7 +183,7 @@ void laser_setEX(void) {
 
 void laser_move(void) {
   // [LaserNow] will get mutated for reflecting lasers!
-  for (decltype(LaserNow) i = 0; i < LaserNow; i++) {
+  for (uint16_t i = 0; i < LaserNow; i++) {
     auto *lp = &Laser[LaserInd[i]];
     Lmove(lp);
     lp->count++;
@@ -234,7 +233,7 @@ void laser_draw(void) {
 }
 
 void laser_clear(void) {
-  for (decltype(LaserNow) i = 0; i < LaserNow; i++) {
+  for (uint16_t i = 0; i < LaserNow; i++) {
     auto &l = Laser[LaserInd[i]];
     if (l.flag != LF_CLEAR) {
       l.flag = LF_CLEAR;
@@ -583,7 +582,7 @@ static int REFL_hit(const LASER_DATA *lp) {
   for (i = 0; i < LLASER_MAX; i++) {
     if (i == lp->notr)
       continue; // 前回反射したなら無視する
-    ll = LLaser + i;
+    ll = &LLaser[i];
     if (ll->flag != LLF_NORM)
       continue; // 完全オープンでなければ次へ
 

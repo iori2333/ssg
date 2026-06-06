@@ -7,7 +7,7 @@
 #include "GIAN.h"
 #include "LEVEL.h"
 
-PlayRankInfo PlayRank;
+// PlayRank → rank_manager.cpp に移動
 
 // 難易度の許容範囲内でプレイランクを増減する
 void PlayRankAdd(int n) {

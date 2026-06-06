@@ -13,12 +13,12 @@
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
-uint16_t HLaserNow;               // ホーミングレーザーの本数
-HLaserInfo HLaserCmd;             // ホーミングレーザーセット用データ
-HLaserData HLaserBuf[HLASER_MAX]; // ホーミングレーザー格納バッファ
-
-HLaserData ActiveHL; // 確保済みホーミングレーザー
-HLaserData FreeHL;   // 解放済みホーミングレーザー
+// HLaserNow, HLaserCmd, HLaserBuf, ActiveHL, FreeHL → laser_manager.cpp に移動
+extern uint16_t& HLaserNow;
+extern HomingLaserInfo& HLaserCmd;
+extern std::array<HomingLaserData, HLASER_MAX>& HLaserBuf;
+extern HomingLaserData& ActiveHL;
+extern HomingLaserData& FreeHL;
 
 ///// [マクロ] /////
 constexpr int HLASER_GETNEXT(int current) {
@@ -39,10 +39,10 @@ void HLaserInit(void) {
   HLaserNow = 0;
 
   ActiveHL.Next = nullptr;
-  FreeHL.Next = HLaserBuf;
+  FreeHL.Next = HLaserBuf.data();
 
   for (i = 0; i < HLASER_MAX - 2; i++) {
-    HLaserBuf[i].Next = HLaserBuf + (i + 1);
+    HLaserBuf[i].Next = &HLaserBuf[i + 1];
   }
 
   HLaserBuf[HLASER_MAX - 1].Next = nullptr;

@@ -10,9 +10,7 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-std::array<ITEM_DATA, ITEM_MAX> Item;
-std::array<uint16_t, ITEM_MAX> ItemInd;
-uint16_t ItemNow;
+// Item[], ItemInd[], ItemNow → item_manager.cpp に移動
 
 // アイテムを発生させる //
 void ItemSet(int x, int y, uint8_t type) {

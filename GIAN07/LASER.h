@@ -71,8 +71,8 @@ extern void laser_clear(void);  // レーザー全てに消去エフェクトを
 extern void laserind_set(void); // レーザー順序用配列の初期化
 
 ////レーザーの各種変数たち////
-extern LASER_CMD LaserCmd; // 標準レーザーコマンド構造体
-extern uint16_t LaserNow;  // レーザーの本数
+extern LaserCommand& LaserCmd; // 標準レーザーコマンド構造体
+extern uint16_t& LaserNow;     // レーザーの本数
 // extern REFLECTOR	Reflector[RT_MAX];		// 反射物構造体
 // extern uint16_t	ReflectorNow;	// 反射物の個数
 

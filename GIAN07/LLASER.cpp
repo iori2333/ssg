@@ -10,9 +10,8 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-//// レーザー変数２ ////
-LLASER_DATA LLaser[LLASER_MAX];
-LLASER_CMD LLaserCmd;
+//// レーザー変数２ → laser_manager.cpp に移動
+// LLaser[], LLaserCmd は laser_manager.cpp で定義
 
 //// ローカル関数 ////
 static void _LLaserPointSet(LLASER_DATA *lp);
@@ -63,7 +62,7 @@ bool LLaserSet(uint8_t id) {
 
   lp->count = 0;
 
-  _LLaserPointSet(lp); // p[4] をセット
+  _LLaserPointSet(&*lp); // p[4] をセット
 
   lp->flag = LLF_LINE;
 
@@ -114,7 +113,7 @@ static void _LLaserXYSet(int id) {
   LLaser[id].x = LLaser[id].e->x + LLaser[id].dx;
   LLaser[id].y = LLaser[id].e->y + LLaser[id].dy;
 
-  _LLaserPointSet(LLaser + id); // p[4] をセット
+  _LLaserPointSet(&LLaser[id]); // p[4] をセット
 }
 
 extern void LLaserDegA(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
@@ -175,7 +174,7 @@ extern void LLaserMove(void) {
   int i;
   LLASER_DATA *lp;
 
-  for (i = 0, lp = LLaser; i < LLASER_MAX; i++, lp++) {
+  for (i = 0, lp = LLaser.data(); i < LLASER_MAX; i++, lp++) {
 
     // 角度セットモードで、敵の角度と現在の角度が異なっていたら再度セット //
     if (lp->type == LLS_SETDEG && lp->e && lp->d != lp->e->d) {

@@ -42,7 +42,7 @@ void ItemDraw(void);                      // アイテムを描画する
 void ItemIndSet(void); // アイテム配列の初期化
 
 ///// [ 変数 ] /////
-extern std::array<ITEM_DATA, ITEM_MAX> Item;
-extern std::array<uint16_t, ITEM_MAX> ItemInd;
-extern uint16_t ItemNow;
+extern std::array<ItemData, ITEM_MAX>& Item;
+extern std::array<uint16_t, ITEM_MAX>& ItemInd;
+extern uint16_t& ItemNow;
 

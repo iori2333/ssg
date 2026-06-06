@@ -53,8 +53,8 @@ struct HomingLaserInfo {
 using HLaserInfo = HomingLaserInfo;
 
 ///// [グローバル変数] /////
-extern uint16_t HLaserNow;   // ホーミングレーザーの本数
-extern HLaserInfo HLaserCmd; // ホーミングレーザーセット用データ
+extern uint16_t& HLaserNow;   // ホーミングレーザーの本数
+extern HomingLaserInfo& HLaserCmd; // ホーミングレーザーセット用データ
 
 ///// [関数プロトタイプ] /////
 void HLaserInit(void);                   // ホーミングレーザーの初期化を行う

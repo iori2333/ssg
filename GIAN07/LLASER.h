@@ -94,6 +94,6 @@ extern void LLaserClear(void); // 無限遠レーザーを全クローズ
 extern void LLaserSetup(void); // レーザー配列の初期化をする
 
 //// レーザー変数２ ////
-extern LLASER_DATA LLaser[LLASER_MAX];
-extern LLASER_CMD LLaserCmd;
+extern std::array<LongLaserData, LLASER_MAX>& LLaser;
+extern LongLaserCommand& LLaserCmd;
 
