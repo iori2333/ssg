@@ -3,25 +3,25 @@
  *
  */
 
-#include <cstdint>
 #include <algorithm>
 #include <bit>
+#include <cstdint>
 #include <utility>
 
-#include "game/ENDING.h"
 #include "ecl/scl_opcodes.h" // SCL opcodes
-#include "game/GAMEMAIN.h"
 #include "enemy/ENEMY.h"
+#include "game/ENDING.h"
+#include "game/GAMEMAIN.h"
 #include "game/GIAN.h"
 #include "game/LOADER.h"
 #include "game/bgm.h"
 #include "game/cast.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/endian.h"
+#include "game/graphics.h"
 #include "game/narrow.h"
 #include "game/text.h"
-#include "game/graphics.h"
 #include "platform/graphics_backend.h"
 #include "platform/sdl/graphics_sdl.h"
 #include "platform/text_backend.h"
@@ -351,7 +351,7 @@ void EndingSCLDecode() {
     switch (static_cast<Scmd>(cmd[0])) {
     case (Scmd::TIME): {
       const auto temp = I32LEAt(&cmd[1]);
-      if (std::cmp_greater(temp , GameCount)) {
+      if (std::cmp_greater(temp, GameCount)) {
         bFlag = false;
       } else {
         SCL_Now += 5; // cmd(1)+time(4)

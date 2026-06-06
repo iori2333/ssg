@@ -6,20 +6,21 @@
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
 #include <cinttypes> // for PRId64
-#include <cstdint>
-#include <memory>
-#include <optional>
 #include <concepts>
-#include <cstring>
-#include <cstdio>
-#include <new>
 #include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <memory>
+#include <new>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <utility>
-#include "game/SCORE.h"
+
 #include "game/LEVEL.h"
 #include "game/LZ_UTY.h"
+#include "game/SCORE.h"
 #include "game/defer.h"
 
 using NR_SCORE_LIST = std::span<NR_NAME_DATA, NR_RANK_MAX>;
@@ -108,7 +109,7 @@ uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
 
   if ((rank != 0) && (NData != nullptr)) {
     // まずは、スコアを下方向に押し出すのだ //
-    for (i = NR_RANK_MAX - 1; std::cmp_greater_equal(i , rank); i--) {
+    for (i = NR_RANK_MAX - 1; std::cmp_greater_equal(i, rank); i--) {
       p[i] = p[i - 1]; // 構造体から構造体への代入
     }
 
@@ -312,8 +313,8 @@ static bool LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
     CheckSum = 0;
     if (flag != bd.GetBit())
       return false;
-    
-      flag = 1 - flag;
+
+    flag = 1 - flag;
 
     // 名前を獲得する //
     for (auto &c : nd.Name) {
@@ -322,40 +323,40 @@ static bool LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
     }
     if (flag != bd.GetBit())
       return false;
-    
-      flag = 1 - flag;
+
+    flag = 1 - flag;
 
     // 得点を獲得する //
     nd.Score = xGet<uint64_t>(bd, Mask);
     CheckSum += nd.Score;
     if (flag != bd.GetBit())
       return false;
-    
-      flag = 1 - flag;
+
+    flag = 1 - flag;
 
     // かすりを獲得する //
     nd.Evade = xGet<uint32_t>(bd, Mask);
     CheckSum += nd.Evade;
     if (flag != bd.GetBit())
       return false;
-    
-      flag = 1 - flag;
+
+    flag = 1 - flag;
 
     // ステージを獲得する //
     nd.Stage = xGet<uint8_t>(bd, Mask);
     CheckSum += nd.Stage;
     if (flag != bd.GetBit())
       return false;
-    
-      flag = 1 - flag;
+
+    flag = 1 - flag;
 
     // ウエポンを獲得する //
     nd.Weapon = xGet<uint8_t>(bd, Mask);
     CheckSum += nd.Weapon;
     if (flag != bd.GetBit())
       return false;
-    
-      flag = 1 - flag;
+
+    flag = 1 - flag;
 
     // チェックサム比較 //
     if (CheckSum != xGet<uint64_t>(bd, Mask)) {

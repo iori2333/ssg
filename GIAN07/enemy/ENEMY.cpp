@@ -3,21 +3,21 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include <cstdint>
-#include <cstddef>
 #include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <utility>
 
-#include "enemy/ENEMY.h"
 #include "GIAN07/game/entity.h"
-#include "entity/MAID.h"
-#include "enemy/BOSS.h"
 #include "ecl/ecl_vm.h"
-#include "entity/TAMA.h"
-#include "entity/LLASER.h"
+#include "enemy/BOSS.h"
+#include "enemy/ENEMY.h"
 #include "entity/ITEM.h"
+#include "entity/LLASER.h"
+#include "entity/MAID.h"
+#include "entity/TAMA.h"
 #include "game/GIAN.h"
 #include "game/LOADER.h"
 #include "game/cast.h"
@@ -43,7 +43,7 @@ static void EnemyDrawBomb(int x, int y, uint32_t count);
 
 template <size_t N>
 static void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
-             const std::array<EnemyData, N> &entities) {
+                    const std::array<EnemyData, N> &entities) {
   Indsort(indices, count, entities,
           [](const EnemyData &e) { return (e.flag & EF_DELETE); });
 }
@@ -91,7 +91,8 @@ void EnemyData::Draw() const {
 
   // 描画モード選択 //
   const auto &src =
-      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(d - 64 + 8) >> 4] : a.ptn[anm_c]);
+      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(d - 64 + 8) >> 4]
+                           : a.ptn[anm_c]);
   if (GrpSurface_Blit({topleft.x, topleft.y}, sid, src)) {
     if ((anm_ptn != anm_ptnEx) && IsDamaged) {
       const auto &a = Anime[anm_ptnEx];
@@ -107,7 +108,7 @@ void enemy_move(void) {
   if (BossNow == 0)
     HomingFlag = HOMING_DUMMY;
 
-  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
+  for (i = 0; std::cmp_less(i, EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     e->IsDamaged = 0;
     if (!(e->flag & EF_BOMB)) {
@@ -169,7 +170,7 @@ void enemy_draw(void) {
   int y;
   // HRESULT		ddrval;
 
-  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
+  for (i = 0; std::cmp_less(i, EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
 
     // 敵を描画する(クリッピング＆幅、高さ処理を追加すること) //
@@ -190,7 +191,7 @@ void enemy_draw(void) {
 extern void enemy_clear(void) {
   int i;
 
-  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
+  for (i = 0; std::cmp_less(i, EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (e->flag == EF_BOMB)
       continue;
@@ -220,7 +221,7 @@ extern void enemy_clear(void) {
 void enemyind_set(void) {
   int i;
 
-  for (i = 0; std::cmp_less(i , ENEMY_MAX); i++) {
+  for (i = 0; std::cmp_less(i, ENEMY_MAX); i++) {
     // memset(Enemy+i,0,sizeof(Enemy));
     EnemyInd[i] = i;
   }
@@ -230,7 +231,7 @@ void enemyind_set(void) {
 
 static bool EnemyDamageApply(EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (std::cmp_less_equal(e.hp , damage)) {
+  if (std::cmp_less_equal(e.hp, damage)) {
     Snd_SEPlay(SOUND_ID_BOMB, e.x);
     if (e.LLaserRef) {
       LLaserForceClose(&e); // レーザーの強制クローズ
@@ -258,15 +259,14 @@ bool enemy_damage(int x, int y, int damage) {
     return true;
   }
 
-  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
+  for (i = 0; std::cmp_less(i, EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
         (e->flag & EF_DAMAGE)) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      } 
-        return EnemyDamageApply(*e, damage);
-     
+      }
+      return EnemyDamageApply(*e, damage);
     }
   }
 
@@ -277,14 +277,13 @@ bool enemy_damage2(int x, int y, int damage) {
   int i;
   auto ret_val = BossDamage2(x, y, damage);
 
-  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
+  for (i = 0; std::cmp_less(i, EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (HITCHK(x, e->x, e->g_width) && (y > e->y) && (e->flag & EF_DAMAGE)) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      } 
-        ret_val = EnemyDamageApply(*e, damage);
-     
+      }
+      ret_val = EnemyDamageApply(*e, damage);
     }
   }
 
@@ -299,14 +298,13 @@ extern void enemy_damage3(int x, int y, uint8_t d) {
 
   BossDamage3(x, y, d);
 
-  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
+  for (i = 0; std::cmp_less(i, EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      } 
-        EnemyDamageApply(*e, damage);
-     
+      }
+      EnemyDamageApply(*e, damage);
     }
   }
 }
@@ -317,15 +315,14 @@ extern void enemy_damage4(int damage) {
 
   BossDamage4(damage);
 
-  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
+  for (i = 0; std::cmp_less(i, EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (e->flag & EF_DAMAGE) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      } 
-        EnemyDamageApply(*e, damage);
-        // return true;
-     
+      }
+      EnemyDamageApply(*e, damage);
+      // return true;
     }
   }
 

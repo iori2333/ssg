@@ -3,32 +3,33 @@
 /*                                                                           */
 /*                                                                           */
 #include <algorithm>
-#include <string_view>
-#include <cstdint>
-#include <span>
-#include <cstring>
-#include <optional>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include "game/GAMEMAIN.h"
+#include <cstring>
+#include <optional>
+#include <span>
+#include <string_view>
+
 #include "effect/BOMBEFC.h" // 爆発エフェクト処理
 #include "effect/EFFECT.h"
-#include "effect/FRAGMENT.h"
 #include "effect/EFFECT3D.h"
+#include "effect/FRAGMENT.h"
 #include "effect/GEOMETRY.h"
 #include "effect/LENS.h"
-#include "entity/MAID.h"
 #include "enemy/BOSS.h"
-#include "entity/MAIDTAMA.h"
 #include "enemy/ENEMY.h"
-#include "entity/TAMA.h"
-#include "entity/LASER.h"
-#include "entity/LLASER.h"
 #include "entity/HOMINGL.h"
 #include "entity/ITEM.h"
+#include "entity/LASER.h"
+#include "entity/LLASER.h"
+#include "entity/MAID.h"
+#include "entity/MAIDTAMA.h"
+#include "entity/TAMA.h"
 #include "game/CONFIG.h"
 #include "game/DEMOPLAY.h"
+#include "game/GAMEMAIN.h"
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
 #include "game/LOADER.h"
@@ -36,9 +37,9 @@
 #include "game/SCORE.h"
 #include "game/SCROLL.h"
 #include "game/bgm.h"
-#include "game/coords.h"
-#include "game/constants.h"
 #include "game/cast.h"
+#include "game/constants.h"
+#include "game/coords.h"
 #include "game/debug.h"
 #include "game/graphics.h"
 #include "game/input.h"
@@ -121,7 +122,7 @@ static void NameRegistProc(bool &); // お名前入力
 static void ReplayProcAll(bool &);
 static void GameOverSaveProc(bool &);
 
-  // 西方Ｐｒｏｊｅｃｔ初期化部
+// 西方Ｐｒｏｊｅｃｔ初期化部
 static void SProjectProc(bool &); // 西方Ｐｒｏｊｅｃｔ表示動作部
 
 static void ScoreNameProc(bool &);
@@ -261,7 +262,7 @@ void ScoreDraw(void) {
       GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::SYSTEM, src);
     } else {
       GrpPutScore(gx, gy, ScoreString[i].Stage);
-}
+    }
 
     gx = (ScoreString[i].x >> 6) + 224 + 80;
     gy = (ScoreString[i].y >> 6) + 25;
@@ -285,61 +286,60 @@ static char GetAddr2Char(int x, int y) {
     return ('a' + (x % 26));
   }
   // その他記号など //
-  
-    switch (x) {
-    case 0:
-      return '0';
-    case 1:
-      return '1';
-    case 2:
-      return '2';
-    case 3:
-      return '3';
-    case 4:
-      return '4';
-    case 5:
-      return '5';
-    case 6:
-      return '6';
-    case 7:
-      return '7';
-    case 8:
-      return '8';
-    case 9:
-      return '9';
-    case 10:
-      return '!';
-    case 11:
-      return '?';
-    case 12:
-      return '#';
-    case 13:
-      return '\\';
-    case 14:
-      return '<';
-    case 15:
-      return '>';
-    case 16:
-      return '=';
-    case 17:
-      return ',';
-    case 18:
-      return '+';
-    case 19:
-      return '-';
-    case 20:
-      return ' '; // SPACE
-    // case 21:
-    case 22:
-      return NR_EXCHAR_BACK;
-    // case 23:
-    case 24:
-      return NR_EXCHAR_END;
-    // case 25:
-    default:
-      return NR_EXCHAR_ERROR;
-    }
- 
+
+  switch (x) {
+  case 0:
+    return '0';
+  case 1:
+    return '1';
+  case 2:
+    return '2';
+  case 3:
+    return '3';
+  case 4:
+    return '4';
+  case 5:
+    return '5';
+  case 6:
+    return '6';
+  case 7:
+    return '7';
+  case 8:
+    return '8';
+  case 9:
+    return '9';
+  case 10:
+    return '!';
+  case 11:
+    return '?';
+  case 12:
+    return '#';
+  case 13:
+    return '\\';
+  case 14:
+    return '<';
+  case 15:
+    return '>';
+  case 16:
+    return '=';
+  case 17:
+    return ',';
+  case 18:
+    return '+';
+  case 19:
+    return '-';
+  case 20:
+    return ' '; // SPACE
+  // case 21:
+  case 22:
+    return NR_EXCHAR_BACK;
+  // case 23:
+  case 24:
+    return NR_EXCHAR_END;
+  // case 25:
+  default:
+    return NR_EXCHAR_ERROR;
+  }
 }
 
 // お名前入力 //
@@ -670,7 +670,6 @@ extern bool GameNextStage(void) {
 
   // エンディングに移行する //
   GameStage = std::min<int>(GameStage, STAGE_MAX); // 後で変更のこと
-  
 
   GameSTD_Init();
   MaidNextStage();

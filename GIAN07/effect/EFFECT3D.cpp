@@ -3,16 +3,17 @@
 /*                                                                           */
 /*                                                                           */
 
-#include <cstdint>
 #include <cmath>
-#include <span>
+#include <cstdint>
 #include <ranges>
+#include <span>
 #include <utility>
+
 #include "effect/EFFECT3D.h"
 #include "game/GIAN.h"
 #include "game/cast.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 #include "platform/sdl/graphics_sdl.h"
@@ -105,13 +106,13 @@ LineList3D	LList_W = {32,39,PList_W,11,PWork_W};
 */
 
 static LineList3D Warning[8] = {{{192, 39}, PList_W},
-                         {{192, 39}, PList_A1},
-                         {{192, 39}, PList_A2},
-                         {{192, 39}, PList_R},
-                         {{192, 39}, PList_N1},
-                         {{192, 39}, PList_I},
-                         {{(192 - (296 - 215)), 39}, PList_N2},
-                         {{192, 39}, PList_G}};
+                                {{192, 39}, PList_A1},
+                                {{192, 39}, PList_A2},
+                                {{192, 39}, PList_R},
+                                {{192, 39}, PList_N1},
+                                {{192, 39}, PList_I},
+                                {{(192 - (296 - 215)), 39}, PList_N2},
+                                {{192, 39}, PList_G}};
 
 static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz);
 static void Draw3DCube(const Cube3D *c); // 汎用３Ｄキューブ描画
@@ -760,7 +761,7 @@ void DrawStg4Rock(void) {
   }
 }
 
-void SendCmdStg4Rock(uint8_t Cmd, uint8_t  /*Param*/) {
+void SendCmdStg4Rock(uint8_t Cmd, uint8_t /*Param*/) {
   switch (Cmd) {
   case (STG4ROCK_LEAVE): {
     for (auto &it : Rock) {

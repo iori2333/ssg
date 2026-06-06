@@ -6,31 +6,31 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cstdint>
-#include <string_view>
-#include <string>
 #include <cstddef>
+#include <cstdint>
 #include <ranges>
 #include <span>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
-#include "game/LOADER.h"
+
 #include "ecl/ecl_vm.h"
 #include "ecl/scl_vm.h"
 #include "enemy/ENEMY.h"
 #include "game/CONFIG.h"
 #include "game/GAMEMAIN.h"
 #include "game/GIAN.h"
+#include "game/LOADER.h"
 #include "game/LZ_UTY.h"
-#include "game/constants.h"
 #include "game/SCROLL.h"
+#include "game/constants.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
 #include "game/graphics.h"
 #include "game/hash.h"
 #include "game/input.h"
 #include "game/midi.h"
-
 #include "game/narrow.h"
 #include "game/snd.h"
 #include "platform/file.h"
@@ -217,7 +217,8 @@ static bool LoadMIDIWithPotentialLoop(BYTE_BUFFER_OWNED buf, const HASH &hash) {
 // ---------------------------------------------------
 
 // Packfile loading //
-static bool GrpBMPLoadP(const PACKFILE_READ &in, fil_no_t filno, SURFACE_ID sid) {
+static bool GrpBMPLoadP(const PACKFILE_READ &in, fil_no_t filno,
+                        SURFACE_ID sid) {
   auto maybe_bmp = BMPLoad(in.MemExpand(filno));
 
   // If this fails, we're going to crash due to the uninitialized surface
@@ -234,7 +235,8 @@ static bool GrpBMPLoadP(const PACKFILE_READ &in, fil_no_t filno, SURFACE_ID sid)
   return GrpSurface_Load(sid, std::move(bmp));
 }
 
-static bool Snd_SELoadP(const PACKFILE_READ &in, fil_no_t filno, uint8_t id, int max) {
+static bool Snd_SELoadP(const PACKFILE_READ &in, fil_no_t filno, uint8_t id,
+                        int max) {
   return Snd_SELoad(in.MemExpand(filno), id, max);
 }
 
@@ -326,7 +328,7 @@ static void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
   MusicNum = in.info.size();
   MusicHashes.reserve(MusicNum);
 
-  for (auto i = 0; std::cmp_less(i , MusicNum); i++) {
+  for (auto i = 0; std::cmp_less(i, MusicNum); i++) {
     if (st) {
       break;
     }
@@ -344,7 +346,8 @@ static void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
 bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
   if (pack) {
     return true;
-  } if (filename_with_found_prefix.empty()) {
+  }
+  if (filename_with_found_prefix.empty()) {
     static_assert(NOT_FOUND.size() == FOUND.size());
     const auto basename = BASENAMES[id];
     const auto cap = (NOT_FOUND.size() + path_data.size() + basename.size());
@@ -363,9 +366,10 @@ bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
     return false;
   }
   std::ranges::copy(FOUND, filename_with_found_prefix.begin());
-  load_thread = ThreadStart(
-      [this, stream = stream, id](const THREAD_STOP &st) mutable {
-        auto in = FilStartR(std::move(stream)); // NOLINT(performance-move-const-arg)
+  load_thread =
+      ThreadStart([this, stream = stream, id](const THREAD_STOP &st) mutable {
+        auto in =
+            FilStartR(std::move(stream)); // NOLINT(performance-move-const-arg)
         if (id == PACK_ID::MUSIC) {
           LoadMusicHashes(in, st);
         } else if (id == PACK_ID::SOUND) {
@@ -419,7 +423,8 @@ static bool FoundAll = false;
 static bool FnRecheck(INPUT_BITS key) {
   if ((key == KEY_BOMB) || (key == KEY_ESC)) {
     return false;
-  } if (Input_OptionKeyDelta(key) && DAT::Check()) {
+  }
+  if (Input_OptionKeyDelta(key) && DAT::Check()) {
     FoundAll = true;
     return false;
   }

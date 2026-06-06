@@ -3,30 +3,30 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <optional>
-#include <algorithm>
-#include <cmath>
-#include <cassert>
 #include <utility>
 
-#include "ui/WindowSys.h"
 #include "game/LOADER.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/enum_array.h"
 #include "game/enum_flags.h"
-#include "game/narrow.h"
-#include "game/input.h"
 #include "game/graphics.h"
+#include "game/input.h"
+#include "game/narrow.h"
 #include "game/snd.h"
 #include "game/text.h"
 #include "game/ut_math.h"
-#include "platform/sdl/graphics_sdl.h"
 #include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 #include "platform/text_backend.h"
 #include "platform/windows/text_gdi.h"
 #include "ui/FONTUTY.h"
+#include "ui/WindowSys.h"
 
 ///// [構造体] /////
 
@@ -62,7 +62,6 @@ using MSG_WINDOW = struct tagMSG_WINDOW {
     }
     Text.clear();
   }
-
 };
 
 ///// [非公開関数] /////
@@ -79,7 +78,7 @@ static MSG_WINDOW MsgWindow; // メッセージウィンドウ
 
 uint8_t WINDOW_MENU::MaxItems() const {
   uint8_t ret = NumItems;
-  for (auto i = 0; std::cmp_less(i , NumItems); i++) {
+  for (auto i = 0; std::cmp_less(i, NumItems); i++) {
     if (ItemPtr[i]->Submenu) {
       ret = (std::max)(ret, ItemPtr[i]->Submenu->MaxItems());
     }
@@ -159,7 +158,7 @@ void CWinMove(WINDOW_SYSTEM *ws) {
 }
 
 static void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
-                   bool is_title) {
+                          bool is_title) {
   struct COLOR_PAIR {
     RGB shadow;
     RGB text;
@@ -208,14 +207,14 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
   top += CWIN_ITEM_H;
 
   GrpGeom->SetColor({0, 0, 2});
-  for (i = 0; std::cmp_less(i , p->NumItems); i++) {
-    if (std::cmp_equal(i , ws->Select[ws->SelectDepth])) {
+  for (i = 0; std::cmp_less(i, p->NumItems); i++) {
+    if (std::cmp_equal(i, ws->Select[ws->SelectDepth])) {
       GrpGeom->SetAlphaNorm(128);
       GrpGeom->SetColor({5, 0, 0});
     }
     GrpGeom->DrawBoxA(ws->x, top, (ws->x + ws->W), (top + CWIN_ITEM_H));
     top += CWIN_ITEM_H;
-    if (std::cmp_equal(i , ws->Select[ws->SelectDepth])) {
+    if (std::cmp_equal(i, ws->Select[ws->SelectDepth])) {
       GrpGeom->SetAlphaNorm(alpha);
       GrpGeom->SetColor({0, 0, 2});
     }
@@ -231,7 +230,7 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
   });
   topleft.y += (CWIN_ITEM_H + 1); // ???
 
-  for (i = 0; std::cmp_less(i , p->NumItems); i++) {
+  for (i = 0; std::cmp_less(i, p->NumItems); i++) {
     const auto trr = ws->TRRs[1 + i];
     auto *item = p->ItemPtr[i];
     const Narrow::string_view c =
@@ -397,7 +396,7 @@ void MWinDraw(void) {
     TextObj.Render(topleft, trr, text, [](TEXTRENDER_SESSION &s) {
       // セットされたフォントで描画
       s.SetFont(MsgWindow.FontID);
-      for (auto i = 0; std::cmp_less(i , MsgWindow.Line); i++) {
+      for (auto i = 0; std::cmp_less(i, MsgWindow.Line); i++) {
         const auto line = MsgWindow.Msg[i];
 
         // 一応安全対策
@@ -477,7 +476,7 @@ void MWinMsg(Narrow::string_view s) {
 
   Line = MsgWindow.Line;
 
-  if (std::cmp_equal(Line , MsgWindow.MaxLine)) {
+  if (std::cmp_equal(Line, MsgWindow.MaxLine)) {
     // すでに表示最大行数を超えていた場合 //
     for (i = 1; i < MsgWindow.MaxLine - 1; i++)
       MsgWindow.Msg[i] = MsgWindow.Msg[i + 1];
@@ -586,7 +585,7 @@ WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws) {
 
   // 現在アクティブな項目を探す //
   auto *p = &(ws->Parent);
-  for (i = 0; std::cmp_less(i , ws->SelectDepth); i++) {
+  for (i = 0; std::cmp_less(i, ws->SelectDepth); i++) {
     p = p->ItemPtr[ws->Select[i]]->Submenu;
   }
 
@@ -598,9 +597,8 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
   if (ws->FirstWait) {
     if (Key_Data) {
       return;
-    } 
-      ws->FirstWait = false;
-   
+    }
+    ws->FirstWait = false;
   }
 
   // 操作性が悪かった点を修正 //
@@ -637,8 +635,9 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
       ws->OldKey = 0;
     }
     return;
-  } if ((ws->OldKey == KEY_UP) || (ws->OldKey == KEY_DOWN) ||
-             (ws->OldKey == KEY_LEFT) || (ws->OldKey == KEY_RIGHT)) {
+  }
+  if ((ws->OldKey == KEY_UP) || (ws->OldKey == KEY_DOWN) ||
+      (ws->OldKey == KEY_LEFT) || (ws->OldKey == KEY_RIGHT)) {
     ws->KeyCount = CWIN_KEYWAIT;
     return;
   } else if (Input_IsOK(ws->OldKey) || Input_IsCancel(ws->OldKey)) {
@@ -690,7 +689,8 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
       if (p2->OptionFn) {
         if (Input_IsCancel(Key_Data)) {
           return false;
-        } if (const auto delta = Input_OptionKeyDelta(Key_Data)) {
+        }
+        if (const auto delta = Input_OptionKeyDelta(Key_Data)) {
           p2->OptionFn(delta);
         }
         p->SetItems(true);

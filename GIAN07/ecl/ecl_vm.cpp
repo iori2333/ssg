@@ -6,16 +6,16 @@
  *   control flow, and interrupt vectors.
  */
 
+#include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <optional>
 #include <span>
-#include <cstdlib>
-#include <cmath>
 #include <utility>
 
-#include "ecl/ecl_vm.h"
 #include "ecl/ecl_commands.h"
 #include "ecl/ecl_opcodes.h"
+#include "ecl/ecl_vm.h"
 #include "effect/EFFECT.h"
 #include "effect/EFFECT3D.h"
 #include "enemy/BOSS.h"
@@ -1230,7 +1230,7 @@ ECL_HEAD:
 void EclVM::CheckInterrupts(EnemyData &e_ref) {
   auto *e = &e_ref;
 
-  for (int i = 0; std::cmp_less(i , ECLVECT_MAX); i++) {
+  for (int i = 0; std::cmp_less(i, ECLVECT_MAX); i++) {
     if (e->Vect[i].vect == 0)
       continue; // 割り込みがかかっていない
     switch (static_cast<EclIntVec>(i)) {
@@ -1246,7 +1246,9 @@ void EclVM::CheckInterrupts(EnemyData &e_ref) {
       break;
 
     case (EclIntVec::BOSSLEFT): // ボス残り割り込み
-      if (std::cmp_less_equal(BossNow , e->Vect[std::to_underlying(EclIntVec::BOSSLEFT)].value)) {
+      if (std::cmp_less_equal(
+              BossNow,
+              e->Vect[std::to_underlying(EclIntVec::BOSSLEFT)].value)) {
         e->cmd = e->Vect[std::to_underlying(EclIntVec::BOSSLEFT)].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1256,7 +1258,8 @@ void EclVM::CheckInterrupts(EnemyData &e_ref) {
       break;
 
     case (EclIntVec::HP): // HPL 割り込み
-      if (std::cmp_less_equal(e->hp , e->Vect[std::to_underlying(EclIntVec::HP)].value)) {
+      if (std::cmp_less_equal(
+              e->hp, e->Vect[std::to_underlying(EclIntVec::HP)].value)) {
         e->cmd = e->Vect[std::to_underlying(EclIntVec::HP)].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1266,7 +1269,9 @@ void EclVM::CheckInterrupts(EnemyData &e_ref) {
       break;
 
     case (EclIntVec::TIMER): // タイマー割り込み
-      if (std::cmp_greater(e->IntTimer , e->Vect[std::to_underlying(EclIntVec::TIMER)].value)) {
+      if (std::cmp_greater(
+              e->IntTimer,
+              e->Vect[std::to_underlying(EclIntVec::TIMER)].value)) {
         e->cmd = e->Vect[std::to_underlying(EclIntVec::TIMER)].vect;
         e->cmd_c = 0;    // コマンド繰り返しカウンタ
         e->rep_c = 0;    // LOOP(旧REP)命令カウンタ

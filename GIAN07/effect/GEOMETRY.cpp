@@ -3,11 +3,12 @@
  *
  */
 
-#include <cstdint>
-#include <span>
 #include <cmath>
+#include <cstdint>
 #include <ranges>
+#include <span>
 #include <utility>
+
 #include "effect/GEOMETRY.h"
 #include "game/coords.h"
 #include "game/ut_math.h"

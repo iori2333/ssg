@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <optional>
+
 #include "ecl/scl_commands.h"
 
 class SclVM {

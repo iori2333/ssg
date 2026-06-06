@@ -4,11 +4,11 @@
 /*                                                                           */
 
 #include <algorithm>
-#include <cstdint>
 #include <cmath>
-#include <iterator>
-#include <cstring>
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
+#include <iterator>
 
 #include "effect/EFFECT.h"
 #include "effect/EFFECT3D.h"
@@ -16,14 +16,14 @@
 #include "game/GIAN.h"
 #include "game/LOADER.h"
 #include "game/cast.h"
-#include "game/narrow.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
+#include "game/narrow.h"
 #include "game/snd.h"
 #include "game/text.h"
 #include "game/ut_math.h"
-#include "platform/sdl/graphics_sdl.h"
 #include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 #include "platform/text_backend.h"
 #include "platform/windows/text_gdi.h"
 #include "ui/FONTUTY.h"
@@ -501,8 +501,10 @@ void ScreenEffectMove(void) {
 
   case (SCNEFC_CFADEOUT): // 円形フェードアウト
     ScreenInfo.count += 10;
-    ScreenInfo.count = (std::min<uint32_t>)(ScreenInfo.count, 600); // ScreenInfo.cmd = SCNEFC_NONE;
-    
+    ScreenInfo.count =
+        (std::min<uint32_t>)(ScreenInfo.count,
+                             600); // ScreenInfo.cmd = SCNEFC_NONE;
+
     break;
 
   case (SCNEFC_WHITEIN): // ホワイトイン

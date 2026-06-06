@@ -3,21 +3,20 @@
 /*                                                                           */
 /*                                                                           */
 
-#include <cstdint>
-#include <iterator>
+#include <algorithm>
 #include <cassert>
-#include <type_traits>
-#include <ranges>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
+#include <iterator>
+#include <ranges>
+#include <type_traits>
 #include <utility>
 
-#include <algorithm>
-
-#include "enemy/EnemyExCtrl.h"
+#include "ecl/ecl_opcodes.h"
 #include "enemy/BOSS.h"
 #include "enemy/ENEMY.h"
-#include "ecl/ecl_opcodes.h"
+#include "enemy/EnemyExCtrl.h"
 #include "entity/LLASER.h"
 #include "entity/MAID.h"
 #include "game/LOADER.h"
@@ -118,8 +117,8 @@ void SnakyMove(void) {
 
 // 蛇型の敵を殺す
 void SnakyDelete(const BOSS_DATA *b) {
-  auto *s = std::ranges::find_if(SnakeData,
-                                [b](const auto &s) { return (s.Parent == b); });
+  auto *s = std::ranges::find_if(
+      SnakeData, [b](const auto &s) { return (s.Parent == b); });
   if (s == std::end(SnakeData)) {
     return;
   }
@@ -210,7 +209,7 @@ void BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID) {
 
   const auto n = (4 + (BitID << 2));
 
-  for (i = 0; std::cmp_less(i , NumBits); i++) {
+  for (i = 0; std::cmp_less(i, NumBits); i++) {
     if (EnemyNow + 1 < ENEMY_MAX) {
       // 敵資源の要求 //
       auto *e = &Enemy[EnemyInd[EnemyNow++]];
@@ -276,14 +275,14 @@ void BitMove(void) {
   if (BitData.bIsLaserEnable) {
     // 敵のＨＰを仮想ＨＰに回復？させる //
     // -> ダメージを蓄積させたい場合は、下のforを注釈化する事 //
-    for (i = 0; std::cmp_less(i , BitData.NumBits); i++) {
+    for (i = 0; std::cmp_less(i, BitData.NumBits); i++) {
       BitData.Bit[i].pEnemy->hp = BIT_VIRTUAL_HP;
     }
     return;
   }
 
   // BitData.NumBits は、削除が行われるとその数が減ることに注意 //
-  for (i = 0; std::cmp_less(i , BitData.NumBits); i++) {
+  for (i = 0; std::cmp_less(i, BitData.NumBits); i++) {
     e = BitData.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;
@@ -302,7 +301,7 @@ void BitMove(void) {
 
       Snd_SEPlay(SOUND_ID_BOMB, e->x);
 
-      for (j = i + 1; std::cmp_less(j , BitData.NumBits); j++) {
+      for (j = i + 1; std::cmp_less(j, BitData.NumBits); j++) {
         BitData.Bit[j - 1] = BitData.Bit[j];
         BitData.Bit[j - 1].BitID--;
       }
@@ -343,7 +342,7 @@ void BitMove(void) {
   }
 
   // レジスタ更新 //
-  for (i = 0; std::cmp_less(i , BitData.NumBits); i++) {
+  for (i = 0; std::cmp_less(i, BitData.NumBits); i++) {
     e = BitData.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;
@@ -495,7 +494,7 @@ void BitDelete(void) {
     return;
 
   // 各ビットを消滅させる //
-  for (i = 0; std::cmp_less(i , BitData.NumBits); i++) {
+  for (i = 0; std::cmp_less(i, BitData.NumBits); i++) {
     e = BitData.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;
@@ -564,7 +563,7 @@ void BitSelectAttack(uint32_t BitID) {
 
   const auto n = (4 + (BitID << 2));
 
-  for (i = 0; std::cmp_less(i , BitData.NumBits); i++) {
+  for (i = 0; std::cmp_less(i, BitData.NumBits); i++) {
     EnemyECL_LongJump(BitData.Bit[i].pEnemy, n);
   }
 }
@@ -582,7 +581,7 @@ void BitLaserCommand(uint8_t Command) {
 
   BitData.bIsLaserEnable = true;
 
-  for (i = 0; std::cmp_less(i , BitData.NumBits); i++) {
+  for (i = 0; std::cmp_less(i, BitData.NumBits); i++) {
     e = BitData.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;

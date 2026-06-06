@@ -13,13 +13,12 @@
 // #define PBG_DEBUG		// デバッグモードを可能にする時に定義する
 
 ///// [Include Files] /////
-#include "game/constants.h"
-
 #include "effect/EFFECT.h"   // 主にテキストベースのエフェクト処理
 #include "effect/EFFECT3D.h" // ３Ｄエフェクト
 #include "effect/FRAGMENT.h" // 破片系エフェクト処理
 #include "enemy/BOSS.h"      // ボスの定義＆ボス用エフェクトなど
 #include "entity/HOMINGL.h"  // ホーミングレーザーの処理
+#include "entity/ITEM.h"     // アイテム処理
 #include "entity/LASER.h"    // 短いレーザー＆リフレクトレーザー処理
 #include "entity/LLASER.h"   // なが～いレーザーの処理
 #include "entity/MAID.h"     // その名の通り
@@ -28,8 +27,7 @@
 #include "game/LOADER.h"     // 各種ローダー
 #include "game/PRankCtrl.h"  // プレイランク管理
 #include "game/SCROLL.h"     // 背景スクロール＆ＳＣＬ管理
-
-#include "entity/ITEM.h"  // アイテム処理
+#include "game/constants.h"
 #include "game/ut_math.h" // for rnd()
 
 ///// [ 定数 ] /////

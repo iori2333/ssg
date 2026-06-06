@@ -4,23 +4,23 @@
 /*                                                                           */
 
 #include <array>
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <utility>
 
+#include "effect/FRAGMENT.h"
+#include "enemy/ENEMY.h"
+#include "entity/MAID.h"
 #include "entity/MAIDTAMA.h"
 #include "entity/TAMA.h"
-#include "entity/MAID.h"
-#include "enemy/ENEMY.h"
-#include "effect/FRAGMENT.h"
 #include "game/GIAN.h"
-#include "game/SCROLL.h"
-#include "game/PRankCtrl.h"
 #include "game/LOADER.h"
+#include "game/PRankCtrl.h"
+#include "game/SCROLL.h"
 #include "game/cast.h"
-#include "game/entity.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
+#include "game/entity.h"
 #include "game/input.h"
 #include "game/snd.h"
 #include "platform/graphics_backend.h"
@@ -178,7 +178,7 @@ void MaidTamaMove(void) {
 
   int i;
 
-  for (i = 0; std::cmp_less(i , MaidTamaNow); i++) {
+  for (i = 0; std::cmp_less(i, MaidTamaNow); i++) {
     auto *t = &MaidTama[MaidTamaInd[i]];
     if (t->c == TID_HOMING_BOMB_B) {
       enemy_damage(t->x, t->y, TogeDamage[t->c]);
@@ -210,7 +210,7 @@ void MaidTamaMove(void) {
       }
     } else {
       tamaEmove(t);
-}
+    }
   }
   Indsort(MaidTamaInd, MaidTamaNow, MaidTama,
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
@@ -240,7 +240,7 @@ void MaidTamaDraw(void) {
                                      {568, 104, 568 + 32, 104 + 32},
                                      {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; std::cmp_less(i , MaidTamaNow); i++) {
+  for (i = 0; std::cmp_less(i, MaidTamaNow); i++) {
     auto *t = &MaidTama[MaidTamaInd[i]];
 
     x = (t->x >> 6) - 8; // -8 は座標の補正用です

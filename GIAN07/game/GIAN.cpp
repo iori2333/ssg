@@ -5,13 +5,14 @@
 
 #include <cstdint>
 #include <cstdio>
-#include "game/GIAN.h"
+
 #include "entity/MAID.h"
+#include "game/GIAN.h"
 #include "game/LEVEL.h"
-#include "game/coords.h"
-#include "game/constants.h"
 #include "game/LOADER.h"
 #include "game/PRankCtrl.h"
+#include "game/constants.h"
+#include "game/coords.h"
 #include "platform/time.h"
 #include "ui/FONTUTY.h"
 
@@ -21,8 +22,6 @@
 uint32_t GameCount;
 uint8_t GameStage;
 uint8_t GameLevel;
-
-
 
 ///// [ 関数(非公開) ] /////
 extern void StdStatusOutput(void) {

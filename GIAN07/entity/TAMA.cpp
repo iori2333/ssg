@@ -3,25 +3,25 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include <cstdint>
-#include <ranges>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
+#include <ranges>
 #include <span>
 #include <utility>
 
-#include "entity/TAMA.h"
-#include "entity/MAID.h"
 #include "effect/EFFECT.h"
-#include "entity/ITEM.h"
 #include "effect/FRAGMENT.h"
 #include "enemy/ENEMY.h"
+#include "entity/ITEM.h"
+#include "entity/MAID.h"
+#include "entity/TAMA.h"
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
 #include "game/PRankCtrl.h"
 #include "game/cast.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
@@ -701,7 +701,7 @@ void tamaind_set(uint16_t tama1) {
   Tama2Max = TAMA_MAX - tama1;
 
   // 弾のインデックス用配列の初期化 //
-  for (i = 0; std::cmp_less(i , tama1); i++)
+  for (i = 0; std::cmp_less(i, tama1); i++)
     Tama1Ind[i] = i;
   for (i = tama1; i < TAMA_MAX; i++)
     Tama2Ind[i - tama1] = i;
@@ -780,9 +780,9 @@ uint8_t tama_dir(uint16_t i) {
     i++;
     if (TamaCmd.n & 1)
       return deg + (i >> 1) * TamaCmd.dw * (1 - ((i & 1) << 1));
-    
-      return deg - (TamaCmd.dw >> 1) +
-             (i >> 1) * TamaCmd.dw * (1 - ((i & 1) << 1));
+
+    return deg - (TamaCmd.dw >> 1) +
+           (i >> 1) * TamaCmd.dw * (1 - ((i & 1) << 1));
 
   case (TC_ALL):
     return deg + (i << 8) / TamaCmd.n;
@@ -816,8 +816,8 @@ int NewTamaSpeed(uint16_t i) {
 
   if (TamaCmd.cmd & TAMA_REN)
     return vret + (vret >> 3) * (i / TamaCmd.n) + temp;
-  
-    return vret + temp;
+
+  return vret + temp;
 }
 
 int LineCmdNewTamaSpeed(uint16_t i) {
@@ -834,8 +834,8 @@ int LineCmdNewTamaSpeed(uint16_t i) {
 
   if (TamaCmd.cmd & TAMA_REN)
     return vret + (vret >> 3) * (i - 1);
-  
-    return vret;
+
+  return vret;
 }
 
 int tama_speed(uint16_t i) {
@@ -857,8 +857,8 @@ int tama_speed(uint16_t i) {
 
   if (TamaCmd.cmd & TAMA_REN)
     return vret + (vret >> 3) * (i / TamaCmd.n) + temp;
-  
-    return vret + temp;
+
+  return vret + temp;
 }
 
 uint8_t tama_flag(void) {

@@ -3,14 +3,15 @@
  *
  */
 
-#include <SDL3/SDL_iostream.h>
-#include <type_traits>
-#include <string>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
+
+#include <SDL3/SDL_iostream.h>
 
 #include "game/CONFIG.h"
 #include "game/bgm.h"

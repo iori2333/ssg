@@ -3,7 +3,6 @@
  *
  */
 
-#include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -12,8 +11,11 @@
 #include <numeric>
 #include <optional>
 #include <span>
-#include <vector>
 #include <utility>
+#include <vector>
+
+#include <SDL3/SDL_iostream.h>
+
 #include "game/LZ_UTY.h"
 #include "game/defer.h"
 #include "platform/file.h"
@@ -137,9 +139,9 @@ BYTE_BUFFER_OWNED PACKFILE_READ::MemExpand(fil_no_t filno) const {
       auto seq_offset = device.GetBits(LZSS_DICT_BITS);
       if (seq_offset == 0) {
         break;
-      } 
-        seq_offset--;
-     
+      }
+      seq_offset--;
+
       const auto seq_length = (device.GetBits(LZSS_SEQ_BITS) + LZSS_SEQ_MIN);
       for (auto i = decltype(seq_length){0}; i < seq_length; i++) {
         output(dict[seq_offset++ & LZSS_DICT_MASK]);

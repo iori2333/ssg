@@ -3,17 +3,18 @@
 /*                                                                           */
 /*                                                                           */
 
-#include <cstdint>
 #include <algorithm>
-#include <iterator>
+#include <array>
 #include <cmath>
 #include <cstddef>
-#include <array>
-#include <ranges>
+#include <cstdint>
 #include <cstdlib>
-#include "entity/LLASER.h"
+#include <iterator>
+#include <ranges>
+
 #include "ecl/ecl_opcodes.h"
 #include "effect/GEOMETRY.h"
+#include "entity/LLASER.h"
 #include "entity/MAID.h"
 #include "game/graphics.h"
 #include "game/pixelformat.h"
@@ -68,7 +69,7 @@ bool LLaserSet(uint8_t id) {
     lp->type = LLS_LONG;
   } else {
     lp->type = LLaserCmd.type;
-}
+  }
 
   lp->infx = cosl(lp->d, 800);
   lp->infy = sinl(lp->d, 800);
@@ -238,7 +239,7 @@ extern void LLaserMove(void) {
           lp->e = nullptr;
         } else {
           lp->flag = LLF_LINE;
-}
+        }
       }
 
       lp->lx = cosl(lp->d, lp->w >> 6);
@@ -247,7 +248,7 @@ extern void LLaserMove(void) {
       lp->wy = lp->lx;
 
       LLaserPointSet(lp); // p[4] をセット
-                           //_LLaserHitCheck(lp);
+                          //_LLaserHitCheck(lp);
       break;
 
     // 直線状態 //
@@ -342,7 +343,8 @@ extern void LLaserDraw(void) {
           }
           gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, p2, vcs);
           break;
-        } if (auto *gf = GrpGeom_FB()) {
+        }
+        if (auto *gf = GrpGeom_FB()) {
           // gf->SetColor({ 2, 0, 2 });
           gf->SetColor(Table8BitA[c]);
           gf->DrawTriangleFan(lp->p);

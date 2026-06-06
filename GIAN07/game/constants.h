@@ -48,7 +48,7 @@ enum class SURFACE_ID : uint8_t {
   // In-game
   MAPCHIP = 1, // 背景用
   ENEMY = 2,   // 敵(雑魚＆ボス)用
-  FACE = 3,        // 顔グラ用
+  FACE = 3,    // 顔グラ用
   FACE_last = (FACE + FACE_MAX - 1),
   BOMBER = 6, // ボム用グラフィック用
 

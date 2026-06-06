@@ -4,10 +4,11 @@
 /*                                                                           */
 
 #include <algorithm>
-#include "game/PRankCtrl.h"
+
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
 #include "game/LOADER.h"
+#include "game/PRankCtrl.h"
 
 // PlayRank → rank_manager.cpp に移動
 

@@ -4,11 +4,12 @@
  */
 #include <algorithm>
 #include <array>
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
+
 #include "effect/BOMBEFC.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 

@@ -3,11 +3,13 @@
  *
  */
 
-#include <SDL3/SDL_filesystem.h>
 #include <chrono>
 #include <filesystem>
-#include "GIAN07/game/ENTRY.h"
+
+#include <SDL3/SDL_filesystem.h>
+
 #include "GIAN07/game/CONFIG.h"
+#include "GIAN07/game/ENTRY.h"
 #include "GIAN07/game/GAMEMAIN.h"
 #include "GIAN07/game/LOADER.h"
 #include "game/bgm.h"

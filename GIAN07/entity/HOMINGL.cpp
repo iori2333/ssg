@@ -4,13 +4,13 @@
 /*                                                                           */
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <cmath>
 #include <utility>
 
-#include "entity/HOMINGL.h"
 #include "effect/GEOMETRY.h"
+#include "entity/HOMINGL.h"
 #include "entity/MAID.h"
 #include "game/GIAN.h"
 #include "game/snd.h"
@@ -21,7 +21,6 @@
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
 // HLaserNow, HLaserCmd, HLaserBuf, ActiveHL, FreeHL → laser_manager.cpp に移動
-
 
 extern std::array<HomingLaserData, HLASER_MAX> &HLaserBuf;
 extern HomingLaserData &ActiveHL;
@@ -63,7 +62,7 @@ void HLaserSet(const HLaserInfo *hinfo) {
   HLaserData *p;
 
   // 1-n としているのは、角度設定のためね... //
-  for (i = 1; std::cmp_less_equal(i , (hinfo->n)); i++) {
+  for (i = 1; std::cmp_less_equal(i, (hinfo->n)); i++) {
     p = FreeHL.Next;
     if (p == nullptr) {
       return; // データを確保できない
@@ -219,7 +218,7 @@ void HLaserMove(void) {
 }
 
 static void CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
-                uint8_t d) {
+                      uint8_t d) {
   VERTEX_XY src[9 + 1];
   int i;
   int j;

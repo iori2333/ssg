@@ -4,26 +4,25 @@
 /*                                                                           */
 
 #include <algorithm>
-
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <iterator>
 #include <utility>
 
-#include "enemy/BOSS.h"
 #include "ecl/ecl_opcodes.h"
 #include "effect/BOMBEFC.h" // 爆発エフェクト処理
-#include "effect/FRAGMENT.h"
 #include "effect/EFFECT.h"
+#include "effect/FRAGMENT.h"
 #include "effect/GEOMETRY.h"
+#include "enemy/BOSS.h"
 #include "enemy/ENEMY.h"
 #include "enemy/EnemyExCtrl.h"
-#include "entity/MAID.h"
-#include "entity/LLASER.h"
-#include "entity/TAMA.h"
 #include "entity/ITEM.h"
 #include "entity/LASER.h"
+#include "entity/LLASER.h"
+#include "entity/MAID.h"
+#include "entity/TAMA.h"
 #include "game/GIAN.h"
 #include "game/LOADER.h"
 #include "game/SCROLL.h"
@@ -79,7 +78,7 @@ using BOSSHPG_INFO = struct tagBOSSHPG_INFO {
 
 // 公開グローバル //
 static BOSS_DATA Boss[BOSS_MAX]; // ボスデータ格納用構造体
-uint16_t BossNow;         // 現在のボスの数
+uint16_t BossNow;                // 現在のボスの数
 
 // 秘密のグローバル //
 static BOSSHPG_INFO BossHPG; // 体力ゲージ保持用
@@ -524,7 +523,7 @@ void BossKillAll(void) {
 
 static bool BossDamageApply(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (std::cmp_less_equal(e.hp , damage)) { // ボスの死亡処理(後で変更すること!!)
+  if (std::cmp_less_equal(e.hp, damage)) { // ボスの死亡処理(後で変更すること!!)
     SnakyDelete(&b);
     BitDelete();
     enemy_clear();
@@ -589,9 +588,8 @@ bool BossDamage(int x, int y, int damage) {
           (e->flag & EF_DAMAGE)) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        } 
-          return BossDamageApply(*b, *e, damage);
-       
+        }
+        return BossDamageApply(*b, *e, damage);
       }
     }
   }
@@ -622,9 +620,8 @@ bool BossDamage2(int x, int y, int damage) {
       if (HITCHK(x, e->x, e->g_width) && (y > e->y) && (e->flag & EF_DAMAGE)) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        } 
-          ret_val = BossDamageApply(*b, *e, damage);
-       
+        }
+        ret_val = BossDamageApply(*b, *e, damage);
       }
     }
   }
@@ -655,9 +652,8 @@ void BossDamage3(int x, int y, uint8_t d) {
       if (LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        } 
-          BossDamageApply(*b, *e, damage);
-       
+        }
+        BossDamageApply(*b, *e, damage);
       }
     }
   }
@@ -685,11 +681,10 @@ void BossDamage4(int damage) {
       if (e->flag & EF_DAMAGE) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        } 
-          BossDamageApply(*b, *e, damage);
+        }
+        BossDamageApply(*b, *e, damage);
 
-          // return TRUE;
-       
+        // return TRUE;
       }
     }
   }

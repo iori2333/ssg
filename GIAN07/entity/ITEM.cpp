@@ -3,14 +3,14 @@
 /*                                                                           */
 /*                                                                           */
 
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <utility>
 
-#include "entity/ITEM.h"
-#include "entity/MAID.h"
 #include "effect/EFFECT.h"
 #include "effect/FRAGMENT.h"
+#include "entity/ITEM.h"
+#include "entity/MAID.h"
 #include "entity/item_manager.h"
 #include "game/GIAN.h"
 #include "game/LOADER.h"
@@ -67,7 +67,7 @@ void ItemMove(void) {
   // point = 100+(Viv.evade)*100;
   const uint32_t point = ((((SY_MAX - Viv.y) >> 6) + (Viv.evade * 4)) * 160);
 
-  for (i = 0; std::cmp_less(i , ItemNow); i++) {
+  for (i = 0; std::cmp_less(i, ItemNow); i++) {
     auto *ip = &Item[ItemInd[i]];
     if (!Viv.bomb_time) {
       if (Viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
@@ -139,7 +139,7 @@ void ItemDraw(void) {
   int y;
   PIXEL_LTRB src;
 
-  for (i = 0; std::cmp_less(i , ItemNow); i++) {
+  for (i = 0; std::cmp_less(i, ItemNow); i++) {
     auto *ip = &Item[ItemInd[i]];
     const uint8_t ptn = ((ip->count >> 2) & 3);
     switch (ip->type) {

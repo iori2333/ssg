@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <optional>
 #include <span>
+
 #include "ecl/ecl_opcodes.h"
 
 struct EnemyData;

@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+
 #include "entity/HOMINGL.h"
 #include "entity/LASER.h"
 #include "entity/LLASER.h"

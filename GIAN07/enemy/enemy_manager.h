@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+
 #include "enemy/ENEMY.h"
 #include "platform/buffer.h"
 

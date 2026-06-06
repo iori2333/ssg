@@ -2,12 +2,13 @@
  *   SclVM — Stage Control Language virtual machine
  */
 
-#include <optional>
 #include <cstdint>
 #include <cstring>
-#include "ecl/scl_vm.h"
+#include <optional>
+
 #include "ecl/scl_commands.h"
 #include "ecl/scl_opcodes.h"
+#include "ecl/scl_vm.h"
 #include "effect/EFFECT.h"
 #include "enemy/BOSS.h"
 #include "enemy/ENEMY.h"

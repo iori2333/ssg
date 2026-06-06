@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "ecl/ecl_opcodes.h"
 #include "game/endian.h"
 

@@ -3,19 +3,19 @@
 /*                                                                           */
 /*                                                                           */
 
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <utility>
 
-#include "game/SCROLL.h"
 #include "ecl/scl_vm.h"
-#include "enemy/ENEMY.h"
-#include "effect/EFFECT3D.h"
 #include "effect/EFFECT.h"
+#include "effect/EFFECT3D.h"
+#include "enemy/ENEMY.h"
 #include "game/GIAN.h"
+#include "game/SCROLL.h"
 #include "game/cast.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/endian.h"
 #include "platform/graphics_backend.h"
 
@@ -81,7 +81,8 @@ void ScrollMove(void) {
     // 通常のスクロール //
     for (i = 0; i < ScrollInfo.NumLayer; i++) {
       ScrollInfo.LayerCount[i] += ScrollInfo.ScrollSpeed;
-      while (std::cmp_greater_equal(ScrollInfo.LayerCount[i] , ScrollInfo.LayerWait[i])) {
+      while (std::cmp_greater_equal(ScrollInfo.LayerCount[i],
+                                    ScrollInfo.LayerWait[i])) {
         ScrollInfo.LayerCount[i] -= ScrollInfo.LayerWait[i];
         ScrollInfo.LayerDy[i] = (ScrollInfo.LayerDy[i] + 1) % 16; //& 0x0f;
         if (ScrollInfo.LayerDy[i] == 0)
@@ -216,10 +217,12 @@ void ScrollDraw(void) {
   if (ScrollInfo.ExCmd == ScrollCmdStg3Boss) {
     Stg3BossMapDraw();
     return;
-  } if (ScrollInfo.ExCmd == ScrollCmdStg6Cube) {
+  }
+  if (ScrollInfo.ExCmd == ScrollCmdStg6Cube) {
     Draw3DCube();
     return;
-  } if (ScrollInfo.ExCmd == ScrollCmdStg6RndEcl) {
+  }
+  if (ScrollInfo.ExCmd == ScrollCmdStg6RndEcl) {
     DrawEffectFakeECL();
     return;
   } else if (ScrollInfo.ExCmd == ScrollCmdStg6Raster) {

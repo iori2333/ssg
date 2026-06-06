@@ -3,26 +3,27 @@
 /*                                                                           */
 /*                                                                           */
 
-#include <SDL3/SDL_misc.h>
-#include <cstdint>
-#include <cstddef>
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cassert>
-#include <iterator>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <functional>
-#include <chrono>
+#include <iterator>
 #include <numeric>
+#include <ranges>
+#include <span>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <SDL3/SDL_filesystem.h>
-#include <vector>
-#include <string>
-#include <span>
-#include <ranges>
-#include <utility>
-#include <tuple>
+#include <SDL3/SDL_misc.h>
+
 #include "game/CONFIG.h"
 #include "game/DEMOPLAY.h"
 #include "game/ENTRY.h"
@@ -31,18 +32,18 @@
 #include "game/LOADER.h"
 #include "game/MUSIC.h"
 #include "game/bgm.h"
-#include "game/input.h"
-#include "game/graphics.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/enum_array.h"
 #include "game/enum_flags.h"
+#include "game/graphics.h"
+#include "game/input.h"
 #include "game/midi.h"
 #include "game/narrow.h"
 #include "game/snd.h"
 #include "game/string_format.h"
-#include "platform/graphics_backend.h"
 #include "game/volume.h"
+#include "platform/graphics_backend.h"
 #include "platform/input.h"
 #include "platform/midi_backend.h"
 #include "ui/WindowCtrl.h"
@@ -119,9 +120,7 @@ static WINDOW_LABEL TitleItem = {TitleBuf};
 
 static std::vector<std::u8string> Files;
 
-static size_t ListSize(void) {
-  return (!Files.empty() ? Files.size() + 1 : 2);
-}
+static size_t ListSize(void) { return (!Files.empty() ? Files.size() + 1 : 2); }
 static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
 static bool Handle(INPUT_BITS key, size_t selected);
 } // namespace ReplayFiles
@@ -243,8 +242,8 @@ static char HelpScMode[50];
 // 	TitleDevice, "ビデオカードの選択", FnChgDevice
 // };
 #ifdef SUPPORT_GRP_WINDOWED
-static WINDOW_CHOICE ItemDisp = {TitleDisp,
-                          "Switch between window and fullscreen modes", FnDisp};
+static WINDOW_CHOICE ItemDisp = {
+    TitleDisp, "Switch between window and fullscreen modes", FnDisp};
 static WINDOW_CHOICE ItemFSMode = {TitleFSMode, HelpFSMode, FnFSMode};
 #endif
 #ifdef SUPPORT_GRP_SCALING
@@ -256,7 +255,7 @@ static WINDOW_CHOICE ItemSkip = {TitleSkip, "描画スキップの設定です",
 WINDOW_CHOICE ItemBpp = {TitleBpp, "使用する色数を指定します", FnBpp};
 #endif
 static WINDOW_CHOICE ItemMsg = {TitleMsg, "ウィンドウの表示位置を決めます",
-                         FnWinLocate};
+                                FnWinLocate};
 static WINDOW_CHOICE ItemScreenshot = {
     "Screenshots", "Customize the screenshot format", Screenshot::Menu};
 #ifdef SUPPORT_GRP_API
@@ -264,27 +263,27 @@ static WINDOW_CHOICE ItemAPI = {"API", "Select rendering API", API::Menu};
 #endif
 static WINDOW_CHOICE ItemExit = SubmenuExitItemForArray;
 static WINDOW_MENU Menu = {SetItem,
-                    {
+                           {
 #ifdef SUPPORT_GRP_WINDOWED
-                        &ItemDisp,
-                        &ItemFSMode,
+                               &ItemDisp,
+                               &ItemFSMode,
 #endif
 #ifdef SUPPORT_GRP_SCALING
-                        &ItemScale,
-                        &ItemScMode,
+                               &ItemScale,
+                               &ItemScMode,
 #endif
-                        &ItemSkip,
+                               &ItemSkip,
 #ifdef SUPPORT_GRP_BITDEPTH
-                        &ItemBpp,
+                               &ItemBpp,
 #endif
-                        &ItemScreenshot,
+                               &ItemScreenshot,
 #ifdef SUPPORT_GRP_API
-                        &ItemAPI,
+                               &ItemAPI,
 #endif
-                        &HRuleItem,
-                        &ItemMsg,
-                        &ItemExit,
-                    }};
+                               &HRuleItem,
+                               &ItemMsg,
+                               &ItemExit,
+                           }};
 } // namespace Grp
 
 namespace Snd {
@@ -415,37 +414,43 @@ static auto &ItemMusic = Item[5];
 
 static WINDOW_LABEL ExitTitle = {"    終了するの？"};
 static WINDOW_CHOICE ExitItems[] = {{"  Save && Exit  ", "", ExitFnSaveExit},
-                             {"   お っ け ～ ", "", ExitFnYes},
-                             {"   だ め だ め", "", ExitFnNo}};
+                                    {"   お っ け ～ ", "", ExitFnYes},
+                                    {"   だ め だ め", "", ExitFnNo}};
 static WINDOW_MENU ExitMenu = {std::span(ExitItems), [](bool) {}, &ExitTitle};
 
 static WINDOW_LABEL ContinueTitle = {" Ｃｏｎｔｉｎｕｅ？"};
-static WINDOW_CHOICE ContinueYesNoItem[] = {{"   お っ け ～", "", ContinueFnYes},
-                                     {"   や だ や だ", "", ContinueFnNo}};
+static WINDOW_CHOICE ContinueYesNoItem[] = {
+    {"   お っ け ～", "", ContinueFnYes},
+    {"   や だ や だ", "", ContinueFnNo}};
 static WINDOW_MENU ContinueMenu = {std::span(ContinueYesNoItem), [](bool) {},
-                            &ContinueTitle};
+                                   &ContinueTitle};
 
 static WINDOW_LABEL GameOverSaveTitle = {"  Save Replay?"};
-static WINDOW_CHOICE GameOverSaveItems[] = {{"   お っ け ～ ", "", GameOverSaveFnYes},
-                                     {"   や だ や だ", "", GameOverSaveFnNo}};
-static WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](bool) {},
-                                &GameOverSaveTitle};
+static WINDOW_CHOICE GameOverSaveItems[] = {
+    {"   お っ け ～ ", "", GameOverSaveFnYes},
+    {"   や だ や だ", "", GameOverSaveFnNo}};
+static WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems),
+                                       [](bool) {}, &GameOverSaveTitle};
 
-static WINDOW_MENU_SCROLL<BGMPack::TitleItem, BGMPack::ListSize, BGMPack::Generate,
-                   BGMPack::Handle>
+static WINDOW_MENU_SCROLL<BGMPack::TitleItem, BGMPack::ListSize,
+                          BGMPack::Generate, BGMPack::Handle>
     BGMPackMenu;
 
 static WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, ReplayFiles::ListSize,
-                   ReplayFiles::Generate, ReplayFiles::Handle>
+                          ReplayFiles::Generate, ReplayFiles::Handle>
     ReplayFilesMenu;
 
 ///// [グローバル変数(公開)] /////
 WINDOW_SYSTEM MainWindow = {Main::Menu};
 WINDOW_SYSTEM ExitWindow = {ExitMenu};
 WINDOW_SYSTEM ContinueWindow = {ContinueMenu};
-WINDOW_SYSTEM BGMPackWindow = {WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize, &BGMPack::Generate, &BGMPack::Handle, 20>::Menu};
+WINDOW_SYSTEM BGMPackWindow = {
+    WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize,
+                       &BGMPack::Generate, &BGMPack::Handle, 20>::Menu};
 WINDOW_SYSTEM GameOverSaveWindow = {GameOverSaveMenu};
-WINDOW_SYSTEM ReplayFilesWindow = {WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize, &ReplayFiles::Generate, &ReplayFiles::Handle, 20>::Menu};
+WINDOW_SYSTEM ReplayFilesWindow = {
+    WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
+                       &ReplayFiles::Generate, &ReplayFiles::Handle, 20>::Menu};
 
 // メインメニューの初期化 //
 void InitMainWindow(void) {
@@ -661,7 +666,9 @@ void Open(void) {
   }
   w = (std::min)(w, GRP_RES.w);
 
-  WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize, &BGMPack::Generate, &BGMPack::Handle, 20>::Init(BGMPackWindow, SelAtOpen, &MainWindow);
+  WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize, &BGMPack::Generate,
+                     &BGMPack::Handle, 20>::Init(BGMPackWindow, SelAtOpen,
+                                                 &MainWindow);
   BGMPackWindow.Init(w);
   BGMPackWindow.OpenCentered(w, BGMPackWindow.Select[0]);
 }
@@ -776,7 +783,9 @@ void Open(void) {
   w = (std::max)(w, CWinItemExtent(" Exit").w);
   w = (std::min)(w, GRP_RES.w);
 
-  WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize, &ReplayFiles::Generate, &ReplayFiles::Handle, 20>::Init(ReplayFilesWindow, 0, &MainWindow);
+  WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
+                     &ReplayFiles::Generate, &ReplayFiles::Handle,
+                     20>::Init(ReplayFilesWindow, 0, &MainWindow);
   ReplayFilesWindow.Init(w);
   ReplayFilesWindow.OpenCentered(w, ReplayFilesWindow.Select[0]);
 }

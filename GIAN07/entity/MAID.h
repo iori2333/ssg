@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <cstdint>
 #include "game/cast.h"
+#include <cstdint>
 
 ///// [ 定数 ] /////
 
@@ -70,7 +70,7 @@ struct Player {
 
   // --- メソッド ---
   void Draw();             // プレイヤー描画 (MaidDraw)
-  void DrawStatus() const;       // 各種ステータス描画 (StateDraw)
+  void DrawStatus() const; // 各種ステータス描画 (StateDraw)
   void Update();           // 毎フレーム更新 (MaidMove)
   void Initialize();       // 初期化 (MaidSet)
   void PrepareNextStage(); // 次のステージ準備 (MaidNextStage)
@@ -80,9 +80,9 @@ struct Player {
   void AddEvadeEx(int x, int y,
                   uint8_t n);   // 指定座標からかすりエフェクト (evade_addEx)
   void AddScore(int sc);        // スコア加算 (score_add)
-  void DrawWideBomb() const;          // ワイドボム描画 (WideBombDraw)
+  void DrawWideBomb() const;    // ワイドボム描画 (WideBombDraw)
   void PowerUp(uint8_t damage); // パワーアップ処理
-  uint8_t GetLaserDeg() const;        // レーザー角度取得
+  uint8_t GetLaserDeg() const;  // レーザー角度取得
   static uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
   static uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);
 

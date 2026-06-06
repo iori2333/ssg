@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+
 #include "game/coords.h"
 
 ///// [構造体] /////

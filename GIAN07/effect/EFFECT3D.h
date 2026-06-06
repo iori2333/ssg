@@ -11,6 +11,7 @@
 ///// [ヘッダファイル] /////
 #include <cstdint>
 #include <span>
+
 #include "game/coords.h"
 
 ///// [ 定数 ] /////

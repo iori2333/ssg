@@ -2,10 +2,10 @@
  *   ItemManager — centralized item system state
  */
 
-#include <array>
-#include <cstdint>
 #include "entity/item_manager.h"
 #include "entity/ITEM.h"
+#include <array>
+#include <cstdint>
 
 ItemManager Items;
 std::array<ItemData, ITEM_MAX> &Item = Items.pool.entities;

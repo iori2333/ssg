@@ -3,16 +3,16 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include <clocale>
-#include <cstdint>
 #include <array>
+#include <clocale>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <utility>
 
-#include "entity/LASER.h"
 #include "GIAN07/game/entity.h"
 #include "effect/GEOMETRY.h"
+#include "entity/LASER.h"
 #include "entity/LLASER.h"
 #include "entity/MAID.h"
 #include "game/GIAN.h"
@@ -214,7 +214,7 @@ void laser_draw(void) {
 
   GrpGeom->Lock();
 
-  for (i = 0; std::cmp_less(i , LaserNow); i++) {
+  for (i = 0; std::cmp_less(i, LaserNow); i++) {
     auto *lp = &Laser[LaserInd[i]];
     switch (lp->type) {
     // ノーマルショートレーザー＆反射レーザー //
@@ -330,9 +330,9 @@ static uint8_t laser_dir(uint16_t i) {
     i++;
     if (LaserCmd.n & 1)
       return deg + (i >> 1) * LaserCmd.dw * (1 - ((i & 1) << 1));
-    
-      return deg - (LaserCmd.dw >> 1) +
-             (i >> 1) * LaserCmd.dw * (1 - ((i & 1) << 1));
+
+    return deg - (LaserCmd.dw >> 1) +
+           (i >> 1) * LaserCmd.dw * (1 - ((i & 1) << 1));
 
   case (LC_ALL):
     return deg + (i << 8) / LaserCmd.n;
@@ -432,7 +432,7 @@ static void Lmove(LASER_DATA *lp) {
       lp->p[2].y = lp->p[3].y + lp->ly;
     } else {
       lp->w += 64;
-}
+    }
 
     lp->wx = -sinl(lp->d, lp->w >> 6);
     lp->wy = cosl(lp->d, lp->w >> 6);
@@ -590,7 +590,7 @@ static int REFL_hit(const LASER_DATA *lp) {
   const long ly = (lp->y + sinl(lp->d, lp->l)); // レーザーの判定ポイントY
 
   long tx;
-  long ty;        // 演算用座標
+  long ty; // 演算用座標
   long length;
   long width; // ヒットチェック用
 
@@ -599,7 +599,7 @@ static int REFL_hit(const LASER_DATA *lp) {
 
   // 太レーザーに対して反射する //
   for (i = 0; i < LLASER_MAX; i++) {
-    if (std::cmp_equal(i , lp->notr))
+    if (std::cmp_equal(i, lp->notr))
       continue; // 前回反射したなら無視する
     ll = &LLaser[i];
     if (ll->flag != LLF_NORM)

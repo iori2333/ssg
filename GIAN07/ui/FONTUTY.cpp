@@ -9,17 +9,17 @@
 #include <span>
 #include <string_view>
 
-#include "ui/FONTUTY.h"
 #include "game/constants.h"
 #include "game/coords.h"
 #include "game/enum_array.h"
 #include "game/graphics.h"
 #include "game/narrow.h"
 #include "platform/graphics_backend.h"
-#include "platform/windows/text_gdi.h"
+#include "ui/FONTUTY.h"
 
 #ifdef WIN32
 #include <windows.h>
+
 #include "platform/windows/text_gdi.h"
 
 extern constinit const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs = [] {

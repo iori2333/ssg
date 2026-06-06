@@ -5,9 +5,9 @@
 
 #pragma once
 
+#include "game/input.h"
 #include <string>
 #include <vector>
-#include "game/input.h"
 
 struct CONFIG_DATA;
 

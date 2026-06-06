@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+
 #include "entity/TAMA.h"
 
 struct BulletManager {

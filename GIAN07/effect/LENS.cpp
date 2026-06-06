@@ -4,14 +4,14 @@
 /*                                                                           */
 
 #include <cassert>
-#include <optional>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <cstddef>
 #include <new>
+#include <optional>
 #include <span>
-
 #include <utility>
+
 #include "effect/LENS.h"
 #include "game/cast.h"
 #include "game/constants.h"
@@ -55,7 +55,7 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
   const auto r2 = (Cast::up_sign<int32_t>(r) * r);
   const auto s = isqrt(r2 - (Cast::up_sign<int32_t>(m) * m));
 
-  for (auto i = -Cast::up_sign<int32_t>(r); std::cmp_less(i , r); i++) {
+  for (auto i = -Cast::up_sign<int32_t>(r); std::cmp_less(i, r); i++) {
     // ｘ座標の測定だ //
     dx = (s * s) - (i * i);
 

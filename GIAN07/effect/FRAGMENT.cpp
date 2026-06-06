@@ -3,18 +3,19 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
+
 #include "effect/FRAGMENT.h"
 #include "effect/GEOMETRY.h"
-#include "game/coords.h"
 #include "game/constants.h"
+#include "game/coords.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 #include "platform/sdl/graphics_sdl.h"
 
 FRAGMENT_DATA Fragment[FRAGMENT_MAX]; // 破片データ管理用構造体
-static int FragmentPtr = 0;                  // 次に破片データを挿入する位置
+static int FragmentPtr = 0;           // 次に破片データを挿入する位置
 
 static void FDraw(const FRAGMENT_DATA *f);
 

@@ -5,10 +5,8 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include <cinttypes> // for PRId64
-
 #include <algorithm>
-
+#include <cinttypes> // for PRId64
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -17,19 +15,19 @@
 #include "effect/EFFECT.h"
 #include "effect/FRAGMENT.h"
 #include "effect/GEOMETRY.h"
+#include "entity/LASER.h"
 #include "entity/MAID.h"
 #include "entity/MAIDTAMA.h"
 #include "entity/TAMA.h"
-#include "entity/LASER.h"
 #include "game/CONFIG.h"
 #include "game/GAMEMAIN.h"
 #include "game/GIAN.h"
-#include "game/coords.h"
-#include "game/constants.h"
 #include "game/LOADER.h"
-#include "game/SCROLL.h"
 #include "game/PRankCtrl.h"
+#include "game/SCROLL.h"
 #include "game/cast.h"
+#include "game/constants.h"
+#include "game/coords.h"
 #include "game/input.h"
 #include "game/pixelformat.h"
 #include "game/snd.h"
@@ -286,7 +284,7 @@ void Player::DrawStatus() const {
   sprintf(buf, "       Bomb %1d", bomb);
   GrpPut16(280, 0, buf);
 
-  for (i = 0; std::cmp_less(i , left); i++) {
+  for (i = 0; std::cmp_less(i, left); i++) {
     constexpr PIXEL_LTWH life_src = {608, 432, 16, 16};
     GrpSurface_Blit({(280 + (i * 14)), 0}, SURFACE_ID::SYSTEM, life_src);
   }
@@ -560,7 +558,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
     fragment_set(ex, ey, FRG_EVADE);
   }
 
-  for (i = 0; std::cmp_less(i , n); i++) {
+  for (i = 0; std::cmp_less(i, n); i++) {
     if (evade == 999) {
       evade_c = 1;
       return;

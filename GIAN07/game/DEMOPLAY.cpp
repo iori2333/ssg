@@ -3,19 +3,21 @@
 /*                                                                           */
 /*                                                                           */
 
-#include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <string>
-#include <stdio.h>
 #include <utility>
 #include <vector>
-#include "game/DEMOPLAY.h"
+
+#include <SDL3/SDL_iostream.h>
+
 #include "entity/MAID.h"
 #include "game/CONFIG.h"
+#include "game/DEMOPLAY.h"
 #include "game/GIAN.h"
 #include "game/LOADER.h"
 #include "game/LZ_UTY.h"
@@ -24,9 +26,9 @@
 #include "game/ut_math.h"
 #include "platform/file.h"
 
-bool DemoplayLoadEnable = false;    // デモプレイのロードが動作しているか
-bool DemoplaySaveAllEnable = false; // Multi-stage recording active
-bool DemoplayLoadAllEnable = false; // Multi-stage playback active
+bool DemoplayLoadEnable = false;           // デモプレイのロードが動作しているか
+bool DemoplaySaveAllEnable = false;        // Multi-stage recording active
+bool DemoplayLoadAllEnable = false;        // Multi-stage playback active
 static DEMOPLAY_INFO DemoInfo;             // デモプレイ情報
 static INPUT_BITS DemoBuffer[DEMOBUF_MAX]; // デモプレイ用バッファ
 static uint32_t DemoFrameCur;
@@ -234,16 +236,17 @@ void DemoplaySaveReplayAll(bool exstg) {
   info.CfgDat = DemoInfo.CfgDat;
   info.Exp = DemoInfo.Exp;
   info.Weapon = DemoInfo.Weapon;
-  for (int i = 0; std::cmp_less(i , MultiStageCount); i++) {
+  for (int i = 0; std::cmp_less(i, MultiStageCount); i++) {
     info.Stages[i] = MultiStageNums[i];
     info.FrameCounts[i] = MultiStageFrames[i];
   }
 
   PACKFILE_WRITE out;
-  out.files.emplace_back(reinterpret_cast<const uint8_t *>(&info), sizeof(info));
+  out.files.emplace_back(reinterpret_cast<const uint8_t *>(&info),
+                         sizeof(info));
   for (auto &buf : StageRecordBufs) {
     out.files.emplace_back(reinterpret_cast<const uint8_t *>(buf.data()),
-                         buf.size() * sizeof(INPUT_BITS));
+                           buf.size() * sizeof(INPUT_BITS));
   }
 
   const auto fn = ReplayAllFN(exstg);

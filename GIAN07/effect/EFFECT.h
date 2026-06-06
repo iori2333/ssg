@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "game/narrow.h"
 
 ///// [更新履歴] /////

@@ -5,27 +5,27 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include <bit>
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cinttypes> // for PRId64
-#include <optional>
 #include <cstddef>
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
+#include <iterator>
+#include <optional>
+#include <ranges>
 #include <span>
 #include <utility>
-#include <iterator>
-#include <ranges>
 
 #include "effect/EFFECT.h"
 #include "game/GAMEMAIN.h"
 #include "game/LOADER.h"
 #include "game/MUSIC.h"
 #include "game/bgm.h"
-#include "game/coords.h"
-#include "game/constants.h"
 #include "game/cast.h"
+#include "game/constants.h"
+#include "game/coords.h"
 #include "game/debug.h"
 #include "game/graphics.h"
 #include "game/input.h"
