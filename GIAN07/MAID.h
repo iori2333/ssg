@@ -18,47 +18,44 @@ inline constexpr int MAID_MOVE_DISABLE_TIME = (250 - 100); // 行動不能な時
 
 inline constexpr int BOMBMUTEKI_VAL = 60; // ボムの終端無敵時間
 inline constexpr int SBOPT_DX       = 26; // オプションのずれ幅(x64ではない)
-// #define EVADE_X_START	150			//
-// かすりカウンタの初期表示座標 #define EVADE_X_SPD		5
-// // かすりカウンタの移動速度 #define EVADE_TIME		60
-// // かすり許容フレーム数
+
 inline constexpr int EVADETIME_MAX = 256; // かすりマックス時の待ち時間
 
 inline constexpr int SSP_WIDE   = (64 * 9); //
 inline constexpr int SSP_HOMING = (64 * 9); //
 inline constexpr int SSP_LASER  = (64 * 13); //
 
-///// [マクロ] /////
+///// [ Player クラス ] /////
 
-///// [構造体] /////
+struct Player {
+  // --- 座標 ---
+  int x, y;        // 現在の<表示>座標
+  int vx, vy;      // オプションのズレ具合
+  int opx, opy;    // 現在のオプション基本座標
 
-typedef struct {
-  int x, y; // 現在の<表示>座標
+  // --- スコア ---
+  int64_t score;   // 得点カウンタ
+  int64_t dscore;  // 得点増加値
 
-  int vx, vy;   // オプションのズレ具合
-  int opx, opy; // 現在のオプション基本座標
-
-  int64_t score;  // 得点カウンタ
-  int64_t dscore; // 得点増加値
-
+  // --- かすり ---
   uint32_t evade_sum; // かすり合計
   int evadesc;        // かすり得点
   uint16_t evade;     // かすり回数
   uint16_t evade_c;   // 連続「かすり」の残り許容時間
 
-  char v; // サボテンの移動速度基本値(後で64~45倍にする)
-
-  uint8_t weapon; // "とげ" の種類
-  uint8_t exp;    // サボテンの経験値？
-  uint8_t bomb;   // ボムの数
-  uint8_t left;   // 残りサボテン数
-  uint8_t credit; // のこりクレジット
-
+  // --- ステータス ---
+  char v;             // サボテンの移動速度基本値(後で64~45倍にする)
+  uint8_t weapon;     // "とげ" の種類
+  uint8_t exp;        // サボテンの経験値？
+  uint8_t bomb;       // ボムの数
+  uint8_t left;       // 残りサボテン数
+  uint8_t credit;     // のこりクレジット
   uint16_t miss_count; // ミス回数
   uint16_t bomb_used;  // ボム使用回数
 
-  uint8_t GrpID; // 表示すべきグラフィック
+  uint8_t GrpID;      // 表示すべきグラフィック
 
+  // --- タイマー/状態 ---
   uint16_t bomb_time;   // ボムウェイト用
   uint16_t exp2;        // 経験値増加抑制用
   uint16_t muteki;      // 無敵フラグ(0:off !0:無敵時間カウンタ)
@@ -70,71 +67,48 @@ typedef struct {
 
   bool bGameOver; // ゲームオーバー判定用フラグ
   bool BuzzSound; // かすった音を連続再生させないためのフラグ
-} MAID;
 
-///// [ 関数 ] /////
-extern void MaidDraw(void);
-extern void StateDraw(void); // 各種ステータスを描画する
-extern void MaidMove(void);
-extern void MaidSet(void);       // 初期化
-extern void MaidNextStage(void); // 次のステージの準備
-extern void MaidDead(void);      // 死す
+  // --- メソッド ---
+  void Draw();             // プレイヤー描画 (MaidDraw)
+  void DrawStatus();       // 各種ステータス描画 (StateDraw)
+  void Update();           // 毎フレーム更新 (MaidMove)
+  void Initialize();       // 初期化 (MaidSet)
+  void PrepareNextStage(); // 次のステージ準備 (MaidNextStage)
+  void OnDeath();          // 死亡処理 (MaidDead)
 
-extern void evade_add(uint8_t n); // かすりゲージを上昇させる
-// extern void evade_addEx(int x, int y, uint8_t n);	//
-// かすりゲージを上昇させる
+  void AddEvade(uint8_t n);                    // かすりゲージ上昇 (evade_add)
+  void AddEvadeEx(int x, int y, uint8_t n);    // 指定座標からかすりエフェクト (evade_addEx)
+  void AddScore(int sc);                       // スコア加算 (score_add)
+  void DrawWideBomb();                         // ワイドボム描画 (WideBombDraw)
+  void PowerUp(uint8_t damage);                // パワーアップ処理
+  uint8_t GetLaserDeg();                       // レーザー角度取得
+  uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
+  uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);
 
-extern void score_add(int sc); // スコアを上昇させる
+private:
+  void DrawLaserBomb();                        // レーザーボム描画
+  static uint8_t GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i);
+};
 
-extern void WideBombDraw(void); // ワイドショット用のボム(やや例外処理)
+// 後方互換用エイリアス（段階的に廃止予定）
+using MAID = Player;
 
 ///// [ 変数 ] /////
-extern MAID Viv; // 麗しきメイドさん構造体
+extern Player Viv; // 麗しきメイドさん = プレイヤーインスタンス
 
-inline void PowerUp(uint8_t damage) {
-  // ダメージの分だけ加算する //
-  Viv.exp2 += damage;
-
-  // Viv.exp(8bit+1bit) ooo oooooo //
-  switch ((Cast::up<uint16_t>(Viv.exp) + 1) >> 5) {
-  case (0):
-    if (Viv.exp2 > 5 - 3)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (1):
-    if (Viv.exp2 > 25 - 15)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (2):
-    if (Viv.exp2 > 50 - 20)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (3):
-    if (Viv.exp2 > 80)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (4):
-    if (Viv.exp2 > 120)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (5):
-    if (Viv.exp2 > 140)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (6):
-    if (Viv.exp2 > 160)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (7):
-    if (Viv.exp2 > 180)
-      Viv.exp++, Viv.exp2 = 0;
-    return;
-  case (8):
-    return; // フルパワーアップ時
-  }
-}
-
+///// [ 後方互換用関数ラッパー（段階的に廃止予定）] /////
+inline void MaidDraw()       { Viv.Draw(); }
+inline void StateDraw()      { Viv.DrawStatus(); }
+inline void MaidMove()       { Viv.Update(); }
+inline void MaidSet()        { Viv.Initialize(); }
+inline void MaidNextStage()  { Viv.PrepareNextStage(); }
+inline void MaidDead()       { Viv.OnDeath(); }
+inline void evade_add(uint8_t n)           { Viv.AddEvade(n); }
+inline void evade_addEx(int x, int y, uint8_t n) { Viv.AddEvadeEx(x, y, n); }
+inline void score_add(int sc)              { Viv.AddScore(sc); }
+inline void WideBombDraw()                 { Viv.DrawWideBomb(); }
+inline void PowerUp(uint8_t damage)        { Viv.PowerUp(damage); }
+inline uint8_t GetLaserDeg()               { return Viv.GetLaserDeg(); }
+// レーザー角度計算（MAIDTAMA.cpp から参照されるため public に公開）
 uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
 uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);
-
-inline uint8_t GetLaserDeg(void) { return ((120 - Viv.bomb_time) * 3) / 2; }
