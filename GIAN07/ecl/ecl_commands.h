@@ -79,12 +79,12 @@ struct CmdJfcs {
 
 struct CmdSti {
   uint32_t addr;
-  uint8_t cond; // EclIntVec
+  EclIntVec cond;
   uint32_t value;
 }; // set interrupt vector
 
 struct CmdCli {
-  uint8_t vec; // EclIntVec
+  EclIntVec vec;
 }; // clear interrupt vector
 
 // -- 0x1?: Movement --
@@ -397,7 +397,7 @@ struct CmdPse {
 }; // play sound effect
 
 struct CmdInt {
-  uint8_t id;
+  EclIntType id;
 }; // boss interrupt
 
 struct CmdExdegd {
@@ -413,7 +413,7 @@ struct CmdEnemyset {
 struct CmdEnemysetd {
   int16_t x;
   int16_t y;
-  uint8_t reg; // EclReg for angle
+  EclReg reg;
   uint8_t ecl_id;
 }; // spawn enemy with angle
 
@@ -458,60 +458,60 @@ struct CmdCefc {
 // -- 0xB?: Register operations --
 
 struct CmdMovr {
-  uint8_t dst;
-  uint8_t src;
+  EclReg dst;
+  EclReg src;
 }; // move register
 
 struct CmdMovc {
-  uint8_t dst;
+  EclReg dst;
   uint32_t value;
 }; // move constant to register
 
 struct CmdAdd {
-  uint8_t dst;
-  uint8_t src;
+  EclReg dst;
+  EclReg src;
 }; // add to register
 
 struct CmdSub {
-  uint8_t dst;
-  uint8_t src;
+  EclReg dst;
+  EclReg src;
 }; // subtract from register
 
 struct CmdSinl {
-  uint8_t dst;
-  uint8_t src;
+  EclReg dst;
+  EclReg src;
 }; // sinl to register
 
 struct CmdCosl {
-  uint8_t dst;
-  uint8_t src;
+  EclReg dst;
+  EclReg src;
 }; // cosl to register
 
 struct CmdMod {
-  uint8_t dst;
+  EclReg dst;
   uint32_t value;
 }; // modulo register
 
 struct CmdRnd {
-  uint8_t dst;
+  EclReg dst;
 }; // random to register
 
 struct CmdCmpr {
-  uint8_t reg0;
-  uint8_t reg1;
+  EclReg reg0;
+  EclReg reg1;
 }; // compare registers
 
 struct CmdCmpc {
-  uint8_t reg;
+  EclReg reg;
   uint32_t value;
 }; // compare register with constant
 
 struct CmdInc {
-  uint8_t dst;
+  EclReg dst;
 }; // increment register
 
 struct CmdDec {
-  uint8_t dst;
+  EclReg dst;
 }; // decrement register
 
 struct CmdJl {
@@ -856,11 +856,11 @@ inline CmdJfcs Decode(EclOpTag<EclOp::JFCS>, const uint8_t *raw) {
 }
 
 inline CmdSti Decode(EclOpTag<EclOp::STI>, const uint8_t *raw) {
-  return {U32LEAt(&raw[1]), raw[5], U32LEAt(&raw[6])};
+  return {U32LEAt(&raw[1]), static_cast<EclIntVec>(raw[5]), U32LEAt(&raw[6])};
 }
 
 inline CmdCli Decode(EclOpTag<EclOp::CLI>, const uint8_t *raw) {
-  return {raw[1]};
+  return {static_cast<EclIntVec>(raw[1])};
 }
 
 // --- 0x1?: Movement ---
@@ -1114,7 +1114,7 @@ inline CmdPse Decode(EclOpTag<EclOp::PSE>, const uint8_t *raw) {
 }
 
 inline CmdInt Decode(EclOpTag<EclOp::INT>, const uint8_t *raw) {
-  return {raw[1]};
+  return {static_cast<EclIntType>(raw[1])};
 }
 
 inline CmdExdegd Decode(EclOpTag<EclOp::EXDEGD>, const uint8_t *raw) {
@@ -1128,7 +1128,8 @@ inline CmdEnemyset Decode(EclOpTag<EclOp::ENEMYSET>, const uint8_t *raw) {
 
 inline CmdEnemysetd Decode(EclOpTag<EclOp::ENEMYSETD>, const uint8_t *raw) {
   return {static_cast<int16_t>(U16LEAt(&raw[1])),
-          static_cast<int16_t>(U16LEAt(&raw[3])), raw[5], raw[6]};
+          static_cast<int16_t>(U16LEAt(&raw[3])), static_cast<EclReg>(raw[5]),
+          raw[6]};
 }
 
 inline CmdHitxy Decode(EclOpTag<EclOp::HITXY>, const uint8_t *raw) {
@@ -1167,51 +1168,51 @@ inline CmdCefc Decode(EclOpTag<EclOp::CEFC>, const uint8_t *raw) {
 // --- 0xB?: Register operations ---
 
 inline CmdMovr Decode(EclOpTag<EclOp::MOVR>, const uint8_t *raw) {
-  return {raw[1], raw[2]};
+  return {static_cast<EclReg>(raw[1]), static_cast<EclReg>(raw[2])};
 }
 
 inline CmdMovc Decode(EclOpTag<EclOp::MOVC>, const uint8_t *raw) {
-  return {raw[1], U32LEAt(&raw[2])};
+  return {static_cast<EclReg>(raw[1]), U32LEAt(&raw[2])};
 }
 
 inline CmdAdd Decode(EclOpTag<EclOp::ADD>, const uint8_t *raw) {
-  return {raw[1], raw[2]};
+  return {static_cast<EclReg>(raw[1]), static_cast<EclReg>(raw[2])};
 }
 
 inline CmdSub Decode(EclOpTag<EclOp::SUB>, const uint8_t *raw) {
-  return {raw[1], raw[2]};
+  return {static_cast<EclReg>(raw[1]), static_cast<EclReg>(raw[2])};
 }
 
 inline CmdSinl Decode(EclOpTag<EclOp::SINL>, const uint8_t *raw) {
-  return {raw[1], raw[2]};
+  return {static_cast<EclReg>(raw[1]), static_cast<EclReg>(raw[2])};
 }
 
 inline CmdCosl Decode(EclOpTag<EclOp::COSL>, const uint8_t *raw) {
-  return {raw[1], raw[2]};
+  return {static_cast<EclReg>(raw[1]), static_cast<EclReg>(raw[2])};
 }
 
 inline CmdMod Decode(EclOpTag<EclOp::MOD>, const uint8_t *raw) {
-  return {raw[1], U32LEAt(&raw[2])};
+  return {static_cast<EclReg>(raw[1]), U32LEAt(&raw[2])};
 }
 
 inline CmdRnd Decode(EclOpTag<EclOp::RND>, const uint8_t *raw) {
-  return {raw[1]};
+  return {static_cast<EclReg>(raw[1])};
 }
 
 inline CmdCmpr Decode(EclOpTag<EclOp::CMPR>, const uint8_t *raw) {
-  return {raw[1], raw[2]};
+  return {static_cast<EclReg>(raw[1]), static_cast<EclReg>(raw[2])};
 }
 
 inline CmdCmpc Decode(EclOpTag<EclOp::CMPC>, const uint8_t *raw) {
-  return {raw[1], U32LEAt(&raw[2])};
+  return {static_cast<EclReg>(raw[1]), U32LEAt(&raw[2])};
 }
 
 inline CmdInc Decode(EclOpTag<EclOp::INC>, const uint8_t *raw) {
-  return {raw[1]};
+  return {static_cast<EclReg>(raw[1])};
 }
 
 inline CmdDec Decode(EclOpTag<EclOp::DEC>, const uint8_t *raw) {
-  return {raw[1]};
+  return {static_cast<EclReg>(raw[1])};
 }
 
 inline CmdJl Decode(EclOpTag<EclOp::JL>, const uint8_t *raw) {

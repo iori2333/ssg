@@ -234,7 +234,7 @@ ECL_HEAD:
   }
   case EclOp::STI: {
     auto c = Decode(EclOpTag<EclOp::STI>{}, raw);
-    switch (static_cast<EclIntVec>(c.cond)) {
+    switch (c.cond) {
     case EclIntVec::BITLEFT:
       e.Vect[std::to_underlying(EclIntVec::BITLEFT)].vect = c.addr;
       e.Vect[std::to_underlying(EclIntVec::BITLEFT)].value = c.value;
@@ -259,7 +259,7 @@ ECL_HEAD:
   }
   case EclOp::CLI: {
     auto c = Decode(EclOpTag<EclOp::CLI>{}, raw);
-    switch (static_cast<EclIntVec>(c.vec)) {
+    switch (c.vec) {
     case EclIntVec::BITLEFT:
       e.Vect[std::to_underlying(EclIntVec::BITLEFT)].vect = 0;
       break;
@@ -941,7 +941,7 @@ ECL_HEAD:
   }
   case EclOp::INT: {
     auto c = Decode(EclOpTag<EclOp::INT>{}, raw);
-    BossINT(&e, static_cast<EclIntType>(c.id));
+    BossINT(&e, c.id);
     break;
   }
   case EclOp::EXDEGD: {
@@ -966,7 +966,7 @@ ECL_HEAD:
       short sx = (e.x >> 6) + c.x;
       short sy = (e.y >> 6) + c.y;
       InitEnemyDataSTD(ne, sx, sy, 4 + (c.ecl_id << 2));
-      ne->d = ResolveValue(&e, static_cast<EclReg>(c.reg));
+      ne->d = ResolveValue(&e, c.reg);
     }
     break;
   }
@@ -1034,8 +1034,8 @@ ECL_HEAD:
   // ============================================================
   case EclOp::MOVR: {
     auto c = Decode(EclOpTag<EclOp::MOVR>{}, raw);
-    auto val = ResolveValue(&e, static_cast<EclReg>(c.src));
-    switch (static_cast<EclReg>(c.dst)) {
+    auto val = ResolveValue(&e, c.src);
+    switch (c.dst) {
     case EclReg::GR0:
     case EclReg::GR1:
     case EclReg::GR2:
@@ -1108,74 +1108,79 @@ ECL_HEAD:
   }
   case EclOp::MOVC: {
     auto c = Decode(EclOpTag<EclOp::MOVC>{}, raw);
-    if (c.dst < ECLREG_MAX)
-      e.GR[c.dst] = c.value;
+    if (std::to_underlying(c.dst) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)] = c.value;
     else
       DebugOut(u8"unknown register");
     break;
   }
   case EclOp::INC: {
     auto c = Decode(EclOpTag<EclOp::INC>{}, raw);
-    if (c.dst < ECLREG_MAX)
-      e.GR[c.dst]++;
+    if (std::to_underlying(c.dst) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)]++;
     break;
   }
   case EclOp::DEC: {
     auto c = Decode(EclOpTag<EclOp::DEC>{}, raw);
-    if (c.dst < ECLREG_MAX)
-      e.GR[c.dst]--;
+    if (std::to_underlying(c.dst) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)]--;
     break;
   }
   case EclOp::ADD: {
     auto c = Decode(EclOpTag<EclOp::ADD>{}, raw);
-    if (c.dst < ECLREG_MAX)
-      e.GR[c.dst] += ResolveValue(&e, static_cast<EclReg>(c.src));
+    if (std::to_underlying(c.dst) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)] += ResolveValue(&e, c.src);
     break;
   }
   case EclOp::SUB: {
     auto c = Decode(EclOpTag<EclOp::SUB>{}, raw);
-    if (c.dst < ECLREG_MAX)
-      e.GR[c.dst] -= ResolveValue(&e, static_cast<EclReg>(c.src));
+    if (std::to_underlying(c.dst) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)] -= ResolveValue(&e, c.src);
     break;
   }
   case EclOp::SINL: {
     auto c = Decode(EclOpTag<EclOp::SINL>{}, raw);
-    if (c.dst < ECLREG_MAX && c.src < ECLREG_MAX)
-      e.GR[c.dst] = sinl(static_cast<uint8_t>(e.GR[c.src]), e.GR[c.dst]);
+    if (std::to_underlying(c.dst) < ECLREG_MAX &&
+        std::to_underlying(c.src) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)] =
+          sinl(static_cast<uint8_t>(e.GR[std::to_underlying(c.src)]),
+               e.GR[std::to_underlying(c.dst)]);
     break;
   }
   case EclOp::COSL: {
     auto c = Decode(EclOpTag<EclOp::COSL>{}, raw);
-    if (c.dst < ECLREG_MAX && c.src < ECLREG_MAX)
-      e.GR[c.dst] = cosl(static_cast<uint8_t>(e.GR[c.src]), e.GR[c.dst]);
+    if (std::to_underlying(c.dst) < ECLREG_MAX &&
+        std::to_underlying(c.src) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)] =
+          cosl(static_cast<uint8_t>(e.GR[std::to_underlying(c.src)]),
+               e.GR[std::to_underlying(c.dst)]);
     break;
   }
   case EclOp::MOD: {
     auto c = Decode(EclOpTag<EclOp::MOD>{}, raw);
-    if (c.dst < ECLREG_MAX && c.value != 0)
-      e.GR[c.dst] %= c.value;
+    if (std::to_underlying(c.dst) < ECLREG_MAX && c.value != 0)
+      e.GR[std::to_underlying(c.dst)] %= c.value;
     break;
   }
   case EclOp::RND: {
     auto c = Decode(EclOpTag<EclOp::RND>{}, raw);
-    if (c.dst < ECLREG_MAX)
-      e.GR[c.dst] = static_cast<uint32_t>(rnd()) * rnd();
+    if (std::to_underlying(c.dst) < ECLREG_MAX)
+      e.GR[std::to_underlying(c.dst)] = static_cast<uint32_t>(rnd()) * rnd();
     break;
   }
   case EclOp::CMPR: {
     auto c = Decode(EclOpTag<EclOp::CMPR>{}, raw);
-    if (c.reg0 < ECLREG_MAX && c.reg1 < ECLREG_MAX)
-      RegCmp = ResolveValue(&e, static_cast<EclReg>(c.reg0)) -
-               ResolveValue(&e, static_cast<EclReg>(c.reg1));
+    if (std::to_underlying(c.reg0) < ECLREG_MAX &&
+        std::to_underlying(c.reg1) < ECLREG_MAX)
+      RegCmp = ResolveValue(&e, c.reg0) - ResolveValue(&e, c.reg1);
     else
       return;
     break;
   }
   case EclOp::CMPC: {
     auto c = Decode(EclOpTag<EclOp::CMPC>{}, raw);
-    if (c.reg < ECLREG_MAX)
-      RegCmp = ResolveValue(&e, static_cast<EclReg>(c.reg)) -
-               static_cast<int>(c.value);
+    if (std::to_underlying(c.reg) < ECLREG_MAX)
+      RegCmp = ResolveValue(&e, c.reg) - static_cast<int>(c.value);
     else
       return;
     break;
