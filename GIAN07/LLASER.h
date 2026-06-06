@@ -84,14 +84,14 @@ void LLaserDegA(const ENEMY_DATA *e, uint8_t d,
 void LLaserDegR(const ENEMY_DATA *e, char d,
                 uint8_t id); // レーザーを角度相対で回転
 
-extern void LLaserForceClose(
+void LLaserForceClose(
     const ENEMY_DATA *e); // 敵に関連づけられたレーザーを強制クローズ
 
-extern void LLaserMove(void);  // レーザーを動かす
-extern void LLaserDraw(void);  // レーザーを描画する
-extern void LLaserClear(void); // 無限遠レーザーを全クローズ
+void LLaserMove(void);  // レーザーを動かす
+void LLaserDraw(void);  // レーザーを描画する
+void LLaserClear(void); // 無限遠レーザーを全クローズ
 
-extern void LLaserSetup(void); // レーザー配列の初期化をする
+void LLaserSetup(void); // レーザー配列の初期化をする
 
 //// レーザー変数２ ////
 extern std::array<LongLaserData, LLASER_MAX>& LLaser;

@@ -179,6 +179,6 @@ extern DEBUG_DATA DebugDat;
 
 ///// [関数] /////
 
-extern void ConfigLoad();
+void ConfigLoad();
 
-extern void ConfigSave(void); // コンフィグの内容を保存する
+void ConfigSave(void); // コンフィグの内容を保存する

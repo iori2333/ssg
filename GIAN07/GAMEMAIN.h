@@ -25,18 +25,18 @@ extern void (*GameMain)(bool &quit);
 
 bool WeaponSelectInit(bool ExStg);
 bool GameInit(void (*NextProc)(bool &quit)); // ゲームの初期化をする
-extern void GameRestart(void);               // ゲームを再開する(ESC 抜けから)
-extern bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
-extern void GameOverInit(void);                  // ゲームオーバーの前処理
-extern void GameContinue(void);                  // コンティニューを行う場合
+void GameRestart(void);               // ゲームを再開する(ESC 抜けから)
+bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
+void GameOverInit(void);                  // ゲームオーバーの前処理
+void GameContinue(void);                  // コンティニューを行う場合
 
-extern bool GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
+bool GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
 
-extern bool SProjectInit(void); // 西方Ｐｒｏｊｅｃｔ表示の初期化
+bool SProjectInit(void); // 西方Ｐｒｏｊｅｃｔ表示の初期化
 
-extern bool GameExstgInit(void); // エキストラステージを始める
+bool GameExstgInit(void); // エキストラステージを始める
 
-extern bool NameRegistInit(bool bNeedChgMusic); // お名前入力の初期化
-extern bool ScoreNameInit(void);                // お名前表示画面
+bool NameRegistInit(bool bNeedChgMusic); // お名前入力の初期化
+bool ScoreNameInit(void);                // お名前表示画面
 
-extern bool GameNextStage(void); // 次のステージに移行する
+bool GameNextStage(void); // 次のステージに移行する

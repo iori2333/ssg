@@ -98,15 +98,15 @@ BYTE_BUFFER_OWNED LoadMusicRoomComment(int no);
 
 BYTE_BUFFER_OWNED LoadDemo(int stage);
 
-extern void LoadPaletteFromEnemy(void); // 敵のパレットにする
+void LoadPaletteFromEnemy(void); // 敵のパレットにする
 
 // Reloads the last stage loaded with LoadGraph().
 void ReloadGraph(void);
 
 /*
 // 廃止：2000/12/01 //
-extern void EnterBombPalette(void);		// ボム用パレット属性に変更する
-extern void LeaveBombPalette(void);		// ボム用パレット属性を外す
+void EnterBombPalette(void);		// ボム用パレット属性に変更する
+void LeaveBombPalette(void);		// ボム用パレット属性を外す
 */
 
 //// [ 変数 ] ////

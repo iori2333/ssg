@@ -145,18 +145,18 @@ extern int& HomingY;    // ホーミング対象のＹ座標
 extern int& HomingFlag; // 真ならホーミング実行
 
 //// 敵制御関数 ////
-extern void enemy_move(void);   // 敵を動かす
-extern void enemy_draw(void);   // 敵を描画する
-extern void enemyind_set(void); // 敵の順序設定用配列の初期化をする
-extern void enemy_clear(void);  // 雑魚を消滅させる
+void enemy_move(void);   // 敵を動かす
+void enemy_draw(void);   // 敵を描画する
+void enemyind_set(void); // 敵の順序設定用配列の初期化をする
+void enemy_clear(void);  // 雑魚を消滅させる
 
 bool enemy_damage(int x, int y, int damage); // 敵にダメージを与える
 bool enemy_damage2(int x, int y,
                    int damage); // ｙ上方向無限Ver.敵にダメージを与える
 void enemy_damage3(int x, int y, uint8_t d); // ナナメレーザーの当たり判定
-extern void enemy_damage4(int damage);       // すべての敵にダメージを与える
+void enemy_damage4(int damage);       // すべての敵にダメージを与える
 
-extern void EnemyAnimeMove(EnemyData *e);
+void EnemyAnimeMove(EnemyData *e);
 
 // 敵データを初期化する(x,y は x64 で指定のこと) //
 void InitEnemyDataX64(EnemyData *e, int x, int y, uint32_t EclID);
@@ -167,10 +167,10 @@ void InitEnemyDataSTD(EnemyData *e, short x, short y, uint32_t EclID);
 // 強制的に ECL ブロック間を移動する //
 void EnemyECL_LongJump(EnemyData *e, uint32_t EclID);
 
-extern void UpdateHoming(const EnemyData *e); // ホーミング座標を更新する
-extern void parse_ECL(EnemyData *e);          // 敵をＥＣＬに従って動かす
-extern void CheckECLInterrupt(EnemyData *e);  // 割り込みジャンプを調べる
-extern void InitECLInterrupt(EnemyData *e);   // 割り込みベクタの初期化
+void UpdateHoming(const EnemyData *e); // ホーミング座標を更新する
+void parse_ECL(EnemyData *e);          // 敵をＥＣＬに従って動かす
+void CheckECLInterrupt(EnemyData *e);  // 割り込みジャンプを調べる
+void InitECLInterrupt(EnemyData *e);   // 割り込みベクタの初期化
 
 // Vivit ナナメレーザーの当たり判定 //
 bool LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d);

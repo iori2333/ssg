@@ -117,4 +117,4 @@ extern uint32_t GameCount;
 extern uint8_t GameStage;
 extern uint8_t GameLevel;
 
-extern void StdStatusOutput(void);
+void StdStatusOutput(void);
