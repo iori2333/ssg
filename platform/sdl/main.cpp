@@ -19,7 +19,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "GIAN07/ENTRY.H"
+#include "GIAN07/ENTRY.h"
 #include "game/defer.h"
 #include "obj/platform_constants.h"
 #include "platform/sdl/log_sdl.h"

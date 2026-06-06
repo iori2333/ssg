@@ -3,9 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#ifndef PBGWIN_WINDOWCTRL_H
-#define PBGWIN_WINDOWCTRL_H "WINDOWCTRL : Version 0.01 : Update 2000/02/12"
-// #pragma message(PBGWIN_WINDOWCTRL_H)
+#pragma once
 
 ///// [更新履歴] /////
 
@@ -29,5 +27,3 @@ extern struct tagWINDOW_SYSTEM ReplayFilesWindow;
 void InitMainWindow(void);     // メインメニューの初期化
 void InitExitWindow(void);     // 終了Ｙ／Ｎウィンドウの初期化
 void InitContinueWindow(void); // コンティニューＹ／Ｎウィンドウの初期化
-
-#endif

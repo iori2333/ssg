@@ -1,0 +1,607 @@
+/*                                                                           */
+/*   Maid.cpp   メイドさん関連の処理                                         */
+/*                                                                           */
+/*                                                                           */
+
+// GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
+// imaxdiv_t'` if this appears after a module import.
+#include <inttypes.h> // for PRId64
+
+#include "CONFIG.h"
+#include "FONTUTY.h"
+#include "GEOMETRY.h"
+#include "GIAN.h"
+#include "MAID.h"
+#include "game/input.h"
+#include "game/snd.h"
+#include "game/ut_math.h"
+
+MAID Viv; // 麗しきメイドさん構造体
+
+extern void WideBombDraw(void) {
+  // PIXEL_LTRB	src = {0, 0, 382, 480};
+  static PIXEL_LTRB data[6] = {
+      {0, 0, 210, 240},           {210, 0, 210 * 2, 240},
+      {210 * 2, 0, 210 * 3, 240}, {0, 240, 210, 480},
+      {210, 240, 210 * 2, 480},   {210 * 2, 240, 210 * 3, 480}};
+
+  int x, y;
+  int t;
+
+  constexpr int BX_MIN = (X_MIN + 100);
+  constexpr int BY_MIN = (Y_MIN + 100);
+
+  if (Viv.weapon != 0 || Viv.bomb_time == 0)
+    return;
+
+  x = BX_MIN;
+  y = BY_MIN;
+
+  if (Viv.bomb_time > 80) {
+    //		x = BX_MIN + (Viv.bomb_time-30*7) * 11;	if(x < BX_MIN) x =
+    // BX_MIN; 		y = BY_MIN + (Viv.bomb_time-30*7) * 11;	if(y < BY_MIN) y
+    // = BY_MIN;
+    t = ((60 * 4 - Viv.bomb_time) / 4);
+    if (t < 0)
+      t = 0;
+    if (t > 5)
+      t = 5;
+  } else {
+    //		x = BX_MIN - (80-Viv.bomb_time) * 8;
+    //		y = BY_MIN - (80-Viv.bomb_time) * 8;
+    t = (Viv.bomb_time / 4);
+    if (t > 5)
+      t = 5;
+  }
+
+  GrpSurface_Blit({x, y}, SURFACE_ID::BOMBER, data[t]);
+}
+
+void LaserBombDraw(void) {
+  constexpr RGBA col_channeled = RGB216{0, 0, 5}.ToRGB().WithAlpha(0xFF);
+  VERTEX_XY p[4];
+  int i, w;
+  int lx, ly;
+  int wx, wy;
+  const auto LaserDeg = GetLaserDeg();
+
+  GrpGeom->Lock();
+  if (LaserDeg < 58) {
+    for (w = 3; w > 0; w--) {
+      for (i = -3; i <= 3; i++) {
+        // 64+48 - LaserDeg*3 + i*(64-LaserDeg)/2;
+        const auto d = GetRightLaserDeg(LaserDeg, i);
+
+        lx = cosl(d, 850);
+        ly = sinl(d, 850);
+        wx = cosl(d + 64, w);
+        wy = sinl(d + 64, w);
+        p[0].x = (Viv.opx >> 6) + SBOPT_DX + 0 + wx;
+        p[0].y = (Viv.opy >> 6) + 0 + wy;
+        p[3].x = (Viv.opx >> 6) + SBOPT_DX + 0 - wx;
+        p[3].y = (Viv.opy >> 6) + 0 - wy;
+        p[2].x = (Viv.opx >> 6) + SBOPT_DX + lx - wx;
+        p[2].y = (Viv.opy >> 6) + ly - wy;
+        p[1].x = (Viv.opx >> 6) + SBOPT_DX + lx + wx;
+        p[1].y = (Viv.opy >> 6) + ly + wy;
+        if (auto *gp = GrpGeom_Poly()) {
+          gp->SetAlphaOne();
+          GeomGrdRectA(*gp, p, col_channeled);
+        } else if (auto *gf = GrpGeom_FB()) {
+          switch (w) {
+          case (1):
+            gf->SetColor({4, 4, 5});
+            break;
+          case (2):
+            gf->SetColor({2, 2, 5});
+            break;
+          case (3):
+            gf->SetColor({0, 0, 5});
+            break;
+          }
+          gf->DrawTriangleFan(p);
+        }
+      }
+      for (i = -3; i <= 3; i++) {
+        // 64-48 + LaserDeg*3 + i*(64-LaserDeg)/2;
+        const auto d = GetLeftLaserDeg(LaserDeg, i);
+
+        lx = cosl(d, 850);
+        ly = sinl(d, 850);
+        wx = cosl(d + 64, w);
+        wy = sinl(d + 64, w);
+        p[0].x = (Viv.opx >> 6) - SBOPT_DX + 0 + wx;
+        p[0].y = (Viv.opy >> 6) + 0 + wy;
+        p[3].x = (Viv.opx >> 6) - SBOPT_DX + 0 - wx;
+        p[3].y = (Viv.opy >> 6) + 0 - wy;
+        p[2].x = (Viv.opx >> 6) - SBOPT_DX + lx - wx;
+        p[2].y = (Viv.opy >> 6) + ly - wy;
+        p[1].x = (Viv.opx >> 6) - SBOPT_DX + lx + wx;
+        p[1].y = (Viv.opy >> 6) + ly + wy;
+        if (auto *gp = GrpGeom_Poly()) {
+          gp->SetAlphaOne();
+          GeomGrdRectA(*gp, p, col_channeled);
+        } else if (auto *gf = GrpGeom_FB()) {
+          switch (w) {
+          case (1):
+            gf->SetColor({4, 4, 5});
+            break;
+          case (2):
+            gf->SetColor({2, 2, 5});
+            break;
+          case (3):
+            gf->SetColor({0, 0, 5});
+            break;
+          }
+          gf->DrawTriangleFan(p);
+        }
+      }
+      if (GrpGeom_Poly()) {
+        break;
+      }
+    }
+  } else if (LaserDeg < 150) {
+    uint8_t c = 0;
+    for (w = 12 - (LaserDeg - 64) / 8; w > 0; w -= 2, c++) {
+      for (i = -3; i <= 3; i++) {
+        // 64+48 - 58*3 + i*(64-min(62,LaserDeg))/2;
+        const auto d = GetRightLaserDeg(LaserDeg, i);
+
+        lx = cosl(d, 850);
+        ly = sinl(d, 850);
+        wx = cosl(d + 64, w);
+        wy = sinl(d + 64, w);
+        p[0].x = (Viv.opx >> 6) + SBOPT_DX + 0 + wx;
+        p[0].y = (Viv.opy >> 6) + 0 + wy;
+        p[3].x = (Viv.opx >> 6) + SBOPT_DX + 0 - wx;
+        p[3].y = (Viv.opy >> 6) + 0 - wy;
+        p[2].x = (Viv.opx >> 6) + SBOPT_DX + lx - wx;
+        p[2].y = (Viv.opy >> 6) + ly - wy;
+        p[1].x = (Viv.opx >> 6) + SBOPT_DX + lx + wx;
+        p[1].y = (Viv.opy >> 6) + ly + wy;
+        if (auto *gp = GrpGeom_Poly()) {
+          gp->SetAlphaOne();
+          GeomGrdRectA(*gp, p, col_channeled);
+        } else if (auto *gf = GrpGeom_FB()) {
+          gf->SetColor({c, c, 5u});
+          gf->DrawTriangleFan(p);
+        }
+      }
+      for (i = -3; i <= 3; i++) {
+        // 64-48 + 58*3 + i*(64-min(62,LaserDeg))/2;
+        const auto d = GetLeftLaserDeg(LaserDeg, i);
+
+        lx = cosl(d, 850);
+        ly = sinl(d, 850);
+        wx = cosl(d + 64, w);
+        wy = sinl(d + 64, w);
+        p[0].x = (Viv.opx >> 6) - SBOPT_DX + 0 + wx;
+        p[0].y = (Viv.opy >> 6) + 0 + wy;
+        p[3].x = (Viv.opx >> 6) - SBOPT_DX + 0 - wx;
+        p[3].y = (Viv.opy >> 6) + 0 - wy;
+        p[2].x = (Viv.opx >> 6) - SBOPT_DX + lx - wx;
+        p[2].y = (Viv.opy >> 6) + ly - wy;
+        p[1].x = (Viv.opx >> 6) - SBOPT_DX + lx + wx;
+        p[1].y = (Viv.opy >> 6) + ly + wy;
+        if (auto *gp = GrpGeom_Poly()) {
+          gp->SetAlphaOne();
+          GeomGrdRectA(*gp, p, col_channeled);
+        } else if (auto *gf = GrpGeom_FB()) {
+          gf->SetColor({c, c, 5u});
+          gf->DrawTriangleFan(p);
+        }
+      }
+      if (GrpGeom_Poly()) {
+        break;
+      }
+    }
+  }
+
+  GrpGeom->Unlock();
+}
+
+extern void MaidDraw(void) {
+  static PIXEL_LTRB VivBit[4][2] = {
+      {{480, 128, 480 + 24, 128 + 24},
+       {504, 128, 504 + 24, 128 + 24}}, // ワイド
+      {{480, 152, 480 + 24, 152 + 24},
+       {504, 152, 504 + 24, 152 + 24}}, // ホーミング
+      {{528, 152, 528 + 24, 152 + 24},
+       {552, 152, 552 + 24, 152 + 24}}, // レーザー
+      {{480, 152, 480 + 24, 152 + 24}, {504, 152, 504 + 24, 152 + 24}}, // 仮
+  };
+
+  static uint8_t draw_flag = 0;
+  static uint8_t draw_flag2 = 0;
+
+  const auto x = ((Viv.x >> 6) - 16);
+  const auto y = ((Viv.y >> 6) - 24);
+  const auto ox = ((Viv.opx >> 6) - 12);
+  const auto oy = ((Viv.opy >> 6) - 12);
+  PIXEL_LTRB src;
+
+  draw_flag = 1 - draw_flag;
+  draw_flag2++;
+
+  if (Viv.muteki == VIVDEAD_VAL)
+    draw_flag = 0;
+
+  if (Viv.muteki == 0 || draw_flag) {
+    src = PIXEL_LTWH{(384 + (Viv.GrpID * 32)), 128, (16 * 2), (16 * 3)};
+    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
+  }
+
+  if (((Viv.exp + 1) >> 5)) {
+    if (Viv.muteki < VIVDEAD_VAL) {
+      src = VivBit[Viv.weapon & 3][(draw_flag2 >> 2) & 1];
+      GrpSurface_Blit({(ox + SBOPT_DX), oy}, SURFACE_ID::SYSTEM, src);
+      src = VivBit[Viv.weapon & 3][(draw_flag2 >> 2) & 1];
+      GrpSurface_Blit({(ox - SBOPT_DX), oy}, SURFACE_ID::SYSTEM, src);
+    }
+  }
+
+  if (Viv.bomb_time && Viv.weapon == 2)
+    LaserBombDraw();
+}
+
+// 各種ステータスを描画する //
+extern void StateDraw(void) {
+  int i, temp;
+  // PIXEL_LTRB	src = { 0, 80, 128, (80 + 16) };
+  constexpr PIXEL_LTRB src = {0, 80, 128, (80 + 24)};
+  char buf[100];
+
+  // 残りかすり時間ゲージの表示 //
+  if (Viv.evade_c) {
+    GrpGeom->Lock();
+    GrpGeom->SetColor({5, 1, 0});
+    GrpGeom->SetAlphaOne();
+    for (i = 0; i <= 10; i++) {
+      temp = 128 + 9 + (Viv.evade_c >> 2) + (5 - i);
+      if (temp > (128 + 8)) {
+        GrpGeom->DrawBoxA((128 + 8), (16 + 3 + i), temp, (16 + 3 + i + 1));
+        // GrpGeom->DrawBoxA(
+        // 	(128 + 8),
+        // 	(16 + 3),
+        // 	(128 + 9 + (Viv.evade_c >> 2)),
+        // 	(16 + 3 + 10)
+        // );
+      }
+    }
+    GrpGeom->Unlock();
+  }
+  GrpSurface_Blit({128, 16}, SURFACE_ID::SYSTEM, src);
+  sprintf(buf, "%3d", Viv.evade);
+  GrpPut57(128 + 95, 16 + 91 - 80, buf);
+
+  // 得点表示 //
+  sprintf(buf, "%9" PRId64, Viv.score);
+  GrpPut16(128, 0, buf);
+
+  // 仮の残機＆残りボム表示 //
+  sprintf(buf, "       Bomb %1d", Viv.bomb);
+  GrpPut16(280, 0, buf);
+
+  // 残りメイド数表示 //
+  for (i = 0; i < Viv.left; i++) {
+    constexpr PIXEL_LTWH src = {608, 432, 16, 16};
+    GrpSurface_Blit({(280 + (i * 14)), 0}, SURFACE_ID::SYSTEM, src);
+  }
+}
+
+extern void MaidMove(void) {
+  int vx, vy, v;
+  constexpr int VivSpeed = (64 * 18);
+  char buf[100];
+
+  // かすり残り時間を減らす //
+  if (Viv.evade_c) {
+    if (Viv.bomb_time && Viv.evade_c >= 2)
+      Viv.evade_c -= 2;
+    else
+      Viv.evade_c -= 1;
+
+    if (Viv.evade_c == 0) {
+      sprintf(buf, "%3d Evade  %7dPts", Viv.evade, Viv.evadesc);
+      StringEffect(180, 40, buf);
+      score_add(Viv.evadesc);
+      Viv.evade = 0;
+      Viv.evadesc = 0;
+    }
+  }
+
+  // 無敵時間を減らす(ボム中は減らさない) //
+  if (Viv.muteki && Viv.bomb_time == 0)
+    Viv.muteki--;
+
+  // 得点変化処理 //
+  if (Viv.dscore >= 100000)
+    Viv.score += 100000, Viv.dscore -= 100000;
+  else if (Viv.dscore >= 20000)
+    Viv.score += 20000, Viv.dscore -= 20000;
+  else if (Viv.dscore >= 2000)
+    Viv.score += 2000, Viv.dscore -= 2000;
+  else if (Viv.dscore >= 200)
+    Viv.score += 200, Viv.dscore -= 200;
+  else if (Viv.dscore >= 20)
+    Viv.score += 20, Viv.dscore -= 20;
+  else if (Viv.dscore >= 10)
+    Viv.score += 10, Viv.dscore -= 10;
+
+  // 押しっぱなし減速を有効にするのか //
+  if (ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) {
+    if (Key_Data & KEY_TAMA) {
+      if (Viv.ShiftCounter < 8)
+        Viv.ShiftCounter++;
+      else
+        Key_Data = Key_Data | KEY_SHIFT;
+    } else {
+      Viv.ShiftCounter = 0;
+    }
+  }
+
+  if (Viv.muteki < MAID_MOVE_DISABLE_TIME) {
+    vx = vy = 0;
+    v = (Key_Data & KEY_SHIFT) ? (VivSpeed / 3) : VivSpeed;
+    if (Key_Data & KEY_UP)
+      vy -= v;
+    if (Key_Data & KEY_DOWN)
+      vy += v;
+    if (Key_Data & KEY_LEFT)
+      vx -= v;
+    if (Key_Data & KEY_RIGHT)
+      vx += v;
+
+    if (vx && vy) {
+      Viv.x += (vx / 6);
+      Viv.y += (vy / 6);
+    } else {
+      Viv.x += (vx >> 2);
+      Viv.y += (vy >> 2);
+    }
+
+    if (Viv.y < SY_MIN)
+      Viv.y = SY_MIN;
+    else if (Viv.y > SY_MAX)
+      Viv.y = SY_MAX;
+
+    if (Viv.x < SX_MIN)
+      Viv.x = SX_MIN;
+    else if (Viv.x > SX_MAX)
+      Viv.x = SX_MAX;
+  } else {
+    vx = 0;
+    vy = -(64 + 32);
+    Viv.y += vy;
+  }
+
+  if (vx > 0)
+    Viv.GrpID = 2;
+  else if (vx < 0)
+    Viv.GrpID = 0;
+  else
+    Viv.GrpID = 1;
+
+  Viv.opx = Viv.x;
+  Viv.opy = Viv.y;
+
+  // オプションの処理 //
+  if (Viv.vx < 0)
+    Viv.vx += 64;
+  if (Viv.vx > 0)
+    Viv.vx -= 64;
+  if (Viv.vy < 0)
+    Viv.vy += 64;
+  if (Viv.vy > 0)
+    Viv.vy -= 64;
+
+  if (vx < 0 && Viv.vx < 6 * 64)
+    Viv.vx += 2 * 64;
+  if (vx > 0 && Viv.vx > -6 * 64)
+    Viv.vx -= 2 * 64;
+  if (vy < 0 && Viv.vy < 10 * 64)
+    Viv.vy += 2 * 64;
+  if (vy > 0 && Viv.vy > -10 * 64)
+    Viv.vy -= 2 * 64;
+
+  Viv.opx = Viv.x + Viv.vx;
+  Viv.opy = Viv.y + Viv.vy + 64 * 6;
+
+  // 弾＆ボムのセット //
+  MaidTamaSet();
+
+  if (Viv.bomb_time) {
+    tama_clear();
+    laser_clear();
+    // if(Viv.bomb_time%60==0) fragment_set(Viv.x,Viv.y,FRG_FATCIRCLE);
+  }
+
+  Viv.BuzzSound = false;
+}
+
+// 初期化 //
+extern void MaidSet(void) {
+  MaidNextStage();
+
+  Viv.score = 0;
+  Viv.dscore = 0;
+  Viv.exp = 0;
+  Viv.exp2 = 0;
+  Viv.bomb = ConfigDat.BombStock.v;
+  Viv.left = ConfigDat.PlayerStock.v;
+  Viv.credit = 4; // 5;
+
+  Viv.miss_count = 0;
+  Viv.bomb_used = 0;
+
+  Viv.bomb_time = 0;
+  Viv.evade_c = Viv.evade = 0;
+  Viv.evadesc = 0;
+  Viv.evade_sum = 0;
+
+  Viv.GrpID = 1;
+
+  Viv.muteki = VIVDEAD_VAL;
+
+  Viv.bGameOver = false;
+
+  Viv.toge_ex = 0;
+  Viv.toge_time = 0;
+  Viv.lay_time = 0;
+  Viv.lay_grp = 0;
+  Viv.ShiftCounter = 0;
+
+  Viv.BuzzSound = false;
+}
+
+// 次のステージの準備 //
+extern void MaidNextStage(void) {
+  Viv.x = Viv.opx = SX_START;
+  Viv.y = Viv.opx = SY_START;
+  Viv.vx = 0;
+  Viv.vy = 0;
+
+  Viv.toge_ex = 0;
+  Viv.toge_time = 0;
+  Viv.lay_time = 0;
+  Viv.lay_grp = 0;
+
+  Viv.muteki = VIVDEAD_VAL;
+  Viv.bomb_time = 0;
+  Viv.ShiftCounter = 0;
+
+  Viv.BuzzSound = false;
+}
+
+extern void MaidDead(void) {
+  int i;
+
+#ifdef PBG_DEBUG
+  if (!DebugDat.Hit)
+    return;
+#endif
+
+  if (ConfigDat.PracticeMode.v == PRACTICE_INVINCIBLE) {
+    fragment_set(Viv.x, Viv.y, FRG_FATCIRCLE);
+    for (i = 0; i < 50; i++)
+      fragment_set(Viv.x, Viv.y, FRG_HEART);
+    Snd_SEPlay(SOUND_ID_DEAD);
+    Viv.muteki = 30;
+    return;
+  }
+
+  // 自動ボム：练习模式为自动Bomb以上时，Bomb キーが押されておらず、かつ Bomb
+  // 残量がある場合、 死亡の代わりに自動で Bomb を発動する
+  if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB && !(Key_Data & KEY_BOMB) &&
+      (Viv.bomb_time == 0) && (Viv.bomb > 0) && (SclInfo.MsgFlag == false)) {
+    static constexpr uint8_t bomb_time[4] = {60 * 4, 60 * 3, 60 * 2, 0};
+    Viv.bomb_time = bomb_time[Viv.weapon & 3];
+    Viv.muteki = BOMBMUTEKI_VAL;
+    Viv.bomb--;
+    Viv.bomb_used++;
+    PlayRankAdd(-25); // 自动Bomb降低Rank
+    tama_clear();
+    laser_clear();
+    return;
+  }
+
+  fragment_set(Viv.x, Viv.y, FRG_FATCIRCLE);
+
+  for (i = 0; i < 50; i++)
+    fragment_set(Viv.x, Viv.y, FRG_HEART);
+
+  Snd_SEPlay(SOUND_ID_DEAD);
+
+  // 座標系セット //
+  Viv.x = Viv.opx = SX_START;
+  Viv.y = Viv.opx = SY_START;
+  Viv.vx = 0;
+  Viv.vy = 0;
+
+  // かすり系リセット //
+  //	Viv.evade_c = 0;
+  //	Viv.evade   = 0;
+  //	Viv.evadesc = 0;
+
+  Viv.lay_time = 0;
+  Viv.lay_grp = 0;
+
+  Viv.bomb = ConfigDat.BombStock.v;
+  Viv.muteki = VIVDEAD_VAL;
+
+  PlayRankAdd(-100); // 死亡降低Rank
+
+  if (Viv.left) {
+    // 残機の残っている場合 //
+    Viv.left -= 1;
+    Viv.miss_count++;
+  } else {
+    // 残機の残っていない場合 //
+    Viv.bGameOver = true;
+    Viv.score += Viv.dscore; // 得点吐き出し
+
+    // かすり系リセット //
+    Viv.evade_c = 0;
+    Viv.evade = 0;
+    Viv.evadesc = 0;
+
+    GameOverInit(); // ゲームオーバーへと
+  }
+
+  tama_clear();
+  laser_clear();
+}
+
+// かすりゲージを上昇させる(エフェクトはメイド中心) //
+extern void evade_add(uint8_t n) { evade_addEx(Viv.x, Viv.y, n); }
+
+// 指定座標からエフェクト発生＆ゲージ上昇 //
+extern void evade_addEx(int x, int y, uint8_t n) {
+  int i;
+
+  // PlayRankAdd(n<<2);	// 擦弹不再增加 Rank
+
+  if (n) {
+    if (Viv.BuzzSound == false) {
+      Snd_SEPlay(SOUND_ID_BUZZ, x);
+      Viv.BuzzSound = true;
+    }
+    fragment_set(x, y, FRG_EVADE);
+    fragment_set(x, y, FRG_EVADE);
+    fragment_set(x, y, FRG_EVADE);
+  }
+
+  for (i = 0; i < n; i++) {
+    if (Viv.evade == 999) {
+      Viv.evade_c = 1;
+      return;
+    }
+    Viv.evade += 1;
+    Viv.evade_sum += 1;
+    Viv.evadesc += Viv.evade * 20;
+  }
+
+  if (Viv.evade)
+    Viv.evade_c = EVADETIME_MAX;
+}
+
+// スコアを上昇させる //
+extern void score_add(int sc) { Viv.dscore += sc; }
+
+// MSVC's static analyzer suggests to make the functions below `constexpr`,
+// which won't work because they are used in other translation units and this
+// is not a header.
+#pragma warning(suppress : 26497) // f.4
+uint8_t GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i) {
+  return ((LaserDeg < 58)
+              ? ((LaserDeg * 3) + ((i * (64 - LaserDeg)) / 2))
+              : ((58 * 3) + ((i * (64 - (std::min)(62, int{LaserDeg}))) / 2)));
+}
+
+uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i) {
+  return (64 + 48 - GetLeftOrRightLaserDeg(LaserDeg, i));
+}
+
+uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i) {
+  return (64 - 48 + GetLeftOrRightLaserDeg(LaserDeg, i));
+}

@@ -3,8 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#ifndef PBGWIN_WINDOWSYS_H
-#define PBGWIN_WINDOWSYS_H "WINDOWSYS : Version 0.24 : Update 2000/02/28"
+#pragma once
 
 #include "game/enum_flags.h"
 #include "game/input.h"
@@ -28,18 +27,18 @@
 // ---------
 
 // 最大数に関する定数 //
-#define WINITEM_MAX 20  // 項目の最大数
-#define WINDOW_DEPTH 10 // ウィンドウの深さ
-#define MSG_HEIGHT 5    // メッセージウィンドウの高さ
+inline constexpr auto WINITEM_MAX = 20;  // 項目の最大数
+inline constexpr auto WINDOW_DEPTH = 10; // ウィンドウの深さ
+inline constexpr auto MSG_HEIGHT = 5;    // メッセージウィンドウの高さ
 
 // コマンドウィンドウの状態 //
-#define CWIN_DEAD 0x00   // 使用されていない
-#define CWIN_FREE 0x01   // 入力待ち状態
-#define CWIN_OPEN 0x02   // 項目移動中(進む)
-#define CWIN_CLOSE 0x03  // 項目移動中(戻る)
-#define CWIN_NEXT 0x04   // 次のウィンドウに移行中
-#define CWIN_BEFORE 0x05 // 前のウィンドウに移行中
-#define CWIN_INIT 0xff   // 初期化処理中
+inline constexpr auto CWIN_DEAD = 0x00;   // 使用されていない
+inline constexpr auto CWIN_FREE = 0x01;   // 入力待ち状態
+inline constexpr auto CWIN_OPEN = 0x02;   // 項目移動中(進む)
+inline constexpr auto CWIN_CLOSE = 0x03;  // 項目移動中(戻る)
+inline constexpr auto CWIN_NEXT = 0x04;   // 次のウィンドウに移行中
+inline constexpr auto CWIN_BEFORE = 0x05; // 前のウィンドウに移行中
+inline constexpr auto CWIN_INIT = 0xff;   // 初期化処理中
 
 constexpr auto CWIN_FONT = FONT_ID::SMALL;
 
@@ -51,26 +50,26 @@ constexpr PIXEL_COORD FACE_W = 96;
 constexpr PIXEL_COORD FACE_H = 96;
 
 // メッセージウィンドウ・コマンド //
-#define MWCMD_SMALLFONT 0x00  // スモールフォントを使用する
-#define MWCMD_NORMALFONT 0x01 // ノーマルフォントを使用する
-#define MWCMD_LARGEFONT 0x02  // ラージフォントを使用する
-#define MWCMD_NEWPAGE 0x03    // 改ページする
+inline constexpr auto MWCMD_SMALLFONT = 0x00;  // スモールフォントを使用する
+inline constexpr auto MWCMD_NORMALFONT = 0x01; // ノーマルフォントを使用する
+inline constexpr auto MWCMD_LARGEFONT = 0x02;  // ラージフォントを使用する
+inline constexpr auto MWCMD_NEWPAGE = 0x03;    // 改ページする
 
 // メッセージウィンドウの状態 //
-#define MWIN_DEAD 0x00  // 使用されていない
-#define MWIN_OPEN 0x01  // オープン中
-#define MWIN_CLOSE 0x02 // クローズ中
-#define MWIN_FREE 0x03  // 待ち状態
+inline constexpr auto MWIN_DEAD = 0x00;  // 使用されていない
+inline constexpr auto MWIN_OPEN = 0x01;  // オープン中
+inline constexpr auto MWIN_CLOSE = 0x02; // クローズ中
+inline constexpr auto MWIN_FREE = 0x03;  // 待ち状態
 
 // メッセージウィンドウ(顔の状態) //
-#define MFACE_NONE 0x00  // 表示されていない
-#define MFACE_OPEN 0x01  // オープン中
-#define MFACE_CLOSE 0x02 // クローズ中
-#define MFACE_NEXT 0x03  // 次の顔へ
-#define MFACE_WAIT 0x04  // 待ち状態
+inline constexpr auto MFACE_NONE = 0x00;  // 表示されていない
+inline constexpr auto MFACE_OPEN = 0x01;  // オープン中
+inline constexpr auto MFACE_CLOSE = 0x02; // クローズ中
+inline constexpr auto MFACE_NEXT = 0x03;  // 次の顔へ
+inline constexpr auto MFACE_WAIT = 0x04;  // 待ち状態
 
 // その他の定数 //
-#define CWIN_KEYWAIT 8
+inline constexpr auto CWIN_KEYWAIT = 8;
 // ---------
 
 ///// [構造体] /////
@@ -325,4 +324,3 @@ void MWinCmd(uint8_t cmd);             // コマンドを送る
 
 void MWinHelp(WINDOW_SYSTEM *ws); // メッセージウィンドウにヘルプ文字列を送る
 
-#endif

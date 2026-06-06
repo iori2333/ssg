@@ -4,8 +4,8 @@
 /*                                                                           */
 
 #include "PRankCtrl.h"
-#include "GIAN.H"
-#include "LEVEL.H"
+#include "GIAN.h"
+#include "LEVEL.h"
 
 PlayRankInfo PlayRank;
 

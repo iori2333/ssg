@@ -3,13 +3,11 @@
 /*                                                                           */
 /*                                                                           */
 
-#ifndef PBGWIN_ENEMYEXCTRL_H
-#define PBGWIN_ENEMYEXCTRL_H "ENEMYEXCTRL : Version 0.01 : Update 2000/02/27"
-// #pragma message(PBGWIN_ENEMYEXCTRL_H)
+#pragma once
 
-#include "BOSS.H"
-#include "ENEMY.H"
-#include "EXDEF.H"
+#include "BOSS.h"
+#include "ENEMY.h"
+#include "EXDEF.h"
 
 ///// [更新履歴] /////
 
@@ -18,25 +16,25 @@
 // 2000/04/06 : 開発を始める
 
 ///// [ 定数 ] /////
-#define SNAKE_MAX 4 // 蛇型の敵の最大数
+inline constexpr auto SNAKE_MAX = 4; // 蛇型の敵の最大数
 constexpr auto SNAKEYMOVE_POINTS_PER_ENEMY = 8;
 
-#define BIT_MAX 6             // ビットの最大数
-#define BITCMD_STDMOVE 0x00   // 通常の移動を行う
-#define BITCMD_CHGSPD 0x01    // 回転速度を変更する
-#define BITCMD_SELECTATK 0x02 // 攻撃コマンドを変更する
-#define BITCMD_CHGRADIUS 0x03 // 半径を変更する
-#define BITCMD_MOVTARGET 0x04 // 目標(びびっと)に向けてブーメラン移動
-#define BITCMD_DISABLE 0xff   // ビットを使用していない
+inline constexpr auto BIT_MAX = 6;             // ビットの最大数
+inline constexpr auto BITCMD_STDMOVE = 0x00;   // 通常の移動を行う
+inline constexpr auto BITCMD_CHGSPD = 0x01;    // 回転速度を変更する
+inline constexpr auto BITCMD_SELECTATK = 0x02; // 攻撃コマンドを変更する
+inline constexpr auto BITCMD_CHGRADIUS = 0x03; // 半径を変更する
+inline constexpr auto BITCMD_MOVTARGET = 0x04; // 目標(びびっと)に向けてブーメラン移動
+inline constexpr auto BITCMD_DISABLE = 0xff;   // ビットを使用していない
 
-#define BLASERCMD_OPEN 0x00   // レーザーをオープンする
-#define BLASERCMD_CLOSE 0x01  // ビットの放っているレーザーをクローズする
-#define BLASERCMD_CLOSEL 0x02 // ライン状態に推移させる
+inline constexpr auto BLASERCMD_OPEN = 0x00;   // レーザーをオープンする
+inline constexpr auto BLASERCMD_CLOSE = 0x01;  // ビットの放っているレーザーをクローズする
+inline constexpr auto BLASERCMD_CLOSEL = 0x02; // ライン状態に推移させる
 
-#define BLASERCMD_TYPE_A 0x03  // 一方向・角度固定レーザーを放射
-#define BLASERCMD_TYPE_B 0x04  // 両方向角度同期変化レーザーを放射
-#define BLASERCMD_TYPE_C 0x05  // 角度同期ｎ芒星レーザー
-#define BLASERCMD_DISABLE 0xff // 何も発動していない
+inline constexpr auto BLASERCMD_TYPE_A = 0x03;  // 一方向・角度固定レーザーを放射
+inline constexpr auto BLASERCMD_TYPE_B = 0x04;  // 両方向角度同期変化レーザーを放射
+inline constexpr auto BLASERCMD_TYPE_C = 0x05;  // 角度同期ｎ芒星レーザー
+inline constexpr auto BLASERCMD_DISABLE = 0xff; // 何も発動していない
 
 ///// [構造体] /////
 
@@ -105,4 +103,3 @@ void BitLaserCommand(uint8_t Command);           // レーザー系命令を発�
 void BitSendCommand(uint8_t Command, int Param); // ビット命令を送信
 int BitGetNum(void);                             // 現在のビット数を取得する
 
-#endif

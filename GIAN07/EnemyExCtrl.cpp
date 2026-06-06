@@ -4,15 +4,15 @@
 /*                                                                           */
 
 #include "EnemyExCtrl.h"
-#include "LLASER.H"
-#include "LOADER.H"
-#include "MAID.H"
+#include "LLASER.h"
+#include "LOADER.h"
+#include "MAID.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-#define BIT_VIRTUAL_HP 990000 // ビットの仮想ＨＰ
+static constexpr auto BIT_VIRTUAL_HP = 990000; // ビットの仮想ＨＰ
 
 SNAKYMOVE_DATA<30> SnakeData[SNAKE_MAX];
 BIT_DATA BitData;

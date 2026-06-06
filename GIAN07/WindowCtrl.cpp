@@ -6,13 +6,13 @@
 #include <SDL3/SDL_misc.h>
 #include <numeric>
 
-#include "CONFIG.H"
-#include "DEMOPLAY.H"
-#include "ENTRY.H"
-#include "GAMEMAIN.H"
-#include "LEVEL.H"
-#include "LOADER.H"
-#include "MUSIC.H"
+#include "CONFIG.h"
+#include "DEMOPLAY.h"
+#include "ENTRY.h"
+#include "GAMEMAIN.h"
+#include "LEVEL.h"
+#include "LOADER.h"
+#include "MUSIC.h"
 #include "WindowCtrl.h"
 #include "WindowSys.h"
 #include "game/bgm.h"

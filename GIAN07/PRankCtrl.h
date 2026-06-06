@@ -3,8 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#ifndef PBGWIN_PRANKCTRL_H
-#define PBGWIN_PRANKCTRL_H "PRANKCTRL : Version 0.01 : Update 2000/09/13"
+#pragma once
 
 #include <cstdint>
 
@@ -20,5 +19,3 @@ extern PlayRankInfo PlayRank;
 ///// [ 関数 ] /////
 void PlayRankAdd(int n);  // 難易度の許容範囲内でプレイランクを増減する
 void PlayRankReset(void); // 現在の難易度に応じてプレイランクを初期化
-
-#endif
