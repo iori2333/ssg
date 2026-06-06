@@ -1,5 +1,5 @@
 /*************************************************************************************************/
-/*   ENEMY.H   敵の管理とか発生制御等 */
+/*   ENEMY.h   敵の管理とか発生制御等 */
 /*                                                                                               */
 /*************************************************************************************************/
 
@@ -12,13 +12,6 @@
 // の処理を追加(実際の発射は構造体そのものに直接代入する事で行う) 2000/02/25 :
 // 敵の当たり判定チェック用関数 enemy_damage() を追加 2000/02/22 :
 // 敵のクリッピング範囲を変更した。
-
-/* -> ここから下は古いよ
- * > 8/23 (20:56)  : (ox,oy) は使用しないものとする
- *                 : ECL_Head から始まるデータ
- * <敵の数><開始アドレスx敵の数><ECLデータ>
- *
- */
 
 #include "ECL.h"
 #include "LASER.h"
@@ -50,13 +43,13 @@ inline constexpr uint8_t ANM_DEG      = 0x01; // 角度でアニメーション�
 inline constexpr uint8_t ANM_STOP     = 0x02; // 最終パターンで静止する
 
 //// 割り込みベクタ構造体 ////
-typedef struct {
+struct InterruptVector {
   uint32_t vect; // 割り込みベクタ(0 なら無効)
   int value;     // 比較値
-} INT_VECTOR;
+};
 
 //// 敵データ構造体 ////
-struct ENEMY_DATA {
+struct EnemyData {
   WORLD_COORD x, y; // 表示座標
   int vx, vy;       // 速度の(x,y)成分 x64系
 
@@ -73,8 +66,8 @@ struct ENEMY_DATA {
 
   uint32_t IntTimer; // 割り込みようタイマー
 
-  uint32_t GR[ECLREG_MAX];      // 変数用レジスタ
-  INT_VECTOR Vect[ECLVECT_MAX]; // 割り込みベクタ
+  uint32_t GR[ECLREG_MAX];              // 変数用レジスタ
+  InterruptVector Vect[ECLVECT_MAX];    // 割り込みベクタ
 
   uint16_t g_width;  // グラフィックの幅  /2*64(当たり判定にも使用)
   uint16_t g_height; // グラフィックの高さ/2*64(上に同じ)
@@ -99,8 +92,14 @@ struct ENEMY_DATA {
   TAMA_CMD t_cmd;  // 弾発射用コマンド
   LASER_CMD l_cmd; // レーザー発射用コマンド
 
+  // --- メソッド ---
   void Draw() const;
+  void UpdateAnimation();  // EnemyAnimeMove()
 };
+
+// 後方互換用エイリアス
+using ENEMY_DATA = EnemyData;
+using INT_VECTOR = InterruptVector;
 
 struct ANIME_DATA {
   uint8_t mode;                 // アニメーションモード
@@ -122,20 +121,18 @@ struct ANIME_DATA {
     }
   }
 
-  // Cel sheets of quadratic sprites.
   template <uint8_t Count, PIXEL_COORD Size>
   void SetSheet(PIXEL_POINT topleft, uint8_t mode) {
     SetSheet<Count>(topleft, {Size, Size}, mode);
   }
 
-  // Rotational cel sheets always consist of 16 quadratic sprites.
   template <PIXEL_COORD Size> void SetSheetDeg(PIXEL_POINT topleft) {
     SetSheet<16>(topleft, {Size, Size}, ANM_DEG);
   }
 };
 
 //// 敵変数 ////
-extern std::array<ENEMY_DATA, ENEMY_MAX> Enemy;
+extern std::array<EnemyData, ENEMY_MAX> Enemy;
 extern BYTE_BUFFER_OWNED ECL_Head;
 extern BYTE_BUFFER_OWNED SCL_Head;
 extern uint8_t *SCL_Now;
@@ -159,21 +156,21 @@ bool enemy_damage2(int x, int y,
 void enemy_damage3(int x, int y, uint8_t d); // ナナメレーザーの当たり判定
 extern void enemy_damage4(int damage);       // すべての敵にダメージを与える
 
-extern void EnemyAnimeMove(ENEMY_DATA *e);
+extern void EnemyAnimeMove(EnemyData *e);
 
 // 敵データを初期化する(x,y は x64 で指定のこと) //
-void InitEnemyDataX64(ENEMY_DATA *e, int x, int y, uint32_t EclID);
+void InitEnemyDataX64(EnemyData *e, int x, int y, uint32_t EclID);
 
 // 敵データを初期化する(x,y は非x64(ランダム可能) で指定のこと) //
-void InitEnemyDataSTD(ENEMY_DATA *e, short x, short y, uint32_t EclID);
+void InitEnemyDataSTD(EnemyData *e, short x, short y, uint32_t EclID);
 
 // 強制的に ECL ブロック間を移動する //
-void EnemyECL_LongJump(ENEMY_DATA *e, uint32_t EclID);
+void EnemyECL_LongJump(EnemyData *e, uint32_t EclID);
 
-extern void UpdateHoming(const ENEMY_DATA *e); // ホーミング座標を更新する
-extern void parse_ECL(ENEMY_DATA *e);          // 敵をＥＣＬに従って動かす
-extern void CheckECLInterrupt(ENEMY_DATA *e);  // 割り込みジャンプを調べる
-extern void InitECLInterrupt(ENEMY_DATA *e);   // 割り込みベクタの初期化
+extern void UpdateHoming(const EnemyData *e); // ホーミング座標を更新する
+extern void parse_ECL(EnemyData *e);          // 敵をＥＣＬに従って動かす
+extern void CheckECLInterrupt(EnemyData *e);  // 割り込みジャンプを調べる
+extern void InitECLInterrupt(EnemyData *e);   // 割り込みベクタの初期化
 
 // Vivit ナナメレーザーの当たり判定 //
-bool LaserHITCHK(const ENEMY_DATA *e, int ox, int oy, uint8_t d);
+bool LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d);

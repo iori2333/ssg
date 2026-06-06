@@ -41,7 +41,7 @@ static void ECL_DEBUG(const char *s, auto param) {
 BYTE_BUFFER_OWNED ECL_Head = nullptr;
 BYTE_BUFFER_OWNED SCL_Head = nullptr;
 uint8_t *SCL_Now = nullptr;
-std::array<ENEMY_DATA, ENEMY_MAX> Enemy;
+std::array<EnemyData, ENEMY_MAX> Enemy;
 std::array<uint16_t, ENEMY_MAX> EnemyInd;
 uint16_t EnemyNow = 0;
 ANIME_DATA Anime[ANIME_MAX];
@@ -58,15 +58,15 @@ static void _EnemyDrawBomb(int x, int y, uint32_t count);
 
 template <size_t N>
 void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
-             const std::array<ENEMY_DATA, N> &entities) {
+             const std::array<EnemyData, N> &entities) {
   Indsort(indices, count, entities,
-          [](const ENEMY_DATA &e) { return (e.flag & EF_DELETE); });
+          [](const EnemyData &e) { return (e.flag & EF_DELETE); });
 }
 
 // ECLCST_?? からその値に変換する
-static uint32_t ID2Value(const ENEMY_DATA *e, uint8_t id);
+static uint32_t ID2Value(const EnemyData *e, uint8_t id);
 
-void UpdateHoming(const ENEMY_DATA *e) {
+void UpdateHoming(const EnemyData *e) {
   const int temp = (Viv.y - e->y);
 
   if (temp < 0)
@@ -79,7 +79,7 @@ void UpdateHoming(const ENEMY_DATA *e) {
   }
 }
 
-bool LaserHITCHK(const ENEMY_DATA *e, int ox, int oy, uint8_t d) {
+bool LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d) {
   const int chkw = (min(e->g_height, e->g_width) + (3 * 64));
 
   const int tx = (e->x - ox);
@@ -98,7 +98,7 @@ inline Debug(DWORD old,int id)
 }
 */
 
-void ENEMY_DATA::Draw() const {
+void EnemyData::Draw() const {
   constexpr auto sid = SURFACE_ID::ENEMY;
 
   // TODO: Remove once the structure itself uses WORLD_POINT.
@@ -234,14 +234,14 @@ void enemyind_set(void) {
   int i;
 
   for (i = 0; i < ENEMY_MAX; i++) {
-    // memset(Enemy+i,0,sizeof(ENEMY_DATA));
+    // memset(Enemy+i,0,sizeof(Enemy));
     EnemyInd[i] = i;
   }
 
   EnemyNow = 0;
 }
 
-bool EnemyDamageApply(ENEMY_DATA &e, int damage) {
+bool EnemyDamageApply(EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
   if (e.hp <= damage) {
     Snd_SEPlay(SOUND_ID_BOMB, e.x);
@@ -346,7 +346,7 @@ extern void enemy_damage4(int damage) {
 }
 
 // 敵データを初期化する(x,y は x64 で指定のこと) //
-void InitEnemyDataX64(ENEMY_DATA *e, int x, int y, uint32_t EclID) {
+void InitEnemyDataX64(EnemyData *e, int x, int y, uint32_t EclID) {
   e->x = x;
   e->y = y;
 
@@ -412,7 +412,7 @@ void InitEnemyDataX64(ENEMY_DATA *e, int x, int y, uint32_t EclID) {
 }
 
 // 強制的に ECL ブロック間を移動する //
-void EnemyECL_LongJump(ENEMY_DATA *e, uint32_t EclID) {
+void EnemyECL_LongJump(EnemyData *e, uint32_t EclID) {
   e->cmd = U32LEAt(&ECL_Head[EclID]);
 
   e->call_addr = e->cmd;
@@ -423,7 +423,7 @@ void EnemyECL_LongJump(ENEMY_DATA *e, uint32_t EclID) {
 }
 
 // 敵データを初期化する(x,y は非x64(ランダム可能) で指定のこと) //
-void InitEnemyDataSTD(ENEMY_DATA *e, short x, short y, uint32_t EclID) {
+void InitEnemyDataSTD(EnemyData *e, short x, short y, uint32_t EclID) {
   int EnemyX = x;
   int EnemyY = y;
   /*
@@ -438,7 +438,7 @@ void InitEnemyDataSTD(ENEMY_DATA *e, short x, short y, uint32_t EclID) {
   InitEnemyDataX64(e, EnemyX, EnemyY, EclID);
 }
 
-void EnemyAnimeMove(ENEMY_DATA *e) {
+void EnemyAnimeMove(EnemyData *e) {
   const auto *a = &Anime[e->anm_ptn];
 
   switch (a->mode) {
@@ -504,7 +504,7 @@ static void _EnemyDrawBomb(int x, int y, uint32_t count) {
   GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
 }
 
-void parse_ECL(ENEMY_DATA *e) {
+void parse_ECL(EnemyData *e) {
   bool bRetFlag; // 実行クロック０命令の場合はfalseにすること
   int RegCmp;
   HLaserInfo HInfo;
@@ -1850,7 +1850,7 @@ ECL_HEAD:
 }
 
 // 割り込みジャンプを調べる //
-extern void CheckECLInterrupt(ENEMY_DATA *e) {
+extern void CheckECLInterrupt(EnemyData *e) {
   int i;
 
   for (i = 0; i < ECLVECT_MAX; i++) {
@@ -1911,7 +1911,7 @@ extern void CheckECLInterrupt(ENEMY_DATA *e) {
 }
 
 // 割り込みベクタの初期化 //
-extern void InitECLInterrupt(ENEMY_DATA *e) {
+extern void InitECLInterrupt(EnemyData *e) {
   for (auto &it : e->Vect) {
     it.vect = 0;
   }
@@ -1923,7 +1923,7 @@ extern void InitECLInterrupt(ENEMY_DATA *e) {
 #pragma warning(error : 4244)
 
 // ECLCST_?? からその値に変換する //
-static uint32_t ID2Value(const ENEMY_DATA *e, uint8_t id) {
+static uint32_t ID2Value(const EnemyData *e, uint8_t id) {
   switch (id) {
   // レジスタ指定の場合 //
   case (ECLCST_GR0):
