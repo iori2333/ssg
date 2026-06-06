@@ -7,7 +7,7 @@
 #include <SDL3/SDL_filesystem.h>
 #include <bit>
 
-#include "constants.h"
+#include "game/constants.h"
 #include "platform/path.h"
 
 #ifndef WIN32

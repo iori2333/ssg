@@ -19,12 +19,12 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "GIAN07/ENTRY.h"
+#include "GIAN07/game/ENTRY.h"
+#include "GIAN07/game/constants.h"
 #include "game/defer.h"
 #include "obj/platform_constants.h"
 #include "platform/sdl/log_sdl.h"
 #include "platform/window_backend.h"
-#include "GIAN07/constants.h"
 
 #define UTF8_(S) u8##S
 #define UTF8(S) UTF8_(S)
