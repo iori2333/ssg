@@ -5,7 +5,7 @@
 
 #include "game/SCROLL.h"
 #include "ecl/SCL.h" // ＳＣＬ定義ファイル
-#include "ecl/scl_executor.h"
+#include "ecl/scl_vm.h"
 #include "game/CONFIG.h"
 #include "game/DEMOPLAY.h"
 #include "game/GIAN.h"
@@ -136,7 +136,12 @@ static PBGMAP *ScBeforeLine(PBGMAP *p) {
 // p:SCL_ENEMY以降の敵配置データ //
 // SclKeyWaitCount → scroll_manager.cpp の Scroller に移動
 
-static void enemy_set(void) { SclExecute(SCL_Now); }
+static void enemy_set(void) {
+  if (SclVM::IsInitialized()) {
+    SclVM::Instance().Execute();
+    SCL_Now = const_cast<uint8_t *>(SclVM::Instance().PC());
+  }
+}
 
 /*
 static void ExDraw(void)

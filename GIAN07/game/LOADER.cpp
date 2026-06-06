@@ -4,6 +4,7 @@
 /*                                                                           */
 
 #include "ecl/ecl_vm.h"
+#include "ecl/scl_vm.h"
 #include "enemy/ENEMY.h"
 #include "game/CONFIG.h"
 #include "game/GIAN.h"
@@ -647,7 +648,8 @@ bool LoadStageData(uint8_t stage) {
   ECL_Head = nullptr;
   SCL_Head = nullptr;
   ScrollInfo.DataHead = nullptr;
-  EclVM::Init({}); // Clear stale interpreter
+  EclVM::Init({}); // Clear stale ECL interpreter
+  SclVM::Clear();  // Clear stale SCL interpreter
 
   const auto &enemy = DAT::Packfile(DAT::PACK_ID::ENEMY);
 
@@ -699,8 +701,11 @@ bool LoadStageData(uint8_t stage) {
 
   // Initialize ECL interpreter with loaded data
   if (ECL_Head) {
-    EclVM::Init(
-        std::span<const uint8_t>(ECL_Head.get(), ECL_Head.size()));
+    EclVM::Init(std::span<const uint8_t>(ECL_Head.get(), ECL_Head.size()));
+  }
+  // Initialize SCL interpreter
+  if (SCL_Head) {
+    SclVM::Init(SCL_Head.get());
   }
 
   // スクロール用変数の初期化 //
