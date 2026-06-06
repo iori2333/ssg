@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "ecl/scl_commands.h"
 #include <cstdint>
 #include <optional>
 
@@ -39,7 +40,7 @@ private:
   const uint8_t *m_pc;   // Program counter (non-owning)
 
   // Command handlers
-  void SpawnEnemy(const uint8_t *p);
+  void SpawnEnemy(const SclCmdEnemy &c);
 
   static std::optional<SclVM> s_instance;
 };

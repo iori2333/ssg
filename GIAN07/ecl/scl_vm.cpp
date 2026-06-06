@@ -45,16 +45,14 @@ SclVM &SclVM::Instance() { return *s_instance; }
 bool SclVM::IsInitialized() { return s_instance.has_value(); }
 
 // --- Spawn a single enemy from SCL_ENEMY data ---
-void SclVM::SpawnEnemy(const uint8_t *p) {
+void SclVM::SpawnEnemy(const SclCmdEnemy &c) {
   if (Enemies.count + 1 >= ENEMY_MAX)
     return;
 
   auto *e = &Enemies.entities[Enemies.indices[Enemies.count++]];
 
-  const uint32_t n = (4 + (p[4] << 2));
-  const auto x = I16LEAt(&p[0]);
-  const auto y = I16LEAt(&p[2]);
-  InitEnemyDataSTD(e, x, y, n);
+  const uint32_t n = (4 + (c.id << 2));
+  InitEnemyDataSTD(e, c.x, c.y, n);
 }
 
 // --- Main execution loop ---
@@ -67,7 +65,7 @@ bool SclVM::Execute() {
     case SCL_KEY:
       if ((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) ||
           ++SclKeyWaitCount >= 180) {
-        m_pc++;
+        m_pc += SclCmdLength(cmd[0]);
         SclKeyWaitCount = 0;
       } else {
         bFlag = false;
@@ -95,8 +93,9 @@ bool SclVM::Execute() {
     } break;
 
     case SCL_ENEMY: {
+      auto c = Decode(ScmdTag<SCL_ENEMY>{}, cmd);
       if (BossNow == 0)
-        SpawnEnemy(cmd + 1);
+        SpawnEnemy(c);
       m_pc += SclCmdLength(SCL_ENEMY);
     } break;
 
@@ -108,21 +107,21 @@ bool SclVM::Execute() {
 
     case SCL_BOSSDEAD:
       BossKillAll();
-      m_pc++;
+      m_pc += SclCmdLength(cmd[0]);
       break;
 
     case SCL_MWOPEN:
       if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE))
         MWinOpen();
       SclInfo.MsgFlag = true;
-      m_pc++;
+      m_pc += SclCmdLength(cmd[0]);
       break;
 
     case SCL_MWCLOSE:
       if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE))
         MWinClose();
       SclInfo.MsgFlag = false;
-      m_pc++;
+      m_pc += SclCmdLength(cmd[0]);
       break;
 
     case SCL_MSG:
@@ -144,7 +143,7 @@ bool SclVM::Execute() {
 
     case SCL_NPG:
       MWinCmd(MWCMD_NEWPAGE);
-      m_pc++;
+      m_pc += SclCmdLength(cmd[0]);
       break;
 
     case SCL_END:
@@ -172,7 +171,7 @@ bool SclVM::Execute() {
 
     case SCL_DELENEMY:
       enemyind_set();
-      m_pc++;
+      m_pc += SclCmdLength(cmd[0]);
       break;
 
     case SCL_EFC: {
@@ -307,12 +306,12 @@ bool SclVM::Execute() {
 
     case SCL_MAPPALETTE:
       GrpSurface_PaletteApplyToBackend(SURFACE_ID::MAPCHIP);
-      m_pc++;
+      m_pc += SclCmdLength(cmd[0]);
       break;
 
     case SCL_ENEMYPALETTE:
       LoadPaletteFromEnemy();
-      m_pc++;
+      m_pc += SclCmdLength(cmd[0]);
       break;
 
     default:
