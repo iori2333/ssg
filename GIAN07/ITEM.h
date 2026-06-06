@@ -25,13 +25,14 @@ inline constexpr auto ITEM_HITX = (8 + 8) * 64; // アイテムのＸ当たり�
 inline constexpr auto ITEM_HITY = (16 + 8) * 64; // アイテムのＹ当たり判定
 
 ///// [構造体] /////
-typedef struct tagITEM_DATA {
+struct ItemData {
   int x, y;
   int vx, vy;
   uint32_t count;
   uint8_t type;
   bool auto_collect; // 自動回収が発動済みか
-} ITEM_DATA;
+};
+using ITEM_DATA = ItemData;
 
 ///// [ 関数 ] /////
 void ItemSet(int x, int y, uint8_t type); // アイテムを発生させる

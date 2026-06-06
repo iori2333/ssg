@@ -29,13 +29,14 @@ struct DEMOPLAY_CONFIG_DATA {
 static_assert(sizeof(DEMOPLAY_CONFIG_DATA) == 24);
 
 ///// [構造体] /////
-typedef struct tagDEMOPLAY_INFO {
+struct DemoPlayState {
   uint32_t RndSeed;            // 乱数のたね
   uint32_t FrameCount;         // Not data size! Including the terminating ESC.
   DEMOPLAY_CONFIG_DATA CfgDat; // コンフィグの情報(Load時に一部を参照する)
   uint8_t Exp;                 // 初期パワーアップ
   uint8_t Weapon;              // 初期装備
-} DEMOPLAY_INFO;
+};
+using DEMOPLAY_INFO = DemoPlayState;
 
 // Multi-stage replay header
 struct MULTI_REPLAY_INFO {

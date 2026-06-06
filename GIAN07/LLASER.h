@@ -32,7 +32,7 @@ inline constexpr auto LLF_CLOSEL = 0x08; // レーザーをライン状態にす
 inline constexpr auto LLF_LINE = 0x10; // レーザーはライン状態
 
 //// レーザー発動コマンド構造体２ ////
-typedef struct {
+struct LongLaserCommand {
   ENEMY_DATA *e; // 敵データへのポインタ
 
   int dx, dy; // レーザーの発射座標ずらし値
@@ -44,10 +44,11 @@ typedef struct {
 
   uint8_t c;    // レーザーの色
   uint8_t type; // レーザーの種類
-} LLASER_CMD;
+};
+using LLASER_CMD = LongLaserCommand;
 
 //// レーザー用構造体２ ////
-typedef struct {
+struct LongLaserData {
   ENEMY_DATA
   *e; // 敵データへのポインタ(ここら辺でボスでも雑魚でも発射できるように)
 
@@ -70,7 +71,8 @@ typedef struct {
   uint8_t flag;    // レーザーの状態
   uint8_t type;    // レーザーの種類
   uint8_t EnemyID; // 敵から見た番号
-} LLASER_DATA;
+};
+using LLASER_DATA = LongLaserData;
 
 //// レーザー関数２ ////
 bool LLaserSet(uint8_t id);                        // レーザーをセットする

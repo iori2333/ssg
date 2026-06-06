@@ -51,16 +51,17 @@ template <size_t Len> struct SNAKYMOVE_DATA {
   constexpr static size_t Length() { return Len; }
 };
 
-typedef struct tagBIT_PARAM {
+struct BitParam {
   ENEMY_DATA *pEnemy; // 対象となる敵へのポインタ
 
   uint32_t BitHP; // ビットの耐久力
   uint8_t BitID;  // 基準角から何番目(0～)に相当するビットか
   uint8_t Angle;  // 現在の角度
   char Force;     // 現在力の加えられている方向
-} BIT_PARAM;
+};
+using BIT_PARAM = BitParam;
 
-typedef struct tagBIT_DATA {
+struct BitData {
   BIT_PARAM Bit[BIT_MAX]; // ビットデータへのポインタ
   BOSS_DATA *Parent;      // 親データへのポインタ
 
@@ -84,7 +85,8 @@ typedef struct tagBIT_DATA {
   uint16_t BaseAngle; // ビットの回転基本角
 
   bool bIsLaserEnable; // レーザーが動作中かどうか
-} BIT_DATA;
+};
+using BIT_DATA = BitData;
 
 ///// [ 関数 ] /////
 void SnakyInit(void);                                  // 蛇型の敵配列の初期化

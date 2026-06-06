@@ -29,7 +29,7 @@
 inline constexpr auto LASER_MAX = 1000; // レーザーの最大発生本数
 
 ////レーザー発動コマンド構造体////
-typedef struct {
+struct LaserCommand {
   int x, y; // 始点の座標
   int v;    // レーザーの初速度
 
@@ -47,7 +47,8 @@ typedef struct {
   uint8_t cmd;  // レーザー発動コマンド(ほとんど弾と同じかも)
   uint8_t type; // ショート、無限遠など
   uint8_t notr; // 反射しないリフレクターの番号
-} LASER_CMD;
+};
+using LASER_CMD = LaserCommand;
 
 /*
 ////反射物(鏡?) 構造体////

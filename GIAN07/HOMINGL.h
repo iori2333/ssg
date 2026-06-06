@@ -22,7 +22,7 @@ inline constexpr auto HLS_DEAD = 0xff; // ホーミングレーザー削除要�
 ///// [構造体] /////
 
 // ホーミングレーザー //
-typedef struct tagHLaserData {
+struct HomingLaserData {
   int Current; // 現在の先頭
   int v;       // 速度
   int a;       // 加速度
@@ -34,12 +34,13 @@ typedef struct tagHLaserData {
   uint8_t c;     // 色
   uint8_t Left;  // 残りホーミング回数
 
-  struct tagHLaserData *Next;              // 次のレーザーへのポインタ
+  HomingLaserData *Next;                   // 次のレーザーへのポインタ
   DegPoint p[HLASER_LEN * HLASER_SECTION]; // 頂点キュー(ExDef.h)
-} HLaserData;
+};
+using HLaserData = HomingLaserData;
 
 // ホーミングレーザーセット情報 //
-typedef struct tagHLaserInfo {
+struct HomingLaserInfo {
   int x, y; // 中心座標
 
   uint8_t d;  // 角度
@@ -48,7 +49,8 @@ typedef struct tagHLaserInfo {
 
   uint8_t c;    // 色
   uint8_t type; // 種類
-} HLaserInfo;
+};
+using HLaserInfo = HomingLaserInfo;
 
 ///// [グローバル変数] /////
 extern uint16_t HLaserNow;   // ホーミングレーザーの本数

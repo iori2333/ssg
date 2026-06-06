@@ -49,7 +49,7 @@ typedef uint16_t PBGMAP; // マップパーツ格納用の型
 ///// [構造体] /////
 
 // スクロール管理用構造体 //
-typedef struct tagScrollInfo {
+struct ScrollState {
   //	GRP		lpMapOffs;					//
   // マップパーツデータ(Graphic)の格納先
 
@@ -76,13 +76,17 @@ typedef struct tagScrollInfo {
 
   void (*ExCmd)(void); // 特殊コマンド
   uint32_t ExCount;    // 特殊コマンド用カウンタ
-} SCROLL_INFO;
+};
 
 // ＳＣＬ管理用構造体 //
-typedef struct tagSCL_INFO {
+struct SceneState {
   bool MsgFlag;    // メッセージスキップ用フラグ
   bool ReturnFlag; // リターンキー用フラグ
-} SCL_INFO;
+};
+
+// 後方互換用エイリアス
+using SCROLL_INFO = ScrollState;
+using SCL_INFO = SceneState;
 
 ///// [ 関数 ] /////
 void ScrollMove(void); // 背景を動かす(１フレーム分)

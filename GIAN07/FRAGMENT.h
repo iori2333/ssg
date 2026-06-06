@@ -22,12 +22,13 @@ inline constexpr auto FRG_ESCAPE = 0x10;   // 指定座標から逃げる
 inline constexpr auto FRG_APPROACH = 0x20; // 指定座標に近づく
 
 //// 破片構造体 ////
-typedef struct {
+struct FragmentData {
   int x, y;      // 現在の座標
   int vx, vy;    // 速度成分 (x64)
   uint8_t count; // フレームカウンタ(０の時は使用していないとする)
   uint8_t cmd;   // どんな破片？
-} FRAGMENT_DATA;
+};
+using FRAGMENT_DATA = FragmentData;
 
 //// 破片用変数 ////
 extern FRAGMENT_DATA Fragment[FRAGMENT_MAX];
