@@ -469,7 +469,8 @@ ECL_HEAD:
     break;
   }
   case EclOp::ACCXYA:
-    break; // unimplemented
+    e.cmd += CmdLength(EclOp::ACCXYA);
+    return; // unimplemented, stop for frame
 
   case EclOp::GRAX: {
     auto c = Decode(EclOpTag<EclOp::GRAX>{}, raw);
@@ -876,7 +877,8 @@ ECL_HEAD:
     HInfo.x = e.x + e.l_cmd.x;
     HInfo.y = e.y + e.l_cmd.y;
     HLaserSet(&HInfo);
-    break;
+    e.cmd += CmdLength(EclOp::HLASER);
+    return; // stop for frame (was implicit bRetFlag in old code)
   }
 
   // ============================================================
@@ -978,7 +980,8 @@ ECL_HEAD:
   case EclOp::ITEM: {
     auto c = Decode(EclOpTag<EclOp::ITEM>{}, raw);
     e.item = c.type;
-    break;
+    e.cmd += CmdLength(EclOp::ITEM);
+    return; // stop for frame (was implicit bRetFlag in old code)
   }
   case EclOp::STG4EFC: {
     auto c = Decode(EclOpTag<EclOp::STG4EFC>{}, raw);
@@ -998,7 +1001,8 @@ ECL_HEAD:
   }
   case EclOp::STG3EFC:
     ScrollCommand(SCMD_STG3STAR);
-    break;
+    e.cmd += CmdLength(EclOp::STG3EFC);
+    return; // stop for frame
 
   case EclOp::BITLASER: {
     auto c = Decode(EclOpTag<EclOp::BITLASER>{}, raw);

@@ -86,8 +86,10 @@ void EnemyData::Draw() const {
 }
 
 void enemy_move(void) {
-  int i; //,chkx,chky;if (BossNow == 0)
-  HomingFlag = HOMING_DUMMY;
+  int i;
+
+  if (BossNow == 0)
+    HomingFlag = HOMING_DUMMY;
 
   for (i = 0; i < EnemyNow; i++) {
     auto *e = &Enemy[EnemyInd[i]];

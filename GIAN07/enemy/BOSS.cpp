@@ -123,8 +123,6 @@ void BossSet(int x, int y, uint32_t BossID) {
 
   BossHPG_Open(HP_Sum);
   BossNow++;
-  fprintf(stderr, "BossSet: n=%d BossNow=%d hp=%u\n", n, BossNow,
-          Boss[n].Edat.hp);
 }
 
 // ボスをセットする(ＥＣＬ用) //
