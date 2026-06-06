@@ -3,14 +3,29 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <optional>
+#include <algorithm>
+#include <cmath>
+#include <cassert>
 #include <utility>
 
 #include "ui/WindowSys.h"
 #include "game/LOADER.h"
+#include "game/coords.h"
+#include "game/constants.h"
+#include "game/enum_array.h"
 #include "game/enum_flags.h"
+#include "game/narrow.h"
+#include "game/input.h"
+#include "game/graphics.h"
 #include "game/snd.h"
+#include "game/text.h"
 #include "game/ut_math.h"
+#include "platform/sdl/graphics_sdl.h"
+#include "platform/graphics_backend.h"
 #include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 #include "ui/FONTUTY.h"
 
 ///// [構造体] /////
@@ -614,7 +629,7 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
       ws->OldKey = 0;
     }
     return;
-  } if (!!(p2->Flags & WINDOW_FLAGS::FAST_REPEAT) &&
+  } else if (!!(p2->Flags & WINDOW_FLAGS::FAST_REPEAT) &&
              Input_OptionKeyDelta(ws->OldKey)) {
     ws->KeyCount = ws->FastRepeatWait;
     ws->FastRepeatWait = (std::max)((ws->FastRepeatWait - 2), 0);
@@ -622,7 +637,7 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
       ws->OldKey = 0;
     }
     return;
-  } else if ((ws->OldKey == KEY_UP) || (ws->OldKey == KEY_DOWN) ||
+  } if ((ws->OldKey == KEY_UP) || (ws->OldKey == KEY_DOWN) ||
              (ws->OldKey == KEY_LEFT) || (ws->OldKey == KEY_RIGHT)) {
     ws->KeyCount = CWIN_KEYWAIT;
     return;

@@ -3,14 +3,26 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <array>
+#include <cstdint>
+#include <cmath>
 #include <utility>
 
 #include "entity/MAIDTAMA.h"
+#include "entity/TAMA.h"
+#include "entity/MAID.h"
+#include "enemy/ENEMY.h"
+#include "effect/FRAGMENT.h"
 #include "game/GIAN.h"
+#include "game/SCROLL.h"
+#include "game/PRankCtrl.h"
+#include "game/LOADER.h"
 #include "game/cast.h"
+#include "game/entity.h"
+#include "game/coords.h"
+#include "game/constants.h"
 #include "game/input.h"
 #include "game/snd.h"
-#include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
 ///// [ひみつの関数] /////

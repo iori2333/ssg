@@ -3,6 +3,10 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <array>
+#include <cstdint>
+#include <cstdlib>
+#include <cmath>
 #include <utility>
 
 #include "entity/HOMINGL.h"
@@ -12,6 +16,7 @@
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 

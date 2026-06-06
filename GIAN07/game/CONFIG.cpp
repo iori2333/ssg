@@ -4,12 +4,21 @@
  */
 
 #include <SDL3/SDL_iostream.h>
+#include <type_traits>
+#include <string>
+#include <cstdint>
+#include <cstddef>
+#include <limits>
+#include <tuple>
+#include <utility>
 
 #include "game/CONFIG.h"
 #include "game/bgm.h"
 #include "game/defer.h"
 #include "game/endian.h"
+#include "game/graphics.h"
 #include "platform/file.h"
+#include "platform/graphics_backend.h"
 #include "platform/window_backend.h"
 
 ///// Constants /////

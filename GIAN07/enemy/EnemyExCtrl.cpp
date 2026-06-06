@@ -3,18 +3,28 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <iterator>
+#include <cassert>
+#include <type_traits>
+#include <ranges>
+#include <cmath>
+#include <cstdlib>
 #include <utility>
 
 #include <algorithm>
 
 #include "enemy/EnemyExCtrl.h"
+#include "enemy/BOSS.h"
+#include "enemy/ENEMY.h"
+#include "ecl/ecl_opcodes.h"
 #include "entity/LLASER.h"
 #include "entity/MAID.h"
 #include "game/LOADER.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
-#include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 
 static constexpr auto BIT_VIRTUAL_HP = 990000; // ビットの仮想ＨＰ
 

@@ -3,13 +3,24 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <cstdio>
+#include <optional>
+#include <span>
+#include <string_view>
+
 #include "ui/FONTUTY.h"
-#include "game/LOADER.h"
+#include "game/constants.h"
+#include "game/coords.h"
+#include "game/enum_array.h"
+#include "game/graphics.h"
+#include "game/narrow.h"
 #include "platform/graphics_backend.h"
-#include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 
 #ifdef WIN32
 #include <windows.h>
+#include "platform/windows/text_gdi.h"
 
 extern constinit const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs = [] {
   ENUMARRAY<LOGFONTW, FONT_ID> ret;

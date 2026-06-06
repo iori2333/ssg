@@ -9,15 +9,32 @@
 
 #include <algorithm>
 
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
 #include <utility>
 
+#include "effect/EFFECT.h"
+#include "effect/FRAGMENT.h"
 #include "effect/GEOMETRY.h"
 #include "entity/MAID.h"
+#include "entity/MAIDTAMA.h"
+#include "entity/TAMA.h"
+#include "entity/LASER.h"
 #include "game/CONFIG.h"
+#include "game/GAMEMAIN.h"
 #include "game/GIAN.h"
+#include "game/coords.h"
+#include "game/constants.h"
+#include "game/LOADER.h"
+#include "game/SCROLL.h"
+#include "game/PRankCtrl.h"
+#include "game/cast.h"
 #include "game/input.h"
+#include "game/pixelformat.h"
 #include "game/snd.h"
-#include "game/ut_math.h"
+#include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 #include "ui/FONTUTY.h"
 
 Player Viv; // プレイヤーインスタンス
@@ -55,7 +72,7 @@ void Player::DrawWideBomb() const {
   GrpSurface_Blit({x, y}, SURFACE_ID::BOMBER, data[t]);
 }
 
-void Player::DrawLaserBomb() {
+void Player::DrawLaserBomb() const {
   constexpr RGBA col_channeled = RGB216{0, 0, 5}.ToRGB().WithAlpha(0xFF);
   VERTEX_XY p[4];
   int i;
@@ -619,8 +636,8 @@ uint8_t Player::GetLeftLaserDeg(uint8_t LaserDeg, int i) {
 
 // 後方互換用：MAIDTAMA.cpp などから参照される自由関数ラッパー
 uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i) {
-  return Viv.GetRightLaserDeg(LaserDeg, i);
+  return Player::GetRightLaserDeg(LaserDeg, i);
 }
 uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i) {
-  return Viv.GetLeftLaserDeg(LaserDeg, i);
+  return Player::GetLeftLaserDeg(LaserDeg, i);
 }

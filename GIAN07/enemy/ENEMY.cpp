@@ -3,12 +3,26 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include <cstdint>
+#include <cstddef>
+#include <array>
+#include <cmath>
+#include <cstdlib>
 #include <utility>
 
 #include "enemy/ENEMY.h"
 #include "GIAN07/game/entity.h"
+#include "entity/MAID.h"
+#include "enemy/BOSS.h"
+#include "ecl/ecl_vm.h"
+#include "entity/TAMA.h"
+#include "entity/LLASER.h"
+#include "entity/ITEM.h"
 #include "game/GIAN.h"
+#include "game/LOADER.h"
 #include "game/cast.h"
+#include "game/constants.h"
+#include "game/coords.h"
 #include "game/endian.h"
 #include "game/snd.h"
 #include "game/ut_math.h"

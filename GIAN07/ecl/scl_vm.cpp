@@ -4,7 +4,8 @@
 
 #include "ecl/scl_vm.h"
 #include "ecl/scl_commands.h"
-#include "effect/EFFECT3D.h"
+#include "ecl/scl_opcodes.h"
+#include "effect/EFFECT.h"
 #include "enemy/BOSS.h"
 #include "enemy/ENEMY.h"
 #include "enemy/enemy_manager.h"
@@ -16,16 +17,17 @@
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
 #include "game/LOADER.h"
-#include "game/MUSIC.h"
 #include "game/PRankCtrl.h"
 #include "game/SCROLL.h"
 #include "game/bgm.h"
-#include "game/endian.h"
+#include "game/constants.h"
 #include "game/input.h"
 #include "game/snd.h"
 #include "platform/graphics_backend.h"
-#include "ui/WindowCtrl.h"
 #include "ui/WindowSys.h"
+#include <optional>
+#include <cstdint>
+#include <cstring>
 
 // --- Global instance ---
 std::optional<SclVM> SclVM::s_instance;

@@ -4,14 +4,28 @@
 /*                                                                           */
 
 #include <algorithm>
+#include <cstdint>
+#include <cmath>
+#include <iterator>
+#include <cstring>
+#include <cstdio>
 
 #include "effect/EFFECT.h"
+#include "effect/EFFECT3D.h"
 #include "effect/GEOMETRY.h"
 #include "game/GIAN.h"
+#include "game/LOADER.h"
 #include "game/cast.h"
+#include "game/narrow.h"
+#include "game/coords.h"
+#include "game/constants.h"
 #include "game/snd.h"
+#include "game/text.h"
 #include "game/ut_math.h"
+#include "platform/sdl/graphics_sdl.h"
+#include "platform/graphics_backend.h"
 #include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 #include "ui/FONTUTY.h"
 
 SEFFECT_DATA SEffect[SEFFECT_MAX];

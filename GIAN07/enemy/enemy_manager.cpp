@@ -3,6 +3,10 @@
  */
 
 #include "enemy/enemy_manager.h"
+#include <array>
+#include "enemy/ENEMY.h"
+#include <cstdint>
+#include "platform/sdl/buffer.h"
 
 // --- グローバルインスタンス ---
 EnemyManager Enemies;

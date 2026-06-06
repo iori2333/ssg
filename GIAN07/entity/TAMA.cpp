@@ -3,12 +3,25 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include <cstdint>
+#include <ranges>
+#include <cmath>
+#include <cstdlib>
+#include <span>
 #include <utility>
 
 #include "entity/TAMA.h"
+#include "entity/MAID.h"
+#include "effect/EFFECT.h"
+#include "entity/ITEM.h"
+#include "effect/FRAGMENT.h"
+#include "enemy/ENEMY.h"
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
+#include "game/PRankCtrl.h"
 #include "game/cast.h"
+#include "game/coords.h"
+#include "game/constants.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"

@@ -6,11 +6,18 @@
 #include "game/LZ_UTY.h"
 #include "game/defer.h"
 #include "platform/file.h"
+#include "platform/sdl/buffer.h"
 #include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <numeric>
 #include <optional>
+#include <span>
+#include <vector>
+#include <utility>
 
 constexpr auto LZSS_DICT_BITS = 13;
 constexpr auto LZSS_SEQ_BITS = 4;

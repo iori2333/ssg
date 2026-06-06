@@ -3,6 +3,7 @@
  */
 
 #include "game/scroll_manager.h"
+#include "game/SCROLL.h"
 
 // --- グローバルインスタンス ---
 ScrollManager Scroller;

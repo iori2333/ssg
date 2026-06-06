@@ -4,6 +4,16 @@
 /*                                                                           */
 
 #include <SDL3/SDL_misc.h>
+#include <cstdint>
+#include <cstddef>
+#include <array>
+#include <algorithm>
+#include <cassert>
+#include <iterator>
+#include <cstdio>
+#include <cstring>
+#include <functional>
+#include <chrono>
 #include <numeric>
 
 #include "game/CONFIG.h"
@@ -14,14 +24,29 @@
 #include "game/LOADER.h"
 #include "game/MUSIC.h"
 #include "game/bgm.h"
+#include "game/input.h"
+#include "game/graphics.h"
+#include "game/coords.h"
+#include "game/constants.h"
+#include "game/enum_array.h"
+#include "game/enum_flags.h"
 #include "game/midi.h"
+#include "game/narrow.h"
 #include "game/snd.h"
 #include "game/string_format.h"
+#include "platform/graphics_backend.h"
+#include "game/volume.h"
 #include "platform/input.h"
 #include "platform/midi_backend.h"
 #include "ui/WindowCtrl.h"
 #include "ui/WindowSys.h"
 #include <SDL3/SDL_filesystem.h>
+#include <vector>
+#include <string>
+#include <span>
+#include <ranges>
+#include <utility>
+#include <tuple>
 
 using namespace std::chrono_literals;
 

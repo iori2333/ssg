@@ -6,6 +6,8 @@
 #include "game/PRankCtrl.h"
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
+#include "game/LOADER.h"
+#include <algorithm>
 
 // PlayRank → rank_manager.cpp に移動
 

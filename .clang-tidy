@@ -32,7 +32,8 @@ Checks: >
   performance-*,
   -performance-avoid-endl,
   misc-*,
-  -misc-include-cleaner,
+
+
   -misc-non-private-member-variables-in-classes,
   -misc-const-correctness,
   -misc-use-anonymous-namespace,

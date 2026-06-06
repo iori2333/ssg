@@ -4,10 +4,16 @@
 /*                                                                           */
 
 #include "game/GIAN.h"
-#include "game/CONFIG.h"
+#include "entity/MAID.h"
 #include "game/LEVEL.h"
+#include "game/coords.h"
+#include "game/constants.h"
+#include "game/LOADER.h"
+#include "game/PRankCtrl.h"
 #include "platform/time.h"
 #include "ui/FONTUTY.h"
+#include <cstdint>
+#include <cstdio>
 
 ///// [グローバル変数] /////
 // HIGH_SCORE		*HighScore;

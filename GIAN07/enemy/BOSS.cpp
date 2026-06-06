@@ -5,17 +5,35 @@
 
 #include <algorithm>
 
+#include <cstdint>
+#include <cmath>
+#include <cstdio>
+#include <iterator>
 #include <utility>
 
 #include "enemy/BOSS.h"
+#include "ecl/ecl_opcodes.h"
 #include "effect/BOMBEFC.h" // 爆発エフェクト処理
+#include "effect/FRAGMENT.h"
+#include "effect/EFFECT.h"
 #include "effect/GEOMETRY.h"
+#include "enemy/ENEMY.h"
 #include "enemy/EnemyExCtrl.h"
+#include "entity/MAID.h"
+#include "entity/LLASER.h"
+#include "entity/TAMA.h"
+#include "entity/ITEM.h"
+#include "entity/LASER.h"
 #include "game/GIAN.h"
+#include "game/LOADER.h"
+#include "game/SCROLL.h"
 #include "game/cast.h"
+#include "game/constants.h"
+#include "game/coords.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 
 ///// [ 定数 ] /////
 

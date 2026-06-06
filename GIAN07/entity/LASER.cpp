@@ -3,17 +3,25 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include <clocale>
+#include <cstdint>
+#include <array>
+#include <cmath>
+#include <cstdlib>
 #include <utility>
 
 #include "entity/LASER.h"
 #include "GIAN07/game/entity.h"
 #include "effect/GEOMETRY.h"
 #include "entity/LLASER.h"
+#include "entity/MAID.h"
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
 #include "game/PRankCtrl.h"
+#include "game/graphics.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 
 /*
  * レーザーの座標管理について、今回は次のような構造体をもたせる事にする

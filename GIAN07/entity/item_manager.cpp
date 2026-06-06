@@ -3,6 +3,9 @@
  */
 
 #include "entity/item_manager.h"
+#include <array>
+#include "entity/ITEM.h"
+#include <cstdint>
 
 ItemManager Items;
 std::array<ItemData, ITEM_MAX> &Item = Items.pool.entities;

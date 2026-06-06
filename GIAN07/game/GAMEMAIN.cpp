@@ -4,26 +4,55 @@
 /*                                                                           */
 #include "game/GAMEMAIN.h"
 #include "effect/BOMBEFC.h" // 爆発エフェクト処理
+#include "effect/EFFECT.h"
+#include "effect/FRAGMENT.h"
+#include "effect/EFFECT3D.h"
 #include "effect/GEOMETRY.h"
 #include "effect/LENS.h"
+#include "entity/MAID.h"
+#include "enemy/BOSS.h"
+#include "entity/MAIDTAMA.h"
+#include "enemy/ENEMY.h"
+#include "entity/TAMA.h"
+#include "entity/LASER.h"
+#include "entity/LLASER.h"
+#include "entity/HOMINGL.h"
+#include "entity/ITEM.h"
 #include "game/CONFIG.h"
 #include "game/DEMOPLAY.h"
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
-#include "game/MUSIC.h"
+#include "game/LOADER.h"
+#include "game/PRankCtrl.h"
 #include "game/SCORE.h"
+#include "game/SCROLL.h"
 #include "game/bgm.h"
+#include "game/coords.h"
+#include "game/constants.h"
+#include "game/cast.h"
 #include "game/debug.h"
+#include "game/graphics.h"
 #include "game/input.h"
+#include "game/narrow.h"
 #include "game/snd.h"
+#include "game/text.h"
 #include "game/ut_math.h"
+#include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 #include "platform/text_backend.h"
 #include "platform/time.h"
 #include "ui/FONTUTY.h"
 #include "ui/WindowCtrl.h" // ウィンドウ定義
 #include "ui/WindowSys.h"
 #include <algorithm>
-#include <chrono>
+#include <string_view>
+#include <cstdint>
+#include <span>
+#include <cstring>
+#include <optional>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
 
@@ -256,7 +285,7 @@ static char GetAddr2Char(int x, int y) {
     return ('a' + (x % 26));
   }
   // その他記号など //
-  else {
+  
     switch (x) {
     case 0:
       return '0';
@@ -310,7 +339,7 @@ static char GetAddr2Char(int x, int y) {
     default:
       return NR_EXCHAR_ERROR;
     }
-  }
+ 
 }
 
 // お名前入力 //

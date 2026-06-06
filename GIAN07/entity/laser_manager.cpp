@@ -3,6 +3,11 @@
  */
 
 #include "entity/laser_manager.h"
+#include "entity/LASER.h"
+#include <cstdint>
+#include <array>
+#include "entity/LLASER.h"
+#include "entity/HOMINGL.h"
 
 // --- グローバルインスタンス ---
 LaserManager Lasers;

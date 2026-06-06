@@ -3,24 +3,21 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <cmath>
 #include <utility>
 
 #include "game/SCROLL.h"
-#include "ecl/scl_opcodes.h" // SCL opcodes
 #include "ecl/scl_vm.h"
-#include "game/CONFIG.h"
-#include "game/DEMOPLAY.h"
+#include "enemy/ENEMY.h"
+#include "effect/EFFECT3D.h"
+#include "effect/EFFECT.h"
 #include "game/GIAN.h"
-#include "game/LEVEL.h"
-#include "game/bgm.h"
 #include "game/cast.h"
-#include "game/debug.h"
+#include "game/coords.h"
+#include "game/constants.h"
 #include "game/endian.h"
-#include "game/input.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
 #include "platform/graphics_backend.h"
-#include "ui/WindowSys.h"
 
 // マップデータ保存用ヘッダ //
 using ScrollSaveHeader = struct tagScrollSaveHeader {
@@ -222,7 +219,7 @@ void ScrollDraw(void) {
   } if (ScrollInfo.ExCmd == ScrollCmdStg6Cube) {
     Draw3DCube();
     return;
-  } else if (ScrollInfo.ExCmd == ScrollCmdStg6RndEcl) {
+  } if (ScrollInfo.ExCmd == ScrollCmdStg6RndEcl) {
     DrawEffectFakeECL();
     return;
   } else if (ScrollInfo.ExCmd == ScrollCmdStg6Raster) {

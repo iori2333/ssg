@@ -9,9 +9,17 @@
 #include "game/LEVEL.h"
 #include "game/LZ_UTY.h"
 #include "game/defer.h"
-#include <array>
 #include <cinttypes> // for PRId64
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <concepts>
+#include <cstring>
+#include <cstdio>
+#include <new>
+#include <cstddef>
 #include <ranges>
+#include <span>
 #include <utility>
 
 using NR_SCORE_LIST = std::span<NR_NAME_DATA, NR_RANK_MAX>;

@@ -3,12 +3,20 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <cstdint>
+#include <cmath>
 #include <utility>
 
 #include "entity/ITEM.h"
+#include "entity/MAID.h"
+#include "effect/EFFECT.h"
+#include "effect/FRAGMENT.h"
 #include "entity/item_manager.h"
 #include "game/GIAN.h"
+#include "game/LOADER.h"
+#include "game/constants.h"
 #include "game/coord_util.h"
+#include "game/coords.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"

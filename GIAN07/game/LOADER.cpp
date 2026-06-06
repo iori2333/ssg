@@ -3,26 +3,42 @@
 /*                                                                           */
 /*                                                                           */
 
+#include "game/LOADER.h"
 #include "ecl/ecl_vm.h"
 #include "ecl/scl_vm.h"
 #include "enemy/ENEMY.h"
 #include "game/CONFIG.h"
+#include "game/GAMEMAIN.h"
 #include "game/GIAN.h"
 #include "game/LZ_UTY.h"
-#include "game/MUSIC.h"
+#include "game/constants.h"
+#include "game/SCROLL.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
 #include "game/graphics.h"
 #include "game/hash.h"
+#include "game/input.h"
 #include "game/midi.h"
+#include "game/narrow.h"
 #include "game/snd.h"
+#include "platform/file.h"
 #include "platform/graphics_backend.h"
 #include "platform/path.h"
-#include "platform/thread.h"
+#include "platform/sdl/buffer.h"
+#include "platform/sdl/thread_sdl.h"
 #include "ui/WindowSys.h"
+#include <algorithm>
+#include <array>
 #include <cassert>
 
+#include <cstdint>
+#include <string_view>
+#include <string>
+#include <cstddef>
+#include <ranges>
+#include <span>
 #include <utility>
+#include <vector>
 
 // Hardcoded loop points for ZUN's original MIDI files
 // ---------------------------------------------------

@@ -6,10 +6,16 @@
  *   control flow, and interrupt vectors.
  */
 
+#include <cstdint>
+#include <optional>
+#include <span>
+#include <cstdlib>
+#include <cmath>
 #include <utility>
 
 #include "ecl/ecl_vm.h"
 #include "ecl/ecl_commands.h"
+#include "ecl/ecl_opcodes.h"
 #include "effect/EFFECT.h"
 #include "effect/EFFECT3D.h"
 #include "enemy/BOSS.h"
@@ -23,7 +29,6 @@
 #include "game/LEVEL.h"
 #include "game/PRankCtrl.h"
 #include "game/SCROLL.h"
-#include "game/cast.h"
 #include "game/coords.h"
 #include "game/debug.h"
 #include "game/endian.h"

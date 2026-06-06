@@ -3,15 +3,29 @@
  *
  */
 
+#include <cstdint>
+#include <algorithm>
+#include <bit>
 #include <utility>
 
 #include "game/ENDING.h"
 #include "ecl/scl_opcodes.h" // SCL opcodes
+#include "game/GAMEMAIN.h"
+#include "enemy/ENEMY.h"
 #include "game/GIAN.h"
+#include "game/LOADER.h"
 #include "game/bgm.h"
 #include "game/cast.h"
+#include "game/coords.h"
+#include "game/constants.h"
 #include "game/endian.h"
+#include "game/narrow.h"
+#include "game/text.h"
+#include "game/graphics.h"
+#include "platform/graphics_backend.h"
+#include "platform/sdl/graphics_sdl.h"
 #include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 
 using EndingGrpInfo = struct tagEndingGrpInfo {
   uint32_t timer;          // 表示用タイマー

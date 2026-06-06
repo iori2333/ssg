@@ -87,7 +87,7 @@ struct Player {
   static uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);
 
 private:
-  void DrawLaserBomb(); // レーザーボム描画
+  void DrawLaserBomb() const; // レーザーボム描画
   static uint8_t GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i);
 };
 

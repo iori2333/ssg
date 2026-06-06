@@ -3,6 +3,9 @@
  */
 
 #include "entity/bullet_manager.h"
+#include <array>
+#include "entity/TAMA.h"
+#include <cstdint>
 
 // --- グローバルインスタンス ---
 BulletManager Bullets;

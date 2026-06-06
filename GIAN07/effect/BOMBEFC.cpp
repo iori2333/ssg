@@ -3,12 +3,14 @@
  *
  */
 #include "effect/BOMBEFC.h"
-#include "game/LOADER.h"
+#include "game/coords.h"
+#include "game/constants.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 #include <algorithm>
 #include <array>
-#include <ranges>
+#include <cstdint>
+#include <cmath>
 
 static BombEfcCtrl BombEfc[EXBOMB_MAX];
 
