@@ -3,6 +3,8 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <utility>
+
 #include "ui/WindowSys.h"
 #include "game/LOADER.h"
 #include "game/enum_flags.h"
@@ -14,7 +16,7 @@
 ///// [構造体] /////
 
 // メッセージウィンドウ管理用構造体 //
-typedef struct tagMSG_WINDOW {
+using MSG_WINDOW = struct tagMSG_WINDOW {
   WINDOW_LTRB MaxSize; // ウィンドウの最終的な大きさ
   WINDOW_LTRB NowSize; // ウィンドウの現在のサイズ
   PIXEL_POINT TextTopleft;
@@ -46,7 +48,7 @@ typedef struct tagMSG_WINDOW {
     Text.clear();
   }
 
-} MSG_WINDOW;
+};
 
 ///// [非公開関数] /////
 
@@ -58,11 +60,11 @@ static void GrpBoxA2(int x1, int y1, int x2, int y2); // 平行四辺形ＢＯ�
 
 ///// [グローバル変数] /////
 
-MSG_WINDOW MsgWindow; // メッセージウィンドウ
+static MSG_WINDOW MsgWindow; // メッセージウィンドウ
 
 uint8_t WINDOW_MENU::MaxItems() const {
   uint8_t ret = NumItems;
-  for (auto i = 0; i < NumItems; i++) {
+  for (auto i = 0; std::cmp_less(i , NumItems); i++) {
     if (ItemPtr[i]->Submenu) {
       ret = (std::max)(ret, ItemPtr[i]->Submenu->MaxItems());
     }
@@ -141,7 +143,7 @@ void CWinMove(WINDOW_SYSTEM *ws) {
   ws->Count++;
 }
 
-void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
+static void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
                    bool is_title) {
   struct COLOR_PAIR {
     RGB shadow;
@@ -191,14 +193,14 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
   top += CWIN_ITEM_H;
 
   GrpGeom->SetColor({0, 0, 2});
-  for (i = 0; i < p->NumItems; i++) {
-    if (i == ws->Select[ws->SelectDepth]) {
+  for (i = 0; std::cmp_less(i , p->NumItems); i++) {
+    if (std::cmp_equal(i , ws->Select[ws->SelectDepth])) {
       GrpGeom->SetAlphaNorm(128);
       GrpGeom->SetColor({5, 0, 0});
     }
     GrpGeom->DrawBoxA(ws->x, top, (ws->x + ws->W), (top + CWIN_ITEM_H));
     top += CWIN_ITEM_H;
-    if (i == ws->Select[ws->SelectDepth]) {
+    if (std::cmp_equal(i , ws->Select[ws->SelectDepth])) {
       GrpGeom->SetAlphaNorm(alpha);
       GrpGeom->SetColor({0, 0, 2});
     }
@@ -214,7 +216,7 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
   });
   topleft.y += (CWIN_ITEM_H + 1); // ???
 
-  for (i = 0; i < p->NumItems; i++) {
+  for (i = 0; std::cmp_less(i , p->NumItems); i++) {
     const auto trr = ws->TRRs[1 + i];
     auto *item = p->ItemPtr[i];
     const Narrow::string_view c =
@@ -229,10 +231,7 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
 
 // コマンド [Exit] のデフォルト処理関数 //
 bool CWinExitFn(INPUT_BITS key) {
-  if (Input_IsOK(key) || Input_IsCancel(key)) {
-    return false;
-  }
-  return true;
+  return !(Input_IsOK(key) || Input_IsCancel(key));
 }
 
 PIXEL_SIZE CWinTextExtent(Narrow::string_view str) {
@@ -359,7 +358,9 @@ void MWinDraw(void) {
   const auto y = MsgWindow.NowSize.top;          // ウィンドウ左上Ｙ
   const auto w = (MsgWindow.NowSize.right - x);  // ウィンドウ幅
   const auto h = (MsgWindow.NowSize.bottom - y); // ウィンドウ高さ
-  int len, time, oy;
+  int len;
+  int time;
+  int oy;
 
   // メッセージウィンドウが死んでいたら何もしない //
   if (MsgWindow.State == MWIN_DEAD)
@@ -381,7 +382,7 @@ void MWinDraw(void) {
     TextObj.Render(topleft, trr, text, [](TEXTRENDER_SESSION &s) {
       // セットされたフォントで描画
       s.SetFont(MsgWindow.FontID);
-      for (auto i = 0; i < MsgWindow.Line; i++) {
+      for (auto i = 0; std::cmp_less(i , MsgWindow.Line); i++) {
         const auto line = MsgWindow.Msg[i];
 
         // 一応安全対策
@@ -456,11 +457,12 @@ void MWinDraw(void) {
 }
 
 void MWinMsg(Narrow::string_view s) {
-  int Line, i;
+  int Line;
+  int i;
 
   Line = MsgWindow.Line;
 
-  if (Line == MsgWindow.MaxLine) {
+  if (std::cmp_equal(Line , MsgWindow.MaxLine)) {
     // すでに表示最大行数を超えていた場合 //
     for (i = 1; i < MsgWindow.MaxLine - 1; i++)
       MsgWindow.Msg[i] = MsgWindow.Msg[i + 1];
@@ -569,7 +571,7 @@ WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws) {
 
   // 現在アクティブな項目を探す //
   auto *p = &(ws->Parent);
-  for (i = 0; i < ws->SelectDepth; i++) {
+  for (i = 0; std::cmp_less(i , ws->SelectDepth); i++) {
     p = p->ItemPtr[ws->Select[i]]->Submenu;
   }
 
@@ -581,9 +583,9 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
   if (ws->FirstWait) {
     if (Key_Data) {
       return;
-    } else {
+    } 
       ws->FirstWait = false;
-    }
+   
   }
 
   // 操作性が悪かった点を修正 //
@@ -612,7 +614,7 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
       ws->OldKey = 0;
     }
     return;
-  } else if (!!(p2->Flags & WINDOW_FLAGS::FAST_REPEAT) &&
+  } if (!!(p2->Flags & WINDOW_FLAGS::FAST_REPEAT) &&
              Input_OptionKeyDelta(ws->OldKey)) {
     ws->KeyCount = ws->FastRepeatWait;
     ws->FastRepeatWait = (std::max)((ws->FastRepeatWait - 2), 0);
@@ -673,7 +675,7 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
       if (p2->OptionFn) {
         if (Input_IsCancel(Key_Data)) {
           return false;
-        } else if (const auto delta = Input_OptionKeyDelta(Key_Data)) {
+        } if (const auto delta = Input_OptionKeyDelta(Key_Data)) {
           p2->OptionFn(delta);
         }
         p->SetItems(true);
@@ -686,7 +688,7 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
 
       return p2->CallBackFn(Key_Data);
     })();
-    if (ret == false) {
+    if (!ret) {
       if (Depth == 0) {
         if (!Input_IsCancel(Key_Data)) {
           // 後で (CWIN_CLOSE) に変更すること//

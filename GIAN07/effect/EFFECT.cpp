@@ -3,6 +3,8 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <algorithm>
+
 #include "effect/EFFECT.h"
 #include "effect/GEOMETRY.h"
 #include "game/GIAN.h"
@@ -16,11 +18,11 @@ SEFFECT_DATA SEffect[SEFFECT_MAX];
 CIRCLE_EFC_DATA CEffect[CIRCLE_EFC_MAX];
 LOCKON_INFO LockInfo[LOCKON_MAX];
 SCREENEFC_INFO ScreenInfo;
-TEXTRENDER_RECT_ID MTitleRect;
+static TEXTRENDER_RECT_ID MTitleRect;
 
 // Print the ♪ separately, since it can be combined with a music title in
 // any encoding.
-Narrow::string_view MTitleStrs[2] = {"♪ "};
+static Narrow::string_view MTitleStrs[2] = {"♪ "};
 
 extern void CircleFadeOut(int x, int y, int r);
 
@@ -65,8 +67,12 @@ void CEffectMove(void) {
 
 // 円エフェクトを描画する //
 void CEffectDraw(void) {
-  int j, r;
-  int x1, x2, y1, y2;
+  int j;
+  int r;
+  int x1;
+  int x2;
+  int y1;
+  int y2;
   static constexpr uint8_t dtable[4] = {0, 1, 3, 7};
 
   GrpGeom->Lock();
@@ -122,7 +128,7 @@ void CEffectDraw(void) {
 
 // 円エフェクトをセットする //
 void CEffectSet(int x, int y, uint8_t type) {
-  auto ce = std::ranges::find_if(
+  auto *ce = std::ranges::find_if(
       CEffect, [](const auto &ce) { return (ce.type == CEFC_NONE); });
   if (ce == std::end(CEffect)) {
     return;
@@ -167,7 +173,9 @@ void SEffectInit(void) {
 
 // 文字列系エフェクト //
 void StringEffect(int x, int y, const char *s) {
-  int i, j, len;
+  int i;
+  int j;
+  int len;
 
   len = strlen(s);
   for (i = j = 0; i < len; i++) {
@@ -224,7 +232,7 @@ void StringEffect3(void) {
 // 曲名の表示 //
 void SetMusicTitle(int y, Narrow::string_view s) {
   // 空きバッファ検索 //
-  auto e = std::ranges::find_if(
+  auto *e = std::ranges::find_if(
       SEffect, [](const auto &e) { return (e.cmd == SEFC_NONE); });
   if (e == std::end(SEffect)) {
     return;
@@ -249,7 +257,7 @@ void SetMusicTitle(int y, Narrow::string_view s) {
   e->vy = extent.h;
 }
 
-void MTitleRender(WINDOW_POINT topleft, const PIXEL_LTWH &subrect) {
+static void MTitleRender(WINDOW_POINT topleft, const PIXEL_LTWH &subrect) {
   const auto mtitle = MTitleStrs[1];
   TextObj.Render(
       topleft, MTitleRect, mtitle,
@@ -339,8 +347,10 @@ void SEffectMove(void) {
 
 // エフェクトを描画する(仕様変更の可能性があります) //
 void SEffectDraw(void) {
-  int j, k;
-  int x, y;
+  int j;
+  int k;
+  int x;
+  int y;
   int temp;
   PIXEL_LTWH src;
   char buf[20];
@@ -477,10 +487,8 @@ void ScreenEffectMove(void) {
 
   case (SCNEFC_CFADEOUT): // 円形フェードアウト
     ScreenInfo.count += 10;
-    if (ScreenInfo.count > 600) {
-      ScreenInfo.count = 600;
-      // ScreenInfo.cmd = SCNEFC_NONE;
-    }
+    ScreenInfo.count = (std::min<uint32_t>)(ScreenInfo.count, 600); // ScreenInfo.cmd = SCNEFC_NONE;
+    
     break;
 
   case (SCNEFC_WHITEIN): // ホワイトイン
@@ -505,7 +513,8 @@ void ScreenEffectMove(void) {
 
 // 画面全体に対するエフェクトを描画する //
 void ScreenEffectDraw(void) {
-  int i, j;
+  int i;
+  int j;
   PIXEL_LTRB src;
 
   switch (ScreenInfo.cmd) {
@@ -547,8 +556,7 @@ extern void CircleFadeOut(int x, int y, int r) {
   PIXEL_LTRB src;
   int temp;
 
-  if (r < 0)
-    r = 0;
+  r = (std::max)(r, 0);
 
   for (auto i = 0; i < GRP_RES.w; i += 16) {
     for (auto j = 0; j < GRP_RES.h; j += 16) {
@@ -588,7 +596,7 @@ void ObjectLockOnInit(void) {
 
 // 何かをロックオンする //
 void ObjectLockOn(int *x, int *y, int wx64, int hx64) {
-  auto l = std::ranges::find_if(
+  auto *l = std::ranges::find_if(
       LockInfo, [](const auto &l) { return (l.state == LOCKON_NONE); });
   if (l == std::end(LockInfo)) {
     return;
@@ -678,8 +686,8 @@ void ObjectLockDraw(void) {
   }
 }
 
-bool bEnableWarnEfc = false;
-uint16_t WarnEfcTime = 0;
+static bool bEnableWarnEfc = false;
+static uint16_t WarnEfcTime = 0;
 
 // ワーニングの初期化 //
 void WarningEffectInit(void) { bEnableWarnEfc = false; }

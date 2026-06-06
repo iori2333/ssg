@@ -12,16 +12,18 @@
 #include "platform/file.h"
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
+#include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <utility>
 
 bool DemoplayLoadEnable = false;    // デモプレイのロードが動作しているか
 bool DemoplaySaveAllEnable = false; // Multi-stage recording active
 bool DemoplayLoadAllEnable = false; // Multi-stage playback active
-DEMOPLAY_INFO DemoInfo;             // デモプレイ情報
-INPUT_BITS DemoBuffer[DEMOBUF_MAX]; // デモプレイ用バッファ
+static DEMOPLAY_INFO DemoInfo;             // デモプレイ情報
+static INPUT_BITS DemoBuffer[DEMOBUF_MAX]; // デモプレイ用バッファ
 static uint32_t DemoFrameCur;
-struct {
+static struct {
   uint8_t PlayerStock;
   uint8_t BombStock;
   uint8_t InputFlags;
@@ -39,7 +41,7 @@ MULTI_REPLAY_INFO MultiPlayInfo;
 uint8_t PlaybackMaxStage = 0;
 std::u8string PendingReplayFile;
 
-std::u8string ReplayAllFN(bool exstg) {
+static std::u8string ReplayAllFN(bool exstg) {
   const auto now = std::chrono::system_clock::now();
   const auto time = std::chrono::system_clock::to_time_t(now);
   struct tm tm;
@@ -97,7 +99,7 @@ void DemoplayFlushStage(void) {
   DemoFrameCur = 0;
 }
 
-bool DemoplayLoadSetup() {
+static bool DemoplayLoadSetup() {
   DemoFrameCur = 0;
   DemoplayLoadEnable = true;
 
@@ -225,16 +227,16 @@ void DemoplaySaveReplayAll(bool exstg) {
   info.CfgDat = DemoInfo.CfgDat;
   info.Exp = DemoInfo.Exp;
   info.Weapon = DemoInfo.Weapon;
-  for (int i = 0; i < MultiStageCount; i++) {
+  for (int i = 0; std::cmp_less(i , MultiStageCount); i++) {
     info.Stages[i] = MultiStageNums[i];
     info.FrameCounts[i] = MultiStageFrames[i];
   }
 
   PACKFILE_WRITE out;
-  out.files.push_back({reinterpret_cast<const uint8_t *>(&info), sizeof(info)});
+  out.files.emplace_back(reinterpret_cast<const uint8_t *>(&info), sizeof(info));
   for (auto &buf : StageRecordBufs) {
-    out.files.push_back({reinterpret_cast<const uint8_t *>(buf.data()),
-                         buf.size() * sizeof(INPUT_BITS)});
+    out.files.emplace_back(reinterpret_cast<const uint8_t *>(buf.data()),
+                         buf.size() * sizeof(INPUT_BITS));
   }
 
   const auto fn = ReplayAllFN(exstg);
@@ -257,8 +259,7 @@ bool DemoplayLoadReplayAll(const char8_t *fn) {
   // Compute max stage for stage transition gating
   PlaybackMaxStage = 0;
   for (uint8_t i = 0; i < MultiPlayInfo.StageCount; i++) {
-    if (MultiPlayInfo.Stages[i] > PlaybackMaxStage)
-      PlaybackMaxStage = MultiPlayInfo.Stages[i];
+    PlaybackMaxStage = (std::max)(MultiPlayInfo.Stages[i], PlaybackMaxStage);
   }
 
   AllPlaybackBuf.clear();
@@ -268,14 +269,13 @@ bool DemoplayLoadReplayAll(const char8_t *fn) {
     if (nullptr == temp)
       return false;
     uint32_t n_frames = MultiPlayInfo.FrameCounts[i];
-    const auto src = reinterpret_cast<const INPUT_BITS *>(temp.get());
+    const auto *const src = reinterpret_cast<const INPUT_BITS *>(temp.get());
     AllPlaybackBuf.insert(AllPlaybackBuf.end(), src, src + n_frames);
     total_frames += n_frames;
   }
 
   // Copy combined data into DemoBuffer for DemoplayMove()
-  if (total_frames > DEMOBUF_MAX)
-    total_frames = DEMOBUF_MAX;
+  total_frames = (std::min<uint32_t>)(total_frames, DEMOBUF_MAX);
   memcpy(DemoBuffer, AllPlaybackBuf.data(), total_frames * sizeof(INPUT_BITS));
   DemoInfo.FrameCount = total_frames;
   DemoInfo.RndSeed = MultiPlayInfo.RndSeed;

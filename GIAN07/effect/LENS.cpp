@@ -8,11 +8,15 @@
 #include "game/constants.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
-#include <assert.h>
+#include <cassert>
+
+#include <utility>
 
 // 半径:r  出っ張り:m  のレンズを作成 //
 std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
-  int dx, z, w;
+  int dx;
+  int z;
+  int w;
 
   // Since the surface pitch can be different than its with, [Table] will
   // still contain byte offsets, regardless of our main pixel format.
@@ -44,7 +48,7 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
   const auto r2 = (Cast::up_sign<int32_t>(r) * r);
   const auto s = isqrt(r2 - (Cast::up_sign<int32_t>(m) * m));
 
-  for (auto i = -Cast::up_sign<int32_t>(r); i < r; i++) {
+  for (auto i = -Cast::up_sign<int32_t>(r); std::cmp_less(i , r); i++) {
     // ｘ座標の測定だ //
     dx = (s * s) - (i * i);
 

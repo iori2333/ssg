@@ -10,12 +10,12 @@
 #include <array>
 #include <ranges>
 
-BombEfcCtrl BombEfc[EXBOMB_MAX];
+static BombEfcCtrl BombEfc[EXBOMB_MAX];
 
 // 秘密の関数 //
-void _ExBombSTDInit(BombEfcCtrl *p);
-void _ExBombSTDDraw(BombEfcCtrl *p);
-void _ExBombSTDMove(BombEfcCtrl *p);
+static void ExBombSTDInit(BombEfcCtrl *p);
+static void ExBombSTDDraw(BombEfcCtrl *p);
+static void ExBombSTDMove(BombEfcCtrl *p);
 
 // 爆発系エフェクトの初期化 //
 void ExBombEfcInit(void) {
@@ -26,7 +26,7 @@ void ExBombEfcInit(void) {
 
 // 爆発系エフェクトをセットする //
 void ExBombEfcSet(int x, int y, uint8_t type) {
-  auto p =
+  auto *p =
       std::ranges::find_if(BombEfc, [](const auto &p) { return !p.bIsUsed; });
 
   // 空いているオブジェクトが存在しない //
@@ -42,7 +42,7 @@ void ExBombEfcSet(int x, int y, uint8_t type) {
 
   switch (type) {
   case EXBOMB_STD:
-    _ExBombSTDInit(p);
+    ExBombSTDInit(p);
     break;
 
   default:
@@ -61,7 +61,7 @@ void ExBombEfcDraw(void) {
     }
     switch (it.type) {
     case EXBOMB_STD:
-      _ExBombSTDDraw(&it);
+      ExBombSTDDraw(&it);
       break;
 
     default:
@@ -79,7 +79,7 @@ void ExBombEfcMove(void) {
     it.count++;
     switch (it.type) {
     case EXBOMB_STD:
-      _ExBombSTDMove(&it);
+      ExBombSTDMove(&it);
       if (it.count > ((64 * 3) + 32)) {
         it.bIsUsed = false;
       }
@@ -91,8 +91,10 @@ void ExBombEfcMove(void) {
   }
 }
 
-void _ExBombSTDInit(BombEfcCtrl *p) {
-  int i, x, y;
+void ExBombSTDInit(BombEfcCtrl *p) {
+  int i;
+  int x;
+  int y;
   SpObj *target;
 
   x = p->x;
@@ -106,8 +108,10 @@ void _ExBombSTDInit(BombEfcCtrl *p) {
   }
 }
 
-void _ExBombSTDDraw(BombEfcCtrl *p) {
-  int x, y, dx;
+void ExBombSTDDraw(BombEfcCtrl *p) {
+  int x;
+  int y;
+  int dx;
 
   // Graphic 48 * 48 //
   for (const auto &it : p->Obj) {
@@ -122,9 +126,12 @@ void _ExBombSTDDraw(BombEfcCtrl *p) {
   }
 }
 
-void _ExBombSTDMove(BombEfcCtrl *p) {
+void ExBombSTDMove(BombEfcCtrl *p) {
   int j = 0;
-  int x, y, v, rv;
+  int x;
+  int y;
+  int v;
+  int rv;
 
   x = p->x;
   y = p->y;

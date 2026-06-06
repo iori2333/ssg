@@ -10,9 +10,9 @@
 #include "platform/graphics_backend.h"
 
 FRAGMENT_DATA Fragment[FRAGMENT_MAX]; // 破片データ管理用構造体
-int FragmentPtr = 0;                  // 次に破片データを挿入する位置
+static int FragmentPtr = 0;                  // 次に破片データを挿入する位置
 
-static void _FDraw(const FRAGMENT_DATA *f);
+static void FDraw(const FRAGMENT_DATA *f);
 
 void fragment_set(int x, int y, uint8_t cmd) {
   int i;
@@ -125,7 +125,7 @@ void fragment_move(void) {
 void fragment_draw(void) {
   for (const auto &it : Fragment) {
     if (it.count) {
-      _FDraw(&it);
+      FDraw(&it);
     }
   }
 }
@@ -139,8 +139,9 @@ void fragment_setup(void) {
   FragmentPtr = 0;
 }
 
-static void _FDraw(const FRAGMENT_DATA *f) {
-  int x, y;
+static void FDraw(const FRAGMENT_DATA *f) {
+  int x;
+  int y;
   PIXEL_LTRB src;
 
   switch (f->cmd) {

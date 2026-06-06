@@ -5,7 +5,11 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include <inttypes.h> // for PRId64
+#include <cinttypes> // for PRId64
+
+#include <algorithm>
+
+#include <utility>
 
 #include "effect/GEOMETRY.h"
 #include "entity/MAID.h"
@@ -20,13 +24,14 @@ Player Viv; // プレイヤーインスタンス
 
 // --- Player メソッド実装 ---
 
-void Player::DrawWideBomb() {
+void Player::DrawWideBomb() const {
   static PIXEL_LTRB data[6] = {
       {0, 0, 210, 240},           {210, 0, 210 * 2, 240},
       {210 * 2, 0, 210 * 3, 240}, {0, 240, 210, 480},
       {210, 240, 210 * 2, 480},   {210 * 2, 240, 210 * 3, 480}};
 
-  int x, y;
+  int x;
+  int y;
   int t;
 
   constexpr int BX_MIN = (X_MIN + 100);
@@ -40,14 +45,11 @@ void Player::DrawWideBomb() {
 
   if (bomb_time > 80) {
     t = ((60 * 4 - bomb_time) / 4);
-    if (t < 0)
-      t = 0;
-    if (t > 5)
-      t = 5;
+    t = (std::max)(t, 0);
+    t = (std::min)(t, 5);
   } else {
     t = (bomb_time / 4);
-    if (t > 5)
-      t = 5;
+    t = (std::min)(t, 5);
   }
 
   GrpSurface_Blit({x, y}, SURFACE_ID::BOMBER, data[t]);
@@ -56,9 +58,12 @@ void Player::DrawWideBomb() {
 void Player::DrawLaserBomb() {
   constexpr RGBA col_channeled = RGB216{0, 0, 5}.ToRGB().WithAlpha(0xFF);
   VERTEX_XY p[4];
-  int i, w;
-  int lx, ly;
-  int wx, wy;
+  int i;
+  int w;
+  int lx;
+  int ly;
+  int wx;
+  int wy;
   const auto LaserDeg = GetLaserDeg();
 
   GrpGeom->Lock();
@@ -236,8 +241,9 @@ void Player::Draw() {
     DrawLaserBomb();
 }
 
-void Player::DrawStatus() {
-  int i, temp;
+void Player::DrawStatus() const {
+  int i;
+  int temp;
   constexpr PIXEL_LTRB src = {0, 80, 128, (80 + 24)};
   char buf[100];
 
@@ -263,14 +269,16 @@ void Player::DrawStatus() {
   sprintf(buf, "       Bomb %1d", bomb);
   GrpPut16(280, 0, buf);
 
-  for (i = 0; i < left; i++) {
+  for (i = 0; std::cmp_less(i , left); i++) {
     constexpr PIXEL_LTWH life_src = {608, 432, 16, 16};
     GrpSurface_Blit({(280 + (i * 14)), 0}, SURFACE_ID::SYSTEM, life_src);
   }
 }
 
 void Player::Update() {
-  int vx, vy, v;
+  int vx;
+  int vy;
+  int v;
   constexpr int VivSpeed = (64 * 18);
   char buf[100];
 
@@ -470,7 +478,7 @@ void Player::OnDeath() {
   // 自動ボム：练习模式为自动Bomb以上时，Bomb キーが押されておらず、かつ Bomb
   // 残量がある場合、 死亡の代わりに自動で Bomb を発動する
   if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB && !(Key_Data & KEY_BOMB) &&
-      (bomb_time == 0) && (bomb > 0) && (SclInfo.MsgFlag == false)) {
+      (bomb_time == 0) && (bomb > 0) && (!SclInfo.MsgFlag)) {
     static constexpr uint8_t bomb_time_tbl[4] = {60 * 4, 60 * 3, 60 * 2, 0};
     bomb_time = bomb_time_tbl[weapon & 3];
     muteki = BOMBMUTEKI_VAL;
@@ -526,7 +534,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   int i;
 
   if (n) {
-    if (BuzzSound == false) {
+    if (!BuzzSound) {
       Snd_SEPlay(SOUND_ID_BUZZ, ex);
       BuzzSound = true;
     }
@@ -535,7 +543,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
     fragment_set(ex, ey, FRG_EVADE);
   }
 
-  for (i = 0; i < n; i++) {
+  for (i = 0; std::cmp_less(i , n); i++) {
     if (evade == 999) {
       evade_c = 1;
       return;
@@ -592,7 +600,7 @@ void Player::PowerUp(uint8_t damage) {
   }
 }
 
-uint8_t Player::GetLaserDeg() { return ((120 - bomb_time) * 3) / 2; }
+uint8_t Player::GetLaserDeg() const { return ((120 - bomb_time) * 3) / 2; }
 
 #pragma warning(suppress : 26497) // f.4
 uint8_t Player::GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i) {

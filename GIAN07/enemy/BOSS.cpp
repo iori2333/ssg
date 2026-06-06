@@ -3,6 +3,10 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <algorithm>
+
+#include <utility>
+
 #include "enemy/BOSS.h"
 #include "effect/BOMBEFC.h" // 爆発エフェクト処理
 #include "effect/GEOMETRY.h"
@@ -43,7 +47,7 @@ static constexpr auto BHPG_OPEN3 = 0x05; // 体力ゲージを更新する
 ///// [構造体] /////
 
 // ボスの体力ゲージ //
-typedef struct tagBOSSHPG_INFO {
+using BOSSHPG_INFO = struct tagBOSSHPG_INFO {
   uint32_t Now, Max; // 体力の現在値＆最大値
   uint32_t Next;     // 次の体力の値
   uint32_t Update;   // 更新用の値
@@ -51,16 +55,16 @@ typedef struct tagBOSSHPG_INFO {
 
   uint16_t XTemp[BOSSHPG_HEIGHT]; // ＨＰゲージの演出用
   uint8_t State;                  // 状態
-} BOSSHPG_INFO;
+};
 
 ///// [ 変数 ] /////
 
 // 公開グローバル //
-BOSS_DATA Boss[BOSS_MAX]; // ボスデータ格納用構造体
+static BOSS_DATA Boss[BOSS_MAX]; // ボスデータ格納用構造体
 uint16_t BossNow;         // 現在のボスの数
 
 // 秘密のグローバル //
-BOSSHPG_INFO BossHPG; // 体力ゲージ保持用
+static BOSSHPG_INFO BossHPG; // 体力ゲージ保持用
 
 // 秘密の関数 //
 static void BossHPG_Open(uint32_t max);    // ボスの体力ゲージをオープンする
@@ -198,8 +202,11 @@ void BossMove(void) {
 // ボスを描画する
 void BossDraw(void) {
   constexpr auto sid = SURFACE_ID::ENEMY;
-  int x, y;
-  int w, h, t;
+  int x;
+  int y;
+  int w;
+  int h;
+  int t;
   ENEMY_DATA *e;
   PIXEL_LTRB wing;
   /*
@@ -258,8 +265,7 @@ void BossDraw(void) {
       switch (b->ExState) {
       case (BEXST_WING01):
         t = (b->ExCount - 64 - 8) << 2;
-        if (t < 0)
-          t = 0;
+        t = (std::max)(t, 0);
         w = 64;
         h = 92;
         wing = {0, 176, 128, 360};
@@ -498,9 +504,9 @@ void BossKillAll(void) {
   BossNow = 0;
 }
 
-bool BossDamageApply(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
+static bool BossDamageApply(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (e.hp <= damage) { // ボスの死亡処理(後で変更すること!!)
+  if (std::cmp_less_equal(e.hp , damage)) { // ボスの死亡処理(後で変更すること!!)
     SnakyDelete(&b);
     BitDelete();
     enemy_clear();
@@ -563,11 +569,11 @@ bool BossDamage(int x, int y, int damage) {
       e = &(b->Edat);
       if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
           (e->flag & EF_DAMAGE)) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        else {
+        } 
           return BossDamageApply(*b, *e, damage);
-        }
+       
       }
     }
   }
@@ -596,11 +602,11 @@ bool BossDamage2(int x, int y, int damage) {
     if (b->IsUsed) {
       e = &(b->Edat);
       if (HITCHK(x, e->x, e->g_width) && (y > e->y) && (e->flag & EF_DAMAGE)) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        else {
+        } 
           ret_val = BossDamageApply(*b, *e, damage);
-        }
+       
       }
     }
   }
@@ -629,11 +635,11 @@ void BossDamage3(int x, int y, uint8_t d) {
     if (b->IsUsed) {
       e = &(b->Edat);
       if (LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        else {
+        } 
           BossDamageApply(*b, *e, damage);
-        }
+       
       }
     }
   }
@@ -659,13 +665,13 @@ void BossDamage4(int damage) {
     if (b->IsUsed) {
       e = &(b->Edat);
       if (e->flag & EF_DAMAGE) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
           continue;
-        else {
+        } 
           BossDamageApply(*b, *e, damage);
 
           // return TRUE;
-        }
+       
       }
     }
   }
@@ -680,7 +686,7 @@ static int PutBoss(int x, int y, uint32_t id) {
   // e->x   = (*(short *)(&p[0]));	//((int)(*(short *)(&p[0])))*64;
   // e->y   = (*(short *)(&p[2]));	//((int)(*(short *)(&p[2])))*64;
 
-  auto it =
+  auto *it =
       std::ranges::find_if(Boss, [](const auto &it) { return !it.IsUsed; });
 
   // まず、あり得ないのだが... //
@@ -802,7 +808,7 @@ uint32_t GetBossHPSum(void) {
 
 // ボス用割り込み処理 //
 void BossINT(ENEMY_DATA *e, EclIntType IntID) {
-  auto b = std::ranges::find_if(
+  auto *b = std::ranges::find_if(
       Boss, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(Boss)) {
     return;

@@ -16,35 +16,35 @@ static constexpr auto FAKE_ECLSTR_MAX = 80;
 static constexpr auto ROCK_MAX = 28;
 // #define CLOUD_MAX			10
 
-Circle3D Cir[CIRCLE_MAX];
-Cube3D Cube[CUBE_MAX];
-Star2D Star[STAR_MAX];
-Rock3D Rock[ROCK_MAX];
+static Circle3D Cir[CIRCLE_MAX];
+static Cube3D Cube[CUBE_MAX];
+static Star2D Star[STAR_MAX];
+static Rock3D Rock[ROCK_MAX];
 // Cloud2D		Cloud[CLOUD_MAX];
 
-WFLine2D WFLine;
-FakeECLString FakeECLStr[FAKE_ECLSTR_MAX];
+static WFLine2D WFLine;
+static FakeECLString FakeECLStr[FAKE_ECLSTR_MAX];
 
 #define _ PIXEL_POINT
 
-WORLD_POINT PList_W[11] = {
+static WORLD_POINT PList_W[11] = {
     _{0, 15},  _{15, 66}, _{32, 47}, _{48, 66}, _{63, 14}, _{52, 11},
     _{42, 38}, _{32, 26}, _{21, 38}, _{11, 10}, _{0, 15},
 };
 
-WORLD_POINT PList_A1[8] = {
+static WORLD_POINT PList_A1[8] = {
     _{96, 12},  _{66, 61},  _{75, 67},  _{83, 56},
     _{107, 56}, _{115, 67}, _{125, 61}, _{96, 12},
 };
 
-WORLD_POINT PList_A2[4] = {
+static WORLD_POINT PList_A2[4] = {
     _{96, 34},
     _{90, 44},
     _{101, 44},
     _{96, 34},
 };
 
-WORLD_POINT PList_R[15 - 1] = {
+static WORLD_POINT PList_R[15 - 1] = {
     _{132, 14},
     _{132, 64},
     _{145, 64},
@@ -64,21 +64,21 @@ WORLD_POINT PList_R[15 - 1] = {
     _{132, 14},
 };
 
-WORLD_POINT PList_N1[9] = {
+static WORLD_POINT PList_N1[9] = {
     _{189, 12}, _{189, 64}, _{201, 64}, _{201, 40}, _{239, 66},
     _{239, 14}, _{227, 14}, _{227, 38}, _{189, 12},
 };
 
-WORLD_POINT PList_N2[9] = {
+static WORLD_POINT PList_N2[9] = {
     _{189, 12}, _{189, 64}, _{201, 64}, _{201, 40}, _{239, 66},
     _{239, 14}, _{227, 14}, _{227, 38}, _{189, 12},
 };
 
-WORLD_POINT PList_I[5] = {
+static WORLD_POINT PList_I[5] = {
     _{248, 14}, _{248, 64}, _{262, 64}, _{262, 14}, _{248, 14},
 };
 
-WORLD_POINT PList_G[17] = {
+static WORLD_POINT PList_G[17] = {
     _{354, 11}, _{328, 22}, _{328, 57}, _{354, 68}, _{380, 59}, _{380, 34},
     _{355, 34}, _{354, 45}, _{367, 46}, _{367, 51}, _{355, 55}, _{342, 50},
     _{342, 29}, _{354, 24}, _{372, 30}, _{377, 19}, _{354, 11},
@@ -96,7 +96,7 @@ LineList3D	LList_A1 = {96,39,PList_A1,8,PWork_A1};
 LineList3D	LList_W = {32,39,PList_W,11,PWork_W};
 */
 
-LineList3D Warning[8] = {{{192, 39}, PList_W},
+static LineList3D Warning[8] = {{{192, 39}, PList_W},
                          {{192, 39}, PList_A1},
                          {{192, 39}, PList_A2},
                          {{192, 39}, PList_R},
@@ -106,9 +106,9 @@ LineList3D Warning[8] = {{{192, 39}, PList_W},
                          {{192, 39}, PList_G}};
 
 static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz);
-static void __Draw3DCube(const Cube3D *c); // 汎用３Ｄキューブ描画
+static void Draw3DCube(const Cube3D *c); // 汎用３Ｄキューブ描画
 
-void Transform3D(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
+static void Transform3D(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
   static Point3D temp;
 
   temp.y = p->y;
@@ -127,7 +127,7 @@ void Transform3D(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
   p->y = (sinl(dz, temp.x) + cosl(dz, temp.y));
 }
 
-void ShiftRight6Bit(const Point3D *o, Point3D *p) {
+static void ShiftRight6Bit(const Point3D *o, Point3D *p) {
   p->x = (((p->x + o->x) >> 6) + 320);
   p->y = (((p->y + o->y) >> 6) + 240);
 }
@@ -144,7 +144,8 @@ void InitWarning(void) {
 
 void DrawWarning(void) {
   constexpr PIXEL_LTRB src = {0, (152 + 16), 384, (232 + 16)};
-  int st, det;
+  int st;
+  int det;
   static int count;
 
   count += 8;
@@ -289,16 +290,19 @@ void Draw3DCube(void) {
 
   GrpGeom->Lock();
   for (const auto &it : Cube) {
-    __Draw3DCube(&it);
+    Draw3DCube(&it);
   }
   GrpGeom->Unlock();
 }
 
 void Move3DCube(void) {
   int i;
-  int l, d2;
+  int l;
+  int d2;
   static uint16_t d;
-  static uint16_t dx, dy, dz;
+  static uint16_t dx;
+  static uint16_t dy;
+  static uint16_t dz;
 
   d += 64 * 4;
 
@@ -331,13 +335,17 @@ void Move3DCube(void) {
 }
 
 // 汎用３Ｄキューブ描画 //
-static void __Draw3DCube(const Cube3D *c) {
+static void Draw3DCube(const Cube3D *c) {
   // ３Ｄで透過色付きorアルファ比較ポリゴンを使えばもっともっと早いのだが... //
   // ８ビット対応のため、まぁ仕方が無いか... //
 
-  int x, y, z;
-  int l, l2;
-  Point3D p1, p2;
+  int x;
+  int y;
+  int z;
+  int l;
+  int l2;
+  Point3D p1;
+  Point3D p2;
   Point3D o;
 
   o = c->p;
@@ -455,7 +463,8 @@ void MoveEffectFakeECL(void) {
 
 void DrawEffectFakeECL(void) {
   PIXEL_LTRB src;
-  int i, j;
+  int i;
+  int j;
 
   GrpGeom->Lock();
 
@@ -711,9 +720,9 @@ void MoveStg4Rock(void) {
       break;
 
     case (STG4ROCK_END):
-      if (p->y > (500 + 40) * 64)
+      if (p->y > (500 + 40) * 64) {
         break;
-      else {
+      } else {
         p->y += ((4 - p->GrpID) * 32 * 6);
       }
       break;
@@ -731,7 +740,8 @@ void DrawStg4Rock(void) {
   static int dx[3] = {80 / 2, 48 / 2, 32 / 2};
   static int dy[3] = {64 / 2, 48 / 2, 32 / 2};
 
-  int x, y;
+  int x;
+  int y;
 
   for (const auto &it : Rock) {
     const auto *p = &it;
@@ -742,7 +752,7 @@ void DrawStg4Rock(void) {
   }
 }
 
-void SendCmdStg4Rock(uint8_t Cmd, uint8_t Param) {
+void SendCmdStg4Rock(uint8_t Cmd, uint8_t  /*Param*/) {
   switch (Cmd) {
   case (STG4ROCK_LEAVE): {
     for (auto &it : Rock) {
@@ -789,21 +799,21 @@ static constexpr auto S6RASTER_MAX = 28;
 static constexpr auto S6STAR_MAX = 60;
 static constexpr auto S3STAR_MAX = 180;
 
-typedef struct tagStg6Raster {
+using Stg6Raster = struct tagStg6Raster {
   int x, y;     // 表示座標
   char vy;      //
   uint8_t type; // 種類(0-2)
   uint8_t deg;  // 基準角度
   uint8_t amp;  // 振幅
-} Stg6Raster;
+};
 
-typedef struct tagStg6Star {
+using Stg6Star = struct tagStg6Star {
   int x, y;
   int vy;
-} Stg6Star;
+};
 
-Stg6Raster S6Ras[S6RASTER_MAX];
-Stg6Star S6Star[S3STAR_MAX]; // 兼用モノなのだ
+static Stg6Raster S6Ras[S6RASTER_MAX];
+static Stg6Star S6Star[S3STAR_MAX]; // 兼用モノなのだ
 
 // ６面ラスター初期化 //
 void InitStg6Raster() {
@@ -866,8 +876,14 @@ void DrawStg6Raster() {
   };
 
   PIXEL_LTRB src;
-  int i, j, h, w;
-  int x1, x2, dx, oy;
+  int i;
+  int j;
+  int h;
+  int w;
+  int x1;
+  int x2;
+  int dx;
+  int oy;
 
   for (i = 0; i < S6STAR_MAX; i++) {
     src = {624, 352, (624 + 16), (352 + 16)};

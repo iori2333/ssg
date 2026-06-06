@@ -56,13 +56,13 @@ extern constinit const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs = [] {
 static constexpr auto FONT_MODERN = L"msgothic.ttc";
 
 void TextBackend_GDIInit(void) {
-  AddFontResourceExW(FONT_MODERN, FR_PRIVATE, 0);
+  AddFontResourceExW(FONT_MODERN, FR_PRIVATE, nullptr);
 }
 
 void TextBackend_GDICleanup(void) {
-  RemoveFontResourceExW(FONT_MODERN, FR_PRIVATE, 0);
+  RemoveFontResourceExW(FONT_MODERN, FR_PRIVATE, nullptr);
 }
-#elif defined(LINUX)
+#elifdef LINUX
 static constexpr auto GOTHIC = "MS Gothic,IPAMonaGothic ";
 
 extern constinit const ENUMARRAY<const char *, FONT_ID> FontSpecs = {
@@ -76,7 +76,7 @@ extern constinit const ENUMARRAY<const char *, FONT_ID> FontSpecs = {
 #endif
 
 // Glyph selection inside the 16×16 font //
-std::optional<PIXEL_LTRB> Glyph16x16(char c) {
+static std::optional<PIXEL_LTRB> Glyph16x16(char c) {
   PIXEL_LTWH src;
   src.w = 16;
   src.h = 16;
@@ -146,7 +146,9 @@ std::optional<PIXEL_LTRB> Glyph16x16(char c) {
 
 // 16x16 透過フォントで文字列出力(高速) //
 extern void GrpPut16(int x, int y, const char *s) {
-  int sx, tx, ty;
+  int sx;
+  int tx;
+  int ty;
 
   sx = x;
 
@@ -163,7 +165,9 @@ extern void GrpPut16(int x, int y, const char *s) {
 
 // 上と同じだが、ｘ移動幅が１６ //
 extern void GrpPut16c2(int x, int y, const char *s) {
-  int sx, tx, ty;
+  int sx;
+  int tx;
+  int ty;
 
   sx = x;
 
@@ -189,7 +193,9 @@ extern void GrpPutc(int x, int y, char c) {
 // 05x07 べた貼りフォント //
 extern void GrpPut57(int x, int y, const char *s) {
   PIXEL_LTRB src;
-  int sx, tx, ty;
+  int sx;
+  int tx;
+  int ty;
 
   sx = x;
 
@@ -230,7 +236,9 @@ extern void GrpPut7B(int x, int y, const char *s) {
 // 得点アイテムのスコアを描画 //
 extern void GrpPutScore(int x, int y, const char *s) {
   PIXEL_LTRB src;
-  int sx, tx, ty;
+  int sx;
+  int tx;
+  int ty;
 
   sx = x;
 

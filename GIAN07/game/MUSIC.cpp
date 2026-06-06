@@ -5,7 +5,7 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include <inttypes.h> // for PRId64
+#include <cinttypes> // for PRId64
 
 #include "effect/EFFECT.h"
 #include "game/GAMEMAIN.h"
@@ -47,8 +47,8 @@ struct MUSICROOM_TEXT {
   void RenderComment(WINDOW_POINT topleft) const;
 };
 
-decltype(MusicNum) MidiPlayID = 0;
-std::optional<MUSICROOM_TEXT> MusicRoomText;
+static decltype(MusicNum) MidiPlayID = 0;
+static std::optional<MUSICROOM_TEXT> MusicRoomText;
 // -----
 
 void MUSICROOM_TEXT::RenderVersion(WINDOW_POINT topleft) const {
@@ -181,7 +181,8 @@ bool MusicRoomInit(void) {
 
 // スペアナ描画 //
 void GrpDrawSpect(int x, int y) {
-  uint16_t ftable[128 + 8 + 8], ftable2[128];
+  uint16_t ftable[128 + 8 + 8];
+  uint16_t ftable2[128];
 
   static uint16_t ftable3[128 + 8 + 8];
   static uint8_t ftable3flag;

@@ -6,6 +6,8 @@
  *   control flow, and interrupt vectors.
  */
 
+#include <utility>
+
 #include "ecl/ecl_vm.h"
 #include "ecl/ecl_commands.h"
 #include "effect/EFFECT.h"
@@ -110,11 +112,11 @@ uint32_t EclVM::ResolveValue(const EnemyData *e, EclReg id) {
 void EclVM::Execute(EnemyData &e) {
   // Direction-flip helpers (formerly macros)
   auto AbsDegRL = [&e](uint8_t d) -> uint8_t {
-    return (e.flag & EF_RLCHG) ? uint8_t(128 - d) : d;
+    return (e.flag & EF_RLCHG) ? static_cast<uint8_t>(128 - d) : d;
   };
   auto AbsVxRL = [&e](int vx) { return (e.flag & EF_RLCHG) ? (-vx) : vx; };
   auto RelDegRL = [&e](int8_t d) -> int8_t {
-    return (e.flag & EF_RLCHG) ? int8_t(-d) : d;
+    return (e.flag & EF_RLCHG) ? static_cast<int8_t>(-d) : d;
   };
 
   int RegCmp = 0;
@@ -123,11 +125,12 @@ void EclVM::Execute(EnemyData &e) {
   const PIXEL_LTRB rcDegX2 = {
       GX_MIN + 150 * 64, GY_MIN + (GY_MID - GY_MIN - 40 * 64) / 3,
       GX_MAX - 150 * 64, GY_MID - (GY_MID - GY_MIN - 40 * 64) / 3 - 40 * 64};
-  uint16_t BaseAngle, DeltaAngle;
+  uint16_t BaseAngle;
+  uint16_t DeltaAngle;
 
 ECL_HEAD:
   const auto *raw = m_ecl_data.data() + e.cmd;
-  const EclOp op = static_cast<EclOp>(*raw);
+  const auto op = static_cast<EclOp>(*raw);
 
   switch (op) {
   // ============================================================
@@ -1044,7 +1047,7 @@ ECL_HEAD:
     case EclReg::GR5:
     case EclReg::GR6:
     case EclReg::GR7:
-      e.GR[std::to_underlying(static_cast<EclReg>(c.dst))] = val;
+      e.GR[std::to_underlying(c.dst)] = val;
       break;
     case EclReg::LCMD_D:
       e.l_cmd.d = val;
@@ -1222,7 +1225,7 @@ ECL_HEAD:
 void EclVM::CheckInterrupts(EnemyData &e_ref) {
   auto *e = &e_ref;
 
-  for (int i = 0; i < ECLVECT_MAX; i++) {
+  for (int i = 0; std::cmp_less(i , ECLVECT_MAX); i++) {
     if (e->Vect[i].vect == 0)
       continue; // 割り込みがかかっていない
     switch (static_cast<EclIntVec>(i)) {
@@ -1238,7 +1241,7 @@ void EclVM::CheckInterrupts(EnemyData &e_ref) {
       break;
 
     case (EclIntVec::BOSSLEFT): // ボス残り割り込み
-      if (BossNow <= e->Vect[std::to_underlying(EclIntVec::BOSSLEFT)].value) {
+      if (std::cmp_less_equal(BossNow , e->Vect[std::to_underlying(EclIntVec::BOSSLEFT)].value)) {
         e->cmd = e->Vect[std::to_underlying(EclIntVec::BOSSLEFT)].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1248,7 +1251,7 @@ void EclVM::CheckInterrupts(EnemyData &e_ref) {
       break;
 
     case (EclIntVec::HP): // HPL 割り込み
-      if (e->hp <= e->Vect[std::to_underlying(EclIntVec::HP)].value) {
+      if (std::cmp_less_equal(e->hp , e->Vect[std::to_underlying(EclIntVec::HP)].value)) {
         e->cmd = e->Vect[std::to_underlying(EclIntVec::HP)].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1258,7 +1261,7 @@ void EclVM::CheckInterrupts(EnemyData &e_ref) {
       break;
 
     case (EclIntVec::TIMER): // タイマー割り込み
-      if (e->IntTimer > e->Vect[std::to_underlying(EclIntVec::TIMER)].value) {
+      if (std::cmp_greater(e->IntTimer , e->Vect[std::to_underlying(EclIntVec::TIMER)].value)) {
         e->cmd = e->Vect[std::to_underlying(EclIntVec::TIMER)].vect;
         e->cmd_c = 0;    // コマンド繰り返しカウンタ
         e->rep_c = 0;    // LOOP(旧REP)命令カウンタ

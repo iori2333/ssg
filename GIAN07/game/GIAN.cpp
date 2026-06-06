@@ -16,14 +16,15 @@ uint32_t GameCount;
 uint8_t GameStage;
 uint8_t GameLevel;
 
-extern MAID Viv;
+
 
 ///// [ 関数(非公開) ] /////
 extern void StdStatusOutput(void) {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
 
   static uint32_t prev;
-  static uint32_t fps, count;
+  static uint32_t fps;
+  static uint32_t count;
   // extern InputConfig			IConfig;
   const char *const DItem[4] = {"Easy", "Norm", "Hard", "Luna"};
   char buf[100];

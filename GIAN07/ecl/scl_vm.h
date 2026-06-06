@@ -40,7 +40,7 @@ private:
   const uint8_t *m_pc;   // Program counter (non-owning)
 
   // Command handlers
-  void SpawnEnemy(const SclCmdEnemy &c);
+  static void SpawnEnemy(const SclCmdEnemy &c);
 
   static std::optional<SclVM> s_instance;
 };

@@ -19,7 +19,7 @@ constexpr auto LZSS_DICT_MASK = ((1 << LZSS_DICT_BITS) - 1);
 constexpr auto LZSS_SEQ_MAX = (LZSS_SEQ_MIN + ((1 << LZSS_SEQ_BITS) - 1));
 
 template <typename Container>
-fil_checksum_t
+static fil_checksum_t
 FilChecksumAddFile(fil_checksum_t &current_total, fil_size_t offset,
                    fil_size_t size_uncompressed, const Container &compressed) {
   auto ret =
@@ -30,7 +30,7 @@ FilChecksumAddFile(fil_checksum_t &current_total, fil_size_t offset,
   return ret;
 }
 
-std::optional<BYTE_BUFFER_BORROWED>
+static std::optional<BYTE_BUFFER_BORROWED>
 FilFileGetCompressed(const BYTE_BUFFER_OWNED &packfile,
                      const std::span<const PBG_FILEINFO> info, fil_no_t filno) {
   if (filno >= info.size()) {
@@ -130,9 +130,9 @@ BYTE_BUFFER_OWNED PACKFILE_READ::MemExpand(fil_no_t filno) const {
       auto seq_offset = device.GetBits(LZSS_DICT_BITS);
       if (seq_offset == 0) {
         break;
-      } else {
+      } 
         seq_offset--;
-      }
+     
       const auto seq_length = (device.GetBits(LZSS_SEQ_BITS) + LZSS_SEQ_MIN);
       for (auto i = decltype(seq_length){0}; i < seq_length; i++) {
         output(dict[seq_offset++ & LZSS_DICT_MASK]);
@@ -143,7 +143,7 @@ BYTE_BUFFER_OWNED PACKFILE_READ::MemExpand(fil_no_t filno) const {
   return uncompressed;
 }
 
-BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
+static BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
   constexpr auto DICT_WINDOW = ((1 << LZSS_DICT_BITS) - LZSS_SEQ_MAX);
 
   BIT_DEVICE_WRITE device;

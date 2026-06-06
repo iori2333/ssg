@@ -3,6 +3,8 @@
  *
  */
 
+#include <utility>
+
 #include "game/ENDING.h"
 #include "ecl/scl_opcodes.h" // SCL opcodes
 #include "game/GIAN.h"
@@ -11,7 +13,7 @@
 #include "game/endian.h"
 #include "platform/text_backend.h"
 
-typedef struct tagEndingGrpInfo {
+using EndingGrpInfo = struct tagEndingGrpInfo {
   uint32_t timer;          // 表示用タイマー
   decltype(timer) fadein;  // フェードイン時刻
   decltype(timer) fadeout; // フェードアウト時刻
@@ -20,10 +22,10 @@ typedef struct tagEndingGrpInfo {
 
   int x, y;       // 表示する左上
   bool bWantDisp; // 表示するかどうか
-} EndingGrpInfo;
+};
 
 // スタッフ描画タスク //
-typedef struct tagEndingStTask {
+using EndingStTask = struct tagEndingStTask {
   uint32_t timer;          // 表示用タイマー
   decltype(timer) fadein;  // フェードイン時刻
   decltype(timer) fadeout; // フェードアウト時刻
@@ -37,9 +39,9 @@ typedef struct tagEndingStTask {
   int ox, oy; // 表示基準座標
 
   bool bWantDisp; // 表示するのかな
-} EndingStTask;
+};
 
-typedef struct tagEndingText {
+using EndingText = struct tagEndingText {
   Narrow::string_view Text[10]; // 表示するテキストへのポインタ
   int NumText;                  // 現在格納されているテキストの数
   TEXTRENDER_RECT_ID Rect;
@@ -53,11 +55,11 @@ typedef struct tagEndingText {
   }
 
   void Render(WINDOW_POINT topleft);
-} EndingText;
+};
 
-EndingGrpInfo EGrpInfo;
-EndingStTask EStfTask;
-EndingText EText;
+static EndingGrpInfo EGrpInfo;
+static EndingStTask EStfTask;
+static EndingText EText;
 
 const PIXEL_LTRB StaffLabel[7] = {
     {0, 0, 160, 24},
@@ -75,19 +77,19 @@ const PIXEL_LTRB StaffMember[7] = {{0, 168, 72, 192},    {96, 168, 168, 192},
                                    {0, 216, 336, 264}};
 
 // フラッシュの状態 //
-uint16_t FlashState = 0;
+static uint16_t FlashState = 0;
 
-void UpdateGrpInfo(); // グラフィックの更新(内部データ)
-void UpdateStfInfo(); // スタッフの更新(内部データ)
+static void UpdateGrpInfo(); // グラフィックの更新(内部データ)
+static void UpdateStfInfo(); // スタッフの更新(内部データ)
 
-void DrawGrpInfo(); // グラフィックの描画
-void DrawStfInfo(); // スタッフの描画
+static void DrawGrpInfo(); // グラフィックの描画
+static void DrawStfInfo(); // スタッフの描画
 
-void DrawFadeInfo(); // フェードＩＯ情報の反映
+static void DrawFadeInfo(); // フェードＩＯ情報の反映
 
-void EndingSCLDecode(); // エンディング用 SCL のデコード
+static void EndingSCLDecode(); // エンディング用 SCL のデコード
 
-void EndingSetFixedColors(PALETTE &pal) {
+static void EndingSetFixedColors(PALETTE &pal) {
   pal[255] = {0x00, 0x00, 0x00};
   pal[199] = {0xFF, 0xFF, 0xFF};
   pal[198] = {0x80, 0x80, 0x80};
@@ -164,13 +166,13 @@ void EndingDraw(void) {
 }
 
 // グラフィックのフェードアウト用関数 //
-void FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
+static void FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
   Dest = Src.Fade(a, 0, 199);
   EndingSetFixedColors(Dest);
 }
 
 // スタッフ名のフェードアウト用関数 //
-void FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
+static void FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
   Dest = Src.Fade(a, 200, 255);
   EndingSetFixedColors(Dest);
 }
@@ -267,7 +269,7 @@ void EndingText::Render(WINDOW_POINT topleft) {
   });
 }
 
-void FlashPaletteGrp(PALETTE &dest, const PALETTE &pal, uint16_t a) {
+static void FlashPaletteGrp(PALETTE &dest, const PALETTE &pal, uint16_t a) {
   const uint16_t a16 = ((a > 256) ? (a - 256) : a);
   for (int i = 0; i < dest.size(); i++) {
     dest[i].r = (std::min)(256, (256 * (256 - a) + (pal[i].r * a16)) / 256);
@@ -335,7 +337,7 @@ void EndingSCLDecode() {
     switch (static_cast<Scmd>(cmd[0])) {
     case (Scmd::TIME): {
       const auto temp = I32LEAt(&cmd[1]);
-      if (temp > GameCount) {
+      if (std::cmp_greater(temp , GameCount)) {
         bFlag = false;
       } else {
         SCL_Now += 5; // cmd(1)+time(4)

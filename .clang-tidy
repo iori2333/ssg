@@ -1,0 +1,46 @@
+---
+# clang-tidy configuration for GIAN07 project
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-narrowing-conversions,
+  -bugprone-branch-clone,
+  -bugprone-macro-parentheses,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-use-nodiscard,
+  -modernize-redundant-void-arg,
+  -modernize-use-designated-initializers,
+  -modernize-macro-to-enum,
+  readability-*,
+  -readability-identifier-naming,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity,
+  -readability-redundant-access-specifiers,
+  -readability-avoid-return-with-void-value,
+  -readability-braces-around-statements,
+  -readability-redundant-inline-specifier,
+  -readability-uppercase-literal-suffix,
+  -readability-redundant-parentheses,
+  -readability-math-missing-parentheses,
+  -readability-implicit-bool-conversion,
+  -readability-named-parameter,
+  performance-*,
+  -performance-avoid-endl,
+  misc-*,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -misc-const-correctness,
+  -misc-use-anonymous-namespace,
+  -misc-no-recursion,
+  -misc-header-extension,
+
+CheckOptions:
+  - key: readability-implicit-bool-conversion.AllowIntegerConditions
+    value: true
+  - key: readability-implicit-bool-conversion.AllowPointerConditions
+    value: true

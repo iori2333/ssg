@@ -14,9 +14,9 @@
 // LLaser[], LLaserCmd は laser_manager.cpp で定義
 
 //// ローカル関数 ////
-static void _LLaserPointSet(LLASER_DATA *lp);
-static void _LLaserHitCheck(const LLASER_DATA *lp);
-static void _LLaserXYSet(int id); // レーザーの座標をセットする
+static void LLaserPointSet(LLASER_DATA *lp);
+static void LLaserHitCheck(const LLASER_DATA *lp);
+static void LLaserXYSet(int id); // レーザーの座標をセットする
 
 bool LLaserSet(uint8_t id) {
   // この部分で空いているレーザーのサーチを行う             //
@@ -54,15 +54,16 @@ bool LLaserSet(uint8_t id) {
   if (LLaserCmd.type == LLS_LONGZ) {
     lp->d += atan8(Viv.x - lp->x, Viv.y - lp->y);
     lp->type = LLS_LONG;
-  } else
+  } else {
     lp->type = LLaserCmd.type;
+}
 
   lp->infx = cosl(lp->d, 800);
   lp->infy = sinl(lp->d, 800);
 
   lp->count = 0;
 
-  _LLaserPointSet(&*lp); // p[4] をセット
+  LLaserPointSet(&*lp); // p[4] をセット
 
   lp->flag = LLF_LINE;
 
@@ -107,13 +108,13 @@ extern void LLaserLine(const ENEMY_DATA *e, uint8_t id) {
   }
 }
 
-static void _LLaserXYSet(int id) {
+static void LLaserXYSet(int id) {
   // 注意！！この関数のid は旧式のid の意味を持つことに注意 //
 
   LLaser[id].x = LLaser[id].e->x + LLaser[id].dx;
   LLaser[id].y = LLaser[id].e->y + LLaser[id].dy;
 
-  _LLaserPointSet(&LLaser[id]); // p[4] をセット
+  LLaserPointSet(&LLaser[id]); // p[4] をセット
 }
 
 extern void LLaserDegA(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
@@ -131,7 +132,7 @@ extern void LLaserDegA(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
       lp->infx = cosl(lp->d, 800);
       lp->infy = sinl(lp->d, 800);
 
-      _LLaserPointSet(lp); // p[4] をセット
+      LLaserPointSet(lp); // p[4] をセット
     }
   }
 }
@@ -151,7 +152,7 @@ extern void LLaserDegR(const ENEMY_DATA *e, char d, uint8_t id) {
       lp->infx = cosl(lp->d, 800);
       lp->infy = sinl(lp->d, 800);
 
-      _LLaserPointSet(lp); // p[4] をセット
+      LLaserPointSet(lp); // p[4] をセット
     }
   }
 }
@@ -189,13 +190,13 @@ extern void LLaserMove(void) {
       lp->infx = cosl(lp->d, 800);
       lp->infy = sinl(lp->d, 800);
 
-      _LLaserPointSet(lp); // p[4] をセット
+      LLaserPointSet(lp); // p[4] をセット
     }
 
     switch (lp->flag) {
     // 太くなる場合 //
     case (LLF_OPEN):
-      _LLaserXYSet(i);
+      LLaserXYSet(i);
       lp->w += lp->v;
 
       if ((lp->w) >= (lp->wmax)) {
@@ -208,14 +209,14 @@ extern void LLaserMove(void) {
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
 
-      _LLaserPointSet(lp); // p[4] をセット
-      _LLaserHitCheck(lp);
+      LLaserPointSet(lp); // p[4] をセット
+      LLaserHitCheck(lp);
       break;
 
     // 細くなる場合 //
     case (LLF_CLOSE):
     case (LLF_CLOSEL):
-      _LLaserXYSet(i);
+      LLaserXYSet(i);
       lp->w -= lp->v;
 
       if ((lp->w) <= 0) {
@@ -223,8 +224,9 @@ extern void LLaserMove(void) {
         if (lp->flag == LLF_CLOSE) {
           lp->flag = LLF_DISABLE;
           lp->e = nullptr;
-        } else
+        } else {
           lp->flag = LLF_LINE;
+}
       }
 
       lp->lx = cosl(lp->d, lp->w >> 6);
@@ -232,21 +234,21 @@ extern void LLaserMove(void) {
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
 
-      _LLaserPointSet(lp); // p[4] をセット
+      LLaserPointSet(lp); // p[4] をセット
                            //_LLaserHitCheck(lp);
       break;
 
     // 直線状態 //
     case (LLF_LINE):
-      _LLaserXYSet(i);
+      LLaserXYSet(i);
       // この部分にレーザー溜めエフェクトを仕掛ける //
       // fragment_set(lp->x,lp->y,FRG_LASER);
       break;
 
     // ノーマル //
     case (LLF_NORM):
-      _LLaserXYSet(i);
-      _LLaserHitCheck(lp);
+      LLaserXYSet(i);
+      LLaserHitCheck(lp);
       break;
 
     case (LLF_DISABLE):
@@ -256,9 +258,12 @@ extern void LLaserMove(void) {
 }
 
 extern void LLaserDraw(void) {
-  int x, y;
+  int x;
+  int y;
   VERTEX_XY p[4];
-  int wx, wy, len;
+  int wx;
+  int wy;
+  int len;
 
   static const RGB216 Table16Bit[16] = {
       {3, 0, 3}, {0, 2, 0}, {0, 0, 4}, {4, 2, 0}, {0, 0, 1}};
@@ -325,7 +330,7 @@ extern void LLaserDraw(void) {
           }
           gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, p2, vcs);
           break;
-        } else if (auto *gf = GrpGeom_FB()) {
+        } if (auto *gf = GrpGeom_FB()) {
           // gf->SetColor({ 2, 0, 2 });
           gf->SetColor(Table8BitA[c]);
           gf->DrawTriangleFan(lp->p);
@@ -405,7 +410,7 @@ extern void LLaserSetup(void) {
   Snd_SEStop(2);
 }
 
-static void _LLaserPointSet(LLASER_DATA *lp) {
+static void LLaserPointSet(LLASER_DATA *lp) {
   auto *pp = lp->p;
 
   pp[1].x = pp[0].x = (lp->x >> 6) + lp->wx + lp->lx;
@@ -421,11 +426,13 @@ static void _LLaserPointSet(LLASER_DATA *lp) {
   pp[2].y += lp->infy;
 }
 
-static void _LLaserHitCheck(const LLASER_DATA *lp) {
+static void LLaserHitCheck(const LLASER_DATA *lp) {
   //	long tx,ty,w1,w2,length;
 
-  int tx, ty;
-  int length, width;
+  int tx;
+  int ty;
+  int length;
+  int width;
 
   if (Viv.muteki)
     return;

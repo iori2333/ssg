@@ -3,6 +3,8 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include <utility>
+
 #include "enemy/ENEMY.h"
 #include "GIAN07/game/entity.h"
 #include "game/GIAN.h"
@@ -23,10 +25,10 @@
 // HomingX, HomingY, HomingFlag — enemy_manager.cpp で参照として定義
 
 // 関数 //
-static void _EnemyDrawBomb(int x, int y, uint32_t count);
+static void EnemyDrawBomb(int x, int y, uint32_t count);
 
 template <size_t N>
-void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
+static void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
              const std::array<EnemyData, N> &entities) {
   Indsort(indices, count, entities,
           [](const EnemyData &e) { return (e.flag & EF_DELETE); });
@@ -75,7 +77,7 @@ void EnemyData::Draw() const {
 
   // 描画モード選択 //
   const auto &src =
-      ((a.mode == ANM_DEG) ? a.ptn[uint8_t(d - 64 + 8) >> 4] : a.ptn[anm_c]);
+      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(d - 64 + 8) >> 4] : a.ptn[anm_c]);
   if (GrpSurface_Blit({topleft.x, topleft.y}, sid, src)) {
     if ((anm_ptn != anm_ptnEx) && IsDamaged) {
       const auto &a = Anime[anm_ptnEx];
@@ -91,14 +93,14 @@ void enemy_move(void) {
   if (BossNow == 0)
     HomingFlag = HOMING_DUMMY;
 
-  for (i = 0; i < EnemyNow; i++) {
+  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     e->IsDamaged = 0;
     if (!(e->flag & EF_BOMB)) {
       // 通常の敵の処理 //
       if (EclVM::IsInitialized()) {
         auto &interp = EclVM::Instance();
-        interp.CheckInterrupts(*e);
+        EclVM::CheckInterrupts(*e);
         interp.Execute(*e);
       }
 
@@ -148,17 +150,19 @@ void enemy_move(void) {
 }
 
 void enemy_draw(void) {
-  int i, x, y;
+  int i;
+  int x;
+  int y;
   // HRESULT		ddrval;
 
-  for (i = 0; i < EnemyNow; i++) {
+  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
 
     // 敵を描画する(クリッピング＆幅、高さ処理を追加すること) //
     x = (e->x >> 6);
     y = (e->y >> 6);
     if (e->flag == EF_BOMB) {
-      _EnemyDrawBomb(x, y, e->count);
+      EnemyDrawBomb(x, y, e->count);
       continue;
     }
 
@@ -172,7 +176,7 @@ void enemy_draw(void) {
 extern void enemy_clear(void) {
   int i;
 
-  for (i = 0; i < EnemyNow; i++) {
+  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (e->flag == EF_BOMB)
       continue;
@@ -202,7 +206,7 @@ extern void enemy_clear(void) {
 void enemyind_set(void) {
   int i;
 
-  for (i = 0; i < ENEMY_MAX; i++) {
+  for (i = 0; std::cmp_less(i , ENEMY_MAX); i++) {
     // memset(Enemy+i,0,sizeof(Enemy));
     EnemyInd[i] = i;
   }
@@ -210,9 +214,9 @@ void enemyind_set(void) {
   EnemyNow = 0;
 }
 
-bool EnemyDamageApply(EnemyData &e, int damage) {
+static bool EnemyDamageApply(EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (e.hp <= damage) {
+  if (std::cmp_less_equal(e.hp , damage)) {
     Snd_SEPlay(SOUND_ID_BOMB, e.x);
     if (e.LLaserRef) {
       LLaserForceClose(&e); // レーザーの強制クローズ
@@ -240,15 +244,15 @@ bool enemy_damage(int x, int y, int damage) {
     return true;
   }
 
-  for (i = 0; i < EnemyNow; i++) {
+  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
         (e->flag & EF_DAMAGE)) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      else {
+      } 
         return EnemyDamageApply(*e, damage);
-      }
+     
     }
   }
 
@@ -259,14 +263,14 @@ bool enemy_damage2(int x, int y, int damage) {
   int i;
   auto ret_val = BossDamage2(x, y, damage);
 
-  for (i = 0; i < EnemyNow; i++) {
+  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (HITCHK(x, e->x, e->g_width) && (y > e->y) && (e->flag & EF_DAMAGE)) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      else {
+      } 
         ret_val = EnemyDamageApply(*e, damage);
-      }
+     
     }
   }
 
@@ -281,14 +285,14 @@ extern void enemy_damage3(int x, int y, uint8_t d) {
 
   BossDamage3(x, y, d);
 
-  for (i = 0; i < EnemyNow; i++) {
+  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      else {
+      } 
         EnemyDamageApply(*e, damage);
-      }
+     
     }
   }
 }
@@ -299,15 +303,15 @@ extern void enemy_damage4(int damage) {
 
   BossDamage4(damage);
 
-  for (i = 0; i < EnemyNow; i++) {
+  for (i = 0; std::cmp_less(i , EnemyNow); i++) {
     auto *e = &Enemy[EnemyInd[i]];
     if (e->flag & EF_DAMAGE) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE)) {
         continue;
-      else {
+      } 
         EnemyDamageApply(*e, damage);
         // return true;
-      }
+     
     }
   }
 
@@ -448,7 +452,7 @@ void EnemyAnimeMove(EnemyData *e) {
   }
 }
 
-static void _EnemyDrawBomb(int x, int y, uint32_t count) {
+static void EnemyDrawBomb(int x, int y, uint32_t count) {
   PIXEL_LTRB src;
 
   /*

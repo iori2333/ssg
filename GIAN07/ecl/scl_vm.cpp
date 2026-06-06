@@ -176,7 +176,7 @@ bool SclVM::Execute() {
 
     case Scmd::EFC: {
       auto c = Decode(ScmdTag<Scmd::EFC>{}, cmd);
-      switch (static_cast<Sefc>(c.efc_id)) {
+      switch (c.efc_id) {
       case Sefc::WARN:
         Snd_SEPlay(8, GX_MID, true);
         WarningEffectSet();
@@ -241,7 +241,7 @@ bool SclVM::Execute() {
 
     case Scmd::WAITEX: {
       auto c = Decode(ScmdTag<Scmd::WAITEX>{}, cmd);
-      switch (static_cast<Swait>(c.cond)) {
+      switch (c.cond) {
       case Swait::BOSSHP:
         if (GetBossHPSum() <= c.value)
           break;

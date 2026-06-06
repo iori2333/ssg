@@ -22,8 +22,8 @@ public:
   void Execute(EnemyData &e);
 
   // Interrupt vector management
-  void CheckInterrupts(EnemyData &e);
-  void InitInterrupts(EnemyData &e);
+  static void CheckInterrupts(EnemyData &e);
+  static void InitInterrupts(EnemyData &e);
 
   // Long jump to a different ECL block
   void LongJump(EnemyData &e, uint32_t ecl_id);
@@ -41,7 +41,7 @@ private:
   std::span<const uint8_t> m_ecl_data;
 
   // Resolve an EclReg register/field ID to its value
-  uint32_t ResolveValue(const EnemyData *e, EclReg id);
+  static uint32_t ResolveValue(const EnemyData *e, EclReg id);
 
   static std::optional<EclVM> s_instance;
 };

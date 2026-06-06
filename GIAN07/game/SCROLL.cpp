@@ -3,6 +3,8 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <utility>
+
 #include "game/SCROLL.h"
 #include "ecl/scl_opcodes.h" // SCL opcodes
 #include "ecl/scl_vm.h"
@@ -21,14 +23,14 @@
 #include "ui/WindowSys.h"
 
 // マップデータ保存用ヘッダ //
-typedef struct tagScrollSaveHeader {
+using ScrollSaveHeader = struct tagScrollSaveHeader {
   U32LE Address;    // このデータの開始アドレス
   U32LE ScrollWait; // このレイヤーのディレイ
   U32LE Length;     // このレイヤーの長さ
-} ScrollSaveHeader;
+};
 
 // ScrollInfo, SclInfo → scroll_manager.cpp の Scroller に移動
-PIXEL_LTRB rcMapChip[1200]; // マップパーツＩＤに対する矩形
+static PIXEL_LTRB rcMapChip[1200]; // マップパーツＩＤに対する矩形
 
 static void enemy_set(void);       // 敵をセットする
 static void InitMapChipRect(void); // スクロールに関する情報の初期化を行う
@@ -82,7 +84,7 @@ void ScrollMove(void) {
     // 通常のスクロール //
     for (i = 0; i < ScrollInfo.NumLayer; i++) {
       ScrollInfo.LayerCount[i] += ScrollInfo.ScrollSpeed;
-      while (ScrollInfo.LayerCount[i] >= ScrollInfo.LayerWait[i]) {
+      while (std::cmp_greater_equal(ScrollInfo.LayerCount[i] , ScrollInfo.LayerWait[i])) {
         ScrollInfo.LayerCount[i] -= ScrollInfo.LayerWait[i];
         ScrollInfo.LayerDy[i] = (ScrollInfo.LayerDy[i] + 1) % 16; //& 0x0f;
         if (ScrollInfo.LayerDy[i] == 0)
@@ -107,9 +109,9 @@ static PBGMAP *ScNextLine(PBGMAP *p) {
   int i;
 
   for (i = 0; i < MAP_WIDTH;) {
-    if (*p != MAPDATA_NONE)
+    if (*p != MAPDATA_NONE) {
       p++, i++;
-    else {
+    } else {
       i = i + (*(p + 1));
       p = p + 2;
     }
@@ -122,9 +124,9 @@ static PBGMAP *ScBeforeLine(PBGMAP *p) {
   int i;
 
   for (i = 0; i < MAP_WIDTH;) {
-    if (*(p - 2) != MAPDATA_NONE)
+    if (*(p - 2) != MAPDATA_NONE) {
       p--, i++;
-    else {
+    } else {
       i = i + (*(p - 1));
       p = p - 2;
     }
@@ -196,7 +198,11 @@ infy));
 // 背景を描画する //
 void ScrollDraw(void) {
   PBGMAP *p;
-  int i, j, k, x, y;
+  int i;
+  int j;
+  int k;
+  int x;
+  int y;
   int dx = 0;   // 振動用
   int RasterDx; // ラスター用
 
@@ -213,7 +219,7 @@ void ScrollDraw(void) {
   if (ScrollInfo.ExCmd == ScrollCmdStg3Boss) {
     Stg3BossMapDraw();
     return;
-  } else if (ScrollInfo.ExCmd == ScrollCmdStg6Cube) {
+  } if (ScrollInfo.ExCmd == ScrollCmdStg6Cube) {
     Draw3DCube();
     return;
   } else if (ScrollInfo.ExCmd == ScrollCmdStg6RndEcl) {
@@ -450,7 +456,8 @@ static void ScrollCmdStg2Boss(void) {
 
 // ラスタースクロールオープン //
 static void ScrollCmdRasterOpen(void) {
-  int i, j;
+  int i;
+  int j;
 
   // ちょっと重いかもね... //
   for (i = j = 0; i < 31; i++, j += 16) {
@@ -466,7 +473,8 @@ static void ScrollCmdRasterOpen(void) {
 
 // ラスタースクロールクローズ //
 static void ScrollCmdRasterClose(void) {
-  int i, j;
+  int i;
+  int j;
 
   // ちょっと重いかもね... //
   for (i = j = 0; i < 31; i++, j += 2) {
@@ -491,7 +499,8 @@ static void ScrollCmdStg3Boss(void) {
 
 // ゲイツ雲描画 //
 static void Stg3BossMapDraw(void) {
-  int x, y;
+  int x;
+  int y;
 
   x = X_MIN;
   y = Y_MIN - ScrollInfo.ExCount;
@@ -602,7 +611,9 @@ bool ScrollInit(void) {
 
 // スクロールに関する情報の初期化を行う //
 static void InitMapChipRect(void) {
-  int i, x, y;
+  int i;
+  int x;
+  int y;
 
   // マップチップ用矩形の準備 //
   for (i = 0; i < 1200; i++) {

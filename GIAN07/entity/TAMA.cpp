@@ -3,6 +3,8 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include <utility>
+
 #include "entity/TAMA.h"
 #include "game/GIAN.h"
 #include "game/LEVEL.h"
@@ -17,15 +19,15 @@
 extern int &TamaSpeed; // Bullets.speed への参照
 
 ////ローカルな関数////
-static void __TamaSet(void);
+static void TamaSet(void);
 static void easy_cmd(void); // 難易度：Ｅａｓｙ
 static void hard_cmd(void); // 難易度：Ｈａｒｄ
 static void luna_cmd(void); // 難易度：Ｌｕｎａｔｉｃ
 
-int NewTamaSpeed(uint16_t i);
-int LineCmdNewTamaSpeed(uint16_t i);
-int TamaSpeedEx(uint8_t d);
-void _TamaEffectDraw(const TAMA_DATA *t); // 弾をエフェクトとして描画？
+static int NewTamaSpeed(uint16_t i);
+static int LineCmdNewTamaSpeed(uint16_t i);
+static int TamaSpeedEx(uint8_t d);
+static void TamaEffectDraw(const TAMA_DATA *t); // 弾をエフェクトとして描画？
 
 /*
 inline Debug(uint32_t old, int id)
@@ -60,19 +62,21 @@ void tama_set(void) {
   else
     TamaSpeed = v;
 
-  __TamaSet();
+  TamaSet();
 }
 
 void tama_setEX(void) {
   TamaSpeed = SPEEDM(TamaCmd.v);
 
-  __TamaSet();
+  TamaSet();
 }
 
 // 弾をセットする(ライン状に発射)
 void tama_setLine(void) {
   // uint32_t temp;
-  uint16_t *indnow, *indmax, *indp; // 上に同じ
+  uint16_t *indnow;
+  uint16_t *indmax;
+  uint16_t *indp; // 上に同じ
 
   TamaSpeed = SPEEDM(TamaCmd.v);
 
@@ -128,7 +132,9 @@ void tama_setLine(void) {
 // エキストラボス専用弾幕(角度が広くなると、遅くなる) //
 void tama_setExtra01(void) {
   // uint32_t temp;
-  uint16_t *indnow, *indmax, *indp; // 上に同じ
+  uint16_t *indnow;
+  uint16_t *indmax;
+  uint16_t *indp; // 上に同じ
 
   TamaSpeed = SPEEDM(TamaCmd.v);
 
@@ -202,9 +208,11 @@ int TamaSpeedEx(uint8_t d) {
   return TamaSpeed - (TamaSpeed * abs(delta)) / 23 + temp;
 }
 
-static void __TamaSet(void) {
+static void TamaSet(void) {
   // uint32_t temp;
-  uint16_t *indnow, *indmax, *indp; // 上に同じ
+  uint16_t *indnow;
+  uint16_t *indmax;
+  uint16_t *indp; // 上に同じ
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
   if ((TamaCmd.c & 0xf0) == TAMA_SMALL)
@@ -316,8 +324,10 @@ void tama_move(void) {
 void tama_draw(void) {
   //	HRESULT		ddrval;
   PIXEL_LTRB src;
-  int x, y;
-  int dx, dy;
+  int x;
+  int y;
+  int dx;
+  int dy;
 
   static const PIXEL_LTRB rcExtraTama[4] = {{128, 384, 128 + 32, 384 + 32},
                                             {128 + 32, 384, 128 + 56, 384 + 24},
@@ -340,7 +350,7 @@ void tama_draw(void) {
       continue;
 
     case (TE_CIRCLE1):
-      _TamaEffectDraw(t);
+      TamaEffectDraw(t);
       continue;
 
       // その他は知らぬ //
@@ -443,7 +453,7 @@ void tama_draw(void) {
       continue;
 
     case (TE_CIRCLE1):
-      _TamaEffectDraw(t);
+      TamaEffectDraw(t);
       continue;
 
       // その他は知らぬ //
@@ -471,7 +481,7 @@ constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB {
   return {x, y, x + w, y + w};
 }
 } // namespace
-void _TamaEffectDraw(const TAMA_DATA *t) {
+void TamaEffectDraw(const TAMA_DATA *t) {
 
   static constexpr PIXEL_LTRB Data[6][5] = {
       // [色][パターン]
@@ -540,7 +550,8 @@ void _TamaEffectDraw(const TAMA_DATA *t) {
 
   PIXEL_LTRB temp;
   const int ptn = ((t->count / 4) % 5);
-  int x, y;
+  int x;
+  int y;
 
   x = (t->x >> 6) - Width[ptn];
   y = (t->y >> 6) - Width[ptn];
@@ -677,7 +688,7 @@ void tamaind_set(uint16_t tama1) {
   Tama2Max = TAMA_MAX - tama1;
 
   // 弾のインデックス用配列の初期化 //
-  for (i = 0; i < tama1; i++)
+  for (i = 0; std::cmp_less(i , tama1); i++)
     Tama1Ind[i] = i;
   for (i = tama1; i < TAMA_MAX; i++)
     Tama2Ind[i - tama1] = i;
@@ -756,7 +767,7 @@ uint8_t tama_dir(uint16_t i) {
     i++;
     if (TamaCmd.n & 1)
       return deg + (i >> 1) * TamaCmd.dw * (1 - ((i & 1) << 1));
-    else
+    
       return deg - (TamaCmd.dw >> 1) +
              (i >> 1) * TamaCmd.dw * (1 - ((i & 1) << 1));
 
@@ -792,7 +803,7 @@ int NewTamaSpeed(uint16_t i) {
 
   if (TamaCmd.cmd & TAMA_REN)
     return vret + (vret >> 3) * (i / TamaCmd.n) + temp;
-  else
+  
     return vret + temp;
 }
 
@@ -810,7 +821,7 @@ int LineCmdNewTamaSpeed(uint16_t i) {
 
   if (TamaCmd.cmd & TAMA_REN)
     return vret + (vret >> 3) * (i - 1);
-  else
+  
     return vret;
 }
 
@@ -833,7 +844,7 @@ int tama_speed(uint16_t i) {
 
   if (TamaCmd.cmd & TAMA_REN)
     return vret + (vret >> 3) * (i / TamaCmd.n) + temp;
-  else
+  
     return vret + temp;
 }
 

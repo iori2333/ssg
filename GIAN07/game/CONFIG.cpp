@@ -23,7 +23,7 @@ using DISK =
     std::conditional_t<std::is_fundamental_v<T>, ENDIAN_SELECT_BIG<T>, T>;
 
 template <typename T>
-bool OptionRead(CONFIG_OPTION_VALUE<T> &opt, SDL_IOStream &f) {
+static bool OptionRead(CONFIG_OPTION_VALUE<T> &opt, SDL_IOStream &f) {
   DISK<T> d_loaded;
   if (!SDL_MustReadIO(&f, &d_loaded, sizeof(d_loaded))) {
     return false;
@@ -37,12 +37,12 @@ bool OptionRead(CONFIG_OPTION_VALUE<T> &opt, SDL_IOStream &f) {
 }
 
 template <typename T>
-bool OptionWrite(SDL_IOStream &f, const CONFIG_OPTION_VALUE<T> &opt) {
+static bool OptionWrite(SDL_IOStream &f, const CONFIG_OPTION_VALUE<T> &opt) {
   const DISK<T> d_v = opt.v;
   return SDL_MustWriteIO(&f, &d_v, sizeof(T));
 }
 
-bool OptionRead(std::u8string &opt, SDL_IOStream &f) {
+static bool OptionRead(std::u8string &opt, SDL_IOStream &f) {
   U32BE d_len;
   if (!SDL_MustReadIO(&f, &d_len, sizeof(d_len))) {
     return false;
@@ -53,7 +53,7 @@ bool OptionRead(std::u8string &opt, SDL_IOStream &f) {
   return ((opt.size() * sizeof(std::u8string::value_type)) == len);
 }
 
-bool OptionWrite(SDL_IOStream &f, const std::u8string &opt) {
+static bool OptionWrite(SDL_IOStream &f, const std::u8string &opt) {
   if (opt.size() > (std::numeric_limits<uint32_t>::max)()) {
     return false;
   }
@@ -66,13 +66,13 @@ bool OptionWrite(SDL_IOStream &f, const std::u8string &opt) {
 }
 
 template <class... Options>
-bool OptionRead(const std::tuple<Options &...> &opts, SDL_IOStream &f) {
+static bool OptionRead(const std::tuple<Options &...> &opts, SDL_IOStream &f) {
   return std::apply([&](auto &...opt) { return (... && OptionRead(opt, f)); },
                     opts);
 }
 
 template <class... Options>
-bool OptionWrite(SDL_IOStream &f, const std::tuple<Options &...> &opts) {
+static bool OptionWrite(SDL_IOStream &f, const std::tuple<Options &...> &opts) {
   return std::apply(
       [&](const auto &...opt) { return (... && OptionWrite(f, opt)); }, opts);
 }

@@ -3,6 +3,8 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include <utility>
+
 #include "entity/LASER.h"
 #include "GIAN07/game/entity.h"
 #include "effect/GEOMETRY.h"
@@ -69,7 +71,7 @@ static constexpr auto LF_NMOVE = 0x06; // レーザーの長さ変わらず(LF_S
 static constexpr auto LF_DELETE = 0x80; // レーザーを消去する(処理対象から外す)
 
 ////レーザー用構造体////
-typedef struct {
+using LASER_DATA = struct {
   int x, y;   // 現在の始点
   int vx, vy; // 速度の(X,Y)成分
   int lx, ly; // 表示座標の加算値(長さ)
@@ -91,12 +93,12 @@ typedef struct {
   uint8_t flag;   // 消去要請フラグ等(エフェクト含む)
   uint8_t notr;   // 反射しないリフレクターの番号
   uint8_t evade;  // かすり用フラグ
-} LASER_DATA;
+};
 
 ////グローバル変数////
 // LaserCmd, LaserNow → laser_manager.cpp に移動
-std::array<LASER_DATA, LASER_MAX> Laser;  // レーザー格納用構造体
-std::array<uint16_t, LASER_MAX> LaserInd; // レーザー順番維持用配列
+static std::array<LASER_DATA, LASER_MAX> Laser;  // レーザー格納用構造体
+static std::array<uint16_t, LASER_MAX> LaserInd; // レーザー順番維持用配列
 // REFLECTOR		Reflector[RT_MAX]; // 反射物_構造体
 //  uint16_t	ReflectorNow;		// 反射物の個数
 
@@ -204,7 +206,7 @@ void laser_draw(void) {
 
   GrpGeom->Lock();
 
-  for (i = 0; i < LaserNow; i++) {
+  for (i = 0; std::cmp_less(i , LaserNow); i++) {
     auto *lp = &Laser[LaserInd[i]];
     switch (lp->type) {
     // ノーマルショートレーザー＆反射レーザー //
@@ -320,7 +322,7 @@ static uint8_t laser_dir(uint16_t i) {
     i++;
     if (LaserCmd.n & 1)
       return deg + (i >> 1) * LaserCmd.dw * (1 - ((i & 1) << 1));
-    else
+    
       return deg - (LaserCmd.dw >> 1) +
              (i >> 1) * LaserCmd.dw * (1 - ((i & 1) << 1));
 
@@ -350,9 +352,11 @@ static void slaser_pset(LASER_DATA *lp) {
 
 static void SLdraw(const LASER_DATA *lp) {
   constexpr RGB216 col = {1, 0, 5};
-  int x, y;
+  int x;
+  int y;
 
-  int tx, ty;
+  int tx;
+  int ty;
 
   if (lp->flag == LF_CLEAR) {
     // GrpGeom->SetColor(laser_color[lp->c]);
@@ -418,8 +422,9 @@ static void Lmove(LASER_DATA *lp) {
       lp->p[1].y = lp->p[0].y + lp->ly;
       lp->p[2].x = lp->p[3].x + lp->lx;
       lp->p[2].y = lp->p[3].y + lp->ly;
-    } else
+    } else {
       lp->w += 64;
+}
 
     lp->wx = -sinl(lp->d, lp->w >> 6);
     lp->wy = cosl(lp->d, lp->w >> 6);
@@ -461,7 +466,10 @@ static void Lmove(LASER_DATA *lp) {
 }
 
 static void laser_hitchk(LASER_DATA *lp) {
-  long tx, ty, w1, length;
+  long tx;
+  long ty;
+  long w1;
+  long length;
 
   switch (lp->type) {
   case (LS_SHORT):
@@ -490,9 +498,9 @@ static void laser_hitchk(LASER_DATA *lp) {
       MaidDead();
     } else if (length > 0 && length <= (lp->l) &&
                w1 <= (lp->w + LASER_EVADE_WIDTH)) {
-      if (lp->evade)
+      if (lp->evade) {
         evade_add(0);
-      else {
+      } else {
         lp->evade = 0xff;
         evade_add(SLASER_EVADE);
       }
@@ -573,15 +581,17 @@ static int REFL_hit(const LASER_DATA *lp) {
   const long lx = (lp->x + cosl(lp->d, lp->l)); // レーザーの判定ポイントX
   const long ly = (lp->y + sinl(lp->d, lp->l)); // レーザーの判定ポイントY
 
-  long tx, ty;        // 演算用座標
-  long length, width; // ヒットチェック用
+  long tx;
+  long ty;        // 演算用座標
+  long length;
+  long width; // ヒットチェック用
 
   // ﾘﾌﾚｸﾀｰとの当たり判定(ﾋｯﾄ->非０) //
   // d' = - d + Rd*2    : d:Laser_Degree  Rd:Reflector_Degree //
 
   // 太レーザーに対して反射する //
   for (i = 0; i < LLASER_MAX; i++) {
-    if (i == lp->notr)
+    if (std::cmp_equal(i , lp->notr))
       continue; // 前回反射したなら無視する
     ll = &LLaser[i];
     if (ll->flag != LLF_NORM)

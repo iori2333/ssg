@@ -3,6 +3,8 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <utility>
+
 #include "entity/HOMINGL.h"
 #include "effect/GEOMETRY.h"
 #include "entity/MAID.h"
@@ -14,20 +16,20 @@
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
 // HLaserNow, HLaserCmd, HLaserBuf, ActiveHL, FreeHL → laser_manager.cpp に移動
-extern uint16_t &HLaserNow;
-extern HomingLaserInfo &HLaserCmd;
+
+
 extern std::array<HomingLaserData, HLASER_MAX> &HLaserBuf;
 extern HomingLaserData &ActiveHL;
 extern HomingLaserData &FreeHL;
 
 ///// [マクロ] /////
-constexpr int HLASER_GETNEXT(int current) {
+static constexpr int HLASER_GETNEXT(int current) {
   // 後で mod -> and に変更すること //
   return (current + HLASER_LEN * HLASER_SECTION - 1) %
          (HLASER_LEN * HLASER_SECTION);
 }
 
-constexpr int HLASER_GETPREV(int current, int n) {
+static constexpr int HLASER_GETPREV(int current, int n) {
   // 後で mod -> and に変更すること //
   return (current + n) % (HLASER_LEN * HLASER_SECTION);
 }
@@ -50,12 +52,13 @@ void HLaserInit(void) {
 
 // ホーミングレーザーをセットする //
 void HLaserSet(const HLaserInfo *hinfo) {
-  int i, j;
+  int i;
+  int j;
   uint8_t deg;
   HLaserData *p;
 
   // 1-n としているのは、角度設定のためね... //
-  for (i = 1; i <= (hinfo->n); i++) {
+  for (i = 1; std::cmp_less_equal(i , (hinfo->n)); i++) {
     p = FreeHL.Next;
     if (p == nullptr) {
       return; // データを確保できない
@@ -96,9 +99,12 @@ void HLaserSet(const HLaserInfo *hinfo) {
 void HLaserMove(void) {
   HLaserData *hl;
   HLaserData *temp;
-  int x, y;
-  int i, j;
-  int deg, deg2;
+  int x;
+  int y;
+  int i;
+  int j;
+  int deg;
+  int deg2;
 
   // 次のフレームに移行する //
   for (hl = ActiveHL.Next; hl != nullptr; hl = hl->Next) {
@@ -207,10 +213,11 @@ void HLaserMove(void) {
   }
 }
 
-void _CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
+static void CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
                 uint8_t d) {
   VERTEX_XY src[9 + 1];
-  int i, j;
+  int i;
+  int j;
 
   for (j = 0, i = -64; j <= 8; j++) {
     src[j].x = (x + cosl(d + i, r)) >> 6;
@@ -226,7 +233,9 @@ void _CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
 // ホーミングレーザーを描画する //
 void HLaserDraw(void) {
   HLaserData *hl;
-  int i, w, current;
+  int i;
+  int w;
+  int current;
   DegPoint *p;
   VERTEX_XY src[4];
   auto *gp = GrpGeom_Poly();
@@ -263,7 +272,7 @@ void HLaserDraw(void) {
     src[1].y = (p->y - sinl(p->d - 64, w)) >> 6;
 
     if (gp) {
-      _CircleA16(*gp, p->x, p->y, w, p->d);
+      CircleA16(*gp, p->x, p->y, w, p->d);
     } else {
       GeomCircleF({(p->x >> 6), (p->y >> 6)}, (w >> 6));
     }
@@ -308,7 +317,7 @@ void HLaserDraw(void) {
 
     // AlphaCircle(p->x>>6, p->y>>6, w>>6);
     if (gp) {
-      _CircleA16(*gp, p->x, p->y, w, p->d);
+      CircleA16(*gp, p->x, p->y, w, p->d);
     } else {
       GeomCircleF({(p->x >> 6), (p->y >> 6)}, (w >> 6));
     }

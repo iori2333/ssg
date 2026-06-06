@@ -20,7 +20,9 @@
 #include "platform/path.h"
 #include "platform/thread.h"
 #include "ui/WindowSys.h"
-#include <assert.h>
+#include <cassert>
+
+#include <utility>
 
 // Hardcoded loop points for ZUN's original MIDI files
 // ---------------------------------------------------
@@ -185,7 +187,7 @@ static constinit const auto LOOPS = HashesSorted<MID_LOOP_FOR_HASH, 66>({{
     // ----------------------------------------------------------------------
 }});
 
-bool LoadMIDIWithPotentialLoop(BYTE_BUFFER_OWNED buf, const HASH &hash) {
+static bool LoadMIDIWithPotentialLoop(BYTE_BUFFER_OWNED buf, const HASH &hash) {
   const auto ret = Mid_Load(std::move(buf));
   if (!ret) {
     return false;
@@ -199,7 +201,7 @@ bool LoadMIDIWithPotentialLoop(BYTE_BUFFER_OWNED buf, const HASH &hash) {
 // ---------------------------------------------------
 
 // Packfile loading //
-bool GrpBMPLoadP(const PACKFILE_READ &in, fil_no_t filno, SURFACE_ID sid) {
+static bool GrpBMPLoadP(const PACKFILE_READ &in, fil_no_t filno, SURFACE_ID sid) {
   auto maybe_bmp = BMPLoad(in.MemExpand(filno));
 
   // If this fails, we're going to crash due to the uninitialized surface
@@ -216,11 +218,11 @@ bool GrpBMPLoadP(const PACKFILE_READ &in, fil_no_t filno, SURFACE_ID sid) {
   return GrpSurface_Load(sid, std::move(bmp));
 }
 
-bool Snd_SELoadP(const PACKFILE_READ &in, fil_no_t filno, uint8_t id, int max) {
+static bool Snd_SELoadP(const PACKFILE_READ &in, fil_no_t filno, uint8_t id, int max) {
   return Snd_SELoad(in.MemExpand(filno), id, max);
 }
 
-bool LoadSound(const PACKFILE_READ &in);
+static bool LoadSound(const PACKFILE_READ &in);
 
 // Packfile cache //
 // -------------- //
@@ -294,21 +296,21 @@ public:
     }
   }
 };
-ENUMARRAY<PACK, PACK_ID> Packs;
+static ENUMARRAY<PACK, PACK_ID> Packs;
 
 // For MUSIC.DAT, we want to start asynchronously calculating all hashes
 // once the process starts.
-std::vector<HASH> MusicHashes;
+static std::vector<HASH> MusicHashes;
 
-const PACKFILE_READ &Packfile(PACK_ID id) {
+static const PACKFILE_READ &Packfile(PACK_ID id) {
   return Packs[id].BlockUntilLoaded();
 }
 
-void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
+static void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
   MusicNum = in.info.size();
   MusicHashes.reserve(MusicNum);
 
-  for (auto i = 0; i < MusicNum; i++) {
+  for (auto i = 0; std::cmp_less(i , MusicNum); i++) {
     if (st) {
       break;
     }
@@ -326,7 +328,7 @@ void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
 bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
   if (pack) {
     return true;
-  } else if (filename_with_found_prefix.empty()) {
+  } if (filename_with_found_prefix.empty()) {
     static_assert(NOT_FOUND.size() == FOUND.size());
     const auto basename = BASENAMES[id];
     const auto cap = (NOT_FOUND.size() + path_data.size() + basename.size());
@@ -346,8 +348,8 @@ bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
   }
   std::ranges::copy(FOUND, filename_with_found_prefix.begin());
   load_thread = ThreadStart(
-      [this, stream = std::move(stream), id](const THREAD_STOP &st) mutable {
-        auto in = FilStartR(std::move(stream));
+      [this, stream = stream, id](const THREAD_STOP &st) mutable {
+        auto in = FilStartR(std::move(stream)); // NOLINT(performance-move-const-arg)
         if (id == PACK_ID::MUSIC) {
           LoadMusicHashes(in, st);
         } else if (id == PACK_ID::SOUND) {
@@ -358,7 +360,7 @@ bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
   return true;
 }
 
-bool Check(void) {
+static bool Check(void) {
   const auto path_data = PathForData();
   bool ret = true;
   for (const auto i : std::views::iota(0u, BASENAMES.size())) {
@@ -369,7 +371,7 @@ bool Check(void) {
 }
 
 // ｎ番目の曲をロードする //
-bool LoadMusic(fil_no_t filno) {
+static bool LoadMusic(fil_no_t filno) {
   const auto &music = Packs[PACK_ID::MUSIC].BlockUntilLoaded();
   if (filno >= MusicHashes.size()) {
     return false;
@@ -377,7 +379,7 @@ bool LoadMusic(fil_no_t filno) {
   return LoadMIDIWithPotentialLoop(music.MemExpand(filno), MusicHashes[filno]);
 }
 
-bool LoadMusicByHash(const HASH &hash) {
+static bool LoadMusicByHash(const HASH &hash) {
   Packs[PACK_ID::MUSIC].BlockUntilLoaded();
   const auto ret = std::ranges::find(MusicHashes, hash);
   if (ret == MusicHashes.cend()) {
@@ -396,12 +398,12 @@ extern bool IsDraw();
 namespace DAT_MISSING {
 constexpr Narrow::string_view TITLE = "Missing game data files";
 
-bool FoundAll = false;
+static bool FoundAll = false;
 
-bool FnRecheck(INPUT_BITS key) {
+static bool FnRecheck(INPUT_BITS key) {
   if ((key == KEY_BOMB) || (key == KEY_ESC)) {
     return false;
-  } else if (Input_OptionKeyDelta(key) && DAT::Check()) {
+  } if (Input_OptionKeyDelta(key) && DAT::Check()) {
     FoundAll = true;
     return false;
   }
@@ -409,8 +411,8 @@ bool FnRecheck(INPUT_BITS key) {
 }
 
 constexpr auto CENTER = WINDOW_FLAGS::CENTER;
-WINDOW_LABEL Title = {TITLE.data(), CENTER};
-std::array<WINDOW_CHOICE, (DAT::BASENAMES.size() + 6)> Info = {{
+static WINDOW_LABEL Title = {TITLE.data(), CENTER};
+static std::array<WINDOW_CHOICE, (DAT::BASENAMES.size() + 6)> Info = {{
     {},
     {},
     {},
@@ -423,10 +425,10 @@ std::array<WINDOW_CHOICE, (DAT::BASENAMES.size() + 6)> Info = {{
     {"Recheck", "", FnRecheck, CENTER},
     {"Quit", "", CWinExitFn, CENTER},
 }};
-WINDOW_MENU Menu = {std::span(Info), [](bool) {}, &Title};
-WINDOW_SYSTEM Window = {Menu};
+static WINDOW_MENU Menu = {std::span(Info), [](bool) {}, &Title};
+static WINDOW_SYSTEM Window = {Menu};
 
-void Proc(bool &quit) {
+static void Proc(bool &quit) {
   CWinMove(&Window);
   if (Window.State == CWIN_DEAD) {
     if (FoundAll) {
@@ -442,7 +444,7 @@ void Proc(bool &quit) {
   }
 }
 
-void Init(void) {
+static void Init(void) {
   for (const auto i : std::views::iota(0u, DAT::BASENAMES.size())) {
     const auto id = Cast::down_enum<DAT::PACK_ID>(i);
     const auto &title = DAT::Packs[id].FilenameWithFoundPrefix();

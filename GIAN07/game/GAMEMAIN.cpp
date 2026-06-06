@@ -22,6 +22,7 @@
 #include "ui/FONTUTY.h"
 #include "ui/WindowCtrl.h" // ウィンドウ定義
 #include "ui/WindowSys.h"
+#include <algorithm>
 #include <chrono>
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
@@ -32,18 +33,18 @@ struct LINE {
   WINDOW_COORD left;
 };
 
-LINE Line[1];
+static LINE Line[1];
 
 constexpr std::string_view BUILD_LABEL = "BUILD";
 constexpr Narrow::string_view BUILD_VALUE = (" " VERSION_TAG);
 
-void Init(void) {
+static void Init(void) {
   const auto build_w = TextObj.TextExtent(FONT_ID::TINY, BUILD_VALUE).w;
   Line[0].trr = TextObj.Register({136, 10});
   Line[0].left = (GRP_RES.w - build_w);
 }
 
-void Render(PIXEL_COORD top) {
+static void Render(PIXEL_COORD top) {
   // Matches the font rendered by GrpPutScore().
   const auto gradient_func = [](PIXEL_COORD y) -> uint8_t {
     return ((y <= 3) ? 254 : (y <= 6) ? 220 : 180);
@@ -66,52 +67,52 @@ void Render(PIXEL_COORD top) {
 }
 }; // namespace Version
 
-uint16_t DemoTimer = 0;
-uint32_t DrawCount = 0;
-uint8_t WeaponKeyWait = 0;
-int GameOverTimer = 0;
+static uint16_t DemoTimer = 0;
+static uint32_t DrawCount = 0;
+static uint8_t WeaponKeyWait = 0;
+static int GameOverTimer = 0;
 
-NR_NAME_DATA CurrentName; // ネームレジスト準備用データ
-uint8_t CurrentRank;      // ネームレジスト用順位データ
-uint8_t CurrentDif;       // 現在の難易度(スコアネーム表示用)
+static NR_NAME_DATA CurrentName; // ネームレジスト準備用データ
+static uint8_t CurrentRank;      // ネームレジスト用順位データ
+static uint8_t CurrentDif;       // 現在の難易度(スコアネーム表示用)
 
-MAID VivTemp;
+static MAID VivTemp;
 
 bool IsDemoplay = false;
 
-void TitleProc(bool &quit);
-void WeaponSelectProc(bool &); // 装備選択
-void GameProc(bool &);
-void GameOverProc0(bool &); // ゲームオーバー出現用
-void GameOverProc(bool &);  // ゲームオーバー
-void PauseProc(bool &);
-void DemoProc(bool &);       // デモプレイ
-void NameRegistProc(bool &); // お名前入力
+static void TitleProc(bool &quit);
+static void WeaponSelectProc(bool &); // 装備選択
+static void GameProc(bool &);
+static void GameOverProc0(bool &); // ゲームオーバー出現用
+static void GameOverProc(bool &);  // ゲームオーバー
+static void PauseProc(bool &);
+static void DemoProc(bool &);       // デモプレイ
+static void NameRegistProc(bool &); // お名前入力
 
-void ReplayProcAll(bool &);
-void GameOverSaveProc(bool &);
+static void ReplayProcAll(bool &);
+static void GameOverSaveProc(bool &);
 
-bool SProjectInit(void);   // 西方Ｐｒｏｊｅｃｔ初期化部
-void SProjectProc(bool &); // 西方Ｐｒｏｊｅｃｔ表示動作部
+  // 西方Ｐｒｏｊｅｃｔ初期化部
+static void SProjectProc(bool &); // 西方Ｐｒｏｊｅｃｔ表示動作部
 
-void ScoreNameProc(bool &);
+static void ScoreNameProc(bool &);
 
-void GameSTD_Init(void); // ゲームを立ち上げる際に必ず行う初期化関数群
-bool DemoInit(void);     // デモプレイの初期化を行う
+static void GameSTD_Init(void); // ゲームを立ち上げる際に必ず行う初期化関数群
+static bool DemoInit(void);     // デモプレイの初期化を行う
 
-void GameDraw(void);
-void GameMove(void);
+static void GameDraw(void);
+static void GameMove(void);
 bool IsDraw(void);
 
-void ScoreDraw(void); // スコアの描画
+static void ScoreDraw(void); // スコアの描画
 
 void (*GameMain)(bool &quit) = TitleProc;
 
-uint8_t CurrentLevel() {
+static uint8_t CurrentLevel() {
   return ((GameStage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameLevel);
 }
 
-bool InputLocked;
+static bool InputLocked;
 
 // スコアネーム表示の準備を行う //
 extern bool ScoreNameInit(void) {
@@ -186,7 +187,10 @@ void ScoreNameProc(bool &) {
 
 // スコアの描画 //
 void ScoreDraw(void) {
-  int i, gx, gy, v;
+  int i;
+  int gx;
+  int gy;
+  int v;
   PIXEL_LTRB src;
 
   for (i = 0; i < 5; i++) {
@@ -226,8 +230,9 @@ void ScoreDraw(void) {
     if (ScoreString[i].Stage[0] == '7') {
       src = {288, 88, (288 + 16), (88 + 8)};
       GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::SYSTEM, src);
-    } else
+    } else {
       GrpPutScore(gx, gy, ScoreString[i].Stage);
+}
 
     gx = (ScoreString[i].x >> 6) + 224 + 80;
     gy = (ScoreString[i].y >> 6) + 25;
@@ -241,13 +246,13 @@ static constexpr auto NR_EXCHAR_END = -1;
 static constexpr auto NR_EXCHAR_ERROR = -2;
 
 // 座標から選択文字を取得する //
-char GetAddr2Char(int x, int y) {
+static char GetAddr2Char(int x, int y) {
   // 大文字 //
   if (y == 0) {
     return ('A' + (x % 26));
   }
   // 小文字 //
-  else if (y == 1) {
+  if (y == 1) {
     return ('a' + (x % 26));
   }
   // その他記号など //
@@ -312,8 +317,11 @@ char GetAddr2Char(int x, int y) {
 void NameRegistProc(bool &) {
   // <- DemoInit() を修正するのだぞ
   PIXEL_LTRB src = {0, 0, 400, 64};
-  int gx, gy, len;
-  static int x, y;
+  int gx;
+  int gy;
+  int len;
+  static int x;
+  static int y;
   static int8_t key_time;
   static uint8_t count;
   static uint8_t time;
@@ -632,9 +640,8 @@ extern bool GameNextStage(void) {
   GameStage++;
 
   // エンディングに移行する //
-  if (GameStage >= STAGE_MAX) {
-    GameStage = STAGE_MAX; // 後で変更のこと
-  }
+  GameStage = std::min<int>(GameStage, STAGE_MAX); // 後で変更のこと
+  
 
   GameSTD_Init();
   MaidNextStage();
@@ -781,7 +788,7 @@ bool DemoInit(void) {
 }
 
 // 西方Ｐｒｏｊｅｃｔ表示動作部 //
-std::optional<LensInfo> Lens;
+static std::optional<LensInfo> Lens;
 
 void SProjectProc(bool &) {
   static uint16_t timer = 0;
@@ -803,7 +810,8 @@ void SProjectProc(bool &) {
   };
 
   constexpr PIXEL_LTRB rc = {0, 0, logo_size.w, logo_size.h};
-  int x, y;
+  int x;
+  int y;
 
   timer = timer + 1;
 
@@ -1091,7 +1099,9 @@ void DemoProc(bool &) {
 // 装備選択 //
 void WeaponSelectProc(bool &) {
   PIXEL_LTRB rc;
-  int i, x, y;
+  int i;
+  int x;
+  int y;
   char buf[100];
 
   static char deg = 0;

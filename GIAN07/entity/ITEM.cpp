@@ -3,6 +3,8 @@
 /*                                                                           */
 /*                                                                           */
 
+#include <utility>
+
 #include "entity/ITEM.h"
 #include "entity/item_manager.h"
 #include "game/GIAN.h"
@@ -46,7 +48,10 @@ void ItemSet(int x, int y, uint8_t type) {
 
 // アイテムを動かす //
 void ItemMove(void) {
-  int i, tx, ty, l;
+  int i;
+  int tx;
+  int ty;
+  int l;
 
   // 自機がこの高さより上にいる場合、アイテム自動回収
   constexpr int AUTO_COLLECT_Y = (120 * 64);
@@ -54,7 +59,7 @@ void ItemMove(void) {
   // point = 100+(Viv.evade)*100;
   const uint32_t point = ((((SY_MAX - Viv.y) >> 6) + (Viv.evade * 4)) * 160);
 
-  for (i = 0; i < ItemNow; i++) {
+  for (i = 0; std::cmp_less(i , ItemNow); i++) {
     auto *ip = &Item[ItemInd[i]];
     if (!Viv.bomb_time) {
       if (Viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
@@ -120,10 +125,13 @@ void ItemMove(void) {
 
 // アイテムを描画する //
 void ItemDraw(void) {
-  int i, j, x, y;
+  int i;
+  int j;
+  int x;
+  int y;
   PIXEL_LTRB src;
 
-  for (i = 0; i < ItemNow; i++) {
+  for (i = 0; std::cmp_less(i , ItemNow); i++) {
     auto *ip = &Item[ItemInd[i]];
     const uint8_t ptn = ((ip->count >> 2) & 3);
     switch (ip->type) {
