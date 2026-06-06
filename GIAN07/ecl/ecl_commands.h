@@ -5,7 +5,7 @@
  *   Decode() overloads (tag-dispatched via EclOpTag<Op>) handle endian
  *   conversion and byte offset calculation in one place.
  *
- *   CmdLength(op) returns the total byte length of an instruction (opcode
+ *   EclCmdLength(op) returns the total byte length of an instruction (opcode
  *   byte + parameters), replacing the old ECL_CmdLen[] table lookup.
  */
 
@@ -527,10 +527,10 @@ struct CmdJeq {
 }; // jump if equal
 
 // ===================================================================
-// CmdLength — constexpr instruction length lookup (replaces ECL_CmdLen[])
+// EclCmdLength — constexpr instruction length lookup (replaces ECL_CmdLen[])
 // ===================================================================
 
-constexpr uint8_t CmdLength(EclOp op) {
+constexpr uint8_t EclCmdLength(EclOp op) {
   switch (op) {
   // 0x0?: Control flow
   case EclOp::SETUP:
@@ -807,7 +807,7 @@ constexpr uint8_t CmdLength(EclOp op) {
 
 // Helper for no-parameter commands (length == 1)
 template <EclOp Op>
-  requires(CmdLength(Op) == 1)
+  requires(EclCmdLength(Op) == 1)
 inline auto Decode(EclOpTag<Op>, const uint8_t *) {
   return CmdEnd{}; // all 1-byte commands decode to empty struct
 }
