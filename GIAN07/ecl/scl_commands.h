@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ecl/SCL.h"
+#include "ecl/scl_opcodes.h"
 #include "game/endian.h"
 #include <cstdint>
 

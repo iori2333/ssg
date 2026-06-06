@@ -13,11 +13,17 @@
 // 敵の当たり判定チェック用関数 enemy_damage() を追加 2000/02/22 :
 // 敵のクリッピング範囲を変更した。
 
-#include "ecl/ECL.h"
+#include "ecl/ecl_opcodes.h"
 #include "ecl/ecl_vm.h"
 #include "entity/LASER.h"
 #include "entity/TAMA.h"
 #include "platform/buffer.h"
+
+//// 割り込みベクタ構造体 ////
+struct InterruptVector {
+  uint32_t vect; // 割り込みベクタ(0 なら無効)
+  int value;     // 比較値
+};
 
 //// 敵定数 ////
 inline constexpr uint16_t ENEMY_MAX = 50; // 敵の最大発生数

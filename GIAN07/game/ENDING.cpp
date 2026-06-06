@@ -4,7 +4,7 @@
  */
 
 #include "game/ENDING.h"
-#include "ecl/SCL.h" // ＳＣＬ定義ファイル
+#include "ecl/scl_opcodes.h" // SCL opcodes
 #include "game/GIAN.h"
 #include "game/bgm.h"
 #include "game/cast.h"

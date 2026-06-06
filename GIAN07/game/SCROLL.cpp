@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "game/SCROLL.h"
-#include "ecl/SCL.h" // ＳＣＬ定義ファイル
+#include "ecl/scl_opcodes.h" // SCL opcodes
 #include "ecl/scl_vm.h"
 #include "game/CONFIG.h"
 #include "game/DEMOPLAY.h"

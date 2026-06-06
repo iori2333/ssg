@@ -7,7 +7,6 @@
  */
 
 #include "ecl/ecl_vm.h"
-#include "ecl/ECL.h"
 #include "ecl/ecl_commands.h"
 #include "effect/EFFECT.h"
 #include "effect/EFFECT3D.h"
