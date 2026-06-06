@@ -69,15 +69,17 @@ inline constexpr auto SNDMAX_HLASER = 1;
 inline constexpr auto SNDMAX_TAMEFAST = 5;
 inline constexpr auto SNDMAX_WARP = 1;
 
-typedef struct tagFACE_DATA {
+struct FaceData {
   PALETTE pal; // 顔グラ用パレット
-} FACE_DATA;
+};
+using FACE_DATA = FaceData;
 
 // エンディングのグラフィック管理用 //
-typedef struct tagENDING_GRP {
+struct EndingGrp {
   PIXEL_LTRB rcTarget; // 矩形の範囲
   PALETTE pal;         // パレット
-} ENDING_GRP;
+};
+using ENDING_GRP = EndingGrp;
 
 ///// [ 関数 ] /////
 void LoaderInit(void);

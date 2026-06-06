@@ -49,16 +49,17 @@ inline constexpr auto SCNEFC_WHITEIN = 0x03; // ホワイトイン
 inline constexpr auto SCNEFC_WHITEOUT = 0x04; // ホワイトアウト
 
 ///// [構造体] /////
-typedef struct _tagCIRCLE_EFC_DATA {
+struct CircleEffectData {
   int x, y;       // 中心座標
   int r, rmax;    // 半径／最大半径
   uint32_t count; // カウンタ
   uint8_t type;   // 円エフェクトの種類
                   //	uint8_t	Level;	// 円エフェクトの段階
   uint8_t d;      // 円エフェクトの角度(謎)
-} CIRCLE_EFC_DATA;
+};
+using CIRCLE_EFC_DATA = CircleEffectData;
 
-typedef struct _tagSEFFECT_DATA {
+struct StringEffectData {
   int x, y;
   int vx, vy;
 
@@ -67,20 +68,23 @@ typedef struct _tagSEFFECT_DATA {
 
   uint8_t cmd;
   char c;
-} SEFFECT_DATA;
+};
+using SEFFECT_DATA = StringEffectData;
 
-typedef struct tagLOCKON_INFO {
+struct LockOnInfo {
   int *x, *y;        // ロック座標へのポインタ
   int width, height; // 幅＆高さ
   int vx, vy;        // 速度成分
   uint32_t count;    // カウンタ
   uint8_t state;     // 状態
-} LOCKON_INFO;
+};
+using LOCKON_INFO = LockOnInfo;
 
-typedef struct tagSCREENEFC_INFO {
+struct ScreenEffectState {
   uint8_t cmd;    // 発動中エフェクト
   uint32_t count; // エフェクトに対するカウンタ
-} SCREENEFC_INFO;
+};
+using SCREENEFC_INFO = ScreenEffectState;
 
 ///// [ 関数 ] /////
 void MTitleInit(void);  // Registers the music title rectangle
