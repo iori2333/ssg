@@ -100,7 +100,7 @@ void ScrollCommand(
 bool ScrollInit(void); // マップデータを初期化する
 
 ///// [ 変数 ] /////
-extern SCROLL_INFO ScrollInfo; // スクロールに関する情報
-extern SCL_INFO SclInfo;       // ＳＣＬに関する情報
-extern int SclKeyWaitCount;    // SCL_KEY frame counter
+extern ScrollState& ScrollInfo; // スクロールに関する情報
+extern SceneState& SclInfo;     // ＳＣＬに関する情報
+extern int& SclKeyWaitCount;    // SCL_KEY frame counter
 
