@@ -37,21 +37,14 @@ static void ECL_DEBUG(const char *s, auto param) {
 #endif
 }
 
-// 変数の実体 //
-BYTE_BUFFER_OWNED ECL_Head = nullptr;
-BYTE_BUFFER_OWNED SCL_Head = nullptr;
-uint8_t *SCL_Now = nullptr;
-std::array<EnemyData, ENEMY_MAX> Enemy;
-std::array<uint16_t, ENEMY_MAX> EnemyInd;
-uint16_t EnemyNow = 0;
-ANIME_DATA Anime[ANIME_MAX];
+// 変数の実体 → enemy_manager.cpp の EnemyManager に移動
+// 下記の参照が後方互換用:
+// Enemy, EnemyInd, EnemyNow, ECL_Head, SCL_Head, SCL_Now, Anime,
+// HomingX, HomingY, HomingFlag — enemy_manager.cpp で参照として定義
 
-int HomingX;    // ホーミング対象のＸ座標
-int HomingY;    // ホーミング対象のＹ座標
-int HomingFlag; // 真ならホーミング実行
-
-uint8_t EnemyEXDEG;   // 特殊角度の現在値
-uint8_t EnemyEXDEG_D; // 特殊角度の増分
+// 特殊角度（ENEMY.cpp 内でのみ使用）
+extern uint8_t EnemyEXDEG;
+extern uint8_t EnemyEXDEG_D;
 
 // 関数 //
 static void _EnemyDrawBomb(int x, int y, uint32_t count);

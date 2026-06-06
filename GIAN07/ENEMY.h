@@ -132,17 +132,17 @@ struct ANIME_DATA {
 };
 
 //// 敵変数 ////
-extern std::array<EnemyData, ENEMY_MAX> Enemy;
-extern BYTE_BUFFER_OWNED ECL_Head;
-extern BYTE_BUFFER_OWNED SCL_Head;
-extern uint8_t *SCL_Now;
-extern std::array<uint16_t, ENEMY_MAX> EnemyInd;
-extern uint16_t EnemyNow;
-extern ANIME_DATA Anime[ANIME_MAX];
+extern std::array<EnemyData, ENEMY_MAX>& Enemy;
+extern BYTE_BUFFER_OWNED& ECL_Head;
+extern BYTE_BUFFER_OWNED& SCL_Head;
+extern uint8_t*& SCL_Now;
+extern std::array<uint16_t, ENEMY_MAX>& EnemyInd;
+extern uint16_t& EnemyNow;
+extern ANIME_DATA (&Anime)[ANIME_MAX];
 
-extern int HomingX;    // ホーミング対象のＸ座標
-extern int HomingY;    // ホーミング対象のＹ座標
-extern int HomingFlag; // 真ならホーミング実行
+extern int& HomingX;    // ホーミング対象のＸ座標
+extern int& HomingY;    // ホーミング対象のＹ座標
+extern int& HomingFlag; // 真ならホーミング実行
 
 //// 敵制御関数 ////
 extern void enemy_move(void);   // 敵を動かす
