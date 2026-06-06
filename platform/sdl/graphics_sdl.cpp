@@ -10,7 +10,7 @@
 
 using SDL_COLOR = SDL_FColor;
 
-#include "constants.h"
+#include "game/constants.h"
 #include "game/defer.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"

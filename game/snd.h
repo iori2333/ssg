@@ -6,7 +6,7 @@
 #pragma once
 
 // ヘッダファイル //
-#include "constants.h"
+#include "GIAN07/game/constants.h"
 #include "game/enum_flags.h"
 #include "game/volume.h"
 #include "platform/buffer.h"

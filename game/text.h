@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "constants.h"
+#include "GIAN07/game/constants.h"
 #include "game/coords.h"
 #include "game/enum_array.h"
 #include "game/graphics.h"

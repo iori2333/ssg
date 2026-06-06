@@ -67,8 +67,12 @@ target_include_directories(dr_libs INTERFACE libs/dr_libs)
 
 # --- pbg original game code ---
 file(GLOB PBG_SRC CONFIGURE_DEPENDS
-    "GIAN07/*.cpp"
-    "GIAN07/*.CPP"
+    "GIAN07/ecl/*.cpp"
+    "GIAN07/enemy/*.cpp"
+    "GIAN07/entity/*.cpp"
+    "GIAN07/effect/*.cpp"
+    "GIAN07/game/*.cpp"
+    "GIAN07/ui/*.cpp"
 )
 
 # --- Modern game layer ---

@@ -12,7 +12,7 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
 
-#include "constants.h"
+#include "game/constants.h"
 #include "game/bgm.h"
 #include "game/frame.h"
 #include "game/graphics.h"
