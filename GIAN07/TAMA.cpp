@@ -11,16 +11,10 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-////グローバル変数////
-BulletCommand TamaCmd;                   // 標準・弾コマンド構造体
-std::array<Bullet, TAMA_MAX> Tama;       // 弾の格納用構造体
-std::array<uint16_t, TAMA_MAX> Tama1Ind; // 小型弾の順番を維持するための配列
-std::array<uint16_t, TAMA_MAX> Tama2Ind; // 特殊弾の順番を維持するための配列
-uint16_t Tama1Now;                       // 小型弾の弾数
-uint16_t Tama2Now;                       // 特殊弾の弾数
-uint16_t Tama1Max;                       // 小型弾の最大数
-uint16_t Tama2Max;                       // 特殊弾の最大数
-int TamaSpeed;
+////グローバル変数 → bullet_manager.cpp の BulletManager に移動
+// TamaCmd, Tama, Tama1Ind, Tama2Ind, Tama1Now/Max, Tama2Now/Max, TamaSpeed
+// は bullet_manager.cpp で参照として定義
+extern int& TamaSpeed;  // Bullets.speed への参照
 
 ////ローカルな関数////
 static void __TamaSet(void);

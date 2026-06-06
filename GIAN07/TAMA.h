@@ -150,16 +150,16 @@ using TAMA_CMD = BulletCommand;
 using TAMA_DATA = Bullet;
 
 ////弾の各種変数たち////
-extern BulletCommand TamaCmd;                // 標準・弾コマンド構造体
-extern std::array<Bullet, TAMA_MAX> Tama;    // 弾の格納用構造体
-extern std::array<uint16_t, TAMA_MAX>
+extern BulletCommand& TamaCmd;               // 標準・弾コマンド構造体
+extern std::array<Bullet, TAMA_MAX>& Tama;   // 弾の格納用構造体
+extern std::array<uint16_t, TAMA_MAX>&
     Tama1Ind; // 小型弾の順番を維持するための配列
-extern std::array<uint16_t, TAMA_MAX>
+extern std::array<uint16_t, TAMA_MAX>&
     Tama2Ind;             // 特殊弾の順番を維持するための配列
-extern uint16_t Tama1Now; // 小型弾の弾数
-extern uint16_t Tama2Now; // 特殊弾の弾数
-extern uint16_t Tama1Max; // 小型弾の最大数
-extern uint16_t Tama2Max; // 特殊弾の最大数
+extern uint16_t& Tama1Now; // 小型弾の弾数
+extern uint16_t& Tama2Now; // 特殊弾の弾数
+extern uint16_t& Tama1Max; // 小型弾の最大数
+extern uint16_t& Tama2Max; // 特殊弾の最大数
 
 ////弾関数////
 void tama_set(void);              // 弾をセットする(難易度による変更は"有り")
