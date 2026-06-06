@@ -13,11 +13,11 @@ inline constexpr auto EXBOMB_STD = 0;      // よくあるタイプの爆発(??)
 inline constexpr auto EXBOMB_OBJMAX = 200; // エフェクト補助用オブジェクトの個数
 
 /***** [構造体] *****/
-typedef struct tagSpObj {
+struct SpObj {
   int x, y;
   int vx, vy;
   uint8_t d;
-} SpObj;
+};
 
 struct BombEffectCtrl {
   int x, y;       // エフェクトの中心座標
