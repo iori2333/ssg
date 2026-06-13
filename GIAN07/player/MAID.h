@@ -94,7 +94,8 @@ private:
 using MAID = Player;
 
 ///// [ 変数 ] /////
-extern Player Viv; // 麗しきメイドさん = プレイヤーインスタンス
+// Viv → player_manager.cpp で参照として定義
+extern Player& Viv; // 麗しきメイドさん = プレイヤーインスタンス
 
 ///// [ 後方互換用関数ラッパー（段階的に廃止予定）] /////
 inline void MaidDraw()       { Viv.Draw(); }

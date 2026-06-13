@@ -26,8 +26,7 @@ typedef struct tagScrollSaveHeader {
   U32LE Length;     // このレイヤーの長さ
 } ScrollSaveHeader;
 
-// ScrollInfo, SclInfo → scroll_manager.cpp の Scroller に移動
-PIXEL_LTRB rcMapChip[1200]; // マップパーツＩＤに対する矩形
+// ScrollInfo, SclInfo, rcMapChip[] → scroll_manager.cpp の ScrollManager に移動
 
 static void enemy_set(void);             // 敵をセットする
 static void _PutEnemy(const uint8_t *p); // p:SCL_ENEMY以降の敵配置データ

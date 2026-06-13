@@ -6,6 +6,7 @@
 #include "CONFIG.h"
 #include "ENTRY.h"
 #include "gameflow/GAMEMAIN.h"
+#include "gameflow/gameflow_manager.h"
 #include "LOADER.h"
 #include "game/bgm.h"
 #include "game/debug.h"

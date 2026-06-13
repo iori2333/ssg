@@ -10,6 +10,8 @@ LaserManager Lasers;
 // --- 後方互換用参照ラッパー ---
 LaserCommand& LaserCmd = Lasers.cmd;
 uint16_t& LaserNow = Lasers.count;
+std::array<LASER_DATA, LASER_MAX>& Laser = Lasers.lasers;
+std::array<uint16_t, LASER_MAX>& LaserInd = Lasers.laser_indices;
 
 std::array<LongLaserData, LLASER_MAX>& LLaser = Lasers.long_lasers;
 LongLaserCommand& LLaserCmd = Lasers.long_cmd;

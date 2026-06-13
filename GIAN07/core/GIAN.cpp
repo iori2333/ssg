@@ -12,11 +12,8 @@
 ///// [グローバル変数] /////
 // HIGH_SCORE		*HighScore;
 // char			ScoreTable[8][80];
-uint32_t GameCount;
-uint8_t GameStage;
-uint8_t GameLevel;
-
-extern MAID Viv;
+// GameCount, GameStage, GameLevel → game_manager.cpp の GameManager に移動
+// Viv → player_manager.cpp の PlayerManager に移動（MAID.h で Player& として宣言）
 
 ///// [ 関数(非公開) ] /////
 extern void StdStatusOutput(void) {

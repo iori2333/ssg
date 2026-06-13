@@ -19,7 +19,9 @@
 #include "effect/EFFECT.h"    // 主にテキストベースのエフェクト処理
 #include "effect/EFFECT3D.h"  // ３Ｄエフェクト
 #include "effect/FRAGMENT.h"  // 破片系エフェクト処理
+#include "effect/effect_manager.h" // Effects 参照宣言
 #include "gameflow/GAMEMAIN.h"  // メインのルーチン切り替え処理
+#include "gameflow/gameflow_manager.h" // GameMain, DemoTimer, ... 参照宣言
 #include "bullet/HOMINGL.h"   // ホーミングレーザーの処理
 #include "bullet/LASER.h"     // 短いレーザー＆リフレクトレーザー処理
 #include "bullet/LLASER.h"    // なが～いレーザーの処理
@@ -31,6 +33,7 @@
 
 #include "game/ut_math.h" // for rnd()
 #include "player/ITEM.h" // アイテム処理
+#include "game_manager.h" // GameCount, GameStage, GameLevel, IsDemoplay
 
 ///// [ 定数 ] /////
 
@@ -113,8 +116,6 @@ typedef struct tagHIGH_SCORE{
 ///// [グローバル変数] /////
 // extern HIGH_SCORE	*HighScore;
 // extern char			ScoreTable[8][80];
-extern uint32_t GameCount;
-extern uint8_t GameStage;
-extern uint8_t GameLevel;
+// GameCount, GameStage, GameLevel, IsDemoplay → game_manager.h で参照として宣言
 
 void StdStatusOutput(void);

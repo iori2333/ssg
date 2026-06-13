@@ -7,14 +7,17 @@
 #include <cstdint>
 
 struct GameManager {
-  static GameManager& Instance();
-
   // --- ゲームフロー状態 ---
   uint32_t game_count = 0;
   uint8_t game_stage = 0;
   uint8_t game_level = 0;
   bool is_demoplay = false;
-
-private:
-  GameManager() = default;
 };
+
+extern GameManager GameState;
+
+// --- 後方互換用参照 ---
+extern uint32_t& GameCount;
+extern uint8_t& GameStage;
+extern uint8_t& GameLevel;
+extern bool& IsDemoplay;

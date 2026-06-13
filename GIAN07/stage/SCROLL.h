@@ -5,7 +5,9 @@
 
 #pragma once
 
+#include "game/coords.h"
 #include "platform/buffer.h"
+#include <array>
 
 ///// [更新履歴] /////
 // 2000/04/01 : スクロールコマンドを追加(STAGE2_BOSS)
@@ -103,4 +105,5 @@ bool ScrollInit(void); // マップデータを初期化する
 extern ScrollState& ScrollInfo; // スクロールに関する情報
 extern SceneState& SclInfo;     // ＳＣＬに関する情報
 extern int& SclKeyWaitCount;    // SCL_KEY frame counter
+extern std::array<PIXEL_LTRB, 1200>& rcMapChip; // マップパーツＩＤに対する矩形
 

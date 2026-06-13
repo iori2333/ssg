@@ -17,11 +17,12 @@
 ///// [構造体] /////
 
 ///// [グローバル変数] /////
-extern bool IsDemoplay;
+// IsDemoplay → game_manager.h で extern bool& として再宣言
+// GameMain, DemoTimer, DrawCount, WeaponKeyWait, GameOverTimer,
+// CurrentName, CurrentRank, CurrentDif, VivTemp, InputLocked, FlashState
+// → gameflow_manager.h で参照として宣言
 
 ///// [関数] /////
-// ゲーム進行用関数ポインタ(WinMainからコールする)
-extern void (*GameMain)(bool &quit);
 
 bool WeaponSelectInit(bool ExStg);
 bool GameInit(void (*NextProc)(bool &quit)); // ゲームの初期化をする

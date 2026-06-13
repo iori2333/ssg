@@ -12,15 +12,8 @@
 #include "game/ut_math.h"
 #include "platform/text_backend.h"
 
-SEFFECT_DATA SEffect[SEFFECT_MAX];
-CIRCLE_EFC_DATA CEffect[CIRCLE_EFC_MAX];
-LOCKON_INFO LockInfo[LOCKON_MAX];
-SCREENEFC_INFO ScreenInfo;
-TEXTRENDER_RECT_ID MTitleRect;
-
-// Print the ♪ separately, since it can be combined with a music title in
-// any encoding.
-Narrow::string_view MTitleStrs[2] = {"♪ "};
+// SEffect[], CEffect[], LockInfo[], ScreenInfo, MTitleRect, MTitleStrs[]
+// → effect_manager.cpp の EffectManager に移動
 
 extern void CircleFadeOut(int x, int y, int r);
 
@@ -678,8 +671,7 @@ void ObjectLockDraw(void) {
   }
 }
 
-bool bEnableWarnEfc = false;
-uint16_t WarnEfcTime = 0;
+// bEnableWarnEfc, WarnEfcTime → effect_manager.cpp の EffectManager に移動
 
 // ワーニングの初期化 //
 void WarningEffectInit(void) { bEnableWarnEfc = false; }

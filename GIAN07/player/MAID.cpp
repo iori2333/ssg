@@ -16,7 +16,7 @@
 #include "game/snd.h"
 #include "game/ut_math.h"
 
-Player Viv; // プレイヤーインスタンス
+// Viv → player_manager.cpp の PlayerManager に移動
 
 // --- Player メソッド実装 ---
 

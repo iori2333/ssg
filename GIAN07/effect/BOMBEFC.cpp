@@ -3,6 +3,7 @@
  *
  */
 #include "BOMBEFC.h"
+#include "effect_manager.h"
 #include "LOADER.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
@@ -10,7 +11,7 @@
 #include <array>
 #include <ranges>
 
-BombEfcCtrl BombEfc[EXBOMB_MAX];
+// BombEfc[] → effect_manager.cpp の EffectManager に移動
 
 // 秘密の関数 //
 void _ExBombSTDInit(BombEfcCtrl *p);
@@ -42,7 +43,7 @@ void ExBombEfcSet(int x, int y, uint8_t type) {
 
   switch (type) {
   case EXBOMB_STD:
-    _ExBombSTDInit(p);
+    _ExBombSTDInit(&*p);
     break;
 
   default:

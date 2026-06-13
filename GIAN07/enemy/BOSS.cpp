@@ -15,8 +15,7 @@
 
 ///// [ 定数 ] /////
 
-// 最大数 //
-static constexpr auto BOSS_MAX = 4; // ボスの最大出現数(二匹以上出るのか？？)
+// BOSS_MAX, BOSSHPG_HEIGHT → BOSS.h に移動
 
 // ボスの状態 //
 static constexpr auto BEXST_NORM = 0x00; // 通常のＥＣＬで動作中
@@ -28,7 +27,7 @@ static constexpr auto BEXST_SHILD2 = 0x05; // シールド２
 
 // 体力ゲージ編 //
 static constexpr auto BOSSHPG_WIDTH = 256; // 体力ゲージの幅
-static constexpr auto BOSSHPG_HEIGHT = 24; // 体力ゲージの高さ
+// BOSSHPG_HEIGHT → BOSS.h に移動
 static constexpr auto BOSSHPG_START_X = X_MAX; // 体力ゲージの初期Ｘ
 static constexpr auto BOSSHPG_END_X = 260; // 体力ゲージの最終Ｘ
 
@@ -41,25 +40,11 @@ static constexpr auto BHPG_OPEN3 = 0x05; // 体力ゲージを更新する
 
 ///// [構造体] /////
 
-// ボスの体力ゲージ //
-typedef struct tagBOSSHPG_INFO {
-  uint32_t Now, Max; // 体力の現在値＆最大値
-  uint32_t Next;     // 次の体力の値
-  uint32_t Update;   // 更新用の値
-  uint32_t Count;    // フレーム数保持
-
-  uint16_t XTemp[BOSSHPG_HEIGHT]; // ＨＰゲージの演出用
-  uint8_t State;                  // 状態
-} BOSSHPG_INFO;
+// BOSSHPG_INFO → BOSS.h に移動
 
 ///// [ 変数 ] /////
 
-// 公開グローバル //
-BOSS_DATA Boss[BOSS_MAX]; // ボスデータ格納用構造体
-uint16_t BossNow;         // 現在のボスの数
-
-// 秘密のグローバル //
-BOSSHPG_INFO BossHPG; // 体力ゲージ保持用
+// Boss[], BossNow, BossHPG → boss_manager.cpp の BossManager に移動
 
 // 秘密の関数 //
 static void BossHPG_Open(uint32_t max);    // ボスの体力ゲージをオープンする
@@ -753,7 +738,7 @@ static int PutBoss(int x, int y, uint32_t id) {
   // 割り込みベクタの初期化 //
   InitECLInterrupt(e);
 */
-  return std::distance(Boss, it);
+  return std::distance(std::begin(Boss), it);
 }
 
 // ノーマルECL互換の移動 //
@@ -810,7 +795,7 @@ void BossINT(ENEMY_DATA *e, uint8_t IntID) {
   // 割り込み番号による分岐 //
   switch (IntID) {
   case (ECLINT_SNAKEON):
-    SnakySet(b, 30, 11);
+    SnakySet(&*b, 30, 11);
     break;
 
   case (ECLINT_LBWING01): // 蝶の羽も描画する
@@ -824,11 +809,11 @@ void BossINT(ENEMY_DATA *e, uint8_t IntID) {
     break;
 
   case (ECLINT_BITON5):
-    BitSet(b, 5, 3);
+    BitSet(&*b,5, 3);
     break;
 
   case (ECLINT_BITON6):
-    BitSet(b, 6, 3);
+    BitSet(&*b,6, 3);
     break;
 
   case (ECLINT_SHILD1):
@@ -843,7 +828,7 @@ void BossINT(ENEMY_DATA *e, uint8_t IntID) {
 
 // ビット攻撃アドレス指定 //
 void BossBitAttack(ENEMY_DATA *e, uint32_t AtkID) {
-  const auto *b = std::ranges::find_if(
+  const auto b = std::ranges::find_if(
       Boss, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(Boss)) {
     return;
@@ -854,7 +839,7 @@ void BossBitAttack(ENEMY_DATA *e, uint32_t AtkID) {
 
 // ビットにレーザーコマンドセット //
 void BossBitLaser(ENEMY_DATA *e, uint8_t cmd) {
-  const auto *b = std::ranges::find_if(
+  const auto b = std::ranges::find_if(
       Boss, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(Boss)) {
     return;
@@ -865,7 +850,7 @@ void BossBitLaser(ENEMY_DATA *e, uint8_t cmd) {
 
 // ビット命令送信 //
 void BossBitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param) {
-  const auto *b = std::ranges::find_if(
+  const auto b = std::ranges::find_if(
       Boss, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(Boss)) {
     return;

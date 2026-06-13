@@ -9,21 +9,8 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-static constexpr auto CIRCLE_MAX = 40;
-static constexpr auto CUBE_MAX = 8;
-static constexpr auto STAR_MAX = 40;
-static constexpr auto FAKE_ECLSTR_MAX = 80;
-static constexpr auto ROCK_MAX = 28;
-// #define CLOUD_MAX			10
-
-Circle3D Cir[CIRCLE_MAX];
-Cube3D Cube[CUBE_MAX];
-Star2D Star[STAR_MAX];
-Rock3D Rock[ROCK_MAX];
-// Cloud2D		Cloud[CLOUD_MAX];
-
-WFLine2D WFLine;
-FakeECLString FakeECLStr[FAKE_ECLSTR_MAX];
+// CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h に移動
+// Cir[], Cube[], Star[], Rock[], WFLine, FakeECLStr[] → effect_manager.cpp に移動
 
 #define _ PIXEL_POINT
 
@@ -786,25 +773,8 @@ void SendCmdStg4Rock(uint8_t Cmd, uint8_t Param) {
   }
 }
 
-static constexpr auto S6RASTER_MAX = 28;
-static constexpr auto S6STAR_MAX = 60;
-static constexpr auto S3STAR_MAX = 180;
-
-typedef struct tagStg6Raster {
-  int x, y;     // 表示座標
-  char vy;      //
-  uint8_t type; // 種類(0-2)
-  uint8_t deg;  // 基準角度
-  uint8_t amp;  // 振幅
-} Stg6Raster;
-
-typedef struct tagStg6Star {
-  int x, y;
-  int vy;
-} Stg6Star;
-
-Stg6Raster S6Ras[S6RASTER_MAX];
-Stg6Star S6Star[S3STAR_MAX]; // 兼用モノなのだ
+// S6RASTER_MAX, S6STAR_MAX, S3STAR_MAX, Stg6Raster, Stg6Star → effect_manager.h に移動
+// S6Ras[], S6Star[] → effect_manager.cpp に移動
 
 // ６面ラスター初期化 //
 void InitStg6Raster() {

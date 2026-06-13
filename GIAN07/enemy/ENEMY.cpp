@@ -37,9 +37,7 @@ static void ECL_DEBUG(const char *s, auto param) {
 // Enemy, EnemyInd, EnemyNow, ECL_Head, SCL_Head, SCL_Now, Anime,
 // HomingX, HomingY, HomingFlag — enemy_manager.cpp で参照として定義
 
-// 特殊角度（ENEMY.cpp 内でのみ使用）
-extern uint8_t EnemyEXDEG;
-extern uint8_t EnemyEXDEG_D;
+// EnemyEXDEG, EnemyEXDEG_D → enemy_manager.cpp の EnemyManager に移動
 
 // 関数 //
 static void _EnemyDrawBomb(int x, int y, uint32_t count);

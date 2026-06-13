@@ -66,18 +66,9 @@ void Render(PIXEL_COORD top) {
 }
 }; // namespace Version
 
-uint16_t DemoTimer = 0;
-uint32_t DrawCount = 0;
-uint8_t WeaponKeyWait = 0;
-int GameOverTimer = 0;
-
-NR_NAME_DATA CurrentName; // ネームレジスト準備用データ
-uint8_t CurrentRank;      // ネームレジスト用順位データ
-uint8_t CurrentDif;       // 現在の難易度(スコアネーム表示用)
-
-MAID VivTemp;
-
-bool IsDemoplay = false;
+// DemoTimer, DrawCount, WeaponKeyWait, GameOverTimer, CurrentName,
+// CurrentRank, CurrentDif, VivTemp, IsDemoplay, InputLocked
+// → gameflow_manager.cpp の GameFlowManager に移動
 
 void TitleProc(bool &quit);
 void WeaponSelectProc(bool &); // 装備選択
@@ -105,13 +96,16 @@ bool IsDraw(void);
 
 void ScoreDraw(void); // スコアの描画
 
-void (*GameMain)(bool &quit) = TitleProc;
+// GameMain 参照（gameflow_manager.cpp で定義）に TitleProc を代入
+// この代入は動的初期化時に行う必要があるため、ここで明示的に設定
+struct GameMainInit { GameMainInit() { GameMain = TitleProc; } };
+static GameMainInit _game_main_init;
 
 uint8_t CurrentLevel() {
   return ((GameStage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameLevel);
 }
 
-bool InputLocked;
+// InputLocked → gameflow_manager.cpp の GameFlowManager に移動
 
 // スコアネーム表示の準備を行う //
 extern bool ScoreNameInit(void) {

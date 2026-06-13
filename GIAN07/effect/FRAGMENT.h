@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 //// 破片定数 ////
@@ -31,7 +32,9 @@ struct FragmentData {
 using FRAGMENT_DATA = FragmentData;
 
 //// 破片用変数 ////
-extern FRAGMENT_DATA Fragment[FRAGMENT_MAX];
+// Fragment[], FragmentPtr → effect_manager.cpp で参照として定義
+extern std::array<FRAGMENT_DATA, FRAGMENT_MAX>& Fragment;
+extern int& FragmentPtr;
 
 //// 破片関数 ////
 void fragment_set(int x, int y, uint8_t cmd);

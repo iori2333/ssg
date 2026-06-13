@@ -27,6 +27,10 @@ struct EnemyManager {
   int homing_x = 0;              // HomingX
   int homing_y = 0;              // HomingY
   int homing_flag = 0;           // HomingFlag
+
+  // --- 特殊角度（ENEMY.cpp 内で使用）---
+  uint8_t enemy_exdeg = 0;       // EnemyEXDEG
+  uint8_t enemy_exdeg_d = 0;     // EnemyEXDEG_D
 };
 
 extern EnemyManager Enemies;

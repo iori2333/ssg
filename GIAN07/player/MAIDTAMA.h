@@ -36,9 +36,8 @@ void MaidTamaDraw(void);   // ナニな弾描画
 void MaidTamaIndSet(void); // 弾ハッシュテーブル初期化
 
 ///// [ 変数 ] /////
-extern std::array<TAMA_DATA, MAIDTAMA_MAX>
-    MaidTama; // 自機ショットの格納用構造体
-extern std::array<uint16_t, MAIDTAMA_MAX>
-    MaidTamaInd;             // 弾の順番を維持するための配列(TAMA.CPP互換)
-extern uint16_t MaidTamaNow; // 現在の数
+// MaidTama[], MaidTamaInd[], MaidTamaNow → player_manager.cpp で参照として定義
+extern std::array<TAMA_DATA, MAIDTAMA_MAX>& MaidTama;
+extern std::array<uint16_t, MAIDTAMA_MAX>& MaidTamaInd;
+extern uint16_t& MaidTamaNow;
 

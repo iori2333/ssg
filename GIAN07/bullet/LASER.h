@@ -6,6 +6,7 @@
 #pragma once
 
 #include "game/coords.h"
+#include "platform/graphics_backend.h"
 #include <cstdint>
 
 ///// [更新履歴] /////
@@ -50,6 +51,33 @@ struct LaserCommand {
 };
 using LASER_CMD = LaserCommand;
 
+////レーザー用構造体////
+inline constexpr auto LF_DELETE = 0x80; // レーザーを消去する(処理対象から外す)
+
+struct LASER_DATA {
+  int x, y;   // 現在の始点
+  int vx, vy; // 速度の(X,Y)成分
+  int lx, ly; // 表示座標の加算値(長さ)
+  int wx, wy; // 表示座標の加算値(太さ)
+  int v;      // 速度
+
+  VERTEX_XY p[4]; // 表示する座標
+
+  char a;    // 加速度(つかうのか??)
+  uint8_t d; // 進行方向
+
+  int w, wmax; // 太さ
+  int l, lmax; // 現在の長さ、長さの最終値
+  int ltemp;   // 反射レーザー専用変数(発射＆ヒットの場合にのみ使用)
+
+  uint16_t count; // フレームカウンタ
+  uint8_t c;      // 色
+  uint8_t type;   // 種類
+  uint8_t flag;   // 消去要請フラグ等(エフェクト含む)
+  uint8_t notr;   // 反射しないリフレクターの番号
+  uint8_t evade;  // かすり用フラグ
+};
+
 /*
 ////反射物(鏡?) 構造体////
 typedef struct{
@@ -73,6 +101,8 @@ void laserind_set(void); // レーザー順序用配列の初期化
 ////レーザーの各種変数たち////
 extern LaserCommand& LaserCmd; // 標準レーザーコマンド構造体
 extern uint16_t& LaserNow;     // レーザーの本数
+extern std::array<LASER_DATA, LASER_MAX>& Laser;    // レーザー格納用構造体
+extern std::array<uint16_t, LASER_MAX>& LaserInd;   // レーザー順番維持用配列
 // extern REFLECTOR	Reflector[RT_MAX];		// 反射物構造体
 // extern uint16_t	ReflectorNow;	// 反射物の個数
 

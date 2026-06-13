@@ -75,7 +75,7 @@ const PIXEL_LTRB StaffMember[7] = {{0, 168, 72, 192},    {96, 168, 168, 192},
                                    {0, 216, 336, 264}};
 
 // フラッシュの状態 //
-uint16_t FlashState = 0;
+// FlashState → gameflow_manager.cpp の GameFlowManager に移動
 
 void UpdateGrpInfo(); // グラフィックの更新(内部データ)
 void UpdateStfInfo(); // スタッフの更新(内部データ)

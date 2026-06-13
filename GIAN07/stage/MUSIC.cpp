@@ -10,6 +10,7 @@
 #include "EFFECT.h"
 #include "FONTUTY.h"
 #include "GAMEMAIN.h"
+#include "gameflow/gameflow_manager.h"
 #include "LOADER.h"
 #include "MUSIC.h"
 #include "game/bgm.h"

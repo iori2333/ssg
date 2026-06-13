@@ -6,6 +6,8 @@
 #pragma once
 
 #include "ENEMY.h"
+#include <array>
+#include <cstdint>
 
 ///// [構造体] /////
 
@@ -27,6 +29,21 @@ struct BossData {
   uint8_t IsUsed;   // このデータは使用されているか(非ゼロなら使用されている)
 };
 using BOSS_DATA = BossData;
+
+///// [ 定数 ] /////
+inline constexpr auto BOSS_MAX = 4; // ボスの最大出現数
+inline constexpr auto BOSSHPG_HEIGHT = 24; // 体力ゲージの高さ
+
+// ボスの体力ゲージ //
+typedef struct tagBOSSHPG_INFO {
+  uint32_t Now, Max; // 体力の現在値＆最大値
+  uint32_t Next;     // 次の体力の値
+  uint32_t Update;   // 更新用の値
+  uint32_t Count;    // フレーム数保持
+
+  uint16_t XTemp[BOSSHPG_HEIGHT]; // ＨＰゲージの演出用
+  uint8_t State;                  // 状態
+} BOSSHPG_INFO;
 
 ///// [ 関数 ] /////
 void BossDataInit(
@@ -58,4 +75,7 @@ void BossBitLaser(ENEMY_DATA *e,
 void BossBitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param); // ビット命令送信
 
 ///// [ 変数 ] /////
-extern uint16_t BossNow; // 現在のボスの数
+// Boss[], BossNow, BossHPG → boss_manager.cpp で参照として定義
+extern std::array<BOSS_DATA, BOSS_MAX>& Boss;
+extern uint16_t& BossNow;
+extern BOSSHPG_INFO& BossHPG;

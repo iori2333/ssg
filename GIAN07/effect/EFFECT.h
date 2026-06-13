@@ -6,6 +6,7 @@
 #pragma once
 
 #include "game/narrow.h"
+#include <array>
 #include <cstdint>
 
 ///// [更新履歴] /////
@@ -122,8 +123,14 @@ void GrpDrawSpect(int x, int y); // スペアナ描画
 void GrpDrawNote(void);          // 押されているところを表示
 
 ///// [ 変数 ] /////
-extern SEFFECT_DATA SEffect[SEFFECT_MAX];
-extern CIRCLE_EFC_DATA CEffect[CIRCLE_EFC_MAX];
-extern LOCKON_INFO LockInfo[LOCKON_MAX];
-extern SCREENEFC_INFO ScreenInfo;
+// SEffect[], CEffect[], LockInfo[], ScreenInfo, MTitleRect,
+// bEnableWarnEfc, WarnEfcTime → effect_manager.cpp で参照として定義
+extern std::array<SEFFECT_DATA, SEFFECT_MAX>& SEffect;
+extern std::array<CIRCLE_EFC_DATA, CIRCLE_EFC_MAX>& CEffect;
+extern std::array<LOCKON_INFO, LOCKON_MAX>& LockInfo;
+extern SCREENEFC_INFO& ScreenInfo;
+extern unsigned int& MTitleRect;  // TEXTRENDER_RECT_ID
+extern Narrow::string_view (&MTitleStrs)[2];
+extern bool& bEnableWarnEfc;
+extern uint16_t& WarnEfcTime;
 

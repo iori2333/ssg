@@ -11,3 +11,4 @@ ScrollManager Scroller;
 ScrollState& ScrollInfo = Scroller.scroll;
 SceneState& SclInfo = Scroller.scene;
 int& SclKeyWaitCount = Scroller.key_wait_count;
+std::array<PIXEL_LTRB, 1200>& rcMapChip = Scroller.map_chip_rects;

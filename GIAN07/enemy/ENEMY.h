@@ -139,6 +139,8 @@ extern uint8_t*& SCL_Now;
 extern std::array<uint16_t, ENEMY_MAX>& EnemyInd;
 extern uint16_t& EnemyNow;
 extern ANIME_DATA (&Anime)[ANIME_MAX];
+extern uint8_t& EnemyEXDEG;
+extern uint8_t& EnemyEXDEG_D;
 
 extern int& HomingX;    // ホーミング対象のＸ座標
 extern int& HomingY;    // ホーミング対象のＹ座標

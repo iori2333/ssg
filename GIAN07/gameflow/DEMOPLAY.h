@@ -68,10 +68,15 @@ bool DemoplayLoadReplayAll(const char8_t *fn);
 bool DemoplayHasRecordedStages(void);
 
 ///// [ 変数 ] /////
-extern bool DemoplayLoadEnable;    // リプレイのロードが動作しているか
-extern bool DemoplaySaveAllEnable; // Multi-stage recording active
-extern bool DemoplayLoadAllEnable; // Multi-stage playback active
-extern MULTI_REPLAY_INFO MultiPlayInfo;
-extern uint8_t PlaybackMaxStage;
-extern std::u8string PendingReplayFile;
+// DemoplayLoadEnable, DemoplaySaveAllEnable, DemoplayLoadAllEnable,
+// MultiPlayInfo, PlaybackMaxStage, PendingReplayFile, DemoInfo, DemoBuffer
+// → demo_manager.cpp で参照として定義
+extern bool& DemoplayLoadEnable;
+extern bool& DemoplaySaveAllEnable;
+extern bool& DemoplayLoadAllEnable;
+extern MULTI_REPLAY_INFO& MultiPlayInfo;
+extern uint8_t& PlaybackMaxStage;
+extern std::u8string& PendingReplayFile;
+extern DEMOPLAY_INFO& DemoInfo;
+extern std::array<INPUT_BITS, DEMOBUF_MAX>& DemoBuffer;
 

@@ -9,8 +9,7 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-FRAGMENT_DATA Fragment[FRAGMENT_MAX]; // 破片データ管理用構造体
-int FragmentPtr = 0;                  // 次に破片データを挿入する位置
+// Fragment[], FragmentPtr → effect_manager.cpp の EffectManager に移動
 
 static void _FDraw(const FRAGMENT_DATA *f);
 
@@ -18,11 +17,11 @@ void fragment_set(int x, int y, uint8_t cmd) {
   int i;
   int l;
   uint8_t d;
-  FRAGMENT_DATA *f = Fragment + FragmentPtr;
+  FRAGMENT_DATA *f = Fragment.data() + FragmentPtr;
 
   if (cmd == FRG_ESCAPE) {
     for (i = 0; i < FRAGMENT_MAX; i++) {
-      f = Fragment + i;
+      f = Fragment.data() + i;
       if (f->count) {
         f->vx = ((f->x - x) / 16); // f->count;
         f->vy = ((f->y - y) / 16); // f->count;
@@ -30,7 +29,7 @@ void fragment_set(int x, int y, uint8_t cmd) {
     }
   } else if (cmd == FRG_APPROACH) {
     for (i = 0; i < FRAGMENT_MAX; i++) {
-      f = Fragment + i;
+      f = Fragment.data() + i;
       if (f->count) {
         f->vx = (x - f->x) / f->count;
         f->vy = (x - f->y) / f->count;

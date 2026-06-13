@@ -59,10 +59,7 @@ static void SetHomingBomb(void);
 static void SetLaserBomb(void);
 static void SetCactusBomb(void);
 
-std::array<TAMA_DATA, MAIDTAMA_MAX> MaidTama; // 自機ショットの格納用構造体
-std::array<uint16_t, MAIDTAMA_MAX>
-    MaidTamaInd;      // 弾の順番を維持するための配列(TAMA.CPP互換)
-uint16_t MaidTamaNow; // 現在の数
+// MaidTama[], MaidTamaInd[], MaidTamaNow → player_manager.cpp の PlayerManager に移動
 
 constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     // MainWeapon		// SubWeapon
