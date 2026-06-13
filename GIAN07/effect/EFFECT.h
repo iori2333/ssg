@@ -88,49 +88,10 @@ struct ScreenEffectState {
 using SCREENEFC_INFO = ScreenEffectState;
 
 ///// [ 関数 ] /////
-void MTitleInit(void);  // Registers the music title rectangle
-void SEffectInit(void); // エフェクトの初期化を行う
-void StringEffect(int x, int y,
-                  const char *s); // 文字列系エフェクト(上に表示する奴)
-void StringEffect2(int x, int y, uint32_t point); // 得点表示エフェクト
-void StringEffect3(void);                         // ゲームオーバーの表示
-void SetMusicTitle(int y, Narrow::string_view s); // 曲名の表示
-
-void SEffectMove(void); // エフェクトを動かす(仕様変更の可能性があります)
-void SEffectDraw(void); // エフェクトを描画する(仕様変更の可能性があります)
-
-void CEffectInit(void);                      // 円エフェクトの初期化
-void CEffectMove(void);                      // 円エフェクトを動かす
-void CEffectDraw(void);                      // 円エフェクトを描画する
-void CEffectSet(int x, int y, uint8_t type); // 円エフェクトをセットする
-
-void ScreenEffectInit(void);       // 画面全体に対するエフェクトの初期化
-void ScreenEffectSet(uint8_t cmd); // 画面全体に対するエフェクトをセットする
-void ScreenEffectMove(void);       // 画面全体に対するエフェクトを動かす
-void ScreenEffectDraw(void);       // 画面全体に対するエフェクトを描画する
-
-void WarningEffectInit(void); // ワーニングの初期化
-void WarningEffectSet(void);  // ワーニング発動！！
-void WarningEffectMove(void); // ワーニングの動作
-void WarningEffectDraw(void); // ワーニングの描画
-
-void ObjectLockOnInit(void);                           // ロックオン配列を初期化
-void ObjectLockOn(int *x, int *y, int wx64, int hx64); // 何かをロックオンする
-void ObjectLockMove(void); // ロックオンアニメーション動作
-void ObjectLockDraw(void); // ロックオン枠描画
-
-void GrpDrawSpect(int x, int y); // スペアナ描画
-void GrpDrawNote(void);          // 押されているところを表示
+// 後方互換 inline wrapper は effect_manager.h の末尾に移動
+void GrpDrawSpect(int x, int y); // スペアナ描画 (MUSIC.cpp)
+void GrpDrawNote(void);          // 押されているところを表示 (MUSIC.cpp)
 
 ///// [ 変数 ] /////
-// SEffect[], CEffect[], LockInfo[], ScreenInfo, MTitleRect,
-// bEnableWarnEfc, WarnEfcTime → effect_manager.cpp で参照として定義
-extern std::array<SEFFECT_DATA, SEFFECT_MAX>& SEffect;
-extern std::array<CIRCLE_EFC_DATA, CIRCLE_EFC_MAX>& CEffect;
-extern std::array<LOCKON_INFO, LOCKON_MAX>& LockInfo;
-extern SCREENEFC_INFO& ScreenInfo;
-extern unsigned int& MTitleRect;  // TEXTRENDER_RECT_ID
-extern Narrow::string_view (&MTitleStrs)[2];
-extern bool& bEnableWarnEfc;
-extern uint16_t& WarnEfcTime;
+// 全エフェクト変数 → Effects.xxx で直接アクセス（effect_manager.h 参照）
 

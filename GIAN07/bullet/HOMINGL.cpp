@@ -6,6 +6,7 @@
 #include "GEOMETRY.h"
 #include "GIAN.h"
 #include "HOMINGL.h"
+#include "laser_manager.h"
 #include "MAID.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
@@ -13,12 +14,9 @@
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
-// HLaserNow, HLaserCmd, HLaserBuf, ActiveHL, FreeHL → laser_manager.cpp に移動
+// HLaserNow はクロスモジュールのため extern を維持
 extern uint16_t& HLaserNow;
-extern HomingLaserInfo& HLaserCmd;
-extern std::array<HomingLaserData, HLASER_MAX>& HLaserBuf;
-extern HomingLaserData& ActiveHL;
-extern HomingLaserData& FreeHL;
+// Lasers.homing_cmd, Lasers.homing_buf, Lasers.active, Lasers.free_list → laser_manager.h 経由で直接アクセス
 
 ///// [マクロ] /////
 constexpr int HLASER_GETNEXT(int current) {
@@ -38,14 +36,14 @@ void HLaserInit(void) {
 
   HLaserNow = 0;
 
-  ActiveHL.Next = nullptr;
-  FreeHL.Next = HLaserBuf.data();
+  Lasers.active.Next = nullptr;
+  Lasers.free_list.Next = Lasers.homing_buf.data();
 
   for (i = 0; i < HLASER_MAX - 2; i++) {
-    HLaserBuf[i].Next = &HLaserBuf[i + 1];
+    Lasers.homing_buf[i].Next = &Lasers.homing_buf[i + 1];
   }
 
-  HLaserBuf[HLASER_MAX - 1].Next = nullptr;
+  Lasers.homing_buf[HLASER_MAX - 1].Next = nullptr;
 }
 
 // ホーミングレーザーをセットする //
@@ -56,15 +54,15 @@ void HLaserSet(const HLaserInfo *hinfo) {
 
   // 1-n としているのは、角度設定のためね... //
   for (i = 1; i <= (hinfo->n); i++) {
-    p = FreeHL.Next;
+    p = Lasers.free_list.Next;
     if (p == nullptr) {
       return; // データを確保できない
     }
 
     // ポインタ結合を行う //
-    FreeHL.Next = FreeHL.Next->Next;
-    p->Next = ActiveHL.Next;
-    ActiveHL.Next = p;
+    Lasers.free_list.Next = Lasers.free_list.Next->Next;
+    p->Next = Lasers.active.Next;
+    Lasers.active.Next = p;
     HLaserNow++;
 
     p->v = 64 * 4;  // 加速度セット
@@ -101,7 +99,7 @@ void HLaserMove(void) {
   int deg, deg2;
 
   // 次のフレームに移行する //
-  for (hl = ActiveHL.Next; hl != nullptr; hl = hl->Next) {
+  for (hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
     // 前回の先頭を一時保存する //
     x = hl->p[hl->Current].x;
     y = hl->p[hl->Current].y;
@@ -191,11 +189,11 @@ void HLaserMove(void) {
   }
 
   // 不要なデータを削除する //
-  for (hl = &ActiveHL; (hl->Next) != nullptr;) {
+  for (hl = &Lasers.active; (hl->Next) != nullptr;) {
     if (hl->Next->State == HLS_DEAD) {
       temp = hl->Next->Next;
-      hl->Next->Next = FreeHL.Next;
-      FreeHL.Next = hl->Next;
+      hl->Next->Next = Lasers.free_list.Next;
+      Lasers.free_list.Next = hl->Next;
       hl->Next = temp;
 
       HLaserNow--;
@@ -251,7 +249,7 @@ void HLaserDraw(void) {
 
   GrpGeom->Lock();
 
-  for (hl = ActiveHL.Next; hl != nullptr; hl = hl->Next) {
+  for (hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
     w = HOMINGL_WIDTH;
     current = hl->Current;
     p = &(hl->p[current]);
@@ -296,7 +294,7 @@ void HLaserDraw(void) {
     gf->SetColor({5, 5, 5});
   }
 
-  for (hl = ActiveHL.Next; hl != nullptr; hl = hl->Next) {
+  for (hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
     w = HOMINGL_WIDTH / 2;
     current = hl->Current;
     p = &(hl->p[current]);
@@ -346,7 +344,7 @@ void HLaserClear(void) {
 
   HLaserInit();
   /*
-  for(hl = ActiveHL.Next; hl != nullptr; hl = hl->Next) {
+  for(hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
           hl->State = HLS_CLEAR;
   }
   */

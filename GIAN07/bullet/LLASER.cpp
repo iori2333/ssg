@@ -5,13 +5,14 @@
 
 #include "GEOMETRY.h"
 #include "LLASER.h"
+#include "laser_manager.h"
 #include "MAID.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
 //// レーザー変数２ → laser_manager.cpp に移動
-// LLaser[], LLaserCmd は laser_manager.cpp で定義
+// Lasers.long_lasers[], LLaserCmd は laser_manager.cpp で定義
 
 //// ローカル関数 ////
 static void _LLaserPointSet(LLASER_DATA *lp);
@@ -23,8 +24,8 @@ bool LLaserSet(uint8_t id) {
   // もし、レーザーが見つからなければ、FALSE をリターンする //
   // つまり、その場合は、参照カウントを増加させない         //
   auto lp = std::ranges::find_if(
-      LLaser, [](const auto &lp) { return (lp.flag == LLF_DISABLE); });
-  if (lp == std::end(LLaser)) {
+      Lasers.long_lasers, [](const auto &lp) { return (lp.flag == LLF_DISABLE); });
+  if (lp == std::end(Lasers.long_lasers)) {
     return false;
   }
 
@@ -72,7 +73,7 @@ bool LLaserSet(uint8_t id) {
 }
 
 extern void LLaserOpen(const ENEMY_DATA *e, uint8_t id) {
-  for (auto &it : LLaser) {
+  for (auto &it : Lasers.long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL) &&
         lp->flag != LLF_DISABLE) {
@@ -88,7 +89,7 @@ extern void LLaserClose(const ENEMY_DATA *e, uint8_t id) {
     return;
   }
 
-  for (auto &it : LLaser) {
+  for (auto &it : Lasers.long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id)) {
       lp->flag = LLF_CLOSE;
@@ -98,7 +99,7 @@ extern void LLaserClose(const ENEMY_DATA *e, uint8_t id) {
 }
 
 extern void LLaserLine(const ENEMY_DATA *e, uint8_t id) {
-  for (auto &it : LLaser) {
+  for (auto &it : Lasers.long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
       lp->flag = LLF_CLOSEL;
@@ -110,14 +111,14 @@ extern void LLaserLine(const ENEMY_DATA *e, uint8_t id) {
 static void _LLaserXYSet(int id) {
   // 注意！！この関数のid は旧式のid の意味を持つことに注意 //
 
-  LLaser[id].x = LLaser[id].e->x + LLaser[id].dx;
-  LLaser[id].y = LLaser[id].e->y + LLaser[id].dy;
+  Lasers.long_lasers[id].x = Lasers.long_lasers[id].e->x + Lasers.long_lasers[id].dx;
+  Lasers.long_lasers[id].y = Lasers.long_lasers[id].e->y + Lasers.long_lasers[id].dy;
 
-  _LLaserPointSet(&LLaser[id]); // p[4] をセット
+  _LLaserPointSet(&Lasers.long_lasers[id]); // p[4] をセット
 }
 
 extern void LLaserDegA(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
-  for (auto &it : LLaser) {
+  for (auto &it : Lasers.long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
       lp->d = d;
@@ -137,7 +138,7 @@ extern void LLaserDegA(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
 }
 
 extern void LLaserDegR(const ENEMY_DATA *e, char d, uint8_t id) {
-  for (auto &it : LLaser) {
+  for (auto &it : Lasers.long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
       lp->d += d;
@@ -158,7 +159,7 @@ extern void LLaserDegR(const ENEMY_DATA *e, char d, uint8_t id) {
 
 // 敵に関連づけられたレーザーを強制クローズ(Level2...) //
 extern void LLaserForceClose(const ENEMY_DATA *e) {
-  for (auto &it : LLaser) {
+  for (auto &it : Lasers.long_lasers) {
     auto *lp = &it;
 
     // (参考) すでにクローズ状態であっても LLaserClose() は問題を発生させない //
@@ -174,7 +175,7 @@ extern void LLaserMove(void) {
   int i;
   LLASER_DATA *lp;
 
-  for (i = 0, lp = LLaser.data(); i < LLASER_MAX; i++, lp++) {
+  for (i = 0, lp = Lasers.long_lasers.data(); i < LLASER_MAX; i++, lp++) {
 
     // 角度セットモードで、敵の角度と現在の角度が異なっていたら再度セット //
     if (lp->type == LLS_SETDEG && lp->e && lp->d != lp->e->d) {
@@ -275,7 +276,7 @@ extern void LLaserDraw(void) {
 
   GrpGeom->Lock();
 
-  for (const auto &it : LLaser) {
+  for (const auto &it : Lasers.long_lasers) {
     const auto *lp = &it;
     const auto c = lp->c;
     switch (lp->flag) {
@@ -386,7 +387,7 @@ extern void LLaserDraw(void) {
 
 extern void LLaserClear(void) {
   // 存在するレーザー全てを閉じる //
-  for (auto &it : LLaser) {
+  for (auto &it : Lasers.long_lasers) {
     if (it.flag != LLF_DISABLE) {
       it.flag = LLF_CLOSE;
     }
@@ -396,8 +397,8 @@ extern void LLaserClear(void) {
 }
 
 extern void LLaserSetup(void) {
-  for (auto &it : LLaser) {
-    // memset(LLaser+i,0,sizeof(LLASER_DATA));
+  for (auto &it : Lasers.long_lasers) {
+    // memset(Lasers.long_lasers+i,0,sizeof(LLASER_DATA));
     it.flag = LLF_DISABLE;
     it.e = nullptr;
   }

@@ -6,15 +6,16 @@
 #include "GIAN.h"
 #include "LEVEL.h"
 #include "TAMA.h"
+#include "bullet_manager.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
 ////グローバル変数 → bullet_manager.cpp の BulletManager に移動
-// TamaCmd, Tama, Tama1Ind, Tama2Ind, Tama1Now/Max, Tama2Now/Max, TamaSpeed
-// は bullet_manager.cpp で参照として定義
-extern int& TamaSpeed;  // Bullets.speed への参照
+// TamaCmd, Tama, Tama1Now, Tama2Now → bullet_manager.cpp の参照 (クロスモジュール)
+// Bullets.indices_small, Bullets.indices_large, Bullets.max_small, Bullets.max_large, Bullets.speed
+// → bullet_manager.h 経由で直接アクセス
 
 ////ローカルな関数////
 static void __TamaSet(void);
@@ -56,15 +57,15 @@ void tama_set(void) {
   // 数値は単純に　(speed /2) *rank/32 + speed/2
   v = SPEEDM(TamaCmd.v); // 速度の基本値をセットする(GIAN.H)
   if ((TamaCmd.type & 0x0f) == T_NORM)
-    TamaSpeed = (((v >> 1) * (PlayRank.Rank)) >> (5 + 8)) + (v >> 1);
+    Bullets.speed = (((v >> 1) * (PlayRank.Rank)) >> (5 + 8)) + (v >> 1);
   else
-    TamaSpeed = v;
+    Bullets.speed = v;
 
   __TamaSet();
 }
 
 void tama_setEX(void) {
-  TamaSpeed = SPEEDM(TamaCmd.v);
+  Bullets.speed = SPEEDM(TamaCmd.v);
 
   __TamaSet();
 }
@@ -74,13 +75,13 @@ void tama_setLine(void) {
   // uint32_t temp;
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
-  TamaSpeed = SPEEDM(TamaCmd.v);
+  Bullets.speed = SPEEDM(TamaCmd.v);
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
   if ((TamaCmd.c & 0xf0) == TAMA_SMALL)
-    indnow = &Tama1Now, indmax = &Tama1Max, indp = &Tama1Ind[Tama1Now];
+    indnow = &Tama1Now, indmax = &Bullets.max_small, indp = &Bullets.indices_small[Tama1Now];
   else
-    indnow = &Tama2Now, indmax = &Tama2Max, indp = &Tama2Ind[Tama2Now];
+    indnow = &Tama2Now, indmax = &Bullets.max_large, indp = &Bullets.indices_large[Tama2Now];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -130,13 +131,13 @@ void tama_setExtra01(void) {
   // uint32_t temp;
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
-  TamaSpeed = SPEEDM(TamaCmd.v);
+  Bullets.speed = SPEEDM(TamaCmd.v);
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
   if ((TamaCmd.c & 0xf0) == TAMA_SMALL)
-    indnow = &Tama1Now, indmax = &Tama1Max, indp = &Tama1Ind[Tama1Now];
+    indnow = &Tama1Now, indmax = &Bullets.max_small, indp = &Bullets.indices_small[Tama1Now];
   else
-    indnow = &Tama2Now, indmax = &Tama2Max, indp = &Tama2Ind[Tama2Now];
+    indnow = &Tama2Now, indmax = &Bullets.max_large, indp = &Bullets.indices_large[Tama2Now];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -199,7 +200,7 @@ int TamaSpeedEx(uint8_t d) {
   if (delta < -128)
     delta += 256;
 
-  return TamaSpeed - (TamaSpeed * abs(delta)) / 23 + temp;
+  return Bullets.speed - (Bullets.speed * abs(delta)) / 23 + temp;
 }
 
 static void __TamaSet(void) {
@@ -208,9 +209,9 @@ static void __TamaSet(void) {
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
   if ((TamaCmd.c & 0xf0) == TAMA_SMALL)
-    indnow = &Tama1Now, indmax = &Tama1Max, indp = &Tama1Ind[Tama1Now];
+    indnow = &Tama1Now, indmax = &Bullets.max_small, indp = &Bullets.indices_small[Tama1Now];
   else
-    indnow = &Tama2Now, indmax = &Tama2Max, indp = &Tama2Ind[Tama2Now];
+    indnow = &Tama2Now, indmax = &Bullets.max_large, indp = &Bullets.indices_large[Tama2Now];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -258,7 +259,7 @@ void tama_move(void) {
 
   // 小型弾の処理 //
   for (const auto i : std::views::iota(0u, Tama1Now)) {
-    auto *t = &Tama[Tama1Ind[i]];
+    auto *t = &Tama[Bullets.indices_small[i]];
     if (t->effect == TE_NONE) {
       tamaTmove(t);
       tamaOmove(t);
@@ -282,11 +283,11 @@ void tama_move(void) {
       t->count++;
     }
   }
-  Indsort(Tama1Ind, Tama1Now, Tama);
+  Indsort(Bullets.indices_small, Tama1Now, Tama);
 
   // 大型弾＆特殊弾の処理 //
   for (const auto i : std::views::iota(0u, Tama2Now)) {
-    auto *t = &Tama[Tama2Ind[i]];
+    auto *t = &Tama[Bullets.indices_large[i]];
     if (t->effect == TE_NONE) {
       tamaTmove(t);
       tamaOmove(t);
@@ -310,7 +311,7 @@ void tama_move(void) {
       t->count++;
     }
   }
-  Indsort(Tama2Ind, Tama2Now, Tama);
+  Indsort(Bullets.indices_large, Tama2Now, Tama);
 }
 
 void tama_draw(void) {
@@ -328,7 +329,7 @@ void tama_draw(void) {
 
   // 大型弾＆特殊弾(16*16) の描画 //
   for (const auto i : std::views::iota(0u, Tama2Now)) {
-    auto *t = &Tama[Tama2Ind[i]];
+    auto *t = &Tama[Bullets.indices_large[i]];
 
     x = (t->x >> 6) - 8; // -8 は座標の補正用です
     y = (t->y >> 6) - 8; // 上に同じ
@@ -431,7 +432,7 @@ void tama_draw(void) {
 
   // 小型弾(8*8) の描画 //
   for (const auto i : std::views::iota(0u, Tama1Now)) {
-    auto *t = &Tama[Tama1Ind[i]];
+    auto *t = &Tama[Bullets.indices_small[i]];
 
     x = (t->x >> 6) - 4; // -4 は座標の補正用です
     y = (t->y >> 6) - 4; // 上に同じ
@@ -552,7 +553,7 @@ void _TamaEffectDraw(const TAMA_DATA *t) {
 
 void tama_clear(void) {
   for (const auto i : std::views::iota(0u, Tama1Now)) {
-    auto &t = Tama[Tama1Ind[i]];
+    auto &t = Tama[Bullets.indices_small[i]];
     if (t.effect != TE_DELETE) {
       t.effect = TE_DELETE;
       t.count = 0;
@@ -562,7 +563,7 @@ void tama_clear(void) {
   }
 
   for (const auto i : std::views::iota(0u, Tama2Now)) {
-    auto &t = Tama[Tama2Ind[i]];
+    auto &t = Tama[Bullets.indices_large[i]];
     if (t.effect != TE_DELETE) {
       t.effect = TE_DELETE;
       t.count = 0;
@@ -579,7 +580,7 @@ uint32_t tama2score(void) {
 
   Score = TAMA1_POINT + Viv.evade * 100;
   for (const auto i : std::views::iota(0u, Tama1Now)) {
-    auto *t = &Tama[Tama1Ind[i]];
+    auto *t = &Tama[Bullets.indices_small[i]];
     if (t->effect != TE_DELETE) {
       StringEffect2(t->x - 64 * 4, t->y - 64 * 4, Score);
       sum += Score;
@@ -589,11 +590,11 @@ uint32_t tama2score(void) {
       t->d = 0;
     }
   }
-  Indsort(Tama1Ind, Tama1Now, Tama);
+  Indsort(Bullets.indices_small, Tama1Now, Tama);
 
   Score = TAMA2_POINT + Viv.evade * 100;
   for (const auto i : std::views::iota(0u, Tama2Now)) {
-    auto *t = &Tama[Tama2Ind[i]];
+    auto *t = &Tama[Bullets.indices_large[i]];
     if (t->effect != TE_DELETE) {
       StringEffect2(t->x - 64 * 8, t->y - 64 * 8, Score);
       sum += Score;
@@ -603,7 +604,7 @@ uint32_t tama2score(void) {
       t->d = 0;
     }
   }
-  Indsort(Tama2Ind, Tama2Now, Tama);
+  Indsort(Bullets.indices_large, Tama2Now, Tama);
 
   return sum;
 }
@@ -621,7 +622,7 @@ void tama2item(uint8_t n) {
   }
 
   for (const auto i : std::views::iota(0u, Tama1Now)) {
-    auto *t = &Tama[Tama1Ind[i]];
+    auto *t = &Tama[Bullets.indices_small[i]];
     if (t->effect != TE_DELETE) {
       t->count = 0;
       t->d = 0;
@@ -637,11 +638,11 @@ void tama2item(uint8_t n) {
       }
     }
   }
-  Indsort(Tama1Ind, Tama1Now, Tama);
+  Indsort(Bullets.indices_small, Tama1Now, Tama);
 
   //	Score = TAMA2_POINT + Viv.evade * 100;
   for (const auto i : std::views::iota(0u, Tama2Now)) {
-    auto *t = &Tama[Tama2Ind[i]];
+    auto *t = &Tama[Bullets.indices_large[i]];
     if (t->effect != TE_DELETE) {
       t->count = 0;
       t->d = 0;
@@ -657,7 +658,7 @@ void tama2item(uint8_t n) {
       }
     }
   }
-  Indsort(Tama2Ind, Tama2Now, Tama);
+  Indsort(Bullets.indices_large, Tama2Now, Tama);
 
   //	return sum;
 }
@@ -669,14 +670,14 @@ void tamaind_set(uint16_t tama1) {
     tama1 = TAMA_MAX - 1;
 
   // 弾の最大数のセット //
-  Tama1Max = tama1;
-  Tama2Max = TAMA_MAX - tama1;
+  Bullets.max_small = tama1;
+  Bullets.max_large = TAMA_MAX - tama1;
 
   // 弾のインデックス用配列の初期化 //
   for (i = 0; i < tama1; i++)
-    Tama1Ind[i] = i;
+    Bullets.indices_small[i] = i;
   for (i = tama1; i < TAMA_MAX; i++)
-    Tama2Ind[i - tama1] = i;
+    Bullets.indices_large[i - tama1] = i;
 
   // memset(Tama,0,sizeof(TAMA_DATA)*TAMA_MAX);
 
@@ -771,7 +772,7 @@ uint8_t tama_dir(uint16_t i) {
 int NewTamaSpeed(uint16_t i) {
   int temp = 0; // ランダム要素の設定用
   const int vret =
-      TamaSpeed; // SPEEDM(TamaCmd.v);	// 速度の基本値をセットする(GIAN.H)
+      Bullets.speed; // SPEEDM(TamaCmd.v);	// 速度の基本値をセットする(GIAN.H)
 
   // 速度ランダムは基本値のｎ％変化とするべきかもしれないが... //
   switch (TamaCmd.v & 0xc0) {
@@ -793,7 +794,7 @@ int NewTamaSpeed(uint16_t i) {
 }
 
 int LineCmdNewTamaSpeed(uint16_t i) {
-  int vret = TamaSpeed; // 速度の基本値をセットする(GIAN.H)
+  int vret = Bullets.speed; // 速度の基本値をセットする(GIAN.H)
 
   i = (i % TamaCmd.n) + 1; // 連射弾対策
 

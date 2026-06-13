@@ -56,6 +56,5 @@ uint8_t IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif);
 bool SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif); // スコアデータを書き出す
 
 ///// [グローバル変数] /////
-// ScoreString[] → gameflow_manager.cpp で参照として定義
-extern std::array<NR_SCORE_STRING, NR_RANK_MAX>& ScoreString;
+// ScoreString[] → GameFlow.score_string で直接アクセス
 

@@ -32,13 +32,8 @@ struct FragmentData {
 using FRAGMENT_DATA = FragmentData;
 
 //// 破片用変数 ////
-// Fragment[], FragmentPtr → effect_manager.cpp で参照として定義
-extern std::array<FRAGMENT_DATA, FRAGMENT_MAX>& Fragment;
-extern int& FragmentPtr;
+// Fragment[], FragmentPtr → Effects.fragments, Effects.fragment_ptr で直接アクセス
 
 //// 破片関数 ////
-void fragment_set(int x, int y, uint8_t cmd);
-void fragment_move(void);
-void fragment_draw(void);
-void fragment_setup(void);
+// 後方互換 inline wrapper は effect_manager.h の末尾に移動
 

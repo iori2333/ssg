@@ -10,7 +10,7 @@
 #include "platform/graphics_backend.h"
 
 // CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h に移動
-// Cir[], Cube[], Star[], Rock[], WFLine, FakeECLStr[] → effect_manager.cpp に移動
+// Effects.circles[], Effects.cubes[], Effects.stars[], Effects.rocks[], Effects.wf_line, Effects.fake_ecl_strs[] → effect_manager.cpp に移動
 
 #define _ PIXEL_POINT
 
@@ -83,14 +83,7 @@ LineList3D	LList_A1 = {96,39,PList_A1,8,PWork_A1};
 LineList3D	LList_W = {32,39,PList_W,11,PWork_W};
 */
 
-LineList3D Warning[8] = {{{192, 39}, PList_W},
-                         {{192, 39}, PList_A1},
-                         {{192, 39}, PList_A2},
-                         {{192, 39}, PList_R},
-                         {{192, 39}, PList_N1},
-                         {{192, 39}, PList_I},
-                         {{(192 - (296 - 215)), 39}, PList_N2},
-                         {{192, 39}, PList_G}};
+// Warning[8] は EffectManager::warning_lines に移動 — InitWarningText() で初期化
 
 static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz);
 static void __Draw3DCube(const Cube3D *c); // 汎用３Ｄキューブ描画
@@ -119,24 +112,35 @@ void ShiftRight6Bit(const Point3D *o, Point3D *p) {
   p->y = (((p->y + o->y) >> 6) + 240);
 }
 
-void InitWarning(void) {
+void EffectManager::InitWarningText() {
   static bool bInitialized = false;
 
   if (bInitialized)
     return;
 
-  InitLineList3D(Warning);
+  // Initialize warning_lines with center positions and point arrays
+  // (was: LineList3D Warning[8] = { ... } file-static initialization)
+  this->warning_lines[0] = {{192, 39}, PList_W};
+  this->warning_lines[1] = {{192, 39}, PList_A1};
+  this->warning_lines[2] = {{192, 39}, PList_A2};
+  this->warning_lines[3] = {{192, 39}, PList_R};
+  this->warning_lines[4] = {{192, 39}, PList_N1};
+  this->warning_lines[5] = {{192, 39}, PList_I};
+  this->warning_lines[6] = {{(192 - (296 - 215)), 39}, PList_N2};
+  this->warning_lines[7] = {{192, 39}, PList_G};
+
+  InitLineList3D(this->warning_lines);
   bInitialized = true;
 }
 
-void DrawWarning(void) {
+void EffectManager::DrawWarningText() {
   constexpr PIXEL_LTRB src = {0, (152 + 16), 384, (232 + 16)};
   int st, det;
   static int count;
 
   count += 8;
 
-  if (Warning[0].DegX == 0) {
+  if (Effects.warning_lines[0].DegX == 0) {
     GrpGeom->Lock();
     GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>(128 + sinl(count, 48)));
     GrpGeom->SetColor({5, 0, 0});
@@ -148,21 +152,21 @@ void DrawWarning(void) {
   } else {
     GrpGeom->Lock();
 
-    if (Warning[0].DegX < 10) {
+    if (Effects.warning_lines[0].DegX < 10) {
       st = 0;
       det = 0;
       st = 0;
       det = 0;
-    } else if (Warning[0].DegX < 20) {
+    } else if (Effects.warning_lines[0].DegX < 20) {
       st = -4;
       det = 1;
     } else {
-      // if(Warning[0].DegX < 40){
+      // if(Effects.warning_lines[0].DegX < 40){
       st = -8;
       det = 2;
     }
 
-    constexpr auto w = std::span(Warning);
+    const auto w = std::span(Effects.warning_lines);
     GrpGeom->SetColor({1, 1, 5});
     MoveWarningR(st);
     DrawLineList3D(w);
@@ -187,15 +191,15 @@ void MoveWarningR(char count) {
   if (count == 0)
     return;
 
-  for (auto &llist : Warning) {
+  for (auto &llist : Effects.warning_lines) {
     llist.DegX += (count * 2);
     llist.DegY += (count * 1);
     llist.DegZ += (count * 4);
   }
 }
 
-void MoveWarning(uint8_t count) {
-  for (auto &llist : Warning) {
+void EffectManager::MoveWarningText(uint8_t count) {
+  for (auto &llist : Effects.warning_lines) {
     llist.DegX = ((count < 64) ? ((64 - count) * 2) : 0);
     llist.DegY = ((count < 64) ? ((64 - count) * 1) : 0);
     llist.DegZ = ((count < 64) ? ((64 - count) * 4) : 0);
@@ -248,40 +252,40 @@ static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
   p->y = sinl(dz, temp.x) + cosl(dz, temp.y);
 }
 
-void Init3DCube(void) {
+void EffectManager::Init3DCubes() {
   int i;
 
   for (i = 0; i < CUBE_MAX; i++) {
-    Cube[i].l = 30 * 64;
-    Cube[i].d.dx = rnd();
-    Cube[i].d.dy = rnd();
-    Cube[i].d.dz = rnd();
-    Cube[i].p.x = cosl(i * 256 / CUBE_MAX, 200 * 64);
-    Cube[i].p.y = sinl(i * 256 / CUBE_MAX, 200 * 64);
-    Cube[i].p.z = 0;
+    Effects.cubes[i].l = 30 * 64;
+    Effects.cubes[i].d.dx = rnd();
+    Effects.cubes[i].d.dy = rnd();
+    Effects.cubes[i].d.dz = rnd();
+    Effects.cubes[i].p.x = cosl(i * 256 / CUBE_MAX, 200 * 64);
+    Effects.cubes[i].p.y = sinl(i * 256 / CUBE_MAX, 200 * 64);
+    Effects.cubes[i].p.z = 0;
   }
 
-  for (auto &it : Star) {
+  for (auto &it : Effects.stars) {
     it.x = ((rnd() % (640 - 256)) + 128);
     it.y = -(rnd() % 480);
     it.vy = ((rnd() % 10) + 10);
   }
 }
 
-void Draw3DCube(void) {
-  for (const auto &it : Star) {
+void EffectManager::Draw3DCubes() {
+  for (const auto &it : Effects.stars) {
     constexpr PIXEL_LTWH rc = {136, 272, 16, 24};
     GrpSurface_Blit({it.x, it.y}, SURFACE_ID::SYSTEM, rc);
   }
 
   GrpGeom->Lock();
-  for (const auto &it : Cube) {
+  for (const auto &it : Effects.cubes) {
     __Draw3DCube(&it);
   }
   GrpGeom->Unlock();
 }
 
-void Move3DCube(void) {
+void EffectManager::Move3DCubes() {
   int i;
   int l, d2;
   static uint16_t d;
@@ -296,18 +300,18 @@ void Move3DCube(void) {
   l = sinl(d >> 7, 100 * 64) + (200 - 20) * 64;
 
   for (i = 0; i < CUBE_MAX; i++) {
-    Cube[i].l = 15 * 64 + (l >> 4) + i * 128;
-    Cube[i].d.dx += 4;
-    Cube[i].d.dy -= 4;
-    // Cube[i].p.x = cosl(i*256/CUBE_MAX+d2, l);
-    // Cube[i].p.y = sinl(i*256/CUBE_MAX+d2, l);
-    Cube[i].p.x = cosl(i * 500 / CUBE_MAX + d2, l);
-    Cube[i].p.y = sinl(i * 500 / CUBE_MAX + d2, l);
-    Cube[i].p.z = (i - CUBE_MAX / 2) * 64 * 40;
-    Transform3D(&Cube[i].p, dx >> 8, dy >> 8, dz >> 8);
+    Effects.cubes[i].l = 15 * 64 + (l >> 4) + i * 128;
+    Effects.cubes[i].d.dx += 4;
+    Effects.cubes[i].d.dy -= 4;
+    // Effects.cubes[i].p.x = cosl(i*256/CUBE_MAX+d2, l);
+    // Effects.cubes[i].p.y = sinl(i*256/CUBE_MAX+d2, l);
+    Effects.cubes[i].p.x = cosl(i * 500 / CUBE_MAX + d2, l);
+    Effects.cubes[i].p.y = sinl(i * 500 / CUBE_MAX + d2, l);
+    Effects.cubes[i].p.z = (i - CUBE_MAX / 2) * 64 * 40;
+    Transform3D(&Effects.cubes[i].p, dx >> 8, dy >> 8, dz >> 8);
   }
 
-  for (auto &it : Star) {
+  for (auto &it : Effects.stars) {
     it.y += it.vy;
     if (it.y > 480) {
       it.x = ((rnd() % (640 - 256)) + 128);
@@ -395,15 +399,15 @@ static void __Draw3DCube(const Cube3D *c) {
   }
 }
 
-void InitEffectFakeECL(void) {
+void EffectManager::InitFakeECL() {
   int v;
 
-  WFLine.d = 0;
-  WFLine.ox = 640 * 64 / 2;
-  WFLine.oy = 480 * 64 / 2;
-  WFLine.w = 30;
+  Effects.wf_line.d = 0;
+  Effects.wf_line.ox = 640 * 64 / 2;
+  Effects.wf_line.oy = 480 * 64 / 2;
+  Effects.wf_line.w = 30;
 
-  for (auto &it : FakeECLStr) {
+  for (auto &it : Effects.fake_ecl_strs) {
     const uint8_t d = (rnd() % 128);
     v = rnd() % (64 * 5) + 64 * 5;
 
@@ -416,13 +420,13 @@ void InitEffectFakeECL(void) {
   }
 }
 
-void MoveEffectFakeECL(void) {
+void EffectManager::MoveFakeECL() {
   int v;
 
-  WFLine.ox = (WFLine.ox + 1) % 64;
-  WFLine.oy = (WFLine.oy + 62) % 64;
+  Effects.wf_line.ox = (Effects.wf_line.ox + 1) % 64;
+  Effects.wf_line.oy = (Effects.wf_line.oy + 62) % 64;
 
-  for (auto &it : FakeECLStr) {
+  for (auto &it : Effects.fake_ecl_strs) {
     it.x += it.vx;
     it.y += it.vy;
 
@@ -440,7 +444,7 @@ void MoveEffectFakeECL(void) {
   }
 }
 
-void DrawEffectFakeECL(void) {
+void EffectManager::DrawFakeECL() {
   PIXEL_LTRB src;
   int i, j;
 
@@ -450,25 +454,25 @@ void DrawEffectFakeECL(void) {
   GrpGeom->SetColor({0, 2, 0});
   // GrpGeom->SetColor({ 0, 0, 3 });
 
-  for (i = 128 - WFLine.ox / 2; i < 640 - 128; i += 32)
+  for (i = 128 - Effects.wf_line.ox / 2; i < 640 - 128; i += 32)
     GrpGeom->DrawLine(i, 0, i, 480);
 
-  for (j = WFLine.oy / 2; j < 480; j += 32)
+  for (j = Effects.wf_line.oy / 2; j < 480; j += 32)
     GrpGeom->DrawLine(128, j, (640 - 128), j);
 
   // GrpGeom->SetColor({ 5, 3, 0 });	// 後半戦用
   GrpGeom->SetColor({0, 3, 0});
   // GrpGeom->SetColor({ 0, 0, 4 });
 
-  for (i = 128 - WFLine.ox; i < 640 - 128; i += 64)
+  for (i = 128 - Effects.wf_line.ox; i < 640 - 128; i += 64)
     GrpGeom->DrawLine(i, 0, i, 480);
 
-  for (j = -WFLine.oy; j < 480; j += 64)
+  for (j = -Effects.wf_line.oy; j < 480; j += 64)
     GrpGeom->DrawLine(128, j, (640 - 128), j);
 
   GrpGeom->Unlock();
 
-  for (const auto &it : FakeECLStr) {
+  for (const auto &it : Effects.fake_ecl_strs) {
     src = PIXEL_LTWH{it.SrcX, it.SrcY, 72, 16};
     GrpSurface_Blit({(it.x >> 6), (it.y >> 6)}, SURFACE_ID::MAPCHIP, src);
   }
@@ -564,7 +568,7 @@ Small_1 RsetMacro(144, 400,  32,  48),			// Small_2
 }
 */
 
-void InitStg4Rock(void) {
+void EffectManager::InitStg4Rocks() {
   int i;
   int id = 2;
   int y = 0;
@@ -575,33 +579,33 @@ void InitStg4Rock(void) {
     y = (i % 4) * dy + (rnd() % dy2);
     //((380*64/16) * (i%(ROCK_MAX/16+1))) + rnd()%(380*64/16);
 
-    Rock[i].x = (rnd() % (500 * 64) - 250 * 64); //
-    Rock[i].y = -250 * 64 - y;                   // 上の方なのだ
-    Rock[i].z = (rnd() % (500 * 64) - 250 * 64); //
+    Effects.rocks[i].x = (rnd() % (500 * 64) - 250 * 64); //
+    Effects.rocks[i].y = -250 * 64 - y;                   // 上の方なのだ
+    Effects.rocks[i].z = (rnd() % (500 * 64) - 250 * 64); //
 
     if (i == ROCK_MAX * 5 / 8)
       id--;
     if (i == ROCK_MAX * 7 / 8)
       id--;
 
-    Rock[i].GrpID = id;
+    Effects.rocks[i].GrpID = id;
 
-    Rock[i].vx = 0;
-    Rock[i].vy = (4 - Rock[i].GrpID) * 16;
-    Rock[i].v = Rock[i].vy;
+    Effects.rocks[i].vx = 0;
+    Effects.rocks[i].vy = (4 - Effects.rocks[i].GrpID) * 16;
+    Effects.rocks[i].v = Effects.rocks[i].vy;
 
-    Rock[i].count = 0;
-    Rock[i].a = 0;
-    Rock[i].d = 64;
-    Rock[i].State = STG4ROCK_STDMOVE;
+    Effects.rocks[i].count = 0;
+    Effects.rocks[i].a = 0;
+    Effects.rocks[i].d = 64;
+    Effects.rocks[i].State = STG4ROCK_STDMOVE;
   }
 }
 
-void MoveStg4Rock(void) {
+void EffectManager::MoveStg4Rocks() {
   constexpr int dy = (500 * (64 / 4));
   constexpr int dy2 = (dy / 2);
 
-  for (auto &it : Rock) {
+  for (auto &it : Effects.rocks) {
     auto *p = &it;
     p->count++;
 
@@ -712,7 +716,7 @@ void MoveStg4Rock(void) {
   }
 }
 
-void DrawStg4Rock(void) {
+void EffectManager::DrawStg4Rocks() {
   constexpr auto sid = SURFACE_ID::MAPCHIP;
   static PIXEL_LTRB src[3] = {
       {0, 224, 80, 288}, {0, 288, 48, 336}, {48, 288, 80, 320}};
@@ -721,7 +725,7 @@ void DrawStg4Rock(void) {
 
   int x, y;
 
-  for (const auto &it : Rock) {
+  for (const auto &it : Effects.rocks) {
     const auto *p = &it;
     x = (p->x + GX_MID) >> 6;
     y = (p->y + GY_MID) >> 6;
@@ -730,22 +734,22 @@ void DrawStg4Rock(void) {
   }
 }
 
-void SendCmdStg4Rock(uint8_t Cmd, uint8_t Param) {
+void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
   switch (Cmd) {
   case (STG4ROCK_LEAVE): {
-    for (auto &it : Rock) {
+    for (auto &it : Effects.rocks) {
       it.State = STG4ROCK_LEAVE;
     }
   } break;
 
   case (STG4ROCK_END): {
-    for (auto &it : Rock) {
+    for (auto &it : Effects.rocks) {
       it.State = STG4ROCK_END;
     }
   } break;
 
   case (STG4ROCK_ACCMOVE1): {
-    for (auto &it : Rock) {
+    for (auto &it : Effects.rocks) {
       it.State = STG4ROCK_ACCMOVE1;
       it.a = (it.v / 24); // ((3 - p->GrpID) * 3);
       it.count = 0;
@@ -753,12 +757,12 @@ void SendCmdStg4Rock(uint8_t Cmd, uint8_t Param) {
   } break;
 
   case (STG4ROCK_ACCMOVE2): {
-    for (auto &it : Rock) {
+    for (auto &it : Effects.rocks) {
       it.State = STG4ROCK_ACCMOVE2;
       it.a = (it.v / 12); // 24; // ((3 - p->GrpID) * 3);
       it.count = 0;
     }
-    /*		for(auto& it : Rock) {
+    /*		for(auto& it : Effects.rocks) {
                             it.State = STG4ROCK_ACCMOVE2;
                             it.a = -4;
                             it.count = 0;
@@ -774,61 +778,61 @@ void SendCmdStg4Rock(uint8_t Cmd, uint8_t Param) {
 }
 
 // S6RASTER_MAX, S6STAR_MAX, S3STAR_MAX, Stg6Raster, Stg6Star → effect_manager.h に移動
-// S6Ras[], S6Star[] → effect_manager.cpp に移動
+// Effects.s6_ras[], Effects.s6_stars[] → effect_manager.cpp に移動
 
 // ６面ラスター初期化 //
-void InitStg6Raster() {
+void EffectManager::InitStg6Rasters() {
   int i;
 
   for (i = 0; i < S6RASTER_MAX; i++) {
-    S6Ras[i].x = rnd() % (640 - 256) + 128;
-    S6Ras[i].y = -rnd() % (480 + 160); //(480+240)-240;
-    S6Ras[i].deg = rnd();
-    S6Ras[i].type = i % 3;
-    S6Ras[i].amp = rnd() % 80 + 70;
-    S6Ras[i].vy = 2 + rnd() % 3;
+    Effects.s6_ras[i].x = rnd() % (640 - 256) + 128;
+    Effects.s6_ras[i].y = -rnd() % (480 + 160); //(480+240)-240;
+    Effects.s6_ras[i].deg = rnd();
+    Effects.s6_ras[i].type = i % 3;
+    Effects.s6_ras[i].amp = rnd() % 80 + 70;
+    Effects.s6_ras[i].vy = 2 + rnd() % 3;
   }
 
   for (i = 0; i < S6STAR_MAX; i++) {
-    S6Star[i].x = rnd() % (640 - 256) + 128;
-    S6Star[i].y = rnd() % 480;
-    S6Star[i].vy = rnd() % 20 + 8;
+    Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
+    Effects.s6_stars[i].y = rnd() % 480;
+    Effects.s6_stars[i].vy = rnd() % 20 + 8;
   }
 }
 
 // ６面ラスター動作 //
-void MoveStg6Raster() {
+void EffectManager::MoveStg6Rasters() {
   int i;
 
   for (i = 0; i < S6RASTER_MAX; i++) {
     if (i & 1)
-      S6Ras[i].deg += 2;
+      Effects.s6_ras[i].deg += 2;
     else
-      S6Ras[i].deg -= 2;
+      Effects.s6_ras[i].deg -= 2;
 
-    S6Ras[i].y += S6Ras[i].vy;
+    Effects.s6_ras[i].y += Effects.s6_ras[i].vy;
 
-    if (S6Ras[i].y > 480) {
-      S6Ras[i].x = rnd() % (640 - 256) + 128;
-      S6Ras[i].y = -160;
-      S6Ras[i].deg = rnd();
-      S6Ras[i].amp = rnd() % 80 + 70;
+    if (Effects.s6_ras[i].y > 480) {
+      Effects.s6_ras[i].x = rnd() % (640 - 256) + 128;
+      Effects.s6_ras[i].y = -160;
+      Effects.s6_ras[i].deg = rnd();
+      Effects.s6_ras[i].amp = rnd() % 80 + 70;
     }
   }
 
   for (i = 0; i < S6STAR_MAX; i++) {
-    S6Star[i].y += S6Star[i].vy;
+    Effects.s6_stars[i].y += Effects.s6_stars[i].vy;
 
-    if (S6Star[i].y > 480) {
-      S6Star[i].x = rnd() % (640 - 256) + 128;
-      S6Star[i].y -= 480;
-      S6Star[i].vy = rnd() % 20 + 8;
+    if (Effects.s6_stars[i].y > 480) {
+      Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
+      Effects.s6_stars[i].y -= 480;
+      Effects.s6_stars[i].vy = rnd() % 20 + 8;
     }
   }
 }
 
 // ６面ラスター描画 //
-void DrawStg6Raster() {
+void EffectManager::DrawStg6Rasters() {
   constexpr auto sid = SURFACE_ID::MAPCHIP;
   static PIXEL_LTRB Target[3] = {
       {608, 272, 640, 352},
@@ -842,10 +846,10 @@ void DrawStg6Raster() {
 
   for (i = 0; i < S6STAR_MAX; i++) {
     src = {624, 352, (624 + 16), (352 + 16)};
-    GrpSurface_Blit({S6Star[i].x, S6Star[i].y}, sid, src);
+    GrpSurface_Blit({Effects.s6_stars[i].x, Effects.s6_stars[i].y}, sid, src);
   }
 
-  for (const auto &it : S6Ras) {
+  for (const auto &it : Effects.s6_ras) {
     x1 = Target[it.type].left;
     x2 = Target[it.type].right;
     oy = Target[it.type].top;
@@ -860,37 +864,37 @@ void DrawStg6Raster() {
 }
 
 // ３面高速星初期化 //
-void InitStg3Star() {
+void EffectManager::InitStg3Stars() {
   int i;
 
   for (i = 0; i < S3STAR_MAX; i++) {
-    S6Star[i].x = rnd() % (640 - 256) + 128;
-    S6Star[i].y = rnd() % 480;
-    S6Star[i].vy = rnd() % 20 + 8;
+    Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
+    Effects.s6_stars[i].y = rnd() % 480;
+    Effects.s6_stars[i].vy = rnd() % 20 + 8;
   }
 }
 
 // ３面高速星動作 //
-void MoveStg3Star() {
+void EffectManager::MoveStg3Stars() {
   int i;
 
   for (i = 0; i < S3STAR_MAX; i++) {
-    S6Star[i].y += S6Star[i].vy;
+    Effects.s6_stars[i].y += Effects.s6_stars[i].vy;
 
-    if (S6Star[i].y > 480) {
-      S6Star[i].x = rnd() % (640 - 256) + 128;
-      S6Star[i].y -= 480;
-      S6Star[i].vy = rnd() % 20 + 8;
+    if (Effects.s6_stars[i].y > 480) {
+      Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
+      Effects.s6_stars[i].y -= 480;
+      Effects.s6_stars[i].vy = rnd() % 20 + 8;
     }
   }
 }
 
 // ３面高速星描画 //
-void DrawStg3Star() {
+void EffectManager::DrawStg3Stars() {
   int i;
 
   for (i = 0; i < S3STAR_MAX; i++) {
     constexpr PIXEL_LTRB src = {(640 - 16), 0, 640, 16};
-    GrpSurface_Blit({S6Star[i].x, S6Star[i].y}, SURFACE_ID::MAPCHIP, src);
+    GrpSurface_Blit({Effects.s6_stars[i].x, Effects.s6_stars[i].y}, SURFACE_ID::MAPCHIP, src);
   }
 }

@@ -74,9 +74,7 @@ bool DemoplayHasRecordedStages(void);
 extern bool& DemoplayLoadEnable;
 extern bool& DemoplaySaveAllEnable;
 extern bool& DemoplayLoadAllEnable;
-extern MULTI_REPLAY_INFO& MultiPlayInfo;
 extern uint8_t& PlaybackMaxStage;
 extern std::u8string& PendingReplayFile;
-extern DEMOPLAY_INFO& DemoInfo;
-extern std::array<INPUT_BITS, DEMOBUF_MAX>& DemoBuffer;
+// MultiPlayInfo, DemoInfo, DemoBuffer → Demos.xxx で直接アクセス
 

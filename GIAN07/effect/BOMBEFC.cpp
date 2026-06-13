@@ -13,25 +13,22 @@
 
 // BombEfc[] → effect_manager.cpp の EffectManager に移動
 
-// 秘密の関数 //
-void _ExBombSTDInit(BombEfcCtrl *p);
-void _ExBombSTDDraw(BombEfcCtrl *p);
-void _ExBombSTDMove(BombEfcCtrl *p);
+// 秘密の関数（EffectManager の private メソッドとして宣言済み）
 
 // 爆発系エフェクトの初期化 //
-void ExBombEfcInit(void) {
-  for (auto &it : BombEfc) {
+void EffectManager::InitBombEffects() {
+  for (auto &it : Effects.bomb_effects) {
     it.bIsUsed = false;
   }
 }
 
 // 爆発系エフェクトをセットする //
-void ExBombEfcSet(int x, int y, uint8_t type) {
+void EffectManager::SpawnBombEffect(int x, int y, uint8_t type) {
   auto p =
-      std::ranges::find_if(BombEfc, [](const auto &p) { return !p.bIsUsed; });
+      std::ranges::find_if(Effects.bomb_effects, [](const auto &p) { return !p.bIsUsed; });
 
   // 空いているオブジェクトが存在しない //
-  if (p == std::end(BombEfc)) {
+  if (p == std::end(Effects.bomb_effects)) {
     return;
   }
 
@@ -43,7 +40,7 @@ void ExBombEfcSet(int x, int y, uint8_t type) {
 
   switch (type) {
   case EXBOMB_STD:
-    _ExBombSTDInit(&*p);
+    Effects.InitBombEffectSTD(&*p);
     break;
 
   default:
@@ -55,14 +52,14 @@ void ExBombEfcSet(int x, int y, uint8_t type) {
 }
 
 // 爆発系エフェクトを描画する
-void ExBombEfcDraw(void) {
-  for (auto &it : BombEfc) {
+void EffectManager::DrawBombEffects() {
+  for (auto &it : Effects.bomb_effects) {
     if (!it.bIsUsed) {
       continue;
     }
     switch (it.type) {
     case EXBOMB_STD:
-      _ExBombSTDDraw(&it);
+      Effects.DrawBombEffectSTD(&it);
       break;
 
     default:
@@ -72,15 +69,15 @@ void ExBombEfcDraw(void) {
 }
 
 // 爆発系エフェクトを動作させる
-void ExBombEfcMove(void) {
-  for (auto &it : BombEfc) {
+void EffectManager::MoveBombEffects() {
+  for (auto &it : Effects.bomb_effects) {
     if (!it.bIsUsed) {
       continue;
     }
     it.count++;
     switch (it.type) {
     case EXBOMB_STD:
-      _ExBombSTDMove(&it);
+      Effects.MoveBombEffectSTD(&it);
       if (it.count > ((64 * 3) + 32)) {
         it.bIsUsed = false;
       }
@@ -92,7 +89,7 @@ void ExBombEfcMove(void) {
   }
 }
 
-void _ExBombSTDInit(BombEfcCtrl *p) {
+void EffectManager::InitBombEffectSTD(BombEfcCtrl *p) {
   int i, x, y;
   SpObj *target;
 
@@ -107,7 +104,7 @@ void _ExBombSTDInit(BombEfcCtrl *p) {
   }
 }
 
-void _ExBombSTDDraw(BombEfcCtrl *p) {
+void EffectManager::DrawBombEffectSTD(BombEfcCtrl *p) {
   int x, y, dx;
 
   // Graphic 48 * 48 //
@@ -123,7 +120,7 @@ void _ExBombSTDDraw(BombEfcCtrl *p) {
   }
 }
 
-void _ExBombSTDMove(BombEfcCtrl *p) {
+void EffectManager::MoveBombEffectSTD(BombEfcCtrl *p) {
   int j = 0;
   int x, y, v, rv;
 

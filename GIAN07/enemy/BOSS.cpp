@@ -5,6 +5,7 @@
 
 #include "BOMBEFC.h" // 爆発エフェクト処理
 #include "BOSS.h"
+#include "boss_manager.h"
 #include "EnemyExCtrl.h"
 #include "GEOMETRY.h"
 #include "GIAN.h"
@@ -44,7 +45,7 @@ static constexpr auto BHPG_OPEN3 = 0x05; // 体力ゲージを更新する
 
 ///// [ 変数 ] /////
 
-// Boss[], BossNow, BossHPG → boss_manager.cpp の BossManager に移動
+// Boss[], BossNow, Bosses.hpg → boss_manager.cpp の BossManager に移動
 
 // 秘密の関数 //
 static void BossHPG_Open(uint32_t max);    // ボスの体力ゲージをオープンする
@@ -68,7 +69,7 @@ void BossDataInit(void) {
   }
 
   // ボスが死んでいるのだから、体力ゲージはもちろん表示しない //
-  BossHPG.State = BHPG_DEAD;
+  Bosses.hpg.State = BHPG_DEAD;
 
   // ボスの数を０にする //
   BossNow = 0;
@@ -276,28 +277,28 @@ void BossClearCmd(void) { BitDelete(); }
 static void BossHPG_Open(uint32_t max) {
   int i;
 
-  BossHPG.Max = max;    // 最大値
-  BossHPG.Now = 0;      // 最初のエフェクトで上昇して行くので
-  BossHPG.Next = max;   // 次の体力値
-  BossHPG.Update = max; // 更新用の値
+  Bosses.hpg.Max = max;    // 最大値
+  Bosses.hpg.Now = 0;      // 最初のエフェクトで上昇して行くので
+  Bosses.hpg.Next = max;   // 次の体力値
+  Bosses.hpg.Update = max; // 更新用の値
 
-  BossHPG.State = BHPG_OPEN1;
-  BossHPG.Count = 0;
+  Bosses.hpg.State = BHPG_OPEN1;
+  Bosses.hpg.Count = 0;
 
   // 表示用初期Ｘを指定する(乱数を使用するが...) //
   for (i = 0; i < BOSSHPG_HEIGHT; i++) {
-    BossHPG.XTemp[i] = BOSSHPG_START_X + i * 20;
+    Bosses.hpg.XTemp[i] = BOSSHPG_START_X + i * 20;
   }
 }
 
 // ボスの体力ゲージを上昇させる //
 static void BossHPG_Update(uint32_t next) {
-  //	BossHPG.Max  = max;		// 最大値
-  //	BossHPG.Now  = 0;		// 最初のエフェクトで上昇して行くので
-  BossHPG.Update = next; // 次の体力値
+  //	Bosses.hpg.Max  = max;		// 最大値
+  //	Bosses.hpg.Now  = 0;		// 最初のエフェクトで上昇して行くので
+  Bosses.hpg.Update = next; // 次の体力値
 
-  BossHPG.State = BHPG_OPEN3;
-  //	BossHPG.Count = 0;
+  Bosses.hpg.State = BHPG_OPEN3;
+  //	Bosses.hpg.Count = 0;
 }
 
 // ボスの体力ゲージを増減する //
@@ -305,11 +306,11 @@ static void BossHPG_Move(uint32_t now) {
   int i;
   int ChkCount = 0;
 
-  BossHPG.Next = now;
+  Bosses.hpg.Next = now;
 
-  switch (BossHPG.State) {
+  switch (Bosses.hpg.State) {
   case (BHPG_OPEN1): {
-    for (auto &it : BossHPG.XTemp) {
+    for (auto &it : Bosses.hpg.XTemp) {
       it -= 6;
       if (it <= BOSSHPG_END_X) {
         it = BOSSHPG_END_X;
@@ -318,46 +319,46 @@ static void BossHPG_Move(uint32_t now) {
     }
 
     if (ChkCount == BOSSHPG_HEIGHT)
-      BossHPG.State = BHPG_OPEN2;
+      Bosses.hpg.State = BHPG_OPEN2;
   } break;
 
   case (BHPG_OPEN2):
-    BossHPG.Now += ((BossHPG.Max >> 7) + 1);
-    if (BossHPG.Now >= BossHPG.Max) {
-      BossHPG.Now = BossHPG.Max;
-      BossHPG.State = BHPG_NORM;
+    Bosses.hpg.Now += ((Bosses.hpg.Max >> 7) + 1);
+    if (Bosses.hpg.Now >= Bosses.hpg.Max) {
+      Bosses.hpg.Now = Bosses.hpg.Max;
+      Bosses.hpg.State = BHPG_NORM;
     }
     break;
 
   case (BHPG_OPEN3):
-    BossHPG.Now += ((BossHPG.Max >> 7) + 1);
-    if (BossHPG.Now >= BossHPG.Update) {
-      BossHPG.Now = BossHPG.Update;
-      BossHPG.State = BHPG_NORM;
+    Bosses.hpg.Now += ((Bosses.hpg.Max >> 7) + 1);
+    if (Bosses.hpg.Now >= Bosses.hpg.Update) {
+      Bosses.hpg.Now = Bosses.hpg.Update;
+      Bosses.hpg.State = BHPG_NORM;
     }
     break;
 
   case (BHPG_NORM):
-    if (BossHPG.Now > BossHPG.Next) {
-      // temp = max(BossHPG.Max>>10,1);
-      // temp = max((30*8*3)/max(BossHPG.Max,1),3);
+    if (Bosses.hpg.Now > Bosses.hpg.Next) {
+      // temp = max(Bosses.hpg.Max>>10,1);
+      // temp = max((30*8*3)/max(Bosses.hpg.Max,1),3);
       const auto temp =
-          (std::max)(((std::max)(BossHPG.Max, 1u) / (30 * 8 * 4)), 3u);
-      if (BossHPG.Now - BossHPG.Next > temp)
-        BossHPG.Now -= temp;
+          (std::max)(((std::max)(Bosses.hpg.Max, 1u) / (30 * 8 * 4)), 3u);
+      if (Bosses.hpg.Now - Bosses.hpg.Next > temp)
+        Bosses.hpg.Now -= temp;
       else
-        BossHPG.Now = BossHPG.Next;
+        Bosses.hpg.Now = Bosses.hpg.Next;
     }
-    if (BossHPG.Now == 0)
+    if (Bosses.hpg.Now == 0)
       BossHPG_Close();
     break;
 
   case (BHPG_CLOSE):
-    BossHPG.XTemp[BOSSHPG_HEIGHT - 1] += 6;
+    Bosses.hpg.XTemp[BOSSHPG_HEIGHT - 1] += 6;
     for (i = BOSSHPG_HEIGHT - 2; i >= 0; i--) {
-      BossHPG.XTemp[i] = max(BossHPG.XTemp[i], BossHPG.XTemp[i + 1] - 20);
+      Bosses.hpg.XTemp[i] = max(Bosses.hpg.XTemp[i], Bosses.hpg.XTemp[i + 1] - 20);
     }
-    if (BossHPG.XTemp[0] >= BOSSHPG_START_X)
+    if (Bosses.hpg.XTemp[0] >= BOSSHPG_START_X)
       BossHPG_Close();
     break;
 
@@ -366,13 +367,13 @@ static void BossHPG_Move(uint32_t now) {
     return;
   }
 
-  BossHPG.Count++;
+  Bosses.hpg.Count++;
 }
 
 // ボスの体力ゲージをクローズする //
 static void BossHPG_Close(void) {
   // 後で変更のこと //
-  BossHPG.State = BHPG_CLOSE;
+  Bosses.hpg.State = BHPG_CLOSE;
 }
 
 // ボスの体力ゲージを描画する //
@@ -380,13 +381,13 @@ void BossHPG_Draw(void) {
   PIXEL_LTRB src;
   int i;
 
-  switch (BossHPG.State) {
+  switch (Bosses.hpg.State) {
   case (BHPG_OPEN1):
   case (BHPG_CLOSE):
     // エフェクト付き枠の描画 //
     for (i = 0; i < BOSSHPG_HEIGHT; i++) {
       src = {0, (104 + i), BOSSHPG_WIDTH, (104 + i + 1)};
-      GrpSurface_Blit({BossHPG.XTemp[i], (16 + i)}, SURFACE_ID::SYSTEM, src);
+      GrpSurface_Blit({Bosses.hpg.XTemp[i], (16 + i)}, SURFACE_ID::SYSTEM, src);
     }
     break;
 
@@ -397,8 +398,8 @@ void BossHPG_Draw(void) {
     constexpr WINDOW_COORD left = (BOSSHPG_END_X + 3);
     constexpr WINDOW_COORD top = (16 + 3);
     constexpr WINDOW_COORD bottom = (top + 11);
-    const auto x1 = (left + ((BossHPG.Next * 30 * 8) / BossHPG.Max));
-    const auto x2 = (left + ((BossHPG.Now * 30 * 8) / BossHPG.Max));
+    const auto x1 = (left + ((Bosses.hpg.Next * 30 * 8) / Bosses.hpg.Max));
+    const auto x2 = (left + ((Bosses.hpg.Now * 30 * 8) / Bosses.hpg.Max));
     constexpr uint8_t alpha = (128 + 64);
     constexpr RGB216 col = {0, 1, 5};
 

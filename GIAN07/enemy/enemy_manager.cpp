@@ -19,6 +19,4 @@ int& HomingX = Enemies.homing_x;
 int& HomingY = Enemies.homing_y;
 int& HomingFlag = Enemies.homing_flag;
 
-// --- 特殊角度 ---
-uint8_t& EnemyEXDEG = Enemies.enemy_exdeg;
-uint8_t& EnemyEXDEG_D = Enemies.enemy_exdeg_d;
+// EnemyEXDEG, EnemyEXDEG_D → Enemies.xxx で直接アクセス

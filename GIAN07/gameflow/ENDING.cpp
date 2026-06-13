@@ -75,7 +75,7 @@ const PIXEL_LTRB StaffMember[7] = {{0, 168, 72, 192},    {96, 168, 168, 192},
                                    {0, 216, 336, 264}};
 
 // フラッシュの状態 //
-// FlashState → gameflow_manager.cpp の GameFlowManager に移動
+// GameFlow.flash_state → gameflow_manager.cpp の GameFlowManager に移動
 
 void UpdateGrpInfo(); // グラフィックの更新(内部データ)
 void UpdateStfInfo(); // スタッフの更新(内部データ)
@@ -113,7 +113,7 @@ bool EndingInit(void) {
 
   GameMain = EndingProc;
 
-  FlashState = 0;
+  GameFlow.flash_state = 0;
 
   EGrpInfo.bWantDisp = false;
   EStfTask.bWantDisp = false;
@@ -133,8 +133,8 @@ void EndingProc(bool &) { /*
                          */
   extern bool IsDraw();
 
-  if (FlashState)
-    FlashState -= 32;
+  if (GameFlow.flash_state)
+    GameFlow.flash_state -= 32;
 
   EndingSCLDecode();
   if (GameMain != EndingProc)
@@ -282,8 +282,8 @@ void DrawFadeInfo() {
 
   // フェードアウト関連
   if (GrpGeom_FB()) {
-    if (FlashState) {
-      FlashPaletteGrp(temp_pal, EGrpInfo.target->pal, FlashState);
+    if (GameFlow.flash_state) {
+      FlashPaletteGrp(temp_pal, EGrpInfo.target->pal, GameFlow.flash_state);
       GrpBackend_PaletteSet(temp_pal);
     } else if (EGrpInfo.target) {
       FadeoutPaletteGrp(temp_pal, EGrpInfo.target->pal,
@@ -316,8 +316,8 @@ void DrawFadeInfo() {
         GrpGeom->DrawBoxA(0, 0, (320 - 50), 300);
       }
     }
-    if (FlashState) {
-      GrpGeom->SetAlphaNorm(255 - FlashState);
+    if (GameFlow.flash_state) {
+      GrpGeom->SetAlphaNorm(255 - GameFlow.flash_state);
       GrpGeom->SetColor({5, 5, 5});
       GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
     }
@@ -454,7 +454,7 @@ void EndingSCLDecode() {
     case (SCL_EFC):
       switch (cmd[1]) {
       case 0:
-        FlashState = 256 * 2;
+        GameFlow.flash_state = 256 * 2;
         break;
       }
 

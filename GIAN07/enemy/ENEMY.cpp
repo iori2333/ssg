@@ -5,6 +5,7 @@
 
 #include "ECL_LEN.h"
 #include "ENEMY.h"
+#include "enemy_manager.h"
 #include "GIAN.h"
 #include "core/entity.h"
 #include "LEVEL.h"
@@ -37,7 +38,7 @@ static void ECL_DEBUG(const char *s, auto param) {
 // Enemy, EnemyInd, EnemyNow, ECL_Head, SCL_Head, SCL_Now, Anime,
 // HomingX, HomingY, HomingFlag — enemy_manager.cpp で参照として定義
 
-// EnemyEXDEG, EnemyEXDEG_D → enemy_manager.cpp の EnemyManager に移動
+// Enemies.enemy_exdeg, Enemies.enemy_exdeg_d → enemy_manager.cpp の EnemyManager に移動
 
 // 関数 //
 static void _EnemyDrawBomb(int x, int y, uint32_t count);
@@ -1123,8 +1124,8 @@ ECL_HEAD:
     break;
 
   case (ECL_DEGEX):
-    e->d = EnemyEXDEG;
-    EnemyEXDEG += EnemyEXDEG_D;
+    e->d = Enemies.enemy_exdeg;
+    Enemies.enemy_exdeg += Enemies.enemy_exdeg_d;
     bRetFlag = false;
     break;
 
@@ -1509,7 +1510,7 @@ ECL_HEAD:
     break;
 
   case (ECL_EXDEGD): // 特殊角度増分変更
-    EnemyEXDEG_D = cmd[1];
+    Enemies.enemy_exdeg_d = cmd[1];
     bRetFlag = false;
     break;
 

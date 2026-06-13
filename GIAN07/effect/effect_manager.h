@@ -27,6 +27,10 @@ typedef struct { int x, y; char vy; uint8_t type; uint8_t deg; uint8_t amp; } St
 typedef struct { int x, y; int vy; } Stg6Star;
 
 struct EffectManager {
+  // ========================================================================
+  // Data members
+  // ========================================================================
+
   // EFFECT.cpp
   std::array<SEFFECT_DATA, SEFFECT_MAX> string_effects;
   std::array<CIRCLE_EFC_DATA, CIRCLE_EFC_MAX> circle_effects;
@@ -53,34 +57,170 @@ struct EffectManager {
   std::array<FakeECLString, FAKE_ECLSTR_MAX> fake_ecl_strs;
   std::array<Stg6Raster, S6RASTER_MAX> s6_ras;
   std::array<Stg6Star, S3STAR_MAX> s6_stars;
+
+  // EFFECT3D.cpp — warning wireframe state (was file-static Warning[8])
+  LineList3D warning_lines[8];
+
+  // EFFECT3D.cpp — Move3DCube animation state (was static locals)
+  uint16_t cube_anim_d = 0;
+  uint16_t cube_anim_dx = 0;
+  uint16_t cube_anim_dy = 0;
+  uint16_t cube_anim_dz = 0;
+
+  // ========================================================================
+  // EFFECT.cpp methods (string/circle/screen/lockon/warning effects)
+  // ========================================================================
+
+  void InitMusicTitle();
+  void InitStringEffects();
+  void SpawnStringEffect(int x, int y, const char* s);
+  void SpawnPointEffect(int x, int y, uint32_t point);
+  void SpawnGameOverEffect();
+  void SetMusicTitle(int y, Narrow::string_view s);
+  void MoveStringEffects();
+  void DrawStringEffects();
+
+  void InitCircleEffects();
+  void MoveCircleEffects();
+  void DrawCircleEffects();
+  void SpawnCircleEffect(int x, int y, uint8_t type);
+
+  void InitScreenEffect();
+  void SetScreenEffect(uint8_t cmd);
+  void MoveScreenEffect();
+  void DrawScreenEffect();
+
+  void InitLockOn();
+  void LockOn(int* x, int* y, int wx64, int hx64);
+  void MoveLockOn();
+  void DrawLockOn();
+
+  void InitWarningEffect();
+  void SetWarningEffect();
+  void MoveWarningEffect();
+  void DrawWarningEffect();
+
+  void CircleFadeOut(int x, int y, int r);
+
+  void RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH& subrect);
+
+  // ========================================================================
+  // FRAGMENT.cpp methods
+  // ========================================================================
+
+  void InitFragments();
+  void SpawnFragment(int x, int y, uint8_t cmd);
+  void MoveFragments();
+  void DrawFragments();
+
+  // ========================================================================
+  // BOMBEFC.cpp methods
+  // ========================================================================
+
+  void InitBombEffects();
+  void SpawnBombEffect(int x, int y, uint8_t type);
+  void DrawBombEffects();
+  void MoveBombEffects();
+
+  // ========================================================================
+  // EFFECT3D.cpp methods (3D effects)
+  // ========================================================================
+
+  void Init3DCubes();
+  void Draw3DCubes();
+  void Move3DCubes();
+  void InitFakeECL();
+  void MoveFakeECL();
+  void DrawFakeECL();
+  void InitStg4Rocks();
+  void MoveStg4Rocks();
+  void DrawStg4Rocks();
+  void SendCmdStg4Rocks(uint8_t cmd, uint8_t param);
+  void InitStg6Rasters();
+  void MoveStg6Rasters();
+  void DrawStg6Rasters();
+  void InitStg3Stars();
+  void MoveStg3Stars();
+  void DrawStg3Stars();
+
+  // Warning wireframe 3D text
+  void InitWarningText();
+  void DrawWarningText();
+  void MoveWarningText(uint8_t count);
+
+private:
+  // Internal helpers (BOMBEFC.cpp)
+  void InitBombEffectSTD(BombEfcCtrl* p);
+  void DrawBombEffectSTD(BombEfcCtrl* p);
+  void MoveBombEffectSTD(BombEfcCtrl* p);
 };
 
 extern EffectManager Effects;
 
-// --- 後方互換用参照 ---
-// EFFECT.cpp
-extern std::array<SEFFECT_DATA, SEFFECT_MAX>& SEffect;
-extern std::array<CIRCLE_EFC_DATA, CIRCLE_EFC_MAX>& CEffect;
-extern std::array<LOCKON_INFO, LOCKON_MAX>& LockInfo;
-extern SCREENEFC_INFO& ScreenInfo;
-extern unsigned int& MTitleRect;
-extern Narrow::string_view (&MTitleStrs)[2];
-extern bool& bEnableWarnEfc;
-extern uint16_t& WarnEfcTime;
+// ============================================================
+// Backward-compat inline wrappers (was in EFFECT.h)
+// ============================================================
 
-// FRAGMENT.cpp
-extern std::array<FRAGMENT_DATA, FRAGMENT_MAX>& Fragment;
-extern int& FragmentPtr;
+inline void MTitleInit()        { Effects.InitMusicTitle(); }
+inline void SEffectInit()       { Effects.InitStringEffects(); }
+inline void StringEffect(int x, int y, const char* s) { Effects.SpawnStringEffect(x, y, s); }
+inline void StringEffect2(int x, int y, uint32_t point) { Effects.SpawnPointEffect(x, y, point); }
+inline void StringEffect3()     { Effects.SpawnGameOverEffect(); }
+inline void SetMusicTitle(int y, Narrow::string_view s) { Effects.SetMusicTitle(y, s); }
+inline void SEffectMove()       { Effects.MoveStringEffects(); }
+inline void SEffectDraw()       { Effects.DrawStringEffects(); }
 
-// BOMBEFC.cpp
-extern std::array<BombEfcCtrl, EXBOMB_MAX>& BombEfc;
+inline void CEffectInit()       { Effects.InitCircleEffects(); }
+inline void CEffectMove()       { Effects.MoveCircleEffects(); }
+inline void CEffectDraw()       { Effects.DrawCircleEffects(); }
+inline void CEffectSet(int x, int y, uint8_t type) { Effects.SpawnCircleEffect(x, y, type); }
 
-// EFFECT3D.cpp
-extern std::array<Circle3D, CIRCLE_MAX>& Cir;
-extern std::array<Cube3D, CUBE_MAX>& Cube;
-extern std::array<Star2D, STAR_MAX>& Star;
-extern std::array<Rock3D, ROCK_MAX>& Rock;
-extern WFLine2D& WFLine;
-extern std::array<FakeECLString, FAKE_ECLSTR_MAX>& FakeECLStr;
-extern std::array<Stg6Raster, S6RASTER_MAX>& S6Ras;
-extern std::array<Stg6Star, S3STAR_MAX>& S6Star;
+inline void ScreenEffectInit()  { Effects.InitScreenEffect(); }
+inline void ScreenEffectSet(uint8_t cmd) { Effects.SetScreenEffect(cmd); }
+inline void ScreenEffectMove()  { Effects.MoveScreenEffect(); }
+inline void ScreenEffectDraw()  { Effects.DrawScreenEffect(); }
+
+inline void WarningEffectInit() { Effects.InitWarningEffect(); }
+inline void WarningEffectSet()  { Effects.SetWarningEffect(); }
+inline void WarningEffectMove() { Effects.MoveWarningEffect(); }
+inline void WarningEffectDraw() { Effects.DrawWarningEffect(); }
+
+inline void ObjectLockOnInit()  { Effects.InitLockOn(); }
+inline void ObjectLockOn(int* x, int* y, int wx64, int hx64) { Effects.LockOn(x, y, wx64, hx64); }
+inline void ObjectLockMove()    { Effects.MoveLockOn(); }
+inline void ObjectLockDraw()    { Effects.DrawLockOn(); }
+
+inline void CircleFadeOut(int x, int y, int r) { Effects.CircleFadeOut(x, y, r); }
+
+// FRAGMENT.cpp wrappers
+inline void fragment_set(int x, int y, uint8_t cmd) { Effects.SpawnFragment(x, y, cmd); }
+inline void fragment_move()  { Effects.MoveFragments(); }
+inline void fragment_draw()  { Effects.DrawFragments(); }
+inline void fragment_setup() { Effects.InitFragments(); }
+
+// BOMBEFC.cpp wrappers
+inline void ExBombEfcInit()                         { Effects.InitBombEffects(); }
+inline void ExBombEfcSet(int x, int y, uint8_t t)   { Effects.SpawnBombEffect(x, y, t); }
+inline void ExBombEfcDraw()                         { Effects.DrawBombEffects(); }
+inline void ExBombEfcMove()                         { Effects.MoveBombEffects(); }
+
+// EFFECT3D.cpp wrappers
+inline void Init3DCube()           { Effects.Init3DCubes(); }
+inline void Draw3DCube()           { Effects.Draw3DCubes(); }
+inline void Move3DCube()           { Effects.Move3DCubes(); }
+inline void InitEffectFakeECL()    { Effects.InitFakeECL(); }
+inline void MoveEffectFakeECL()    { Effects.MoveFakeECL(); }
+inline void DrawEffectFakeECL()    { Effects.DrawFakeECL(); }
+inline void InitStg4Rock()         { Effects.InitStg4Rocks(); }
+inline void MoveStg4Rock()         { Effects.MoveStg4Rocks(); }
+inline void DrawStg4Rock()         { Effects.DrawStg4Rocks(); }
+inline void SendCmdStg4Rock(uint8_t Cmd, uint8_t Param) { Effects.SendCmdStg4Rocks(Cmd, Param); }
+inline void InitStg6Raster()       { Effects.InitStg6Rasters(); }
+inline void MoveStg6Raster()       { Effects.MoveStg6Rasters(); }
+inline void DrawStg6Raster()       { Effects.DrawStg6Rasters(); }
+inline void InitStg3Star()         { Effects.InitStg3Stars(); }
+inline void MoveStg3Star()         { Effects.MoveStg3Stars(); }
+inline void DrawStg3Star()         { Effects.DrawStg3Stars(); }
+inline void InitWarning()          { Effects.InitWarningText(); }
+inline void DrawWarning()          { Effects.DrawWarningText(); }
+inline void MoveWarning(uint8_t count) { Effects.MoveWarningText(count); }

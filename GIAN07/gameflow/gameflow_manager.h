@@ -33,14 +33,6 @@ struct GameFlowManager {
 extern GameFlowManager GameFlow;
 
 // --- 後方互換用参照 ---
+// GameMain のみクロスモジュール（ENTRY.cpp, MUSIC.cpp で使用）
 extern void (*& GameMain)(bool &quit);
-extern uint16_t& DemoTimer;
-extern uint32_t& DrawCount;
-extern uint8_t& WeaponKeyWait;
-extern int& GameOverTimer;
-extern NR_NAME_DATA& CurrentName;
-extern uint8_t& CurrentRank;
-extern uint8_t& CurrentDif;
-extern MAID& VivTemp;
-extern bool& InputLocked;
-extern uint16_t& FlashState; // from ENDING.cpp
+// その他の参照は削除 — 各 .cpp は GameFlow.xxx を直接使用

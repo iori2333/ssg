@@ -5,6 +5,7 @@
 
 #include "GIAN.h"
 #include "MAIDTAMA.h"
+#include "player_manager.h"
 #include "game/cast.h"
 #include "game/input.h"
 #include "game/snd.h"
@@ -59,7 +60,7 @@ static void SetHomingBomb(void);
 static void SetLaserBomb(void);
 static void SetCactusBomb(void);
 
-// MaidTama[], MaidTamaInd[], MaidTamaNow → player_manager.cpp の PlayerManager に移動
+// Players.maid_tama[], Players.maid_tama_ind[], Players.maid_tama_now → player_manager.cpp の PlayerManager に移動
 
 constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     // MainWeapon		// SubWeapon
@@ -161,8 +162,8 @@ void MaidTamaMove(void) {
 
   int i;
 
-  for (i = 0; i < MaidTamaNow; i++) {
-    auto *t = &MaidTama[MaidTamaInd[i]];
+  for (i = 0; i < Players.maid_tama_now; i++) {
+    auto *t = &Players.maid_tama[Players.maid_tama_ind[i]];
     if (t->c == TID_HOMING_BOMB_B) {
       enemy_damage(t->x, t->y, TogeDamage[t->c]);
       t->count++;
@@ -194,7 +195,7 @@ void MaidTamaMove(void) {
     } else
       tamaEmove(t);
   }
-  Indsort(MaidTamaInd, MaidTamaNow, MaidTama,
+  Indsort(Players.maid_tama_ind, Players.maid_tama_now, Players.maid_tama,
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
 
   // レーザーの当たり判定 //
@@ -219,8 +220,8 @@ void MaidTamaDraw(void) {
                                      {568, 104, 568 + 32, 104 + 32},
                                      {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; i < MaidTamaNow; i++) {
-    auto *t = &MaidTama[MaidTamaInd[i]];
+  for (i = 0; i < Players.maid_tama_now; i++) {
+    auto *t = &Players.maid_tama[Players.maid_tama_ind[i]];
 
     x = (t->x >> 6) - 8; // -8 は座標の補正用です
     y = (t->y >> 6) - 8; // 上に同じ
@@ -287,20 +288,20 @@ void MaidTamaIndSet(void) {
 
   // この配列を初期化することで全ての弾を初期化する事になる //
   for (i = 0; i < MAIDTAMA_MAX; i++) {
-    MaidTamaInd[i] = i;
-    // memset(MaidTama+i,0,sizeof(TAMA_DATA));
+    Players.maid_tama_ind[i] = i;
+    // memset(Players.maid_tama+i,0,sizeof(TAMA_DATA));
   }
 
   // 現在の個数を０初期化するのを忘れずに //
-  MaidTamaNow = 0;
+  Players.maid_tama_now = 0;
 }
 
 static void MTamaSet(void) {
   for (decltype(TamaCmd.n) i = 0; i < TamaCmd.n; i++) {
-    if (MaidTamaNow + 1 >= MAIDTAMA_MAX)
+    if (Players.maid_tama_now + 1 >= MAIDTAMA_MAX)
       return; // セットできない場合
 
-    auto *t = &MaidTama[MaidTamaInd[MaidTamaNow++]]; // 弾ポインタをセット
+    auto *t = &Players.maid_tama[Players.maid_tama_ind[Players.maid_tama_now++]]; // 弾ポインタをセット
 
     t->x = t->tx = TamaCmd.x; // X座標のセット
     t->y = t->ty = TamaCmd.y; // Y座標のセット

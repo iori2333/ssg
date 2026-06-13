@@ -9,6 +9,7 @@
 #include "LZ_UTY.h"
 #include "SCORE.h"
 #include "game/defer.h"
+#include "gameflow_manager.h"
 #include <array>
 #include <inttypes.h> // for PRId64
 #include <ranges>
@@ -21,7 +22,7 @@ using NR_CONST_SCORE_LIST = std::span<const NR_NAME_DATA, NR_RANK_MAX>;
 constexpr uint64_t PBG_MASK_VALUE = 0xb97eb2c6542d3a41;
 
 const auto ScoreFileName = u8"秋霜SC.DAT"; // スコアデータ格納ファイル名
-// ScoreString[] → gameflow_manager.cpp の GameFlowManager に移動
+// GameFlow.score_string[] → gameflow_manager.cpp の GameFlowManager に移動
 
 // スコアデータ格納先(名前空間で保護)
 static std::unique_ptr<NR_SCORE_DATA> ScoreData = nullptr;
@@ -74,7 +75,7 @@ uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
   int i, num;
   int64_t temp;
 
-  Res = ScoreString.data();
+  Res = GameFlow.score_string.data();
 
   // スコアデータを読み込む //
   uint8_t rank;

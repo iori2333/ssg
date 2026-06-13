@@ -31,9 +31,6 @@ struct BombEffectCtrl {
 using BombEfcCtrl = BombEffectCtrl;
 
 /***** [関数プロトタイプ] *****/
-void ExBombEfcInit(void);                      // 爆発系エフェクトの初期化
-void ExBombEfcSet(int x, int y, uint8_t type); // 爆発系エフェクトをセットする
-void ExBombEfcDraw(void);                      // 爆発系エフェクトを描画する
-void ExBombEfcMove(void);                      // 爆発系エフェクトを動作させる
+// 後方互換 inline wrapper は effect_manager.h の末尾に移動
 
 

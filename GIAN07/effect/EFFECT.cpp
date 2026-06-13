@@ -12,21 +12,19 @@
 #include "game/ut_math.h"
 #include "platform/text_backend.h"
 
-// SEffect[], CEffect[], LockInfo[], ScreenInfo, MTitleRect, MTitleStrs[]
+// Effects.string_effects[], Effects.circle_effects[], Effects.lock_info[], Effects.screen_info, Effects.mtitle_rect, Effects.mtitle_strs[]
 // → effect_manager.cpp の EffectManager に移動
 
-extern void CircleFadeOut(int x, int y, int r);
-
 // 円エフェクトの初期化 //
-void CEffectInit(void) {
-  for (auto &it : CEffect) {
+void EffectManager::InitCircleEffects() {
+  for (auto &it : Effects.circle_effects) {
     it.type = CEFC_NONE;
   }
 }
 
 // 円エフェクトを動かす //
-void CEffectMove(void) {
-  for (auto &it : CEffect) {
+void EffectManager::MoveCircleEffects() {
+  for (auto &it : Effects.circle_effects) {
     auto *ce = &it;
     ce->count++;
 
@@ -57,14 +55,14 @@ void CEffectMove(void) {
 }
 
 // 円エフェクトを描画する //
-void CEffectDraw(void) {
+void EffectManager::DrawCircleEffects() {
   int j, r;
   int x1, x2, y1, y2;
   static constexpr uint8_t dtable[4] = {0, 1, 3, 7};
 
   GrpGeom->Lock();
 
-  for (const auto &it : CEffect) {
+  for (const auto &it : Effects.circle_effects) {
     const auto *ce = &it;
     switch (ce->type) {
     case (CEFC_STAR):
@@ -114,10 +112,10 @@ void CEffectDraw(void) {
 }
 
 // 円エフェクトをセットする //
-void CEffectSet(int x, int y, uint8_t type) {
+void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
   auto ce = std::ranges::find_if(
-      CEffect, [](const auto &ce) { return (ce.type == CEFC_NONE); });
-  if (ce == std::end(CEffect)) {
+      Effects.circle_effects, [](const auto &ce) { return (ce.type == CEFC_NONE); });
+  if (ce == std::end(Effects.circle_effects)) {
     return;
   }
 
@@ -146,42 +144,42 @@ void CEffectSet(int x, int y, uint8_t type) {
   }
 }
 
-void MTitleInit(void) {
-  MTitleRect = TextObj.Register({((X_MAX + 1) - X_MIN), 20});
+void EffectManager::InitMusicTitle() {
+  Effects.mtitle_rect = TextObj.Register({((X_MAX + 1) - X_MIN), 20});
 }
 
 // エフェクトの初期化を行う //
-void SEffectInit(void) {
-  for (auto &it : SEffect) {
-    // memset(SEffect+i,0,sizeof(SEFFECT_DATA));
+void EffectManager::InitStringEffects() {
+  for (auto &it : Effects.string_effects) {
+    // memset(Effects.string_effects+i,0,sizeof(SEFFECT_DATA));
     it.cmd = SEFC_NONE;
   }
 }
 
 // 文字列系エフェクト //
-void StringEffect(int x, int y, const char *s) {
+void EffectManager::SpawnStringEffect(int x, int y, const char *s) {
   int i, j, len;
 
   len = strlen(s);
   for (i = j = 0; i < len; i++) {
-    while (SEffect[j].cmd != SEFC_NONE) {
+    while (Effects.string_effects[j].cmd != SEFC_NONE) {
       j++;
       if (j >= SEFFECT_MAX)
         return;
     }
-    SEffect[j].c = s[i];
-    SEffect[j].x = (x + (i << 4) + 512) << 6;
-    SEffect[j].y = (y) << 6;
-    SEffect[j].vx = (-20) << 6;
-    SEffect[j].vy = (0) << 6;
-    SEffect[j].cmd = SEFC_STR1;
-    SEffect[j].time = 26;
+    Effects.string_effects[j].c = s[i];
+    Effects.string_effects[j].x = (x + (i << 4) + 512) << 6;
+    Effects.string_effects[j].y = (y) << 6;
+    Effects.string_effects[j].vx = (-20) << 6;
+    Effects.string_effects[j].vy = (0) << 6;
+    Effects.string_effects[j].cmd = SEFC_STR1;
+    Effects.string_effects[j].time = 26;
   }
 }
 
 // 得点表示エフェクト //
-void StringEffect2(int x, int y, uint32_t point) {
-  for (auto &it : SEffect) {
+void EffectManager::SpawnPointEffect(int x, int y, uint32_t point) {
+  for (auto &it : Effects.string_effects) {
     if (it.cmd != SEFC_NONE) {
       continue;
     }
@@ -198,8 +196,8 @@ void StringEffect2(int x, int y, uint32_t point) {
 }
 
 // ゲームオーバーの表示 //
-void StringEffect3(void) {
-  for (auto &it : SEffect) {
+void EffectManager::SpawnGameOverEffect() {
+  for (auto &it : Effects.string_effects) {
     if (it.cmd != SEFC_NONE) {
       continue;
     }
@@ -215,17 +213,17 @@ void StringEffect3(void) {
 }
 
 // 曲名の表示 //
-void SetMusicTitle(int y, Narrow::string_view s) {
+void EffectManager::SetMusicTitle(int y, Narrow::string_view s) {
   // 空きバッファ検索 //
   auto e = std::ranges::find_if(
-      SEffect, [](const auto &e) { return (e.cmd == SEFC_NONE); });
-  if (e == std::end(SEffect)) {
+      Effects.string_effects, [](const auto &e) { return (e.cmd == SEFC_NONE); });
+  if (e == std::end(Effects.string_effects)) {
     return;
   }
 
-  MTitleStrs[1] = s;
+  Effects.mtitle_strs[1] = s;
   PIXEL_SIZE extent = {0, 0};
-  for (const auto s : MTitleStrs) {
+  for (const auto s : Effects.mtitle_strs) {
     const auto s_extent = TextObj.TextExtent(FONT_ID::NORMAL, s);
     extent.w += s_extent.w;
     extent.h = s_extent.h;
@@ -242,22 +240,22 @@ void SetMusicTitle(int y, Narrow::string_view s) {
   e->vy = extent.h;
 }
 
-void MTitleRender(WINDOW_POINT topleft, const PIXEL_LTWH &subrect) {
-  const auto mtitle = MTitleStrs[1];
+void EffectManager::RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH &subrect) {
+  const auto mtitle = Effects.mtitle_strs[1];
   TextObj.Render(
-      topleft, MTitleRect, mtitle,
+      topleft, Effects.mtitle_rect, mtitle,
       [](TEXTRENDER_SESSION &s) {
         const auto gradient_func = [](PIXEL_COORD y) -> uint8_t {
           return (255 + 8 - (y * 8));
         };
-        DrawGrdFont(s, MTitleStrs, FONT_ID::NORMAL, true, gradient_func);
+        DrawGrdFont(s, Effects.mtitle_strs, FONT_ID::NORMAL, true, gradient_func);
       },
       subrect);
 }
 
 // エフェクトを動かす(仕様変更の可能性があります) //
-void SEffectMove(void) {
-  for (auto &it : SEffect) {
+void EffectManager::MoveStringEffects() {
+  for (auto &it : Effects.string_effects) {
     auto *e = &it;
     switch (e->cmd) {
     case (SEFC_STR1):
@@ -331,14 +329,14 @@ void SEffectMove(void) {
 }
 
 // エフェクトを描画する(仕様変更の可能性があります) //
-void SEffectDraw(void) {
+void EffectManager::DrawStringEffects() {
   int j, k;
   int x, y;
   int temp;
   PIXEL_LTWH src;
   char buf[20];
 
-  for (const auto &it : SEffect) {
+  for (const auto &it : Effects.string_effects) {
     const auto *e = &it;
     switch (e->cmd) {
     case (SEFC_STR1):
@@ -390,7 +388,7 @@ void SEffectDraw(void) {
         const auto y = ((e->y >> 6) - sinl((degx + j), degx /*40*/));
         for (k = 0; k < 2; k++) {
           const auto x = ((e->x >> 6) + sinl((degx + (j / 2)), temp) + j + k);
-          MTitleRender({x, y}, src);
+          Effects.RenderMusicTitle({x, y}, src);
         }
       }
     } break;
@@ -403,7 +401,7 @@ void SEffectDraw(void) {
         const auto y = ((e->y >> 6) - sinl((degx + j), degx /*40*/));
         for (k = 0; k < 2; k++) {
           const auto x = ((e->x >> 6) + sinl((degx + (j / 2)), temp) + j + k);
-          MTitleRender({x, y}, src);
+          Effects.RenderMusicTitle({x, y}, src);
         }
       }
     } break;
@@ -419,7 +417,7 @@ void SEffectDraw(void) {
       }
       GrpGeom->Unlock();
       src = {0, 0, e->vx, e->vy};
-      MTitleRender({(e->x >> 6), (e->y >> 6)}, src);
+      Effects.RenderMusicTitle({(e->x >> 6), (e->y >> 6)}, src);
     } break;
 
     case (SEFC_NONE):
@@ -430,19 +428,19 @@ void SEffectDraw(void) {
 }
 
 // 画面全体に対するエフェクトの初期化 //
-void ScreenEffectInit(void) {
-  ScreenInfo.cmd = SCNEFC_NONE;
-  ScreenInfo.count = 0;
+void EffectManager::InitScreenEffect() {
+  Effects.screen_info.cmd = SCNEFC_NONE;
+  Effects.screen_info.count = 0;
 
   GrpBackend_SetClip(PLAYFIELD_CLIP);
 }
 
 // 画面全体に対するエフェクトをセットする //
-void ScreenEffectSet(uint8_t cmd) {
-  // if(ScreenInfo.cmd != SCNEFC_NONE) return;
+void EffectManager::SetScreenEffect(uint8_t cmd) {
+  // if(Effects.screen_info.cmd != SCNEFC_NONE) return;
 
-  ScreenInfo.cmd = cmd;
-  ScreenInfo.count = 0;
+  Effects.screen_info.cmd = cmd;
+  Effects.screen_info.count = 0;
 
   switch (cmd) {
   case (SCNEFC_CFADEIN):  // 円形フェードイン
@@ -454,41 +452,41 @@ void ScreenEffectSet(uint8_t cmd) {
     break;
 
   default:                        // ばぐばぐ
-    ScreenInfo.cmd = SCNEFC_NONE; // 一応エフェクトを切っておく
+    Effects.screen_info.cmd = SCNEFC_NONE; // 一応エフェクトを切っておく
     break;
   }
 }
 
 // 画面全体に対するエフェクトを動かす //
-void ScreenEffectMove(void) {
-  switch (ScreenInfo.cmd) {
+void EffectManager::MoveScreenEffect() {
+  switch (Effects.screen_info.cmd) {
   case (SCNEFC_CFADEIN): // 円形フェードイン
-    ScreenInfo.count += 10;
-    if (ScreenInfo.count > 600)
-      ScreenInfo.cmd = SCNEFC_NONE;
+    Effects.screen_info.count += 10;
+    if (Effects.screen_info.count > 600)
+      Effects.screen_info.cmd = SCNEFC_NONE;
     break;
 
   case (SCNEFC_CFADEOUT): // 円形フェードアウト
-    ScreenInfo.count += 10;
-    if (ScreenInfo.count > 600) {
-      ScreenInfo.count = 600;
-      // ScreenInfo.cmd = SCNEFC_NONE;
+    Effects.screen_info.count += 10;
+    if (Effects.screen_info.count > 600) {
+      Effects.screen_info.count = 600;
+      // Effects.screen_info.cmd = SCNEFC_NONE;
     }
     break;
 
   case (SCNEFC_WHITEIN): // ホワイトイン
-    ScreenInfo.count += 10;
-    if (ScreenInfo.count >= 160) {
-      // ScreenInfo.cmd   = SCNEFC_WHITEOUT;
-      // ScreenInfo.count = 0;
-      ScreenInfo.count = 150;
+    Effects.screen_info.count += 10;
+    if (Effects.screen_info.count >= 160) {
+      // Effects.screen_info.cmd   = SCNEFC_WHITEOUT;
+      // Effects.screen_info.count = 0;
+      Effects.screen_info.count = 150;
     }
     break;
 
   case (SCNEFC_WHITEOUT): // ホワイトアウト
-    ScreenInfo.count += 10;
-    if (ScreenInfo.count >= 160)
-      ScreenInfo.cmd = SCNEFC_NONE;
+    Effects.screen_info.count += 10;
+    if (Effects.screen_info.count >= 160)
+      Effects.screen_info.cmd = SCNEFC_NONE;
     break;
 
   default: // ばぐばぐ
@@ -497,21 +495,21 @@ void ScreenEffectMove(void) {
 }
 
 // 画面全体に対するエフェクトを描画する //
-void ScreenEffectDraw(void) {
+void EffectManager::DrawScreenEffect() {
   int i, j;
   PIXEL_LTRB src;
 
-  switch (ScreenInfo.cmd) {
+  switch (Effects.screen_info.cmd) {
   case (SCNEFC_CFADEIN): // 円形フェードイン
-    CircleFadeOut(X_MID, Y_MID, ScreenInfo.count);
+    CircleFadeOut(X_MID, Y_MID, Effects.screen_info.count);
     break;
 
   case (SCNEFC_CFADEOUT): // 円形フェードアウト
-    CircleFadeOut(X_MID, Y_MID, 400 - ScreenInfo.count);
+    CircleFadeOut(X_MID, Y_MID, 400 - Effects.screen_info.count);
     break;
 
   case (SCNEFC_WHITEIN): // ホワイトイン
-    src = PIXEL_LTWH{((15 - (Cast::sign<int>(ScreenInfo.count) / 10)) * 16),
+    src = PIXEL_LTWH{((15 - (Cast::sign<int>(Effects.screen_info.count) / 10)) * 16),
                      (128 + 16), 16, 16};
     for (i = 128; i < 640 - 128; i += 16) {
       for (j = 0; j < 480; j += 16) {
@@ -521,7 +519,7 @@ void ScreenEffectDraw(void) {
     break;
 
   case (SCNEFC_WHITEOUT): // ホワイトアウト
-    src = PIXEL_LTWH{((Cast::sign<int>(ScreenInfo.count) / 10) * 16),
+    src = PIXEL_LTWH{((Cast::sign<int>(Effects.screen_info.count) / 10) * 16),
                      (128 + 16), 16, 16};
     for (i = 128; i < 640 - 128; i += 16) {
       for (j = 0; j < 480; j += 16) {
@@ -536,7 +534,7 @@ void ScreenEffectDraw(void) {
 }
 
 // 円形フェードサポート関数 //
-extern void CircleFadeOut(int x, int y, int r) {
+void EffectManager::CircleFadeOut(int x, int y, int r) {
   PIXEL_LTRB src;
   int temp;
 
@@ -572,18 +570,18 @@ extern void CircleFadeOut(int x, int y, int r) {
 }
 
 // ロックオン配列を初期化 //
-void ObjectLockOnInit(void) {
-  for (auto &it : LockInfo) {
-    // memset(LockInfo+i,0,sizeof(LOCKON_INFO));
+void EffectManager::InitLockOn() {
+  for (auto &it : Effects.lock_info) {
+    // memset(Effects.lock_info+i,0,sizeof(LOCKON_INFO));
     it.state = LOCKON_NONE;
   }
 }
 
 // 何かをロックオンする //
-void ObjectLockOn(int *x, int *y, int wx64, int hx64) {
+void EffectManager::LockOn(int *x, int *y, int wx64, int hx64) {
   auto l = std::ranges::find_if(
-      LockInfo, [](const auto &l) { return (l.state == LOCKON_NONE); });
-  if (l == std::end(LockInfo)) {
+      Effects.lock_info, [](const auto &l) { return (l.state == LOCKON_NONE); });
+  if (l == std::end(Effects.lock_info)) {
     return;
   }
 
@@ -602,8 +600,8 @@ void ObjectLockOn(int *x, int *y, int wx64, int hx64) {
 }
 
 // ロックオンアニメーション動作 //
-void ObjectLockMove(void) {
-  for (auto &it : LockInfo) {
+void EffectManager::MoveLockOn() {
+  for (auto &it : Effects.lock_info) {
     auto *l = &it;
     switch (l->state) {
     case (LOCKON_01):
@@ -635,8 +633,8 @@ void ObjectLockMove(void) {
 }
 
 // ロックオン枠描画 //
-void ObjectLockDraw(void) {
-  for (const auto &it : LockInfo) {
+void EffectManager::DrawLockOn() {
+  for (const auto &it : Effects.lock_info) {
     const auto *l = &it;
     if (l->state != LOCKON_NONE) {
       GrpSurface_Blit({((*l->x >> 6) - 8), ((*l->y >> 6) - 8)},
@@ -671,48 +669,48 @@ void ObjectLockDraw(void) {
   }
 }
 
-// bEnableWarnEfc, WarnEfcTime → effect_manager.cpp の EffectManager に移動
+// Effects.enable_warn_efc, Effects.warn_efc_time → effect_manager.cpp の EffectManager に移動
 
 // ワーニングの初期化 //
-void WarningEffectInit(void) { bEnableWarnEfc = false; }
+void EffectManager::InitWarningEffect() { Effects.enable_warn_efc = false; }
 
 // ワーニングの発動！！ //
-void WarningEffectSet(void) {
-  bEnableWarnEfc = true;
-  WarnEfcTime = 0;
-  InitWarning();
+void EffectManager::SetWarningEffect() {
+  Effects.enable_warn_efc = true;
+  Effects.warn_efc_time = 0;
+  Effects.InitWarningText();
 }
 
 // ワーニングの動作 //
-void WarningEffectMove(void) {
-  if (!bEnableWarnEfc)
+void EffectManager::MoveWarningEffect() {
+  if (!Effects.enable_warn_efc)
     return;
 
-  if (WarnEfcTime < 64 + 128) { // 64+256){
-    MoveWarning(Cast::down<uint8_t>(WarnEfcTime));
+  if (Effects.warn_efc_time < 64 + 128) { // 64+256){
+    Effects.MoveWarningText(Cast::down<uint8_t>(Effects.warn_efc_time));
   } else {
     MoveWarningR(-1);
   }
 
-  if ((WarnEfcTime++) == (256 + 10)) {
-    bEnableWarnEfc = false;
+  if ((Effects.warn_efc_time++) == (256 + 10)) {
+    Effects.enable_warn_efc = false;
   }
 }
 
 // ワーニングの描画 //
-void WarningEffectDraw(void) {
+void EffectManager::DrawWarningEffect() {
   int r;
 
-  if (!bEnableWarnEfc)
+  if (!Effects.enable_warn_efc)
     return;
 
-  if (WarnEfcTime < 256 - 20)
-    DrawWarning();
+  if (Effects.warn_efc_time < 256 - 20)
+    Effects.DrawWarningText();
 
-  if (WarnEfcTime > 256 - 40) {
+  if (Effects.warn_efc_time > 256 - 40) {
     GrpGeom->Lock();
 
-    r = (WarnEfcTime - (256 - 40)) * 3;
+    r = (Effects.warn_efc_time - (256 - 40)) * 3;
     GrpGeom->SetColor({1, 1, 5});
     GeomCircle({320, 100}, (r -= 4));
     GrpGeom->SetColor({2, 2, 5});

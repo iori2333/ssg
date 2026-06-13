@@ -7,6 +7,7 @@
 #include "GIAN.h"
 #include "core/entity.h"
 #include "LASER.h"
+#include "laser_manager.h"
 #include "LEVEL.h"
 #include "LLASER.h"
 #include "PRankCtrl.h"
@@ -28,7 +29,7 @@
  *
  * -> 直線との距離を求める処理を三角関数で計算したものを最適化しています
  *
- * Laser(sx,sy) Saboten(x,y) とするまた、レーザー発射角をdegreeとすると
+ * Lasers.lasers(sx,sy) Saboten(x,y) とするまた、レーザー発射角をdegreeとすると
  * 長さ判定(length)及び、幅判定の値(width)は、
  * (tx = sx-x;	ty = sy-y;)
  * length   = -(cosm(degree)*tx/256+sinm(degree)*ty/256);
@@ -68,7 +69,7 @@ static constexpr auto LF_NMOVE = 0x06; // レーザーの長さ変わらず(LF_S
 // LASER_DATA, LF_DELETE → LASER.h に移動
 
 ////グローバル変数////
-// LaserCmd, LaserNow, Laser[], LaserInd[] → laser_manager.cpp の LaserManager に移動
+// LaserCmd, LaserNow, Lasers.lasers[], Lasers.laser_indices[] → laser_manager.cpp の LaserManager に移動
 // REFLECTOR		Reflector[RT_MAX]; // 反射物_構造体
 //  uint16_t	ReflectorNow;		// 反射物の個数
 
@@ -112,7 +113,7 @@ void laser_setEX(void) {
     if (LaserNow + 1 == LASER_MAX)
       return; // 最大数を越えた場合
 
-    auto *lp = &Laser[LaserInd[LaserNow++]];
+    auto *lp = &Lasers.lasers[Lasers.laser_indices[LaserNow++]];
 
     lp->v = LaserCmd.v;   // レーザーの速度
     lp->a = LaserCmd.a;   // レーザーの加速度
@@ -157,7 +158,7 @@ void laser_setEX(void) {
 void laser_move(void) {
   // [LaserNow] will get mutated for reflecting lasers!
   for (uint16_t i = 0; i < LaserNow; i++) {
-    auto *lp = &Laser[LaserInd[i]];
+    auto *lp = &Lasers.lasers[Lasers.laser_indices[i]];
     Lmove(lp);
     lp->count++;
     if ((lp->x) < GX_MIN || (lp->x) > GX_MAX || (lp->y) < GY_MIN ||
@@ -167,7 +168,7 @@ void laser_move(void) {
     if (Viv.muteki == 0 && !(lp->flag & (LF_CLEAR | LF_DELETE)))
       laser_hitchk(lp);
   }
-  Indsort(LaserInd, LaserNow, Laser,
+  Indsort(Lasers.laser_indices, LaserNow, Lasers.lasers,
           [](const LASER_DATA &l) { return (l.flag & LF_DELETE); });
 }
 
@@ -177,7 +178,7 @@ void laser_draw(void) {
   GrpGeom->Lock();
 
   for (i = 0; i < LaserNow; i++) {
-    auto *lp = &Laser[LaserInd[i]];
+    auto *lp = &Lasers.lasers[Lasers.laser_indices[i]];
     switch (lp->type) {
     // ノーマルショートレーザー＆反射レーザー //
     case (LS_SHORT):
@@ -196,7 +197,7 @@ void laser_draw(void) {
 
   /*
   for(i=0;i<LaserNow;i++){
-          auto* lp = &Laser[LaserInd[i]];
+          auto* lp = &Lasers.lasers[Lasers.laser_indices[i]];
           if(lp->type==LS_REF || lp->type==LS_SHORT)
                   SLdraw(lp);
   }
@@ -207,7 +208,7 @@ void laser_draw(void) {
 
 void laser_clear(void) {
   for (uint16_t i = 0; i < LaserNow; i++) {
-    auto &l = Laser[LaserInd[i]];
+    auto &l = Lasers.lasers[Lasers.laser_indices[i]];
     if (l.flag != LF_CLEAR) {
       l.flag = LF_CLEAR;
       l.count = 0;
@@ -217,8 +218,8 @@ void laser_clear(void) {
 
 void laserind_set(void) {
   for (auto i = 0; i < LASER_MAX; i++) {
-    LaserInd[i] = i;
-    // memset(Laser+i,0,sizeof(LASER_DATA));
+    Lasers.laser_indices[i] = i;
+    // memset(Lasers.lasers+i,0,sizeof(LASER_DATA));
   }
 
   LaserNow = 0;
@@ -555,7 +556,7 @@ static int REFL_hit(const LASER_DATA *lp) {
   for (i = 0; i < LLASER_MAX; i++) {
     if (i == lp->notr)
       continue; // 前回反射したなら無視する
-    ll = &LLaser[i];
+    ll = &Lasers.long_lasers[i];
     if (ll->flag != LLF_NORM)
       continue; // 完全オープンでなければ次へ
 

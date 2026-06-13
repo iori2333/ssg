@@ -93,36 +93,11 @@ struct Rock3D {
 };
 
 ///// [ 関数 ] /////
+// Utility functions (not manager methods)
 void InitLineList3D(std::span<LineList3D> w);
 void DrawLineList3D(std::span<const LineList3D> w);
-
-void InitWarning(void);
-void DrawWarning(void);
-void MoveWarning(uint8_t count);
 void MoveWarningR(char count);
 
-void Init3DCube(void);
-void Draw3DCube(void);
-void Move3DCube(void);
-/*
-void InitStg3Cloud(void);	// ３面の雲の初期化を行う
-void MoveStg3Cloud(void);	// ３面の雲を動作させる
-void DrawStg3Cloud(void);	// ３面の雲を描画する
-*/
-void InitEffectFakeECL(void);
-void MoveEffectFakeECL(void);
-void DrawEffectFakeECL(void);
-
-void InitStg4Rock(void); // ステージ４の背景となる岩の集団
-void MoveStg4Rock(void); //
-void DrawStg4Rock(void); //
-void SendCmdStg4Rock(uint8_t Cmd, uint8_t Param); // コマンド送信
-
-void InitStg6Raster(); // ６面ラスター初期化
-void MoveStg6Raster(); // ６面ラスター動作
-void DrawStg6Raster(); // ６面ラスター描画
-
-void InitStg3Star(); // ３面高速星初期化
-void MoveStg3Star(); // ３面高速星動作
-void DrawStg3Star(); // ３面高速星描画
+// 後方互換 inline wrapper は effect_manager.h の末尾に移動
+// 実装は EffectManager メソッドに移行
 
