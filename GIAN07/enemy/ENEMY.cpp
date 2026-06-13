@@ -6,7 +6,7 @@
 #include "ECL_LEN.h"
 #include "ENEMY.h"
 #include "GIAN.h"
-#include "GIAN07/entity.h"
+#include "core/entity.h"
 #include "LEVEL.h"
 #include "game/cast.h"
 #include "game/debug.h"

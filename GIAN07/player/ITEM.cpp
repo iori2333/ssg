@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "GIAN.h"
-#include "GIAN07/entity.h"
+#include "core/entity.h"
 #include "ITEM.h"
 #include "game/snd.h"
 #include "game/ut_math.h"

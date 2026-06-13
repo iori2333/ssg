@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "EXDEF.h"
+#include "core/EXDEF.h"
 
 ///// [ 定数 ] /////
 inline constexpr auto HLASER_MAX = 162;

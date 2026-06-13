@@ -14,8 +14,8 @@
 // 敵のクリッピング範囲を変更した。
 
 #include "ECL.h"
-#include "LASER.h"
-#include "TAMA.h"
+#include "bullet/LASER.h"
+#include "bullet/TAMA.h"
 #include "platform/buffer.h"
 
 //// 敵定数 ////

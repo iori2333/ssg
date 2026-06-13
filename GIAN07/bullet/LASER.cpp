@@ -5,7 +5,7 @@
 
 #include "GEOMETRY.h"
 #include "GIAN.h"
-#include "GIAN07/entity.h"
+#include "core/entity.h"
 #include "LASER.h"
 #include "LEVEL.h"
 #include "LLASER.h"

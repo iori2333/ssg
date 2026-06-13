@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "GIAN07/entity.h"
+#include "core/entity.h"
 
 ///// [更新履歴] /////
 

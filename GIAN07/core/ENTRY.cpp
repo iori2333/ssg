@@ -3,10 +3,10 @@
  *
  */
 
-#include "GIAN07/CONFIG.h"
-#include "GIAN07/ENTRY.h"
-#include "GIAN07/GAMEMAIN.h"
-#include "GIAN07/LOADER.h"
+#include "CONFIG.h"
+#include "ENTRY.h"
+#include "gameflow/GAMEMAIN.h"
+#include "LOADER.h"
 #include "game/bgm.h"
 #include "game/debug.h"
 #include "game/frame.h"

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "TAMA.h"
+#include "bullet/TAMA.h"
 
 ///// [ 定数 ] /////
 

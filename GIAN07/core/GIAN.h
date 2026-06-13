@@ -15,22 +15,22 @@
 ///// [Include Files] /////
 #include "constants.h"
 
-#include "BOSS.h"      // ボスの定義＆ボス用エフェクトなど
-#include "EFFECT.h"    // 主にテキストベースのエフェクト処理
-#include "EFFECT3D.h"  // ３Ｄエフェクト
-#include "FRAGMENT.h"  // 破片系エフェクト処理
-#include "GAMEMAIN.h"  // メインのルーチン切り替え処理
-#include "HOMINGL.h"   // ホーミングレーザーの処理
-#include "LASER.h"     // 短いレーザー＆リフレクトレーザー処理
-#include "LLASER.h"    // なが～いレーザーの処理
+#include "enemy/BOSS.h"      // ボスの定義＆ボス用エフェクトなど
+#include "effect/EFFECT.h"    // 主にテキストベースのエフェクト処理
+#include "effect/EFFECT3D.h"  // ３Ｄエフェクト
+#include "effect/FRAGMENT.h"  // 破片系エフェクト処理
+#include "gameflow/GAMEMAIN.h"  // メインのルーチン切り替え処理
+#include "bullet/HOMINGL.h"   // ホーミングレーザーの処理
+#include "bullet/LASER.h"     // 短いレーザー＆リフレクトレーザー処理
+#include "bullet/LLASER.h"    // なが～いレーザーの処理
 #include "LOADER.h"    // 各種ローダー
-#include "MAID.h"      // その名の通り
-#include "MAIDTAMA.h"  // 自機ショットの処理
-#include "PRankCtrl.h" // プレイランク管理
-#include "SCROLL.h"    // 背景スクロール＆ＳＣＬ管理
+#include "player/MAID.h"      // その名の通り
+#include "player/MAIDTAMA.h"  // 自機ショットの処理
+#include "gameflow/PRankCtrl.h" // プレイランク管理
+#include "stage/SCROLL.h"    // 背景スクロール＆ＳＣＬ管理
 
 #include "game/ut_math.h" // for rnd()
-#include "ITEM.h" // アイテム処理
+#include "player/ITEM.h" // アイテム処理
 
 ///// [ 定数 ] /////
 
