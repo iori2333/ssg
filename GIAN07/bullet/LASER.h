@@ -89,14 +89,8 @@ typedef struct{
 */
 
 ////レーザー関数////
-void laser_set(void);   // レーザーをセットする(難易度変更"有り")
-void laser_setEX(void); // レーザーをセットする(難易度変更"無し")
-int llaser_set(
-    uint16_t *ind); // 無限遠レーザーをセットする(セットできた数を返すのだ)
-void laser_move(void);   // レーザーを動かす
-void laser_draw(void);   // レーザーを描画する
-void laser_clear(void);  // レーザー全てに消去エフェクトをかける
-void laserind_set(void); // レーザー順序用配列の初期化
+// 後方互換 inline wrapper は laser_manager.h 末尾に移動
+// 実装は LaserManager メソッドに移行
 
 ////レーザーの各種変数たち////
 extern LaserCommand& LaserCmd; // 標準レーザーコマンド構造体

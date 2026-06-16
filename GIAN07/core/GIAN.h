@@ -25,6 +25,8 @@
 #include "bullet/HOMINGL.h"   // ホーミングレーザーの処理
 #include "bullet/LASER.h"     // 短いレーザー＆リフレクトレーザー処理
 #include "bullet/LLASER.h"    // なが～いレーザーの処理
+#include "bullet/bullet_manager.h" // BulletManager + backward-compat wrappers
+#include "bullet/laser_manager.h"  // LaserManager + backward-compat wrappers
 #include "LOADER.h"    // 各種ローダー
 #include "player/MAID.h"      // その名の通り
 #include "player/MAIDTAMA.h"  // 自機ショットの処理

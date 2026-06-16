@@ -73,42 +73,42 @@ static constexpr auto LF_NMOVE = 0x06; // レーザーの長さ変わらず(LF_S
 // REFLECTOR		Reflector[RT_MAX]; // 反射物_構造体
 //  uint16_t	ReflectorNow;		// 反射物の個数
 
-static void easy_cmdL(void); // 難易度：Ｅａｓｙ
-static void hard_cmdL(void); // 難易度：Ｈａｒｄ
-static void luna_cmdL(void); // 難易度：Ｌｕｎａｔｉｃ
+// private methods declared in laser_manager.h
+// private methods declared in laser_manager.h
+// private methods declared in laser_manager.h
 
-static uint8_t laser_dir(uint16_t i);     // レーザーの進行方向をセットする
-static void slaser_pset(LASER_DATA *lp);  // ４点の座標をセットする(ショート用)
-static void SLdraw(const LASER_DATA *lp); // ショートレーザー描画
+// private methods declared in laser_manager.h
+// private methods declared in laser_manager.h
+// private methods declared in laser_manager.h
 
-static void Lmove(LASER_DATA *lp);        // 種類により分岐し座標を更新する
-static void laser_hitchk(LASER_DATA *lp); // レーザーの当たり判定
+// private methods declared in laser_manager.h
+// private methods declared in laser_manager.h
 
-static void REFL_move(LASER_DATA *lp);     // 反射レーザーの移動
-static int REFL_hit(const LASER_DATA *lp); // ﾘﾌﾚｸﾀｰとの当たり判定(ﾋｯﾄ->非０)
+// private methods declared in laser_manager.h
+// private methods declared in laser_manager.h
 
-void laser_set(void) {
+void LaserManager::Spawn() {
   switch (PlayRank.GameLevel) {
   case (GAME_EASY):
-    easy_cmdL();
+    SetEasy();
     break;
 
   case (GAME_HARD):
-    hard_cmdL();
+    SetHard();
     break;
 
   case (GAME_LUNATIC):
-    luna_cmdL();
+    SetLunatic();
     break;
   }
 
   LaserCmd.v =
       (((LaserCmd.v >> 1) * (PlayRank.Rank)) >> (5 + 8)) + (LaserCmd.v >> 1);
 
-  laser_setEX();
+  SpawnEX();
 }
 
-void laser_setEX(void) {
+void LaserManager::SpawnEX() {
   for (decltype(LaserCmd.n) i = 0; i < LaserCmd.n; i++) {
     if (LaserNow + 1 == LASER_MAX)
       return; // 最大数を越えた場合
@@ -117,7 +117,7 @@ void laser_setEX(void) {
 
     lp->v = LaserCmd.v;   // レーザーの速度
     lp->a = LaserCmd.a;   // レーザーの加速度
-    lp->d = laser_dir(i); // レーザーの角度
+    lp->d = CalcDir(i); // レーザーの角度
 
     if (LaserCmd.l2) {
       lp->x = LaserCmd.x + cosl(lp->d, LaserCmd.l2);
@@ -151,28 +151,28 @@ void laser_setEX(void) {
 
     lp->notr = LaserCmd.notr; // 反射しないリフレクター
 
-    slaser_pset(lp); // ４点の座標をセットする(ショート用)
+    SetupShort(lp); // ４点の座標をセットする(ショート用)
   }
 }
 
-void laser_move(void) {
+void LaserManager::Move() {
   // [LaserNow] will get mutated for reflecting lasers!
   for (uint16_t i = 0; i < LaserNow; i++) {
     auto *lp = &Lasers.lasers[Lasers.laser_indices[i]];
-    Lmove(lp);
+    MoveLaser(lp);
     lp->count++;
     if ((lp->x) < GX_MIN || (lp->x) > GX_MAX || (lp->y) < GY_MIN ||
         (lp->y) > GY_MAX)
       lp->flag = LF_DELETE;
 
     if (Viv.muteki == 0 && !(lp->flag & (LF_CLEAR | LF_DELETE)))
-      laser_hitchk(lp);
+      HitCheck(lp);
   }
   Indsort(Lasers.laser_indices, LaserNow, Lasers.lasers,
           [](const LASER_DATA &l) { return (l.flag & LF_DELETE); });
 }
 
-void laser_draw(void) {
+void LaserManager::Draw() {
   int i;
 
   GrpGeom->Lock();
@@ -183,7 +183,7 @@ void laser_draw(void) {
     // ノーマルショートレーザー＆反射レーザー //
     case (LS_SHORT):
     case (LS_REF):
-      SLdraw(lp);
+      DrawShort(lp);
       break;
 
       /*
@@ -199,14 +199,14 @@ void laser_draw(void) {
   for(i=0;i<LaserNow;i++){
           auto* lp = &Lasers.lasers[Lasers.laser_indices[i]];
           if(lp->type==LS_REF || lp->type==LS_SHORT)
-                  SLdraw(lp);
+                  DrawShort(lp);
   }
   */
 
   GrpGeom->Unlock();
 }
 
-void laser_clear(void) {
+void LaserManager::Clear() {
   for (uint16_t i = 0; i < LaserNow; i++) {
     auto &l = Lasers.lasers[Lasers.laser_indices[i]];
     if (l.flag != LF_CLEAR) {
@@ -216,7 +216,7 @@ void laser_clear(void) {
   }
 }
 
-void laserind_set(void) {
+void LaserManager::SetIndices() {
   for (auto i = 0; i < LASER_MAX; i++) {
     Lasers.laser_indices[i] = i;
     // memset(Lasers.lasers+i,0,sizeof(LASER_DATA));
@@ -225,7 +225,7 @@ void laserind_set(void) {
   LaserNow = 0;
 }
 
-static void easy_cmdL(void) {
+void LaserManager::SetEasy() {
   switch (LaserCmd.cmd & 0x03) {
   case (LC_WAY):
     if (LaserCmd.n >= 3)
@@ -242,7 +242,7 @@ static void easy_cmdL(void) {
   LaserCmd.l -= (LaserCmd.l >> 2);
 }
 
-static void hard_cmdL(void) {
+void LaserManager::SetHard() {
   switch (LaserCmd.cmd & 0x03) {
   case (LC_WAY):
     LaserCmd.n += 2;                   // 奇数・偶数は変化させない
@@ -261,7 +261,7 @@ static void hard_cmdL(void) {
   LaserCmd.l += (LaserCmd.l >> 2);
 }
 
-static void luna_cmdL(void) {
+void LaserManager::SetLunatic() {
   switch (LaserCmd.cmd & 0x03) {
   case (LC_WAY):
     LaserCmd.n += 4;                  // 奇数・偶数は変化させない
@@ -280,7 +280,7 @@ static void luna_cmdL(void) {
   LaserCmd.l += (LaserCmd.l >> 1);
 }
 
-static uint8_t laser_dir(uint16_t i) {
+uint8_t LaserManager::CalcDir(uint16_t i) {
   uint8_t deg = 0;
 
   if (LaserCmd.cmd & LS_ZSET)
@@ -308,7 +308,7 @@ static uint8_t laser_dir(uint16_t i) {
   }
 }
 
-static void slaser_pset(LASER_DATA *lp) {
+void LaserManager::SetupShort(LASER_DATA *lp) {
   lp->p[1].x = lp->p[0].x = (lp->x >> 6) + lp->wx;
   lp->p[1].y = lp->p[0].y = (lp->y >> 6) + lp->wy;
 
@@ -321,7 +321,7 @@ static void slaser_pset(LASER_DATA *lp) {
   lp->p[2].y += lp->ly;
 }
 
-static void SLdraw(const LASER_DATA *lp) {
+void LaserManager::DrawShort(const LASER_DATA *lp) {
   constexpr RGB216 col = {1, 0, 5};
   int x, y;
 
@@ -377,7 +377,7 @@ static void SLdraw(const LASER_DATA *lp) {
   // Grp_Polygon(temp,4,RGB256(5,5,5));
 }
 
-static void Lmove(LASER_DATA *lp) {
+void LaserManager::MoveLaser(LASER_DATA *lp) {
   // int i;
   // int ltempx,ltempy;
 
@@ -396,7 +396,7 @@ static void Lmove(LASER_DATA *lp) {
 
     lp->wx = -sinl(lp->d, lp->w >> 6);
     lp->wy = cosl(lp->d, lp->w >> 6);
-    slaser_pset(lp);
+    SetupShort(lp);
 
     if (lp->count > 30)
       lp->flag = LF_DELETE;
@@ -416,12 +416,12 @@ static void Lmove(LASER_DATA *lp) {
     } else {
       lp->x += lp->vx;
       lp->y += lp->vy;
-      slaser_pset(lp);
+      SetupShort(lp);
     }
     return;
 
   case (LS_REF):   // 反射レーザー
-    REFL_move(lp); // 長いので関数にしよう！
+    MoveReflect(lp); // 長いので関数にしよう！
     return;
 
     /*
@@ -433,7 +433,7 @@ static void Lmove(LASER_DATA *lp) {
   }
 }
 
-static void laser_hitchk(LASER_DATA *lp) {
+void LaserManager::HitCheck(LASER_DATA *lp) {
   long tx, ty, w1, length;
 
   switch (lp->type) {
@@ -482,15 +482,15 @@ static void laser_hitchk(LASER_DATA *lp) {
   }
 }
 
-static void REFL_move(LASER_DATA *lp) {
+void LaserManager::MoveReflect(LASER_DATA *lp) {
   switch (lp->flag) {
   case (LF_NONE): // E  -->  R	普通に移動
     lp->x += lp->vx;
     lp->y += lp->vy;
-    slaser_pset(lp);
+    SetupShort(lp);
 
     // ここにヒットチェックを記述だ！ //
-    if (REFL_hit(lp))
+    if (HitReflect(lp))
       lp->flag = LF_HIT;
     return;
 
@@ -507,7 +507,7 @@ static void REFL_move(LASER_DATA *lp) {
 
     // ここにもヒットチェックがいるぞ！ //
     // 注意 ltemp:=l を必ず実行する事 //
-    if (REFL_hit(lp)) {
+    if (HitReflect(lp)) {
       lp->ltemp = lp->l;
       lp->flag |= LF_HIT; // LF_HIT or LF_NMOVE
     }
@@ -537,7 +537,7 @@ static void REFL_move(LASER_DATA *lp) {
   }
 }
 
-static int REFL_hit(const LASER_DATA *lp) {
+int LaserManager::HitReflect(const LASER_DATA *lp) {
   // REFLECTOR *rp;
   LLASER_DATA *ll;
   int i;
@@ -578,7 +578,7 @@ static int REFL_hit(const LASER_DATA *lp) {
       LaserCmd.cmd = LC_WAY;  //
       LaserCmd.type = LS_REF; // ２回以上の反射を許可
       LaserCmd.notr = i;      // 自分には反射しない
-      laser_setEX();          // 難易度変更無し
+      SpawnEX();          // 難易度変更無し
       return 1;               // 当たった
     }
   }

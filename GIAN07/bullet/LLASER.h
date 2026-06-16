@@ -75,23 +75,8 @@ struct LongLaserData {
 using LLASER_DATA = LongLaserData;
 
 //// レーザー関数２ ////
-bool LLaserSet(uint8_t id);                        // レーザーをセットする
-void LLaserOpen(const ENEMY_DATA *e, uint8_t id);  // レーザーを開く
-void LLaserClose(const ENEMY_DATA *e, uint8_t id); // レーザーを閉じる
-void LLaserLine(const ENEMY_DATA *e, uint8_t id);  // レーザーをライン状態にする
-void LLaserDegA(const ENEMY_DATA *e, uint8_t d,
-                uint8_t id); // レーザーを角度絶対で回転
-void LLaserDegR(const ENEMY_DATA *e, char d,
-                uint8_t id); // レーザーを角度相対で回転
-
-void LLaserForceClose(
-    const ENEMY_DATA *e); // 敵に関連づけられたレーザーを強制クローズ
-
-void LLaserMove(void);  // レーザーを動かす
-void LLaserDraw(void);  // レーザーを描画する
-void LLaserClear(void); // 無限遠レーザーを全クローズ
-
-void LLaserSetup(void); // レーザー配列の初期化をする
+// 後方互換 inline wrapper は laser_manager.h 末尾に移動
+// 実装は LaserManager メソッドに移行
 
 //// レーザー変数２ ////
 extern std::array<LongLaserData, LLASER_MAX>& LLaser;

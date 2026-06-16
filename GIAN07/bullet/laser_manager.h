@@ -27,6 +27,89 @@ struct LaserManager {
   std::array<HomingLaserData, HLASER_MAX> homing_buf; // HLaserBuf[]
   HomingLaserData active;        // ActiveHL
   HomingLaserData free_list;     // FreeHL
+
+  // ================================================================
+  // Reflective laser methods (was LASER.cpp free functions)
+  // ================================================================
+  void Spawn();                    // was laser_set (reads RankManager)
+  void SpawnEX();                  // was laser_setEX
+  int  SpawnLong(uint16_t* ind);   // was llaser_set
+  void Move();                     // was laser_move
+  void Draw();                     // was laser_draw
+  void Clear();                    // was laser_clear
+  void SetIndices();               // was laserind_set
+
+private:
+  void SetEasy();                  // was easy_cmdL
+  void SetHard();                  // was hard_cmdL
+  void SetLunatic();               // was luna_cmdL
+  uint8_t CalcDir(uint16_t i);     // was laser_dir
+  void SetupShort(LASER_DATA* lp); // was slaser_pset
+  void DrawShort(const LASER_DATA* lp); // was SLdraw
+  void MoveLaser(LASER_DATA* lp);  // was Lmove
+  void HitCheck(LASER_DATA* lp);   // was laser_hitchk
+  void MoveReflect(LASER_DATA* lp);// was REFL_move
+  int  HitReflect(const LASER_DATA* lp); // was REFL_hit
+
+public:
+  // ================================================================
+  // Long laser methods (was LLASER.cpp free functions)
+  // ================================================================
+  bool SpawnLongLaser(uint8_t id);                    // was LLaserSet
+  void OpenLong(const EnemyData* e, uint8_t id);      // was LLaserOpen
+  void CloseLong(const EnemyData* e, uint8_t id);     // was LLaserClose
+  void LineLong(const EnemyData* e, uint8_t id);      // was LLaserLine
+  void RotateLongAbs(const EnemyData* e, uint8_t d, uint8_t id);  // was LLaserDegA
+  void RotateLongRel(const EnemyData* e, char d, uint8_t id);      // was LLaserDegR
+  void ForceCloseLong(const EnemyData* e);             // was LLaserForceClose
+  void MoveLong();             // was LLaserMove
+  void DrawLong();             // was LLaserDraw
+  void ClearLong();            // was LLaserClear
+  void SetupLong();            // was LLaserSetup
+
+private:
+  void SetLongPoint(LLASER_DATA* lp);   // was _LLaserPointSet
+  void HitCheckLong(const LLASER_DATA* lp); // was _LLaserHitCheck
+  void UpdateLongXY(int id);            // was _LLaserXYSet
+
+public:
+  // ================================================================
+  // Homing laser methods (was HOMINGL.cpp free functions)
+  // ================================================================
+  void InitHoming();           // was HLaserInit
+  void SpawnHoming(const HomingLaserInfo* info); // was HLaserSet
+  void MoveHoming();           // was HLaserMove (reads PlayerManager Viv)
+  void DrawHoming();           // was HLaserDraw
+  void ClearHoming();          // was HLaserClear
 };
 
 extern LaserManager Lasers;
+
+// ================================================================
+// Backward-compat inline wrappers
+// ================================================================
+inline void laser_set()        { Lasers.Spawn(); }
+inline void laser_setEX()      { Lasers.SpawnEX(); }
+inline int  llaser_set(uint16_t* ind) { return Lasers.SpawnLong(ind); }
+inline void laser_move()       { Lasers.Move(); }
+inline void laser_draw()       { Lasers.Draw(); }
+inline void laser_clear()      { Lasers.Clear(); }
+inline void laserind_set()     { Lasers.SetIndices(); }
+
+inline bool LLaserSet(uint8_t id)                    { return Lasers.SpawnLongLaser(id); }
+inline void LLaserOpen(const EnemyData* e, uint8_t id)      { Lasers.OpenLong(e, id); }
+inline void LLaserClose(const EnemyData* e, uint8_t id)     { Lasers.CloseLong(e, id); }
+inline void LLaserLine(const EnemyData* e, uint8_t id)      { Lasers.LineLong(e, id); }
+inline void LLaserDegA(const EnemyData* e, uint8_t d, uint8_t id) { Lasers.RotateLongAbs(e, d, id); }
+inline void LLaserDegR(const EnemyData* e, char d, uint8_t id)     { Lasers.RotateLongRel(e, d, id); }
+inline void LLaserForceClose(const EnemyData* e)             { Lasers.ForceCloseLong(e); }
+inline void LLaserMove()    { Lasers.MoveLong(); }
+inline void LLaserDraw()    { Lasers.DrawLong(); }
+inline void LLaserClear()   { Lasers.ClearLong(); }
+inline void LLaserSetup()   { Lasers.SetupLong(); }
+
+inline void HLaserInit()    { Lasers.InitHoming(); }
+inline void HLaserSet(const HomingLaserInfo* info) { Lasers.SpawnHoming(info); }
+inline void HLaserMove()    { Lasers.MoveHoming(); }
+inline void HLaserDraw()    { Lasers.DrawHoming(); }
+inline void HLaserClear()   { Lasers.ClearHoming(); }

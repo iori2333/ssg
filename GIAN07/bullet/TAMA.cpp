@@ -18,14 +18,7 @@
 // → bullet_manager.h 経由で直接アクセス
 
 ////ローカルな関数////
-static void __TamaSet(void);
-static void easy_cmd(void); // 難易度：Ｅａｓｙ
-static void hard_cmd(void); // 難易度：Ｈａｒｄ
-static void luna_cmd(void); // 難易度：Ｌｕｎａｔｉｃ
-
-int NewTamaSpeed(uint16_t i);
-int LineCmdNewTamaSpeed(uint16_t i);
-int TamaSpeedEx(uint8_t d);
+// プライベートメソッドは bullet_manager.h で宣言済み
 void _TamaEffectDraw(const TAMA_DATA *t); // 弾をエフェクトとして描画？
 
 /*
@@ -35,22 +28,22 @@ inline Debug(uint32_t old, int id)
 }
 */
 
-void tama_set(void) {
+void BulletManager::Spawn() {
   int v;
 
   // NORMAL の場合は変更しない(ゲーム中に増減する難易度は考案中) //
   // おそらく switch 中に記述する事になるかと... //
   switch (PlayRank.GameLevel) {
   case (GAME_EASY):
-    easy_cmd();
+    SetEasy();
     break;
 
   case (GAME_HARD):
-    hard_cmd();
+    SetHard();
     break;
 
   case (GAME_LUNATIC):
-    luna_cmd();
+    SetLunatic();
     break;
   }
 
@@ -61,17 +54,17 @@ void tama_set(void) {
   else
     Bullets.speed = v;
 
-  __TamaSet();
+  TamaSetMain();
 }
 
-void tama_setEX(void) {
+void BulletManager::SpawnEX() {
   Bullets.speed = SPEEDM(TamaCmd.v);
 
-  __TamaSet();
+  TamaSetMain();
 }
 
 // 弾をセットする(ライン状に発射)
-void tama_setLine(void) {
+void BulletManager::SpawnLine() {
   // uint32_t temp;
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
@@ -103,13 +96,13 @@ void tama_setLine(void) {
     t->a = TamaCmd.a; // 注意：サイズは char
 
     // temp = random_ref;
-    t->d = tama_dir(i); // 弾の発射角度
+    t->d = Dir(i); // 弾の発射角度
     // Debug(temp,31);
 
     t->d16 = (t->d << 8); // 角速度のある運動で使用
 
     // temp = random_ref;
-    t->v = t->v0 = LineCmdNewTamaSpeed(i); // 初速度のセット
+    t->v = t->v0 = LineCmdNewSpeed(i); // 初速度のセット
     // Debug(temp,30);
 
     t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
@@ -122,12 +115,12 @@ void tama_setLine(void) {
     t->option = TamaCmd.option;     // 弾の属性(バイブ、反射等)
     t->effect = TamaCmd.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
-    t->flag = tama_flag();          // フラグの初期化
+    t->flag = Flag();          // フラグの初期化
   }
 }
 
 // エキストラボス専用弾幕(角度が広くなると、遅くなる) //
-void tama_setExtra01(void) {
+void BulletManager::SpawnExtra01() {
   // uint32_t temp;
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
@@ -158,10 +151,10 @@ void tama_setExtra01(void) {
 
     t->a = TamaCmd.a; // 注意：サイズは char
 
-    t->d = tama_dir(i);   // 弾の発射角度
+    t->d = Dir(i);   // 弾の発射角度
     t->d16 = (t->d << 8); // 角速度のある運動で使用
 
-    t->v = t->v0 = TamaSpeedEx(t->d); // 初速度のセット
+    t->v = t->v0 = SpeedEx(t->d); // 初速度のセット
 
     t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
     t->vy = sinl(t->d, t->v); // 速度のＹ成分セット
@@ -173,11 +166,11 @@ void tama_setExtra01(void) {
     t->option = TamaCmd.option;     // 弾の属性(バイブ、反射等)
     t->effect = TamaCmd.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
-    t->flag = tama_flag();          // フラグの初期化
+    t->flag = Flag();          // フラグの初期化
   }
 }
 
-int TamaSpeedEx(uint8_t d) {
+int BulletManager::SpeedEx(uint8_t d) {
   int temp = 0;
   int delta;
 
@@ -203,7 +196,7 @@ int TamaSpeedEx(uint8_t d) {
   return Bullets.speed - (Bullets.speed * abs(delta)) / 23 + temp;
 }
 
-static void __TamaSet(void) {
+void BulletManager::TamaSetMain() {
   // uint32_t temp;
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
@@ -228,13 +221,13 @@ static void __TamaSet(void) {
     t->y = t->ty = TamaCmd.y; // Y座標のセット
 
     // temp = random_ref;
-    t->v = t->v0 = NewTamaSpeed(i); // 初速度のセット
+    t->v = t->v0 = NewSpeed(i); // 初速度のセット
     // Debug(temp,30);
 
     t->a = TamaCmd.a; // 注意：サイズは char
 
     // temp = random_ref;
-    t->d = tama_dir(i); // 弾の発射角度
+    t->d = Dir(i); // 弾の発射角度
     // Debug(temp,31);
 
     t->d16 = (t->d << 8); // 角速度のある運動で使用
@@ -249,11 +242,11 @@ static void __TamaSet(void) {
     t->option = TamaCmd.option;     // 弾の属性(バイブ、反射等)
     t->effect = TamaCmd.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
-    t->flag = tama_flag();          // フラグの初期化
+    t->flag = Flag();          // フラグの初期化
   }
 }
 
-void tama_move(void) {
+void BulletManager::Move() {
   // ヒットチェック後にサボテンの生死判定をしているのは、死んでいる時間 //
   // よりも生きている時間のほうが長いからなのですが...                  //
 
@@ -261,8 +254,8 @@ void tama_move(void) {
   for (const auto i : std::views::iota(0u, Tama1Now)) {
     auto *t = &Tama[Bullets.indices_small[i]];
     if (t->effect == TE_NONE) {
-      tamaTmove(t);
-      tamaOmove(t);
+      MoveByType(t);
+      MoveByOption(t);
       if (((t->flag & TF_CLIP) == 0) &&
           ((t->x) < GX_MIN - 4 * 64 || (t->x) > GX_MAX + 4 * 64 ||
            (t->y) < GY_MIN - 4 * 64 || (t->y) > GY_MAX + 4 * 64))
@@ -279,7 +272,7 @@ void tama_move(void) {
         MaidDead();
       }
     } else {
-      tamaEmove(t);
+      MoveByEffect(t);
       t->count++;
     }
   }
@@ -289,8 +282,8 @@ void tama_move(void) {
   for (const auto i : std::views::iota(0u, Tama2Now)) {
     auto *t = &Tama[Bullets.indices_large[i]];
     if (t->effect == TE_NONE) {
-      tamaTmove(t);
-      tamaOmove(t);
+      MoveByType(t);
+      MoveByOption(t);
       if (((t->flag & TF_CLIP) == 0) &&
           ((t->x) < GX_MIN - 8 * 64 || (t->x) > GX_MAX + 8 * 64 ||
            (t->y) < GY_MIN - 8 * 64 || (t->y) > GY_MAX + 8 * 64))
@@ -307,14 +300,14 @@ void tama_move(void) {
         MaidDead();
       }
     } else {
-      tamaEmove(t);
+      MoveByEffect(t);
       t->count++;
     }
   }
   Indsort(Bullets.indices_large, Tama2Now, Tama);
 }
 
-void tama_draw(void) {
+void BulletManager::Draw() {
   //	HRESULT		ddrval;
   PIXEL_LTRB src;
   int x, y;
@@ -551,7 +544,7 @@ void _TamaEffectDraw(const TAMA_DATA *t) {
   GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, temp);
 }
 
-void tama_clear(void) {
+void BulletManager::Clear() {
   for (const auto i : std::views::iota(0u, Tama1Now)) {
     auto &t = Tama[Bullets.indices_small[i]];
     if (t.effect != TE_DELETE) {
@@ -574,7 +567,7 @@ void tama_clear(void) {
 }
 
 // 弾を得点化する(Ret : 得点)
-uint32_t tama2score(void) {
+uint32_t BulletManager::ScoreToItems() {
   uint32_t sum = 0;
   uint32_t Score;
 
@@ -610,7 +603,7 @@ uint32_t tama2score(void) {
 }
 
 // 弾をアイテム化する //
-void tama2item(uint8_t n) {
+void BulletManager::ToItems(uint8_t n) {
   // uint32_t sum = 0;
   // uint32_t Score;
 
@@ -663,7 +656,7 @@ void tama2item(uint8_t n) {
   //	return sum;
 }
 
-void tamaind_set(uint16_t tama1) {
+void BulletManager::SetIndices(uint16_t tama1) {
   int i;
 
   if (tama1 >= TAMA_MAX)
@@ -684,7 +677,7 @@ void tamaind_set(uint16_t tama1) {
   Tama1Now = Tama2Now = 0;
 }
 
-static void easy_cmd(void) {
+void BulletManager::SetEasy() {
   switch (TamaCmd.cmd & 0x03) {
   case (TC_WAY):
     if (TamaCmd.n >= 3)
@@ -702,7 +695,7 @@ static void easy_cmd(void) {
     TamaCmd.ns--; // 連射数_減少
 }
 
-static void hard_cmd(void) {
+void BulletManager::SetHard() {
   switch (TamaCmd.cmd & 0x03) {
   case (TC_WAY):
     TamaCmd.n += 2;                  // 奇数・偶数は変化させない
@@ -721,7 +714,7 @@ static void hard_cmd(void) {
   TamaCmd.ns++; // 連射数_増加
 }
 
-static void luna_cmd(void) {
+void BulletManager::SetLunatic() {
   switch (TamaCmd.cmd & 0x03) {
   case (TC_WAY):
     TamaCmd.n += 4;                 // 奇数・偶数は変化させない
@@ -740,7 +733,7 @@ static void luna_cmd(void) {
   TamaCmd.ns += 2; // 連射数_増加
 }
 
-uint8_t tama_dir(uint16_t i) {
+uint8_t BulletManager::Dir(uint16_t i) {
   uint8_t deg = ((TamaCmd.cmd & TAMA_ZSET)
                      ? atan8((Viv.x - TamaCmd.x), (Viv.y - TamaCmd.y))
                      : 0);
@@ -769,7 +762,7 @@ uint8_t tama_dir(uint16_t i) {
   }
 }
 
-int NewTamaSpeed(uint16_t i) {
+int BulletManager::NewSpeed(uint16_t i) {
   int temp = 0; // ランダム要素の設定用
   const int vret =
       Bullets.speed; // SPEEDM(TamaCmd.v);	// 速度の基本値をセットする(GIAN.H)
@@ -793,7 +786,7 @@ int NewTamaSpeed(uint16_t i) {
     return vret + temp;
 }
 
-int LineCmdNewTamaSpeed(uint16_t i) {
+int BulletManager::LineCmdNewSpeed(uint16_t i) {
   int vret = Bullets.speed; // 速度の基本値をセットする(GIAN.H)
 
   i = (i % TamaCmd.n) + 1; // 連射弾対策
@@ -811,7 +804,7 @@ int LineCmdNewTamaSpeed(uint16_t i) {
     return vret;
 }
 
-int tama_speed(uint16_t i) {
+int BulletManager::Speed(uint16_t i) {
   int temp = 0;                       // ランダム要素の設定用
   const int vret = SPEEDM(TamaCmd.v); // 速度の基本値をセットする(GIAN.H)
 
@@ -834,7 +827,7 @@ int tama_speed(uint16_t i) {
     return vret + temp;
 }
 
-uint8_t tama_flag(void) {
+uint8_t BulletManager::Flag() {
   switch (TamaCmd.type) {
   case (T_HOMING):
   case (T_HOMING_M):
@@ -849,7 +842,7 @@ uint8_t tama_flag(void) {
   }
 }
 
-void tamaTmove(TAMA_DATA *t) {
+void BulletManager::MoveByType(TAMA_DATA *t) {
   short deg_t;
   // ENEMY_DATA	*e;
 
@@ -1029,7 +1022,7 @@ void tamaTmove(TAMA_DATA *t) {
   }
 }
 
-void tamaOmove(TAMA_DATA *t) {
+void BulletManager::MoveByOption(TAMA_DATA *t) {
   int op_temp = 0;
 
   // 分裂はとボムは消去要請フラグを立てる必要がある //
@@ -1170,7 +1163,7 @@ void tamaOmove(TAMA_DATA *t) {
   }
 }
 
-void tamaEmove(TAMA_DATA *t) {
+void BulletManager::MoveByEffect(TAMA_DATA *t) {
   // TE_NONE:エフェクト無しはこの関数にこないので記述しても意味無し //
   // TE_DELETE:消去要請フラグを立てる事を忘れないように！ //
   switch (t->effect & 0xf0) {

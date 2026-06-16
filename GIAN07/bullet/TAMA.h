@@ -162,25 +162,8 @@ extern uint16_t& Tama1Max; // 小型弾の最大数
 extern uint16_t& Tama2Max; // 特殊弾の最大数
 
 ////弾関数////
-void tama_set(void);              // 弾をセットする(難易度による変更は"有り")
-void tama_setEX(void);            // 弾をセットする(難易度による変更は"無し")
-void tama_setLine(void);          // 弾をセットする(ライン状に発射)
-void tama_setExtra01(void);       // エキストラボス専用弾幕
-void tama_move(void);             // 弾を動かす
-void tama_draw(void);             // 弾を描画する
-void tama_clear(void);            // 弾に消去エフェクトをセットする
-void tamaind_set(uint16_t tama1); // 弾の個数の割合をセットする(危険！)
-
-uint32_t tama2score(void); // 弾を得点化する(Ret : 得点)
-void tama2item(uint8_t n); // 弾の 1/n をアイテム化する
-
-uint8_t tama_dir(uint16_t i); // 弾の進行方向をセットする
-int tama_speed(uint16_t i);   // 弾の初速度をセットする
-uint8_t tama_flag(void);      // 弾のフラグを初期化する
-
-void tamaTmove(TAMA_DATA *t); // 弾の " Type " による移動を行う
-void tamaOmove(TAMA_DATA *t); // 弾の "Option" による移動を行う
-void tamaEmove(TAMA_DATA *t); // 弾の "Effect" による移動を行う
+// 後方互換 inline wrapper は bullet_manager.h の末尾に移動
+// 実装は BulletManager メソッドに移行
 
 //// かすり用マクロ ////
 void evade_addEx(int x, int y, uint8_t n); // かすりゲージを上昇させる
@@ -230,4 +213,6 @@ void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
   Indsort(indices, count, entities,
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
 }
+
+// 後方互換 inline wrapper は bullet_manager.h 末尾に移動
 

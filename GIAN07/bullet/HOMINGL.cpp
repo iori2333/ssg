@@ -31,7 +31,7 @@ constexpr int HLASER_GETPREV(int current, int n) {
 }
 
 // ホーミングレーザーの初期化を行う //
-void HLaserInit(void) {
+void LaserManager::InitHoming() {
   int i;
 
   HLaserNow = 0;
@@ -47,7 +47,7 @@ void HLaserInit(void) {
 }
 
 // ホーミングレーザーをセットする //
-void HLaserSet(const HLaserInfo *hinfo) {
+void LaserManager::SpawnHoming(const HLaserInfo *hinfo) {
   int i, j;
   uint8_t deg;
   HLaserData *p;
@@ -91,7 +91,7 @@ void HLaserSet(const HLaserInfo *hinfo) {
 }
 
 // ホーミングレーザーを動作させる //
-void HLaserMove(void) {
+void LaserManager::MoveHoming() {
   HLaserData *hl;
   HLaserData *temp;
   int x, y;
@@ -222,7 +222,7 @@ void _CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
 }
 
 // ホーミングレーザーを描画する //
-void HLaserDraw(void) {
+void LaserManager::DrawHoming() {
   HLaserData *hl;
   int i, w, current;
   DegPoint *p;
@@ -339,7 +339,7 @@ void HLaserDraw(void) {
 }
 
 // ホーミングレーザーに消去エフェクトをセット //
-void HLaserClear(void) {
+void LaserManager::ClearHoming() {
   //	HLaserData	*hl;
 
   HLaserInit();

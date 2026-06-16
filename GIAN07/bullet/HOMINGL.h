@@ -57,9 +57,6 @@ extern uint16_t& HLaserNow;   // ホーミングレーザーの本数
 extern HomingLaserInfo& HLaserCmd; // ホーミングレーザーセット用データ
 
 ///// [関数プロトタイプ] /////
-void HLaserInit(void);                   // ホーミングレーザーの初期化を行う
-void HLaserSet(const HLaserInfo *hinfo); // ホーミングレーザーをセットする
-void HLaserMove(void);                   // ホーミングレーザーを動作させる
-void HLaserDraw(void);                   // ホーミングレーザーを描画する
-void HLaserClear(void); // ホーミングレーザーに消去エフェクトをセット
+// 後方互換 inline wrapper は laser_manager.h 末尾に移動
+// 実装は LaserManager メソッドに移行
 

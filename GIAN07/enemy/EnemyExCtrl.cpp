@@ -5,6 +5,7 @@
 
 #include "EnemyExCtrl.h"
 #include "LLASER.h"
+#include "laser_manager.h"
 #include "LOADER.h"
 #include "MAID.h"
 #include "game/cast.h"

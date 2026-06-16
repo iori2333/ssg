@@ -92,16 +92,16 @@ void PlayRankReset(void) {
 
   switch (GameLevel) {
   case (GAME_EASY):
-    PlayRank.Rank = 12 * 256;
+    PlayRank.Rank = 16 * 256;
     break;
   case (GAME_NORMAL):
-    PlayRank.Rank = 28 * 256;
+    PlayRank.Rank = 32 * 256;
     break;
   case (GAME_HARD):
-    PlayRank.Rank = 40 * 256;
+    PlayRank.Rank = 44 * 256;
     break;
   case (GAME_LUNATIC):
-    PlayRank.Rank = 52 * 256;
+    PlayRank.Rank = 60 * 256;
     break;
     // case(GAME_EXTRA):		break;
   }
