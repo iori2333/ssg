@@ -17,7 +17,7 @@ void RankManager::Add(int n) {
   // ルナティック  40 ～ 64
 
   // 難易度を変化させる //
-  if (GameStage == GRAPH_ID_EXSTAGE) {
+  if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
     if (n > 0) {
       this->state.Rank += (std::max)(+1, (n / 4));
     } else if (n < 0) {
@@ -28,7 +28,7 @@ void RankManager::Add(int n) {
   }
 
   // この分岐に関しては、基本的にコンフィグの値に基づく //
-  switch (GameLevel) {
+  switch (GameState.game_level) {
   case (GAME_EASY):
     if (this->state.Rank < 0)
       this->state.Rank = 0;
@@ -88,9 +88,9 @@ void RankManager::Add(int n) {
 
 // 現在の難易度に応じてプレイランクを初期化
 void RankManager::Reset(void) {
-  this->state.GameLevel = GameLevel;
+  this->state.GameLevel = GameState.game_level;
 
-  switch (GameLevel) {
+  switch (GameState.game_level) {
   case (GAME_EASY):
     this->state.Rank = 16 * 256;
     break;

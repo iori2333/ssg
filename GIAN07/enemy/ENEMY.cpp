@@ -66,7 +66,7 @@ void EnemyManager::UpdateHoming(const EnemyData *e) {
   }
 }
 
-bool EnemyManager::LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d) {
+bool EnemyManager::EnemyManager::LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d) {
   const int chkw = (min(e->g_height, e->g_width) + (3 * 64));
 
   const int tx = (e->x - ox);
@@ -305,7 +305,7 @@ void EnemyManager::DamageAt3(int x, int y, uint8_t d) {
 
   for (i = 0; i < this->count; i++) {
     auto *e = &this->entities[this->indices[i]];
-    if (LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
+    if (EnemyManager::LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
         continue;
       else {
@@ -592,15 +592,15 @@ ECL_HEAD:
     break;
 
   case (ECL_LLSET): // 太レーザーセット
-    LLaserCmd.c = e->l_cmd.c;
-    LLaserCmd.d = e->l_cmd.d;
-    LLaserCmd.dx = e->l_cmd.x;
-    LLaserCmd.dy = e->l_cmd.y;
-    LLaserCmd.e = e;
-    LLaserCmd.type = e->l_cmd.type;
-    // LLaserCmd.type = (e->l_cmd.type==0) ? LLS_LONG : LLS_SETDEG;
-    LLaserCmd.v = e->l_cmd.v;
-    LLaserCmd.w = e->l_cmd.w;
+    Lasers.long_cmd.c = e->l_cmd.c;
+    Lasers.long_cmd.d = e->l_cmd.d;
+    Lasers.long_cmd.dx = e->l_cmd.x;
+    Lasers.long_cmd.dy = e->l_cmd.y;
+    Lasers.long_cmd.e = e;
+    Lasers.long_cmd.type = e->l_cmd.type;
+    // Lasers.long_cmd.type = (e->l_cmd.type==0) ? LLS_LONG : LLS_SETDEG;
+    Lasers.long_cmd.v = e->l_cmd.v;
+    Lasers.long_cmd.w = e->l_cmd.w;
 
     // 失敗した場合は、参照カウントを増やさない //
     if (Lasers.SpawnLongLaser(e->LLaserRef))
@@ -1306,17 +1306,17 @@ ECL_HEAD:
     break;
 
   case (ECL_LASER): // レーザー発射
-    LaserCmd = e->l_cmd;
-    LaserCmd.x += e->x;
-    LaserCmd.y += e->y;
+    Lasers.cmd = e->l_cmd;
+    Lasers.cmd.x += e->x;
+    Lasers.cmd.y += e->y;
     Lasers.Spawn();
     bRetFlag = false;
     break;
 
   case (ECL_LASER2): // レーザー発射
-    LaserCmd = e->l_cmd;
-    LaserCmd.x += e->x;
-    LaserCmd.y += e->y;
+    Lasers.cmd = e->l_cmd;
+    Lasers.cmd.x += e->x;
+    Lasers.cmd.y += e->y;
     Lasers.SpawnEX();
     bRetFlag = false;
     break;

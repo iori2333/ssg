@@ -144,7 +144,7 @@ void BossManager::Move(void) {
   uint32_t HP_Sum = 0;
   ENEMY_DATA *e;
 
-  HomingFlag = HOMING_DUMMY;
+  Enemies.homing_flag = HOMING_DUMMY;
 
   for (auto &it : this->bosses) {
     auto *b = &it;

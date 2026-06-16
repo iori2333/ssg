@@ -150,16 +150,10 @@ using TAMA_CMD = BulletCommand;
 using TAMA_DATA = Bullet;
 
 ////弾の各種変数たち////
+// TamaCmd, Tama → bullet_manager.cpp で参照として定義 (TAMA.h inline 関数用)
 extern BulletCommand& TamaCmd;               // 標準・弾コマンド構造体
 extern std::array<Bullet, TAMA_MAX>& Tama;   // 弾の格納用構造体
-extern std::array<uint16_t, TAMA_MAX>&
-    Tama1Ind; // 小型弾の順番を維持するための配列
-extern std::array<uint16_t, TAMA_MAX>&
-    Tama2Ind;             // 特殊弾の順番を維持するための配列
-extern uint16_t& Tama1Now; // 小型弾の弾数
-extern uint16_t& Tama2Now; // 特殊弾の弾数
-extern uint16_t& Tama1Max; // 小型弾の最大数
-extern uint16_t& Tama2Max; // 特殊弾の最大数
+// Tama1Ind, Tama2Ind, Tama1Now, Tama2Now, Tama1Max, Tama2Max → Bullets.* で直接アクセス
 
 ////弾関数////
 // 後方互換 inline wrapper は bullet_manager.h の末尾に移動

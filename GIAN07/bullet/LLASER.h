@@ -79,6 +79,5 @@ using LLASER_DATA = LongLaserData;
 // 実装は LaserManager メソッドに移行
 
 //// レーザー変数２ ////
-extern std::array<LongLaserData, LLASER_MAX>& LLaser;
-extern LongLaserCommand& LLaserCmd;
+// Lasers.long_lasers, Lasers.long_cmd で直接アクセス
 

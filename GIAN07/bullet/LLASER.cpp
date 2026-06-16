@@ -30,18 +30,18 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
     return false;
   }
 
-  lp->dx = LLaserCmd.dx;
-  lp->dy = LLaserCmd.dy;
-  lp->e = LLaserCmd.e;
+  lp->dx = Lasers.long_cmd.dx;
+  lp->dy = Lasers.long_cmd.dy;
+  lp->e = Lasers.long_cmd.e;
 
   lp->EnemyID = id;
 
   lp->x = lp->e->x + lp->dx;
   lp->y = lp->e->y + lp->dy;
 
-  lp->v = LLaserCmd.v;
+  lp->v = Lasers.long_cmd.v;
 
-  lp->c = LLaserCmd.c;
+  lp->c = Lasers.long_cmd.c;
 
   lp->lx = 0;
   lp->ly = 0;
@@ -49,15 +49,15 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   lp->wy = 0;
 
   lp->w = 0;
-  lp->wmax = LLaserCmd.w;
+  lp->wmax = Lasers.long_cmd.w;
 
-  lp->d = LLaserCmd.d;
+  lp->d = Lasers.long_cmd.d;
 
-  if (LLaserCmd.type == LLS_LONGZ) {
+  if (Lasers.long_cmd.type == LLS_LONGZ) {
     lp->d += atan8(Players.viv.x - lp->x, Players.viv.y - lp->y);
     lp->type = LLS_LONG;
   } else
-    lp->type = LLaserCmd.type;
+    lp->type = Lasers.long_cmd.type;
 
   lp->infx = cosl(lp->d, 800);
   lp->infy = sinl(lp->d, 800);

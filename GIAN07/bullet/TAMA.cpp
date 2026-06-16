@@ -981,8 +981,8 @@ void BulletManager::MoveByType(TAMA_DATA *t) {
       Effects.SpawnFragment(t->x, t->y, FRG_SMOKE);
     t->tx += t->vx;
     t->ty += t->vy;
-    if ((t->count < 130 - 60) && HomingFlag != HOMING_DUMMY) {
-      deg_t = atan8(HomingX - (t->x), HomingY - (t->y)) - (t->d);
+    if ((t->count < 130 - 60) && Enemies.homing_flag != HOMING_DUMMY) {
+      deg_t = atan8(Enemies.homing_x - (t->x), Enemies.homing_y - (t->y)) - (t->d);
     } else if (t->count < 130 - 60) {
       deg_t = atan8(0, (-20 * 64) - (t->y)) - (t->d);
     } else {

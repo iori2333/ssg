@@ -34,8 +34,5 @@ inline constexpr auto TDM_LASER_SUB = 5; // レーザー・サブショットの
 // 実装は PlayerManager メソッドに移行
 
 ///// [ 変数 ] /////
-// MaidTama[], MaidTamaInd[], MaidTamaNow → player_manager.cpp で参照として定義
-extern std::array<TAMA_DATA, MAIDTAMA_MAX>& MaidTama;
-extern std::array<uint16_t, MAIDTAMA_MAX>& MaidTamaInd;
-extern uint16_t& MaidTamaNow;
+// Players.maid_tama, Players.maid_tama_ind, Players.maid_tama_now で直接アクセス
 

@@ -68,7 +68,7 @@ void Render(PIXEL_COORD top) {
 }; // namespace Version
 
 // GameFlow.demo_timer, GameFlow.draw_count, GameFlow.weapon_key_wait, GameFlow.game_over_timer, GameFlow.current_name,
-// GameFlow.current_rank, GameFlow.current_dif, GameFlow.viv_temp, IsDemoplay, GameFlow.input_locked
+// GameFlow.current_rank, GameFlow.current_dif, GameFlow.viv_temp, GameState.is_demoplay, GameFlow.input_locked
 // → gameflow_manager.cpp の GameFlowManager に移動
 
 // 変換済み関数 → inline wrapper は gameflow_manager.h で提供
@@ -94,7 +94,7 @@ void GameMove(void);
 // game_main 初期値 → gameflow_manager.cpp で設定
 
 uint8_t CurrentLevel() {
-  return ((GameStage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameLevel);
+  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameState.game_level);
 }
 
 // GameFlow.input_locked → gameflow_manager.cpp の GameFlowManager に移動
@@ -488,10 +488,10 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   GameFlow.current_name.Score = Players.viv.score;
   GameFlow.current_name.Evade = Players.viv.evade_sum;
   GameFlow.current_name.Weapon = Players.viv.weapon;
-  if (GameStage == GRAPH_ID_EXSTAGE)
+  if (GameState.game_stage == GRAPH_ID_EXSTAGE)
     GameFlow.current_name.Stage = 1;
   else
-    GameFlow.current_name.Stage = GameStage;
+    GameFlow.current_name.Stage = GameState.game_stage;
 
   // デバッグ用... //
   Snd_SEStop(8); // ワーニング音を止める
@@ -563,7 +563,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameLevel = (ExStg ? EXTRA_LEVEL : ConfigDat.GameLevel.v);
+  GameState.game_level = (ExStg ? EXTRA_LEVEL : ConfigDat.GameLevel.v);
 
   GameSTD_Init();
   Ranking.Reset();
@@ -577,7 +577,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GameFlow.game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   GameFlow.current_state = GameState::WeaponSelect;
   if (ExStg) {
-    GameStage = GRAPH_ID_EXSTAGE;
+    GameState.game_stage = GRAPH_ID_EXSTAGE;
   }
 
   GameFlow.viv_temp = Players.viv;
@@ -623,21 +623,21 @@ extern bool GameNextStage(void) {
   Demos.SaveDemo();
 #endif
 
-  GameStage++;
+  GameState.game_stage++;
 
   // エンディングに移行する //
-  if (GameStage >= STAGE_MAX) {
-    GameStage = STAGE_MAX; // 後で変更のこと
+  if (GameState.game_stage >= STAGE_MAX) {
+    GameState.game_stage = STAGE_MAX; // 後で変更のこと
   }
 
   GameSTD_Init();
   MaidNextStage();
 
-  if (!LoadGraph(GameStage)) {
+  if (!LoadGraph(GameState.game_stage)) {
     DebugOut(u8"GRAPH.DAT が破壊されています");
     return false;
   }
-  if (!LoadStageData(GameStage)) {
+  if (!LoadStageData(GameState.game_stage)) {
     DebugOut(u8"ENEMY.DAT が破壊されています");
     return false;
   }
@@ -653,7 +653,7 @@ extern bool GameReplayInitAll(const char8_t *fn) {
     return false;
   }
 
-  GameStage = Demos.multi_play_info.Stages[0];
+  GameState.game_stage = Demos.multi_play_info.Stages[0];
 
   Ranking.Reset();
 
@@ -661,20 +661,20 @@ extern bool GameReplayInitAll(const char8_t *fn) {
   Grp_Flip();
   GameSTD_Init();
 
-  if (!LoadGraph(GameStage)) {
+  if (!LoadGraph(GameState.game_stage)) {
     DebugOut(u8"GRAPH.DAT が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
-  if (!LoadStageData(GameStage)) {
+  if (!LoadStageData(GameState.game_stage)) {
     DebugOut(u8"ENEMY.DAT が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
 
-  if (GameStage == GRAPH_ID_EXSTAGE) {
+  if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
     Players.viv.credit = 0;
   }
 
@@ -749,24 +749,24 @@ bool DemoInit(void) {
   MaidSet();
 
   rnd_seed_set(Time_SteadyTicksMS());
-  GameStage = (rnd() % STAGE_MAX) + 1;
+  GameState.game_stage = (rnd() % STAGE_MAX) + 1;
 
-  //	GameStage = (rnd()%3)+1;		// この部分は体験版(コミケ)だけ
-  //// 	GameStage = 1;					// こっちはＨＰ体験版用
+  //	GameState.game_stage = (rnd()%3)+1;		// この部分は体験版(コミケ)だけ
+  //// 	GameState.game_stage = 1;					// こっちはＨＰ体験版用
   ////
 
-  if (!Demos.LoadDemo(GameStage)) {
+  if (!Demos.LoadDemo(GameState.game_stage)) {
     // DebugOut(u8"デモプレイデータが存在せず");
     return false;
   }
 
   Ranking.Reset();
 
-  if (!LoadGraph(GameStage)) {
+  if (!LoadGraph(GameState.game_stage)) {
     DebugOut(u8"GRAPH.DAT が破壊されています");
     return false;
   }
-  if (!LoadStageData(GameStage)) {
+  if (!LoadStageData(GameState.game_stage)) {
     DebugOut(u8"ENEMY.DAT が破壊されています");
     return false;
   }
@@ -877,7 +877,7 @@ extern bool GameExit(bool bNeedChgMusic) {
 
   GameFlow.demo_timer = 0;
 
-  GameStage = 0;
+  GameState.game_stage = 0;
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
@@ -1062,12 +1062,12 @@ void DemoProc(bool &) {
   else
     Key_Data = Demos.Move();
 
-  IsDemoplay = true;
+  GameState.is_demoplay = true;
 
   // ＥＳＣが押されたら即、終了 //
   if (Key_Data & KEY_ESC) {
     Demos.Cleanup();
-    IsDemoplay = false;
+    GameState.is_demoplay = false;
     GameExit();
     return;
   }
@@ -1076,7 +1076,7 @@ void DemoProc(bool &) {
 
   if (GameFlow.current_state != GameState::Demo) {
     Demos.Cleanup(); // 後始末
-    IsDemoplay = false;
+    GameState.is_demoplay = false;
     GameExit(); // 強制終了させる(ゲームオーバー対策)
     return;
   }
@@ -1168,7 +1168,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
   case (KEY_RETURN):
     if (spd)
       break;
-    if (GameStage == GRAPH_ID_EXSTAGE) {
+    if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
       if (!((1 << Players.viv.weapon) & ConfigDat.ExtraStgFlags.v)) {
         break;
       }
@@ -1180,31 +1180,31 @@ void GameFlowManager::WeaponSelectProc(bool &) {
     count = 0;
 
     Snd_SEPlay(SOUND_ID_SELECT);
-    if (GameStage != GRAPH_ID_EXSTAGE) {
+    if (GameState.game_stage != GRAPH_ID_EXSTAGE) {
 #ifdef PBG_DEBUG
       if (forceStage)
-        GameStage = forceStage;
+        GameState.game_stage = forceStage;
       else
-        GameStage = DebugDat.StgSelect;
-      if (GameStage == 2)
+        GameState.game_stage = DebugDat.StgSelect;
+      if (GameState.game_stage == 2)
         Players.viv.exp = 160;
-      if (GameStage >= 3)
+      if (GameState.game_stage >= 3)
         Players.viv.exp = 255;
 #else
       if (forceStage) {
-        GameStage = forceStage;
-        if (GameStage == 2)
+        GameState.game_stage = forceStage;
+        if (GameState.game_stage == 2)
           Players.viv.exp = 160;
-        if (GameStage >= 3)
+        if (GameState.game_stage >= 3)
           Players.viv.exp = 255;
       } else if (ConfigDat.StageSelect.v) {
-        GameStage = ConfigDat.StageSelect.v;
-        if (GameStage == 2)
+        GameState.game_stage = ConfigDat.StageSelect.v;
+        if (GameState.game_stage == 2)
           Players.viv.exp = 160;
-        if (GameStage >= 3)
+        if (GameState.game_stage >= 3)
           Players.viv.exp = 255;
       } else {
-        GameStage = 1;
+        GameState.game_stage = 1;
       }
 #endif
     } else {
@@ -1215,11 +1215,11 @@ void GameFlowManager::WeaponSelectProc(bool &) {
 
     Demos.Init();
 
-    if (!LoadGraph(GameStage)) {
+    if (!LoadGraph(GameState.game_stage)) {
       DebugOut(u8"GRAPH.DAT が破壊されています");
       return;
     }
-    if (!LoadStageData(GameStage)) {
+    if (!LoadStageData(GameState.game_stage)) {
       DebugOut(u8"ENEMY.DAT が破壊されています");
       return;
     }
@@ -1264,7 +1264,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
     GrpGeom->SetColor({0, 0, 1});
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
-      if ((GameStage != GRAPH_ID_EXSTAGE) ||
+      if ((GameState.game_stage != GRAPH_ID_EXSTAGE) ||
           ((1 << i) & ConfigDat.ExtraStgFlags.v)) {
         continue;
       }
@@ -1280,7 +1280,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
     if (Players.viv.exp < 31)
       Players.viv.lay_time = Players.viv.lay_grp = 0;
 
-    HomingFlag = HOMING_DUMMY;
+    Enemies.homing_flag = HOMING_DUMMY;
     Key_Data = KEY_TAMA;
 
     Players.viv.muteki = 0;

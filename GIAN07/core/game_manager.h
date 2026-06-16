@@ -15,9 +15,3 @@ struct GameManager {
 };
 
 extern GameManager GameState;
-
-// --- 後方互換用参照 ---
-extern uint32_t& GameCount;
-extern uint8_t& GameStage;
-extern uint8_t& GameLevel;
-extern bool& IsDemoplay;

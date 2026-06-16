@@ -53,8 +53,7 @@ struct HomingLaserInfo {
 using HLaserInfo = HomingLaserInfo;
 
 ///// [グローバル変数] /////
-extern uint16_t& HLaserNow;   // ホーミングレーザーの本数
-extern HomingLaserInfo& HLaserCmd; // ホーミングレーザーセット用データ
+// Lasers.homing_count, Lasers.homing_cmd で直接アクセス
 
 ///// [関数プロトタイプ] /////
 // 後方互換 inline wrapper は laser_manager.h 末尾に移動

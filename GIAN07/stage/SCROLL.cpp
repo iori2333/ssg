@@ -146,12 +146,12 @@ static void enemy_set(void) {
   bool CtrlFlag = false;
 
   while (bFlag) {
-    const auto *cmd = SCL_Now;
+    const auto *cmd = Enemies.scl_now;
     switch (cmd[0]) {
     case (SCL_KEY): // キー入力待ち
       if ((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) ||
           ++Scroller.key_wait_count >= 180) {
-        SCL_Now++;
+        Enemies.scl_now++;
         Scroller.key_wait_count = 0;
       } else {
         bFlag = false;
@@ -165,7 +165,7 @@ static void enemy_set(void) {
         if ((Key_Data & KEY_TAMA) || (Key_Data & KEY_RETURN) ||
             (Key_Data & KEY_BOMB)) {
           if (!Scroller.scene.ReturnFlag) {
-            GameCount = temp;
+            GameState.game_count = temp;
             Scroller.scene.ReturnFlag = true;
           }
         } else {
@@ -174,18 +174,18 @@ static void enemy_set(void) {
       }
       /*
                                       if((Key_Data & KEY_SKIP) &&
-         Scroller.scene.MsgFlag) GameCount+=(temp-GameCount)/3; else if((Key_Data &
-         KEY_RETURN) && !Scroller.scene.ReturnFlag){ GameCount  = temp;
+         Scroller.scene.MsgFlag) GameState.game_count+=(temp-GameState.game_count)/3; else if((Key_Data &
+         KEY_RETURN) && !Scroller.scene.ReturnFlag){ GameState.game_count  = temp;
                                               Scroller.scene.ReturnFlag = true;
                                       }
                                       if(!(Key_Data & KEY_RETURN) &&
          Scroller.scene.ReturnFlag) { Scroller.scene.ReturnFlag = false;
                                       }
       */
-      if (temp > GameCount) {
+      if (temp > GameState.game_count) {
         bFlag = false;
       } else {
-        SCL_Now += 5; // cmd(1)+time(4)
+        Enemies.scl_now += 5; // cmd(1)+time(4)
       }
       SCL_DEBUG(u8"--- SCL_TIME ---");
     } break;
@@ -193,7 +193,7 @@ static void enemy_set(void) {
     case (SCL_ENEMY):
       if (Bosses.count == 0)
         _PutEnemy(cmd + 1); // ボス出現中は出て来ちゃダメ
-      SCL_Now += 6;         // cmd(1)+x(2)+y(2)+id(1)
+      Enemies.scl_now += 6;         // cmd(1)+x(2)+y(2)+id(1)
       SCL_DEBUG(u8"--- SCL_ENEMY ---");
       break;
 
@@ -202,12 +202,12 @@ static void enemy_set(void) {
       const auto y = I16LEAt(&cmd[1 + 2]); // ボス初期Ｙ
       const auto id = cmd[1 + 2 + 2];      // ボスＩＤ
       Bosses.Set(x, y, id);
-      SCL_Now += (1 + 2 + 2 + 1); // cmd+x+y+id
+      Enemies.scl_now += (1 + 2 + 2 + 1); // cmd+x+y+id
     } break;
 
     case (SCL_BOSSDEAD): // ボスを強制的に破壊する(Level2 命令Only)
       Bosses.KillAll();
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     case (SCL_MWOPEN): // メッセージウィンドウを開く
@@ -215,7 +215,7 @@ static void enemy_set(void) {
         MWinOpen();
       }
       Scroller.scene.MsgFlag = true;
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     case (SCL_MWCLOSE): // メッセージウィンドウを閉じる
@@ -223,28 +223,28 @@ static void enemy_set(void) {
         MWinClose();
       }
       Scroller.scene.MsgFlag = false;
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     case (SCL_MSG): // メッセージを出力する
       // MWinCmd(MWCMD_SMALLFONT);
       MWinMsg(reinterpret_cast<const char *>(cmd + 1));
-      SCL_Now += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
+      Enemies.scl_now += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
       break;
 
     case (SCL_FACE): // 顔を表示する
       MWinFace(cmd[1]);
-      SCL_Now += 2;
+      Enemies.scl_now += 2;
       break;
 
     case (SCL_LOADFACE): // 顔グラをロードする(SurfaceID,FileNo)
       LoadFace(cmd[1], cmd[2]);
-      SCL_Now += 3;
+      Enemies.scl_now += 3;
       break;
 
     case (SCL_NPG): // 新しいページに変更する
       MWinCmd(MWCMD_NEWPAGE);
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     case (SCL_END): // カウントも変更させずにリターンする
@@ -259,12 +259,12 @@ static void enemy_set(void) {
 
     case (SCL_SSP): // スクロールスピード変更
       Scroller.SetSpeed(I16LEAt(&cmd[1]));
-      SCL_Now += 3;
+      Enemies.scl_now += 3;
       break;
 
     case (SCL_MUSIC):
       //				if(!(/*DemoplaySaveEnable||*/Demos.load_enable)){
-      if (!IsDemoplay) {
+      if (!GameState.is_demoplay) {
         BGM_Stop();
         if (BGM_Switch(cmd[1])) {
           BGM_Play();
@@ -274,21 +274,21 @@ static void enemy_set(void) {
           }
         }
       }
-      SCL_Now += 2;
+      Enemies.scl_now += 2;
       break;
 
     case (SCL_DELENEMY):
       Enemies.InitIndices();
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     case (SCL_EFC):
       switch (cmd[1]) {
       case (SEFC_WARN):
-        // effect_set(0,0,EFC_WARNBOSS,GameStage);
+        // effect_set(0,0,EFC_WARNBOSS,GameState.game_stage);
         Snd_SEPlay(8, GX_MID, true);
         Effects.SetWarningEffect();
-        // StringEffect3(GameStage);
+        // StringEffect3(GameState.game_stage);
         break;
 
       case (SEFC_WARNSTOP):
@@ -346,7 +346,7 @@ static void enemy_set(void) {
         Scroller.Command(SCMD_STG6RASTER);
         break; // ６面ラスター
       }
-      SCL_Now += 2;
+      Enemies.scl_now += 2;
       break;
 
     case (SCL_WAITEX): // 特殊待ち <cmd1>,<opt4>
@@ -362,7 +362,7 @@ static void enemy_set(void) {
         }
         return;
       }
-      SCL_Now += (1 + 1 + 4);
+      Enemies.scl_now += (1 + 1 + 4);
       break;
 
     case (SCL_STAGECLEAR): // ステージクリア
@@ -372,7 +372,7 @@ static void enemy_set(void) {
         return;
       }
       if (Demos.load_all_enable) {
-        if (GameStage < Demos.playback_max_stage) {
+        if (GameState.game_stage < Demos.playback_max_stage) {
           GameNextStage();
         }
         return;
@@ -390,9 +390,9 @@ static void enemy_set(void) {
       if (Demos.load_all_enable)
         return;
 
-      if (GameStage == STAGE_MAX)
-        GameStage = 7;
-      if (GameLevel != GAME_EASY) {
+      if (GameState.game_stage == STAGE_MAX)
+        GameState.game_stage = 7;
+      if (GameState.game_level != GAME_EASY) {
         switch (Players.viv.weapon) {
         case (0):
           ConfigDat.ExtraStgFlags.v |= 1;
@@ -424,12 +424,12 @@ static void enemy_set(void) {
       // 前後にある４０色をマップパーツのパレットにする
       // BitDeapth 判定は、関数側に任せる
       GrpSurface_PaletteApplyToBackend(SURFACE_ID::MAPCHIP);
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     case (SCL_ENEMYPALETTE):
       LoadPaletteFromEnemy(); // BitDeapth 判定は、関数側に任せる
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     default: // 未実装 or ばぐ
@@ -442,13 +442,13 @@ static void enemy_set(void) {
     }
   }
 
-  GameCount++;
+  GameState.game_count++;
 
-  if ((GameCount & 0x3f) == 0) {
-    if (GameStage == GRAPH_ID_EXSTAGE)
+  if ((GameState.game_count & 0x3f) == 0) {
+    if (GameState.game_stage == GRAPH_ID_EXSTAGE)
       Ranking.Add(1);
     else
-      Ranking.Add(1 + GameStage / 3);
+      Ranking.Add(1 + GameState.game_stage / 3);
   }
 }
 
@@ -456,7 +456,7 @@ static void _PutEnemy(const uint8_t *p) {
   /*
    * [メモ]
    *  p[0-1]:EnemyX  p[2-3]:EnemyY  p[4]:EnemyID
-   *  ECL_Head[0-3]:Num  ECL_Head[n*4-(n*4+3)] (n>1):StartAddr(ABS)
+   *  Enemies.ecl_head[0-3]:Num  Enemies.ecl_head[n*4-(n*4+3)] (n>1):StartAddr(ABS)
    */
   ENEMY_DATA *e;
   short x, y;
@@ -478,7 +478,7 @@ static void _PutEnemy(const uint8_t *p) {
 
           e->x = (e->x==X_RNDV) ? GX_RND() : (e->x<<6);
           e->y = (e->y==Y_RNDV) ? GY_RND() : (e->y<<6);
-          e->cmd = U32LEAt(&ECL_Head[n]);
+          e->cmd = U32LEAt(&Enemies.ecl_head[n]);
 
           e->call_addr = e->cmd;
 

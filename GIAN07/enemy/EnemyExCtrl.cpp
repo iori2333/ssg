@@ -556,10 +556,10 @@ void BossManager::BitLaserCommand(uint8_t Command) {
   ENEMY_DATA *e;
   uint8_t delta;
 
-  LLaserCmd.dx = 0;
-  LLaserCmd.dy = 0;
-  LLaserCmd.v = 64;
-  LLaserCmd.w = 64 * 8;
+  Lasers.long_cmd.dx = 0;
+  Lasers.long_cmd.dy = 0;
+  Lasers.long_cmd.v = 64;
+  Lasers.long_cmd.w = 64 * 8;
 
   this->bit_data.bIsLaserEnable = true;
 
@@ -569,39 +569,39 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       continue;
     }
 
-    LLaserCmd.e = e;
-    LLaserCmd.d = e->d;
+    Lasers.long_cmd.e = e;
+    Lasers.long_cmd.d = e->d;
 
     switch (Command) {
     case (BLASERCMD_TYPE_A): // 一方向・角度固定レーザーを放射
-      LLaserCmd.type = LLS_LONG;
-      LLaserCmd.c = 2;
+      Lasers.long_cmd.type = LLS_LONG;
+      Lasers.long_cmd.c = 2;
       if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
       break;
 
     case (BLASERCMD_TYPE_B): // 両方向角度固定レーザーを放射
-      LLaserCmd.d += 64;
-      LLaserCmd.type = LLS_LONG;
-      LLaserCmd.c = 1;
+      Lasers.long_cmd.d += 64;
+      Lasers.long_cmd.type = LLS_LONG;
+      Lasers.long_cmd.c = 1;
       if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
 
-      LLaserCmd.d += 128;
+      Lasers.long_cmd.d += 128;
       if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
       break;
 
     case (BLASERCMD_TYPE_C): // 角度同期ｎ芒星レーザー
-      LLaserCmd.type = LLS_LONG;
-      LLaserCmd.c = 0;
+      Lasers.long_cmd.type = LLS_LONG;
+      Lasers.long_cmd.c = 0;
 
       delta = 64 + 256 / this->bit_data.NumBits;
 
-      LLaserCmd.d = e->d + delta;
+      Lasers.long_cmd.d = e->d + delta;
       if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
-      LLaserCmd.d = e->d - delta;
+      Lasers.long_cmd.d = e->d - delta;
       if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
       break;

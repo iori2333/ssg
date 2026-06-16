@@ -252,14 +252,14 @@ void EndingManager::SCLDecode() {
   bool bFlag = true;
 
   while (bFlag) {
-    const uint8_t *cmd = SCL_Now;
+    const uint8_t *cmd = Enemies.scl_now;
     switch (cmd[0]) {
     case (SCL_TIME): {
       const auto temp = I32LEAt(&cmd[1]);
-      if (temp > GameCount) {
+      if (temp > GameState.game_count) {
         bFlag = false;
       } else {
-        SCL_Now += 5; // cmd(1)+time(4)
+        Enemies.scl_now += 5; // cmd(1)+time(4)
       }
       break;
     }
@@ -270,7 +270,7 @@ void EndingManager::SCLDecode() {
       this->text.Text[this->text.NumText++] = line;
       this->text.TextStr += line_p;
       this->text.TextStr += '\n';
-      SCL_Now += (line.length() + 2);
+      Enemies.scl_now += (line.length() + 2);
       break;
     }
 
@@ -310,7 +310,7 @@ void EndingManager::SCLDecode() {
       this->grp_info.target = EndingGrp + cmd[1];
       this->grp_info.timer = 0;
       this->grp_info.bWantDisp = true;
-      SCL_Now += 2;
+      Enemies.scl_now += 2;
       break;
 
     case (SCL_STAFF): // わかりにくいが、１２８を加えると、役割名指定ね
@@ -353,12 +353,12 @@ void EndingManager::SCLDecode() {
       } else {
         this->stf_task.StfID[this->stf_task.NumStf++] = cmd[1];
       }
-      SCL_Now += 2;
+      Enemies.scl_now += 2;
       break;
 
     case (SCL_NPG): // 新しいページに変更する
       this->text.Blank();
-      SCL_Now++;
+      Enemies.scl_now++;
       break;
 
     case (SCL_END): // カウントも変更させずにリターンするのだ
@@ -369,7 +369,7 @@ void EndingManager::SCLDecode() {
 
     case (SCL_MUSIC):
       BGM_Switch(cmd[1]);
-      SCL_Now += 2;
+      Enemies.scl_now += 2;
       break;
 
     case (SCL_EFC):
@@ -379,7 +379,7 @@ void EndingManager::SCLDecode() {
         break;
       }
 
-      SCL_Now += 2;
+      Enemies.scl_now += 2;
       break;
 
     case (SCL_STAGECLEAR): // ステージクリア
@@ -393,5 +393,5 @@ void EndingManager::SCLDecode() {
     }
   }
 
-  GameCount++;
+  GameState.game_count++;
 }

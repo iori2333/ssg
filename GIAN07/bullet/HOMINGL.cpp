@@ -14,9 +14,7 @@
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
-// HLaserNow はクロスモジュールのため extern を維持
-extern uint16_t& HLaserNow;
-// Lasers.homing_cmd, Lasers.homing_buf, Lasers.active, Lasers.free_list → laser_manager.h 経由で直接アクセス
+// this->homing_count → this->homing_count で直接アクセス
 
 ///// [マクロ] /////
 constexpr int HLASER_GETNEXT(int current) {
@@ -34,7 +32,7 @@ constexpr int HLASER_GETPREV(int current, int n) {
 void LaserManager::InitHoming() {
   int i;
 
-  HLaserNow = 0;
+  this->homing_count = 0;
 
   Lasers.active.Next = nullptr;
   Lasers.free_list.Next = Lasers.homing_buf.data();
@@ -63,7 +61,7 @@ void LaserManager::SpawnHoming(const HLaserInfo *hinfo) {
     Lasers.free_list.Next = Lasers.free_list.Next->Next;
     p->Next = Lasers.active.Next;
     Lasers.active.Next = p;
-    HLaserNow++;
+    this->homing_count++;
 
     p->v = 64 * 4;  // 加速度セット
     p->a = 10;      // 速度セット
@@ -196,7 +194,7 @@ void LaserManager::MoveHoming() {
       Lasers.free_list.Next = hl->Next;
       hl->Next = temp;
 
-      HLaserNow--;
+      this->homing_count--;
     }
     // そうでなければポインタを進める //
     else {

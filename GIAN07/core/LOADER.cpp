@@ -641,9 +641,9 @@ bool LoadStageData(uint8_t stage) {
   int i;
 
   // メモリを解放だ！ //
-  SCL_Now = nullptr;
-  ECL_Head = nullptr;
-  SCL_Head = nullptr;
+  Enemies.scl_now = nullptr;
+  Enemies.ecl_head = nullptr;
+  Enemies.scl_head = nullptr;
   Scroller.scroll.DataHead = nullptr;
 
   const auto &enemy = DAT::Packfile(DAT::PACK_ID::ENEMY);
@@ -651,12 +651,12 @@ bool LoadStageData(uint8_t stage) {
   // エキストラステージシステム用 //
   if (stage == GRAPH_ID_EXSTAGE) {
     // ECL Load
-    if ((ECL_Head = enemy.MemExpand(24)) == nullptr) {
+    if ((Enemies.ecl_head = enemy.MemExpand(24)) == nullptr) {
       return false;
     }
 
     // SCL Load
-    if ((SCL_Head = enemy.MemExpand(25)) == nullptr) {
+    if ((Enemies.scl_head = enemy.MemExpand(25)) == nullptr) {
       return false;
     }
 
@@ -666,11 +666,11 @@ bool LoadStageData(uint8_t stage) {
     }
   } else if (stage == GRAPH_ID_ENDING) {
     // SCL Load
-    if ((SCL_Head = enemy.MemExpand(47)) == nullptr) {
+    if ((Enemies.scl_head = enemy.MemExpand(47)) == nullptr) {
       return false;
     }
-    SCL_Now = SCL_Head.get();
-    GameCount = 0;
+    Enemies.scl_now = Enemies.scl_head.get();
+    GameState.game_count = 0;
     return true;
   } else {
     // 各データをロードする //
@@ -679,12 +679,12 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // ECL Load
-    if ((ECL_Head = enemy.MemExpand(stage + 0 - 1)) == nullptr) {
+    if ((Enemies.ecl_head = enemy.MemExpand(stage + 0 - 1)) == nullptr) {
       return false;
     }
 
     // SCL Load
-    if ((SCL_Head = enemy.MemExpand(stage + 6 - 1)) == nullptr) {
+    if ((Enemies.scl_head = enemy.MemExpand(stage + 6 - 1)) == nullptr) {
       return false;
     }
 
@@ -700,8 +700,8 @@ bool LoadStageData(uint8_t stage) {
   }
 
   // 各変数の初期化 //
-  SCL_Now = SCL_Head.get();
-  GameCount = 0;
+  Enemies.scl_now = Enemies.scl_head.get();
+  GameState.game_count = 0;
 
   // アニメーションの準備 //
   switch (stage) {

@@ -93,10 +93,7 @@ typedef struct{
 // 実装は LaserManager メソッドに移行
 
 ////レーザーの各種変数たち////
-extern LaserCommand& LaserCmd; // 標準レーザーコマンド構造体
-extern uint16_t& LaserNow;     // レーザーの本数
-extern std::array<LASER_DATA, LASER_MAX>& Laser;    // レーザー格納用構造体
-extern std::array<uint16_t, LASER_MAX>& LaserInd;   // レーザー順番維持用配列
+// Lasers.cmd, Lasers.count, Lasers.lasers, Lasers.laser_indices で直接アクセス
 // extern REFLECTOR	Reflector[RT_MAX];		// 反射物構造体
 // extern uint16_t	ReflectorNow;	// 反射物の個数
 

@@ -44,7 +44,7 @@ void DemoManager::Init(void) {
 
   this->demo_info.Exp = Players.viv.exp;
   this->demo_info.Weapon = Players.viv.weapon;
-  this->demo_info.CfgDat.GameLevel = GameLevel;
+  this->demo_info.CfgDat.GameLevel = GameState.game_level;
   this->demo_info.CfgDat.PlayerStock = Players.viv.left;
   this->demo_info.CfgDat.BombStock = ConfigDat.BombStock.v;
   this->demo_info.CfgDat.InputFlags = ConfigDat.InputFlags.v;
@@ -66,7 +66,7 @@ void DemoManager::FlushStage(void) {
     return;
 
   if (this->multi_stage_count < REPLAY_STAGE_MAX) {
-    this->multi_stage_nums[this->multi_stage_count] = GameStage;
+    this->multi_stage_nums[this->multi_stage_count] = GameState.game_stage;
     this->multi_stage_frames[this->multi_stage_count] = this->demo_frame_cur;
 
     std::vector<INPUT_BITS> stage_data(this->demo_buffer.data(), this->demo_buffer.data() + this->demo_frame_cur);
@@ -92,7 +92,7 @@ bool DemoManager::LoadSetup() {
   ConfigDat.BombStock.v = this->demo_info.CfgDat.BombStock;
   ConfigDat.PlayerStock.v = this->demo_info.CfgDat.PlayerStock;
   ConfigDat.InputFlags.v = this->demo_info.CfgDat.InputFlags;
-  GameLevel = this->demo_info.CfgDat.GameLevel;
+  GameState.game_level = this->demo_info.CfgDat.GameLevel;
 
   // 本体の性能記述 //
   Players.viv.exp = this->demo_info.Exp;
@@ -130,7 +130,7 @@ void DemoManager::SaveDemo(void) {
   this->demo_info.FrameCount = (this->demo_frame_cur + 1);
 
   char8_t fn[] = u8"STG_Demo.DAT";
-  fn[3] = ('0' + GameStage);
+  fn[3] = ('0' + GameState.game_stage);
 
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f) {
@@ -191,7 +191,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
 
   // Flush current stage data if any (not yet flushed by stage clear)
   if (this->demo_frame_cur > 0 && this->multi_stage_count < REPLAY_STAGE_MAX) {
-    this->multi_stage_nums[this->multi_stage_count] = GameStage;
+    this->multi_stage_nums[this->multi_stage_count] = GameState.game_stage;
     this->multi_stage_frames[this->multi_stage_count] = this->demo_frame_cur;
     this->stage_record_bufs.emplace_back(this->demo_buffer.data(), this->demo_buffer.data() + this->demo_frame_cur);
     this->multi_stage_count++;

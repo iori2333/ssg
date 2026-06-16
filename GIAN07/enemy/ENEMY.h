@@ -132,19 +132,14 @@ struct ANIME_DATA {
 };
 
 //// 敵変数 ////
+// Enemy, EnemyInd, EnemyNow → Enemies.* 移行待ち
 extern std::array<EnemyData, ENEMY_MAX>& Enemy;
-extern BYTE_BUFFER_OWNED& ECL_Head;
-extern BYTE_BUFFER_OWNED& SCL_Head;
-extern uint8_t*& SCL_Now;
 extern std::array<uint16_t, ENEMY_MAX>& EnemyInd;
 extern uint16_t& EnemyNow;
+// Anime → Enemies.anime 移行待ち (LOADER.cpp)
 extern ANIME_DATA (&Anime)[ANIME_MAX];
-extern uint8_t& EnemyEXDEG;
-extern uint8_t& EnemyEXDEG_D;
-
-extern int& HomingX;    // ホーミング対象のＸ座標
-extern int& HomingY;    // ホーミング対象のＹ座標
-extern int& HomingFlag; // 真ならホーミング実行
+// ECL_Head, SCL_Head, SCL_Now, HomingX/Y/Flag → Enemies.* 移行済み
+// EnemyEXDEG, EnemyEXDEG_D → Enemies.* 移行済み
 
 //// 敵制御関数 ////
 // 後方互換 inline wrapper は enemy_manager.h 末尾に移動
