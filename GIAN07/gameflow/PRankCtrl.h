@@ -18,5 +18,5 @@ using PlayRankInfo = PlayRankState;
 extern PlayRankState& PlayRank;
 
 ///// [ 関数 ] /////
-void PlayRankAdd(int n);  // 難易度の許容範囲内でプレイランクを増減する
-void PlayRankReset(void); // 現在の難易度に応じてプレイランクを初期化
+// 後方互換 inline wrapper は rank_manager.h 末尾に移動
+// 実装は RankManager メソッドに移行

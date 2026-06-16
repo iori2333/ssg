@@ -1,5 +1,5 @@
 /*
- *   DemoManager — centralized demo/replay system state
+ *   DemoManager — centralized demo/replay system state and operations
  */
 
 #pragma once
@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 struct DemoManager {
   bool load_enable = false;
@@ -18,7 +19,44 @@ struct DemoManager {
   std::u8string pending_replay_file;
   DEMOPLAY_INFO demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};
+
+  // ファイル静的変数（DEMOPLAY.cpp から移動）
+  uint32_t demo_frame_cur = 0;
+  struct ConfigTempData {
+    uint8_t PlayerStock;
+    uint8_t BombStock;
+    uint8_t InputFlags;
+  } config_temp;
+  std::vector<std::vector<INPUT_BITS>> stage_record_bufs;
+  uint8_t multi_stage_count = 0;
+  uint8_t multi_stage_nums[REPLAY_STAGE_MAX] = {};
+  uint32_t multi_stage_frames[REPLAY_STAGE_MAX] = {};
+  std::vector<INPUT_BITS> all_playback_buf;
+
+  // === メソッド ===
+  void Init();                                                         // was DemoplayInit
+  bool HasRecordedStages();                                            // was DemoplayHasRecordedStages
+  void FlushStage();                                                   // was DemoplayFlushStage
+  bool LoadSetup();                                                    // was DemoplayLoadSetup
+  bool Record(INPUT_BITS key);                                         // was DemoplayRecord
+  void SaveDemo();                                                     // was DemoplaySaveDemo
+  bool LoadDemo(int stage);                                            // was DemoplayLoadDemo
+  INPUT_BITS Move();                                                   // was DemoplayMove
+  void Cleanup();                                                      // was DemoplayCleanup
+  void SaveReplayAll(bool exstg);                                    // was DemoplaySaveReplayAll
+  bool LoadReplayAll(const char8_t *fn);                              // was DemoplayLoadReplayAll
 };
 
 extern DemoManager Demos;
-// 後方互換用参照は DEMOPLAY.h で宣言
+
+// === 後方互換 inline wrapper ===
+inline void DemoplayInit(void) { Demos.Init(); }
+inline bool DemoplayHasRecordedStages(void) { return Demos.HasRecordedStages(); }
+inline void DemoplayFlushStage(void) { Demos.FlushStage(); }
+inline bool DemoplayRecord(INPUT_BITS key) { return Demos.Record(key); }
+inline void DemoplaySaveDemo(void) { Demos.SaveDemo(); }
+inline bool DemoplayLoadDemo(int stage) { return Demos.LoadDemo(stage); }
+inline INPUT_BITS DemoplayMove(void) { return Demos.Move(); }
+inline void DemoplayCleanup(void) { Demos.Cleanup(); }
+inline void DemoplaySaveReplayAll(bool exstg = false) { Demos.SaveReplayAll(exstg); }
+inline bool DemoplayLoadReplayAll(const char8_t *fn) { return Demos.LoadReplayAll(fn); }

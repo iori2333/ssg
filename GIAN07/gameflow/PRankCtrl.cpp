@@ -10,7 +10,7 @@
 // PlayRank → rank_manager.cpp に移動
 
 // 難易度の許容範囲内でプレイランクを増減する
-void PlayRankAdd(int n) {
+void RankManager::Add(int n) {
   // イージー 　　　0 ～ 24
   // ノーマル　　　16 ～ 40
   // ハード　　 　　32 ～ 48
@@ -19,66 +19,66 @@ void PlayRankAdd(int n) {
   // 難易度を変化させる //
   if (GameStage == GRAPH_ID_EXSTAGE) {
     if (n > 0) {
-      PlayRank.Rank += (std::max)(+1, (n / 4));
+      this->state.Rank += (std::max)(+1, (n / 4));
     } else if (n < 0) {
-      PlayRank.Rank += (std::min)(-1, (n / 10));
+      this->state.Rank += (std::min)(-1, (n / 10));
     }
   } else {
-    PlayRank.Rank += n;
+    this->state.Rank += n;
   }
 
   // この分岐に関しては、基本的にコンフィグの値に基づく //
   switch (GameLevel) {
   case (GAME_EASY):
-    if (PlayRank.Rank < 0)
-      PlayRank.Rank = 0;
-    else if (PlayRank.Rank > 24 * 256)
-      PlayRank.Rank = 24 * 256;
+    if (this->state.Rank < 0)
+      this->state.Rank = 0;
+    else if (this->state.Rank > 24 * 256)
+      this->state.Rank = 24 * 256;
 
-    if (PlayRank.Rank < 20 * 256)
-      PlayRank.GameLevel = GAME_EASY;
+    if (this->state.Rank < 20 * 256)
+      this->state.GameLevel = GAME_EASY;
     else
-      PlayRank.GameLevel = GAME_NORMAL;
+      this->state.GameLevel = GAME_NORMAL;
     break;
 
   case (GAME_NORMAL):
-    if (PlayRank.Rank < 16 * 256)
-      PlayRank.Rank = 16 * 256;
-    else if (PlayRank.Rank > 40 * 256)
-      PlayRank.Rank = 40 * 256;
+    if (this->state.Rank < 16 * 256)
+      this->state.Rank = 16 * 256;
+    else if (this->state.Rank > 40 * 256)
+      this->state.Rank = 40 * 256;
 
-    if (PlayRank.Rank < 20 * 256)
-      PlayRank.GameLevel = GAME_EASY;
-    else if (PlayRank.Rank < 36 * 256)
-      PlayRank.GameLevel = GAME_NORMAL;
+    if (this->state.Rank < 20 * 256)
+      this->state.GameLevel = GAME_EASY;
+    else if (this->state.Rank < 36 * 256)
+      this->state.GameLevel = GAME_NORMAL;
     else
-      PlayRank.GameLevel = GAME_HARD;
+      this->state.GameLevel = GAME_HARD;
     break;
 
   case (GAME_HARD):
-    if (PlayRank.Rank < 32 * 256)
-      PlayRank.Rank = 32 * 256;
-    else if (PlayRank.Rank > 48 * 256)
-      PlayRank.Rank = 48 * 256;
+    if (this->state.Rank < 32 * 256)
+      this->state.Rank = 32 * 256;
+    else if (this->state.Rank > 48 * 256)
+      this->state.Rank = 48 * 256;
 
-    if (PlayRank.Rank < 36 * 256)
-      PlayRank.GameLevel = GAME_NORMAL;
-    else if (PlayRank.Rank < 44 * 256)
-      PlayRank.GameLevel = GAME_HARD;
+    if (this->state.Rank < 36 * 256)
+      this->state.GameLevel = GAME_NORMAL;
+    else if (this->state.Rank < 44 * 256)
+      this->state.GameLevel = GAME_HARD;
     else
-      PlayRank.GameLevel = GAME_LUNATIC;
+      this->state.GameLevel = GAME_LUNATIC;
     break;
 
   case (GAME_LUNATIC):
-    if (PlayRank.Rank < 40 * 256)
-      PlayRank.Rank = 40 * 256;
-    else if (PlayRank.Rank > 64 * 256)
-      PlayRank.Rank = 64 * 256;
+    if (this->state.Rank < 40 * 256)
+      this->state.Rank = 40 * 256;
+    else if (this->state.Rank > 64 * 256)
+      this->state.Rank = 64 * 256;
 
-    if (PlayRank.Rank < 44 * 256)
-      PlayRank.GameLevel = GAME_HARD;
+    if (this->state.Rank < 44 * 256)
+      this->state.GameLevel = GAME_HARD;
     else
-      PlayRank.GameLevel = GAME_LUNATIC;
+      this->state.GameLevel = GAME_LUNATIC;
     break;
 
     // case(GAME_EXTRA):
@@ -87,21 +87,21 @@ void PlayRankAdd(int n) {
 }
 
 // 現在の難易度に応じてプレイランクを初期化
-void PlayRankReset(void) {
-  PlayRank.GameLevel = GameLevel;
+void RankManager::Reset(void) {
+  this->state.GameLevel = GameLevel;
 
   switch (GameLevel) {
   case (GAME_EASY):
-    PlayRank.Rank = 16 * 256;
+    this->state.Rank = 16 * 256;
     break;
   case (GAME_NORMAL):
-    PlayRank.Rank = 32 * 256;
+    this->state.Rank = 32 * 256;
     break;
   case (GAME_HARD):
-    PlayRank.Rank = 44 * 256;
+    this->state.Rank = 44 * 256;
     break;
   case (GAME_LUNATIC):
-    PlayRank.Rank = 60 * 256;
+    this->state.Rank = 60 * 256;
     break;
     // case(GAME_EXTRA):		break;
   }

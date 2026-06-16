@@ -59,7 +59,7 @@ static void SCL_DEBUG(std::u8string_view s) {
 }
 
 // 背景を動かす(１フレーム分) //
-void ScrollMove(void) {
+void ScrollManager::Move(void) {
   int i;
 
   enemy_set();        // 敵をセット
@@ -583,7 +583,7 @@ infy));
 */
 
 // 背景を描画する //
-void ScrollDraw(void) {
+void ScrollManager::Draw(void) {
   PBGMAP *p;
   int i, j, k, x, y;
   int dx = 0;   // 振動用
@@ -657,14 +657,14 @@ void ScrollDraw(void) {
 }
 
 // スクロールスピードを変更する(引数:(1)スクロール速度) //
-void ScrollSpeed(int speed) {
+void ScrollManager::SetSpeed(int speed) {
   // if(speed<0) speed = 0;		// 逆方向スクロール禁止！！
 
   ScrollInfo.ScrollSpeed = speed;
 }
 
 // ＳＣＬ用コマンド実行関数(引数:(1)スクロールコマンド) //
-void ScrollCommand(uint8_t cmd) {
+void ScrollManager::Command(uint8_t cmd) {
   switch (cmd) {
   case (SCMD_QUAKE): // 振動エフェクト
     ScrollInfo.IsQuake = 2;
@@ -917,7 +917,7 @@ static void ScrollCmdStg3Star(void) {
 }
 
 // マップデータをロードする(BMP含む) //
-bool ScrollInit(void) {
+bool ScrollManager::Init(void) {
   ScrollSaveHeader *LayerInfo;
   int i;
   static bool bInitialized = false;

@@ -35,7 +35,10 @@
 #include "player/player_manager.h" // PlayerManager + backward-compat wrappers
 #include "player/item_manager.h"   // ItemManager + backward-compat wrappers
 #include "gameflow/PRankCtrl.h" // プレイランク管理
+#include "gameflow/rank_manager.h"   // RankManager + backward-compat wrappers
+#include "gameflow/demo_manager.h"   // DemoManager + backward-compat wrappers
 #include "stage/SCROLL.h"    // 背景スクロール＆ＳＣＬ管理
+#include "stage/scroll_manager.h"    // ScrollManager + backward-compat wrappers
 
 #include "game/ut_math.h" // for rnd()
 #include "player/ITEM.h" // アイテム処理

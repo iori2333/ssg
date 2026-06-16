@@ -50,22 +50,8 @@ struct MULTI_REPLAY_INFO {
 };
 
 ///// [ 関数 ] /////
-void DemoplayInit(void); // デモプレイデータの準備
-
-// デモプレイデータを保存する
-bool DemoplayRecord(INPUT_BITS key);
-
-void DemoplaySaveDemo(void);   // デモプレイデータをファイルに書き込む
-
-bool DemoplayLoadDemo(int stage);   // デモプレイデータをロードする
-INPUT_BITS DemoplayMove(void);      // Key_Data を返す
-void DemoplayCleanup(void);         // デモプレイロードの事後処理
-
-// Multi-stage replay
-void DemoplayFlushStage(void);
-void DemoplaySaveReplayAll(bool exstg = false);
-bool DemoplayLoadReplayAll(const char8_t *fn);
-bool DemoplayHasRecordedStages(void);
+// 後方互換 inline wrapper は demo_manager.h 末尾に移動
+// 実装は DemoManager メソッドに移行
 
 ///// [ 変数 ] /////
 // DemoplayLoadEnable, DemoplaySaveAllEnable, DemoplayLoadAllEnable,

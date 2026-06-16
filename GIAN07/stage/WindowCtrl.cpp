@@ -8,6 +8,7 @@
 
 #include "CONFIG.h"
 #include "DEMOPLAY.h"
+#include "gameflow/demo_manager.h"
 #include "ENTRY.h"
 #include "GAMEMAIN.h"
 #include "LEVEL.h"
