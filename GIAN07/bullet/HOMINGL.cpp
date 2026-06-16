@@ -342,7 +342,7 @@ void LaserManager::DrawHoming() {
 void LaserManager::ClearHoming() {
   //	HLaserData	*hl;
 
-  HLaserInit();
+  this->InitHoming();
   /*
   for(hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
           hl->State = HLS_CLEAR;

@@ -86,7 +86,7 @@ void LaserManager::OpenLong(const ENEMY_DATA *e, uint8_t id) {
 
 void LaserManager::CloseLong(const ENEMY_DATA *e, uint8_t id) {
   if (id == ECLCST_LLASERALL) {
-    LLaserForceClose(e);
+    this->ForceCloseLong(e);
     return;
   }
 

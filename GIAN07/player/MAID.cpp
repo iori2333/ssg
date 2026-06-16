@@ -380,7 +380,7 @@ void Player::Update() {
 
   if (bomb_time) {
     Bullets.Clear();
-    laser_clear();
+    Lasers.Clear();
   }
 
   BuzzSound = false;
@@ -466,7 +466,7 @@ void Player::OnDeath() {
     bomb_used++;
     Ranking.Add(-25); // 自动Bomb降低Rank
     Bullets.Clear();
-    laser_clear();
+    Lasers.Clear();
     return;
   }
 
@@ -505,7 +505,7 @@ void Player::OnDeath() {
   }
 
   Bullets.Clear();
-  laser_clear();
+  Lasers.Clear();
 }
 
 void Player::AddEvade(uint8_t n) {

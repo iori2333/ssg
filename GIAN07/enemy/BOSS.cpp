@@ -472,7 +472,7 @@ void BossManager::KillAll(void) {
       ExBombEfcSet(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
       if (e->LLaserRef)
-        LLaserForceClose(e); // レーザーの強制クローズ
+        Lasers.ForceCloseLong(e); // レーザーの強制クローズ
       e->hp = 0;
       e->count = 0;
       e->flag = EF_BOMB;
@@ -494,7 +494,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SOUND_ID_BOSSBOMB, e.x);
     if (e.LLaserRef) {
-      LLaserForceClose(&e); // レーザーの強制クローズ
+      Lasers.ForceCloseLong(&e); // レーザーの強制クローズ
     }
     PowerUp(Cast::down<uint8_t>(e.hp));
     e.hp = 0;
@@ -515,7 +515,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
       Items.Spawn(e.x, e.y, e.item);
     }
     score_add(e.score);
-    laser_clear();
+    Lasers.Clear();
     b.IsUsed = 0;
     this->count--; // ボスの参照カウント？を使用する
   } else {

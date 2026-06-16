@@ -117,7 +117,7 @@ void BossManager::SnakyDelete(const BOSS_DATA *b) {
 
     // Snd_SEPlay(SOUND_ID_BOMB, e->x);
     if (e->LLaserRef)
-      LLaserForceClose(e); // レーザーの強制クローズ
+      Lasers.ForceCloseLong(e); // レーザーの強制クローズ
     // PowerUp(e->hp);			// パワーアップ
     e->hp = 0;
     e->count = 0;
@@ -280,7 +280,7 @@ void BossManager::BitMove(void) {
 
       // ビット配列に関連づけられた敵に削除要求を送出 //
       if (e->LLaserRef)
-        LLaserForceClose(e);
+        Lasers.ForceCloseLong(e);
       e->hp = 0;
       e->count = 0; // 爆発のアニメセット用
       e->flag = EF_BOMB;
@@ -465,8 +465,8 @@ void BossManager::BitSTDRoll(void) {
       if (this->bit_data.NumBits == 0)
         break;
       LaserDeg = 64 + 256 / this->bit_data.NumBits;
-      LLaserDegA(e, e->d + LaserDeg, 0);
-      LLaserDegA(e, e->d - LaserDeg, 1);
+      Lasers.RotateLongAbs(e, e->d + LaserDeg, 0);
+      Lasers.RotateLongAbs(e, e->d - LaserDeg, 1);
       break;
     }
   }
@@ -488,7 +488,7 @@ void BossManager::BitDelete(void) {
     }
 
     if (e->LLaserRef)
-      LLaserForceClose(e);
+      Lasers.ForceCloseLong(e);
     e->hp = 0;
     e->count = 0;
     e->flag = EF_BOMB;
@@ -576,7 +576,7 @@ void BossManager::BitLaserCommand(uint8_t Command) {
     case (BLASERCMD_TYPE_A): // 一方向・角度固定レーザーを放射
       LLaserCmd.type = LLS_LONG;
       LLaserCmd.c = 2;
-      if (LLaserSet(e->LLaserRef))
+      if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
       break;
 
@@ -584,11 +584,11 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       LLaserCmd.d += 64;
       LLaserCmd.type = LLS_LONG;
       LLaserCmd.c = 1;
-      if (LLaserSet(e->LLaserRef))
+      if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
 
       LLaserCmd.d += 128;
-      if (LLaserSet(e->LLaserRef))
+      if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
       break;
 
@@ -599,25 +599,25 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       delta = 64 + 256 / this->bit_data.NumBits;
 
       LLaserCmd.d = e->d + delta;
-      if (LLaserSet(e->LLaserRef))
+      if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
       LLaserCmd.d = e->d - delta;
-      if (LLaserSet(e->LLaserRef))
+      if (Lasers.SpawnLongLaser(e->LLaserRef))
         e->LLaserRef++;
       break;
 
     case (BLASERCMD_OPEN):
-      LLaserOpen(e, ECLCST_LLASERALL);
+      Lasers.OpenLong(e, ECLCST_LLASERALL);
       continue;
 
     case (BLASERCMD_CLOSE):
-      LLaserClose(e, ECLCST_LLASERALL);
+      Lasers.CloseLong(e, ECLCST_LLASERALL);
       e->LLaserRef = 0;
       this->bit_data.bIsLaserEnable = false;
       continue;
 
     case (BLASERCMD_CLOSEL):
-      LLaserLine(e, ECLCST_LLASERALL);
+      Lasers.LineLong(e, ECLCST_LLASERALL);
       continue;
     }
 

@@ -537,9 +537,9 @@ void GameSTD_Init(void) {
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
   Bullets.SetIndices(400 + 200); // 小型弾に４００
-  laserind_set();
-  LLaserSetup();
-  HLaserInit();
+  Lasers.SetIndices();
+  Lasers.SetupLong();
+  Lasers.InitHoming();
   SEffectInit();
   CEffectInit();
   ObjectLockOnInit();
@@ -866,7 +866,7 @@ extern bool GameExit(bool bNeedChgMusic) {
   }
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  LLaserSetup(); // 音を止める
+  Lasers.SetupLong(); // 音を止める
   Snd_SEStop(8); // ワーニング音を止めるのだ
 
   const auto flags = MSG_WINDOW_FLAGS::CENTER;
@@ -1460,9 +1460,9 @@ void GameMove(void) {
   Enemies.Move();
   Items.Move();
   Bullets.Move();
-  laser_move();
-  LLaserMove();
-  HLaserMove();
+  Lasers.Move();
+  Lasers.MoveLong();
+  Lasers.MoveHoming();
   fragment_move();
   SEffectMove();
   CEffectMove();
@@ -1496,7 +1496,7 @@ void GameDraw(void) {
   MaidDraw();
 
   if (GrpGeom_FB()) {
-    LLaserDraw();
+    Lasers.DrawLong();
   }
 
   ObjectLockDraw();
@@ -1505,11 +1505,11 @@ void GameDraw(void) {
   Items.Draw();
 
   if (GrpGeom_Poly()) {
-    LLaserDraw();
+    Lasers.DrawLong();
   }
 
-  HLaserDraw();
-  laser_draw();
+  Lasers.DrawHoming();
+  Lasers.Draw();
   Bullets.Draw();
 
   // static uint8_t test = 0;

@@ -148,7 +148,7 @@ void EnemyManager::Move(void) {
           (e->x < GX_MIN - (e->g_width)) || (e->x > GX_MAX + (e->g_width))) {
         if ((e->flag & EF_CLIP) == 0) {
           if (e->LLaserRef)
-            LLaserForceClose(e);
+            Lasers.ForceCloseLong(e);
           e->flag = EF_DELETE;
         }
       }
@@ -204,7 +204,7 @@ void EnemyManager::Clear(void) {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef)
-        LLaserForceClose(e); // レーザーの強制クローズ
+        Lasers.ForceCloseLong(e); // レーザーの強制クローズ
       Snd_SEPlay(SOUND_ID_BOMB, e->x);
     } else {
       // 描画しないタイプの敵の消去の仕方は他の場合と異なり、 //
@@ -213,7 +213,7 @@ void EnemyManager::Clear(void) {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef)
-        LLaserForceClose(e); // レーザーの強制クローズ
+        Lasers.ForceCloseLong(e); // レーザーの強制クローズ
                              // 爆発音の再生は行わない //
     }
   }
@@ -237,7 +237,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   if (e.hp <= damage) {
     Snd_SEPlay(SOUND_ID_BOMB, e.x);
     if (e.LLaserRef) {
-      LLaserForceClose(&e); // レーザーの強制クローズ
+      Lasers.ForceCloseLong(&e); // レーザーの強制クローズ
     }
     PowerUp(static_cast<uint8_t>(e.hp)); // パワーアップ
     e.hp = 0;
@@ -588,7 +588,7 @@ ECL_HEAD:
     HInfo.type = e->l_cmd.type;
     HInfo.x = e->x + e->l_cmd.x;
     HInfo.y = e->y + e->l_cmd.y;
-    HLaserSet(&HInfo);
+    Lasers.SpawnHoming(&HInfo);
     break;
 
   case (ECL_LLSET): // 太レーザーセット
@@ -603,18 +603,18 @@ ECL_HEAD:
     LLaserCmd.w = e->l_cmd.w;
 
     // 失敗した場合は、参照カウントを増やさない //
-    if (LLaserSet(e->LLaserRef))
+    if (Lasers.SpawnLongLaser(e->LLaserRef))
       e->LLaserRef++;
     bRetFlag = false;
     break;
 
   case (ECL_LLOPEN): // 太レーザーオープン cmd,id
-    LLaserOpen(e, cmd[1]);
+    Lasers.OpenLong(e, cmd[1]);
     bRetFlag = false;
     break;
 
   case (ECL_LLCLOSE): // 太レーザークローズ(消去＆参照カウント減少) cmd,id
-    LLaserClose(e, cmd[1]);
+    Lasers.CloseLong(e, cmd[1]);
     if (cmd[1] == ECLCST_LLASERALL)
       e->LLaserRef = 0;
     else
@@ -623,13 +623,13 @@ ECL_HEAD:
     break;
 
   case (ECL_LLCLOSEL): // 太レーザーライン状態へ cmd,id
-    LLaserLine(e, cmd[1]);
+    Lasers.LineLong(e, cmd[1]);
     bRetFlag = false;
     break;
 
   case (ECL_LLDEGR): // 太レーザー角度相対変更 cmd,id,deg
     // 順番が逆だから注意ね
-    LLaserDegR(e, Cast::sign<int8_t>(cmd[2]), cmd[1]);
+    Lasers.RotateLongRel(e, Cast::sign<int8_t>(cmd[2]), cmd[1]);
     bRetFlag = false;
     break;
 
@@ -645,7 +645,7 @@ ECL_HEAD:
   case (ECL_END): // 敵の強制消滅
     ECL_DEBUG("ECL_END", 0);
     if (e->LLaserRef)
-      LLaserForceClose(e); // レーザーの強制クローズ
+      Lasers.ForceCloseLong(e); // レーザーの強制クローズ
     e->flag = EF_DELETE;   // 後で変更するように
     return;                // バグ防止(かも)
 
@@ -1299,8 +1299,8 @@ ECL_HEAD:
   case (ECL_TCLR):  // 敵弾を全消去(レーザー含む)
     Bosses.ClearCmd(); // この処理を何よりも優先させる(ビット消去等を含む)
     Bullets.Clear();
-    laser_clear();
-    HLaserClear();
+    Lasers.Clear();
+    Lasers.ClearHoming();
     Enemies.Clear();
     bRetFlag = false;
     break;
@@ -1309,7 +1309,7 @@ ECL_HEAD:
     LaserCmd = e->l_cmd;
     LaserCmd.x += e->x;
     LaserCmd.y += e->y;
-    laser_set();
+    Lasers.Spawn();
     bRetFlag = false;
     break;
 
@@ -1317,7 +1317,7 @@ ECL_HEAD:
     LaserCmd = e->l_cmd;
     LaserCmd.x += e->x;
     LaserCmd.y += e->y;
-    laser_setEX();
+    Lasers.SpawnEX();
     bRetFlag = false;
     break;
 

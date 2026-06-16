@@ -84,32 +84,3 @@ public:
 };
 
 extern LaserManager Lasers;
-
-// ================================================================
-// Backward-compat inline wrappers
-// ================================================================
-inline void laser_set()        { Lasers.Spawn(); }
-inline void laser_setEX()      { Lasers.SpawnEX(); }
-inline int  llaser_set(uint16_t* ind) { return Lasers.SpawnLong(ind); }
-inline void laser_move()       { Lasers.Move(); }
-inline void laser_draw()       { Lasers.Draw(); }
-inline void laser_clear()      { Lasers.Clear(); }
-inline void laserind_set()     { Lasers.SetIndices(); }
-
-inline bool LLaserSet(uint8_t id)                    { return Lasers.SpawnLongLaser(id); }
-inline void LLaserOpen(const EnemyData* e, uint8_t id)      { Lasers.OpenLong(e, id); }
-inline void LLaserClose(const EnemyData* e, uint8_t id)     { Lasers.CloseLong(e, id); }
-inline void LLaserLine(const EnemyData* e, uint8_t id)      { Lasers.LineLong(e, id); }
-inline void LLaserDegA(const EnemyData* e, uint8_t d, uint8_t id) { Lasers.RotateLongAbs(e, d, id); }
-inline void LLaserDegR(const EnemyData* e, char d, uint8_t id)     { Lasers.RotateLongRel(e, d, id); }
-inline void LLaserForceClose(const EnemyData* e)             { Lasers.ForceCloseLong(e); }
-inline void LLaserMove()    { Lasers.MoveLong(); }
-inline void LLaserDraw()    { Lasers.DrawLong(); }
-inline void LLaserClear()   { Lasers.ClearLong(); }
-inline void LLaserSetup()   { Lasers.SetupLong(); }
-
-inline void HLaserInit()    { Lasers.InitHoming(); }
-inline void HLaserSet(const HomingLaserInfo* info) { Lasers.SpawnHoming(info); }
-inline void HLaserMove()    { Lasers.MoveHoming(); }
-inline void HLaserDraw()    { Lasers.DrawHoming(); }
-inline void HLaserClear()   { Lasers.ClearHoming(); }
