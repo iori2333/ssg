@@ -567,7 +567,7 @@ ECL_HEAD:
     break;
 
   case (ECL_STG3EFC):
-    ScrollCommand(SCMD_STG3STAR);
+    Scroller.Command(SCMD_STG3STAR);
     break;
 
   case (ECL_ITEM):

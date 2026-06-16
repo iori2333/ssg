@@ -95,8 +95,5 @@ using SCL_INFO = SceneState;
 // 実装は ScrollManager メソッドに移行
 
 ///// [ 変数 ] /////
-extern ScrollState& ScrollInfo; // スクロールに関する情報
-extern SceneState& SclInfo;     // ＳＣＬに関する情報
-extern int& SclKeyWaitCount;    // SCL_KEY frame counter
-extern std::array<PIXEL_LTRB, 1200>& rcMapChip; // マップパーツＩＤに対する矩形
+// Scroller.scroll, Scroller.scene, Scroller.key_wait_count, Scroller.map_chip_rects で直接アクセス
 

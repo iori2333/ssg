@@ -524,7 +524,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
 
 // ゲームを立ち上げる際に必ず行う初期化関数群 //
 void GameSTD_Init(void) {
-  SclKeyWaitCount = 0;
+  Scroller.key_wait_count = 0;
   MWinForceClose();
   // GrpBackend_Clear();
   // Grp_Flip();
@@ -1439,7 +1439,7 @@ inline XAdd(DWORD old,int id)
 void GameMove(void) {
   MWinMove();
 
-  ScrollMove();
+  Scroller.Move();
 
   BossMove();
   enemy_move();
@@ -1465,7 +1465,7 @@ void GameMove(void) {
 void GameDraw(void) {
   GrpBackend_Clear();
 
-  ScrollDraw();
+  Scroller.Draw();
   CEffectDraw();
 
   BossDraw();

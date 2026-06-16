@@ -458,7 +458,7 @@ void Player::OnDeath() {
   // 自動ボム：练习模式为自动Bomb以上时，Bomb キーが押されておらず、かつ Bomb
   // 残量がある場合、 死亡の代わりに自動で Bomb を発動する
   if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB && !(Key_Data & KEY_BOMB) &&
-      (bomb_time == 0) && (bomb > 0) && (SclInfo.MsgFlag == false)) {
+      (bomb_time == 0) && (bomb > 0) && (Scroller.scene.MsgFlag == false)) {
     static constexpr uint8_t bomb_time_tbl[4] = {60 * 4, 60 * 3, 60 * 2, 0};
     bomb_time = bomb_time_tbl[weapon & 3];
     muteki = BOMBMUTEKI_VAL;

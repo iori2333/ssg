@@ -645,7 +645,7 @@ bool LoadStageData(uint8_t stage) {
   SCL_Now = nullptr;
   ECL_Head = nullptr;
   SCL_Head = nullptr;
-  ScrollInfo.DataHead = nullptr;
+  Scroller.scroll.DataHead = nullptr;
 
   const auto &enemy = DAT::Packfile(DAT::PACK_ID::ENEMY);
 
@@ -662,7 +662,7 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // MapData Load
-    if ((ScrollInfo.DataHead = enemy.MemExpand(26)) == nullptr) {
+    if ((Scroller.scroll.DataHead = enemy.MemExpand(26)) == nullptr) {
       return false;
     }
   } else if (stage == GRAPH_ID_ENDING) {
@@ -690,13 +690,13 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // MapData Load
-    if ((ScrollInfo.DataHead = enemy.MemExpand(stage + 12 - 1)) == nullptr) {
+    if ((Scroller.scroll.DataHead = enemy.MemExpand(stage + 12 - 1)) == nullptr) {
       return false;
     }
   }
 
   // スクロール用変数の初期化 //
-  if (!ScrollInit()) {
+  if (!Scroller.Init()) {
     return false;
   }
 

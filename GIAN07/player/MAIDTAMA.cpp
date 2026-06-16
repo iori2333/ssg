@@ -113,7 +113,7 @@ void PlayerManager::SetMaidShot(void) {
   // ボムの発動条件を満たしていれば、発動! //
   if ((Key_Data & KEY_BOMB) && (Viv.bomb_time == 0) &&
       (Viv.muteki < VIVDEAD_VAL) && // 死亡中は Bomb を発動しない
-      Viv.bomb && (SclInfo.MsgFlag == false)) {
+      Viv.bomb && (Scroller.scene.MsgFlag == false)) {
     // if(Viv.weapon == 0) EnterBombPalette();
 
     Viv.bomb_time = MaidBombTime[Viv.weapon & 3]; // 装備ごとに変更せよ

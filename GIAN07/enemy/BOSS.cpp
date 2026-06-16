@@ -491,7 +491,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     enemy_clear();
     fragment_set(e.x, e.y, FRG_FATCIRCLE);
     ExBombEfcSet(e.x, e.y, EXBOMB_STD);
-    ScrollCommand(SCMD_QUAKE);
+    Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SOUND_ID_BOSSBOMB, e.x);
     if (e.LLaserRef) {
       LLaserForceClose(&e); // レーザーの強制クローズ

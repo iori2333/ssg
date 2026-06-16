@@ -23,10 +23,3 @@ struct ScrollManager {
 };
 
 extern ScrollManager Scroller;
-
-// === 後方互換 inline wrapper ===
-inline void ScrollMove(void) { Scroller.Move(); }
-inline void ScrollDraw(void) { Scroller.Draw(); }
-inline void ScrollSpeed(int speed) { Scroller.SetSpeed(speed); }
-inline void ScrollCommand(uint8_t cmd) { Scroller.Command(cmd); }
-inline bool ScrollInit(void) { return Scroller.Init(); }
