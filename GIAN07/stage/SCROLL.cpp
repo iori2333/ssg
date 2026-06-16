@@ -20,11 +20,11 @@
 #include "platform/graphics_backend.h"
 
 // マップデータ保存用ヘッダ //
-typedef struct tagScrollSaveHeader {
+struct ScrollSaveHeader {
   U32LE Address;    // このデータの開始アドレス
   U32LE ScrollWait; // このレイヤーのディレイ
   U32LE Length;     // このレイヤーの長さ
-} ScrollSaveHeader;
+};
 
 // ScrollInfo, SclInfo, Scroller.map_chip_rects[] → scroll_manager.cpp の ScrollManager に移動
 

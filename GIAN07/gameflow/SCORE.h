@@ -21,16 +21,16 @@ struct NrNameData {
   uint8_t Stage;          // ステージ
   uint8_t Weapon;         // 装備品
 };
-using NR_NAME_DATA = NrNameData;
+// (NrNameData alias removed — use NrNameData directly)
 
 struct NrScoreData {
-  NR_NAME_DATA Easy[NR_RANK_MAX];    // 難易度：Ｅａｓｙ
-  NR_NAME_DATA Normal[NR_RANK_MAX];  // 難易度：Ｎｏｒｍａｌ
-  NR_NAME_DATA Hard[NR_RANK_MAX];    // 難易度：Ｈａｒｄ
-  NR_NAME_DATA Lunatic[NR_RANK_MAX]; // 難易度：Ｌｕｎａｔｉｃ
-  NR_NAME_DATA Extra[NR_RANK_MAX];   // 難易度：Ｅｘｔｒａ
+  NrNameData Easy[NR_RANK_MAX];    // 難易度：Ｅａｓｙ
+  NrNameData Normal[NR_RANK_MAX];  // 難易度：Ｎｏｒｍａｌ
+  NrNameData Hard[NR_RANK_MAX];    // 難易度：Ｈａｒｄ
+  NrNameData Lunatic[NR_RANK_MAX]; // 難易度：Ｌｕｎａｔｉｃ
+  NrNameData Extra[NR_RANK_MAX];   // 難易度：Ｅｘｔｒａ
 };
-using NR_SCORE_DATA = NrScoreData;
+// (NR_SCORE_DATA alias removed — use NrScoreData directly)
 
 struct NrScoreString {
   uint8_t Rank;     // 実際の順位(ある順位が複数ある場合の対策)
@@ -38,12 +38,12 @@ struct NrScoreString {
   bool bMoveEnable; // 移動可能か？
 
   char Name[NR_NAME_LEN];                                        // 名前
-  char Score[STRING_NUM_CAP<decltype(NR_NAME_DATA::Score)> + 1]; // 得点
-  char Evade[STRING_NUM_CAP<decltype(NR_NAME_DATA::Evade)> + 1]; // かすり
-  char Stage[STRING_NUM_CAP<decltype(NR_NAME_DATA::Stage)> + 1]; // ステージ
+  char Score[STRING_NUM_CAP<decltype(NrNameData::Score)> + 1]; // 得点
+  char Evade[STRING_NUM_CAP<decltype(NrNameData::Evade)> + 1]; // かすり
+  char Stage[STRING_NUM_CAP<decltype(NrNameData::Stage)> + 1]; // ステージ
   uint8_t Weapon;                                                // 装備
 };
-using NR_SCORE_STRING = NrScoreString;
+// (NR_SCORE_STRING alias removed — use NrScoreString directly)
 
 ///// [ 関数 ] /////
 // 後方互換 inline wrapper は score_manager.h 末尾に移動

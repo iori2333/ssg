@@ -37,7 +37,7 @@ struct HomingLaserData {
   HomingLaserData *Next;                   // 次のレーザーへのポインタ
   DegPoint p[HLASER_LEN * HLASER_SECTION]; // 頂点キュー(ExDef.h)
 };
-using HLaserData = HomingLaserData;
+// (HLaserData alias removed — use HomingLaserData directly)
 
 // ホーミングレーザーセット情報 //
 struct HomingLaserInfo {
@@ -50,7 +50,7 @@ struct HomingLaserInfo {
   uint8_t c;    // 色
   uint8_t type; // 種類
 };
-using HLaserInfo = HomingLaserInfo;
+// (HLaserInfo alias removed — use HomingLaserInfo directly)
 
 ///// [グローバル変数] /////
 // Lasers.homing_count, Lasers.homing_cmd で直接アクセス

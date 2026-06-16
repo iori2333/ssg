@@ -77,25 +77,25 @@ inline constexpr auto SNDMAX_WARP = 1;
 struct FaceData {
   PALETTE pal; // 顔グラ用パレット
 };
-using FACE_DATA = FaceData;
+// (FACE_DATA alias removed — use FaceData directly)
 
 // エンディングのグラフィック管理用 //
 struct EndingGrp {
   PIXEL_LTRB rcTarget; // 矩形の範囲
   PALETTE pal;         // パレット
 };
-using ENDING_GRP = EndingGrp;
+// (ENDING_GRP alias removed — use EndingGrp directly)
 
 ///// [ 関数 ] /////
 void LoaderInit();
 void LoaderCleanup();
-bool LoadStageData(
+[[nodiscard]] bool LoadStageData(
     uint8_t stage);        // ＥＣＬ&ＳＣＬデータ列をメモリ上にロードする
-bool LoadGraph(int stage); // あるステージのグラフィックをロードする
-bool LoadFace(uint8_t FaceID, uint8_t FileNo); // 顔グラフィックをロードする
-bool LoadMusic(unsigned int id);               // ｎ番目の曲をロードする
-bool LoadMusicByHash(const HASH &hash);
-bool LoadMIDIBuffer(BYTE_BUFFER_OWNED);
+[[nodiscard]] bool LoadGraph(int stage); // あるステージのグラフィックをロードする
+[[nodiscard]] bool LoadFace(uint8_t FaceID, uint8_t FileNo); // 顔グラフィックをロードする
+[[nodiscard]] bool LoadMusic(unsigned int id);               // ｎ番目の曲をロードする
+[[nodiscard]] bool LoadMusicByHash(const HASH &hash);
+[[nodiscard]] bool LoadMIDIBuffer(BYTE_BUFFER_OWNED);
 bool LoadSound(void); // 全ての Sound データをロードする
 
 // MusicRoom のコメントをロードする
@@ -115,10 +115,10 @@ extern const std::reference_wrapper<SURFACE_DDRAW> GrFaces[FACE_MAX];
 
 extern const std::reference_wrapper<SURFACE_DDRAW> GrEndingPic[ENDING_PIC_MAX];
 
-extern FACE_DATA FaceData[FACE_MAX]; // 顔グラ用
+extern FaceData face_data[FACE_MAX]; // 顔グラ用
 
 extern uint32_t MusicNum; // 曲数
 
 extern PALETTE SProjectPalette;
 
-extern ENDING_GRP EndingGrp[ENDING_PIC_MAX];
+extern EndingGrp ending_pic[ENDING_PIC_MAX];

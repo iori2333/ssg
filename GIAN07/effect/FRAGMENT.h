@@ -29,7 +29,7 @@ struct FragmentData {
   uint8_t count; // フレームカウンタ(０の時は使用していないとする)
   uint8_t cmd;   // どんな破片？
 };
-using FRAGMENT_DATA = FragmentData;
+// (FRAGMENT_DATA alias removed — use FragmentData directly)
 
 //// 破片用変数 ////
 // Fragment[], FragmentPtr → Effects.fragments, Effects.fragment_ptr で直接アクセス

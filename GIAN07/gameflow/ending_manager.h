@@ -20,7 +20,7 @@ struct EndingManager {
     uint32_t timer = 0;
     uint32_t fadein = 0;
     uint32_t fadeout = 0;
-    ENDING_GRP *target = nullptr;
+    EndingGrp *target = nullptr;
     short alpha = 0;
     int x = 0, y = 0;
     bool bWantDisp = false;

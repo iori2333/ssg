@@ -17,7 +17,7 @@ struct DemoManager {
   MULTI_REPLAY_INFO multi_play_info = {};
   uint8_t playback_max_stage = 0;
   std::u8string pending_replay_file;
-  DEMOPLAY_INFO demo_info = {};
+  DemoPlayState demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};
 
   // ファイル静的変数（DEMOPLAY.cpp から移動）
@@ -35,16 +35,16 @@ struct DemoManager {
 
   // === メソッド ===
   void Init();
-  bool HasRecordedStages();
+  [[nodiscard]] bool HasRecordedStages();
   void FlushStage();
-  bool LoadSetup();
-  bool Record(INPUT_BITS key);
+  [[nodiscard]] bool LoadSetup();
+  [[nodiscard]] bool Record(INPUT_BITS key);
   void SaveDemo();
-  bool LoadDemo(int stage);
+  [[nodiscard]] bool LoadDemo(int stage);
   INPUT_BITS Move();
   void Cleanup();
   void SaveReplayAll(bool exstg);
-  bool LoadReplayAll(const char8_t *fn);
+  [[nodiscard]] bool LoadReplayAll(const char8_t *fn);
 };
 
 extern DemoManager Demos;

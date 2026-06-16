@@ -166,15 +166,15 @@ extern CONFIG_DATA ConfigDat;
 
 #ifdef PBG_DEBUG
 // デバッグ情報管理用構造体 //
-typedef struct tagDEBUG_DATA {
+struct DebugData {
   int32_t MsgDisplay; // デバッグ情報を出力するか
   int32_t Hit;        // 当たり判定の有・無
   int32_t DemoSave;   // デモプレイをセーブするか
 
   uint8_t StgSelect; // ステージセレクト(開始ステージ)
-} DEBUG_DATA;
+};
 
-extern DEBUG_DATA DebugDat;
+extern DebugData DebugDat;
 #endif
 
 ///// [関数] /////

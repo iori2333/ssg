@@ -8,6 +8,7 @@
 #include "EFFECT.h"
 #include "EFFECT3D.h"
 #include "FRAGMENT.h"
+#include "game/text.h"
 #include <array>
 #include <cstdint>
 #include <string_view>
@@ -23,8 +24,8 @@ inline constexpr auto S6STAR_MAX = 60;
 inline constexpr auto S3STAR_MAX = 180;
 
 // Stg6 types (moved from EFFECT3D.cpp)
-typedef struct { int x, y; char vy; uint8_t type; uint8_t deg; uint8_t amp; } Stg6Raster;
-typedef struct { int x, y; int vy; } Stg6Star;
+struct Stg6Raster { int x, y; char vy; uint8_t type; uint8_t deg; uint8_t amp; };
+struct Stg6Star { int x, y; int vy; };
 
 struct EffectManager {
   // ========================================================================
@@ -32,17 +33,17 @@ struct EffectManager {
   // ========================================================================
 
   // EFFECT.cpp
-  std::array<SEFFECT_DATA, SEFFECT_MAX> string_effects;
-  std::array<CIRCLE_EFC_DATA, CIRCLE_EFC_MAX> circle_effects;
-  std::array<LOCKON_INFO, LOCKON_MAX> lock_info;
-  SCREENEFC_INFO screen_info;
-  unsigned int mtitle_rect = 0;  // TEXTRENDER_RECT_ID
+  std::array<StringEffectData, SEFFECT_MAX> string_effects;
+  std::array<CircleEffectData, CIRCLE_EFC_MAX> circle_effects;
+  std::array<LockOnInfo, LOCKON_MAX> lock_info;
+  ScreenEffectState screen_info;
+  TEXTRENDER_RECT_ID mtitle_rect = {};
   Narrow::string_view mtitle_strs[2] = {"♪ "};
   bool enable_warn_efc = false;
   uint16_t warn_efc_time = 0;
 
   // FRAGMENT.cpp
-  std::array<FRAGMENT_DATA, FRAGMENT_MAX> fragments;
+  std::array<FragmentData, FRAGMENT_MAX> fragments;
   int fragment_ptr = 0;
 
   // BOMBEFC.cpp

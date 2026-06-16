@@ -10,13 +10,13 @@
 #include <cstdint>
 
 struct BossManager {
-  std::array<BOSS_DATA, BOSS_MAX> bosses;     // Boss[]
+  std::array<BossData, BOSS_MAX> bosses;     // Boss[]
   uint16_t count = 0;                          // BossNow
-  BOSSHPG_INFO hpg;                            // BossHPG
+  BossHpgInfo hpg;                            // BossHPG
 
   // Snaky/Bit データ（旧 EnemyExCtrl.cpp ファイル静的変数）
   SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX];   // SnakeData[]
-  BIT_DATA bit_data;                           // BitData
+  BitData bit_data;                           // BitData
 
   // === メソッド ===
 
@@ -36,7 +36,7 @@ struct BossManager {
   uint32_t GetHPSum();
 
   // ダメージ
-  bool ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage);
+  bool ApplyDamage(BossData &b, EnemyData &e, int damage);
   bool DamageAt(int x, int y, int damage);
   bool DamageAt2(int x, int y, int damage);
   void DamageAt3(int x, int y, uint8_t d);
@@ -51,13 +51,13 @@ struct BossManager {
 
   // 蛇型の敵 (was in EnemyExCtrl.cpp)
   void SnakyInit();
-  void SnakySet(BOSS_DATA *b, int len, uint32_t TailID);
+  void SnakySet(BossData *b, int len, uint32_t TailID);
   void SnakyMove();
-  void SnakyDelete(const BOSS_DATA *b);
+  void SnakyDelete(const BossData *b);
 
   // ビット (was in EnemyExCtrl.cpp)
   void BitInit();
-  void BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID);
+  void BitSet(BossData *b, uint8_t NumBits, uint32_t BitID);
   void BitMove();
   void BitDelete();
   void BitLineDraw();
@@ -72,7 +72,7 @@ private:
   void HPG_Close();
   void HPG_Update(uint32_t next);
   int PutBoss(int x, int y, uint32_t id);
-  static void STDMove(BOSS_DATA *b);
+  static void STDMove(BossData *b);
   void BitSTDRoll();
   void BitSTDRad();
 };

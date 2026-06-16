@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "WindowSys.h"
+
 ///// [更新履歴] /////
 
 //
@@ -16,12 +18,12 @@
 ///// [構造体] /////
 
 ///// [グローバル変数] /////
-extern struct tagWINDOW_SYSTEM MainWindow;
-extern struct tagWINDOW_SYSTEM BGMPackWindow;
-extern struct tagWINDOW_SYSTEM ExitWindow;
-extern struct tagWINDOW_SYSTEM ContinueWindow;
-extern struct tagWINDOW_SYSTEM GameOverSaveWindow;
-extern struct tagWINDOW_SYSTEM ReplayFilesWindow;
+extern WINDOW_SYSTEM MainWindow;
+extern WINDOW_SYSTEM BGMPackWindow;
+extern WINDOW_SYSTEM ExitWindow;
+extern WINDOW_SYSTEM ContinueWindow;
+extern WINDOW_SYSTEM GameOverSaveWindow;
+extern WINDOW_SYSTEM ReplayFilesWindow;
 
 ///// [関数] /////
 void InitMainWindow();     // メインメニューの初期化

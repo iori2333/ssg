@@ -479,8 +479,8 @@ void LoaderCleanup(void) {
 
 // グローバル変数 //
 uint32_t MusicNum = 0;                // 曲数
-FACE_DATA FaceData[FACE_MAX];         // 顔グラ用
-ENDING_GRP EndingGrp[ENDING_PIC_MAX]; // エンディング用
+FaceData face_data[FACE_MAX];         // 顔グラ用
+EndingGrp ending_pic[ENDING_PIC_MAX]; // エンディング用
 
 /*
 static BOOL			bIsBombPalette = FALSE;
@@ -540,7 +540,7 @@ bool LoadGraph(int stage) {
       if (!GrpBMPLoadP(in, (1 + i), (SURFACE_ID::ENDING_PIC + i))) {
         return false;
       }
-      GrpBackend_PaletteGet(EndingGrp[i].pal);
+      GrpBackend_PaletteGet(ending_pic[i].pal);
     }
     return true;
   }
@@ -624,7 +624,7 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
   }
 
   // パレットを保存する //
-  GrpBackend_PaletteGet(FaceData[FaceID].pal);
+  GrpBackend_PaletteGet(face_data[FaceID].pal);
 
   return true;
 }

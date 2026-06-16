@@ -36,7 +36,7 @@ struct DemoPlayState {
   uint8_t Exp;                 // 初期パワーアップ
   uint8_t Weapon;              // 初期装備
 };
-using DEMOPLAY_INFO = DemoPlayState;
+// (DEMOPLAY_INFO alias removed — use DemoPlayState directly)
 
 // Multi-stage replay header
 struct MULTI_REPLAY_INFO {

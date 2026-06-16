@@ -30,7 +30,7 @@ void BossManager::SnakyInit(void) {
 }
 
 // 蛇型の敵をセットする //
-void BossManager::SnakySet(BOSS_DATA *b, int len, uint32_t TailID) {
+void BossManager::SnakySet(BossData *b, int len, uint32_t TailID) {
   ENEMY_DATA *e;
 
   auto s =
@@ -103,7 +103,7 @@ void BossManager::SnakyMove(void) {
 }
 
 // 蛇型の敵を殺す
-void BossManager::SnakyDelete(const BOSS_DATA *b) {
+void BossManager::SnakyDelete(const BossData *b) {
   auto s = std::ranges::find_if(snake_data,
                                 [b](const auto &s) { return (s.Parent == b); });
   if (s == std::end(snake_data)) {
@@ -163,7 +163,7 @@ void BossManager::BitInit(void) {
 }
 
 // ビットをセットする //
-void BossManager::BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID) {
+void BossManager::BitSet(BossData *b, uint8_t NumBits, uint32_t BitID) {
   static const uint8_t BitHPTable[BIT_MAX] = {1, 4, 2, 5, 3, 6};
 
   int i;
@@ -361,7 +361,7 @@ void BossManager::BitSTDRoll(void) {
   uint8_t LaserDeg;
 
   ENEMY_DATA *e;
-  BIT_PARAM *bit;
+  BitParam *bit;
 
   if (bit_data.NumBits == 0)
     return;

@@ -7,7 +7,7 @@
 
 #include "CONFIG.h"
 
-bool XInit();
+[[nodiscard]] bool XInit();
 void XCleanup();
 
 void XGrpTry(const GRAPHICS_PARAMS &prev, GRAPHICS_PARAMS &params);

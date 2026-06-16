@@ -73,4 +73,4 @@ private:
 };
 
 // 後方互換用エイリアス
-using MAID = Player;
+// (MAID alias removed — use Player directly)

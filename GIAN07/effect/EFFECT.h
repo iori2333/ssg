@@ -58,7 +58,7 @@ struct CircleEffectData {
                   //	uint8_t	Level;	// 円エフェクトの段階
   uint8_t d;      // 円エフェクトの角度(謎)
 };
-using CIRCLE_EFC_DATA = CircleEffectData;
+// (CIRCLE_EFC_DATA alias removed — use CircleEffectData directly)
 
 struct StringEffectData {
   int x, y;
@@ -70,7 +70,7 @@ struct StringEffectData {
   uint8_t cmd;
   char c;
 };
-using SEFFECT_DATA = StringEffectData;
+// (SEFFECT_DATA alias removed — use StringEffectData directly)
 
 struct LockOnInfo {
   int *x, *y;        // ロック座標へのポインタ
@@ -79,13 +79,13 @@ struct LockOnInfo {
   uint32_t count;    // カウンタ
   uint8_t state;     // 状態
 };
-using LOCKON_INFO = LockOnInfo;
+// (LOCKON_INFO alias removed — use LockOnInfo directly)
 
 struct ScreenEffectState {
   uint8_t cmd;    // 発動中エフェクト
   uint32_t count; // エフェクトに対するカウンタ
 };
-using SCREENEFC_INFO = ScreenEffectState;
+// (SCREENEFC_INFO alias removed — use ScreenEffectState directly)
 
 ///// [ 関数 ] /////
 // 後方互換 inline wrapper は effect_manager.h の末尾に移動

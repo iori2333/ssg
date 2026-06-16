@@ -183,7 +183,7 @@ struct WINDOW_MENU {
 };
 
 // ウィンドウ群 //
-typedef struct tagWINDOW_SYSTEM {
+struct WINDOW_SYSTEM {
   WINDOW_MENU &Parent; // 親ウィンドウ
   int x, y;            // ウィンドウ左上の座標
   PIXEL_COORD W;
@@ -206,7 +206,7 @@ typedef struct tagWINDOW_SYSTEM {
   void Open(WINDOW_POINT topleft, int select);
 
   void OpenCentered(PIXEL_COORD w, int select);
-} WINDOW_SYSTEM;
+};
 
 // Vertically scrolling menu with elements generated on the fly.
 // Unfortunately has to be a template because [WINDOW_SYSTEM::CallBackFn]

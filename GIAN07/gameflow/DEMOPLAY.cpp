@@ -145,7 +145,7 @@ bool DemoManager::LoadDemo(int stage) {
   const auto temp = ::LoadDemo(stage);
   auto temp_cursor = temp.cursor();
   {
-    const auto maybe_info = temp_cursor.next<DEMOPLAY_INFO>();
+    const auto maybe_info = temp_cursor.next<DemoPlayState>();
     if (!maybe_info) {
       return false;
     }

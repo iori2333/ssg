@@ -14,7 +14,7 @@
 ///// [構造体] /////
 
 // メッセージウィンドウ管理用構造体 //
-typedef struct tagMSG_WINDOW {
+struct MSG_WINDOW {
   WINDOW_LTRB MaxSize; // ウィンドウの最終的な大きさ
   WINDOW_LTRB NowSize; // ウィンドウの現在のサイズ
   PIXEL_POINT TextTopleft;
@@ -46,7 +46,7 @@ typedef struct tagMSG_WINDOW {
     Text.clear();
   }
 
-} MSG_WINDOW;
+};
 
 ///// [非公開関数] /////
 
@@ -307,7 +307,7 @@ void MWinMove(void) {
     if (MsgWindow.FaceTime == 0) {
       MsgWindow.FaceState = MFACE_OPEN;
       MsgWindow.FaceID = MsgWindow.NextFace;
-      GrpBackend_PaletteSet(FaceData[MsgWindow.FaceID / FACE_NUMX].pal);
+      GrpBackend_PaletteSet(face_data[MsgWindow.FaceID / FACE_NUMX].pal);
     }
     break;
 
@@ -490,7 +490,7 @@ void MWinFace(uint8_t faceID) {
   if (MsgWindow.FaceState == MFACE_NONE) {
     MsgWindow.FaceState = MFACE_OPEN;
     MsgWindow.FaceID = faceID;
-    GrpBackend_PaletteSet(FaceData[faceID / FACE_NUMX].pal);
+    GrpBackend_PaletteSet(face_data[faceID / FACE_NUMX].pal);
   } else {
     MsgWindow.FaceState = MFACE_NEXT;
     MsgWindow.NextFace = faceID;

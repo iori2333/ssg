@@ -25,19 +25,19 @@
 ///// [関数] /////
 
 // WeaponSelectInit → inline wrapper in gameflow_manager.h
-bool GameInit(void (*NextProc)(bool &quit)); // ゲームの初期化をする
+[[nodiscard]] bool GameInit(void (*NextProc)(bool &quit)); // ゲームの初期化をする
 void GameRestart();               // ゲームを再開する(ESC 抜けから)
-bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
+[[nodiscard]] bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
 void GameOverInit();                  // ゲームオーバーの前処理
 void GameContinue();                  // コンティニューを行う場合
 
-bool GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
+[[nodiscard]] bool GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
 
-bool SProjectInit(void); // 西方Ｐｒｏｊｅｃｔ表示の初期化
+[[nodiscard]] bool SProjectInit(void); // 西方Ｐｒｏｊｅｃｔ表示の初期化
 
-bool GameExstgInit(void); // エキストラステージを始める
+[[nodiscard]] bool GameExstgInit(void); // エキストラステージを始める
 
 // NameRegistInit → inline wrapper in gameflow_manager.h
-bool ScoreNameInit(void);                // お名前表示画面
+[[nodiscard]] bool ScoreNameInit(void);                // お名前表示画面
 
-bool GameNextStage(void); // 次のステージに移行する
+[[nodiscard]] bool GameNextStage(void); // 次のステージに移行する

@@ -54,12 +54,12 @@ static void HPG_Close(void);           // ボスの体力ゲージをクロー�
 static void HPG_Update(uint32_t next); // ボスの体力ゲージを上昇させる
 
 static int PutBoss(int x, int y, uint32_t id); // ボスをセットする
-static void STDMove(BOSS_DATA *b);         // ノーマルECL互換の移動
+static void STDMove(BossData *b);         // ノーマルECL互換の移動
 
 // ボスデータ配列を初期化する(中断、ステージクリア時に使用) //
 void BossManager::Init(void) {
   for (auto &it : bosses) {
-    it.IsUsed = 0; // 要はこれをゼロにすれば良い
+    it.IsUsed = false; // 要はこれをゼロにすれば良い
 
     // 特殊変数の初期化.... //
     it.ExMove = BossManager::STDMove; // 特殊移動関数
@@ -95,7 +95,7 @@ void BossManager::Set(int x, int y, uint32_t BossID) {
   bosses[n].ExCount = 0;
   bosses[n].ExMove = BossManager::STDMove;
   bosses[n].ExState = BEXST_NORM;
-  bosses[n].IsUsed = 0xff;
+  bosses[n].IsUsed = true;
 
   Enemies.ParseECL(&(bosses[n].Edat));
   // ObjectLockOn(&(bosses[n].Edat.x),&(bosses[n].Edat.y),bosses[n].Edat.g_width,bosses[n].Edat.g_height);
@@ -124,7 +124,7 @@ void BossManager::SetEx(int x, int y, uint32_t BossID) {
   bosses[n].ExCount = 0;
   bosses[n].ExMove = BossManager::STDMove;
   bosses[n].ExState = BEXST_NORM;
-  bosses[n].IsUsed = 0xff;
+  bosses[n].IsUsed = true;
 
   Enemies.ParseECL(&(bosses[n].Edat));
   // ObjectLockOn(&(bosses[n].Edat.x),&(bosses[n].Edat.y),bosses[n].Edat.g_width,bosses[n].Edat.g_height);
@@ -460,14 +460,14 @@ void BossManager::KillAll(void) {
       e->hp = 0;
       e->count = 0;
       e->flag = EF_BOMB;
-      b->IsUsed = 0;
+      b->IsUsed = false;
     }
   }
 
   count = 0;
 }
 
-bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
+bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
   if (e.hp <= damage) { // ボスの死亡処理(後で変更すること!!)
     SnakyDelete(&b);
@@ -500,7 +500,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     }
     score_add(e.score);
     Lasers.Clear();
-    b.IsUsed = 0;
+    b.IsUsed = false;
     count--; // ボスの参照カウント？を使用する
   } else {
     Snd_SEPlay(SOUND_ID_HIT, e.x);
@@ -727,8 +727,8 @@ int BossManager::PutBoss(int x, int y, uint32_t id) {
 }
 
 // ノーマルECL互換の移動 //
-void BossManager::STDMove(BOSS_DATA *b) {
-  ENEMY_DATA *e = &(b->Edat);
+void BossManager::STDMove(BossData *b) {
+  EnemyData *e = &(b->Edat);
 
   // 通常の敵の処理 //
   Enemies.CheckECLInterrupt(e);

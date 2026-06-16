@@ -99,7 +99,7 @@ struct EnemyData {
 
 // 後方互換用エイリアス
 using ENEMY_DATA = EnemyData;
-using INT_VECTOR = InterruptVector;
+// (INT_VECTOR alias removed — use InterruptVector directly)
 
 struct ANIME_DATA {
   uint8_t mode;                 // アニメーションモード

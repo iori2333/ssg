@@ -45,10 +45,10 @@ void LaserManager::InitHoming() {
 }
 
 // ホーミングレーザーをセットする //
-void LaserManager::SpawnHoming(const HLaserInfo *hinfo) {
+void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
   int i, j;
   uint8_t deg;
-  HLaserData *p;
+  HomingLaserData *p;
 
   // 1-n としているのは、角度設定のためね... //
   for (i = 1; i <= (hinfo->n); i++) {
@@ -90,8 +90,8 @@ void LaserManager::SpawnHoming(const HLaserInfo *hinfo) {
 
 // ホーミングレーザーを動作させる //
 void LaserManager::MoveHoming() {
-  HLaserData *hl;
-  HLaserData *temp;
+  HomingLaserData *hl;
+  HomingLaserData *temp;
   int x, y;
   int i, j;
   int deg, deg2;
@@ -221,7 +221,7 @@ void _CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
 
 // ホーミングレーザーを描画する //
 void LaserManager::DrawHoming() {
-  HLaserData *hl;
+  HomingLaserData *hl;
   int i, w, current;
   DegPoint *p;
   VERTEX_XY src[4];

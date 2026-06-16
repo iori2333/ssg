@@ -44,7 +44,7 @@ inline constexpr auto SCMD_STG6RASTER = 0x0b; // ６面ラスター
 inline constexpr auto SCMD_STG3STAR = 0x0c;   // ３面高速星
 
 ///// [  型  ] /////
-typedef uint16_t PBGMAP; // マップパーツ格納用の型
+using PBGMAP = uint16_t; // マップパーツ格納用の型
 
 ///// [マクロ] /////
 
@@ -87,8 +87,8 @@ struct SceneState {
 };
 
 // 後方互換用エイリアス
-using SCROLL_INFO = ScrollState;
-using SCL_INFO = SceneState;
+// (SCROLL_INFO alias removed — use ScrollState directly)
+// (SCL_INFO alias removed — use SceneState directly)
 
 ///// [ 関数 ] /////
 // 後方互換 inline wrapper は scroll_manager.h 末尾に移動

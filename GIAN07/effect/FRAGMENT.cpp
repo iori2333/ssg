@@ -12,13 +12,13 @@
 
 // fragments[], fragment_ptr → effect_manager.cpp の EffectManager に移動
 
-static void _FDraw(const FRAGMENT_DATA *f);
+static void _FDraw(const FragmentData *f);
 
 void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
   int i;
   int l;
   uint8_t d;
-  FRAGMENT_DATA *f = fragments.data() + fragment_ptr;
+  FragmentData *f = fragments.data() + fragment_ptr;
 
   if (cmd == FRG_ESCAPE) {
     for (i = 0; i < FRAGMENT_MAX; i++) {
@@ -139,7 +139,7 @@ void EffectManager::InitFragments() {
   fragment_ptr = 0;
 }
 
-static void _FDraw(const FRAGMENT_DATA *f) {
+static void _FDraw(const FragmentData *f) {
   int x, y;
   PIXEL_LTRB src;
 

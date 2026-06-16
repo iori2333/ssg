@@ -140,7 +140,7 @@ void EndingManager::DrawGrpInfo() {
     return;
 
   // 驚異の画像表示 //
-  const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - EndingGrp));
+  const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - ending_pic));
   GrpSurface_BlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
 }
 
@@ -307,7 +307,7 @@ void EndingManager::SCLDecode() {
         break;
       }
       grp_info.alpha = 0;
-      grp_info.target = EndingGrp + cmd[1];
+      grp_info.target = ending_pic + cmd[1];
       grp_info.timer = 0;
       grp_info.bWantDisp = true;
       Enemies.scl_now += 2;

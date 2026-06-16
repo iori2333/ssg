@@ -37,7 +37,7 @@ struct GameFlowManager {
   uint32_t draw_count = 0;
   uint8_t weapon_key_wait = 0;
   int game_over_timer = 0;
-  NR_NAME_DATA current_name = {};
+  NrNameData current_name = {};
   uint8_t current_rank = 0;
   uint8_t current_dif = 0;
   Player viv_temp = {};

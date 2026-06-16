@@ -22,8 +22,8 @@ const auto ScoreFileName = u8"秋霜SC.DAT"; // スコアデータ格納ファ�
 
 // 現在のスコア列を取得する(名前挿入アリ) //
 // NData == NULL の場合、挿入しません     //
-uint8_t ScoreManager::SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
-  NR_SCORE_STRING *Res;
+uint8_t ScoreManager::SetScoreString(NrNameData *NData, uint8_t Dif) {
+  NrScoreString *Res;
   int i, num;
   int64_t temp;
 
@@ -86,7 +86,7 @@ uint8_t ScoreManager::SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
   return rank;
 }
 
-uint8_t ScoreManager::IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) {
+uint8_t ScoreManager::IsHighScore(const NrNameData *NData, uint8_t Dif) {
   // ロードできないので失敗！ //
   if (!LoadScoreData())
     return 0;
@@ -112,7 +112,7 @@ uint8_t ScoreManager::IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) {
 }
 
 // スコアデータを書き出す //
-bool ScoreManager::SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
+bool ScoreManager::SaveScoreData(NrNameData *NData, uint8_t Dif) {
   // スコアデータを読み込む //
   const auto Rank = IsHighScore(NData, Dif);
 
@@ -161,7 +161,7 @@ bool ScoreManager::LoadScoreData() {
     return true;
   }
 
-  score_cache = std::unique_ptr<NR_SCORE_DATA>(new (std::nothrow) NR_SCORE_DATA);
+  score_cache = std::unique_ptr<NrScoreData>(new (std::nothrow) NrScoreData);
   if (score_cache == nullptr) {
     return false;
   }

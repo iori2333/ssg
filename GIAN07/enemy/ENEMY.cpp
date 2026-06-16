@@ -464,7 +464,7 @@ void EnemyManager::ParseECL(EnemyData *e) {
 
   bool bRetFlag; // 実行クロック０命令の場合はfalseにすること
   int RegCmp;
-  HLaserInfo HInfo;
+  HomingLaserInfo HInfo;
 
   const PIXEL_LTRB rcDegX2 = {
       GX_MIN + 150 * 64, GY_MIN + (GY_MID - GY_MIN - 40 * 64) / 3,

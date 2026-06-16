@@ -44,7 +44,7 @@ template <size_t Len> struct SNAKYMOVE_DATA {
   DegPoint PointBuffer[Len * SNAKEYMOVE_POINTS_PER_ENEMY];
 
   ENEMY_DATA *EnemyPtr[Len]; // 尾となるデータ配列
-  BOSS_DATA *Parent;         // 親(頭となるデータ)
+  BossData *Parent;         // 親(頭となるデータ)
   size_t Head;               // 頭を格納している地点のポインタ
   bool bIsUse;               // この構造体を使用しているか
 
@@ -59,11 +59,11 @@ struct BitParam {
   uint8_t Angle;  // 現在の角度
   char Force;     // 現在力の加えられている方向
 };
-using BIT_PARAM = BitParam;
+// (BIT_PARAM alias removed — use BitParam directly)
 
 struct BitData {
-  BIT_PARAM Bit[BIT_MAX]; // ビットデータへのポインタ
-  BOSS_DATA *Parent;      // 親データへのポインタ
+  BitParam Bit[BIT_MAX]; // ビットデータへのポインタ
+  BossData *Parent;      // 親データへのポインタ
 
   int x, y; // 回転の中心(基本的には、Parent->x, Parent->y)
   int v;    // 加速度付き移動時の速度
@@ -86,7 +86,7 @@ struct BitData {
 
   bool bIsLaserEnable; // レーザーが動作中かどうか
 };
-using BIT_DATA = BitData;
+// (BIT_DATA alias removed — use BitData directly)
 
 ///// [ 関数 ] /////
 // 後方互換 inline wrapper は boss_manager.h 末尾に移動
