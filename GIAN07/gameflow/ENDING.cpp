@@ -4,6 +4,7 @@
  */
 
 #include "ENDING.h"
+#include "ending_manager.h"
 #include "GIAN.h"
 #include "SCL.h" // ＳＣＬ定義ファイル
 #include "game/bgm.h"
@@ -11,90 +12,16 @@
 #include "game/endian.h"
 #include "platform/text_backend.h"
 
-typedef struct tagEndingGrpInfo {
-  uint32_t timer;          // 表示用タイマー
-  decltype(timer) fadein;  // フェードイン時刻
-  decltype(timer) fadeout; // フェードアウト時刻
-  ENDING_GRP *target;      // 描画対象
-  short alpha;             // パレットの状態
+// ファイル静的変数 → ending_manager.h の EndingManager に移動
 
-  int x, y;       // 表示する左上
-  bool bWantDisp; // 表示するかどうか
-} EndingGrpInfo;
-
-// スタッフ描画タスク //
-typedef struct tagEndingStTask {
-  uint32_t timer;          // 表示用タイマー
-  decltype(timer) fadein;  // フェードイン時刻
-  decltype(timer) fadeout; // フェードアウト時刻
-
-  uint8_t StfID[10]; // スタッフＩＤ
-  uint8_t TitleID;   // タイトル、すなわち役職ＩＤ
-
-  short NumStf; // 全スタッフ数
-  short alpha;  // パレットの状態
-
-  int ox, oy; // 表示基準座標
-
-  bool bWantDisp; // 表示するのかな
-} EndingStTask;
-
-typedef struct tagEndingText {
-  Narrow::string_view Text[10]; // 表示するテキストへのポインタ
-  int NumText;                  // 現在格納されているテキストの数
-  TEXTRENDER_RECT_ID Rect;
-
-  // Contains all text from [Text], concatenated with '\n'.
-  Narrow::string TextStr;
-
-  void Blank(void) {
-    NumText = 0;
-    TextStr.clear();
-  }
-
-  void Render(WINDOW_POINT topleft);
-} EndingText;
-
-EndingGrpInfo EGrpInfo;
-EndingStTask EStfTask;
-EndingText EText;
-
-const PIXEL_LTRB StaffLabel[7] = {
-    {0, 0, 160, 24},
-    {0, 24, 104, 48},
-    {0, 48, 160, 72},
-    {0, 72, 232, 96},
-    {0, 96, 168, 120},
-    {0, 144, 104, 168},
-    {0, (480 - 32), (9 * 32), 480},
-};
-
-const PIXEL_LTRB StaffMember[7] = {{0, 168, 72, 192},    {96, 168, 168, 192},
-                                   {192, 168, 264, 192}, {288, 168, 360, 192},
-                                   {0, 192, 144, 216},   {168, 192, 320, 216},
-                                   {0, 216, 336, 264}};
-
-// フラッシュの状態 //
-// GameFlow.flash_state → gameflow_manager.cpp の GameFlowManager に移動
-
-void UpdateGrpInfo(); // グラフィックの更新(内部データ)
-void UpdateStfInfo(); // スタッフの更新(内部データ)
-
-void DrawGrpInfo(); // グラフィックの描画
-void DrawStfInfo(); // スタッフの描画
-
-void DrawFadeInfo(); // フェードＩＯ情報の反映
-
-void EndingSCLDecode(); // エンディング用 SCL のデコード
-
-void EndingSetFixedColors(PALETTE &pal) {
+void EndingManager::SetFixedColors(PALETTE &pal) {
   pal[255] = {0x00, 0x00, 0x00};
   pal[199] = {0xFF, 0xFF, 0xFF};
   pal[198] = {0x80, 0x80, 0x80};
 }
 
 // エンディングまわりの初期化 //
-bool EndingInit(void) {
+bool EndingManager::Init() {
   PALETTE pal;
 
   GrpBackend_SetClip(GRP_RES_RECT);
@@ -108,124 +35,119 @@ bool EndingInit(void) {
   BGM_Stop();
 
   GrpBackend_PaletteGet(pal);
-  EndingSetFixedColors(pal);
+  this->SetFixedColors(pal);
   GrpBackend_PaletteSet(pal);
 
   GameMain = EndingProc;
 
-  GameFlow.flash_state = 0;
+  this->flash_state = 0;
 
-  EGrpInfo.bWantDisp = false;
-  EStfTask.bWantDisp = false;
+  this->grp_info.bWantDisp = false;
+  this->stf_task.bWantDisp = false;
 
   TextObj.Clear();
-  EText.Blank();
-  EText.Rect = TextObj.Register({GRP_RES.w, 131});
+  this->text.Blank();
+  this->text.Rect = TextObj.Register({GRP_RES.w, 131});
 
   return true;
 }
 
-void EndingProc(bool &) { /*
-                                 if(Key_Data){
-                                         GameExit();
-                                         return;
-                                 }
-                         */
+void EndingManager::Proc(bool &) {
   extern bool IsDraw();
 
-  if (GameFlow.flash_state)
-    GameFlow.flash_state -= 32;
+  if (this->flash_state)
+    this->flash_state -= 32;
 
-  EndingSCLDecode();
-  if (GameMain != EndingProc)
+  this->SCLDecode();
+  if (!GameMainIs(EndingProc))
     return;
 
   if (IsDraw()) {
-    UpdateGrpInfo();
-    UpdateStfInfo();
-    EndingDraw();
+    this->UpdateGrpInfo();
+    this->UpdateStfInfo();
+    this->Draw();
   }
 }
 
 // エンディング時の描画処理 //
-void EndingDraw(void) {
+void EndingManager::Draw() {
   // 画面消去 //
   GrpBackend_Clear(255, RGB{0, 0, 0});
 
   // それぞれのグラフィックを描画するで //
-  DrawGrpInfo();
-  DrawStfInfo();
-  EText.Render({0, 349});
+  this->DrawGrpInfo();
+  this->DrawStfInfo();
+  this->text.Render({0, 349});
 
   // フェード情報の反映ぢゃ //
-  DrawFadeInfo();
+  this->DrawFadeInfo();
 
   Grp_Flip();
 }
 
 // グラフィックのフェードアウト用関数 //
-void FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
+void EndingManager::FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
   Dest = Src.Fade(a, 0, 199);
-  EndingSetFixedColors(Dest);
+  EndingManager::SetFixedColors(Dest);
 }
 
 // スタッフ名のフェードアウト用関数 //
-void FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
+void EndingManager::FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
   Dest = Src.Fade(a, 200, 255);
-  EndingSetFixedColors(Dest);
+  EndingManager::SetFixedColors(Dest);
 }
 
 // グラフィックの更新(内部データ) //
-void UpdateGrpInfo() {
-  EGrpInfo.timer++;
-  if (EGrpInfo.timer > EGrpInfo.fadeout) {
-    if (EGrpInfo.alpha - 3 > 0)
-      EGrpInfo.alpha -= 3;
+void EndingManager::UpdateGrpInfo() {
+  this->grp_info.timer++;
+  if (this->grp_info.timer > this->grp_info.fadeout) {
+    if (this->grp_info.alpha - 3 > 0)
+      this->grp_info.alpha -= 3;
     else
-      EGrpInfo.alpha = 0;
-  } else if (EGrpInfo.timer > EGrpInfo.fadein) {
-    if (EGrpInfo.alpha + 3 < 255)
-      EGrpInfo.alpha += 3;
+      this->grp_info.alpha = 0;
+  } else if (this->grp_info.timer > this->grp_info.fadein) {
+    if (this->grp_info.alpha + 3 < 255)
+      this->grp_info.alpha += 3;
     else
-      EGrpInfo.alpha = 255;
+      this->grp_info.alpha = 255;
   }
 
-  if (EGrpInfo.bWantDisp && EGrpInfo.alpha == 0)
-    EGrpInfo.bWantDisp = false;
+  if (this->grp_info.bWantDisp && this->grp_info.alpha == 0)
+    this->grp_info.bWantDisp = false;
 }
 
 // スタッフの更新(内部データ)
-void UpdateStfInfo() {
-  EStfTask.timer++;
-  if (EStfTask.timer > EStfTask.fadeout) {
-    if (EStfTask.alpha - 3 > 0)
-      EStfTask.alpha -= 3;
+void EndingManager::UpdateStfInfo() {
+  this->stf_task.timer++;
+  if (this->stf_task.timer > this->stf_task.fadeout) {
+    if (this->stf_task.alpha - 3 > 0)
+      this->stf_task.alpha -= 3;
     else
-      EStfTask.alpha = 0;
-  } else if (EStfTask.timer > EStfTask.fadein) {
-    if (EStfTask.alpha + 3 < 255)
-      EStfTask.alpha += 3;
+      this->stf_task.alpha = 0;
+  } else if (this->stf_task.timer > this->stf_task.fadein) {
+    if (this->stf_task.alpha + 3 < 255)
+      this->stf_task.alpha += 3;
     else
-      EStfTask.alpha = 255;
+      this->stf_task.alpha = 255;
   }
 
-  if (EStfTask.bWantDisp && EStfTask.alpha == 0)
-    EStfTask.bWantDisp = false;
+  if (this->stf_task.bWantDisp && this->stf_task.alpha == 0)
+    this->stf_task.bWantDisp = false;
 }
 
 // グラフィックの描画 //
-void DrawGrpInfo() {
-  if (!EGrpInfo.bWantDisp)
+void EndingManager::DrawGrpInfo() {
+  if (!this->grp_info.bWantDisp)
     return;
 
   // 驚異の画像表示 //
-  const auto sid = (SURFACE_ID::ENDING_PIC + (EGrpInfo.target - EndingGrp));
-  GrpSurface_BlitOpaque({EGrpInfo.x, EGrpInfo.y}, sid, {0, 0, 320, 240});
+  const auto sid = (SURFACE_ID::ENDING_PIC + (this->grp_info.target - EndingGrp));
+  GrpSurface_BlitOpaque({this->grp_info.x, this->grp_info.y}, sid, {0, 0, 320, 240});
 }
 
 // スタッフの描画 //
-void DrawStfInfo() {
-  if (!EStfTask.bWantDisp)
+void EndingManager::DrawStfInfo() {
+  if (!this->stf_task.bWantDisp)
     return;
 
   auto Blit = [](WINDOW_POINT dst, const PIXEL_LTRB &src) {
@@ -233,15 +155,15 @@ void DrawStfInfo() {
     GrpSurface_Blit({dst.x, dst.y}, SURFACE_ID::ENDING_CREDITS, src);
   };
 
-  Blit({EStfTask.ox, EStfTask.oy}, StaffLabel[EStfTask.TitleID]);
-  for (decltype(EStfTask.NumStf) i = 0; i < EStfTask.NumStf; i++) {
-    const WINDOW_POINT dst = {EStfTask.ox, (EStfTask.oy + (i * 30) + 50)};
-    Blit(dst, StaffMember[EStfTask.StfID[i]]);
+  Blit({this->stf_task.ox, this->stf_task.oy}, staff_label[this->stf_task.TitleID]);
+  for (decltype(this->stf_task.NumStf) i = 0; i < this->stf_task.NumStf; i++) {
+    const WINDOW_POINT dst = {this->stf_task.ox, (this->stf_task.oy + (i * 30) + 50)};
+    Blit(dst, staff_member[this->stf_task.StfID[i]]);
   }
 }
 
 // テキストの描画 //
-void EndingText::Render(WINDOW_POINT topleft) {
+void EndingManager::Text::Render(WINDOW_POINT topleft) {
   TextObj.Render(topleft, Rect, TextStr, [this](TEXTRENDER_SESSION &s) {
     int max = 0;
 
@@ -267,7 +189,7 @@ void EndingText::Render(WINDOW_POINT topleft) {
   });
 }
 
-void FlashPaletteGrp(PALETTE &dest, const PALETTE &pal, uint16_t a) {
+void EndingManager::FlashPaletteGrp(PALETTE &dest, const PALETTE &pal, uint16_t a) {
   const uint16_t a16 = ((a > 256) ? (a - 256) : a);
   for (int i = 0; i < dest.size(); i++) {
     dest[i].r = (std::min)(256, (256 * (256 - a) + (pal[i].r * a16)) / 256);
@@ -277,47 +199,47 @@ void FlashPaletteGrp(PALETTE &dest, const PALETTE &pal, uint16_t a) {
 }
 
 // フェードＩＯ情報の反映 //
-void DrawFadeInfo() {
+void EndingManager::DrawFadeInfo() {
   PALETTE temp_pal;
 
   // フェードアウト関連
   if (GrpGeom_FB()) {
-    if (GameFlow.flash_state) {
-      FlashPaletteGrp(temp_pal, EGrpInfo.target->pal, GameFlow.flash_state);
+    if (this->flash_state) {
+      this->FlashPaletteGrp(temp_pal, this->grp_info.target->pal, this->flash_state);
       GrpBackend_PaletteSet(temp_pal);
-    } else if (EGrpInfo.target) {
-      FadeoutPaletteGrp(temp_pal, EGrpInfo.target->pal,
-                        Cast::down_sign<uint8_t>(EGrpInfo.alpha));
-      FadeoutPaletteStf(temp_pal, temp_pal,
-                        Cast::down_sign<uint8_t>(EStfTask.alpha));
+    } else if (this->grp_info.target) {
+      this->FadeoutPaletteGrp(temp_pal, this->grp_info.target->pal,
+                        Cast::down_sign<uint8_t>(this->grp_info.alpha));
+      this->FadeoutPaletteStf(temp_pal, temp_pal,
+                        Cast::down_sign<uint8_t>(this->stf_task.alpha));
       GrpBackend_PaletteSet(temp_pal);
     } else {
       temp_pal = {0};
-      EndingSetFixedColors(temp_pal);
+      this->SetFixedColors(temp_pal);
       GrpBackend_PaletteSet(temp_pal);
     }
   } else {
     GrpGeom->Lock();
 
-    if (EGrpInfo.bWantDisp) {
-      GrpGeom->SetAlphaNorm(255 - EGrpInfo.alpha);
+    if (this->grp_info.bWantDisp) {
+      GrpGeom->SetAlphaNorm(255 - this->grp_info.alpha);
       GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->DrawBoxA(EGrpInfo.x, EGrpInfo.y, (EGrpInfo.x + 320),
-                        (EGrpInfo.y + 240));
+      GrpGeom->DrawBoxA(this->grp_info.x, this->grp_info.y, (this->grp_info.x + 320),
+                        (this->grp_info.y + 240));
     }
-    if (EStfTask.bWantDisp) {
-      GrpGeom->SetAlphaNorm(255 - EStfTask.alpha);
+    if (this->stf_task.bWantDisp) {
+      GrpGeom->SetAlphaNorm(255 - this->stf_task.alpha);
       GrpGeom->SetColor({0, 0, 0});
-      if (EStfTask.ox == 320) {
+      if (this->stf_task.ox == 320) {
         GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
-      } else if (EStfTask.ox > 320) {
+      } else if (this->stf_task.ox > 320) {
         GrpGeom->DrawBoxA(320, 0, GRP_RES.w, 300);
       } else {
         GrpGeom->DrawBoxA(0, 0, (320 - 50), 300);
       }
     }
-    if (GameFlow.flash_state) {
-      GrpGeom->SetAlphaNorm(255 - GameFlow.flash_state);
+    if (this->flash_state) {
+      GrpGeom->SetAlphaNorm(255 - this->flash_state);
       GrpGeom->SetColor({5, 5, 5});
       GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
     }
@@ -327,7 +249,7 @@ void DrawFadeInfo() {
 }
 
 // エンディング用 SCL のデコード //
-void EndingSCLDecode() {
+void EndingManager::SCLDecode() {
   bool bFlag = true;
 
   while (bFlag) {
@@ -346,9 +268,9 @@ void EndingSCLDecode() {
     case (SCL_MSG): { // メッセージを出力する
       const auto *line_p = std::bit_cast<const char *>(cmd + 1);
       const Narrow::string_view line = line_p;
-      EText.Text[EText.NumText++] = line;
-      EText.TextStr += line_p;
-      EText.TextStr += '\n';
+      this->text.Text[this->text.NumText++] = line;
+      this->text.TextStr += line_p;
+      this->text.TextStr += '\n';
       SCL_Now += (line.length() + 2);
       break;
     }
@@ -356,39 +278,39 @@ void EndingSCLDecode() {
     case (SCL_FACE): // 顔を表示する
       switch (cmd[1]) {
       case 0:
-        EGrpInfo.fadein = 0;
-        EGrpInfo.fadeout = 128 + 64 + 64 + 512;
-        EGrpInfo.x = 640 - 40 - 320;
-        EGrpInfo.y = 40;
+        this->grp_info.fadein = 0;
+        this->grp_info.fadeout = 128 + 64 + 64 + 512;
+        this->grp_info.x = 640 - 40 - 320;
+        this->grp_info.y = 40;
         break;
 
       case 1:
       case 2:
       case 3:
-        EGrpInfo.fadein = 0;
-        EGrpInfo.fadeout = 128 + 64;
-        EGrpInfo.x = 320 - 160;
-        EGrpInfo.y = 40;
+        this->grp_info.fadein = 0;
+        this->grp_info.fadeout = 128 + 64;
+        this->grp_info.x = 320 - 160;
+        this->grp_info.y = 40;
         break;
 
       case 5:
-        EGrpInfo.fadein = 0;
-        EGrpInfo.fadeout = 128 + 64 + 64 + (512 + 512) * 2;
-        EGrpInfo.x = 40;
-        EGrpInfo.y = 40;
+        this->grp_info.fadein = 0;
+        this->grp_info.fadeout = 128 + 64 + 64 + (512 + 512) * 2;
+        this->grp_info.x = 40;
+        this->grp_info.y = 40;
         break;
 
       default:
-        EGrpInfo.fadein = 0;
-        EGrpInfo.fadeout = 128 + 64 + 64 + 512;
-        EGrpInfo.x = 40;
-        EGrpInfo.y = 40;
+        this->grp_info.fadein = 0;
+        this->grp_info.fadeout = 128 + 64 + 64 + 512;
+        this->grp_info.x = 40;
+        this->grp_info.y = 40;
         break;
       }
-      EGrpInfo.alpha = 0;
-      EGrpInfo.target = EndingGrp + cmd[1];
-      EGrpInfo.timer = 0;
-      EGrpInfo.bWantDisp = true;
+      this->grp_info.alpha = 0;
+      this->grp_info.target = EndingGrp + cmd[1];
+      this->grp_info.timer = 0;
+      this->grp_info.bWantDisp = true;
       SCL_Now += 2;
       break;
 
@@ -397,52 +319,52 @@ void EndingSCLDecode() {
         switch (cmd[1] - 128) {
         case 0:
         case 4:
-          EStfTask.fadein = 0;
-          EStfTask.fadeout = 128 + 64 + 64 + 128;
-          EStfTask.ox = 320 + 130;
-          EStfTask.oy = 80 + 50;
+          this->stf_task.fadein = 0;
+          this->stf_task.fadeout = 128 + 64 + 64 + 128;
+          this->stf_task.ox = 320 + 130;
+          this->stf_task.oy = 80 + 50;
           break;
         case 2:
         case 5:
-          EStfTask.fadein = 0;
-          EStfTask.fadeout = 128 + 64 + 64 + 128;
-          EStfTask.ox = 320 + 130;
-          EStfTask.oy = 80;
+          this->stf_task.fadein = 0;
+          this->stf_task.fadeout = 128 + 64 + 64 + 128;
+          this->stf_task.ox = 320 + 130;
+          this->stf_task.oy = 80;
           break;
         case 1:
         case 3:
-          EStfTask.fadein = 0;
-          EStfTask.fadeout = 128 + 64 + 64 + 128;
-          EStfTask.ox = 130;
-          EStfTask.oy = 80 + 50;
+          this->stf_task.fadein = 0;
+          this->stf_task.fadeout = 128 + 64 + 64 + 128;
+          this->stf_task.ox = 130;
+          this->stf_task.oy = 80 + 50;
           break;
         case 6:
-          EStfTask.fadein = 0;
-          EStfTask.fadeout = 128 + 64 + 64; //+64;
-          EStfTask.ox = 320;
-          EStfTask.oy = 80 + 80;
+          this->stf_task.fadein = 0;
+          this->stf_task.fadeout = 128 + 64 + 64; //+64;
+          this->stf_task.ox = 320;
+          this->stf_task.oy = 80 + 80;
           break;
         }
-        EStfTask.alpha = 0;
-        EStfTask.timer = 0;
-        EStfTask.timer = 0;
-        EStfTask.NumStf = 0;
-        EStfTask.TitleID = cmd[1] - 128;
-        EStfTask.bWantDisp = true;
+        this->stf_task.alpha = 0;
+        this->stf_task.timer = 0;
+        this->stf_task.timer = 0;
+        this->stf_task.NumStf = 0;
+        this->stf_task.TitleID = cmd[1] - 128;
+        this->stf_task.bWantDisp = true;
       } else {
-        EStfTask.StfID[EStfTask.NumStf++] = cmd[1];
+        this->stf_task.StfID[this->stf_task.NumStf++] = cmd[1];
       }
       SCL_Now += 2;
       break;
 
     case (SCL_NPG): // 新しいページに変更する
-      EText.Blank();
+      this->text.Blank();
       SCL_Now++;
       break;
 
     case (SCL_END): // カウントも変更させずにリターンするのだ
-      EGrpInfo.bWantDisp = false;
-      EStfTask.bWantDisp = false;
+      this->grp_info.bWantDisp = false;
+      this->stf_task.bWantDisp = false;
       NameRegistInit(false);
       return;
 
@@ -454,7 +376,7 @@ void EndingSCLDecode() {
     case (SCL_EFC):
       switch (cmd[1]) {
       case 0:
-        GameFlow.flash_state = 256 * 2;
+        this->flash_state = 256 * 2;
         break;
       }
 
@@ -462,13 +384,9 @@ void EndingSCLDecode() {
       break;
 
     case (SCL_STAGECLEAR): // ステージクリア
-                           // ステージクリア処理をここに記述 //
-                           // GameNextStage();	// 本当はエラーチェックが必要!!
       return;
 
     case (SCL_GAMECLEAR):
-      // if(GameStage == 6) GameStage = 7;
-      // NameRegistInit();
       return;
 
     default: // 未実装 or ばぐ

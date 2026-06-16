@@ -11,6 +11,7 @@
 #include "gameflow/demo_manager.h"
 #include "ENTRY.h"
 #include "GAMEMAIN.h"
+#include "gameflow/gameflow_manager.h"
 #include "LEVEL.h"
 #include "LOADER.h"
 #include "MUSIC.h"

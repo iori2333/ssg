@@ -12,9 +12,8 @@
 /***** [クラス定義] *****/
 
 /***** [関数プロトタイプ] *****/
-bool EndingInit(void);   // エンディングまわりの初期化
-void EndingProc(bool &); // エンディング状態推移用プロシージャ
-void EndingDraw(void);   // エンディング時の描画処理
+// 後方互換 inline wrapper は ending_manager.h 末尾に移動
+// 実装は EndingManager メソッドに移行
 
 /***** [グローバル変数] *****/
 

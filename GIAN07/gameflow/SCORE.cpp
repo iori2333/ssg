@@ -8,79 +8,31 @@
 #include "LEVEL.h"
 #include "LZ_UTY.h"
 #include "SCORE.h"
+#include "score_manager.h"
 #include "game/defer.h"
-#include "gameflow_manager.h"
 #include <array>
 #include <inttypes.h> // for PRId64
 #include <ranges>
 
-using NR_SCORE_LIST = std::span<NR_NAME_DATA, NR_RANK_MAX>;
-using NR_CONST_SCORE_LIST = std::span<const NR_NAME_DATA, NR_RANK_MAX>;
-
-// constexpr uint64_t PBG_MASK_VALUE = 0x342d3a4de92c68ba;
-// constexpr uint64_t PBG_MASK_VALUE = 0xe92cd3a4d8ba6342;
-constexpr uint64_t PBG_MASK_VALUE = 0xb97eb2c6542d3a41;
+// 型エイリアス → score_manager.h の private に移動
+// ScoreData → Scores.score_cache に移動
+// GameFlow.score_string[] → Scores.score_strings に移動
 
 const auto ScoreFileName = u8"秋霜SC.DAT"; // スコアデータ格納ファイル名
-// GameFlow.score_string[] → gameflow_manager.cpp の GameFlowManager に移動
-
-// スコアデータ格納先(名前空間で保護)
-static std::unique_ptr<NR_SCORE_DATA> ScoreData = nullptr;
-
-static bool LoadScoreData(void);    // スコアデータを読み込む
-static void ReleaseScoreData(void); // スコアデータを解放する
-static std::optional<NR_SCORE_LIST>
-GetNList(uint8_t Dif);                 // 難易度でポインタを振り分ける
-static bool SetDefaultScoreData(void); // スコアデータ初期値をセット
-
-static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd);
-static void _SaveSC(NR_CONST_SCORE_LIST NData, BIT_DEVICE_WRITE &bd);
-
-template <std::unsigned_integral T>
-T _xGet(BIT_DEVICE_READ &bd, uint64_t &ExMask) {
-  ExMask = (((ExMask & 0x800000000000000) >> 60) + (ExMask << 1));
-
-  T ret = 0;
-  if constexpr (sizeof(T) == 1) {
-    ret = bd.GetBits(8);
-  } else {
-    for (const auto word : std::views::iota(0u, (sizeof(T) / 2))) {
-      ret |= (static_cast<T>(bd.GetBits(16)) << (word * 16));
-    }
-  }
-  return (ret - static_cast<T>(ExMask));
-}
-
-template <std::unsigned_integral T>
-void _xPut(BIT_DEVICE_WRITE &bd, T data, uint64_t &ExMask) {
-  ExMask = (((ExMask & 0x800000000000000) >> 60) + (ExMask << 1));
-
-  const auto temp = (data + static_cast<T>(ExMask));
-
-  if constexpr (sizeof(T) == 1) {
-    bd.PutBits(temp, 8);
-  } else {
-    for (const auto word : std::views::iota(0u, (sizeof(T) / 2))) {
-      bd.PutBits((temp >> (word * 16)), 16);
-    }
-  }
-}
 
 // 現在のスコア列を取得する(名前挿入アリ) //
 // NData == NULL の場合、挿入しません     //
-uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
-  //	static char			*WTable[4] = {"WIDE
-  //","HOMING","LASER","?????"};
+uint8_t ScoreManager::SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
   NR_SCORE_STRING *Res;
   int i, num;
   int64_t temp;
 
-  Res = GameFlow.score_string.data();
+  Res = this->score_strings.data();
 
   // スコアデータを読み込む //
   uint8_t rank;
   if (NData != nullptr) {
-    rank = IsHighScore(NData, Dif);
+    rank = this->IsHighScore(NData, Dif);
     if (rank == 0)
       return 0;
   } else {
@@ -88,11 +40,11 @@ uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
   }
 
   // ポインタをセットするぞ //
-  if (!LoadScoreData())
+  if (!this->LoadScoreData())
     return 0;
-  auto maybe_p = GetNList(Dif);
+  auto maybe_p = this->GetNList(Dif);
   if (!maybe_p) {
-    ReleaseScoreData();
+    this->ReleaseScoreData();
     return 0;
   }
   auto p = maybe_p.value();
@@ -122,7 +74,6 @@ uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
 
     strcpy(Res[i].Name, p[i].Name);
 
-    // strcpy(Res[i].Weapon, WTable[p[i].Weapon % 4]);
     Res[i].Weapon = p[i].Weapon % 4;
 
     sprintf(Res[i].Score, "%11" PRId64, p[i].Score);
@@ -130,19 +81,19 @@ uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
     sprintf(Res[i].Stage, "%1d", p[i].Stage);
   }
 
-  ReleaseScoreData();
+  this->ReleaseScoreData();
 
   return rank;
 }
 
-uint8_t IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) {
+uint8_t ScoreManager::IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) {
   // ロードできないので失敗！ //
-  if (!LoadScoreData())
+  if (!this->LoadScoreData())
     return 0;
-  defer(ReleaseScoreData());
+  defer(this->ReleaseScoreData());
 
   // 難易度でポインタを振り分ける //
-  const auto maybe_temp = GetNList(Dif);
+  const auto maybe_temp = this->GetNList(Dif);
   if (!maybe_temp) {
     return 0;
   }
@@ -161,9 +112,9 @@ uint8_t IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) {
 }
 
 // スコアデータを書き出す //
-bool SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
+bool ScoreManager::SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
   // スコアデータを読み込む //
-  const auto Rank = IsHighScore(NData, Dif);
+  const auto Rank = this->IsHighScore(NData, Dif);
 
   // これは、ハイスコアじゃないね //
   if (Rank == 0) {
@@ -171,12 +122,12 @@ bool SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
   }
 
   // ポインタをセットする //
-  if (!LoadScoreData()) {
+  if (!this->LoadScoreData()) {
     return false;
   }
-  auto maybe_temp = GetNList(Dif);
+  auto maybe_temp = this->GetNList(Dif);
   if (!maybe_temp) {
-    ReleaseScoreData();
+    this->ReleaseScoreData();
     return false;
   }
   auto temp = maybe_temp.value();
@@ -191,42 +142,42 @@ bool SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
 
   // 実際にファイルに出力 //
   BIT_DEVICE_WRITE bd;
-  _SaveSC(ScoreData->Easy, bd);
-  _SaveSC(ScoreData->Normal, bd);
-  _SaveSC(ScoreData->Hard, bd);
-  _SaveSC(ScoreData->Lunatic, bd);
-  _SaveSC(ScoreData->Extra, bd);
-  ReleaseScoreData();
+  this->SaveSC(this->score_cache->Easy, bd);
+  this->SaveSC(this->score_cache->Normal, bd);
+  this->SaveSC(this->score_cache->Hard, bd);
+  this->SaveSC(this->score_cache->Lunatic, bd);
+  this->SaveSC(this->score_cache->Extra, bd);
+  this->ReleaseScoreData();
 
   return bd.Write(ScoreFileName);
 }
 
 // スコアデータを読み込む //
-static bool LoadScoreData(void) {
+bool ScoreManager::LoadScoreData() {
   bool bInit = false;
 
   // すでにロード済みの場合(これは失敗にしない) //
-  if (ScoreData) {
+  if (this->score_cache) {
     return true;
   }
 
-  ScoreData = std::unique_ptr<NR_SCORE_DATA>(new (std::nothrow) NR_SCORE_DATA);
-  if (ScoreData == nullptr) {
+  this->score_cache = std::unique_ptr<NR_SCORE_DATA>(new (std::nothrow) NR_SCORE_DATA);
+  if (this->score_cache == nullptr) {
     return false;
   }
 
   // ビット読み込みモードでファイルを開く //
   auto bd = BitFilCreateR(ScoreFileName);
   while (1) {
-    if (!_LoadSC(ScoreData->Easy, bd))
+    if (!this->LoadSC(this->score_cache->Easy, bd))
       break;
-    if (!_LoadSC(ScoreData->Normal, bd))
+    if (!this->LoadSC(this->score_cache->Normal, bd))
       break;
-    if (!_LoadSC(ScoreData->Hard, bd))
+    if (!this->LoadSC(this->score_cache->Hard, bd))
       break;
-    if (!_LoadSC(ScoreData->Lunatic, bd))
+    if (!this->LoadSC(this->score_cache->Lunatic, bd))
       break;
-    if (!_LoadSC(ScoreData->Extra, bd))
+    if (!this->LoadSC(this->score_cache->Extra, bd))
       break;
 
     bInit = true;
@@ -236,54 +187,54 @@ static bool LoadScoreData(void) {
   if (!bInit) {
     // ファイルが存在しないか不正な場合、新たに作成する //
     // この時点では、ファイルに対して書き込みは行わない //
-    return SetDefaultScoreData();
+    return this->SetDefaultScoreData();
   }
 
   return true;
 }
 
-static void ReleaseScoreData(void) {
+void ScoreManager::ReleaseScoreData() {
   // 解放～ //
-  ScoreData = nullptr;
+  this->score_cache = nullptr;
 }
 
 // 難易度でポインタを振り分ける //
-static std::optional<NR_SCORE_LIST> GetNList(uint8_t Dif) {
-  if (!ScoreData) {
+std::optional<ScoreManager::NR_SCORE_LIST> ScoreManager::GetNList(uint8_t Dif) {
+  if (!this->score_cache) {
     return {};
   }
 
   switch (Dif) {
   case (GAME_EASY):
-    return ScoreData->Easy;
+    return this->score_cache->Easy;
   case (GAME_NORMAL):
-    return ScoreData->Normal;
+    return this->score_cache->Normal;
   case (GAME_HARD):
-    return ScoreData->Hard;
+    return this->score_cache->Hard;
   case (GAME_LUNATIC):
-    return ScoreData->Lunatic;
+    return this->score_cache->Lunatic;
   case (GAME_EXTRA):
-    return ScoreData->Extra;
+    return this->score_cache->Extra;
   default:
     return {};
   }
 }
 
 // スコアデータ初期値をセット //
-static bool SetDefaultScoreData(void) {
-  if (nullptr == ScoreData) {
+bool ScoreManager::SetDefaultScoreData() {
+  if (nullptr == this->score_cache) {
     return false;
   }
 
   for (auto i = 0; i < (GAME_EXTRA + 1); i++) {
-    auto maybe_temp = GetNList(i);
+    auto maybe_temp = this->GetNList(i);
     if (!maybe_temp) {
       return false;
     }
     auto temp = maybe_temp.value();
     for (size_t j = 0; j < temp.size(); j++) {
       strcpy(temp[j].Name, "????????");
-      temp[j].Score = ((temp.size() - j) * uint64_t{1200000} // 1500000
+      temp[j].Score = ((temp.size() - j) * uint64_t{1200000}
       );
       temp[j].Evade = ((temp.size() - j) * 50);
       temp[j].Stage = ((i < 4) ? (temp.size() - j) : 1);
@@ -294,7 +245,7 @@ static bool SetDefaultScoreData(void) {
   return true;
 }
 
-static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
+bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
   uint64_t CheckSum = 0;
   uint64_t Mask = PBG_MASK_VALUE;
   uint8_t flag = 0;
@@ -308,7 +259,7 @@ static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
 
     // 名前を獲得する //
     for (auto &c : nd.Name) {
-      c = _xGet<uint8_t>(bd, Mask);
+      c = XGet<uint8_t>(bd, Mask);
       CheckSum += c;
     }
     if (flag != bd.GetBit())
@@ -317,7 +268,7 @@ static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
       flag = 1 - flag;
 
     // 得点を獲得する //
-    nd.Score = _xGet<uint64_t>(bd, Mask);
+    nd.Score = XGet<uint64_t>(bd, Mask);
     CheckSum += nd.Score;
     if (flag != bd.GetBit())
       return false;
@@ -325,7 +276,7 @@ static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
       flag = 1 - flag;
 
     // かすりを獲得する //
-    nd.Evade = _xGet<uint32_t>(bd, Mask);
+    nd.Evade = XGet<uint32_t>(bd, Mask);
     CheckSum += nd.Evade;
     if (flag != bd.GetBit())
       return false;
@@ -333,7 +284,7 @@ static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
       flag = 1 - flag;
 
     // ステージを獲得する //
-    nd.Stage = _xGet<uint8_t>(bd, Mask);
+    nd.Stage = XGet<uint8_t>(bd, Mask);
     CheckSum += nd.Stage;
     if (flag != bd.GetBit())
       return false;
@@ -341,7 +292,7 @@ static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
       flag = 1 - flag;
 
     // ウエポンを獲得する //
-    nd.Weapon = _xGet<uint8_t>(bd, Mask);
+    nd.Weapon = XGet<uint8_t>(bd, Mask);
     CheckSum += nd.Weapon;
     if (flag != bd.GetBit())
       return false;
@@ -349,7 +300,7 @@ static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
       flag = 1 - flag;
 
     // チェックサム比較 //
-    if (CheckSum != _xGet<uint64_t>(bd, Mask)) {
+    if (CheckSum != XGet<uint64_t>(bd, Mask)) {
       return false;
     }
   }
@@ -357,7 +308,7 @@ static bool _LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
   return true;
 }
 
-static void _SaveSC(NR_CONST_SCORE_LIST NData, BIT_DEVICE_WRITE &bd) {
+void ScoreManager::SaveSC(NR_CONST_SCORE_LIST NData, BIT_DEVICE_WRITE &bd) {
   uint64_t CheckSum = 0;
   uint64_t Mask = PBG_MASK_VALUE;
   uint8_t flag = 0;
@@ -370,36 +321,36 @@ static void _SaveSC(NR_CONST_SCORE_LIST NData, BIT_DEVICE_WRITE &bd) {
     // 名前を出力する //
     for (auto &c : nd.Name) {
       CheckSum += c;
-      _xPut(bd, static_cast<unsigned char>(c), Mask);
+      XPut(bd, static_cast<unsigned char>(c), Mask);
     }
     bd.PutBit(flag);
     flag = 1 - flag; // ビット挿入
 
     // 得点を出力する //
     CheckSum += nd.Score;
-    _xPut(bd, static_cast<uint64_t>(nd.Score), Mask);
+    XPut(bd, static_cast<uint64_t>(nd.Score), Mask);
     bd.PutBit(flag);
     flag = 1 - flag; // ビット挿入
 
     // かすりを出力する //
     CheckSum += nd.Evade;
-    _xPut(bd, nd.Evade, Mask);
+    XPut(bd, nd.Evade, Mask);
     bd.PutBit(flag);
     flag = 1 - flag; // ビット挿入
 
     // ステージを出力する //
     CheckSum += nd.Stage;
-    _xPut(bd, nd.Stage, Mask);
+    XPut(bd, nd.Stage, Mask);
     bd.PutBit(flag);
     flag = 1 - flag; // ビット挿入
 
     // ウエポンを出力する //
     CheckSum += nd.Weapon;
-    _xPut(bd, nd.Weapon, Mask);
+    XPut(bd, nd.Weapon, Mask);
     bd.PutBit(flag);
     flag = 1 - flag; // ビット挿入
 
     // チェックサムを出力する //
-    _xPut(bd, CheckSum, Mask);
+    XPut(bd, CheckSum, Mask);
   }
 }

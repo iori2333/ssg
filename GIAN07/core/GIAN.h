@@ -37,6 +37,8 @@
 #include "gameflow/PRankCtrl.h" // プレイランク管理
 #include "gameflow/rank_manager.h"   // RankManager + backward-compat wrappers
 #include "gameflow/demo_manager.h"   // DemoManager + backward-compat wrappers
+#include "gameflow/score_manager.h"  // ScoreManager + backward-compat wrappers
+#include "gameflow/ending_manager.h" // EndingManager + backward-compat wrappers
 #include "stage/SCROLL.h"    // 背景スクロール＆ＳＣＬ管理
 #include "stage/scroll_manager.h"    // ScrollManager + backward-compat wrappers
 

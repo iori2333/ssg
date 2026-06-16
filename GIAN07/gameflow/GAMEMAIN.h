@@ -24,7 +24,7 @@
 
 ///// [関数] /////
 
-bool WeaponSelectInit(bool ExStg);
+// WeaponSelectInit → inline wrapper in gameflow_manager.h
 bool GameInit(void (*NextProc)(bool &quit)); // ゲームの初期化をする
 void GameRestart(void);               // ゲームを再開する(ESC 抜けから)
 bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
@@ -37,7 +37,7 @@ bool SProjectInit(void); // 西方Ｐｒｏｊｅｃｔ表示の初期化
 
 bool GameExstgInit(void); // エキストラステージを始める
 
-bool NameRegistInit(bool bNeedChgMusic); // お名前入力の初期化
+// NameRegistInit → inline wrapper in gameflow_manager.h
 bool ScoreNameInit(void);                // お名前表示画面
 
 bool GameNextStage(void); // 次のステージに移行する

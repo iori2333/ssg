@@ -71,14 +71,13 @@ void Render(PIXEL_COORD top) {
 // GameFlow.current_rank, GameFlow.current_dif, GameFlow.viv_temp, IsDemoplay, GameFlow.input_locked
 // → gameflow_manager.cpp の GameFlowManager に移動
 
-void TitleProc(bool &quit);
-void WeaponSelectProc(bool &); // 装備選択
+// 変換済み関数 → inline wrapper は gameflow_manager.h で提供
+// (TitleProc, WeaponSelectProc, GameOverProc0, NameRegistProc, ScoreNameProc, ScoreDraw)
+
 void GameProc(bool &);
-void GameOverProc0(bool &); // ゲームオーバー出現用
 void GameOverProc(bool &);  // ゲームオーバー
 void PauseProc(bool &);
 void DemoProc(bool &);       // デモプレイ
-void NameRegistProc(bool &); // お名前入力
 
 void ReplayProcAll(bool &);
 void GameOverSaveProc(bool &);
@@ -86,21 +85,13 @@ void GameOverSaveProc(bool &);
 bool SProjectInit(void);   // 西方Ｐｒｏｊｅｃｔ初期化部
 void SProjectProc(bool &); // 西方Ｐｒｏｊｅｃｔ表示動作部
 
-void ScoreNameProc(bool &);
-
 void GameSTD_Init(void); // ゲームを立ち上げる際に必ず行う初期化関数群
 bool DemoInit(void);     // デモプレイの初期化を行う
 
 void GameDraw(void);
 void GameMove(void);
-bool IsDraw(void);
 
-void ScoreDraw(void); // スコアの描画
-
-// GameMain 参照（gameflow_manager.cpp で定義）に TitleProc を代入
-// この代入は動的初期化時に行う必要があるため、ここで明示的に設定
-struct GameMainInit { GameMainInit() { GameMain = TitleProc; } };
-static GameMainInit _game_main_init;
+// game_main 初期値 → gameflow_manager.cpp で設定
 
 uint8_t CurrentLevel() {
   return ((GameStage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameLevel);
@@ -134,7 +125,7 @@ extern bool ScoreNameInit(void) {
 }
 
 // スコアネームの表示 //
-void ScoreNameProc(bool &) {
+void GameFlowManager::ScoreNameProc(bool &) {
   static const char *ExString[5] = {"Easy", "Normal", "Hard", "Lunatic",
                                     "Extra"};
 
@@ -152,7 +143,7 @@ void ScoreNameProc(bool &) {
 
   case (KEY_UP):
   case (KEY_LEFT):
-    if (GameFlow.score_string[4].bMoveEnable)
+    if (Scores.score_strings[4].bMoveEnable)
       break;
     Snd_SEPlay(SOUND_ID_SELECT);
     GameFlow.current_dif = (GameFlow.current_dif + 4) % 5;
@@ -161,7 +152,7 @@ void ScoreNameProc(bool &) {
 
   case (KEY_DOWN):
   case (KEY_RIGHT):
-    if (GameFlow.score_string[4].bMoveEnable)
+    if (Scores.score_strings[4].bMoveEnable)
       break;
     Snd_SEPlay(SOUND_ID_SELECT);
     GameFlow.current_dif = (GameFlow.current_dif + 1) % 5;
@@ -180,53 +171,53 @@ void ScoreNameProc(bool &) {
 }
 
 // スコアの描画 //
-void ScoreDraw(void) {
+void GameFlowManager::ScoreDraw() {
   int i, gx, gy, v;
   PIXEL_LTRB src;
 
   for (i = 0; i < 5; i++) {
-    v = (GameFlow.score_string[i].x - ((50 + i * 24) << 6)) / 12;
+    v = (Scores.score_strings[i].x - ((50 + i * 24) << 6)) / 12;
     if (v > 64 * 2) {
       // v = max(v,20*64);
-      GameFlow.score_string[i].x -= v;
+      Scores.score_strings[i].x -= v;
     } else {
-      GameFlow.score_string[i].bMoveEnable = false;
+      Scores.score_strings[i].bMoveEnable = false;
     }
 
     src = PIXEL_LTWH{0, (64 + (32 * i)), 400, 32};
     const WINDOW_POINT topleft = {
-        (GameFlow.score_string[i].x >> 6),
-        (GameFlow.score_string[i].y >> 6),
+        (Scores.score_strings[i].x >> 6),
+        (Scores.score_strings[i].y >> 6),
     };
     GrpSurface_Blit(topleft, SURFACE_ID::NAMEREG, src);
     // GrpSurface_Blit(
     // 	{ (50 + (i * 24)), (100 + (i * 48) }, SURFACE_ID::NAMEREG, src
     // );
 
-    gx = (GameFlow.score_string[i].x >> 6) + 88;
-    gy = (GameFlow.score_string[i].y >> 6) + 4;
-    GrpPut16c2(gx, gy, GameFlow.score_string[i].Name);
+    gx = (Scores.score_strings[i].x >> 6) + 88;
+    gy = (Scores.score_strings[i].y >> 6) + 4;
+    GrpPut16c2(gx, gy, Scores.score_strings[i].Name);
 
-    gx = (GameFlow.score_string[i].x >> 6) + 232 - 16;
-    gy = (GameFlow.score_string[i].y >> 6) + 4;
-    GrpPut16c2(gx, gy, GameFlow.score_string[i].Score);
+    gx = (Scores.score_strings[i].x >> 6) + 232 - 16;
+    gy = (Scores.score_strings[i].y >> 6) + 4;
+    GrpPut16c2(gx, gy, Scores.score_strings[i].Score);
 
-    gx = (GameFlow.score_string[i].x >> 6) + 120;
-    gy = (GameFlow.score_string[i].y >> 6) + 25;
-    GrpPutScore(gx, gy, GameFlow.score_string[i].Evade);
+    gx = (Scores.score_strings[i].x >> 6) + 120;
+    gy = (Scores.score_strings[i].y >> 6) + 25;
+    GrpPutScore(gx, gy, Scores.score_strings[i].Evade);
 
     // いや、時間が無いのは分かるんだけどさぁ... //
-    gx = (GameFlow.score_string[i].x >> 6) + 224;
-    gy = (GameFlow.score_string[i].y >> 6) + 25;
-    if (GameFlow.score_string[i].Stage[0] == '7') {
+    gx = (Scores.score_strings[i].x >> 6) + 224;
+    gy = (Scores.score_strings[i].y >> 6) + 25;
+    if (Scores.score_strings[i].Stage[0] == '7') {
       src = {288, 88, (288 + 16), (88 + 8)};
       GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::SYSTEM, src);
     } else
-      GrpPutScore(gx, gy, GameFlow.score_string[i].Stage);
+      GrpPutScore(gx, gy, Scores.score_strings[i].Stage);
 
-    gx = (GameFlow.score_string[i].x >> 6) + 224 + 80;
-    gy = (GameFlow.score_string[i].y >> 6) + 25;
-    src = PIXEL_LTWH{0, (400 + (GameFlow.score_string[i].Weapon * 8)), 48, 8};
+    gx = (Scores.score_strings[i].x >> 6) + 224 + 80;
+    gy = (Scores.score_strings[i].y >> 6) + 25;
+    src = PIXEL_LTWH{0, (400 + (Scores.score_strings[i].Weapon * 8)), 48, 8};
     GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::NAMEREG, src);
   }
 }
@@ -236,7 +227,7 @@ static constexpr auto NR_EXCHAR_END = -1;
 static constexpr auto NR_EXCHAR_ERROR = -2;
 
 // 座標から選択文字を取得する //
-char GetAddr2Char(int x, int y) {
+char GameFlowManager::GetAddr2Char(int x, int y) {
   // 大文字 //
   if (y == 0) {
     return ('A' + (x % 26));
@@ -304,7 +295,7 @@ char GetAddr2Char(int x, int y) {
 }
 
 // お名前入力 //
-void NameRegistProc(bool &) {
+void GameFlowManager::NameRegistProc(bool &) {
   // <- DemoInit() を修正するのだぞ
   PIXEL_LTRB src = {0, 0, 400, 64};
   int gx, gy, len;
@@ -359,7 +350,7 @@ void NameRegistProc(bool &) {
       Snd_SEPlay(SOUND_ID_SELECT);
 
       // 最後の文字まで来ていた場合 //
-      if (strlen(GameFlow.score_string[GameFlow.current_rank - 1].Name) == NR_NAME_LEN - 1) {
+      if (strlen(Scores.score_strings[GameFlow.current_rank - 1].Name) == NR_NAME_LEN - 1) {
         switch (c = GetAddr2Char(x, y)) {
         case (NR_EXCHAR_END):
         case (NR_EXCHAR_ERROR):
@@ -387,28 +378,28 @@ void NameRegistProc(bool &) {
         goto BACK_NR_PROC;
 
       default:
-        len = strlen(GameFlow.score_string[GameFlow.current_rank - 1].Name);
-        GameFlow.score_string[GameFlow.current_rank - 1].Name[len] = c;
-        GameFlow.score_string[GameFlow.current_rank - 1].Name[len + 1] = '\0';
+        len = strlen(Scores.score_strings[GameFlow.current_rank - 1].Name);
+        Scores.score_strings[GameFlow.current_rank - 1].Name[len] = c;
+        Scores.score_strings[GameFlow.current_rank - 1].Name[len + 1] = '\0';
         break;
       }
       break;
 
     // １文字前に戻る //
     BACK_NR_PROC:
-      len = strlen(GameFlow.score_string[GameFlow.current_rank - 1].Name);
+      len = strlen(Scores.score_strings[GameFlow.current_rank - 1].Name);
       if (len)
-        GameFlow.score_string[GameFlow.current_rank - 1].Name[len - 1] = '\0';
+        Scores.score_strings[GameFlow.current_rank - 1].Name[len - 1] = '\0';
       break;
 
     // ネームレジスト終了処理 //
     EXIT_NR_PROC:
-      if (strlen(GameFlow.score_string[GameFlow.current_rank - 1].Name) == 0)
-        strcpy(GameFlow.score_string[GameFlow.current_rank - 1].Name, "Vivit!");
+      if (strlen(Scores.score_strings[GameFlow.current_rank - 1].Name) == 0)
+        strcpy(Scores.score_strings[GameFlow.current_rank - 1].Name, "Vivit!");
 
-      GameFlow.score_string[GameFlow.current_rank - 1].Name[NR_NAME_LEN - 1] = '\0';
+      Scores.score_strings[GameFlow.current_rank - 1].Name[NR_NAME_LEN - 1] = '\0';
 
-      strcpy(GameFlow.current_name.Name, GameFlow.score_string[GameFlow.current_rank - 1].Name);
+      strcpy(GameFlow.current_name.Name, Scores.score_strings[GameFlow.current_rank - 1].Name);
       SaveScoreData(&GameFlow.current_name, CurrentLevel());
 
       key_time = END_WAIT;
@@ -444,13 +435,13 @@ void NameRegistProc(bool &) {
   GrpGeom->Lock();
 
   GrpGeom->SetColor({2, 0, 0});
-  gx = GameFlow.score_string[GameFlow.current_rank - 1].x >> 6;
-  gy = GameFlow.score_string[GameFlow.current_rank - 1].y >> 6;
+  gx = Scores.score_strings[GameFlow.current_rank - 1].x >> 6;
+  gy = Scores.score_strings[GameFlow.current_rank - 1].y >> 6;
   GrpGeom->DrawBox(gx, gy, (gx + 400), (gy + 32));
 
   if (time % 64 > 32) {
     GrpGeom->SetColor({4, 0, 0});
-    len = min(strlen(GameFlow.score_string[GameFlow.current_rank - 1].Name), NR_NAME_LEN - 2);
+    len = min(strlen(Scores.score_strings[GameFlow.current_rank - 1].Name), NR_NAME_LEN - 2);
     gx += (len * 16 + 88);
     gy += (4);
     GrpGeom->DrawBox(gx, gy, (gx + 14), (gy + 16));
@@ -481,7 +472,7 @@ void NameRegistProc(bool &) {
   /*
           GrpPut16(400,100,temps);
           for(i=0; i<5; i++){
-                  GrpPut16(100, 100+i*32, GameFlow.score_string[i].Score);
+                  GrpPut16(100, 100+i*32, Scores.score_strings[i].Score);
                   if(GameFlow.current_rank == i+1) GrpPut16(85, 100+i*32, "!!");
           }
   */
@@ -489,7 +480,7 @@ void NameRegistProc(bool &) {
 }
 
 // お名前入力の初期化 //
-bool NameRegistInit(bool bNeedChgMusic) {
+bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   for (auto &it : GameFlow.current_name.Name) {
     it = '\0';
   }
@@ -522,7 +513,7 @@ bool NameRegistInit(bool bNeedChgMusic) {
   GrpBackend_SetClip(GRP_RES_RECT);
 
   GameFlow.input_locked = Key_Data;
-  GameMain = NameRegistProc;
+  GameMain = ::NameRegistProc;
 
   if (bNeedChgMusic) {
     BGM_Switch(19);
@@ -566,7 +557,7 @@ void GameSTD_Init(void) {
   // GameFlow.draw_count = 0;
 }
 
-bool WeaponSelectInit(bool ExStg) {
+bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
@@ -581,7 +572,7 @@ bool WeaponSelectInit(bool ExStg) {
 
   GameFlow.weapon_key_wait = 1;
   Viv.weapon = 0;
-  GameMain = WeaponSelectProc;
+  GameMain = ::WeaponSelectProc;
   if (ExStg) {
     GameStage = GRAPH_ID_EXSTAGE;
   }
@@ -704,7 +695,7 @@ void ReplayProcAll(bool &) {
 
     GameMove();
 
-    if (GameMain != ReplayProcAll) {
+    if (!GameMainIs(ReplayProcAll)) {
       DemoplayCleanup();
       DemoplayLoadAllEnable = false;
       GameExit();
@@ -879,7 +870,7 @@ extern bool GameExit(bool bNeedChgMusic) {
 
   GameStage = 0;
 
-  if (GameMain != DemoProc) {
+  if (!GameMainIs(DemoProc)) {
     if (bNeedChgMusic) {
       BGM_Switch(0);
     }
@@ -952,7 +943,7 @@ void GameProc(bool &) {
           }
   */
   GameMove();
-  if (GameMain != GameProc)
+  if (!GameMainIs(GameProc))
     return;
 
   if (IsDraw()) {
@@ -966,7 +957,7 @@ void GameProc(bool &) {
 }
 
 // ゲームオーバー出現用
-void GameOverProc0(bool &) {
+void GameFlowManager::GameOverProc0(bool &) {
   switch (GameFlow.game_over_timer) {
   default:
     GameFlow.game_over_timer--;
@@ -1014,7 +1005,7 @@ void GameOverProc0(bool &) {
 // Save Replay dialog for Game Over
 void GameOverSaveProc(bool &) {
   CWinMove(&GameOverSaveWindow);
-  if (GameMain != GameOverSaveProc) {
+  if (!GameMainIs(GameOverSaveProc)) {
     return;
   }
 
@@ -1028,7 +1019,7 @@ void GameOverSaveProc(bool &) {
 // ゲームオーバー
 void GameOverProc(bool &) {
   CWinMove(&ContinueWindow);
-  if (GameMain != GameOverProc) {
+  if (!GameMainIs(GameOverProc)) {
     SEffectInit();
     return;
   }
@@ -1068,7 +1059,7 @@ void DemoProc(bool &) {
 
   GameMove();
 
-  if (GameMain != DemoProc) {
+  if (!GameMainIs(DemoProc)) {
     DemoplayCleanup(); // 後始末
     IsDemoplay = false;
     GameExit(); // 強制終了させる(ゲームオーバー対策)
@@ -1084,7 +1075,7 @@ void DemoProc(bool &) {
 }
 
 // 装備選択 //
-void WeaponSelectProc(bool &) {
+void GameFlowManager::WeaponSelectProc(bool &) {
   PIXEL_LTRB rc;
   int i, x, y;
   char buf[100];
@@ -1334,7 +1325,7 @@ void WeaponSelectProc(bool &) {
   }
 }
 
-void TitleProc(bool &quit) {
+void GameFlowManager::TitleProc(bool &quit) {
   constexpr PIXEL_LTRB src = {0, 0, 640, 396};
   // PIXEL_LTRB	src = { 0, 0, 350, 403 };
   // PIXEL_LTRB	src = { 0, 0, 195, 256 };
@@ -1381,7 +1372,7 @@ void TitleProc(bool &quit) {
     return;
   }
 
-  if (GameMain != TitleProc)
+  if (!GameMainIs(::TitleProc))
     return;
 
   if (MainWindow.State == CWIN_DEAD) {
@@ -1424,7 +1415,7 @@ void TitleProc(bool &quit) {
 
 void PauseProc(bool &) {
   CWinMove(&ExitWindow);
-  if (GameMain != PauseProc)
+  if (!GameMainIs(PauseProc))
     return;
 
   if (IsDraw()) {
@@ -1528,7 +1519,7 @@ void GameDraw(void) {
   GrpBackend_SetClip({X_MIN, Y_MIN, (X_MAX + 1), (Y_MAX + 1)});
 }
 
-bool IsDraw(void) {
+bool GameFlowManager::IsDraw() {
   if (Grp_FPSDivisor) {
     GameFlow.draw_count++;
     if (GameFlow.draw_count % Grp_FPSDivisor) {

@@ -46,15 +46,6 @@ struct NrScoreString {
 using NR_SCORE_STRING = NrScoreString;
 
 ///// [ 関数 ] /////
-
-// 現在のスコア列を取得する(Ret:下と同じ)
-uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif);
-
-// ０：ハイスコアでない  それ以外：順位
-uint8_t IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif);
-
-bool SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif); // スコアデータを書き出す
-
-///// [グローバル変数] /////
-// ScoreString[] → GameFlow.score_string で直接アクセス
+// 後方互換 inline wrapper は score_manager.h 末尾に移動
+// 実装は ScoreManager メソッドに移行
 
