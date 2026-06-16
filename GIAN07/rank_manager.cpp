@@ -1,8 +1,0 @@
-/*
- *   RankManager — centralized play rank state
- */
-
-#include "rank_manager.h"
-
-RankManager Ranking;
-PlayRankState& PlayRank = Ranking.state;

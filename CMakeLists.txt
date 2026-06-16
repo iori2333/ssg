@@ -66,7 +66,7 @@ target_include_directories(dr_libs INTERFACE libs/dr_libs)
 # ============================================================
 
 # --- pbg original game code ---
-file(GLOB PBG_SRC CONFIGURE_DEPENDS
+file(GLOB_RECURSE PBG_SRC CONFIGURE_DEPENDS
     "GIAN07/*.cpp"
 )
 
@@ -132,6 +132,13 @@ endif()
 target_include_directories(GIAN07 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/gameflow
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/player
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/enemy
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/bullet
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/effect
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/stage
 )
 
 # Include generated version header
