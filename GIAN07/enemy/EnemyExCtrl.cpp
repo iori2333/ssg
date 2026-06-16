@@ -60,7 +60,7 @@ void BossManager::SnakySet(BOSS_DATA *b, int len, uint32_t TailID) {
     if (EnemyNow + 1 < ENEMY_MAX) {
       e = &Enemy[EnemyInd[EnemyNow++]];
 
-      InitEnemyDataX64(e, b->Edat.x, b->Edat.y, n);
+      Enemies.InitDataX64(e, b->Edat.x, b->Edat.y, n);
       enemy_ptr = e;
     } else {
       enemy_ptr = nullptr; // ポインタを無効化
@@ -202,12 +202,12 @@ void BossManager::BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID) {
       auto *e = &Enemy[EnemyInd[EnemyNow++]];
 
       // データを初期化 //
-      InitEnemyDataX64(e, this->bit_data.x, this->bit_data.y, n);
+      Enemies.InitDataX64(e, this->bit_data.x, this->bit_data.y, n);
       e->hp = BIT_VIRTUAL_HP;
       e->d = i * (256 / NumBits);
       e->GR[0] = i;
       e->GR[1] = NumBits;
-      parse_ECL(e);
+      Enemies.ParseECL(e);
 
       // この構造体と作成した敵を関連づける //
       this->bit_data.Bit[i].pEnemy = e;   // 敵データへのポインタ
@@ -546,7 +546,7 @@ void BossManager::BitSelectAttack(uint32_t BitID) {
   const auto n = (4 + (BitID << 2));
 
   for (i = 0; i < this->bit_data.NumBits; i++) {
-    EnemyECL_LongJump(this->bit_data.Bit[i].pEnemy, n);
+    Enemies.ECL_LongJump(this->bit_data.Bit[i].pEnemy, n);
   }
 }
 

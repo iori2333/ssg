@@ -97,7 +97,7 @@ void BossManager::Set(int x, int y, uint32_t BossID) {
   this->bosses[n].ExState = BEXST_NORM;
   this->bosses[n].IsUsed = 0xff;
 
-  parse_ECL(&(this->bosses[n].Edat));
+  Enemies.ParseECL(&(this->bosses[n].Edat));
   // ObjectLockOn(&(this->bosses[n].Edat.x),&(this->bosses[n].Edat.y),this->bosses[n].Edat.g_width,this->bosses[n].Edat.g_height);
 
   for (const auto &it : this->bosses) {
@@ -126,7 +126,7 @@ void BossManager::SetEx(int x, int y, uint32_t BossID) {
   this->bosses[n].ExState = BEXST_NORM;
   this->bosses[n].IsUsed = 0xff;
 
-  parse_ECL(&(this->bosses[n].Edat));
+  Enemies.ParseECL(&(this->bosses[n].Edat));
   // ObjectLockOn(&(this->bosses[n].Edat.x),&(this->bosses[n].Edat.y),this->bosses[n].Edat.g_width,this->bosses[n].Edat.g_height);
 
   for (const auto &it : this->bosses) {
@@ -163,13 +163,13 @@ void BossManager::Move(void) {
 
       // ホーミングの準備 //
       if (e->flag & EF_DAMAGE)
-        UpdateHoming(e);
+        Enemies.UpdateHoming(e);
 
       // 体力の総和を表示する //
       HP_Sum += b->Edat.hp;
 
       // アニメーションの動作 //
-      EnemyAnimeMove(e);
+      Enemies.UpdateAnimation(e);
 
       e->count++;
     }
@@ -488,7 +488,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
   if (e.hp <= damage) { // ボスの死亡処理(後で変更すること!!)
     this->SnakyDelete(&b);
     this->BitDelete();
-    enemy_clear();
+    Enemies.Clear();
     fragment_set(e.x, e.y, FRG_FATCIRCLE);
     ExBombEfcSet(e.x, e.y, EXBOMB_STD);
     Scroller.Command(SCMD_QUAKE);
@@ -613,7 +613,7 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
 
     if (b->IsUsed) {
       e = &(b->Edat);
-      if (LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
+      if (EnemyManager::LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
           continue;
         else {
@@ -676,7 +676,7 @@ int BossManager::PutBoss(int x, int y, uint32_t id) {
   auto *e = &it->Edat;
 
   const uint32_t addr = (4 + (id << 2)); // ちと、やばいね...
-  InitEnemyDataX64(e, x, y, addr);
+  Enemies.InitDataX64(e, x, y, addr);
   e->item = 0;
 
   /*
@@ -737,7 +737,7 @@ int BossManager::PutBoss(int x, int y, uint32_t id) {
   e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
 
   // 割り込みベクタの初期化 //
-  InitECLInterrupt(e);
+  Enemies.InitECLInterrupt(e);
 */
   return std::distance(std::begin(this->bosses), it);
 }
@@ -747,8 +747,8 @@ void BossManager::STDMove(BOSS_DATA *b) {
   ENEMY_DATA *e = &(b->Edat);
 
   // 通常の敵の処理 //
-  CheckECLInterrupt(e);
-  parse_ECL(e);
+  Enemies.CheckECLInterrupt(e);
+  Enemies.ParseECL(e);
 
   // 弾発射モードによる分岐 //
   if (e->t_rep) {

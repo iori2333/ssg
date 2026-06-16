@@ -1301,7 +1301,7 @@ ECL_HEAD:
     tama_clear();
     laser_clear();
     HLaserClear();
-    enemy_clear();
+    Enemies.Clear();
     bRetFlag = false;
     break;
 

@@ -278,7 +278,7 @@ static void enemy_set(void) {
       break;
 
     case (SCL_DELENEMY):
-      enemyind_set();
+      Enemies.InitIndices();
       SCL_Now++;
       break;
 
@@ -470,7 +470,7 @@ static void _PutEnemy(const uint8_t *p) {
 
   x = I16LEAt(&p[0]); // PixelToWorld(I16LEAt(&p[0]));
   y = I16LEAt(&p[2]); // PixelToWorld(I16LEAt(&p[2]));
-  InitEnemyDataSTD(e, x, y, n);
+  Enemies.InitDataSTD(e, x, y, n);
 
   /*
           e->x   = I16LEAt(&p[0]);	// PixelToWorld(I16LEAt(&p[0]));
@@ -528,7 +528,7 @@ static void _PutEnemy(const uint8_t *p) {
           e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
 
           // 割り込みベクタの初期化 //
-          InitECLInterrupt(e);
+          Enemies.InitECLInterrupt(e);
   */
 }
 

@@ -165,7 +165,7 @@ void PlayerManager::MoveMaidShot(void) {
   for (i = 0; i < this->maid_tama_now; i++) {
     auto *t = &this->maid_tama[this->maid_tama_ind[i]];
     if (t->c == TID_HOMING_BOMB_B) {
-      enemy_damage(t->x, t->y, TogeDamage[t->c]);
+      Enemies.DamageAt(t->x, t->y, TogeDamage[t->c]);
       t->count++;
       if (t->count >= 19)
         t->flag = TF_DELETE;
@@ -179,7 +179,7 @@ void PlayerManager::MoveMaidShot(void) {
                                          (t->y) < GY_MIN || (t->y) > GY_MAX))
         t->flag = TF_DELETE;
 
-      if (enemy_damage(t->x, t->y, TogeDamage[t->c])) {
+      if (Enemies.DamageAt(t->x, t->y, TogeDamage[t->c])) {
         if (t->c == TID_HOMING_BOMB_A) {
           TamaSTDForm(TID_HOMING_BOMB_B);
           TamaCmd.type = T_SBHBOMB;
@@ -202,8 +202,8 @@ void PlayerManager::MoveMaidShot(void) {
   if (Players.viv.weapon == 2 && Players.viv.lay_grp) {
     // x = (Players.viv.opx>>6)+4 -8 + SBOPT_DX;
     // y = (Players.viv.opy>>6)-20;
-    enemy_damage2(Players.viv.opx + (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
-    enemy_damage2(Players.viv.opx - (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
+    Enemies.DamageAt2(Players.viv.opx + (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
+    Enemies.DamageAt2(Players.viv.opx - (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
   }
 }
 
@@ -866,7 +866,7 @@ static void SetWideBomb(void) {
   fragment_set(dx, dy, FRG_STAR1);
   fragment_set(dx, dy, FRG_STAR2);
 
-  enemy_damage4(1);
+  Enemies.DamageAll(1);
 }
 
 static void SetHomingBomb(void) {
@@ -897,14 +897,14 @@ static void SetLaserBomb(void) {
   oy = Players.viv.opy;
   for (i = -3; i <= 3; i++) {
     const auto d = GetRightLaserDeg(LaserDeg, i);
-    enemy_damage3(ox, oy, d);
+    Enemies.DamageAt3(ox, oy, d);
   }
 
   ox = Players.viv.opx - (SBOPT_DX * 64);
   oy = Players.viv.opy;
   for (i = -3; i <= 3; i++) {
     const auto d = GetLeftLaserDeg(LaserDeg, i);
-    enemy_damage3(ox, oy, d);
+    Enemies.DamageAt3(ox, oy, d);
   }
 }
 

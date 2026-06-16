@@ -68,22 +68,3 @@ struct EnemyManager {
 };
 
 extern EnemyManager Enemies;
-
-// === 後方互換 inline wrapper ===
-inline void UpdateHoming(const EnemyData *e) { Enemies.UpdateHoming(e); }
-inline bool LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d) { return EnemyManager::LaserHITCHK(e, ox, oy, d); }
-inline void enemy_move(void) { Enemies.Move(); }
-inline void enemy_draw(void) { Enemies.Draw(); }
-inline void enemyind_set(void) { Enemies.InitIndices(); }
-inline void enemy_clear(void) { Enemies.Clear(); }
-inline bool enemy_damage(int x, int y, int damage) { return Enemies.DamageAt(x, y, damage); }
-inline bool enemy_damage2(int x, int y, int damage) { return Enemies.DamageAt2(x, y, damage); }
-inline void enemy_damage3(int x, int y, uint8_t d) { Enemies.DamageAt3(x, y, d); }
-inline void enemy_damage4(int damage) { Enemies.DamageAll(damage); }
-inline void InitEnemyDataX64(EnemyData *e, int x, int y, uint32_t EclID) { Enemies.InitDataX64(e, x, y, EclID); }
-inline void InitEnemyDataSTD(EnemyData *e, short x, short y, uint32_t EclID) { Enemies.InitDataSTD(e, x, y, EclID); }
-inline void EnemyECL_LongJump(EnemyData *e, uint32_t EclID) { Enemies.ECL_LongJump(e, EclID); }
-inline void EnemyAnimeMove(EnemyData *e) { Enemies.UpdateAnimation(e); }
-inline void parse_ECL(EnemyData *e) { Enemies.ParseECL(e); }
-inline void CheckECLInterrupt(EnemyData *e) { Enemies.CheckECLInterrupt(e); }
-inline void InitECLInterrupt(EnemyData *e) { Enemies.InitECLInterrupt(e); }
