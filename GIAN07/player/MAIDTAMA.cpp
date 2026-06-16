@@ -60,7 +60,7 @@ static void SetHomingBomb(void);
 static void SetLaserBomb(void);
 static void SetCactusBomb(void);
 
-// Players.maid_tama[], Players.maid_tama_ind[], Players.maid_tama_now → player_manager.cpp の PlayerManager に移動
+// this->maid_tama[], this->maid_tama_ind[], this->maid_tama_now → player_manager.cpp の PlayerManager に移動
 
 constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     // MainWeapon		// SubWeapon
@@ -100,7 +100,7 @@ static constexpr auto MAID_MAIN_SHOT = 6; // 4
 static constexpr auto MAID_SUB_SHOT = 9; // 6
 
 // たま発射！！ //
-void MaidTamaSet(void) {
+void PlayerManager::SetMaidShot(void) {
   // この関数では、前回の発射状態 (Viv_St) を参照して、発射可能であるならば //
   // 発射し、そうでなければ、単にリターンする。                             //
   // なお、弾のセットには TAMA.cpp 内の関数と互換のものを使用する           //
@@ -154,7 +154,7 @@ void MaidTamaSet(void) {
 }
 
 // 弾移動＆ヒットチェック //
-void MaidTamaMove(void) {
+void PlayerManager::MoveMaidShot(void) {
   // この関数では、TAMA.cpp の敵弾の移動処理を使用する。もちろん、         //
   // 当たり判定については、敵に対してのものとする事！！                    //
   // 当たり判定は、この弾の座標を与えることで ENEMY.cpp 内の関数が判別して //
@@ -162,8 +162,8 @@ void MaidTamaMove(void) {
 
   int i;
 
-  for (i = 0; i < Players.maid_tama_now; i++) {
-    auto *t = &Players.maid_tama[Players.maid_tama_ind[i]];
+  for (i = 0; i < this->maid_tama_now; i++) {
+    auto *t = &this->maid_tama[this->maid_tama_ind[i]];
     if (t->c == TID_HOMING_BOMB_B) {
       enemy_damage(t->x, t->y, TogeDamage[t->c]);
       t->count++;
@@ -195,7 +195,7 @@ void MaidTamaMove(void) {
     } else
       tamaEmove(t);
   }
-  Indsort(Players.maid_tama_ind, Players.maid_tama_now, Players.maid_tama,
+  Indsort(Players.maid_tama_ind, this->maid_tama_now, Players.maid_tama,
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
 
   // レーザーの当たり判定 //
@@ -208,7 +208,7 @@ void MaidTamaMove(void) {
 }
 
 // ナニな弾描画 //
-void MaidTamaDraw(void) {
+void PlayerManager::DrawMaidShot(void) {
   // ここでは、さすがにTAMA.cpp 内の関数を使用するわけにはいかないので、 //
   // 独自に描画ルーチンを展開する。                                      //
 
@@ -220,8 +220,8 @@ void MaidTamaDraw(void) {
                                      {568, 104, 568 + 32, 104 + 32},
                                      {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; i < Players.maid_tama_now; i++) {
-    auto *t = &Players.maid_tama[Players.maid_tama_ind[i]];
+  for (i = 0; i < this->maid_tama_now; i++) {
+    auto *t = &this->maid_tama[this->maid_tama_ind[i]];
 
     x = (t->x >> 6) - 8; // -8 は座標の補正用です
     y = (t->y >> 6) - 8; // 上に同じ
@@ -283,17 +283,17 @@ void MaidTamaDraw(void) {
 }
 
 // 弾ハッシュテーブル初期化 //
-void MaidTamaIndSet(void) {
+void PlayerManager::SetMaidShotIndices(void) {
   int i;
 
   // この配列を初期化することで全ての弾を初期化する事になる //
   for (i = 0; i < MAIDTAMA_MAX; i++) {
-    Players.maid_tama_ind[i] = i;
+    this->maid_tama_ind[i] = i;
     // memset(Players.maid_tama+i,0,sizeof(TAMA_DATA));
   }
 
   // 現在の個数を０初期化するのを忘れずに //
-  Players.maid_tama_now = 0;
+  this->maid_tama_now = 0;
 }
 
 static void MTamaSet(void) {
@@ -334,7 +334,7 @@ inline bool IsSubShot(uint16_t t) {
   return (t == 0 || t == MAID_SUB_SHOT) && Viv.bomb_time == 0;
 }
 
-void MLaserSet(uint16_t time) {
+void PlayerManager::SetMLaser(uint16_t time) {
   if (Viv.bomb_time || Viv.muteki > MAID_MOVE_DISABLE_TIME) {
     Viv.lay_time = 0;
     Viv.lay_grp = 0;

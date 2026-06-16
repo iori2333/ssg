@@ -6,18 +6,19 @@
 #include "GIAN.h"
 #include "core/entity.h"
 #include "ITEM.h"
+#include "item_manager.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-// Item[], ItemInd[], ItemNow → item_manager.cpp に移動
+// this->entities[], this->indices[], this->count → item_manager.cpp に移動
 
 // アイテムを発生させる //
-void ItemSet(int x, int y, uint8_t type) {
-  if (ItemNow + 1 >= ITEM_MAX)
+void ItemManager::Spawn(int x, int y, uint8_t type) {
+  if (this->count + 1 >= ITEM_MAX)
     return;
 
-  auto *ip = &Item[ItemInd[ItemNow++]];
+  auto *ip = &this->entities[this->indices[this->count++]];
 
   constexpr uint8_t deg = -64; // rnd()%(128-110)+128+55;
   ip->x = x;
@@ -45,7 +46,7 @@ void ItemSet(int x, int y, uint8_t type) {
 }
 
 // アイテムを動かす //
-void ItemMove(void) {
+void ItemManager::Move(void) {
   int i, tx, ty, l;
 
   // 自機がこの高さより上にいる場合、アイテム自動回収
@@ -54,8 +55,8 @@ void ItemMove(void) {
   // point = 100+(Viv.evade)*100;
   const uint32_t point = ((((SY_MAX - Viv.y) >> 6) + (Viv.evade * 4)) * 160);
 
-  for (i = 0; i < ItemNow; i++) {
-    auto *ip = &Item[ItemInd[i]];
+  for (i = 0; i < this->count; i++) {
+    auto *ip = &this->entities[this->indices[i]];
     if (!Viv.bomb_time) {
       if (Viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
         // 自機が回収ラインより上、または既に自動回収が発動済み
@@ -114,17 +115,17 @@ void ItemMove(void) {
       ip->type = ITEM_DELETE;
   }
 
-  Indsort(ItemInd, ItemNow, Item,
+  Indsort(ItemInd, this->count, Item,
           [](const ITEM_DATA &i) { return (i.type == ITEM_DELETE); });
 }
 
 // アイテムを描画する //
-void ItemDraw(void) {
+void ItemManager::Draw(void) {
   int i, j, x, y;
   PIXEL_LTRB src;
 
-  for (i = 0; i < ItemNow; i++) {
-    auto *ip = &Item[ItemInd[i]];
+  for (i = 0; i < this->count; i++) {
+    auto *ip = &this->entities[this->indices[i]];
     const uint8_t ptn = ((ip->count >> 2) & 3);
     switch (ip->type) {
     case (ITEM_SCORE):
@@ -173,13 +174,13 @@ void ItemDraw(void) {
 }
 
 // アイテム配列の初期化 //
-void ItemIndSet(void) {
+void ItemManager::SetIndices(void) {
   int i;
 
   for (i = 0; i < ITEM_MAX; i++) {
-    ItemInd[i] = i;
+    this->indices[i] = i;
     // memset(Item+i,0,sizeof(ITEM_DATA));
   }
 
-  ItemNow = 0;
+  this->count = 0;
 }

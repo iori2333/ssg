@@ -30,10 +30,8 @@ inline constexpr auto TDM_LASER_MAIN = 2; // レーザー・メインショッ�
 inline constexpr auto TDM_LASER_SUB = 5; // レーザー・サブショットのダメージ
 
 ///// [ 関数 ] /////
-void MaidTamaSet(void);    // たま発射！！
-void MaidTamaMove(void);   // 弾移動＆ヒットチェック
-void MaidTamaDraw(void);   // ナニな弾描画
-void MaidTamaIndSet(void); // 弾ハッシュテーブル初期化
+// 後方互換 inline wrapper は player_manager.h 末尾に移動
+// 実装は PlayerManager メソッドに移行
 
 ///// [ 変数 ] /////
 // MaidTama[], MaidTamaInd[], MaidTamaNow → player_manager.cpp で参照として定義

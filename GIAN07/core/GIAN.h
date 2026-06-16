@@ -32,6 +32,8 @@
 #include "LOADER.h"    // 各種ローダー
 #include "player/MAID.h"      // その名の通り
 #include "player/MAIDTAMA.h"  // 自機ショットの処理
+#include "player/player_manager.h" // PlayerManager + backward-compat wrappers
+#include "player/item_manager.h"   // ItemManager + backward-compat wrappers
 #include "gameflow/PRankCtrl.h" // プレイランク管理
 #include "stage/SCROLL.h"    // 背景スクロール＆ＳＣＬ管理
 

@@ -35,11 +35,8 @@ struct ItemData {
 using ITEM_DATA = ItemData;
 
 ///// [ 関数 ] /////
-void ItemSet(int x, int y, uint8_t type); // アイテムを発生させる
-void ItemMove(void);                      // アイテムを動かす
-void ItemDraw(void);                      // アイテムを描画する
-
-void ItemIndSet(void); // アイテム配列の初期化
+// 後方互換 inline wrapper は item_manager.h 末尾に移動
+// 実装は ItemManager メソッドに移行
 
 ///// [ 変数 ] /////
 extern std::array<ItemData, ITEM_MAX>& Item;
