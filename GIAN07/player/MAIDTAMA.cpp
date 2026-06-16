@@ -172,8 +172,8 @@ void PlayerManager::MoveMaidShot(void) {
       continue;
     }
     if (t->effect == TE_NONE) {
-      tamaTmove(t);
-      tamaOmove(t);
+      Bullets.MoveByType(t);
+      Bullets.MoveByOption(t);
       t->count++;
       if (((t->flag & TF_CLIP) == 0) && ((t->x) < GX_MIN || (t->x) > GX_MAX ||
                                          (t->y) < GY_MIN || (t->y) > GY_MAX))
@@ -182,7 +182,7 @@ void PlayerManager::MoveMaidShot(void) {
       if (Enemies.DamageAt(t->x, t->y, TogeDamage[t->c])) {
         if (t->c == TID_HOMING_BOMB_A) {
           TamaSTDForm(TID_HOMING_BOMB_B);
-          TamaCmd.type = T_SBHBOMB;
+          Bullets.command.type = T_SBHBOMB;
           TamaSetXY(t->x, t->y);
           TamaSetDeg(-64, 16);
           TamaSetSpd(10, 0);
@@ -193,7 +193,7 @@ void PlayerManager::MoveMaidShot(void) {
         fragment_set(t->x, t->y, FRG_HIT);
       }
     } else
-      tamaEmove(t);
+      Bullets.MoveByEffect(t);
   }
   Indsort(Players.maid_tama_ind, this->maid_tama_now, Players.maid_tama,
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
@@ -297,33 +297,33 @@ void PlayerManager::SetMaidShotIndices(void) {
 }
 
 static void MTamaSet(void) {
-  for (decltype(TamaCmd.n) i = 0; i < TamaCmd.n; i++) {
+  for (decltype(Bullets.command.n) i = 0; i < Bullets.command.n; i++) {
     if (Players.maid_tama_now + 1 >= MAIDTAMA_MAX)
       return; // セットできない場合
 
     auto *t = &Players.maid_tama[Players.maid_tama_ind[Players.maid_tama_now++]]; // 弾ポインタをセット
 
-    t->x = t->tx = TamaCmd.x; // X座標のセット
-    t->y = t->ty = TamaCmd.y; // Y座標のセット
+    t->x = t->tx = Bullets.command.x; // X座標のセット
+    t->y = t->ty = Bullets.command.y; // Y座標のセット
 
-    t->v = t->v0 = tama_speed(i); // 初速度のセット
-    t->a = TamaCmd.a;             // 注意：サイズは char
+    t->v = t->v0 = Bullets.Speed(i); // 初速度のセット
+    t->a = Bullets.command.a;             // 注意：サイズは char
 
-    t->d = tama_dir(i);   // 弾の発射角度
+    t->d = Bullets.Dir(i);   // 弾の発射角度
     t->d16 = (t->d << 8); // 角速度のある運動で使用
 
     t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
     t->vy = sinl(t->d, t->v); // 速度のＹ成分セット
 
-    t->vd = TamaCmd.vd;         // 角速度もしくはホーミング率
-    t->c = TamaCmd.c;           // 弾のＩＤ
-    t->rep = TamaCmd.rep;       // 繰り返し回数
-    t->type = TamaCmd.type;     // 弾の種類
-    t->option = TamaCmd.option; // 弾の属性(バイブ、反射等)
-    t->effect = 0;              // TamaCmd.cmd & 0xf0;			//
+    t->vd = Bullets.command.vd;         // 角速度もしくはホーミング率
+    t->c = Bullets.command.c;           // 弾のＩＤ
+    t->rep = Bullets.command.rep;       // 繰り返し回数
+    t->type = Bullets.command.type;     // 弾の種類
+    t->option = Bullets.command.option; // 弾の属性(バイブ、反射等)
+    t->effect = 0;              // Bullets.command.cmd & 0xf0;			//
                                 // 弾のエフェクト
     t->count = 0;               // カウンタの初期化
-    t->flag = tama_flag();      // フラグの初期化
+    t->flag = Bullets.Flag();      // フラグの初期化
   }
 }
 
@@ -405,7 +405,7 @@ static void SetT_A2(void) {
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     MTamaSet();
-    TamaCmd.x += (12 * 64);
+    Bullets.command.x += (12 * 64);
     MTamaSet();
   }
 
@@ -580,7 +580,7 @@ static void SetT_B1(void) {
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     MTamaSet();
-    TamaCmd.x += (12 * 64);
+    Bullets.command.x += (12 * 64);
     MTamaSet();
   }
   // Players.viv.toge_time = 4;
@@ -590,9 +590,9 @@ static void SetT_B1(void) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
-    TamaCmd.type = T_SBHOMING;
-    TamaCmd.rep = 64;
-    TamaCmd.vd = 5;
+    Bullets.command.type = T_SBHOMING;
+    Bullets.command.rep = 64;
+    Bullets.command.vd = 5;
     TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
@@ -624,9 +624,9 @@ static void SetT_B2(void) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
-    TamaCmd.type = T_SBHOMING;
-    TamaCmd.rep = 64;
-    TamaCmd.vd = 5;
+    Bullets.command.type = T_SBHOMING;
+    Bullets.command.rep = 64;
+    Bullets.command.vd = 5;
     TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
@@ -660,9 +660,9 @@ static void SetT_B4(void) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
-    TamaCmd.type = T_SBHOMING;
-    TamaCmd.rep = 64;
-    TamaCmd.vd = 5;
+    Bullets.command.type = T_SBHOMING;
+    Bullets.command.rep = 64;
+    Bullets.command.vd = 5;
     TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
@@ -696,9 +696,9 @@ static void SetT_B6(void) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
-    TamaCmd.type = T_SBHOMING;
-    TamaCmd.rep = 64;
-    TamaCmd.vd = 5;
+    Bullets.command.type = T_SBHOMING;
+    Bullets.command.rep = 64;
+    Bullets.command.vd = 5;
     TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
@@ -732,9 +732,9 @@ static void SetT_B8(void) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
-    TamaCmd.type = T_SBHOMING;
-    TamaCmd.rep = 64;
-    TamaCmd.vd = 5;
+    Bullets.command.type = T_SBHOMING;
+    Bullets.command.rep = 64;
+    Bullets.command.vd = 5;
     TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 22, 30);
@@ -770,7 +770,7 @@ static void SetT_C1(void) {
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     MTamaSet();
-    TamaCmd.x += (12 * 64);
+    Bullets.command.x += (12 * 64);
     MTamaSet();
   }
 
@@ -807,7 +807,7 @@ static void SetT_C5(void) {
     MTamaSet();
 
     TamaSetDeg(-64 + 5, 10);
-    TamaCmd.x += (12 * 64);
+    Bullets.command.x += (12 * 64);
     MTamaSet();
   }
 
@@ -872,9 +872,9 @@ static void SetWideBomb(void) {
 static void SetHomingBomb(void) {
   if (Players.viv.bomb_time % 30 == 1) {
     TamaSTDForm(TID_HOMING_BOMB_A);
-    TamaCmd.type = T_SBHOMING;
-    TamaCmd.rep = 64;
-    TamaCmd.vd = 5;
+    Bullets.command.type = T_SBHOMING;
+    Bullets.command.rep = 64;
+    Bullets.command.vd = 5;
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetSpd(28, 4);
     TamaSetDeg(64, 16);

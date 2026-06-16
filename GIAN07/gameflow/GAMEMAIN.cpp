@@ -536,7 +536,7 @@ void GameSTD_Init(void) {
   // MaidSet();
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
-  tamaind_set(400 + 200); // 小型弾に４００
+  Bullets.SetIndices(400 + 200); // 小型弾に４００
   laserind_set();
   LLaserSetup();
   HLaserInit();
@@ -1459,7 +1459,7 @@ void GameMove(void) {
   Bosses.Move();
   Enemies.Move();
   Items.Move();
-  tama_move();
+  Bullets.Move();
   laser_move();
   LLaserMove();
   HLaserMove();
@@ -1510,7 +1510,7 @@ void GameDraw(void) {
 
   HLaserDraw();
   laser_draw();
-  tama_draw();
+  Bullets.Draw();
 
   // static uint8_t test = 0;
 

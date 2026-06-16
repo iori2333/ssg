@@ -49,26 +49,3 @@ private:
 };
 
 extern BulletManager Bullets;
-
-// ============================================================
-// Backward-compat inline wrappers
-// ============================================================
-inline void tama_set()        { Bullets.Spawn(); }
-inline void tama_setEX()      { Bullets.SpawnEX(); }
-inline void tama_setLine()    { Bullets.SpawnLine(); }
-inline void tama_setExtra01() { Bullets.SpawnExtra01(); }
-inline int  TamaSpeedEx(uint8_t d) { return Bullets.SpeedEx(d); }
-inline void tama_move()       { Bullets.Move(); }
-inline void tama_draw()       { Bullets.Draw(); }
-inline void tama_clear()      { Bullets.Clear(); }
-inline uint32_t tama2score()  { return Bullets.ScoreToItems(); }
-inline void tama2item(uint8_t n) { Bullets.ToItems(n); }
-inline void tamaind_set(uint16_t t1) { Bullets.SetIndices(t1); }
-inline uint8_t tama_dir(uint16_t i)  { return Bullets.Dir(i); }
-inline int  NewTamaSpeed(uint16_t i)  { return Bullets.NewSpeed(i); }
-inline int  LineCmdNewTamaSpeed(uint16_t i) { return Bullets.LineCmdNewSpeed(i); }
-inline int  tama_speed(uint16_t i)    { return Bullets.Speed(i); }
-inline uint8_t tama_flag()    { return Bullets.Flag(); }
-inline void tamaTmove(TAMA_DATA* t) { Bullets.MoveByType(t); }
-inline void tamaOmove(TAMA_DATA* t) { Bullets.MoveByOption(t); }
-inline void tamaEmove(TAMA_DATA* t) { Bullets.MoveByEffect(t); }

@@ -128,10 +128,10 @@ void EnemyManager::Move(void) {
       if (e->t_rep && e->hp) {
         e->tama_c = (e->tama_c + 1) % (e->t_rep);
         if (e->tama_c == 0) {
-          TamaCmd = e->t_cmd;
-          TamaCmd.x += e->x;
-          TamaCmd.y += e->y;
-          tama_set();
+          Bullets.command =e->t_cmd;
+          Bullets.command.x += e->x;
+          Bullets.command.y += e->y;
+          Bullets.Spawn();
         }
       }
 
@@ -818,7 +818,7 @@ ECL_HEAD:
     break;
 
   case (ECL_T2ITEM): // 弾の何％かをアイテム化する
-    tama2item(cmd[1]);
+    Bullets.ToItems(cmd[1]);
     bRetFlag = false;
     break;
 
@@ -1172,34 +1172,34 @@ ECL_HEAD:
     break;
 
   case (ECL_TAMA): // ＠弾発射
-    TamaCmd = e->t_cmd;
-    TamaCmd.x += e->x;
-    TamaCmd.y += e->y;
-    tama_set();
+    Bullets.command =e->t_cmd;
+    Bullets.command.x += e->x;
+    Bullets.command.y += e->y;
+    Bullets.Spawn();
     bRetFlag = false;
     break;
 
   case (ECL_TAMA2): // ＠弾発射(難易度変化なし)
-    TamaCmd = e->t_cmd;
-    TamaCmd.x += e->x;
-    TamaCmd.y += e->y;
-    tama_setEX();
+    Bullets.command =e->t_cmd;
+    Bullets.command.x += e->x;
+    Bullets.command.y += e->y;
+    Bullets.SpawnEX();
     bRetFlag = false;
     break;
 
   case (ECL_TAMAL): // ライン状に弾を発射する
-    TamaCmd = e->t_cmd;
-    TamaCmd.x += e->x;
-    TamaCmd.y += e->y;
-    tama_setLine();
+    Bullets.command =e->t_cmd;
+    Bullets.command.x += e->x;
+    Bullets.command.y += e->y;
+    Bullets.SpawnLine();
     bRetFlag = false;
     break;
 
   case (ECL_TAMAEX):
-    TamaCmd = e->t_cmd;
-    TamaCmd.x += e->x;
-    TamaCmd.y += e->y;
-    tama_setExtra01();
+    Bullets.command =e->t_cmd;
+    Bullets.command.x += e->x;
+    Bullets.command.y += e->y;
+    Bullets.SpawnExtra01();
     bRetFlag = false;
     break;
 
@@ -1298,7 +1298,7 @@ ECL_HEAD:
 
   case (ECL_TCLR):  // 敵弾を全消去(レーザー含む)
     Bosses.ClearCmd(); // この処理を何よりも優先させる(ビット消去等を含む)
-    tama_clear();
+    Bullets.Clear();
     laser_clear();
     HLaserClear();
     Enemies.Clear();

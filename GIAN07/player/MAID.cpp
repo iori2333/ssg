@@ -379,7 +379,7 @@ void Player::Update() {
   Players.SetMaidShot();
 
   if (bomb_time) {
-    tama_clear();
+    Bullets.Clear();
     laser_clear();
   }
 
@@ -465,7 +465,7 @@ void Player::OnDeath() {
     bomb--;
     bomb_used++;
     Ranking.Add(-25); // 自动Bomb降低Rank
-    tama_clear();
+    Bullets.Clear();
     laser_clear();
     return;
   }
@@ -504,7 +504,7 @@ void Player::OnDeath() {
     GameOverInit();
   }
 
-  tama_clear();
+  Bullets.Clear();
   laser_clear();
 }
 

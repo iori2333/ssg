@@ -504,7 +504,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     // 最後の一匹だった場合 //
     if (this->count == 1) {
       char buf[100];
-      const auto temp = tama2score(); // 弾→スコアエフェクト
+      const auto temp = Bullets.ScoreToItems(); // 弾→スコアエフェクト
       // sprintf(buf, "%3d Evade  %5dPts", Players.viv.evade, Players.viv.evadesc);
       sprintf(buf, "  Bonus    %7uPts", temp);
       StringEffect(180, 60, buf);
@@ -754,10 +754,10 @@ void BossManager::STDMove(BOSS_DATA *b) {
   if (e->t_rep) {
     e->tama_c = (e->tama_c + 1) % (e->t_rep);
     if (e->tama_c == 0) {
-      TamaCmd = e->t_cmd;
-      TamaCmd.x += e->x;
-      TamaCmd.y += e->y;
-      tama_set();
+      Bullets.command =e->t_cmd;
+      Bullets.command.x += e->x;
+      Bullets.command.y += e->y;
+      Bullets.Spawn();
     }
   }
 
