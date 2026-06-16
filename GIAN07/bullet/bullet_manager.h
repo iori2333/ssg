@@ -49,3 +49,35 @@ private:
 };
 
 extern BulletManager Bullets;
+
+//// 弾コマンド用マクロ (TAMA.h から移動 — Bullets.command を直接参照) ////
+
+inline void TamaSetForm(uint8_t cmd, uint8_t option, uint8_t type, uint8_t c) {
+  Bullets.command.cmd = cmd;
+  Bullets.command.option = option;
+  Bullets.command.type = type;
+  Bullets.command.c = c;
+}
+
+inline void TamaSTDForm(uint8_t c) { TamaSetForm(TC_WAY, TOP_NONE, T_NORM, c); }
+
+inline void TamaSetDeg(uint8_t d, uint8_t dw) {
+  Bullets.command.d = d;
+  Bullets.command.dw = dw;
+}
+
+inline void TamaSetNum(uint8_t n, uint8_t ns) {
+  Bullets.command.n = n;
+  Bullets.command.ns = ns;
+}
+
+inline void TamaSetSpd(uint8_t v, char a) {
+  Bullets.command.v = v;
+  Bullets.command.a = a;
+}
+
+inline void TamaSetXY(int x, int y) {
+  Bullets.command.x = x;
+  Bullets.command.y = y;
+}
+

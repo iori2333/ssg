@@ -150,14 +150,11 @@ using TAMA_CMD = BulletCommand;
 using TAMA_DATA = Bullet;
 
 ////弾の各種変数たち////
-// TamaCmd, Tama → bullet_manager.cpp で参照として定義 (TAMA.h inline 関数用)
-extern BulletCommand& TamaCmd;               // 標準・弾コマンド構造体
-extern std::array<Bullet, TAMA_MAX>& Tama;   // 弾の格納用構造体
-// Tama1Ind, Tama2Ind, Tama1Now, Tama2Now, Tama1Max, Tama2Max → Bullets.* で直接アクセス
+// Bullets.bullets, Bullets.command, Bullets.indices_small/large, Bullets.count_small/large で直接アクセス
 
 ////弾関数////
-// 後方互換 inline wrapper は bullet_manager.h の末尾に移動
 // 実装は BulletManager メソッドに移行
+// TamaSetForm, TamaSTDForm, TamaSetDeg, TamaSetNum, TamaSetSpd, TamaSetXY → bullet_manager.h に移動
 
 //// かすり用マクロ ////
 void evade_addEx(int x, int y, uint8_t n); // かすりゲージを上昇させる
@@ -171,42 +168,10 @@ inline void TamaEvadeAdd(TAMA_DATA *t) {
   }
 }
 
-//// 弾コマンド用マクロ ////
-inline void TamaSetForm(uint8_t cmd, uint8_t option, uint8_t type, uint8_t c) {
-  TamaCmd.cmd = cmd;
-  TamaCmd.option = option;
-  TamaCmd.type = type;
-  TamaCmd.c = c;
-}
-
-inline void TamaSTDForm(uint8_t c) { TamaSetForm(TC_WAY, TOP_NONE, T_NORM, c); }
-
-inline void TamaSetDeg(uint8_t d, uint8_t dw) {
-  TamaCmd.d = d;
-  TamaCmd.dw = dw;
-}
-
-inline void TamaSetNum(uint8_t n, uint8_t ns) {
-  TamaCmd.n = n;
-  TamaCmd.ns = ns;
-}
-
-inline void TamaSetSpd(uint8_t v, char a) {
-  TamaCmd.v = v;
-  TamaCmd.a = a;
-}
-
-inline void TamaSetXY(int x, int y) {
-  TamaCmd.x = x;
-  TamaCmd.y = y;
-}
-
 template <size_t N>
 void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
              const std::array<TAMA_DATA, N> &entities) {
   Indsort(indices, count, entities,
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
 }
-
-// 後方互換 inline wrapper は bullet_manager.h 末尾に移動
 
