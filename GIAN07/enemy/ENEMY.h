@@ -132,14 +132,7 @@ struct ANIME_DATA {
 };
 
 //// 敵変数 ////
-// Enemy, EnemyInd, EnemyNow → Enemies.* 移行待ち
-extern std::array<EnemyData, ENEMY_MAX>& Enemy;
-extern std::array<uint16_t, ENEMY_MAX>& EnemyInd;
-extern uint16_t& EnemyNow;
-// Anime → Enemies.anime 移行待ち (LOADER.cpp)
-extern ANIME_DATA (&Anime)[ANIME_MAX];
-// ECL_Head, SCL_Head, SCL_Now, HomingX/Y/Flag → Enemies.* 移行済み
-// EnemyEXDEG, EnemyEXDEG_D → Enemies.* 移行済み
+// Enemies.entities, Enemies.indices, Enemies.count, Enemies.anime で直接アクセス
 
 //// 敵制御関数 ////
 // 後方互換 inline wrapper は enemy_manager.h 末尾に移動

@@ -461,10 +461,10 @@ static void _PutEnemy(const uint8_t *p) {
   ENEMY_DATA *e;
   short x, y;
 
-  if (EnemyNow + 1 >= ENEMY_MAX)
+  if (Enemies.count + 1 >= ENEMY_MAX)
     return;
 
-  e = &Enemy[EnemyInd[EnemyNow++]];
+  e = &Enemies.entities[Enemies.indices[Enemies.count++]];
 
   const uint32_t n = (4 + (p[4] << 2));
 

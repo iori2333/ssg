@@ -57,8 +57,8 @@ void BossManager::SnakySet(BOSS_DATA *b, int len, uint32_t TailID) {
 
   const auto n = (4 + (TailID << 2));
   for (auto &enemy_ptr : s->EnemyPtr) {
-    if (EnemyNow + 1 < ENEMY_MAX) {
-      e = &Enemy[EnemyInd[EnemyNow++]];
+    if (Enemies.count + 1 < ENEMY_MAX) {
+      e = &Enemies.entities[Enemies.indices[Enemies.count++]];
 
       Enemies.InitDataX64(e, b->Edat.x, b->Edat.y, n);
       enemy_ptr = e;
@@ -197,9 +197,9 @@ void BossManager::BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID) {
   const auto n = (4 + (BitID << 2));
 
   for (i = 0; i < NumBits; i++) {
-    if (EnemyNow + 1 < ENEMY_MAX) {
+    if (Enemies.count + 1 < ENEMY_MAX) {
       // 敵資源の要求 //
-      auto *e = &Enemy[EnemyInd[EnemyNow++]];
+      auto *e = &Enemies.entities[Enemies.indices[Enemies.count++]];
 
       // データを初期化 //
       Enemies.InitDataX64(e, this->bit_data.x, this->bit_data.y, n);

@@ -708,446 +708,446 @@ bool LoadStageData(uint8_t stage) {
   case (GRAPH_ID_EXSTAGE): // エキストラステージのグラフィック矩形
     // Extra Boss I //
     // 00 : ■Ａ　0 ～ 3   :  翼無し通常　（10fpp)
-    Anime[0].SetSheet<4, 80>({0, 0}, ANM_NORM);
+    Enemies.anime[0].SetSheet<4, 80>({0, 0}, ANM_NORM);
 
     // 01 : ■Ｂ　4 ～ 7   :  翼有り通常　（10fpp)
-    Anime[1].SetSheet<4, 80>({320, 0}, ANM_NORM);
+    Enemies.anime[1].SetSheet<4, 80>({320, 0}, ANM_NORM);
 
     // 02 : ■Ｃ　8 ～ 13  :  翼装着　（翼無し->有り）　（6fpp)
-    Anime[2].SetSheet<6, 80>({0, 80}, ANM_STOP);
+    Enemies.anime[2].SetSheet<6, 80>({0, 80}, ANM_STOP);
 
     // 03 : ■Ｄ　14 ～ 15 :  翼有り時攻撃（移動無し）　（6fpp)
-    Anime[3].SetSheet<2, 80>({480, 80}, ANM_NORM);
+    Enemies.anime[3].SetSheet<2, 80>({480, 80}, ANM_NORM);
 
     // 04 : ■Ｅ　16 ～ 17 :  翼装着時移動（もしくは移動攻撃）左　（6fpp)
-    Anime[4].SetSheet<2, 80>({0, 160}, ANM_NORM);
+    Enemies.anime[4].SetSheet<2, 80>({0, 160}, ANM_NORM);
 
     // 05 : ■Ｆ　18 ～ 19 :  翼装着時移動（もしくは移動攻撃）右　（6fpp)
-    Anime[5].SetSheet<2, 80>({160, 160}, ANM_NORM);
+    Enemies.anime[5].SetSheet<2, 80>({160, 160}, ANM_NORM);
 
     // 06 : ■Ｇ　24 ～ 30 :  段階変化　（翼有り->無し）　（6fpp)
-    Anime[6].SetSheet<6, 80>({0, 240}, ANM_STOP);
+    Enemies.anime[6].SetSheet<6, 80>({0, 240}, ANM_STOP);
 
     // 07 : ■20 : 通常時ダメージ用マスク　（翼有り、無し兼用）
-    Anime[7].SetSheet<1, 80>({320, 160}, ANM_NORM);
+    Enemies.anime[7].SetSheet<1, 80>({320, 160}, ANM_NORM);
 
     // 08 : ■21 : 停止攻撃時ダメージ用マスク　
-    Anime[8].SetSheet<1, 80>({400, 160}, ANM_NORM);
+    Enemies.anime[8].SetSheet<1, 80>({400, 160}, ANM_NORM);
 
     // 09 : ■22 : 移動時（左）ダメージ用マスク　
-    Anime[9].SetSheet<1, 80>({480, 160}, ANM_NORM);
+    Enemies.anime[9].SetSheet<1, 80>({480, 160}, ANM_NORM);
 
     // 10 : ■23 : 移動時（右）ダメージ用マスク　
-    Anime[10].SetSheet<1, 80>({560, 160}, ANM_NORM);
+    Enemies.anime[10].SetSheet<1, 80>({560, 160}, ANM_NORM);
 
-    Anime[11].SetSheet<4, 32>({0, (320 + (32 * 0))}, ANM_NORM);
-    Anime[12].SetSheet<4, 32>({0, (320 + (32 * 1))}, ANM_NORM);
-    Anime[13].SetSheet<4, 32>({0, (320 + (32 * 2))}, ANM_NORM);
-    Anime[14].SetSheet<4, 32>({0, (320 + (32 * 3))}, ANM_NORM);
-    Anime[15].SetSheet<4, 32>({0, (320 + (32 * 4))}, ANM_NORM);
-    Anime[16].SetSheet<4, 32>({(32 * 4), 320}, ANM_NORM);
-    Anime[17].SetSheet<1, 32>({(32 * 4), (320 + (32 * 1))}, ANM_NORM);
+    Enemies.anime[11].SetSheet<4, 32>({0, (320 + (32 * 0))}, ANM_NORM);
+    Enemies.anime[12].SetSheet<4, 32>({0, (320 + (32 * 1))}, ANM_NORM);
+    Enemies.anime[13].SetSheet<4, 32>({0, (320 + (32 * 2))}, ANM_NORM);
+    Enemies.anime[14].SetSheet<4, 32>({0, (320 + (32 * 3))}, ANM_NORM);
+    Enemies.anime[15].SetSheet<4, 32>({0, (320 + (32 * 4))}, ANM_NORM);
+    Enemies.anime[16].SetSheet<4, 32>({(32 * 4), 320}, ANM_NORM);
+    Enemies.anime[17].SetSheet<1, 32>({(32 * 4), (320 + (32 * 1))}, ANM_NORM);
 
     // Extra Boss II //
     // 18 : ■Ａ : 停止アニメ　（10～12fpp)
-    Anime[18].SetSheet<4, 80>({0, 0}, ANM_NORM);
+    Enemies.anime[18].SetSheet<4, 80>({0, 0}, ANM_NORM);
 
     // 19 : ■Ｂ : 通常段階攻撃１　（?fpp)
-    Anime[19].SetSheet<4, 80>({320, 0}, ANM_STOP);
+    Enemies.anime[19].SetSheet<4, 80>({320, 0}, ANM_STOP);
 
     // 20 : ■Ｃ :  通常段階攻撃２　および、高速移動前溜めポーズ　（6fpp)
-    Anime[20].SetSheet<2, 80>({0, 80}, ANM_NORM);
+    Enemies.anime[20].SetSheet<2, 80>({0, 80}, ANM_NORM);
 
     // 21 : ■Ｄ : 魂状態（ショットに当たらない無敵） (1 ～ 2 fpp）
     // (160,80), (200,80), (240,80), (280,80)
-    Anime[21].SetSheet<4, 40>({160, 80}, ANM_NORM);
+    Enemies.anime[21].SetSheet<4, 40>({160, 80}, ANM_NORM);
 
     // 22 : ■Ｅ : ダメージマスク(A)
-    Anime[22].SetSheet<1, 80>({320, 80}, ANM_NORM);
+    Enemies.anime[22].SetSheet<1, 80>({320, 80}, ANM_NORM);
 
     // 23 : ■Ｅ : ダメージマスク(B)
-    Anime[23].SetSheet<1, 80>({400, 80}, ANM_NORM);
+    Enemies.anime[23].SetSheet<1, 80>({400, 80}, ANM_NORM);
 
     // 24 : ■Ｅ : ダメージマスク(G)
-    Anime[24].SetSheet<1, 80>({480, 80}, ANM_NORM);
+    Enemies.anime[24].SetSheet<1, 80>({480, 80}, ANM_NORM);
 
     // 25 : ■Ｅ : ダメージマスク(C)
-    Anime[25].SetSheet<1, 80>({560, 80}, ANM_NORM);
+    Enemies.anime[25].SetSheet<1, 80>({560, 80}, ANM_NORM);
 
     // 26 : ■Ｆ : 高速移動アニメ
-    Anime[26].size = {80, 80};
-    Anime[26].n = 16;
-    Anime[26].mode = ANM_DEG; // 16 パターンで助かりましたな...
+    Enemies.anime[26].size = {80, 80};
+    Enemies.anime[26].n = 16;
+    Enemies.anime[26].mode = ANM_DEG; // 16 パターンで助かりましたな...
     for (i = 0; i < 16; i++)
-      Anime[26].ptn[i] = PIXEL_LTWH{((i * 80) % 640), 160, 80, 80};
+      Enemies.anime[26].ptn[i] = PIXEL_LTWH{((i * 80) % 640), 160, 80, 80};
 
     // 27 : ■Ｇ : 通常段階攻撃２溜めポーズ　および、ワープ前後、
-    Anime[27].SetSheet<1, 80>({560, 320}, ANM_NORM);
+    Enemies.anime[27].SetSheet<1, 80>({560, 320}, ANM_NORM);
 
     // 28-32 : 陰陽玉ｘ５
-    Anime[28].SetSheet<8, 32>({0, 384}, ANM_NORM);
-    Anime[29].SetSheet<8, 32>({0, (384 + 32)}, ANM_NORM);
-    Anime[30].SetSheet<8, 32>({0, (384 + 64)}, ANM_NORM);
-    Anime[31].SetSheet<8, 32>({256, (384 + 32)}, ANM_NORM);
-    Anime[32].SetSheet<8, 32>({256, (384 + 64)}, ANM_NORM);
+    Enemies.anime[28].SetSheet<8, 32>({0, 384}, ANM_NORM);
+    Enemies.anime[29].SetSheet<8, 32>({0, (384 + 32)}, ANM_NORM);
+    Enemies.anime[30].SetSheet<8, 32>({0, (384 + 64)}, ANM_NORM);
+    Enemies.anime[31].SetSheet<8, 32>({256, (384 + 32)}, ANM_NORM);
+    Enemies.anime[32].SetSheet<8, 32>({256, (384 + 64)}, ANM_NORM);
 
-    Anime[33].SetSheetDeg<32>({0, 0});
-    Anime[34].SetSheetDeg<32>({0, 32});
-    Anime[35].SetSheetDeg<32>({0, 64});
-    Anime[36].SetSheetDeg<32>({0, 96});
-    Anime[37].SetSheetDeg<32>({0, 128});
+    Enemies.anime[33].SetSheetDeg<32>({0, 0});
+    Enemies.anime[34].SetSheetDeg<32>({0, 32});
+    Enemies.anime[35].SetSheetDeg<32>({0, 64});
+    Enemies.anime[36].SetSheetDeg<32>({0, 96});
+    Enemies.anime[37].SetSheetDeg<32>({0, 128});
 
     // レーザー発射物 //
-    Anime[38].size = {40, 56};
-    Anime[38].n = 1;
-    Anime[38].mode = ANM_NORM;
-    Anime[38].ptn[0] = PIXEL_LTWH{512, 0, 40, 56};
+    Enemies.anime[38].size = {40, 56};
+    Enemies.anime[38].n = 1;
+    Enemies.anime[38].mode = ANM_NORM;
+    Enemies.anime[38].ptn[0] = PIXEL_LTWH{512, 0, 40, 56};
 
     // 中ボス //
-    Anime[39].size = {72, 56};
-    Anime[39].n = 2;
-    Anime[39].mode = ANM_NORM;
-    Anime[39].ptn[0] = {0, 424, 72, 480};
-    Anime[39].ptn[1] = {72, 424, (72 * 2), 480};
+    Enemies.anime[39].size = {72, 56};
+    Enemies.anime[39].n = 2;
+    Enemies.anime[39].mode = ANM_NORM;
+    Enemies.anime[39].ptn[0] = {0, 424, 72, 480};
+    Enemies.anime[39].ptn[1] = {72, 424, (72 * 2), 480};
 
     // 中ボスヒット //
-    Anime[40].size = {72, 56};
-    Anime[40].n = 1;
-    Anime[40].mode = ANM_NORM;
-    Anime[40].ptn[0] = {(72 * 2), 424, (72 * 3), 480};
+    Enemies.anime[40].size = {72, 56};
+    Enemies.anime[40].n = 1;
+    Enemies.anime[40].mode = ANM_NORM;
+    Enemies.anime[40].ptn[0] = {(72 * 2), 424, (72 * 3), 480};
 
     // レーザー発射物ヒット //
-    Anime[41].size = {40, 64};
-    Anime[41].n = 1;
-    Anime[41].mode = ANM_NORM;
-    Anime[41].ptn[0] = PIXEL_LTWH{512, 56, 40, 56};
+    Enemies.anime[41].size = {40, 64};
+    Enemies.anime[41].n = 1;
+    Enemies.anime[41].mode = ANM_NORM;
+    Enemies.anime[41].ptn[0] = PIXEL_LTWH{512, 56, 40, 56};
 
     // 謎の光弾 //
-    Anime[42].size = {24, 24};
-    Anime[42].n = 4;
-    Anime[42].mode = ANM_NORM;
-    Anime[42].ptn[0] = PIXEL_LTWH{552, 0, 24, 24};
-    Anime[42].ptn[1] = PIXEL_LTWH{552, 24, 24, 24};
-    Anime[42].ptn[2] = PIXEL_LTWH{552, 0, 24, 24};
-    Anime[42].ptn[3] = PIXEL_LTWH{552, 48, 24, 24};
+    Enemies.anime[42].size = {24, 24};
+    Enemies.anime[42].n = 4;
+    Enemies.anime[42].mode = ANM_NORM;
+    Enemies.anime[42].ptn[0] = PIXEL_LTWH{552, 0, 24, 24};
+    Enemies.anime[42].ptn[1] = PIXEL_LTWH{552, 24, 24, 24};
+    Enemies.anime[42].ptn[2] = PIXEL_LTWH{552, 0, 24, 24};
+    Enemies.anime[42].ptn[3] = PIXEL_LTWH{552, 48, 24, 24};
     break;
 
   case (1): // Ｓｔａｇｅ１のグラフィック矩形
     // 中ボス //
-    Anime[0].size = {72, 56};
-    Anime[0].n = 2;
-    Anime[0].mode = ANM_NORM;
-    Anime[0].ptn[0] = {0, 0, 72, 56};
-    Anime[0].ptn[1] = {72, 0, (72 * 2), 56};
+    Enemies.anime[0].size = {72, 56};
+    Enemies.anime[0].n = 2;
+    Enemies.anime[0].mode = ANM_NORM;
+    Enemies.anime[0].ptn[0] = {0, 0, 72, 56};
+    Enemies.anime[0].ptn[1] = {72, 0, (72 * 2), 56};
 
-    Anime[1].SetSheetDeg<32>({0, (56 + 0)});
-    Anime[2].SetSheetDeg<32>({0, (56 + 32)});
-    Anime[3].SetSheetDeg<32>({0, (56 + 64)});
-    Anime[4].SetSheetDeg<32>({0, (56 + 96)});
+    Enemies.anime[1].SetSheetDeg<32>({0, (56 + 0)});
+    Enemies.anime[2].SetSheetDeg<32>({0, (56 + 32)});
+    Enemies.anime[3].SetSheetDeg<32>({0, (56 + 64)});
+    Enemies.anime[4].SetSheetDeg<32>({0, (56 + 96)});
 
     // ボス //
-    Anime[5].size = {72, 64};
-    Anime[5].n = 1;
-    Anime[5].mode = ANM_NORM;
-    Anime[5].ptn[0] = {0, 184, 72, 248};
+    Enemies.anime[5].size = {72, 64};
+    Enemies.anime[5].n = 1;
+    Enemies.anime[5].mode = ANM_NORM;
+    Enemies.anime[5].ptn[0] = {0, 184, 72, 248};
 
     // 中ボスフラッシュ用 //
-    Anime[6].size = {72, 56};
-    Anime[6].n = 2;
-    Anime[6].mode = ANM_NORM;
-    Anime[6].ptn[0] = {(72 * 2), 0, (72 * 3), 56};
-    Anime[6].ptn[1] = {(72 * 3), 0, (72 * 4), 56};
+    Enemies.anime[6].size = {72, 56};
+    Enemies.anime[6].n = 2;
+    Enemies.anime[6].mode = ANM_NORM;
+    Enemies.anime[6].ptn[0] = {(72 * 2), 0, (72 * 3), 56};
+    Enemies.anime[6].ptn[1] = {(72 * 3), 0, (72 * 4), 56};
 
     // ボスフラッシュ //
-    Anime[7].size = {72, 64};
-    Anime[7].n = 1;
-    Anime[7].mode = ANM_NORM;
-    Anime[7].ptn[0] = {72, 184, (72 * 2), 248};
+    Enemies.anime[7].size = {72, 64};
+    Enemies.anime[7].n = 1;
+    Enemies.anime[7].mode = ANM_NORM;
+    Enemies.anime[7].ptn[0] = {72, 184, (72 * 2), 248};
     break;
 
   case (2): // Ｓｔａｇｅ２のグラフィック矩形
-    Anime[0].SetSheetDeg<32>({0, 0});
-    Anime[1].SetSheetDeg<32>({0, 32});
-    Anime[2].SetSheetDeg<32>({0, 64});
-    Anime[3].SetSheetDeg<32>({0, 96});
-    Anime[4].SetSheetDeg<32>({0, 128});
+    Enemies.anime[0].SetSheetDeg<32>({0, 0});
+    Enemies.anime[1].SetSheetDeg<32>({0, 32});
+    Enemies.anime[2].SetSheetDeg<32>({0, 64});
+    Enemies.anime[3].SetSheetDeg<32>({0, 96});
+    Enemies.anime[4].SetSheetDeg<32>({0, 128});
 
-    Anime[5].size = {112, 48};
-    Anime[5].n = 1;
-    Anime[5].mode = ANM_NORM;
-    Anime[5].ptn[0] = {0, 160, 112, 208};
+    Enemies.anime[5].size = {112, 48};
+    Enemies.anime[5].n = 1;
+    Enemies.anime[5].mode = ANM_NORM;
+    Enemies.anime[5].ptn[0] = {0, 160, 112, 208};
 
-    Anime[6].size = {64, 48};
-    Anime[6].n = 1;
-    Anime[6].mode = ANM_NORM;
-    Anime[6].ptn[0] = {112, 160, 176, 208};
+    Enemies.anime[6].size = {64, 48};
+    Enemies.anime[6].n = 1;
+    Enemies.anime[6].mode = ANM_NORM;
+    Enemies.anime[6].ptn[0] = {112, 160, 176, 208};
 
     // 中ボス //
-    Anime[7].size = {64, 64};
-    Anime[7].n = 1;
-    Anime[7].mode = ANM_NORM;
-    Anime[7].ptn[0] = {0, 208, 64, 272};
+    Enemies.anime[7].size = {64, 64};
+    Enemies.anime[7].n = 1;
+    Enemies.anime[7].mode = ANM_NORM;
+    Enemies.anime[7].ptn[0] = {0, 208, 64, 272};
 
     // ボス羽 //
-    Anime[8].size = {112, 48};
-    Anime[8].n = 1;
-    Anime[8].mode = ANM_NORM;
-    Anime[8].ptn[0] = {176, 160, 288, 208};
+    Enemies.anime[8].size = {112, 48};
+    Enemies.anime[8].n = 1;
+    Enemies.anime[8].mode = ANM_NORM;
+    Enemies.anime[8].ptn[0] = {176, 160, 288, 208};
 
     // ボス丸 //
-    Anime[9].size = {64, 48};
-    Anime[9].n = 1;
-    Anime[9].mode = ANM_NORM;
-    Anime[9].ptn[0] = {288, 160, 352, 208};
+    Enemies.anime[9].size = {64, 48};
+    Enemies.anime[9].n = 1;
+    Enemies.anime[9].mode = ANM_NORM;
+    Enemies.anime[9].ptn[0] = {288, 160, 352, 208};
 
     // ボスフラッシュ１ //
-    Anime[10].size = {112, 48};
-    Anime[10].n = 1;
-    Anime[10].mode = ANM_NORM;
-    Anime[10].ptn[0] = {176, (160 + 48), 288, (208 + 48)};
+    Enemies.anime[10].size = {112, 48};
+    Enemies.anime[10].n = 1;
+    Enemies.anime[10].mode = ANM_NORM;
+    Enemies.anime[10].ptn[0] = {176, (160 + 48), 288, (208 + 48)};
 
     // ボスフラッシュ２ //
-    Anime[11].size = {64, 48};
-    Anime[11].n = 1;
-    Anime[11].mode = ANM_NORM;
-    Anime[11].ptn[0] = {288, (160 + 48), 352, (208 + 48)};
+    Enemies.anime[11].size = {64, 48};
+    Enemies.anime[11].n = 1;
+    Enemies.anime[11].mode = ANM_NORM;
+    Enemies.anime[11].ptn[0] = {288, (160 + 48), 352, (208 + 48)};
 
     // 中ボスフラッシュ //
-    Anime[12].size = {64, 64};
-    Anime[12].n = 1;
-    Anime[12].mode = ANM_NORM;
-    Anime[12].ptn[0] = {(0 + 64), 208, (64 + 64), 272};
+    Enemies.anime[12].size = {64, 64};
+    Enemies.anime[12].n = 1;
+    Enemies.anime[12].mode = ANM_NORM;
+    Enemies.anime[12].ptn[0] = {(0 + 64), 208, (64 + 64), 272};
 
     /*
                             // 羽モノ Left-I //
-                            Anime[10].size = { 104, 72 };
-                            Anime[10].n      = 1;
-                            Anime[10].mode   = ANM_NORM;
-                            Anime[10].ptn[0] = { 184, 208, 288, 280 };
+                            Enemies.anime[10].size = { 104, 72 };
+                            Enemies.anime[10].n      = 1;
+                            Enemies.anime[10].mode   = ANM_NORM;
+                            Enemies.anime[10].ptn[0] = { 184, 208, 288, 280 };
 
                             // 羽モノ Right-I //
-                            Anime[11].size = { 104, 72 };
-                            Anime[11].n      = 1;
-                            Anime[11].mode   = ANM_NORM;
-                            Anime[11].ptn[0] = { 288, 208, 392, 280 };
+                            Enemies.anime[11].size = { 104, 72 };
+                            Enemies.anime[11].n      = 1;
+                            Enemies.anime[11].mode   = ANM_NORM;
+                            Enemies.anime[11].ptn[0] = { 288, 208, 392, 280 };
 
                             // 羽モノ Left-0 //
-                            Anime[12].size = { 88, 80 };
-                            Anime[12].n      = 1;
-                            Anime[12].mode   = ANM_NORM;
-                            Anime[12].ptn[0] = { 200, 280, 288, 360 };
+                            Enemies.anime[12].size = { 88, 80 };
+                            Enemies.anime[12].n      = 1;
+                            Enemies.anime[12].mode   = ANM_NORM;
+                            Enemies.anime[12].ptn[0] = { 200, 280, 288, 360 };
 
                             // 羽モノ Right-0 //
-                            Anime[13].size = { 88, 80 };
-                            Anime[13].n      = 1;
-                            Anime[13].mode   = ANM_NORM;
-                            Anime[13].ptn[0] = { 288, 280, 376, 360 };
+                            Enemies.anime[13].size = { 88, 80 };
+                            Enemies.anime[13].n      = 1;
+                            Enemies.anime[13].mode   = ANM_NORM;
+                            Enemies.anime[13].ptn[0] = { 288, 280, 376, 360 };
     */
-    SetAnimeRect2(Anime + 14, 0, 288, 159, 479);   // 雲
-    SetAnimeRect2(Anime + 15, 160, 384, 271, 479); //
-    SetAnimeRect2(Anime + 16, 272, 368, 390, 478); //
-    SetAnimeRect2(Anime + 17, 400, 368, 496, 431); //
-    SetAnimeRect2(Anime + 18, 400, 160, 558, 359); //
-    SetAnimeRect2(Anime + 19, 528, 48, 639, 160);  //
-    SetAnimeRect2(Anime + 20, 560, 160, 639, 270); //
-    SetAnimeRect2(Anime + 21, 576, 320, 639, 399); //
+    SetAnimeRect2(Enemies.anime +14, 0, 288, 159, 479);   // 雲
+    SetAnimeRect2(Enemies.anime +15, 160, 384, 271, 479); //
+    SetAnimeRect2(Enemies.anime +16, 272, 368, 390, 478); //
+    SetAnimeRect2(Enemies.anime +17, 400, 368, 496, 431); //
+    SetAnimeRect2(Enemies.anime +18, 400, 160, 558, 359); //
+    SetAnimeRect2(Enemies.anime +19, 528, 48, 639, 160);  //
+    SetAnimeRect2(Enemies.anime +20, 560, 160, 639, 270); //
+    SetAnimeRect2(Enemies.anime +21, 576, 320, 639, 399); //
     break;
 
   case (3): // ゲイツ殿のステージ
-    Anime[0].size = {56, 56};
-    Anime[0].n = 16;
-    Anime[0].mode = ANM_DEG;
+    Enemies.anime[0].size = {56, 56};
+    Enemies.anime[0].n = 16;
+    Enemies.anime[0].mode = ANM_DEG;
     for (i = 0; i < 8; i++)
-      Anime[0].ptn[i] = PIXEL_LTWH{i * 56, 0, 56, 56};
+      Enemies.anime[0].ptn[i] = PIXEL_LTWH{i * 56, 0, 56, 56};
     for (i = 0; i < 8; i++)
-      Anime[0].ptn[i + 8] = PIXEL_LTWH{i * 56, 56, 56, 56};
+      Enemies.anime[0].ptn[i + 8] = PIXEL_LTWH{i * 56, 56, 56, 56};
 
-    Anime[1].SetSheetDeg<32>({0, 112});
-    Anime[2].SetSheetDeg<32>({0, 144});
-    Anime[3].SetSheetDeg<32>({0, 176});
+    Enemies.anime[1].SetSheetDeg<32>({0, 112});
+    Enemies.anime[2].SetSheetDeg<32>({0, 144});
+    Enemies.anime[3].SetSheetDeg<32>({0, 176});
 
-    Anime[4].size = {48, 16};
-    Anime[4].n = 2;
-    Anime[4].mode = ANM_NORM;
-    Anime[4].ptn[0] = PIXEL_LTWH{592, 0, 48, 16};
-    Anime[4].ptn[1] = PIXEL_LTWH{592, 16, 48, 16};
+    Enemies.anime[4].size = {48, 16};
+    Enemies.anime[4].n = 2;
+    Enemies.anime[4].mode = ANM_NORM;
+    Enemies.anime[4].ptn[0] = PIXEL_LTWH{592, 0, 48, 16};
+    Enemies.anime[4].ptn[1] = PIXEL_LTWH{592, 16, 48, 16};
 
-    Anime[5].size = {48, 16};
-    Anime[5].n = 2;
-    Anime[5].mode = ANM_NORM;
-    Anime[5].ptn[0] = PIXEL_LTWH{592, 32, 48, 16};
-    Anime[5].ptn[1] = PIXEL_LTWH{592, 48, 48, 16};
+    Enemies.anime[5].size = {48, 16};
+    Enemies.anime[5].n = 2;
+    Enemies.anime[5].mode = ANM_NORM;
+    Enemies.anime[5].ptn[0] = PIXEL_LTWH{592, 32, 48, 16};
+    Enemies.anime[5].ptn[1] = PIXEL_LTWH{592, 48, 48, 16};
 
     // ボス (464,384)
-    Anime[6].size = {11 * 16, 5 * 16 + 8};
-    Anime[6].n = 1;
-    Anime[6].mode = ANM_NORM;
-    Anime[6].ptn[0] = PIXEL_LTWH{464, 392, (11 * 16), ((5 * 16) + 8)};
+    Enemies.anime[6].size = {11 * 16, 5 * 16 + 8};
+    Enemies.anime[6].n = 1;
+    Enemies.anime[6].mode = ANM_NORM;
+    Enemies.anime[6].ptn[0] = PIXEL_LTWH{464, 392, (11 * 16), ((5 * 16) + 8)};
 
-    Anime[7].SetSheetDeg<32>({0, 208});
-    Anime[8].SetSheetDeg<40>({0, 240});
+    Enemies.anime[7].SetSheetDeg<32>({0, 208});
+    Enemies.anime[8].SetSheetDeg<40>({0, 240});
 
     // ボスの影 //
-    Anime[10].size = {196, 100};
-    Anime[10].n = 1;
-    Anime[10].mode = ANM_NORM;
-    Anime[10].ptn[0] = {444, 292, 640, 392};
+    Enemies.anime[10].size = {196, 100};
+    Enemies.anime[10].n = 1;
+    Enemies.anime[10].mode = ANM_NORM;
+    Enemies.anime[10].ptn[0] = {444, 292, 640, 392};
 
     // ボスフラッシュ
-    Anime[9].size = {128, 76};
-    Anime[9].n = 1;
-    Anime[9].mode = ANM_NORM;
-    Anime[9].ptn[0] = {512, 164, 640, 240};
-    /*	Anime[9].size = { (11 * 16), ((5 *16) + 8) };
-            Anime[9].n      = 1;
-            Anime[9].mode   = ANM_NORM;
-            Anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 * 16), ((5 * 16)
+    Enemies.anime[9].size = {128, 76};
+    Enemies.anime[9].n = 1;
+    Enemies.anime[9].mode = ANM_NORM;
+    Enemies.anime[9].ptn[0] = {512, 164, 640, 240};
+    /*	Enemies.anime[9].size = { (11 * 16), ((5 *16) + 8) };
+            Enemies.anime[9].n      = 1;
+            Enemies.anime[9].mode   = ANM_NORM;
+            Enemies.anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 * 16), ((5 * 16)
        + 8) };
     */
     break;
 
   case (4): // マリーさんのステージ
-    Anime[0].SetSheetDeg<32>({0, 0});
-    Anime[1].SetSheetDeg<32>({0, 32});
-    Anime[2].SetSheetDeg<32>({0, 64});
-    Anime[3].SetSheet<2, 32>({0, 96}, ANM_NORM);
-    Anime[4].SetSheetDeg<24>({64, 96});
-    Anime[5].SetSheetDeg<32>({0, 128});
+    Enemies.anime[0].SetSheetDeg<32>({0, 0});
+    Enemies.anime[1].SetSheetDeg<32>({0, 32});
+    Enemies.anime[2].SetSheetDeg<32>({0, 64});
+    Enemies.anime[3].SetSheet<2, 32>({0, 96}, ANM_NORM);
+    Enemies.anime[4].SetSheetDeg<24>({64, 96});
+    Enemies.anime[5].SetSheetDeg<32>({0, 128});
 
     //(304,296)-(640,480)
-    Anime[6].size = {(640 - 304), (480 - 296)};
-    Anime[6].n = 1;
-    Anime[6].mode = ANM_NORM;
-    Anime[6].ptn[0] = {304, 296, 640, 480};
+    Enemies.anime[6].size = {(640 - 304), (480 - 296)};
+    Enemies.anime[6].n = 1;
+    Enemies.anime[6].mode = ANM_NORM;
+    Enemies.anime[6].ptn[0] = {304, 296, 640, 480};
 
     // ボスのフラッシュ //
-    Anime[7].size = {(640 - 304 - 32), (480 - 296)}; // ここに注意
-    Anime[7].n = 1;
-    Anime[7].mode = ANM_NORM;
-    Anime[7].ptn[0] = {0, 296, 304, 480};
+    Enemies.anime[7].size = {(640 - 304 - 32), (480 - 296)}; // ここに注意
+    Enemies.anime[7].n = 1;
+    Enemies.anime[7].mode = ANM_NORM;
+    Enemies.anime[7].ptn[0] = {0, 296, 304, 480};
     break;
 
   case (5):                                        // ご主人様のステージ
-    Anime[0].SetSheetDeg<32>({0, 0});              // 赤いヤツ
-    Anime[1].SetSheetDeg<32>({0, 32});             // 赤いヤツの出現用演出
-    Anime[2].SetSheetDeg<32>({0, 64});             // 蒼いヤツ
-    Anime[3].SetSheetDeg<32>({0, 96});             // 緑のヤツ
-    Anime[4].SetSheetDeg<32>({0, 128});            // オレンジなやつ
-    Anime[5].SetSheet<4, 32>({512, 0}, ANM_NORM);  // 原子炉搭載ビット
-    Anime[6].SetSheet<4, 32>({512, 64}, ANM_NORM); // オレンジなヤツの出現用演出
+    Enemies.anime[0].SetSheetDeg<32>({0, 0});              // 赤いヤツ
+    Enemies.anime[1].SetSheetDeg<32>({0, 32});             // 赤いヤツの出現用演出
+    Enemies.anime[2].SetSheetDeg<32>({0, 64});             // 蒼いヤツ
+    Enemies.anime[3].SetSheetDeg<32>({0, 96});             // 緑のヤツ
+    Enemies.anime[4].SetSheetDeg<32>({0, 128});            // オレンジなやつ
+    Enemies.anime[5].SetSheet<4, 32>({512, 0}, ANM_NORM);  // 原子炉搭載ビット
+    Enemies.anime[6].SetSheet<4, 32>({512, 64}, ANM_NORM); // オレンジなヤツの出現用演出
 
     // 中ボス用のオプション //
-    Anime[7].size = {24, 24};
-    Anime[7].n = 4;
-    Anime[7].mode = ANM_NORM;
-    Anime[7].ptn[0] = PIXEL_LTWH{592, (96 + 0), 24, 24};
-    Anime[7].ptn[1] = PIXEL_LTWH{592, (96 + 24), 24, 24};
-    Anime[7].ptn[2] = PIXEL_LTWH{592, (96 + 0), 24, 24};
-    Anime[7].ptn[3] = PIXEL_LTWH{592, (96 + 48), 24, 24};
+    Enemies.anime[7].size = {24, 24};
+    Enemies.anime[7].n = 4;
+    Enemies.anime[7].mode = ANM_NORM;
+    Enemies.anime[7].ptn[0] = PIXEL_LTWH{592, (96 + 0), 24, 24};
+    Enemies.anime[7].ptn[1] = PIXEL_LTWH{592, (96 + 24), 24, 24};
+    Enemies.anime[7].ptn[2] = PIXEL_LTWH{592, (96 + 0), 24, 24};
+    Enemies.anime[7].ptn[3] = PIXEL_LTWH{592, (96 + 48), 24, 24};
 
-    Anime[8].SetSheet<1>({512, 96}, {80, 72}, ANM_NORM); // 屈強なる中ボス
+    Enemies.anime[8].SetSheet<1>({512, 96}, {80, 72}, ANM_NORM); // 屈強なる中ボス
 
     // メタリックご主人 //
-    Anime[9].SetSheet<1>({304, 256}, {336, 224}, ANM_NORM);
+    Enemies.anime[9].SetSheet<1>({304, 256}, {336, 224}, ANM_NORM);
     break;
 
   case (6):
     // ラスボス(座り->立ち) //
-    Anime[0].size = {56, 72};
-    Anime[0].n = 6;
-    Anime[0].mode = ANM_STOP;
-    Anime[0].ptn[0] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
-    Anime[0].ptn[1] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
-    Anime[0].ptn[2] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
-    Anime[0].ptn[3] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
-    Anime[0].ptn[4] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
-    Anime[0].ptn[5] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
+    Enemies.anime[0].size = {56, 72};
+    Enemies.anime[0].n = 6;
+    Enemies.anime[0].mode = ANM_STOP;
+    Enemies.anime[0].ptn[0] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
+    Enemies.anime[0].ptn[1] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
+    Enemies.anime[0].ptn[2] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
+    Enemies.anime[0].ptn[3] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
+    Enemies.anime[0].ptn[4] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
+    Enemies.anime[0].ptn[5] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
 
     // ラスボス(立ち->座り) //
-    Anime[1].size = {56, 72};
-    Anime[1].n = 6;
-    Anime[1].mode = ANM_STOP;
-    Anime[1].ptn[0] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
-    Anime[1].ptn[1] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
-    Anime[1].ptn[2] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
-    Anime[1].ptn[3] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
-    Anime[1].ptn[4] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
-    Anime[1].ptn[5] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
+    Enemies.anime[1].size = {56, 72};
+    Enemies.anime[1].n = 6;
+    Enemies.anime[1].mode = ANM_STOP;
+    Enemies.anime[1].ptn[0] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
+    Enemies.anime[1].ptn[1] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
+    Enemies.anime[1].ptn[2] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
+    Enemies.anime[1].ptn[3] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
+    Enemies.anime[1].ptn[4] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
+    Enemies.anime[1].ptn[5] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
 
     // ラスボス(ガード) //
-    Anime[2].size = {56, 72};
-    Anime[2].n = 4;
-    Anime[2].mode = ANM_NORM;
-    Anime[2].ptn[0] = PIXEL_LTWH{(56 * 6), 72, 56, 72};
-    Anime[2].ptn[1] = PIXEL_LTWH{(56 * 7), 72, 56, 72};
-    Anime[2].ptn[2] = PIXEL_LTWH{(56 * 6), 72, 56, 72};
-    Anime[2].ptn[3] = PIXEL_LTWH{(56 * 8), 72, 56, 72};
+    Enemies.anime[2].size = {56, 72};
+    Enemies.anime[2].n = 4;
+    Enemies.anime[2].mode = ANM_NORM;
+    Enemies.anime[2].ptn[0] = PIXEL_LTWH{(56 * 6), 72, 56, 72};
+    Enemies.anime[2].ptn[1] = PIXEL_LTWH{(56 * 7), 72, 56, 72};
+    Enemies.anime[2].ptn[2] = PIXEL_LTWH{(56 * 6), 72, 56, 72};
+    Enemies.anime[2].ptn[3] = PIXEL_LTWH{(56 * 8), 72, 56, 72};
 
     // ラスボス(攻撃-壱) //
-    Anime[3].size = {56, 72};
-    Anime[3].n = 9 + 1;
-    Anime[3].mode = ANM_STOP;
-    Anime[3].ptn[0] = PIXEL_LTWH{(56 * 0), 0, 56, 72};
-    Anime[3].ptn[1] = PIXEL_LTWH{(56 * 1), 0, 56, 72};
-    Anime[3].ptn[2] = PIXEL_LTWH{(56 * 2), 0, 56, 72};
-    Anime[3].ptn[3] = PIXEL_LTWH{(56 * 3), 0, 56, 72};
-    Anime[3].ptn[4] = PIXEL_LTWH{(56 * 4), 0, 56, 72};
-    Anime[3].ptn[5] = PIXEL_LTWH{(56 * 5), 0, 56, 72};
-    Anime[3].ptn[6] = PIXEL_LTWH{(56 * 6), 0, 56, 72};
-    Anime[3].ptn[7] = PIXEL_LTWH{(56 * 7), 0, 56, 72};
-    Anime[3].ptn[8] = PIXEL_LTWH{(56 * 8), 0, 56, 72};
-    Anime[3].ptn[9] = PIXEL_LTWH{(56 * 5), 72, 56, 72}; // ちょっと追加
+    Enemies.anime[3].size = {56, 72};
+    Enemies.anime[3].n = 9 + 1;
+    Enemies.anime[3].mode = ANM_STOP;
+    Enemies.anime[3].ptn[0] = PIXEL_LTWH{(56 * 0), 0, 56, 72};
+    Enemies.anime[3].ptn[1] = PIXEL_LTWH{(56 * 1), 0, 56, 72};
+    Enemies.anime[3].ptn[2] = PIXEL_LTWH{(56 * 2), 0, 56, 72};
+    Enemies.anime[3].ptn[3] = PIXEL_LTWH{(56 * 3), 0, 56, 72};
+    Enemies.anime[3].ptn[4] = PIXEL_LTWH{(56 * 4), 0, 56, 72};
+    Enemies.anime[3].ptn[5] = PIXEL_LTWH{(56 * 5), 0, 56, 72};
+    Enemies.anime[3].ptn[6] = PIXEL_LTWH{(56 * 6), 0, 56, 72};
+    Enemies.anime[3].ptn[7] = PIXEL_LTWH{(56 * 7), 0, 56, 72};
+    Enemies.anime[3].ptn[8] = PIXEL_LTWH{(56 * 8), 0, 56, 72};
+    Enemies.anime[3].ptn[9] = PIXEL_LTWH{(56 * 5), 72, 56, 72}; // ちょっと追加
 
     // 幼虫期(//
-    SetAnimeRect2(Anime + 4, 432, 272, 632, 464);
+    SetAnimeRect2(Enemies.anime +4, 432, 272, 632, 464);
 
     // ラスボス(ジャンプに見えるといいなぁ) //
-    Anime[5].size = {56, 72};
-    Anime[5].n = 11;
-    Anime[5].mode = ANM_STOP;
-    Anime[5].ptn[0] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
-    Anime[5].ptn[1] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
-    Anime[5].ptn[2] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
-    Anime[5].ptn[3] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
-    Anime[5].ptn[4] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
-    Anime[5].ptn[5] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
-    Anime[5].ptn[6] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
-    Anime[5].ptn[7] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
-    Anime[5].ptn[8] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
-    Anime[5].ptn[9] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
-    Anime[5].ptn[10] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
+    Enemies.anime[5].size = {56, 72};
+    Enemies.anime[5].n = 11;
+    Enemies.anime[5].mode = ANM_STOP;
+    Enemies.anime[5].ptn[0] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
+    Enemies.anime[5].ptn[1] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
+    Enemies.anime[5].ptn[2] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
+    Enemies.anime[5].ptn[3] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
+    Enemies.anime[5].ptn[4] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
+    Enemies.anime[5].ptn[5] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
+    Enemies.anime[5].ptn[6] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
+    Enemies.anime[5].ptn[7] = PIXEL_LTWH{(56 * 3), 72, 56, 72};
+    Enemies.anime[5].ptn[8] = PIXEL_LTWH{(56 * 2), 72, 56, 72};
+    Enemies.anime[5].ptn[9] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
+    Enemies.anime[5].ptn[10] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
 
     // 蝶状態で放つビット？(Open) //
-    Anime[6].size = {33, 32};
-    Anime[6].n = 10;
-    Anime[6].mode = ANM_STOP;
-    Anime[6].ptn[0] = PIXEL_LTWH{(32 * 0), 416, 32, 32};
-    Anime[6].ptn[1] = PIXEL_LTWH{(32 * 1), 416, 32, 32};
-    Anime[6].ptn[2] = PIXEL_LTWH{(32 * 2), 416, 32, 32};
-    Anime[6].ptn[3] = PIXEL_LTWH{(32 * 3), 416, 32, 32};
-    Anime[6].ptn[4] = PIXEL_LTWH{(32 * 4), 416, 32, 32};
-    Anime[6].ptn[5] = PIXEL_LTWH{(32 * 5), 416, 32, 32};
-    Anime[6].ptn[6] = PIXEL_LTWH{(32 * 0), 448, 32, 32};
-    Anime[6].ptn[7] = PIXEL_LTWH{(32 * 1), 448, 32, 32};
-    Anime[6].ptn[8] = PIXEL_LTWH{(32 * 2), 448, 32, 32};
-    Anime[6].ptn[9] = PIXEL_LTWH{(32 * 3), 448, 32, 32};
+    Enemies.anime[6].size = {33, 32};
+    Enemies.anime[6].n = 10;
+    Enemies.anime[6].mode = ANM_STOP;
+    Enemies.anime[6].ptn[0] = PIXEL_LTWH{(32 * 0), 416, 32, 32};
+    Enemies.anime[6].ptn[1] = PIXEL_LTWH{(32 * 1), 416, 32, 32};
+    Enemies.anime[6].ptn[2] = PIXEL_LTWH{(32 * 2), 416, 32, 32};
+    Enemies.anime[6].ptn[3] = PIXEL_LTWH{(32 * 3), 416, 32, 32};
+    Enemies.anime[6].ptn[4] = PIXEL_LTWH{(32 * 4), 416, 32, 32};
+    Enemies.anime[6].ptn[5] = PIXEL_LTWH{(32 * 5), 416, 32, 32};
+    Enemies.anime[6].ptn[6] = PIXEL_LTWH{(32 * 0), 448, 32, 32};
+    Enemies.anime[6].ptn[7] = PIXEL_LTWH{(32 * 1), 448, 32, 32};
+    Enemies.anime[6].ptn[8] = PIXEL_LTWH{(32 * 2), 448, 32, 32};
+    Enemies.anime[6].ptn[9] = PIXEL_LTWH{(32 * 3), 448, 32, 32};
 
     // 蝶状態で放つビット？(Close) //
-    Anime[7].size = {33, 32};
-    Anime[7].n = 10;
-    Anime[7].mode = ANM_STOP;
-    Anime[7].ptn[0] = PIXEL_LTWH{(32 * 3), 448, 32, 32};
-    Anime[7].ptn[1] = PIXEL_LTWH{(32 * 2), 448, 32, 32};
-    Anime[7].ptn[2] = PIXEL_LTWH{(32 * 1), 448, 32, 32};
-    Anime[7].ptn[3] = PIXEL_LTWH{(32 * 0), 448, 32, 32};
-    Anime[7].ptn[4] = PIXEL_LTWH{(32 * 5), 416, 32, 32};
-    Anime[7].ptn[5] = PIXEL_LTWH{(32 * 4), 416, 32, 32};
-    Anime[7].ptn[6] = PIXEL_LTWH{(32 * 3), 416, 32, 32};
-    Anime[7].ptn[7] = PIXEL_LTWH{(32 * 2), 416, 32, 32};
-    Anime[7].ptn[8] = PIXEL_LTWH{(32 * 1), 416, 32, 32};
-    Anime[7].ptn[9] = PIXEL_LTWH{(32 * 0), 416, 32, 32};
+    Enemies.anime[7].size = {33, 32};
+    Enemies.anime[7].n = 10;
+    Enemies.anime[7].mode = ANM_STOP;
+    Enemies.anime[7].ptn[0] = PIXEL_LTWH{(32 * 3), 448, 32, 32};
+    Enemies.anime[7].ptn[1] = PIXEL_LTWH{(32 * 2), 448, 32, 32};
+    Enemies.anime[7].ptn[2] = PIXEL_LTWH{(32 * 1), 448, 32, 32};
+    Enemies.anime[7].ptn[3] = PIXEL_LTWH{(32 * 0), 448, 32, 32};
+    Enemies.anime[7].ptn[4] = PIXEL_LTWH{(32 * 5), 416, 32, 32};
+    Enemies.anime[7].ptn[5] = PIXEL_LTWH{(32 * 4), 416, 32, 32};
+    Enemies.anime[7].ptn[6] = PIXEL_LTWH{(32 * 3), 416, 32, 32};
+    Enemies.anime[7].ptn[7] = PIXEL_LTWH{(32 * 2), 416, 32, 32};
+    Enemies.anime[7].ptn[8] = PIXEL_LTWH{(32 * 1), 416, 32, 32};
+    Enemies.anime[7].ptn[9] = PIXEL_LTWH{(32 * 0), 416, 32, 32};
 
-    Anime[8].SetSheet<1>({0, 368}, {48, 48}, ANM_NORM); // 屈強なる中ボス
+    Enemies.anime[8].SetSheet<1>({0, 368}, {48, 48}, ANM_NORM); // 屈強なる中ボス
     break;
   }
 
