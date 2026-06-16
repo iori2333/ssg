@@ -52,17 +52,17 @@ void ItemManager::Move(void) {
   // 自機がこの高さより上にいる場合、アイテム自動回収
   constexpr int AUTO_COLLECT_Y = (120 * 64);
 
-  // point = 100+(Viv.evade)*100;
-  const uint32_t point = ((((SY_MAX - Viv.y) >> 6) + (Viv.evade * 4)) * 160);
+  // point = 100+(Players.viv.evade)*100;
+  const uint32_t point = ((((SY_MAX - Players.viv.y) >> 6) + (Players.viv.evade * 4)) * 160);
 
   for (i = 0; i < this->count; i++) {
     auto *ip = &this->entities[this->indices[i]];
-    if (!Viv.bomb_time) {
-      if (Viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
+    if (!Players.viv.bomb_time) {
+      if (Players.viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
         // 自機が回収ラインより上、または既に自動回収が発動済み
         ip->auto_collect = true;
-        tx = (Viv.x - ip->x);
-        ty = (Viv.y - ip->y);
+        tx = (Players.viv.x - ip->x);
+        ty = (Players.viv.y - ip->y);
         l = 1 + (isqrt(tx * tx + ty * ty) / 500);
         ip->x += tx / l;
         ip->y += ty / l;
@@ -71,8 +71,8 @@ void ItemManager::Move(void) {
         ip->y += ip->vy;
       }
     } else {
-      tx = (Viv.x - ip->x);
-      ty = (Viv.y - ip->y);
+      tx = (Players.viv.x - ip->x);
+      ty = (Players.viv.y - ip->y);
       l = 1 + (isqrt(tx * tx + ty * ty) / 700); // 512(3+6)
       ip->x += tx / l;
       ip->y += ty / l;
@@ -81,14 +81,14 @@ void ItemManager::Move(void) {
     if (ip->vy < 64 * 6)
       ip->vy += ITEM_GRAVITY;
     ip->count++;
-    if (HITCHK(ip->x, Viv.x, ITEM_HITX) && HITCHK(ip->y, Viv.y, ITEM_HITY)) {
+    if (HITCHK(ip->x, Players.viv.x, ITEM_HITX) && HITCHK(ip->y, Players.viv.y, ITEM_HITY)) {
       switch (ip->type) {
       case (ITEM_SCORE):
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        // Ranking.Add((SY_MAX-Viv.y)>>10);	// 道具回收不再增加 Rank
+        // Ranking.Add((SY_MAX-Players.viv.y)>>10);	// 道具回收不再增加 Rank
         score_add(point);
         StringEffect2(ip->x, ip->y, point);
-        if (Viv.evade) {
+        if (Players.viv.evade) {
           fragment_set(ip->x, ip->y, FRG_STAR3);
           fragment_set(ip->x, ip->y, FRG_STAR3);
         }
@@ -97,13 +97,13 @@ void ItemManager::Move(void) {
       case (ITEM_EXTEND):
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
         StringEffect(180 + 64, 80, "E x t e n d  !");
-        Viv.left++;
+        Players.viv.left++;
         break;
 
       case (ITEM_BOMB):
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
         StringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
-        Viv.bomb++;
+        Players.viv.bomb++;
         break;
       }
       ip->type = ITEM_DELETE;

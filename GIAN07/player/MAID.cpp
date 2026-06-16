@@ -376,7 +376,7 @@ void Player::Update() {
   opy = y + this->vy + 64 * 6;
 
   // 弾＆ボムのセット //
-  MaidTamaSet();
+  Players.SetMaidShot();
 
   if (bomb_time) {
     tama_clear();
@@ -605,8 +605,8 @@ uint8_t Player::GetLeftLaserDeg(uint8_t LaserDeg, int i) {
 
 // 後方互換用：MAIDTAMA.cpp などから参照される自由関数ラッパー
 uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i) {
-  return Viv.GetRightLaserDeg(LaserDeg, i);
+  return Players.viv.GetRightLaserDeg(LaserDeg, i);
 }
 uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i) {
-  return Viv.GetLeftLaserDeg(LaserDeg, i);
+  return Players.viv.GetLeftLaserDeg(LaserDeg, i);
 }

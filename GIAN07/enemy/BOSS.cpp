@@ -154,8 +154,8 @@ void BossManager::Move(void) {
       b->ExMove(b);
 
       // サボテンヒットチェック //
-      if (HITCHK(e->x, Viv.x, e->g_width) && HITCHK(e->y, Viv.y, e->g_height) &&
-          Viv.muteki == 0) {
+      if (HITCHK(e->x, Players.viv.x, e->g_width) && HITCHK(e->y, Players.viv.y, e->g_height) &&
+          Players.viv.muteki == 0) {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
         if (e->flag & EF_HITSB)
           MaidDead();
@@ -215,7 +215,7 @@ void BossManager::Draw(void) {
       y = (e->y >> 6);
 
       // 霊魂状態 //
-      if (b->ExState == BEXST_SHILD2 && Viv.bomb_time && (e->flag & EF_DRAW)) {
+      if (b->ExState == BEXST_SHILD2 && Players.viv.bomb_time && (e->flag & EF_DRAW)) {
         wing = PIXEL_LTWH{(160 + (Cast::sign<int32_t>(e->count / 2) % 4) * 40),
                           80, 40, 40};
 
@@ -231,7 +231,7 @@ void BossManager::Draw(void) {
       }
 
       // バリア状態 //
-      if (b->ExState == BEXST_SHILD1 && Viv.bomb_time && (e->flag & EF_DRAW)) {
+      if (b->ExState == BEXST_SHILD1 && Players.viv.bomb_time && (e->flag & EF_DRAW)) {
         GrpGeom->Lock();
         for (uint8_t j = 0; j <= 5; j++) {
           GrpGeom->SetColor({(5u - j), (5u - j), 5u});
@@ -505,7 +505,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     if (this->count == 1) {
       char buf[100];
       const auto temp = tama2score(); // 弾→スコアエフェクト
-      // sprintf(buf, "%3d Evade  %5dPts", Viv.evade, Viv.evadesc);
+      // sprintf(buf, "%3d Evade  %5dPts", Players.viv.evade, Players.viv.evadesc);
       sprintf(buf, "  Bonus    %7uPts", temp);
       StringEffect(180, 60, buf);
       score_add(temp);
@@ -540,7 +540,7 @@ bool BossManager::DamageAt(int x, int y, int damage) {
   for (auto &it : this->bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Viv.bomb_time)
+      if (Players.viv.bomb_time)
         continue;
     }
 
@@ -574,7 +574,7 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
   for (auto &it : this->bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Viv.bomb_time)
+      if (Players.viv.bomb_time)
         continue;
     }
 
@@ -607,7 +607,7 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
   for (auto &it : this->bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Viv.bomb_time)
+      if (Players.viv.bomb_time)
         continue;
     }
 
@@ -637,7 +637,7 @@ void BossManager::DamageAll(int damage) {
   for (auto &it : this->bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Viv.bomb_time)
+      if (Players.viv.bomb_time)
         continue;
     }
 

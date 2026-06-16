@@ -42,10 +42,10 @@ void DemoManager::Init(void) {
       ((Cast::up<uint32_t>(rnd()) + 1u) * (Cast::up<uint32_t>(rnd()) + 1u));
   rnd_seed_set(this->demo_info.RndSeed);
 
-  this->demo_info.Exp = Viv.exp;
-  this->demo_info.Weapon = Viv.weapon;
+  this->demo_info.Exp = Players.viv.exp;
+  this->demo_info.Weapon = Players.viv.weapon;
   this->demo_info.CfgDat.GameLevel = GameLevel;
-  this->demo_info.CfgDat.PlayerStock = Viv.left;
+  this->demo_info.CfgDat.PlayerStock = Players.viv.left;
   this->demo_info.CfgDat.BombStock = ConfigDat.BombStock.v;
   this->demo_info.CfgDat.InputFlags = ConfigDat.InputFlags.v;
 
@@ -95,10 +95,10 @@ bool DemoManager::LoadSetup() {
   GameLevel = this->demo_info.CfgDat.GameLevel;
 
   // 本体の性能記述 //
-  Viv.exp = this->demo_info.Exp;
-  Viv.weapon = this->demo_info.Weapon;
-  Viv.left = ConfigDat.PlayerStock.v;
-  Viv.bomb = ConfigDat.BombStock.v;
+  Players.viv.exp = this->demo_info.Exp;
+  Players.viv.weapon = this->demo_info.Weapon;
+  Players.viv.left = ConfigDat.PlayerStock.v;
+  Players.viv.bomb = ConfigDat.BombStock.v;
 
   // 乱数の初期化 //
   // 最後に乱数もそろえる //

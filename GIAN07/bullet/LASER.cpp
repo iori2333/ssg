@@ -165,7 +165,7 @@ void LaserManager::Move() {
         (lp->y) > GY_MAX)
       lp->flag = LF_DELETE;
 
-    if (Viv.muteki == 0 && !(lp->flag & (LF_CLEAR | LF_DELETE)))
+    if (Players.viv.muteki == 0 && !(lp->flag & (LF_CLEAR | LF_DELETE)))
       HitCheck(lp);
   }
   Indsort(Lasers.laser_indices, LaserNow, Lasers.lasers,
@@ -284,7 +284,7 @@ uint8_t LaserManager::CalcDir(uint16_t i) {
   uint8_t deg = 0;
 
   if (LaserCmd.cmd & LS_ZSET)
-    deg = atan8(Viv.x - LaserCmd.x, Viv.y - LaserCmd.y);
+    deg = atan8(Players.viv.x - LaserCmd.x, Players.viv.y - LaserCmd.y);
 
   deg += LaserCmd.d; // 基本角のセット完了
 
@@ -442,11 +442,11 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     // 計算上の注意 : 座標の計算にはx64をつかう //
     // sinm(),cosm()を使っているので/256補正が必要となる //
 
-    tx = Viv.x - lp->x;
-    ty = Viv.y - lp->y;
+    tx = Players.viv.x - lp->x;
+    ty = Players.viv.y - lp->y;
     length = cosl(lp->d, tx) + sinl(lp->d, ty);
     w1 = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
-    /*			tx = ((lp->x)-(Viv.x));	ty = ((lp->y)-(Viv.y));
+    /*			tx = ((lp->x)-(Players.viv.x));	ty = ((lp->y)-(Players.viv.y));
                             length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
                             tx <<= 8;	ty <<= 8;
 

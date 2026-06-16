@@ -54,7 +54,7 @@ void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
 static uint32_t ID2Value(const EnemyData *e, uint8_t id);
 
 void EnemyManager::UpdateHoming(const EnemyData *e) {
-  const int temp = (Viv.y - e->y);
+  const int temp = (Players.viv.y - e->y);
 
   if (temp < 0)
     return;
@@ -136,8 +136,8 @@ void EnemyManager::Move(void) {
       }
 
       // サボテンヒットチェック //
-      if (HITCHK(e->x, Viv.x, e->g_width) && HITCHK(e->y, Viv.y, e->g_height) &&
-          Viv.muteki == 0) {
+      if (HITCHK(e->x, Players.viv.x, e->g_width) && HITCHK(e->y, Players.viv.y, e->g_height) &&
+          Players.viv.muteki == 0) {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
         if (e->flag & EF_HITSB)
           MaidDead();
@@ -718,7 +718,7 @@ ECL_HEAD:
 
   case (ECL_JDSB): { // 自機と進行角が一致したらジャンプ
     ECL_DEBUG("ECL_JDSB", 0);
-    const uint8_t temp = abs(atan8((Viv.x - e->x), (Viv.y - e->y)) - (e->d));
+    const uint8_t temp = abs(atan8((Players.viv.x - e->x), (Players.viv.y - e->y)) - (e->d));
     if (temp < 4) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
@@ -1029,7 +1029,7 @@ ECL_HEAD:
     ECL_DEBUG("ECL_MXS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
-      e->vx = ((Viv.x) - (e->x)) / e->cmd_c;
+      e->vx = ((Players.viv.x) - (e->x)) / e->cmd_c;
       e->vy = 0;
     }
     if ((--e->cmd_c) != 0) {
@@ -1044,7 +1044,7 @@ ECL_HEAD:
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
       e->vx = 0;
-      e->vy = ((Viv.y) - (e->y)) / e->cmd_c;
+      e->vy = ((Players.viv.y) - (e->y)) / e->cmd_c;
     }
     if ((--e->cmd_c) != 0) {
       e->y += e->vy;
@@ -1057,8 +1057,8 @@ ECL_HEAD:
     ECL_DEBUG("ECL_MXYS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
-      e->vx = ((Viv.x) - (e->x)) / e->cmd_c;
-      e->vy = ((Viv.y) - (e->y)) / e->cmd_c;
+      e->vx = ((Players.viv.x) - (e->x)) / e->cmd_c;
+      e->vy = ((Players.viv.y) - (e->y)) / e->cmd_c;
     }
     if ((--e->cmd_c) != 0) {
       e->x += e->vx;
@@ -1135,7 +1135,7 @@ ECL_HEAD:
 
   case (ECL_DEGS): // ＠角度自機セット
     ECL_DEBUG("ECL_DEGS", 0);
-    e->d = atan8(Viv.x - e->x, Viv.y - e->y);
+    e->d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
     bRetFlag = false;
     break;
 
@@ -1166,8 +1166,8 @@ ECL_HEAD:
     break;
 
   case (ECL_XYS):
-    e->x = Viv.x;
-    e->y = Viv.y;
+    e->x = Players.viv.x;
+    e->y = Players.viv.y;
     bRetFlag = false;
     break;
 
@@ -1233,7 +1233,7 @@ ECL_HEAD:
 
   case (ECL_TDEGS): // ＠弾発射角サボテンセット
     // 正確には、TamaCmd の x,y も使うべきだが...
-    e->t_cmd.d = atan8(Viv.x - e->x, Viv.y - e->y);
+    e->t_cmd.d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
     bRetFlag = false;
     break;
 
@@ -1355,7 +1355,7 @@ ECL_HEAD:
 
   case (ECL_LDEGS): // レーザー発射角サボテンセット
     // 正確には、LaserCmd の x,y も使うべきだが...
-    e->l_cmd.d = atan8(Viv.x - e->x, Viv.y - e->y);
+    e->l_cmd.d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
     bRetFlag = false;
     break;
 

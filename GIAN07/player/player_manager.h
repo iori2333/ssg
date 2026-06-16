@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "MAID.h"
+#include "player_types.h"
 #include "MAIDTAMA.h"
 #include <array>
 #include <cstdint>
@@ -24,10 +24,3 @@ struct PlayerManager {
 };
 
 extern PlayerManager Players;
-
-// === 後方互換 inline wrapper ===
-inline void MaidTamaSet(void) { Players.SetMaidShot(); }
-inline void MaidTamaMove(void) { Players.MoveMaidShot(); }
-inline void MaidTamaDraw(void) { Players.DrawMaidShot(); }
-inline void MaidTamaIndSet(void) { Players.SetMaidShotIndices(); }
-inline void MLaserSet(uint16_t time) { Players.SetMLaser(time); }

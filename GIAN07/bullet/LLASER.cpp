@@ -7,6 +7,7 @@
 #include "LLASER.h"
 #include "laser_manager.h"
 #include "MAID.h"
+#include "player_manager.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
@@ -53,7 +54,7 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   lp->d = LLaserCmd.d;
 
   if (LLaserCmd.type == LLS_LONGZ) {
-    lp->d += atan8(Viv.x - lp->x, Viv.y - lp->y);
+    lp->d += atan8(Players.viv.x - lp->x, Players.viv.y - lp->y);
     lp->type = LLS_LONG;
   } else
     lp->type = LLaserCmd.type;
@@ -428,11 +429,11 @@ void LaserManager::HitCheckLong(const LLASER_DATA *lp) {
   int tx, ty;
   int length, width;
 
-  if (Viv.muteki)
+  if (Players.viv.muteki)
     return;
 
-  tx = Viv.x - lp->x;
-  ty = Viv.y - lp->y;
+  tx = Players.viv.x - lp->x;
+  ty = Players.viv.y - lp->y;
 
   length = cosl(lp->d, tx) + sinl(lp->d, ty);
   width = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
@@ -440,7 +441,7 @@ void LaserManager::HitCheckLong(const LLASER_DATA *lp) {
   /*
           // 計算上の注意 : 座標の計算にはx64をつかう //
           // sinm(),cosm()を使っているので/256補正が必要となる //
-          tx = ((lp->x)-(Viv.x));	ty = ((lp->y)-(Viv.y));
+          tx = ((lp->x)-(Players.viv.x));	ty = ((lp->y)-(Players.viv.y));
           length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
           tx <<= 8;	ty <<= 8;
 

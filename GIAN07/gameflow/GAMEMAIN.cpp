@@ -484,9 +484,9 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   for (auto &it : GameFlow.current_name.Name) {
     it = '\0';
   }
-  GameFlow.current_name.Score = Viv.score;
-  GameFlow.current_name.Evade = Viv.evade_sum;
-  GameFlow.current_name.Weapon = Viv.weapon;
+  GameFlow.current_name.Score = Players.viv.score;
+  GameFlow.current_name.Evade = Players.viv.evade_sum;
+  GameFlow.current_name.Weapon = Players.viv.weapon;
   if (GameStage == GRAPH_ID_EXSTAGE)
     GameFlow.current_name.Stage = 1;
   else
@@ -532,7 +532,7 @@ void GameSTD_Init(void) {
   BossDataInit();
 
   // MaidSet();
-  MaidTamaIndSet();
+  Players.SetMaidShotIndices();
   enemyind_set();
   tamaind_set(400 + 200); // 小型弾に４００
   laserind_set();
@@ -571,13 +571,13 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_SetClip(GRP_RES_RECT);
 
   GameFlow.weapon_key_wait = 1;
-  Viv.weapon = 0;
+  Players.viv.weapon = 0;
   GameMain = ::WeaponSelectProc;
   if (ExStg) {
     GameStage = GRAPH_ID_EXSTAGE;
   }
 
-  GameFlow.viv_temp = Viv;
+  GameFlow.viv_temp = Players.viv;
 
   return true;
 }
@@ -667,7 +667,7 @@ extern bool GameReplayInitAll(const char8_t *fn) {
   }
 
   if (GameStage == GRAPH_ID_EXSTAGE) {
-    Viv.credit = 0;
+    Players.viv.credit = 0;
   }
 
   return GameInit(ReplayProcAll);
@@ -901,16 +901,16 @@ extern void GameOverInit(void) {
 
 // コンティニューを行う場合
 extern void GameContinue(void) {
-  Viv.evade_sum = 0;
-  Viv.left = ConfigDat.PlayerStock.v;
-  Viv.score = (Viv.score % 10 + 1);
+  Players.viv.evade_sum = 0;
+  Players.viv.left = ConfigDat.PlayerStock.v;
+  Players.viv.score = (Players.viv.score % 10 + 1);
 
   GameMain = GameProc;
 
   // ここに入らなかったらバグなのだが... //
-  if (Viv.credit) {
+  if (Players.viv.credit) {
     // クレジットの残っている場合(コンティニュー Y/N 処理へ) //
-    Viv.credit -= 1;
+    Players.viv.credit -= 1;
   }
 }
 
@@ -934,11 +934,11 @@ void GameProc(bool &) {
           static BYTE count;
           if(count) count--;
           if((Key_Data & KEY_TAMA) && count==0){
-                  CEffectSet(Viv.x,Viv.y,CEFC_CIRCLE2);//STAR);
+                  CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE2);//STAR);
                   count = 30;
           }
           if((Key_Data & KEY_BOMB) && count==0){
-                  CEffectSet(Viv.x,Viv.y,CEFC_CIRCLE1);//STAR);
+                  CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE1);//STAR);
                   count = 30;
           }
   */
@@ -985,7 +985,7 @@ void GameFlowManager::GameOverProc0(bool &) {
       return;
     }
 
-    if (Viv.credit == 0) {
+    if (Players.viv.credit == 0) {
       NameRegistInit(true);
       // GameExit();
       return; // 仮
@@ -1094,12 +1094,12 @@ void GameFlowManager::WeaponSelectProc(bool &) {
   deg += spd;
   if (deg >= 85 || deg <= -85) {
     // if(deg>=64 || deg<=-64){
-    // if(spd<0) Viv.weapon = (Viv.weapon+3)%4;
-    // else      Viv.weapon = (Viv.weapon+1)%4;
+    // if(spd<0) Players.viv.weapon = (Players.viv.weapon+3)%4;
+    // else      Players.viv.weapon = (Players.viv.weapon+1)%4;
     if (spd < 0)
-      Viv.weapon = (Viv.weapon + 2) % 3;
+      Players.viv.weapon = (Players.viv.weapon + 2) % 3;
     else
-      Viv.weapon = (Viv.weapon + 1) % 3;
+      Players.viv.weapon = (Players.viv.weapon + 1) % 3;
     spd = 0;
     deg = 0;
     Snd_SEPlay(SOUND_ID_BUZZ);
@@ -1131,9 +1131,9 @@ void GameFlowManager::WeaponSelectProc(bool &) {
   switch (Key_Data) {
   case (KEY_RIGHT):
     if (spd < 0) {
-      // Viv.weapon = (Viv.weapon+3)%4;
+      // Players.viv.weapon = (Players.viv.weapon+3)%4;
       // deg+=64;
-      Viv.weapon = (Viv.weapon + 2) % 3;
+      Players.viv.weapon = (Players.viv.weapon + 2) % 3;
       deg += 85;
     }
     spd = 3;
@@ -1141,9 +1141,9 @@ void GameFlowManager::WeaponSelectProc(bool &) {
 
   case (KEY_LEFT):
     if (spd > 0) {
-      // Viv.weapon = (Viv.weapon+1)%4;
+      // Players.viv.weapon = (Players.viv.weapon+1)%4;
       // deg-=64;
-      Viv.weapon = (Viv.weapon + 1) % 3;
+      Players.viv.weapon = (Players.viv.weapon + 1) % 3;
       deg -= 85;
     }
     spd = -3;
@@ -1154,14 +1154,14 @@ void GameFlowManager::WeaponSelectProc(bool &) {
     if (spd)
       break;
     if (GameStage == GRAPH_ID_EXSTAGE) {
-      if (!((1 << Viv.weapon) & ConfigDat.ExtraStgFlags.v)) {
+      if (!((1 << Players.viv.weapon) & ConfigDat.ExtraStgFlags.v)) {
         break;
       }
     }
 
-    GameFlow.viv_temp.weapon = Viv.weapon;
-    Viv = GameFlow.viv_temp;
-    MaidTamaIndSet();
+    GameFlow.viv_temp.weapon = Players.viv.weapon;
+    Players.viv = GameFlow.viv_temp;
+    Players.SetMaidShotIndices();
     count = 0;
 
     Snd_SEPlay(SOUND_ID_SELECT);
@@ -1172,30 +1172,30 @@ void GameFlowManager::WeaponSelectProc(bool &) {
       else
         GameStage = DebugDat.StgSelect;
       if (GameStage == 2)
-        Viv.exp = 160;
+        Players.viv.exp = 160;
       if (GameStage >= 3)
-        Viv.exp = 255;
+        Players.viv.exp = 255;
 #else
       if (forceStage) {
         GameStage = forceStage;
         if (GameStage == 2)
-          Viv.exp = 160;
+          Players.viv.exp = 160;
         if (GameStage >= 3)
-          Viv.exp = 255;
+          Players.viv.exp = 255;
       } else if (ConfigDat.StageSelect.v) {
         GameStage = ConfigDat.StageSelect.v;
         if (GameStage == 2)
-          Viv.exp = 160;
+          Players.viv.exp = 160;
         if (GameStage >= 3)
-          Viv.exp = 255;
+          Players.viv.exp = 255;
       } else {
         GameStage = 1;
       }
 #endif
     } else {
-      Viv.credit = 0;
-      Viv.left = EXTRA_LIVES;
-      Viv.exp = 255;
+      Players.viv.credit = 0;
+      Players.viv.left = EXTRA_LIVES;
+      Players.viv.exp = 255;
     }
 
     Demos.Init();
@@ -1238,8 +1238,8 @@ void GameFlowManager::WeaponSelectProc(bool &) {
 
     for (i = 0; i < 3; i++) {
       // for(i=0;i<4;i++){
-      // d = (-i+Viv.weapon)*64 + deg - 64;
-      d = (-i + Viv.weapon) * 85 + deg - 64;
+      // d = (-i+Players.viv.weapon)*64 + deg - 64;
+      d = (-i + Players.viv.weapon) * 85 + deg - 64;
       x = 120 + cosl(d, 90) - 56 / 2;
       y = 260 + sinl(d, 110) - 48 / 2;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src[i]);
@@ -1254,42 +1254,42 @@ void GameFlowManager::WeaponSelectProc(bool &) {
         continue;
       }
 
-      d = (-i + Viv.weapon) * 85 + deg - 64;
+      d = (-i + Players.viv.weapon) * 85 + deg - 64;
       x = 120 + cosl(d, 90) - 56 / 2;
       y = 260 + sinl(d, 110) - 48 / 2;
       GrpGeom->DrawBoxA(x, y, (x + 56), (y + 48));
     }
     GrpGeom->Unlock();
 
-    Viv.exp = min(count, 255);
-    if (Viv.exp < 31)
-      Viv.lay_time = Viv.lay_grp = 0;
+    Players.viv.exp = min(count, 255);
+    if (Players.viv.exp < 31)
+      Players.viv.lay_time = Players.viv.lay_grp = 0;
 
     HomingFlag = HOMING_DUMMY;
     Key_Data = KEY_TAMA;
 
-    Viv.muteki = 0;
-    Viv.x = 400 * 64 + sinl((count / 3) * 6, 60 * 64);
-    Viv.y = 350 * 64 + sinl((count / 3) * 4, 30 * 64);
+    Players.viv.muteki = 0;
+    Players.viv.x = 400 * 64 + sinl((count / 3) * 6, 60 * 64);
+    Players.viv.y = 350 * 64 + sinl((count / 3) * 4, 30 * 64);
 
     MaidMove();
-    MaidTamaMove();
+    Players.MoveMaidShot();
 
     GrpBackend_SetClip({(400 - 110), (400 - 300 + 2), (400 + 110), (400 + 10)});
     for (x = 400 - 110 - 2; x < 400 + 110; x += 32) {
       for (y = 400 - 300 + 2 + (count * 2) % 32 - 32; y < 400 + 10; y += 32) {
-        d = Viv.weapon << 4;
+        d = Players.viv.weapon << 4;
         rc = PIXEL_LTWH{224, 256, 32, 32};
         // rc = PIXEL_LTWH{ d, (296 - 24), 16, 16 };
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, rc);
       }
     }
     MaidDraw();
-    MaidTamaDraw();
+    Players.DrawMaidShot();
 
     rc = PIXEL_LTWH{72, (272 + 16), 56, 8};
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
-    sprintf(buf, "%d", ((Cast::up<uint16_t>(Viv.exp) + 1) >> 5));
+    sprintf(buf, "%d", ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5));
     GrpPutScore(500, 400, buf);
 
     GrpBackend_SetClip(GRP_RES_RECT);
@@ -1313,7 +1313,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
                     HDC		hdc;
                     char	buf[100];
                     DxObj.Back->GetDC(&hdc);
-                    sprintf(buf,"Viv.weapon = %d",Viv.weapon);
+                    sprintf(buf,"Players.viv.weapon = %d",Players.viv.weapon);
                     TextOut(hdc,0,0,buf,strlen(buf));
                     DxObj.Back->ReleaseDC(hdc);
 
@@ -1459,7 +1459,7 @@ void GameMove(void) {
 
   // この２行の位置を変更しました //
   MaidMove();
-  MaidTamaMove();
+  Players.MoveMaidShot();
 }
 
 void GameDraw(void) {
@@ -1476,7 +1476,7 @@ void GameDraw(void) {
 
   enemy_draw();
 
-  MaidTamaDraw();
+  Players.DrawMaidShot();
 
   MaidDraw();
 

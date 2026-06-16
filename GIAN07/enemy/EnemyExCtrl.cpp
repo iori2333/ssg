@@ -10,6 +10,7 @@
 #include "laser_manager.h"
 #include "LOADER.h"
 #include "MAID.h"
+#include "player_manager.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
@@ -651,7 +652,7 @@ void BossManager::BitSendCommand(uint8_t Command, int Param) {
   case (BITCMD_MOVTARGET): // 目標(びびっと)に向けてブーメラン移動
     this->bit_data.v = 64 * 10;
     this->bit_data.a = -8;
-    this->bit_data.d = atan8(Viv.x - this->bit_data.x, Viv.y - this->bit_data.y);
+    this->bit_data.d = atan8(Players.viv.x - this->bit_data.x, Players.viv.y - this->bit_data.y);
     this->bit_data.State = BITCMD_MOVTARGET;
     break;
 

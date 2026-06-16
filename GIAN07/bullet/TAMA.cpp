@@ -261,13 +261,13 @@ void BulletManager::Move() {
            (t->y) < GY_MIN - 4 * 64 || (t->y) > GY_MAX + 4 * 64))
         t->flag = TF_DELETE;
       t->count++;
-      if (Viv.muteki)
+      if (Players.viv.muteki)
         continue;
-      if (HITCHK(t->x, Viv.x, TAMA_EVX_SMALL) &&
-          HITCHK(t->y, Viv.y, TAMA_EVY_SMALL)) {
+      if (HITCHK(t->x, Players.viv.x, TAMA_EVX_SMALL) &&
+          HITCHK(t->y, Players.viv.y, TAMA_EVY_SMALL)) {
         TamaEvadeAdd(t);
       }
-      if (HITCHK(t->x, Viv.x, TAMA_HITX) && HITCHK(t->y, Viv.y, TAMA_HITY)) {
+      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) && HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
         t->flag = TF_DELETE;
         MaidDead();
       }
@@ -289,13 +289,13 @@ void BulletManager::Move() {
            (t->y) < GY_MIN - 8 * 64 || (t->y) > GY_MAX + 8 * 64))
         t->flag = TF_DELETE;
       t->count++;
-      if (Viv.muteki)
+      if (Players.viv.muteki)
         continue;
-      if (HITCHK(t->x, Viv.x, TAMA_EVX_LARGE) &&
-          HITCHK(t->y, Viv.y, TAMA_EVY_LARGE)) {
+      if (HITCHK(t->x, Players.viv.x, TAMA_EVX_LARGE) &&
+          HITCHK(t->y, Players.viv.y, TAMA_EVY_LARGE)) {
         TamaEvadeAdd(t);
       }
-      if (HITCHK(t->x, Viv.x, TAMA_HITX) && HITCHK(t->y, Viv.y, TAMA_HITY)) {
+      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) && HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
         t->flag = TF_DELETE;
         MaidDead();
       }
@@ -571,7 +571,7 @@ uint32_t BulletManager::ScoreToItems() {
   uint32_t sum = 0;
   uint32_t Score;
 
-  Score = TAMA1_POINT + Viv.evade * 100;
+  Score = TAMA1_POINT + Players.viv.evade * 100;
   for (const auto i : std::views::iota(0u, Tama1Now)) {
     auto *t = &Tama[Bullets.indices_small[i]];
     if (t->effect != TE_DELETE) {
@@ -585,7 +585,7 @@ uint32_t BulletManager::ScoreToItems() {
   }
   Indsort(Bullets.indices_small, Tama1Now, Tama);
 
-  Score = TAMA2_POINT + Viv.evade * 100;
+  Score = TAMA2_POINT + Players.viv.evade * 100;
   for (const auto i : std::views::iota(0u, Tama2Now)) {
     auto *t = &Tama[Bullets.indices_large[i]];
     if (t->effect != TE_DELETE) {
@@ -607,7 +607,7 @@ void BulletManager::ToItems(uint8_t n) {
   // uint32_t sum = 0;
   // uint32_t Score;
 
-  //	Score = TAMA1_POINT + Viv.evade * 100;
+  //	Score = TAMA1_POINT + Players.viv.evade * 100;
 
   if (n == 0) {
     tama_clear();
@@ -633,7 +633,7 @@ void BulletManager::ToItems(uint8_t n) {
   }
   Indsort(Bullets.indices_small, Tama1Now, Tama);
 
-  //	Score = TAMA2_POINT + Viv.evade * 100;
+  //	Score = TAMA2_POINT + Players.viv.evade * 100;
   for (const auto i : std::views::iota(0u, Tama2Now)) {
     auto *t = &Tama[Bullets.indices_large[i]];
     if (t->effect != TE_DELETE) {
@@ -735,7 +735,7 @@ void BulletManager::SetLunatic() {
 
 uint8_t BulletManager::Dir(uint16_t i) {
   uint8_t deg = ((TamaCmd.cmd & TAMA_ZSET)
-                     ? atan8((Viv.x - TamaCmd.x), (Viv.y - TamaCmd.y))
+                     ? atan8((Players.viv.x - TamaCmd.x), (Players.viv.y - TamaCmd.y))
                      : 0);
 
   deg += TamaCmd.d;  // 基本角のセット完了
@@ -880,14 +880,14 @@ void BulletManager::MoveByType(TAMA_DATA *t) {
     }
     if ((t->a < 0) && (t->v <= 0)) {
       t->a = -(t->a);
-      t->d = atan8((Viv.x) - (t->x), (Viv.y) - (t->y));
+      t->d = atan8((Players.viv.x) - (t->x), (Players.viv.y) - (t->y));
     }
     return;
 
   case (T_HOMING_M): // ｎ％ホーミング(ミサイル系？)
     // 最適化はしておりませんな... //
     if ((t->count > 19) && (t->count % 2 == 0)) {
-      deg_t = atan8((Viv.x) - (t->x), (Viv.y) - (t->y)) - (t->d);
+      deg_t = atan8((Players.viv.x) - (t->x), (Players.viv.y) - (t->y)) - (t->d);
       if (deg_t < -128)
         deg_t += 256;
       if (deg_t > 128)

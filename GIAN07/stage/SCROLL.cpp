@@ -393,7 +393,7 @@ static void enemy_set(void) {
       if (GameStage == STAGE_MAX)
         GameStage = 7;
       if (GameLevel != GAME_EASY) {
-        switch (Viv.weapon) {
+        switch (Players.viv.weapon) {
         case (0):
           ConfigDat.ExtraStgFlags.v |= 1;
           break;
@@ -594,7 +594,7 @@ void ScrollManager::Draw(void) {
   }
 
   // 例外処理：ワイドショット用ボム発動中 //
-  // if(Viv.bomb_time && Viv.weapon==0){
+  // if(Players.viv.bomb_time && Players.viv.weapon==0){
   //	return;
   //}
 

@@ -105,51 +105,51 @@ void PlayerManager::SetMaidShot(void) {
   // 発射し、そうでなければ、単にリターンする。                             //
   // なお、弾のセットには TAMA.cpp 内の関数と互換のものを使用する           //
 
-  if ((Key_Data & KEY_TAMA) && Viv.toge_time == 0 &&
-      Viv.muteki < MAID_MOVE_DISABLE_TIME) {
-    Viv.toge_time = MAID_TAMA_START;
+  if ((Key_Data & KEY_TAMA) && Players.viv.toge_time == 0 &&
+      Players.viv.muteki < MAID_MOVE_DISABLE_TIME) {
+    Players.viv.toge_time = MAID_TAMA_START;
   }
 
   // ボムの発動条件を満たしていれば、発動! //
-  if ((Key_Data & KEY_BOMB) && (Viv.bomb_time == 0) &&
-      (Viv.muteki < VIVDEAD_VAL) && // 死亡中は Bomb を発動しない
-      Viv.bomb && (Scroller.scene.MsgFlag == false)) {
-    // if(Viv.weapon == 0) EnterBombPalette();
+  if ((Key_Data & KEY_BOMB) && (Players.viv.bomb_time == 0) &&
+      (Players.viv.muteki < VIVDEAD_VAL) && // 死亡中は Bomb を発動しない
+      Players.viv.bomb && (Scroller.scene.MsgFlag == false)) {
+    // if(Players.viv.weapon == 0) EnterBombPalette();
 
-    Viv.bomb_time = MaidBombTime[Viv.weapon & 3]; // 装備ごとに変更せよ
-    Viv.muteki = BOMBMUTEKI_VAL;
-    Viv.bomb--;
-    Viv.bomb_used++;
+    Players.viv.bomb_time = MaidBombTime[Players.viv.weapon & 3]; // 装備ごとに変更せよ
+    Players.viv.muteki = BOMBMUTEKI_VAL;
+    Players.viv.bomb--;
+    Players.viv.bomb_used++;
     Ranking.Add(-25); // 難易度ダウン
   }
 
-  if (Viv.bomb_time) {
-    Viv.bomb_time--;
-    MaidBombFunc[Viv.weapon]();
+  if (Players.viv.bomb_time) {
+    Players.viv.bomb_time--;
+    MaidBombFunc[Players.viv.weapon]();
 
-    // if(Viv.bomb_time == 0 && Viv.weapon == 0)
+    // if(Players.viv.bomb_time == 0 && Players.viv.weapon == 0)
     //	LeaveBombPalette();
   }
 
-  if (Viv.toge_time) {
-    MaidTamaFunc[Viv.weapon & 3][(Viv.exp + 1) >> 5]();
-    Viv.toge_time--;
+  if (Players.viv.toge_time) {
+    MaidTamaFunc[Players.viv.weapon & 3][(Players.viv.exp + 1) >> 5]();
+    Players.viv.toge_time--;
   }
 
   // レーザーを装備している場合 //
-  if (Viv.weapon == 2 && Viv.lay_time) {
-    Viv.lay_time--;
-    if (Viv.lay_time < 64)
-      Viv.lay_grp = 0;
-    else if (Viv.lay_time < 64 + 50)
-      Viv.lay_grp = 1;
-    else if (Viv.lay_time < 64 + 100)
-      Viv.lay_grp = 2;
-    else if (Viv.lay_time < 64 + 150)
-      Viv.lay_grp = 3;
+  if (Players.viv.weapon == 2 && Players.viv.lay_time) {
+    Players.viv.lay_time--;
+    if (Players.viv.lay_time < 64)
+      Players.viv.lay_grp = 0;
+    else if (Players.viv.lay_time < 64 + 50)
+      Players.viv.lay_grp = 1;
+    else if (Players.viv.lay_time < 64 + 100)
+      Players.viv.lay_grp = 2;
+    else if (Players.viv.lay_time < 64 + 150)
+      Players.viv.lay_grp = 3;
     else
-      Viv.lay_grp = 4;
-    // Viv.lay_grp = (Viv.lay_time+63)>>6;
+      Players.viv.lay_grp = 4;
+    // Players.viv.lay_grp = (Players.viv.lay_time+63)>>6;
   }
 }
 
@@ -199,11 +199,11 @@ void PlayerManager::MoveMaidShot(void) {
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
 
   // レーザーの当たり判定 //
-  if (Viv.weapon == 2 && Viv.lay_grp) {
-    // x = (Viv.opx>>6)+4 -8 + SBOPT_DX;
-    // y = (Viv.opy>>6)-20;
-    enemy_damage2(Viv.opx + (SBOPT_DX << 6), Viv.opy, Viv.lay_grp / 3 + 1);
-    enemy_damage2(Viv.opx - (SBOPT_DX << 6), Viv.opy, Viv.lay_grp / 3 + 1);
+  if (Players.viv.weapon == 2 && Players.viv.lay_grp) {
+    // x = (Players.viv.opx>>6)+4 -8 + SBOPT_DX;
+    // y = (Players.viv.opy>>6)-20;
+    enemy_damage2(Players.viv.opx + (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
+    enemy_damage2(Players.viv.opx - (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
   }
 }
 
@@ -257,25 +257,25 @@ void PlayerManager::DrawMaidShot(void) {
   }
 
   // レーザーの描画 //
-  if (Viv.weapon == 2 && Viv.lay_grp) {
-    ltemp = PIXEL_LTWH{(384 + ((Viv.lay_grp - 1) << 4)), 240, 8, 16};
+  if (Players.viv.weapon == 2 && Players.viv.lay_grp) {
+    ltemp = PIXEL_LTWH{(384 + ((Players.viv.lay_grp - 1) << 4)), 240, 8, 16};
 
-    x = (Viv.opx >> 6) + 4 - 8 + SBOPT_DX;
-    y = (Viv.opy >> 6) - 20;
+    x = (Players.viv.opx >> 6) + 4 - 8 + SBOPT_DX;
+    y = (Players.viv.opy >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    x = (Viv.opx >> 6) + 4 - 8 - SBOPT_DX;
-    y = (Viv.opy >> 6) - 20;
+    x = (Players.viv.opx >> 6) + 4 - 8 - SBOPT_DX;
+    y = (Players.viv.opy >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    ltemp = PIXEL_LTWH{(384 + 8 + ((Viv.lay_grp - 1) << 4)), 240, 8, 16};
-    for (i = (Viv.opy >> 6) - 36; i > -16; i -= 16) {
-      x = (Viv.opx >> 6) + 4 - 8 + SBOPT_DX;
+    ltemp = PIXEL_LTWH{(384 + 8 + ((Players.viv.lay_grp - 1) << 4)), 240, 8, 16};
+    for (i = (Players.viv.opy >> 6) - 36; i > -16; i -= 16) {
+      x = (Players.viv.opx >> 6) + 4 - 8 + SBOPT_DX;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
-    for (i = (Viv.opy >> 6) - 36; i > -16; i -= 16) {
-      x = (Viv.opx >> 6) + 4 - 8 - SBOPT_DX;
+    for (i = (Players.viv.opy >> 6) - 36; i > -16; i -= 16) {
+      x = (Players.viv.opx >> 6) + 4 - 8 - SBOPT_DX;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
@@ -331,28 +331,28 @@ inline bool IsMainShot(uint16_t t) {
   return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 || t == MAID_MAIN_SHOT * 3);
 }
 inline bool IsSubShot(uint16_t t) {
-  return (t == 0 || t == MAID_SUB_SHOT) && Viv.bomb_time == 0;
+  return (t == 0 || t == MAID_SUB_SHOT) && Players.viv.bomb_time == 0;
 }
 
 void PlayerManager::SetMLaser(uint16_t time) {
-  if (Viv.bomb_time || Viv.muteki > MAID_MOVE_DISABLE_TIME) {
-    Viv.lay_time = 0;
-    Viv.lay_grp = 0;
+  if (Players.viv.bomb_time || Players.viv.muteki > MAID_MOVE_DISABLE_TIME) {
+    Players.viv.lay_time = 0;
+    Players.viv.lay_grp = 0;
     return;
   }
 
-  if (Viv.lay_time == 0) {
-    Viv.lay_time = time;
-    Snd_SEPlay(SOUND_ID_SBLASER, Viv.x);
+  if (Players.viv.lay_time == 0) {
+    Players.viv.lay_time = time;
+    Snd_SEPlay(SOUND_ID_SBLASER, Players.viv.x);
   }
 }
 
 // ショットＴＹＰＥ－Ａ //
 static void SetT_A0(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット単発のみ //
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -363,27 +363,27 @@ static void SetT_A0(void) {
 static void SetT_A1(void) {
   char dd;
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // オプションのショット(右) //
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 + 5, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 - 5, 0);
     MTamaSet();
   }
 
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 軽く振り分けるメインショット //
-    Viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Viv.toge_ex, 6));
+    Players.viv.toge_ex += 32;
+    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64 + dd, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -394,13 +394,13 @@ static void SetT_A1(void) {
 static void SetT_A2(void) {
   char dd;
 
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット２連 //
-    Viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Viv.toge_ex, 6));
+    Players.viv.toge_ex += 32;
+    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
 
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Viv.x - (6 * 64), Viv.y);
+    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
     TamaSetDeg(-64 + dd, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -409,17 +409,17 @@ static void SetT_A2(void) {
     MTamaSet();
   }
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // オプションのショット(右) //
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     TamaSetDeg(-64 + 5, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 - 5, 0);
     MTamaSet();
   }
@@ -428,29 +428,29 @@ static void SetT_A2(void) {
 static void SetT_A3(void) {
   char dd;
 
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット３ＷＡＹ //
-    Viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Viv.toge_ex, 6));
+    Players.viv.toge_ex += 32;
+    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64 + dd, 4);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
     MTamaSet();
   }
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // オプションのショット(右) //
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 + 5, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 - 5, 0);
     MTamaSet();
   }
@@ -459,29 +459,29 @@ static void SetT_A3(void) {
 static void SetT_A4(void) {
   char dd;
 
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット３ＷＡＹ //
-    Viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Viv.toge_ex, 6));
+    Players.viv.toge_ex += 32;
+    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64 + dd, 4);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
     MTamaSet();
   }
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // オプションのショット(右) //
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 + 8, 7); //(-64+5,7);
     TamaSetSpd(54, 0);
     TamaSetNum(2, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 - 8, 7); //(-64-5,7);
     MTamaSet();
   }
@@ -492,29 +492,29 @@ static void SetT_A5(void) { SetT_A4(); }
 static void SetT_A6(void) {
   char dd;
 
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット４ＷＡＹ //
-    Viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Viv.toge_ex, 6));
+    Players.viv.toge_ex += 32;
+    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64 + dd, 3);
     TamaSetSpd(54, 0);
     TamaSetNum(5, 0);
     MTamaSet();
   }
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // オプションのショット(右) //
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 + 10, 8); //-64+6,4);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 - 10, 8); //(-64-6,4);
     MTamaSet();
   }
@@ -525,29 +525,29 @@ static void SetT_A7(void) { SetT_A6(); }
 static void SetT_A8(void) {
   char dd;
 
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット４ＷＡＹ //
-    Viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Viv.toge_ex, 6));
+    Players.viv.toge_ex += 32;
+    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64 + dd, 3);
     TamaSetSpd(54, 0);
     TamaSetNum(5, 0);
     MTamaSet();
   }
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // オプションのショット(右) //
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 + 12, 8); //(-64+7,4);
     TamaSetSpd(54, 0);
     TamaSetNum(4, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(-64 - 12, 8); //(-64-7,4);
     MTamaSet();
   }
@@ -557,25 +557,25 @@ static void SetT_A8(void) {
 static void SetT_B0(void) {
   char dd;
 
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 軽く振り分けるメインショット //
-    Viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Viv.toge_ex, 4));
+    Players.viv.toge_ex += 32;
+    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 4));
     TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64 + dd, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     MTamaSet();
   }
-  // Viv.toge_time = 3;
+  // Players.viv.toge_time = 3;
 }
 
 static void SetT_B1(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット２連 //
     TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Viv.x - (6 * 64), Viv.y);
+    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -583,58 +583,58 @@ static void SetT_B1(void) {
     TamaCmd.x += (12 * 64);
     MTamaSet();
   }
-  // Viv.toge_time = 4;
-  // if((++Viv.toge_ex)&7) return;
+  // Players.viv.toge_time = 4;
+  // if((++Players.viv.toge_ex)&7) return;
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
     TamaCmd.type = T_SBHOMING;
     TamaCmd.rep = 64;
     TamaCmd.vd = 5;
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
     TamaSetNum(1, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
   }
 }
 
 static void SetT_B2(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット３ＷＡＹ //
     TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
     MTamaSet();
   }
 
-  // Viv.toge_time = 4;
-  // if((++Viv.toge_ex)&7) return;
+  // Players.viv.toge_time = 4;
+  // if((++Players.viv.toge_ex)&7) return;
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
     TamaCmd.type = T_SBHOMING;
     TamaCmd.rep = 64;
     TamaCmd.vd = 5;
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
     TamaSetNum(1, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
   }
@@ -643,34 +643,34 @@ static void SetT_B2(void) {
 static void SetT_B3(void) { SetT_B2(); }
 
 static void SetT_B4(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット５ＷＡＹ //
     TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
     TamaSetSpd(54, 0);
     TamaSetNum(5, 0);
     MTamaSet();
   }
 
-  // Viv.toge_time = 4;
-  // if((++Viv.toge_ex)&7) return;
+  // Players.viv.toge_time = 4;
+  // if((++Players.viv.toge_ex)&7) return;
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
     TamaCmd.type = T_SBHOMING;
     TamaCmd.rep = 64;
     TamaCmd.vd = 5;
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
     TamaSetNum(1, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
   }
@@ -679,34 +679,34 @@ static void SetT_B4(void) {
 static void SetT_B5(void) { SetT_B4(); }
 
 static void SetT_B6(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット５ＷＡＹ //
     TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
     TamaSetSpd(54, 0);
     TamaSetNum(5, 0);
     MTamaSet();
   }
 
-  // Viv.toge_time = 4;
-  // if((++Viv.toge_ex)&3) return;
+  // Players.viv.toge_time = 4;
+  // if((++Players.viv.toge_ex)&3) return;
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
     TamaCmd.type = T_SBHOMING;
     TamaCmd.rep = 64;
     TamaCmd.vd = 5;
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 5, 0);
     TamaSetNum(1, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
   }
@@ -715,34 +715,34 @@ static void SetT_B6(void) {
 static void SetT_B7(void) { SetT_B6(); }
 
 static void SetT_B8(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット５ＷＡＹ //
     TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
     TamaSetSpd(54, 0);
     TamaSetNum(5, 0);
     MTamaSet();
   }
 
-  // Viv.toge_time = 4;
-  // if((++Viv.toge_ex)&3) return;
+  // Players.viv.toge_time = 4;
+  // if((++Players.viv.toge_ex)&3) return;
 
-  if (IsSubShot(Viv.toge_time)) {
+  if (IsSubShot(Players.viv.toge_time)) {
     // ホーミング弾 //
     // オプションのショット(右) //
     TamaSTDForm(TID_HOMING_SUB);
     TamaCmd.type = T_SBHOMING;
     TamaCmd.rep = 64;
     TamaCmd.vd = 5;
-    TamaSetXY(Viv.opx + SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx + SBOPT_DX * 64, Players.viv.opy);
     TamaSetSpd(28, 4);
     TamaSetDeg(64 - 22, 30);
     TamaSetNum(2, 0);
     MTamaSet();
 
     // オプションのショット(左) //
-    TamaSetXY(Viv.opx - SBOPT_DX * 64, Viv.opy);
+    TamaSetXY(Players.viv.opx - SBOPT_DX * 64, Players.viv.opy);
     TamaSetDeg(64 + 22, 30);
     MTamaSet();
   }
@@ -750,10 +750,10 @@ static void SetT_B8(void) {
 
 // ショットＴＹＰＥ－Ｃ //
 static void SetT_C0(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット単発のみ //
     TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -762,10 +762,10 @@ static void SetT_C0(void) {
 }
 
 static void SetT_C1(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央に２列ショット //
     TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Viv.x - (6 * 64), Viv.y);
+    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -774,35 +774,35 @@ static void SetT_C1(void) {
     MTamaSet();
   }
 
-  MLaserSet(64 + 50);
+  Players.SetMLaser(64 + 50);
 }
 
 static void SetT_C2(void) { SetT_C1(); }
 
 static void SetT_C3(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット３ＷＡＹ //
     TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 6);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
     MTamaSet();
   }
 
-  MLaserSet(64 + 100);
+  Players.SetMLaser(64 + 100);
 }
 
 static void SetT_C4(void) { SetT_C3(); }
 
 static void SetT_C5(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット４ＷＡＹ(中央は２列で) //
     TamaSTDForm(TID_LASER_SUB);
     TamaSetSpd(54, 0);
 
     TamaSetDeg(-64 - 5, 10);
-    TamaSetXY(Viv.x - (6 * 64), Viv.y);
+    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
     TamaSetNum(2, 0);
     MTamaSet();
 
@@ -811,7 +811,7 @@ static void SetT_C5(void) {
     MTamaSet();
   }
 
-  MLaserSet(64 + 150);
+  Players.SetMLaser(64 + 150);
 }
 
 static void SetT_C6(void) { SetT_C5(); }
@@ -819,17 +819,17 @@ static void SetT_C6(void) { SetT_C5(); }
 static void SetT_C7(void) { SetT_C5(); }
 
 static void SetT_C8(void) {
-  if (IsMainShot(Viv.toge_time)) {
+  if (IsMainShot(Players.viv.toge_time)) {
     // 中央にショット５ＷＡＹ //
     TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 6);
     TamaSetSpd(54, 0);
     TamaSetNum(5, 0);
     MTamaSet();
   }
 
-  MLaserSet(64 + 200);
+  Players.SetMLaser(64 + 200);
 }
 
 // ショットＴＹＰＥ－Ｄ //
@@ -854,11 +854,11 @@ static void SetT_D8(void) {}
 static void SetWideBomb(void) {
   int dx, dy, l;
 
-  if (Viv.bomb_time > WIDE_BOMB_TIME - 30)
+  if (Players.viv.bomb_time > WIDE_BOMB_TIME - 30)
     return;
 
-  const uint8_t d = Cast::down<uint8_t>(Viv.bomb_time * 3u);
-  l = (WIDE_BOMB_TIME - Viv.bomb_time) * 26; // 16-32
+  const uint8_t d = Cast::down<uint8_t>(Players.viv.bomb_time * 3u);
+  l = (WIDE_BOMB_TIME - Players.viv.bomb_time) * 26; // 16-32
   dx = GX_MID + 64 * 70 / 2 + cosl(d, l << 1);
   dy = GY_MID - 64 * 90 / 2 + sinl(d << 1, l);
 
@@ -870,12 +870,12 @@ static void SetWideBomb(void) {
 }
 
 static void SetHomingBomb(void) {
-  if (Viv.bomb_time % 30 == 1) {
+  if (Players.viv.bomb_time % 30 == 1) {
     TamaSTDForm(TID_HOMING_BOMB_A);
     TamaCmd.type = T_SBHOMING;
     TamaCmd.rep = 64;
     TamaCmd.vd = 5;
-    TamaSetXY(Viv.x, Viv.y);
+    TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetSpd(28, 4);
     TamaSetDeg(64, 16);
     TamaSetNum(8, 1);
@@ -893,15 +893,15 @@ static void SetLaserBomb(void) {
 
   const auto LaserDeg = GetLaserDeg();
 
-  ox = Viv.opx + (SBOPT_DX * 64);
-  oy = Viv.opy;
+  ox = Players.viv.opx + (SBOPT_DX * 64);
+  oy = Players.viv.opy;
   for (i = -3; i <= 3; i++) {
     const auto d = GetRightLaserDeg(LaserDeg, i);
     enemy_damage3(ox, oy, d);
   }
 
-  ox = Viv.opx - (SBOPT_DX * 64);
-  oy = Viv.opy;
+  ox = Players.viv.opx - (SBOPT_DX * 64);
+  oy = Players.viv.opy;
   for (i = -3; i <= 3; i++) {
     const auto d = GetLeftLaserDeg(LaserDeg, i);
     enemy_damage3(ox, oy, d);

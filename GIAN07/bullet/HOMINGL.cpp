@@ -112,7 +112,7 @@ void LaserManager::MoveHoming() {
     // 種類別の移動処理 //
     switch (hl->Type) {
     case (HL_TYPE1):
-      deg2 = -deg + atan8(Viv.x - x, Viv.y - y);
+      deg2 = -deg + atan8(Players.viv.x - x, Players.viv.y - y);
       if (deg2 < -128)
         deg2 += 256;
       else if (deg2 > 128)
@@ -163,7 +163,7 @@ void LaserManager::MoveHoming() {
       continue;
     }
 
-    if (Viv.muteki)
+    if (Players.viv.muteki)
       continue;
 
     auto ev_flag = false;
@@ -172,14 +172,14 @@ void LaserManager::MoveHoming() {
       y = hl->p[j].y;
 
       // かすり判定 //
-      if (HITCHK(x, Viv.x, HOMINGL_WIDTH + 15 * 64) &&
-          HITCHK(y, Viv.y, HOMINGL_WIDTH + 15 * 64)) {
+      if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH + 15 * 64) &&
+          HITCHK(y, Players.viv.y, HOMINGL_WIDTH + 15 * 64)) {
         ev_flag = true;
       }
 
       // 当たり判定 //
-      if (HITCHK(x, Viv.x, HOMINGL_WIDTH * 2 / 3) &&
-          HITCHK(y, Viv.y, HOMINGL_WIDTH * 2 / 3)) {
+      if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH * 2 / 3) &&
+          HITCHK(y, Players.viv.y, HOMINGL_WIDTH * 2 / 3)) {
         //	hl->State = HLS_DEAD;	// こいつは消去
         MaidDead(); // 殺っておしまい
       }
