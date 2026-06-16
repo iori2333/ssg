@@ -50,7 +50,4 @@ typedef struct tagBOSSHPG_INFO {
 // 実装は BossManager メソッドに移行
 
 ///// [ 変数 ] /////
-// Boss[], BossNow, BossHPG → boss_manager.cpp で参照として定義
-extern std::array<BOSS_DATA, BOSS_MAX>& Boss;
-extern uint16_t& BossNow;
-extern BOSSHPG_INFO& BossHPG;
+// Bosses.bosses, Bosses.count, Bosses.hpg で直接アクセス

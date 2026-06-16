@@ -113,7 +113,7 @@ void EnemyData::UpdateAnimation() {
 void EnemyManager::Move(void) {
   int i; //,chkx,chky;
 
-  if (BossNow == 0)
+  if (Bosses.count == 0)
     this->homing_flag = HOMING_DUMMY;
 
   for (i = 0; i < this->count; i++) {
@@ -157,7 +157,7 @@ void EnemyManager::Move(void) {
     }
 
     // ホーミングの準備 //
-    if ((BossNow == 0) && (e->flag & EF_DAMAGE))
+    if ((Bosses.count == 0) && (e->flag & EF_DAMAGE))
       this->UpdateHoming(e);
 
     // アニメーションの動作 //
@@ -258,7 +258,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
 bool EnemyManager::DamageAt(int x, int y, int damage) {
   int i;
 
-  if (BossDamage(x, y, damage)) {
+  if (Bosses.DamageAt(x, y, damage)) {
     return true;
   }
 
@@ -279,7 +279,7 @@ bool EnemyManager::DamageAt(int x, int y, int damage) {
 
 bool EnemyManager::DamageAt2(int x, int y, int damage) {
   int i;
-  auto ret_val = BossDamage2(x, y, damage);
+  auto ret_val = Bosses.DamageAt2(x, y, damage);
 
   for (i = 0; i < this->count; i++) {
     auto *e = &this->entities[this->indices[i]];
@@ -301,7 +301,7 @@ void EnemyManager::DamageAt3(int x, int y, uint8_t d) {
   // bool	ret_val = false;
   constexpr int damage = 8;
 
-  BossDamage3(x, y, d);
+  Bosses.DamageAt3(x, y, d);
 
   for (i = 0; i < this->count; i++) {
     auto *e = &this->entities[this->indices[i]];
@@ -319,7 +319,7 @@ void EnemyManager::DamageAt3(int x, int y, uint8_t d) {
 void EnemyManager::DamageAll(int damage) {
   int i;
 
-  BossDamage4(damage);
+  Bosses.DamageAll(damage);
 
   for (i = 0; i < this->count; i++) {
     auto *e = &this->entities[this->indices[i]];
@@ -638,7 +638,7 @@ ECL_HEAD:
     e->hp = U32LEAt(&cmd[1 + 0]);
     e->score = U32LEAt(&cmd[1 + 4]);
     if (e->hp == 0)
-      BossKillAll();
+      Bosses.KillAll();
     bRetFlag = false;
     break;
 
@@ -1297,7 +1297,7 @@ ECL_HEAD:
     break;
 
   case (ECL_TCLR):  // 敵弾を全消去(レーザー含む)
-    BossClearCmd(); // この処理を何よりも優先させる(ビット消去等を含む)
+    Bosses.ClearCmd(); // この処理を何よりも優先させる(ビット消去等を含む)
     tama_clear();
     laser_clear();
     HLaserClear();
@@ -1494,22 +1494,22 @@ ECL_HEAD:
     break;
 
   case (ECL_INT): // ボス用割り込み発生
-    BossINT(e, cmd[1]);
+    Bosses.Interrupt(e, cmd[1]);
     bRetFlag = false;
     break; // cmd を動かさない
 
   case (ECL_BITATTACK): // (ボス特権命令)ビットに攻撃パターンをセットする
-    BossBitAttack(e, U32LEAt(&cmd[1]));
+    Bosses.BitAttack(e, U32LEAt(&cmd[1]));
     bRetFlag = false;
     break;
 
   case (ECL_BITLASER): // (ボス特権命令)ビットにレーザー系コマンドをセットする
-    BossBitLaser(e, cmd[1]);
+    Bosses.BitLaser(e, cmd[1]);
     bRetFlag = false;
     break;
 
   case (ECL_BITCMD):
-    BossBitCommand(e, cmd[1], I32LEAt(&cmd[2]));
+    Bosses.BitCommand(e, cmd[1], I32LEAt(&cmd[2]));
     bRetFlag = false;
     break;
 
@@ -1544,7 +1544,7 @@ ECL_HEAD:
   } break;
 
   case (ECL_BOSSSET): // ボスを発生させる
-    BossSetEx((e->x) >> 6, (e->y) >> 6, cmd[1]);
+    Bosses.SetEx((e->x) >> 6, (e->y) >> 6, cmd[1]);
     bRetFlag = false;
     break;
 
@@ -1854,7 +1854,7 @@ void EnemyManager::CheckECLInterrupt(EnemyData *e) {
       continue; // 割り込みがかかっていない
     switch (i) {
     case (ECLVECT_BITLEFT): // ビット残り割り込み
-      if (BossGetBitLeft() <= e->Vect[ECLVECT_BITLEFT].value) {
+      if (Bosses.GetBitLeft() <= e->Vect[ECLVECT_BITLEFT].value) {
         e->cmd = e->Vect[ECLVECT_BITLEFT].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1864,7 +1864,7 @@ void EnemyManager::CheckECLInterrupt(EnemyData *e) {
       break;
 
     case (ECLVECT_BOSSLEFT): // ボス残り割り込み
-      if (BossNow <= e->Vect[ECLVECT_BOSSLEFT].value) {
+      if (Bosses.count <= e->Vect[ECLVECT_BOSSLEFT].value) {
         e->cmd = e->Vect[ECLVECT_BOSSLEFT].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ

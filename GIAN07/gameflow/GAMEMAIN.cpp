@@ -531,7 +531,7 @@ void GameSTD_Init(void) {
   // GrpBackend_Clear();
   // Grp_Flip();
 
-  BossDataInit();
+  Bosses.Init();
 
   // MaidSet();
   Players.SetMaidShotIndices();
@@ -1456,7 +1456,7 @@ void GameMove(void) {
 
   Scroller.Move();
 
-  BossMove();
+  Bosses.Move();
   enemy_move();
   Items.Move();
   tama_move();
@@ -1483,7 +1483,7 @@ void GameDraw(void) {
   Scroller.Draw();
   CEffectDraw();
 
-  BossDraw();
+  Bosses.Draw();
 
   WideBombDraw(); // 多分、ここで良いと思うが...
 
@@ -1523,7 +1523,7 @@ void GameDraw(void) {
   SEffectDraw();
   StateDraw();
 
-  BossHPG_Draw();
+  Bosses.DrawHPG();
   ScreenEffectDraw();
 
   MWinDraw();

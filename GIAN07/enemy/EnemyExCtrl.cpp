@@ -497,7 +497,7 @@ void BossManager::BitDelete(void) {
   }
 
   // 後は、この関数に任せる //
-  BitInit();
+  this->BitInit();
 }
 
 // ビット間のラインを描画する //

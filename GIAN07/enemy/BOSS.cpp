@@ -75,10 +75,10 @@ void BossManager::Init(void) {
   this->count = 0;
 
   // 蛇管理を初期化(やや謎) //
-  SnakyInit();
+  this->SnakyInit();
 
   // ビット管理も初期化 //
-  BitInit();
+  this->BitInit();
 }
 
 // ボスをセットする //
@@ -175,8 +175,8 @@ void BossManager::Move(void) {
     }
   }
 
-  SnakyMove();
-  BitMove();
+  this->SnakyMove();
+  this->BitMove();
   this->HPG_Move(HP_Sum);
 }
 
@@ -204,7 +204,7 @@ void BossManager::Draw(void) {
                   40, 32, 24, 16, 8, 8
           };
   */
-  BitLineDraw();
+  this->BitLineDraw();
 
   for (auto &it : this->bosses) {
     auto *b = &it;
@@ -271,7 +271,7 @@ void BossManager::Draw(void) {
 }
 
 // ボス用・敵弾クリアの前処理関数 //
-void BossManager::ClearCmd(void) { BitDelete(); }
+void BossManager::ClearCmd(void) { this->BitDelete(); }
 
 // ボスの体力ゲージをオープンする //
 void BossManager::HPG_Open(uint32_t max) {
@@ -467,7 +467,7 @@ void BossManager::KillAll(void) {
     auto *b = &it;
     if (b->IsUsed) {
       e = &(b->Edat);
-      SnakyDelete(b);
+      this->SnakyDelete(b);
       fragment_set(e->x, e->y, FRG_FATCIRCLE);
       ExBombEfcSet(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
@@ -486,8 +486,8 @@ void BossManager::KillAll(void) {
 bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
   if (e.hp <= damage) { // ボスの死亡処理(後で変更すること!!)
-    SnakyDelete(&b);
-    BitDelete();
+    this->SnakyDelete(&b);
+    this->BitDelete();
     enemy_clear();
     fragment_set(e.x, e.y, FRG_FATCIRCLE);
     ExBombEfcSet(e.x, e.y, EXBOMB_STD);
@@ -531,7 +531,7 @@ bool BossManager::DamageAt(int x, int y, int damage) {
   int i;
   ENEMY_DATA *e;
 
-  i = (BitGetNum() >> 1);
+  i = (this->BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0) {
     return false;
@@ -565,7 +565,7 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
   ENEMY_DATA *e;
   bool ret_val = false;
 
-  i = (BitGetNum() >> 1);
+  i = (this->BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0) {
     return false;
@@ -599,7 +599,7 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
   // BOOL			ret_val = FALSE;
   int damage = 2;
 
-  i = (BitGetNum() >> 1);
+  i = (this->BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0)
     return;
@@ -629,7 +629,7 @@ void BossManager::DamageAll(int damage) {
   int i;
   ENEMY_DATA *e;
 
-  i = (BitGetNum() >> 1);
+  i = (this->BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0)
     return;
@@ -788,7 +788,7 @@ uint32_t BossManager::GetHPSum(void) {
 // ボス用割り込み処理 //
 void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
   auto b = std::ranges::find_if(
-      Boss, [e](const auto &b) { return ((&b.Edat) == e); });
+      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(this->bosses)) {
     return;
   }
@@ -796,7 +796,7 @@ void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
   // 割り込み番号による分岐 //
   switch (IntID) {
   case (ECLINT_SNAKEON):
-    SnakySet(&*b, 30, 11);
+    this->SnakySet(&*b, 30, 11);
     break;
 
   case (ECLINT_LBWING01): // 蝶の羽も描画する
@@ -810,11 +810,11 @@ void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
     break;
 
   case (ECLINT_BITON5):
-    BitSet(&*b,5, 3);
+    this->BitSet(&*b,5, 3);
     break;
 
   case (ECLINT_BITON6):
-    BitSet(&*b,6, 3);
+    this->BitSet(&*b,6, 3);
     break;
 
   case (ECLINT_SHILD1):
@@ -830,35 +830,35 @@ void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
 // ビット攻撃アドレス指定 //
 void BossManager::BitAttack(ENEMY_DATA *e, uint32_t AtkID) {
   const auto b = std::ranges::find_if(
-      Boss, [e](const auto &b) { return ((&b.Edat) == e); });
+      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(this->bosses)) {
     return;
   }
 
-  BitSelectAttack(AtkID);
+  this->BitSelectAttack(AtkID);
 }
 
 // ビットにレーザーコマンドセット //
 void BossManager::BitLaser(ENEMY_DATA *e, uint8_t cmd) {
   const auto b = std::ranges::find_if(
-      Boss, [e](const auto &b) { return ((&b.Edat) == e); });
+      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(this->bosses)) {
     return;
   }
 
-  BitLaserCommand(cmd);
+  this->BitLaserCommand(cmd);
 }
 
 // ビット命令送信 //
 void BossManager::BitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param) {
   const auto b = std::ranges::find_if(
-      Boss, [e](const auto &b) { return ((&b.Edat) == e); });
+      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(this->bosses)) {
     return;
   }
 
-  BitSendCommand(Cmd, Param);
+  this->BitSendCommand(Cmd, Param);
 }
 
 // 残りビット数を返す //
-int BossManager::GetBitLeft(void) { return BitGetNum(); }
+int BossManager::GetBitLeft(void) { return this->BitGetNum(); }

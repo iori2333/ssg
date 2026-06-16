@@ -191,7 +191,7 @@ static void enemy_set(void) {
     } break;
 
     case (SCL_ENEMY):
-      if (BossNow == 0)
+      if (Bosses.count == 0)
         _PutEnemy(cmd + 1); // ボス出現中は出て来ちゃダメ
       SCL_Now += 6;         // cmd(1)+x(2)+y(2)+id(1)
       SCL_DEBUG(u8"--- SCL_ENEMY ---");
@@ -201,12 +201,12 @@ static void enemy_set(void) {
       const auto x = I16LEAt(&cmd[1 + 0]); // ボス初期Ｘ
       const auto y = I16LEAt(&cmd[1 + 2]); // ボス初期Ｙ
       const auto id = cmd[1 + 2 + 2];      // ボスＩＤ
-      BossSet(x, y, id);
+      Bosses.Set(x, y, id);
       SCL_Now += (1 + 2 + 2 + 1); // cmd+x+y+id
     } break;
 
     case (SCL_BOSSDEAD): // ボスを強制的に破壊する(Level2 命令Only)
-      BossKillAll();
+      Bosses.KillAll();
       SCL_Now++;
       break;
 
@@ -352,12 +352,12 @@ static void enemy_set(void) {
     case (SCL_WAITEX): // 特殊待ち <cmd1>,<opt4>
       switch (cmd[1]) {
       case (SWAIT_BOSSHP): // 残りＨＰ
-        if (GetBossHPSum() <= U32LEAt(&cmd[2])) {
+        if (Bosses.GetHPSum() <= U32LEAt(&cmd[2])) {
           break;
         }
         return;
       case (SWAIT_BOSSLEFT): // 残りボス数
-        if (BossNow <= U32LEAt(&cmd[2])) {
+        if (Bosses.count <= U32LEAt(&cmd[2])) {
           break;
         }
         return;
