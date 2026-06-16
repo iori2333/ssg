@@ -609,7 +609,11 @@ bool GameInit(void (*NextProc)(bool &quit)) {
   }
   GrpBackend_SetClip(PLAYFIELD_CLIP);
   GameFlow.game_main = NextProc;
-  GameFlow.current_state = GameState::External;
+  // Map known proc pointers to their states for GameMainIs-equiv checks
+  if (NextProc == GameProc)           GameFlow.current_state = GameState::Game;
+  else if (NextProc == DemoProc)      GameFlow.current_state = GameState::Demo;
+  else if (NextProc == ReplayProcAll) GameFlow.current_state = GameState::ReplayAll;
+  else                                GameFlow.current_state = GameState::External;
   return true;
 }
 
