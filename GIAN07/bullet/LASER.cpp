@@ -29,7 +29,7 @@
  *
  * -> 直線との距離を求める処理を三角関数で計算したものを最適化しています
  *
- * Lasers.lasers(sx,sy) Saboten(x,y) とするまた、レーザー発射角をdegreeとすると
+ * lasers(sx,sy) Saboten(x,y) とするまた、レーザー発射角をdegreeとすると
  * 長さ判定(length)及び、幅判定の値(width)は、
  * (tx = sx-x;	ty = sy-y;)
  * length   = -(cosm(degree)*tx/256+sinm(degree)*ty/256);
@@ -69,7 +69,7 @@ static constexpr auto LF_NMOVE = 0x06; // レーザーの長さ変わらず(LF_S
 // LASER_DATA, LF_DELETE → LASER.h に移動
 
 ////グローバル変数////
-// LaserCmd, this->count, Lasers.lasers[], Lasers.laser_indices[] → laser_manager.cpp の LaserManager に移動
+// LaserCmd, count, lasers[], laser_indices[] → laser_manager.cpp の LaserManager に移動
 // REFLECTOR		Reflector[RT_MAX]; // 反射物_構造体
 //  uint16_t	ReflectorNow;		// 反射物の個数
 
@@ -102,36 +102,36 @@ void LaserManager::Spawn() {
     break;
   }
 
-  this->cmd.v =
-      (((this->cmd.v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (this->cmd.v >> 1);
+  cmd.v =
+      (((cmd.v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (cmd.v >> 1);
 
   SpawnEX();
 }
 
 void LaserManager::SpawnEX() {
-  for (decltype(this->cmd.n) i = 0; i < this->cmd.n; i++) {
-    if (this->count + 1 == LASER_MAX)
+  for (decltype(cmd.n) i = 0; i < cmd.n; i++) {
+    if (count + 1 == LASER_MAX)
       return; // 最大数を越えた場合
 
-    auto *lp = &Lasers.lasers[Lasers.laser_indices[this->count++]];
+    auto *lp = &lasers[laser_indices[count++]];
 
-    lp->v = this->cmd.v;   // レーザーの速度
-    lp->a = this->cmd.a;   // レーザーの加速度
+    lp->v = cmd.v;   // レーザーの速度
+    lp->a = cmd.a;   // レーザーの加速度
     lp->d = CalcDir(i); // レーザーの角度
 
-    if (this->cmd.l2) {
-      lp->x = this->cmd.x + cosl(lp->d, this->cmd.l2);
-      lp->y = this->cmd.y + sinl(lp->d, this->cmd.l2);
+    if (cmd.l2) {
+      lp->x = cmd.x + cosl(lp->d, cmd.l2);
+      lp->y = cmd.y + sinl(lp->d, cmd.l2);
     } else {
-      lp->x = this->cmd.x; // 始点のｘ座標
-      lp->y = this->cmd.y; // 始点のｙ座標
+      lp->x = cmd.x; // 始点のｘ座標
+      lp->y = cmd.y; // 始点のｙ座標
     }
 
     lp->vx = cosl(lp->d, lp->v); // ｄとｖからｖｘを
     lp->vy = sinl(lp->d, lp->v); // ｄとｖからｖｙを
 
-    lp->w = this->cmd.w;    // レーザーの太さ
-    lp->lmax = this->cmd.l; // レーザーの長さの最終値
+    lp->w = cmd.w;    // レーザーの太さ
+    lp->lmax = cmd.l; // レーザーの長さの最終値
 
     lp->lx = lp->ly = 0;
     lp->wx = -sinl(lp->d, lp->w >> 6); // cosl(d+64,w)
@@ -139,8 +139,8 @@ void LaserManager::SpawnEX() {
 
     lp->l = lp->count = 0; // 長さとカウンタをゼロ初期化
 
-    lp->c = this->cmd.c;       // レーザーの色を書き込む
-    lp->type = this->cmd.type; // レーザーの種類を書き込む
+    lp->c = cmd.c;       // レーザーの色を書き込む
+    lp->type = cmd.type; // レーザーの種類を書き込む
 
     if (lp->type == LS_REF)
       lp->flag = LF_SHOT;
@@ -149,16 +149,16 @@ void LaserManager::SpawnEX() {
 
     lp->evade = 0; // かすり用フラグ
 
-    lp->notr = this->cmd.notr; // 反射しないリフレクター
+    lp->notr = cmd.notr; // 反射しないリフレクター
 
     SetupShort(lp); // ４点の座標をセットする(ショート用)
   }
 }
 
 void LaserManager::Move() {
-  // [this->count] will get mutated for reflecting lasers!
-  for (uint16_t i = 0; i < this->count; i++) {
-    auto *lp = &Lasers.lasers[Lasers.laser_indices[i]];
+  // [count] will get mutated for reflecting lasers!
+  for (uint16_t i = 0; i < count; i++) {
+    auto *lp = &lasers[laser_indices[i]];
     MoveLaser(lp);
     lp->count++;
     if ((lp->x) < GX_MIN || (lp->x) > GX_MAX || (lp->y) < GY_MIN ||
@@ -168,7 +168,7 @@ void LaserManager::Move() {
     if (Players.viv.muteki == 0 && !(lp->flag & (LF_CLEAR | LF_DELETE)))
       HitCheck(lp);
   }
-  Indsort(Lasers.laser_indices, this->count, Lasers.lasers,
+  Indsort(laser_indices, count, lasers,
           [](const LASER_DATA &l) { return (l.flag & LF_DELETE); });
 }
 
@@ -177,8 +177,8 @@ void LaserManager::Draw() {
 
   GrpGeom->Lock();
 
-  for (i = 0; i < this->count; i++) {
-    auto *lp = &Lasers.lasers[Lasers.laser_indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *lp = &lasers[laser_indices[i]];
     switch (lp->type) {
     // ノーマルショートレーザー＆反射レーザー //
     case (LS_SHORT):
@@ -196,8 +196,8 @@ void LaserManager::Draw() {
   }
 
   /*
-  for(i=0;i<this->count;i++){
-          auto* lp = &Lasers.lasers[Lasers.laser_indices[i]];
+  for(i=0;i<count;i++){
+          auto* lp = &lasers[laser_indices[i]];
           if(lp->type==LS_REF || lp->type==LS_SHORT)
                   DrawShort(lp);
   }
@@ -207,8 +207,8 @@ void LaserManager::Draw() {
 }
 
 void LaserManager::Clear() {
-  for (uint16_t i = 0; i < this->count; i++) {
-    auto &l = Lasers.lasers[Lasers.laser_indices[i]];
+  for (uint16_t i = 0; i < count; i++) {
+    auto &l = lasers[laser_indices[i]];
     if (l.flag != LF_CLEAR) {
       l.flag = LF_CLEAR;
       l.count = 0;
@@ -218,90 +218,90 @@ void LaserManager::Clear() {
 
 void LaserManager::SetIndices() {
   for (auto i = 0; i < LASER_MAX; i++) {
-    Lasers.laser_indices[i] = i;
-    // memset(Lasers.lasers+i,0,sizeof(LASER_DATA));
+    laser_indices[i] = i;
+    // memset(lasers+i,0,sizeof(LASER_DATA));
   }
 
-  this->count = 0;
+  count = 0;
 }
 
 void LaserManager::SetEasy() {
-  switch (this->cmd.cmd & 0x03) {
+  switch (cmd.cmd & 0x03) {
   case (LC_WAY):
-    if (this->cmd.n >= 3)
-      this->cmd.n -= 2;                 // 奇数・偶数は変化させない
-    this->cmd.dw += (this->cmd.dw >> 2); // 幅を広げる
+    if (cmd.n >= 3)
+      cmd.n -= 2;                 // 奇数・偶数は変化させない
+    cmd.dw += (cmd.dw >> 2); // 幅を広げる
     break;
 
   case (LC_ALL):
   case (LC_RND):
-    this->cmd.n >>= 1; // 本数／２
+    cmd.n >>= 1; // 本数／２
     break;
   }
 
-  this->cmd.l -= (this->cmd.l >> 2);
+  cmd.l -= (cmd.l >> 2);
 }
 
 void LaserManager::SetHard() {
-  switch (this->cmd.cmd & 0x03) {
+  switch (cmd.cmd & 0x03) {
   case (LC_WAY):
-    this->cmd.n += 2;                   // 奇数・偶数は変化させない
-    this->cmd.dw -= (this->cmd.dw >> 3); // 幅を狭める
+    cmd.n += 2;                   // 奇数・偶数は変化させない
+    cmd.dw -= (cmd.dw >> 3); // 幅を狭める
     break;
 
   case (LC_ALL):
-    this->cmd.n += (((this->cmd.n >> 2) > 6) ? 6 : (this->cmd.n >> 2));
+    cmd.n += (((cmd.n >> 2) > 6) ? 6 : (cmd.n >> 2));
     break;
 
   case (LC_RND):
-    this->cmd.n += (this->cmd.n >> 1); // 本数５０％アップ
+    cmd.n += (cmd.n >> 1); // 本数５０％アップ
     break;
   }
 
-  this->cmd.l += (this->cmd.l >> 2);
+  cmd.l += (cmd.l >> 2);
 }
 
 void LaserManager::SetLunatic() {
-  switch (this->cmd.cmd & 0x03) {
+  switch (cmd.cmd & 0x03) {
   case (LC_WAY):
-    this->cmd.n += 4;                  // 奇数・偶数は変化させない
-    this->cmd.dw -= (this->cmd.dw / 3); // 幅を狭める
+    cmd.n += 4;                  // 奇数・偶数は変化させない
+    cmd.dw -= (cmd.dw / 3); // 幅を狭める
     break;
 
   case (LC_ALL):
-    this->cmd.n += (((this->cmd.n / 3) > 12) ? 12 : (this->cmd.n / 3));
+    cmd.n += (((cmd.n / 3) > 12) ? 12 : (cmd.n / 3));
     break;
 
   case (LC_RND):
-    this->cmd.n <<= 1; // 本数２倍
+    cmd.n <<= 1; // 本数２倍
     break;
   }
 
-  this->cmd.l += (this->cmd.l >> 1);
+  cmd.l += (cmd.l >> 1);
 }
 
 uint8_t LaserManager::CalcDir(uint16_t i) {
   uint8_t deg = 0;
 
-  if (this->cmd.cmd & LS_ZSET)
-    deg = atan8(Players.viv.x - this->cmd.x, Players.viv.y - this->cmd.y);
+  if (cmd.cmd & LS_ZSET)
+    deg = atan8(Players.viv.x - cmd.x, Players.viv.y - cmd.y);
 
-  deg += this->cmd.d; // 基本角のセット完了
+  deg += cmd.d; // 基本角のセット完了
 
-  switch (this->cmd.cmd & 0x03) {
+  switch (cmd.cmd & 0x03) {
   case (LC_WAY):
     i++;
-    if (this->cmd.n & 1)
-      return deg + (i >> 1) * this->cmd.dw * (1 - ((i & 1) << 1));
+    if (cmd.n & 1)
+      return deg + (i >> 1) * cmd.dw * (1 - ((i & 1) << 1));
     else
-      return deg - (this->cmd.dw >> 1) +
-             (i >> 1) * this->cmd.dw * (1 - ((i & 1) << 1));
+      return deg - (cmd.dw >> 1) +
+             (i >> 1) * cmd.dw * (1 - ((i & 1) << 1));
 
   case (LC_ALL):
-    return deg + (i << 8) / this->cmd.n;
+    return deg + (i << 8) / cmd.n;
 
   case (LC_RND):
-    return deg + rnd() % this->cmd.dw - (this->cmd.dw >> 1);
+    return deg + rnd() % cmd.dw - (cmd.dw >> 1);
 
   default: // ここには絶対にこないと思うのだが...
     return 0;
@@ -556,7 +556,7 @@ int LaserManager::HitReflect(const LASER_DATA *lp) {
   for (i = 0; i < LLASER_MAX; i++) {
     if (i == lp->notr)
       continue; // 前回反射したなら無視する
-    ll = &Lasers.long_lasers[i];
+    ll = &long_lasers[i];
     if (ll->flag != LLF_NORM)
       continue; // 完全オープンでなければ次へ
 
@@ -566,18 +566,18 @@ int LaserManager::HitReflect(const LASER_DATA *lp) {
     width = abs(-sinl(ll->d, tx) + cosl(ll->d, ty));
 
     if (length > 0 && width <= ll->w) {
-      this->cmd.x = lx;
-      this->cmd.y = ly;
-      this->cmd.v = lp->v;
-      this->cmd.d = -(lp->d) + ((ll->d) << 1);
-      this->cmd.w = lp->w;     //
-      this->cmd.l = lp->lmax;  // 結構重要(同じレーザーだと思わせるため)
-      this->cmd.l2 = 0;        // lp->v;	//
-      this->cmd.n = 1;         // 分裂したら少々恐いので...
-      this->cmd.c = lp->c;     // 色は同じでいいでしょ
-      this->cmd.cmd = LC_WAY;  //
-      this->cmd.type = LS_REF; // ２回以上の反射を許可
-      this->cmd.notr = i;      // 自分には反射しない
+      cmd.x = lx;
+      cmd.y = ly;
+      cmd.v = lp->v;
+      cmd.d = -(lp->d) + ((ll->d) << 1);
+      cmd.w = lp->w;     //
+      cmd.l = lp->lmax;  // 結構重要(同じレーザーだと思わせるため)
+      cmd.l2 = 0;        // lp->v;	//
+      cmd.n = 1;         // 分裂したら少々恐いので...
+      cmd.c = lp->c;     // 色は同じでいいでしょ
+      cmd.cmd = LC_WAY;  //
+      cmd.type = LS_REF; // ２回以上の反射を許可
+      cmd.notr = i;      // 自分には反射しない
       SpawnEX();          // 難易度変更無し
       return 1;               // 当たった
     }

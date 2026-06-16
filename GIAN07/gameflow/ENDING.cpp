@@ -35,36 +35,36 @@ bool EndingManager::Init() {
   BGM_Stop();
 
   GrpBackend_PaletteGet(pal);
-  this->SetFixedColors(pal);
+  SetFixedColors(pal);
   GrpBackend_PaletteSet(pal);
 
   GameFlow.game_main = EndingProc;
   GameFlow.current_state = GameState::Ending;
 
-  this->flash_state = 0;
+  flash_state = 0;
 
-  this->grp_info.bWantDisp = false;
-  this->stf_task.bWantDisp = false;
+  grp_info.bWantDisp = false;
+  stf_task.bWantDisp = false;
 
   TextObj.Clear();
-  this->text.Blank();
-  this->text.Rect = TextObj.Register({GRP_RES.w, 131});
+  text.Blank();
+  text.Rect = TextObj.Register({GRP_RES.w, 131});
 
   return true;
 }
 
 void EndingManager::Proc(bool &) {
-  if (this->flash_state)
-    this->flash_state -= 32;
+  if (flash_state)
+    flash_state -= 32;
 
-  this->SCLDecode();
+  SCLDecode();
   if (GameFlow.current_state != GameState::Ending)
     return;
 
   if (GameFlow.IsDraw()) {
-    this->UpdateGrpInfo();
-    this->UpdateStfInfo();
-    this->Draw();
+    UpdateGrpInfo();
+    UpdateStfInfo();
+    Draw();
   }
 }
 
@@ -74,12 +74,12 @@ void EndingManager::Draw() {
   GrpBackend_Clear(255, RGB{0, 0, 0});
 
   // それぞれのグラフィックを描画するで //
-  this->DrawGrpInfo();
-  this->DrawStfInfo();
-  this->text.Render({0, 349});
+  DrawGrpInfo();
+  DrawStfInfo();
+  text.Render({0, 349});
 
   // フェード情報の反映ぢゃ //
-  this->DrawFadeInfo();
+  DrawFadeInfo();
 
   Grp_Flip();
 }
@@ -98,55 +98,55 @@ void EndingManager::FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t
 
 // グラフィックの更新(内部データ) //
 void EndingManager::UpdateGrpInfo() {
-  this->grp_info.timer++;
-  if (this->grp_info.timer > this->grp_info.fadeout) {
-    if (this->grp_info.alpha - 3 > 0)
-      this->grp_info.alpha -= 3;
+  grp_info.timer++;
+  if (grp_info.timer > grp_info.fadeout) {
+    if (grp_info.alpha - 3 > 0)
+      grp_info.alpha -= 3;
     else
-      this->grp_info.alpha = 0;
-  } else if (this->grp_info.timer > this->grp_info.fadein) {
-    if (this->grp_info.alpha + 3 < 255)
-      this->grp_info.alpha += 3;
+      grp_info.alpha = 0;
+  } else if (grp_info.timer > grp_info.fadein) {
+    if (grp_info.alpha + 3 < 255)
+      grp_info.alpha += 3;
     else
-      this->grp_info.alpha = 255;
+      grp_info.alpha = 255;
   }
 
-  if (this->grp_info.bWantDisp && this->grp_info.alpha == 0)
-    this->grp_info.bWantDisp = false;
+  if (grp_info.bWantDisp && grp_info.alpha == 0)
+    grp_info.bWantDisp = false;
 }
 
 // スタッフの更新(内部データ)
 void EndingManager::UpdateStfInfo() {
-  this->stf_task.timer++;
-  if (this->stf_task.timer > this->stf_task.fadeout) {
-    if (this->stf_task.alpha - 3 > 0)
-      this->stf_task.alpha -= 3;
+  stf_task.timer++;
+  if (stf_task.timer > stf_task.fadeout) {
+    if (stf_task.alpha - 3 > 0)
+      stf_task.alpha -= 3;
     else
-      this->stf_task.alpha = 0;
-  } else if (this->stf_task.timer > this->stf_task.fadein) {
-    if (this->stf_task.alpha + 3 < 255)
-      this->stf_task.alpha += 3;
+      stf_task.alpha = 0;
+  } else if (stf_task.timer > stf_task.fadein) {
+    if (stf_task.alpha + 3 < 255)
+      stf_task.alpha += 3;
     else
-      this->stf_task.alpha = 255;
+      stf_task.alpha = 255;
   }
 
-  if (this->stf_task.bWantDisp && this->stf_task.alpha == 0)
-    this->stf_task.bWantDisp = false;
+  if (stf_task.bWantDisp && stf_task.alpha == 0)
+    stf_task.bWantDisp = false;
 }
 
 // グラフィックの描画 //
 void EndingManager::DrawGrpInfo() {
-  if (!this->grp_info.bWantDisp)
+  if (!grp_info.bWantDisp)
     return;
 
   // 驚異の画像表示 //
-  const auto sid = (SURFACE_ID::ENDING_PIC + (this->grp_info.target - EndingGrp));
-  GrpSurface_BlitOpaque({this->grp_info.x, this->grp_info.y}, sid, {0, 0, 320, 240});
+  const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - EndingGrp));
+  GrpSurface_BlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
 }
 
 // スタッフの描画 //
 void EndingManager::DrawStfInfo() {
-  if (!this->stf_task.bWantDisp)
+  if (!stf_task.bWantDisp)
     return;
 
   auto Blit = [](WINDOW_POINT dst, const PIXEL_LTRB &src) {
@@ -154,10 +154,10 @@ void EndingManager::DrawStfInfo() {
     GrpSurface_Blit({dst.x, dst.y}, SURFACE_ID::ENDING_CREDITS, src);
   };
 
-  Blit({this->stf_task.ox, this->stf_task.oy}, staff_label[this->stf_task.TitleID]);
-  for (decltype(this->stf_task.NumStf) i = 0; i < this->stf_task.NumStf; i++) {
-    const WINDOW_POINT dst = {this->stf_task.ox, (this->stf_task.oy + (i * 30) + 50)};
-    Blit(dst, staff_member[this->stf_task.StfID[i]]);
+  Blit({stf_task.ox, stf_task.oy}, staff_label[stf_task.TitleID]);
+  for (decltype(stf_task.NumStf) i = 0; i < stf_task.NumStf; i++) {
+    const WINDOW_POINT dst = {stf_task.ox, (stf_task.oy + (i * 30) + 50)};
+    Blit(dst, staff_member[stf_task.StfID[i]]);
   }
 }
 
@@ -203,42 +203,42 @@ void EndingManager::DrawFadeInfo() {
 
   // フェードアウト関連
   if (GrpGeom_FB()) {
-    if (this->flash_state) {
-      this->FlashPaletteGrp(temp_pal, this->grp_info.target->pal, this->flash_state);
+    if (flash_state) {
+      FlashPaletteGrp(temp_pal, grp_info.target->pal, flash_state);
       GrpBackend_PaletteSet(temp_pal);
-    } else if (this->grp_info.target) {
-      this->FadeoutPaletteGrp(temp_pal, this->grp_info.target->pal,
-                        Cast::down_sign<uint8_t>(this->grp_info.alpha));
-      this->FadeoutPaletteStf(temp_pal, temp_pal,
-                        Cast::down_sign<uint8_t>(this->stf_task.alpha));
+    } else if (grp_info.target) {
+      FadeoutPaletteGrp(temp_pal, grp_info.target->pal,
+                        Cast::down_sign<uint8_t>(grp_info.alpha));
+      FadeoutPaletteStf(temp_pal, temp_pal,
+                        Cast::down_sign<uint8_t>(stf_task.alpha));
       GrpBackend_PaletteSet(temp_pal);
     } else {
       temp_pal = {0};
-      this->SetFixedColors(temp_pal);
+      SetFixedColors(temp_pal);
       GrpBackend_PaletteSet(temp_pal);
     }
   } else {
     GrpGeom->Lock();
 
-    if (this->grp_info.bWantDisp) {
-      GrpGeom->SetAlphaNorm(255 - this->grp_info.alpha);
+    if (grp_info.bWantDisp) {
+      GrpGeom->SetAlphaNorm(255 - grp_info.alpha);
       GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->DrawBoxA(this->grp_info.x, this->grp_info.y, (this->grp_info.x + 320),
-                        (this->grp_info.y + 240));
+      GrpGeom->DrawBoxA(grp_info.x, grp_info.y, (grp_info.x + 320),
+                        (grp_info.y + 240));
     }
-    if (this->stf_task.bWantDisp) {
-      GrpGeom->SetAlphaNorm(255 - this->stf_task.alpha);
+    if (stf_task.bWantDisp) {
+      GrpGeom->SetAlphaNorm(255 - stf_task.alpha);
       GrpGeom->SetColor({0, 0, 0});
-      if (this->stf_task.ox == 320) {
+      if (stf_task.ox == 320) {
         GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
-      } else if (this->stf_task.ox > 320) {
+      } else if (stf_task.ox > 320) {
         GrpGeom->DrawBoxA(320, 0, GRP_RES.w, 300);
       } else {
         GrpGeom->DrawBoxA(0, 0, (320 - 50), 300);
       }
     }
-    if (this->flash_state) {
-      GrpGeom->SetAlphaNorm(255 - this->flash_state);
+    if (flash_state) {
+      GrpGeom->SetAlphaNorm(255 - flash_state);
       GrpGeom->SetColor({5, 5, 5});
       GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
     }
@@ -267,9 +267,9 @@ void EndingManager::SCLDecode() {
     case (SCL_MSG): { // メッセージを出力する
       const auto *line_p = std::bit_cast<const char *>(cmd + 1);
       const Narrow::string_view line = line_p;
-      this->text.Text[this->text.NumText++] = line;
-      this->text.TextStr += line_p;
-      this->text.TextStr += '\n';
+      text.Text[text.NumText++] = line;
+      text.TextStr += line_p;
+      text.TextStr += '\n';
       Enemies.scl_now += (line.length() + 2);
       break;
     }
@@ -277,39 +277,39 @@ void EndingManager::SCLDecode() {
     case (SCL_FACE): // 顔を表示する
       switch (cmd[1]) {
       case 0:
-        this->grp_info.fadein = 0;
-        this->grp_info.fadeout = 128 + 64 + 64 + 512;
-        this->grp_info.x = 640 - 40 - 320;
-        this->grp_info.y = 40;
+        grp_info.fadein = 0;
+        grp_info.fadeout = 128 + 64 + 64 + 512;
+        grp_info.x = 640 - 40 - 320;
+        grp_info.y = 40;
         break;
 
       case 1:
       case 2:
       case 3:
-        this->grp_info.fadein = 0;
-        this->grp_info.fadeout = 128 + 64;
-        this->grp_info.x = 320 - 160;
-        this->grp_info.y = 40;
+        grp_info.fadein = 0;
+        grp_info.fadeout = 128 + 64;
+        grp_info.x = 320 - 160;
+        grp_info.y = 40;
         break;
 
       case 5:
-        this->grp_info.fadein = 0;
-        this->grp_info.fadeout = 128 + 64 + 64 + (512 + 512) * 2;
-        this->grp_info.x = 40;
-        this->grp_info.y = 40;
+        grp_info.fadein = 0;
+        grp_info.fadeout = 128 + 64 + 64 + (512 + 512) * 2;
+        grp_info.x = 40;
+        grp_info.y = 40;
         break;
 
       default:
-        this->grp_info.fadein = 0;
-        this->grp_info.fadeout = 128 + 64 + 64 + 512;
-        this->grp_info.x = 40;
-        this->grp_info.y = 40;
+        grp_info.fadein = 0;
+        grp_info.fadeout = 128 + 64 + 64 + 512;
+        grp_info.x = 40;
+        grp_info.y = 40;
         break;
       }
-      this->grp_info.alpha = 0;
-      this->grp_info.target = EndingGrp + cmd[1];
-      this->grp_info.timer = 0;
-      this->grp_info.bWantDisp = true;
+      grp_info.alpha = 0;
+      grp_info.target = EndingGrp + cmd[1];
+      grp_info.timer = 0;
+      grp_info.bWantDisp = true;
       Enemies.scl_now += 2;
       break;
 
@@ -318,52 +318,52 @@ void EndingManager::SCLDecode() {
         switch (cmd[1] - 128) {
         case 0:
         case 4:
-          this->stf_task.fadein = 0;
-          this->stf_task.fadeout = 128 + 64 + 64 + 128;
-          this->stf_task.ox = 320 + 130;
-          this->stf_task.oy = 80 + 50;
+          stf_task.fadein = 0;
+          stf_task.fadeout = 128 + 64 + 64 + 128;
+          stf_task.ox = 320 + 130;
+          stf_task.oy = 80 + 50;
           break;
         case 2:
         case 5:
-          this->stf_task.fadein = 0;
-          this->stf_task.fadeout = 128 + 64 + 64 + 128;
-          this->stf_task.ox = 320 + 130;
-          this->stf_task.oy = 80;
+          stf_task.fadein = 0;
+          stf_task.fadeout = 128 + 64 + 64 + 128;
+          stf_task.ox = 320 + 130;
+          stf_task.oy = 80;
           break;
         case 1:
         case 3:
-          this->stf_task.fadein = 0;
-          this->stf_task.fadeout = 128 + 64 + 64 + 128;
-          this->stf_task.ox = 130;
-          this->stf_task.oy = 80 + 50;
+          stf_task.fadein = 0;
+          stf_task.fadeout = 128 + 64 + 64 + 128;
+          stf_task.ox = 130;
+          stf_task.oy = 80 + 50;
           break;
         case 6:
-          this->stf_task.fadein = 0;
-          this->stf_task.fadeout = 128 + 64 + 64; //+64;
-          this->stf_task.ox = 320;
-          this->stf_task.oy = 80 + 80;
+          stf_task.fadein = 0;
+          stf_task.fadeout = 128 + 64 + 64; //+64;
+          stf_task.ox = 320;
+          stf_task.oy = 80 + 80;
           break;
         }
-        this->stf_task.alpha = 0;
-        this->stf_task.timer = 0;
-        this->stf_task.timer = 0;
-        this->stf_task.NumStf = 0;
-        this->stf_task.TitleID = cmd[1] - 128;
-        this->stf_task.bWantDisp = true;
+        stf_task.alpha = 0;
+        stf_task.timer = 0;
+        stf_task.timer = 0;
+        stf_task.NumStf = 0;
+        stf_task.TitleID = cmd[1] - 128;
+        stf_task.bWantDisp = true;
       } else {
-        this->stf_task.StfID[this->stf_task.NumStf++] = cmd[1];
+        stf_task.StfID[stf_task.NumStf++] = cmd[1];
       }
       Enemies.scl_now += 2;
       break;
 
     case (SCL_NPG): // 新しいページに変更する
-      this->text.Blank();
+      text.Blank();
       Enemies.scl_now++;
       break;
 
     case (SCL_END): // カウントも変更させずにリターンするのだ
-      this->grp_info.bWantDisp = false;
-      this->stf_task.bWantDisp = false;
+      grp_info.bWantDisp = false;
+      stf_task.bWantDisp = false;
       GameFlow.NameRegistInit(false);
       return;
 
@@ -375,7 +375,7 @@ void EndingManager::SCLDecode() {
     case (SCL_EFC):
       switch (cmd[1]) {
       case 0:
-        this->flash_state = 256 * 2;
+        flash_state = 256 * 2;
         break;
       }
 

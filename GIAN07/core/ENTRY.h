@@ -7,8 +7,8 @@
 
 #include "CONFIG.h"
 
-bool XInit(void);
-void XCleanup(void);
+bool XInit();
+void XCleanup();
 
 void XGrpTry(const GRAPHICS_PARAMS &prev, GRAPHICS_PARAMS &params);
 
@@ -23,5 +23,5 @@ void XGrpTry(std::invocable<GRAPHICS_PARAMS &> auto &&patch_func) {
 }
 
 void XGrpTryCycleScale(int_fast8_t delta, bool include_max);
-void XGrpTryCycleDisp(void);
-void XGrpTryCycleScMode(void);
+void XGrpTryCycleDisp();
+void XGrpTryCycleScMode();

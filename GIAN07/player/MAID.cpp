@@ -354,26 +354,26 @@ void Player::Update() {
   opy = y;
 
   // オプションの処理 //
-  if (this->vx < 0)
-    this->vx += 64;
-  if (this->vx > 0)
-    this->vx -= 64;
-  if (this->vy < 0)
-    this->vy += 64;
-  if (this->vy > 0)
-    this->vy -= 64;
+  if (vx < 0)
+    vx += 64;
+  if (vx > 0)
+    vx -= 64;
+  if (vy < 0)
+    vy += 64;
+  if (vy > 0)
+    vy -= 64;
 
-  if (vx < 0 && this->vx < 6 * 64)
-    this->vx += 2 * 64;
-  if (vx > 0 && this->vx > -6 * 64)
-    this->vx -= 2 * 64;
-  if (vy < 0 && this->vy < 10 * 64)
-    this->vy += 2 * 64;
-  if (vy > 0 && this->vy > -10 * 64)
-    this->vy -= 2 * 64;
+  if (vx < 0 && vx < 6 * 64)
+    vx += 2 * 64;
+  if (vx > 0 && vx > -6 * 64)
+    vx -= 2 * 64;
+  if (vy < 0 && vy < 10 * 64)
+    vy += 2 * 64;
+  if (vy > 0 && vy > -10 * 64)
+    vy -= 2 * 64;
 
-  opx = x + this->vx;
-  opy = y + this->vy + 64 * 6;
+  opx = x + vx;
+  opy = y + vy + 64 * 6;
 
   // 弾＆ボムのセット //
   Players.SetMaidShot();

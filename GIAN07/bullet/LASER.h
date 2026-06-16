@@ -78,16 +78,6 @@ struct LASER_DATA {
   uint8_t evade;  // かすり用フラグ
 };
 
-/*
-////反射物(鏡?) 構造体////
-typedef struct{
-        int		x,y;		// 反射物の中心座標
-
-        uint32_t	l;	//
-リフレクターの長さ(中心から先端まで,つまり全体でl*2) uint8_t	d;	//
-反射物の角度(0 <= d < 128) } REFLECTOR;
-*/
-
 ////レーザー関数////
 // 後方互換 inline wrapper は laser_manager.h 末尾に移動
 // 実装は LaserManager メソッドに移行

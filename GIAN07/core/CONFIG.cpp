@@ -165,7 +165,7 @@ static void DebugInit(void) {
 #endif
 
 // コンフィグの内容を初期化する //
-extern void ConfigLoad() {
+void ConfigLoad() {
 #ifdef PBG_DEBUG
   DebugInit();
 #endif
@@ -174,7 +174,7 @@ extern void ConfigLoad() {
 }
 
 // コンフィグの内容を保存する //
-extern void ConfigSave(void) {
+void ConfigSave() {
   // Sync runtime audio state into config
   ConfigDat.SoundFlags.v &= SNDF_SE_ENABLE;
   ConfigDat.SoundFlags.v |= (BGM_Enabled() * SNDF_BGM_ENABLE);

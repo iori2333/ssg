@@ -27,12 +27,12 @@ uint8_t ScoreManager::SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
   int i, num;
   int64_t temp;
 
-  Res = this->score_strings.data();
+  Res = score_strings.data();
 
   // スコアデータを読み込む //
   uint8_t rank;
   if (NData != nullptr) {
-    rank = this->IsHighScore(NData, Dif);
+    rank = IsHighScore(NData, Dif);
     if (rank == 0)
       return 0;
   } else {
@@ -40,11 +40,11 @@ uint8_t ScoreManager::SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
   }
 
   // ポインタをセットするぞ //
-  if (!this->LoadScoreData())
+  if (!LoadScoreData())
     return 0;
-  auto maybe_p = this->GetNList(Dif);
+  auto maybe_p = GetNList(Dif);
   if (!maybe_p) {
-    this->ReleaseScoreData();
+    ReleaseScoreData();
     return 0;
   }
   auto p = maybe_p.value();
@@ -81,19 +81,19 @@ uint8_t ScoreManager::SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) {
     sprintf(Res[i].Stage, "%1d", p[i].Stage);
   }
 
-  this->ReleaseScoreData();
+  ReleaseScoreData();
 
   return rank;
 }
 
 uint8_t ScoreManager::IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) {
   // ロードできないので失敗！ //
-  if (!this->LoadScoreData())
+  if (!LoadScoreData())
     return 0;
-  defer(this->ReleaseScoreData());
+  defer(ReleaseScoreData());
 
   // 難易度でポインタを振り分ける //
-  const auto maybe_temp = this->GetNList(Dif);
+  const auto maybe_temp = GetNList(Dif);
   if (!maybe_temp) {
     return 0;
   }
@@ -114,7 +114,7 @@ uint8_t ScoreManager::IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) {
 // スコアデータを書き出す //
 bool ScoreManager::SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
   // スコアデータを読み込む //
-  const auto Rank = this->IsHighScore(NData, Dif);
+  const auto Rank = IsHighScore(NData, Dif);
 
   // これは、ハイスコアじゃないね //
   if (Rank == 0) {
@@ -122,12 +122,12 @@ bool ScoreManager::SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
   }
 
   // ポインタをセットする //
-  if (!this->LoadScoreData()) {
+  if (!LoadScoreData()) {
     return false;
   }
-  auto maybe_temp = this->GetNList(Dif);
+  auto maybe_temp = GetNList(Dif);
   if (!maybe_temp) {
-    this->ReleaseScoreData();
+    ReleaseScoreData();
     return false;
   }
   auto temp = maybe_temp.value();
@@ -142,12 +142,12 @@ bool ScoreManager::SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) {
 
   // 実際にファイルに出力 //
   BIT_DEVICE_WRITE bd;
-  this->SaveSC(this->score_cache->Easy, bd);
-  this->SaveSC(this->score_cache->Normal, bd);
-  this->SaveSC(this->score_cache->Hard, bd);
-  this->SaveSC(this->score_cache->Lunatic, bd);
-  this->SaveSC(this->score_cache->Extra, bd);
-  this->ReleaseScoreData();
+  SaveSC(score_cache->Easy, bd);
+  SaveSC(score_cache->Normal, bd);
+  SaveSC(score_cache->Hard, bd);
+  SaveSC(score_cache->Lunatic, bd);
+  SaveSC(score_cache->Extra, bd);
+  ReleaseScoreData();
 
   return bd.Write(ScoreFileName);
 }
@@ -157,27 +157,27 @@ bool ScoreManager::LoadScoreData() {
   bool bInit = false;
 
   // すでにロード済みの場合(これは失敗にしない) //
-  if (this->score_cache) {
+  if (score_cache) {
     return true;
   }
 
-  this->score_cache = std::unique_ptr<NR_SCORE_DATA>(new (std::nothrow) NR_SCORE_DATA);
-  if (this->score_cache == nullptr) {
+  score_cache = std::unique_ptr<NR_SCORE_DATA>(new (std::nothrow) NR_SCORE_DATA);
+  if (score_cache == nullptr) {
     return false;
   }
 
   // ビット読み込みモードでファイルを開く //
   auto bd = BitFilCreateR(ScoreFileName);
   while (1) {
-    if (!this->LoadSC(this->score_cache->Easy, bd))
+    if (!LoadSC(score_cache->Easy, bd))
       break;
-    if (!this->LoadSC(this->score_cache->Normal, bd))
+    if (!LoadSC(score_cache->Normal, bd))
       break;
-    if (!this->LoadSC(this->score_cache->Hard, bd))
+    if (!LoadSC(score_cache->Hard, bd))
       break;
-    if (!this->LoadSC(this->score_cache->Lunatic, bd))
+    if (!LoadSC(score_cache->Lunatic, bd))
       break;
-    if (!this->LoadSC(this->score_cache->Extra, bd))
+    if (!LoadSC(score_cache->Extra, bd))
       break;
 
     bInit = true;
@@ -187,7 +187,7 @@ bool ScoreManager::LoadScoreData() {
   if (!bInit) {
     // ファイルが存在しないか不正な場合、新たに作成する //
     // この時点では、ファイルに対して書き込みは行わない //
-    return this->SetDefaultScoreData();
+    return SetDefaultScoreData();
   }
 
   return true;
@@ -195,26 +195,26 @@ bool ScoreManager::LoadScoreData() {
 
 void ScoreManager::ReleaseScoreData() {
   // 解放～ //
-  this->score_cache = nullptr;
+  score_cache = nullptr;
 }
 
 // 難易度でポインタを振り分ける //
 std::optional<ScoreManager::NR_SCORE_LIST> ScoreManager::GetNList(uint8_t Dif) {
-  if (!this->score_cache) {
+  if (!score_cache) {
     return {};
   }
 
   switch (Dif) {
   case (GAME_EASY):
-    return this->score_cache->Easy;
+    return score_cache->Easy;
   case (GAME_NORMAL):
-    return this->score_cache->Normal;
+    return score_cache->Normal;
   case (GAME_HARD):
-    return this->score_cache->Hard;
+    return score_cache->Hard;
   case (GAME_LUNATIC):
-    return this->score_cache->Lunatic;
+    return score_cache->Lunatic;
   case (GAME_EXTRA):
-    return this->score_cache->Extra;
+    return score_cache->Extra;
   default:
     return {};
   }
@@ -222,12 +222,12 @@ std::optional<ScoreManager::NR_SCORE_LIST> ScoreManager::GetNList(uint8_t Dif) {
 
 // スコアデータ初期値をセット //
 bool ScoreManager::SetDefaultScoreData() {
-  if (nullptr == this->score_cache) {
+  if (nullptr == score_cache) {
     return false;
   }
 
   for (auto i = 0; i < (GAME_EXTRA + 1); i++) {
-    auto maybe_temp = this->GetNList(i);
+    auto maybe_temp = GetNList(i);
     if (!maybe_temp) {
       return false;
     }

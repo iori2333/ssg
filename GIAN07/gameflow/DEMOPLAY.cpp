@@ -38,104 +38,104 @@ std::u8string ReplayAllFN(bool exstg) {
 
 void DemoManager::Init(void) {
   // 乱数の準備 //
-  this->demo_info.RndSeed =
+  demo_info.RndSeed =
       ((Cast::up<uint32_t>(rnd()) + 1u) * (Cast::up<uint32_t>(rnd()) + 1u));
-  rnd_seed_set(this->demo_info.RndSeed);
+  rnd_seed_set(demo_info.RndSeed);
 
-  this->demo_info.Exp = Players.viv.exp;
-  this->demo_info.Weapon = Players.viv.weapon;
-  this->demo_info.CfgDat.GameLevel = GameState.game_level;
-  this->demo_info.CfgDat.PlayerStock = Players.viv.left;
-  this->demo_info.CfgDat.BombStock = ConfigDat.BombStock.v;
-  this->demo_info.CfgDat.InputFlags = ConfigDat.InputFlags.v;
+  demo_info.Exp = Players.viv.exp;
+  demo_info.Weapon = Players.viv.weapon;
+  demo_info.CfgDat.GameLevel = GameState.game_level;
+  demo_info.CfgDat.PlayerStock = Players.viv.left;
+  demo_info.CfgDat.BombStock = ConfigDat.BombStock.v;
+  demo_info.CfgDat.InputFlags = ConfigDat.InputFlags.v;
 
-  this->demo_frame_cur = 0;
-  this->save_all_enable = true;
-  this->multi_stage_count = 0;
-  this->stage_record_bufs.clear();
+  demo_frame_cur = 0;
+  save_all_enable = true;
+  multi_stage_count = 0;
+  stage_record_bufs.clear();
 }
 
 bool DemoManager::HasRecordedStages(void) {
-  return (this->save_all_enable && (this->multi_stage_count > 0 || this->demo_frame_cur > 0));
+  return (save_all_enable && (multi_stage_count > 0 || demo_frame_cur > 0));
 }
 
 void DemoManager::FlushStage(void) {
-  if (!this->save_all_enable)
+  if (!save_all_enable)
     return;
-  if (this->demo_frame_cur == 0)
+  if (demo_frame_cur == 0)
     return;
 
-  if (this->multi_stage_count < REPLAY_STAGE_MAX) {
-    this->multi_stage_nums[this->multi_stage_count] = GameState.game_stage;
-    this->multi_stage_frames[this->multi_stage_count] = this->demo_frame_cur;
+  if (multi_stage_count < REPLAY_STAGE_MAX) {
+    multi_stage_nums[multi_stage_count] = GameState.game_stage;
+    multi_stage_frames[multi_stage_count] = demo_frame_cur;
 
-    std::vector<INPUT_BITS> stage_data(this->demo_buffer.data(), this->demo_buffer.data() + this->demo_frame_cur);
-    this->stage_record_bufs.push_back(std::move(stage_data));
+    std::vector<INPUT_BITS> stage_data(demo_buffer.data(), demo_buffer.data() + demo_frame_cur);
+    stage_record_bufs.push_back(std::move(stage_data));
 
-    this->multi_stage_count++;
+    multi_stage_count++;
   }
 
-  this->demo_frame_cur = 0;
+  demo_frame_cur = 0;
 }
 
 bool DemoManager::LoadSetup() {
-  this->demo_frame_cur = 0;
-  this->load_enable = true;
+  demo_frame_cur = 0;
+  load_enable = true;
 
   // コンフィグの初期化 //
   // 現在のコンフィグを保持する //
-  this->config_temp.PlayerStock = ConfigDat.PlayerStock.v;
-  this->config_temp.BombStock = ConfigDat.BombStock.v;
-  this->config_temp.InputFlags = ConfigDat.InputFlags.v;
+  config_temp.PlayerStock = ConfigDat.PlayerStock.v;
+  config_temp.BombStock = ConfigDat.BombStock.v;
+  config_temp.InputFlags = ConfigDat.InputFlags.v;
 
   // そのときのコンフィグを転送 //
-  ConfigDat.BombStock.v = this->demo_info.CfgDat.BombStock;
-  ConfigDat.PlayerStock.v = this->demo_info.CfgDat.PlayerStock;
-  ConfigDat.InputFlags.v = this->demo_info.CfgDat.InputFlags;
-  GameState.game_level = this->demo_info.CfgDat.GameLevel;
+  ConfigDat.BombStock.v = demo_info.CfgDat.BombStock;
+  ConfigDat.PlayerStock.v = demo_info.CfgDat.PlayerStock;
+  ConfigDat.InputFlags.v = demo_info.CfgDat.InputFlags;
+  GameState.game_level = demo_info.CfgDat.GameLevel;
 
   // 本体の性能記述 //
-  Players.viv.exp = this->demo_info.Exp;
-  Players.viv.weapon = this->demo_info.Weapon;
+  Players.viv.exp = demo_info.Exp;
+  Players.viv.weapon = demo_info.Weapon;
   Players.viv.left = ConfigDat.PlayerStock.v;
   Players.viv.bomb = ConfigDat.BombStock.v;
 
   // 乱数の初期化 //
   // 最後に乱数もそろえる //
-  rnd_seed_set(this->demo_info.RndSeed);
+  rnd_seed_set(demo_info.RndSeed);
 
   return true;
 }
 
 bool DemoManager::Record(INPUT_BITS key) {
-  if (!this->save_all_enable) {
+  if (!save_all_enable) {
     return false;
   }
 
-  this->demo_buffer[this->demo_frame_cur++] = key;
+  demo_buffer[demo_frame_cur++] = key;
 
   // バッファが最後に来たか、ＥＳＣが押された場合 //
-  if ((this->demo_frame_cur == DEMOBUF_MAX) || (key & KEY_ESC)) {
-    this->demo_frame_cur--;
+  if ((demo_frame_cur == DEMOBUF_MAX) || (key & KEY_ESC)) {
+    demo_frame_cur--;
     return true;
   }
   return false;
 }
 
 void DemoManager::SaveDemo(void) {
-  if (!this->save_all_enable)
+  if (!save_all_enable)
     return;
 
-  this->demo_buffer[this->demo_frame_cur] = KEY_ESC;
-  this->demo_info.FrameCount = (this->demo_frame_cur + 1);
+  demo_buffer[demo_frame_cur] = KEY_ESC;
+  demo_info.FrameCount = (demo_frame_cur + 1);
 
   char8_t fn[] = u8"STG_Demo.DAT";
   fn[3] = ('0' + GameState.game_stage);
 
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f) {
-    SDL_WriteIO(f, &this->demo_info, sizeof(this->demo_info));
-    SDL_WriteIO(f, this->demo_buffer.data(), (sizeof(this->demo_buffer[0]) * this->demo_info.FrameCount));
+    SDL_WriteIO(f, &demo_info, sizeof(demo_info));
+    SDL_WriteIO(f, demo_buffer.data(), (sizeof(demo_buffer[0]) * demo_info.FrameCount));
     SDL_CloseIO(f);
   }
 }
@@ -149,72 +149,72 @@ bool DemoManager::LoadDemo(int stage) {
     if (!maybe_info) {
       return false;
     }
-    this->demo_info = maybe_info.value()[0];
+    demo_info = maybe_info.value()[0];
   }
   {
-    const auto maybe_inputs = temp_cursor.next<uint16_t>(this->demo_info.FrameCount);
+    const auto maybe_inputs = temp_cursor.next<uint16_t>(demo_info.FrameCount);
     if (!maybe_inputs) {
       return false;
     }
     const auto inputs = maybe_inputs.value();
-    memcpy(this->demo_buffer.data(), inputs.data(), inputs.size_bytes());
+    memcpy(demo_buffer.data(), inputs.data(), inputs.size_bytes());
   }
-  return this->LoadSetup();
+  return LoadSetup();
 }
 
 INPUT_BITS DemoManager::Move(void) {
-  if (!this->load_enable)
+  if (!load_enable)
     return KEY_ESC;
 
-  const auto ptr = this->demo_frame_cur;
-  if (ptr >= this->demo_info.FrameCount) {
-    this->load_enable = false;
+  const auto ptr = demo_frame_cur;
+  if (ptr >= demo_info.FrameCount) {
+    load_enable = false;
     return KEY_ESC;
   }
 
-  this->demo_frame_cur++;
-  return this->demo_buffer[ptr];
+  demo_frame_cur++;
+  return demo_buffer[ptr];
 }
 
 void DemoManager::Cleanup(void) {
-  ConfigDat.PlayerStock.v = this->config_temp.PlayerStock;
-  ConfigDat.BombStock.v = this->config_temp.BombStock;
-  ConfigDat.InputFlags.v = this->config_temp.InputFlags;
+  ConfigDat.PlayerStock.v = config_temp.PlayerStock;
+  ConfigDat.BombStock.v = config_temp.BombStock;
+  ConfigDat.InputFlags.v = config_temp.InputFlags;
 
-  this->load_enable = false;
-  this->load_all_enable = false;
+  load_enable = false;
+  load_all_enable = false;
 }
 
 void DemoManager::SaveReplayAll(bool exstg) {
-  if (!this->save_all_enable)
+  if (!save_all_enable)
     return;
 
   // Flush current stage data if any (not yet flushed by stage clear)
-  if (this->demo_frame_cur > 0 && this->multi_stage_count < REPLAY_STAGE_MAX) {
-    this->multi_stage_nums[this->multi_stage_count] = GameState.game_stage;
-    this->multi_stage_frames[this->multi_stage_count] = this->demo_frame_cur;
-    this->stage_record_bufs.emplace_back(this->demo_buffer.data(), this->demo_buffer.data() + this->demo_frame_cur);
-    this->multi_stage_count++;
-    this->demo_frame_cur = 0;
+  if (demo_frame_cur > 0 && multi_stage_count < REPLAY_STAGE_MAX) {
+    multi_stage_nums[multi_stage_count] = GameState.game_stage;
+    multi_stage_frames[multi_stage_count] = demo_frame_cur;
+    stage_record_bufs.emplace_back(demo_buffer.data(), demo_buffer.data() + demo_frame_cur);
+    multi_stage_count++;
+    demo_frame_cur = 0;
   }
 
-  this->save_all_enable = false;
+  save_all_enable = false;
 
   MULTI_REPLAY_INFO info = {};
-  info.RndSeed = this->demo_info.RndSeed;
-  info.StageCount = this->multi_stage_count;
-  info.CfgDat = this->demo_info.CfgDat;
-  info.Exp = this->demo_info.Exp;
-  info.Weapon = this->demo_info.Weapon;
-  for (int i = 0; i < this->multi_stage_count; i++) {
-    info.Stages[i] = this->multi_stage_nums[i];
-    info.FrameCounts[i] = this->multi_stage_frames[i];
+  info.RndSeed = demo_info.RndSeed;
+  info.StageCount = multi_stage_count;
+  info.CfgDat = demo_info.CfgDat;
+  info.Exp = demo_info.Exp;
+  info.Weapon = demo_info.Weapon;
+  for (int i = 0; i < multi_stage_count; i++) {
+    info.Stages[i] = multi_stage_nums[i];
+    info.FrameCounts[i] = multi_stage_frames[i];
   }
 
   PACKFILE_WRITE out;
   out.files.push_back(
       {reinterpret_cast<const uint8_t *>(&info), sizeof(info)});
-  for (auto &buf : this->stage_record_bufs) {
+  for (auto &buf : stage_record_bufs) {
     out.files.push_back(
         {reinterpret_cast<const uint8_t *>(buf.data()),
          buf.size() * sizeof(INPUT_BITS)});
@@ -223,8 +223,8 @@ void DemoManager::SaveReplayAll(bool exstg) {
   const auto fn = ReplayAllFN(exstg);
   out.Write(fn.c_str());
 
-  this->stage_record_bufs.clear();
-  this->multi_stage_count = 0;
+  stage_record_bufs.clear();
+  multi_stage_count = 0;
 }
 
 bool DemoManager::LoadReplayAll(const char8_t *fn) {
@@ -235,38 +235,38 @@ bool DemoManager::LoadReplayAll(const char8_t *fn) {
   BYTE_BUFFER_OWNED temp = in.MemExpand(0);
   if (nullptr == temp)
     return false;
-  memcpy(&this->multi_play_info, temp.get(), sizeof(MULTI_REPLAY_INFO));
+  memcpy(&multi_play_info, temp.get(), sizeof(MULTI_REPLAY_INFO));
 
   // Compute max stage for stage transition gating
-  this->playback_max_stage = 0;
-  for (uint8_t i = 0; i < this->multi_play_info.StageCount; i++) {
-    if (this->multi_play_info.Stages[i] > this->playback_max_stage)
-      this->playback_max_stage = this->multi_play_info.Stages[i];
+  playback_max_stage = 0;
+  for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
+    if (multi_play_info.Stages[i] > playback_max_stage)
+      playback_max_stage = multi_play_info.Stages[i];
   }
 
-  this->all_playback_buf.clear();
+  all_playback_buf.clear();
   uint32_t total_frames = 0;
-  for (uint8_t i = 0; i < this->multi_play_info.StageCount; i++) {
+  for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
     temp = in.MemExpand(i + 1);
     if (nullptr == temp)
       return false;
-    uint32_t n_frames = this->multi_play_info.FrameCounts[i];
+    uint32_t n_frames = multi_play_info.FrameCounts[i];
     const auto src = reinterpret_cast<const INPUT_BITS *>(temp.get());
-    this->all_playback_buf.insert(this->all_playback_buf.end(), src, src + n_frames);
+    all_playback_buf.insert(all_playback_buf.end(), src, src + n_frames);
     total_frames += n_frames;
   }
 
-  // Copy combined data into this->demo_buffer for DemoplayMove()
+  // Copy combined data into demo_buffer for DemoplayMove()
   if (total_frames > DEMOBUF_MAX)
     total_frames = DEMOBUF_MAX;
-  memcpy(this->demo_buffer.data(), this->all_playback_buf.data(),
+  memcpy(demo_buffer.data(), all_playback_buf.data(),
          total_frames * sizeof(INPUT_BITS));
-  this->demo_info.FrameCount = total_frames;
-  this->demo_info.RndSeed = this->multi_play_info.RndSeed;
-  this->demo_info.CfgDat = this->multi_play_info.CfgDat;
-  this->demo_info.Exp = this->multi_play_info.Exp;
-  this->demo_info.Weapon = this->multi_play_info.Weapon;
+  demo_info.FrameCount = total_frames;
+  demo_info.RndSeed = multi_play_info.RndSeed;
+  demo_info.CfgDat = multi_play_info.CfgDat;
+  demo_info.Exp = multi_play_info.Exp;
+  demo_info.Weapon = multi_play_info.Weapon;
 
-  this->load_all_enable = true;
-  return this->LoadSetup();
+  load_all_enable = true;
+  return LoadSetup();
 }

@@ -10,8 +10,8 @@ struct RankManager {
   PlayRankState state; // PlayRank
 
   // === メソッド ===
-  void Add(int n);     // was PlayRankAdd
-  void Reset();        // was PlayRankReset
+  void Add(int n);
+  void Reset();
 };
 
 extern RankManager Ranking;

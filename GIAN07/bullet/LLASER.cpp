@@ -13,7 +13,7 @@
 #include "platform/graphics_backend.h"
 
 //// レーザー変数２ → laser_manager.cpp に移動
-// Lasers.long_lasers[], LLaserCmd は laser_manager.cpp で定義
+// long_lasers[], LLaserCmd は laser_manager.cpp で定義
 
 //// ローカル関数 ////
 // private methods declared in laser_manager.h
@@ -25,23 +25,23 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   // もし、レーザーが見つからなければ、FALSE をリターンする //
   // つまり、その場合は、参照カウントを増加させない         //
   auto lp = std::ranges::find_if(
-      Lasers.long_lasers, [](const auto &lp) { return (lp.flag == LLF_DISABLE); });
-  if (lp == std::end(Lasers.long_lasers)) {
+      long_lasers, [](const auto &lp) { return (lp.flag == LLF_DISABLE); });
+  if (lp == std::end(long_lasers)) {
     return false;
   }
 
-  lp->dx = Lasers.long_cmd.dx;
-  lp->dy = Lasers.long_cmd.dy;
-  lp->e = Lasers.long_cmd.e;
+  lp->dx = long_cmd.dx;
+  lp->dy = long_cmd.dy;
+  lp->e = long_cmd.e;
 
   lp->EnemyID = id;
 
   lp->x = lp->e->x + lp->dx;
   lp->y = lp->e->y + lp->dy;
 
-  lp->v = Lasers.long_cmd.v;
+  lp->v = long_cmd.v;
 
-  lp->c = Lasers.long_cmd.c;
+  lp->c = long_cmd.c;
 
   lp->lx = 0;
   lp->ly = 0;
@@ -49,15 +49,15 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   lp->wy = 0;
 
   lp->w = 0;
-  lp->wmax = Lasers.long_cmd.w;
+  lp->wmax = long_cmd.w;
 
-  lp->d = Lasers.long_cmd.d;
+  lp->d = long_cmd.d;
 
-  if (Lasers.long_cmd.type == LLS_LONGZ) {
+  if (long_cmd.type == LLS_LONGZ) {
     lp->d += atan8(Players.viv.x - lp->x, Players.viv.y - lp->y);
     lp->type = LLS_LONG;
   } else
-    lp->type = Lasers.long_cmd.type;
+    lp->type = long_cmd.type;
 
   lp->infx = cosl(lp->d, 800);
   lp->infy = sinl(lp->d, 800);
@@ -74,7 +74,7 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
 }
 
 void LaserManager::OpenLong(const ENEMY_DATA *e, uint8_t id) {
-  for (auto &it : Lasers.long_lasers) {
+  for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL) &&
         lp->flag != LLF_DISABLE) {
@@ -86,11 +86,11 @@ void LaserManager::OpenLong(const ENEMY_DATA *e, uint8_t id) {
 
 void LaserManager::CloseLong(const ENEMY_DATA *e, uint8_t id) {
   if (id == ECLCST_LLASERALL) {
-    this->ForceCloseLong(e);
+    ForceCloseLong(e);
     return;
   }
 
-  for (auto &it : Lasers.long_lasers) {
+  for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id)) {
       lp->flag = LLF_CLOSE;
@@ -100,7 +100,7 @@ void LaserManager::CloseLong(const ENEMY_DATA *e, uint8_t id) {
 }
 
 void LaserManager::LineLong(const ENEMY_DATA *e, uint8_t id) {
-  for (auto &it : Lasers.long_lasers) {
+  for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
       lp->flag = LLF_CLOSEL;
@@ -112,14 +112,14 @@ void LaserManager::LineLong(const ENEMY_DATA *e, uint8_t id) {
 void LaserManager::UpdateLongXY(int id) {
   // 注意！！この関数のid は旧式のid の意味を持つことに注意 //
 
-  Lasers.long_lasers[id].x = Lasers.long_lasers[id].e->x + Lasers.long_lasers[id].dx;
-  Lasers.long_lasers[id].y = Lasers.long_lasers[id].e->y + Lasers.long_lasers[id].dy;
+  long_lasers[id].x = long_lasers[id].e->x + long_lasers[id].dx;
+  long_lasers[id].y = long_lasers[id].e->y + long_lasers[id].dy;
 
-  SetLongPoint(&Lasers.long_lasers[id]); // p[4] をセット
+  SetLongPoint(&long_lasers[id]); // p[4] をセット
 }
 
 void LaserManager::RotateLongAbs(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
-  for (auto &it : Lasers.long_lasers) {
+  for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
       lp->d = d;
@@ -139,7 +139,7 @@ void LaserManager::RotateLongAbs(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
 }
 
 void LaserManager::RotateLongRel(const ENEMY_DATA *e, char d, uint8_t id) {
-  for (auto &it : Lasers.long_lasers) {
+  for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
       lp->d += d;
@@ -160,7 +160,7 @@ void LaserManager::RotateLongRel(const ENEMY_DATA *e, char d, uint8_t id) {
 
 // 敵に関連づけられたレーザーを強制クローズ(Level2...) //
 void LaserManager::ForceCloseLong(const ENEMY_DATA *e) {
-  for (auto &it : Lasers.long_lasers) {
+  for (auto &it : long_lasers) {
     auto *lp = &it;
 
     // (参考) すでにクローズ状態であっても LLaserClose() は問題を発生させない //
@@ -176,7 +176,7 @@ void LaserManager::MoveLong() {
   int i;
   LLASER_DATA *lp;
 
-  for (i = 0, lp = Lasers.long_lasers.data(); i < LLASER_MAX; i++, lp++) {
+  for (i = 0, lp = long_lasers.data(); i < LLASER_MAX; i++, lp++) {
 
     // 角度セットモードで、敵の角度と現在の角度が異なっていたら再度セット //
     if (lp->type == LLS_SETDEG && lp->e && lp->d != lp->e->d) {
@@ -277,7 +277,7 @@ void LaserManager::DrawLong() {
 
   GrpGeom->Lock();
 
-  for (const auto &it : Lasers.long_lasers) {
+  for (const auto &it : long_lasers) {
     const auto *lp = &it;
     const auto c = lp->c;
     switch (lp->flag) {
@@ -388,7 +388,7 @@ void LaserManager::DrawLong() {
 
 void LaserManager::ClearLong() {
   // 存在するレーザー全てを閉じる //
-  for (auto &it : Lasers.long_lasers) {
+  for (auto &it : long_lasers) {
     if (it.flag != LLF_DISABLE) {
       it.flag = LLF_CLOSE;
     }
@@ -398,8 +398,8 @@ void LaserManager::ClearLong() {
 }
 
 void LaserManager::SetupLong() {
-  for (auto &it : Lasers.long_lasers) {
-    // memset(Lasers.long_lasers+i,0,sizeof(LLASER_DATA));
+  for (auto &it : long_lasers) {
+    // memset(long_lasers+i,0,sizeof(LLASER_DATA));
     it.flag = LLF_DISABLE;
     it.e = nullptr;
   }

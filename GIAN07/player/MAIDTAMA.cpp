@@ -60,7 +60,7 @@ static void SetHomingBomb(void);
 static void SetLaserBomb(void);
 static void SetCactusBomb(void);
 
-// this->maid_tama[], this->maid_tama_ind[], this->maid_tama_now → player_manager.cpp の PlayerManager に移動
+// maid_tama[], maid_tama_ind[], maid_tama_now → player_manager.cpp の PlayerManager に移動
 
 constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     // MainWeapon		// SubWeapon
@@ -105,51 +105,51 @@ void PlayerManager::SetMaidShot(void) {
   // 発射し、そうでなければ、単にリターンする。                             //
   // なお、弾のセットには TAMA.cpp 内の関数と互換のものを使用する           //
 
-  if ((Key_Data & KEY_TAMA) && Players.viv.toge_time == 0 &&
-      Players.viv.muteki < MAID_MOVE_DISABLE_TIME) {
-    Players.viv.toge_time = MAID_TAMA_START;
+  if ((Key_Data & KEY_TAMA) && viv.toge_time == 0 &&
+      viv.muteki < MAID_MOVE_DISABLE_TIME) {
+    viv.toge_time = MAID_TAMA_START;
   }
 
   // ボムの発動条件を満たしていれば、発動! //
-  if ((Key_Data & KEY_BOMB) && (Players.viv.bomb_time == 0) &&
-      (Players.viv.muteki < VIVDEAD_VAL) && // 死亡中は Bomb を発動しない
-      Players.viv.bomb && (Scroller.scene.MsgFlag == false)) {
-    // if(Players.viv.weapon == 0) EnterBombPalette();
+  if ((Key_Data & KEY_BOMB) && (viv.bomb_time == 0) &&
+      (viv.muteki < VIVDEAD_VAL) && // 死亡中は Bomb を発動しない
+      viv.bomb && (Scroller.scene.MsgFlag == false)) {
+    // if(viv.weapon == 0) EnterBombPalette();
 
-    Players.viv.bomb_time = MaidBombTime[Players.viv.weapon & 3]; // 装備ごとに変更せよ
-    Players.viv.muteki = BOMBMUTEKI_VAL;
-    Players.viv.bomb--;
-    Players.viv.bomb_used++;
+    viv.bomb_time = MaidBombTime[viv.weapon & 3]; // 装備ごとに変更せよ
+    viv.muteki = BOMBMUTEKI_VAL;
+    viv.bomb--;
+    viv.bomb_used++;
     Ranking.Add(-25); // 難易度ダウン
   }
 
-  if (Players.viv.bomb_time) {
-    Players.viv.bomb_time--;
-    MaidBombFunc[Players.viv.weapon]();
+  if (viv.bomb_time) {
+    viv.bomb_time--;
+    MaidBombFunc[viv.weapon]();
 
-    // if(Players.viv.bomb_time == 0 && Players.viv.weapon == 0)
+    // if(viv.bomb_time == 0 && viv.weapon == 0)
     //	LeaveBombPalette();
   }
 
-  if (Players.viv.toge_time) {
-    MaidTamaFunc[Players.viv.weapon & 3][(Players.viv.exp + 1) >> 5]();
-    Players.viv.toge_time--;
+  if (viv.toge_time) {
+    MaidTamaFunc[viv.weapon & 3][(viv.exp + 1) >> 5]();
+    viv.toge_time--;
   }
 
   // レーザーを装備している場合 //
-  if (Players.viv.weapon == 2 && Players.viv.lay_time) {
-    Players.viv.lay_time--;
-    if (Players.viv.lay_time < 64)
-      Players.viv.lay_grp = 0;
-    else if (Players.viv.lay_time < 64 + 50)
-      Players.viv.lay_grp = 1;
-    else if (Players.viv.lay_time < 64 + 100)
-      Players.viv.lay_grp = 2;
-    else if (Players.viv.lay_time < 64 + 150)
-      Players.viv.lay_grp = 3;
+  if (viv.weapon == 2 && viv.lay_time) {
+    viv.lay_time--;
+    if (viv.lay_time < 64)
+      viv.lay_grp = 0;
+    else if (viv.lay_time < 64 + 50)
+      viv.lay_grp = 1;
+    else if (viv.lay_time < 64 + 100)
+      viv.lay_grp = 2;
+    else if (viv.lay_time < 64 + 150)
+      viv.lay_grp = 3;
     else
-      Players.viv.lay_grp = 4;
-    // Players.viv.lay_grp = (Players.viv.lay_time+63)>>6;
+      viv.lay_grp = 4;
+    // viv.lay_grp = (viv.lay_time+63)>>6;
   }
 }
 
@@ -162,8 +162,8 @@ void PlayerManager::MoveMaidShot(void) {
 
   int i;
 
-  for (i = 0; i < this->maid_tama_now; i++) {
-    auto *t = &this->maid_tama[this->maid_tama_ind[i]];
+  for (i = 0; i < maid_tama_now; i++) {
+    auto *t = &maid_tama[maid_tama_ind[i]];
     if (t->c == TID_HOMING_BOMB_B) {
       Enemies.DamageAt(t->x, t->y, TogeDamage[t->c]);
       t->count++;
@@ -195,15 +195,15 @@ void PlayerManager::MoveMaidShot(void) {
     } else
       Bullets.MoveByEffect(t);
   }
-  Indsort(Players.maid_tama_ind, this->maid_tama_now, Players.maid_tama,
+  Indsort(maid_tama_ind, maid_tama_now, maid_tama,
           [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
 
   // レーザーの当たり判定 //
-  if (Players.viv.weapon == 2 && Players.viv.lay_grp) {
-    // x = (Players.viv.opx>>6)+4 -8 + SBOPT_DX;
-    // y = (Players.viv.opy>>6)-20;
-    Enemies.DamageAt2(Players.viv.opx + (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
-    Enemies.DamageAt2(Players.viv.opx - (SBOPT_DX << 6), Players.viv.opy, Players.viv.lay_grp / 3 + 1);
+  if (viv.weapon == 2 && viv.lay_grp) {
+    // x = (viv.opx>>6)+4 -8 + SBOPT_DX;
+    // y = (viv.opy>>6)-20;
+    Enemies.DamageAt2(viv.opx + (SBOPT_DX << 6), viv.opy, viv.lay_grp / 3 + 1);
+    Enemies.DamageAt2(viv.opx - (SBOPT_DX << 6), viv.opy, viv.lay_grp / 3 + 1);
   }
 }
 
@@ -220,8 +220,8 @@ void PlayerManager::DrawMaidShot(void) {
                                      {568, 104, 568 + 32, 104 + 32},
                                      {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; i < this->maid_tama_now; i++) {
-    auto *t = &this->maid_tama[this->maid_tama_ind[i]];
+  for (i = 0; i < maid_tama_now; i++) {
+    auto *t = &maid_tama[maid_tama_ind[i]];
 
     x = (t->x >> 6) - 8; // -8 は座標の補正用です
     y = (t->y >> 6) - 8; // 上に同じ
@@ -257,25 +257,25 @@ void PlayerManager::DrawMaidShot(void) {
   }
 
   // レーザーの描画 //
-  if (Players.viv.weapon == 2 && Players.viv.lay_grp) {
-    ltemp = PIXEL_LTWH{(384 + ((Players.viv.lay_grp - 1) << 4)), 240, 8, 16};
+  if (viv.weapon == 2 && viv.lay_grp) {
+    ltemp = PIXEL_LTWH{(384 + ((viv.lay_grp - 1) << 4)), 240, 8, 16};
 
-    x = (Players.viv.opx >> 6) + 4 - 8 + SBOPT_DX;
-    y = (Players.viv.opy >> 6) - 20;
+    x = (viv.opx >> 6) + 4 - 8 + SBOPT_DX;
+    y = (viv.opy >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    x = (Players.viv.opx >> 6) + 4 - 8 - SBOPT_DX;
-    y = (Players.viv.opy >> 6) - 20;
+    x = (viv.opx >> 6) + 4 - 8 - SBOPT_DX;
+    y = (viv.opy >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    ltemp = PIXEL_LTWH{(384 + 8 + ((Players.viv.lay_grp - 1) << 4)), 240, 8, 16};
-    for (i = (Players.viv.opy >> 6) - 36; i > -16; i -= 16) {
-      x = (Players.viv.opx >> 6) + 4 - 8 + SBOPT_DX;
+    ltemp = PIXEL_LTWH{(384 + 8 + ((viv.lay_grp - 1) << 4)), 240, 8, 16};
+    for (i = (viv.opy >> 6) - 36; i > -16; i -= 16) {
+      x = (viv.opx >> 6) + 4 - 8 + SBOPT_DX;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
-    for (i = (Players.viv.opy >> 6) - 36; i > -16; i -= 16) {
-      x = (Players.viv.opx >> 6) + 4 - 8 - SBOPT_DX;
+    for (i = (viv.opy >> 6) - 36; i > -16; i -= 16) {
+      x = (viv.opx >> 6) + 4 - 8 - SBOPT_DX;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
@@ -288,12 +288,12 @@ void PlayerManager::SetMaidShotIndices(void) {
 
   // この配列を初期化することで全ての弾を初期化する事になる //
   for (i = 0; i < MAIDTAMA_MAX; i++) {
-    this->maid_tama_ind[i] = i;
+    maid_tama_ind[i] = i;
     // memset(Players.maid_tama+i,0,sizeof(TAMA_DATA));
   }
 
   // 現在の個数を０初期化するのを忘れずに //
-  this->maid_tama_now = 0;
+  maid_tama_now = 0;
 }
 
 static void MTamaSet(void) {

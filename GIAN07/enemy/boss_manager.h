@@ -21,33 +21,33 @@ struct BossManager {
   // === メソッド ===
 
   // 初期化・セット
-  void Init();                                              // was BossDataInit
-  void Set(int x, int y, uint32_t BossID);                 // was BossSet
-  void SetEx(int x, int y, uint32_t BossID);               // was BossSetEx
+  void Init();
+  void Set(int x, int y, uint32_t BossID);
+  void SetEx(int x, int y, uint32_t BossID);
 
   // 移動・描画
-  void Move();                                              // was BossMove
-  void Draw();                                              // was BossDraw
-  void ClearCmd();                                          // was BossClearCmd
-  void DrawHPG();                                           // was BossHPG_Draw
+  void Move();
+  void Draw();
+  void ClearCmd();
+  void DrawHPG();
 
   // 体力
-  void KillAll();                                           // was BossKillAll
-  uint32_t GetHPSum();                                      // was GetBossHPSum
+  void KillAll();
+  uint32_t GetHPSum();
 
   // ダメージ
-  bool ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage); // was BossDamageApply
-  bool DamageAt(int x, int y, int damage);                   // was BossDamage
-  bool DamageAt2(int x, int y, int damage);                  // was BossDamage2
-  void DamageAt3(int x, int y, uint8_t d);                   // was BossDamage3
-  void DamageAll(int damage);                                // was BossDamage4
+  bool ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage);
+  bool DamageAt(int x, int y, int damage);
+  bool DamageAt2(int x, int y, int damage);
+  void DamageAt3(int x, int y, uint8_t d);
+  void DamageAll(int damage);
 
   // 割り込み・ビット制御
-  void Interrupt(ENEMY_DATA *e, uint8_t IntID);              // was BossINT
-  void BitAttack(ENEMY_DATA *e, uint32_t AtkID);             // was BossBitAttack
-  void BitLaser(ENEMY_DATA *e, uint8_t cmd);                 // was BossBitLaser
-  void BitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param);    // was BossBitCommand
-  int GetBitLeft();                                          // was BossGetBitLeft
+  void Interrupt(ENEMY_DATA *e, uint8_t IntID);
+  void BitAttack(ENEMY_DATA *e, uint32_t AtkID);
+  void BitLaser(ENEMY_DATA *e, uint8_t cmd);
+  void BitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param);
+  int GetBitLeft();
 
   // 蛇型の敵 (was in EnemyExCtrl.cpp)
   void SnakyInit();

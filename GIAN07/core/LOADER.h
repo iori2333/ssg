@@ -16,14 +16,19 @@ struct SURFACE_DDRAW;
 inline constexpr auto FACE_NUMX = 6; // 顔グラの横の個数
 
 // 特殊グラフィックID (For LoadGraph() ) //
-inline constexpr auto GRAPH_ID_MUSICROOM = 128; // 音楽室用ＢＭＰのＩＤ(数値は1-6 で無ければ良い)
-inline constexpr auto GRAPH_ID_TITLE = (128 + 1);      // タイトル画面のＢＭＰのＩＤ
-inline constexpr auto GRAPH_ID_NAMEREGIST = (128 + 2); // お名前登録画面のＢＭＰのＩＤ
-inline constexpr auto GRAPH_ID_EXSTAGE = (128 + 3);    // エキストラステージ・システム
-inline constexpr auto GRAPH_ID_EXBOSS1 = (128 + 4);    // エキストラステージ・ボス１
-inline constexpr auto GRAPH_ID_EXBOSS2 = (128 + 5);    // エキストラステージ・ボス２
-inline constexpr auto GRAPH_ID_SPROJECT = (128 + 6);   // 西方Ｐｒｏｊｅｃｔの表示
-inline constexpr auto GRAPH_ID_ENDING = (128 + 7);     // エンディングのロードを行う
+inline constexpr auto GRAPH_ID_MUSICROOM =
+    128; // 音楽室用ＢＭＰのＩＤ(数値は1-6 で無ければ良い)
+inline constexpr auto GRAPH_ID_TITLE = (128 + 1); // タイトル画面のＢＭＰのＩＤ
+inline constexpr auto GRAPH_ID_NAMEREGIST =
+    (128 + 2); // お名前登録画面のＢＭＰのＩＤ
+inline constexpr auto GRAPH_ID_EXSTAGE =
+    (128 + 3); // エキストラステージ・システム
+inline constexpr auto GRAPH_ID_EXBOSS1 =
+    (128 + 4); // エキストラステージ・ボス１
+inline constexpr auto GRAPH_ID_EXBOSS2 =
+    (128 + 5); // エキストラステージ・ボス２
+inline constexpr auto GRAPH_ID_SPROJECT = (128 + 6); // 西方Ｐｒｏｊｅｃｔの表示
+inline constexpr auto GRAPH_ID_ENDING = (128 + 7); // エンディングのロードを行う
 
 // サウンド(効果音番号) //
 inline constexpr auto SOUND_ID_KEBARI = 0x00;
@@ -82,8 +87,8 @@ struct EndingGrp {
 using ENDING_GRP = EndingGrp;
 
 ///// [ 関数 ] /////
-void LoaderInit(void);
-void LoaderCleanup(void);
+void LoaderInit();
+void LoaderCleanup();
 bool LoadStageData(
     uint8_t stage);        // ＥＣＬ&ＳＣＬデータ列をメモリ上にロードする
 bool LoadGraph(int stage); // あるステージのグラフィックをロードする
@@ -98,27 +103,12 @@ BYTE_BUFFER_OWNED LoadMusicRoomComment(int no);
 
 BYTE_BUFFER_OWNED LoadDemo(int stage);
 
-void LoadPaletteFromEnemy(void); // 敵のパレットにする
+void LoadPaletteFromEnemy(); // 敵のパレットにする
 
 // Reloads the last stage loaded with LoadGraph().
-void ReloadGraph(void);
-
-/*
-// 廃止：2000/12/01 //
-void EnterBombPalette(void);		// ボム用パレット属性に変更する
-void LeaveBombPalette(void);		// ボム用パレット属性を外す
-*/
+void ReloadGraph();
 
 //// [ 変数 ] ////
-extern SURFACE_DDRAW &GrTama;   // システム用
-extern SURFACE_DDRAW &GrEnemy;  // 敵(雑魚＆ボス)用
-extern SURFACE_DDRAW &GrMap;    // 背景用
-extern SURFACE_DDRAW &GrBomber; // ボム用グラフィック用
-extern SURFACE_DDRAW &GrSProject;
-extern SURFACE_DDRAW &GrTitle;
-extern SURFACE_DDRAW &GrMusic;
-extern SURFACE_DDRAW &GrNameReg;
-extern SURFACE_DDRAW &GrEndingCredits;
 
 // 顔グラ用
 extern const std::reference_wrapper<SURFACE_DDRAW> GrFaces[FACE_MAX];
@@ -132,4 +122,3 @@ extern uint32_t MusicNum; // 曲数
 extern PALETTE SProjectPalette;
 
 extern ENDING_GRP EndingGrp[ENDING_PIC_MAX];
-

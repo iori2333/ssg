@@ -16,11 +16,11 @@ struct PlayerManager {
   uint16_t maid_tama_now = 0;                               // MaidTamaNow
 
   // === メソッド ===
-  void SetMaidShot();             // was MaidTamaSet
-  void MoveMaidShot();            // was MaidTamaMove
-  void DrawMaidShot();            // was MaidTamaDraw
-  void SetMaidShotIndices();      // was MaidTamaIndSet
-  void SetMLaser(uint16_t time);  // was MLaserSet
+  void SetMaidShot();
+  void MoveMaidShot();
+  void DrawMaidShot();
+  void SetMaidShotIndices();
+  void SetMLaser(uint16_t time);
 };
 
 extern PlayerManager Players;

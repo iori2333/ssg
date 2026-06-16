@@ -630,7 +630,7 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
 }
 
 // 敵のパレットにする
-extern void LoadPaletteFromEnemy(void) {
+void LoadPaletteFromEnemy() {
   if (GrpBackend_PixelFormat().IsPalettized()) {
     GrpBackend_PaletteSet(EnemyPalette);
   }

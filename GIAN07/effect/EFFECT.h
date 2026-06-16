@@ -90,7 +90,7 @@ using SCREENEFC_INFO = ScreenEffectState;
 ///// [ 関数 ] /////
 // 後方互換 inline wrapper は effect_manager.h の末尾に移動
 void GrpDrawSpect(int x, int y); // スペアナ描画 (MUSIC.cpp)
-void GrpDrawNote(void);          // 押されているところを表示 (MUSIC.cpp)
+void GrpDrawNote();          // 押されているところを表示 (MUSIC.cpp)
 
 ///// [ 変数 ] /////
 // 全エフェクト変数 → Effects.xxx で直接アクセス（effect_manager.h 参照）

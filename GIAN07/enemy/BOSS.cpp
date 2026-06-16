@@ -45,7 +45,7 @@ static constexpr auto BHPG_OPEN3 = 0x05; // 体力ゲージを更新する
 
 ///// [ 変数 ] /////
 
-// this->bosses[], this->count, this->hpg → boss_manager.cpp の BossManager に移動
+// bosses[], count, hpg → boss_manager.cpp の BossManager に移動
 
 // 秘密の関数 //
 static void HPG_Open(uint32_t max);    // ボスの体力ゲージをオープンする
@@ -58,7 +58,7 @@ static void STDMove(BOSS_DATA *b);         // ノーマルECL互換の移動
 
 // ボスデータ配列を初期化する(中断、ステージクリア時に使用) //
 void BossManager::Init(void) {
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     it.IsUsed = 0; // 要はこれをゼロにすれば良い
 
     // 特殊変数の初期化.... //
@@ -69,16 +69,16 @@ void BossManager::Init(void) {
   }
 
   // ボスが死んでいるのだから、体力ゲージはもちろん表示しない //
-  this->hpg.State = BHPG_DEAD;
+  hpg.State = BHPG_DEAD;
 
   // ボスの数を０にする //
-  this->count = 0;
+  count = 0;
 
   // 蛇管理を初期化(やや謎) //
-  this->SnakyInit();
+  SnakyInit();
 
   // ビット管理も初期化 //
-  this->BitInit();
+  BitInit();
 }
 
 // ボスをセットする //
@@ -87,27 +87,27 @@ void BossManager::Set(int x, int y, uint32_t BossID) {
   uint32_t HP_Sum = 0;
 
   // ｘ６４座標に変換してボスをセットする //
-  n = this->PutBoss(x << 6, y << 6, BossID);
+  n = PutBoss(x << 6, y << 6, BossID);
 
   if (n == BOSS_MAX)
     return; // ここに来たらバグ
 
-  this->bosses[n].ExCount = 0;
-  this->bosses[n].ExMove = BossManager::STDMove;
-  this->bosses[n].ExState = BEXST_NORM;
-  this->bosses[n].IsUsed = 0xff;
+  bosses[n].ExCount = 0;
+  bosses[n].ExMove = BossManager::STDMove;
+  bosses[n].ExState = BEXST_NORM;
+  bosses[n].IsUsed = 0xff;
 
-  Enemies.ParseECL(&(this->bosses[n].Edat));
-  // ObjectLockOn(&(this->bosses[n].Edat.x),&(this->bosses[n].Edat.y),this->bosses[n].Edat.g_width,this->bosses[n].Edat.g_height);
+  Enemies.ParseECL(&(bosses[n].Edat));
+  // ObjectLockOn(&(bosses[n].Edat.x),&(bosses[n].Edat.y),bosses[n].Edat.g_width,bosses[n].Edat.g_height);
 
-  for (const auto &it : this->bosses) {
+  for (const auto &it : bosses) {
     if (it.IsUsed) {
       HP_Sum += it.Edat.hp;
     }
   }
 
-  this->HPG_Open(HP_Sum);
-  this->count++;
+  HPG_Open(HP_Sum);
+  count++;
 }
 
 // ボスをセットする(ＥＣＬ用) //
@@ -116,27 +116,27 @@ void BossManager::SetEx(int x, int y, uint32_t BossID) {
   uint32_t HP_Sum = 0;
 
   // ｘ６４座標に変換してボスをセットする //
-  n = this->PutBoss(x << 6, y << 6, BossID);
+  n = PutBoss(x << 6, y << 6, BossID);
 
   if (n == BOSS_MAX)
     return; // ここに来たらバグ
 
-  this->bosses[n].ExCount = 0;
-  this->bosses[n].ExMove = BossManager::STDMove;
-  this->bosses[n].ExState = BEXST_NORM;
-  this->bosses[n].IsUsed = 0xff;
+  bosses[n].ExCount = 0;
+  bosses[n].ExMove = BossManager::STDMove;
+  bosses[n].ExState = BEXST_NORM;
+  bosses[n].IsUsed = 0xff;
 
-  Enemies.ParseECL(&(this->bosses[n].Edat));
-  // ObjectLockOn(&(this->bosses[n].Edat.x),&(this->bosses[n].Edat.y),this->bosses[n].Edat.g_width,this->bosses[n].Edat.g_height);
+  Enemies.ParseECL(&(bosses[n].Edat));
+  // ObjectLockOn(&(bosses[n].Edat.x),&(bosses[n].Edat.y),bosses[n].Edat.g_width,bosses[n].Edat.g_height);
 
-  for (const auto &it : this->bosses) {
+  for (const auto &it : bosses) {
     if (it.IsUsed) {
       HP_Sum += it.Edat.hp;
     }
   }
 
-  this->HPG_Update(HP_Sum);
-  this->count++;
+  HPG_Update(HP_Sum);
+  count++;
 }
 
 // ボスを動かす //
@@ -146,7 +146,7 @@ void BossManager::Move(void) {
 
   Enemies.homing_flag = HOMING_DUMMY;
 
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->IsUsed) {
       e = &(b->Edat);
@@ -175,9 +175,9 @@ void BossManager::Move(void) {
     }
   }
 
-  this->SnakyMove();
-  this->BitMove();
-  this->HPG_Move(HP_Sum);
+  SnakyMove();
+  BitMove();
+  HPG_Move(HP_Sum);
 }
 
 // ボスを描画する
@@ -187,26 +187,10 @@ void BossManager::Draw(void) {
   int w, h, t;
   ENEMY_DATA *e;
   PIXEL_LTRB wing;
-  /*
-          PIXEL_LTRB	Right[6] = {
-                  {240+40, 400, 240+80, 480}, {320, 400, 320+32, 480},
-                  {384+24, 400, 384+48, 480}, {432+8, 400, 432+16, 480},
-                  {464+8,  400, 464+16, 480}, {480+8, 400, 480+16,  480},
-          };
 
-          PIXEL_LTRB	Left[6] = {
-                  {240, 400, 240+40, 480}, {320, 400, 320+32, 480},
-                  {384, 400, 384+48, 480}, {432, 400, 432+16, 480},
-                  {464, 400, 464+16,  480}, {480, 400, 480+16,  480},
-          };
+  BitLineDraw();
 
-          WORD	size[6] = {
-                  40, 32, 24, 16, 8, 8
-          };
-  */
-  this->BitLineDraw();
-
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->IsUsed) {
       e = &(b->Edat);
@@ -271,34 +255,34 @@ void BossManager::Draw(void) {
 }
 
 // ボス用・敵弾クリアの前処理関数 //
-void BossManager::ClearCmd(void) { this->BitDelete(); }
+void BossManager::ClearCmd(void) { BitDelete(); }
 
 // ボスの体力ゲージをオープンする //
 void BossManager::HPG_Open(uint32_t max) {
   int i;
 
-  this->hpg.Max = max;    // 最大値
-  this->hpg.Now = 0;      // 最初のエフェクトで上昇して行くので
-  this->hpg.Next = max;   // 次の体力値
-  this->hpg.Update = max; // 更新用の値
+  hpg.Max = max;    // 最大値
+  hpg.Now = 0;      // 最初のエフェクトで上昇して行くので
+  hpg.Next = max;   // 次の体力値
+  hpg.Update = max; // 更新用の値
 
-  this->hpg.State = BHPG_OPEN1;
-  this->hpg.Count = 0;
+  hpg.State = BHPG_OPEN1;
+  hpg.Count = 0;
 
   // 表示用初期Ｘを指定する(乱数を使用するが...) //
   for (i = 0; i < BOSSHPG_HEIGHT; i++) {
-    this->hpg.XTemp[i] = BOSSHPG_START_X + i * 20;
+    hpg.XTemp[i] = BOSSHPG_START_X + i * 20;
   }
 }
 
 // ボスの体力ゲージを上昇させる //
 void BossManager::HPG_Update(uint32_t next) {
-  //	this->hpg.Max  = max;		// 最大値
-  //	this->hpg.Now  = 0;		// 最初のエフェクトで上昇して行くので
-  this->hpg.Update = next; // 次の体力値
+  //	hpg.Max  = max;		// 最大値
+  //	hpg.Now  = 0;		// 最初のエフェクトで上昇して行くので
+  hpg.Update = next; // 次の体力値
 
-  this->hpg.State = BHPG_OPEN3;
-  //	this->hpg.Count = 0;
+  hpg.State = BHPG_OPEN3;
+  //	hpg.Count = 0;
 }
 
 // ボスの体力ゲージを増減する //
@@ -306,11 +290,11 @@ void BossManager::HPG_Move(uint32_t now) {
   int i;
   int ChkCount = 0;
 
-  this->hpg.Next = now;
+  hpg.Next = now;
 
-  switch (this->hpg.State) {
+  switch (hpg.State) {
   case (BHPG_OPEN1): {
-    for (auto &it : this->hpg.XTemp) {
+    for (auto &it : hpg.XTemp) {
       it -= 6;
       if (it <= BOSSHPG_END_X) {
         it = BOSSHPG_END_X;
@@ -319,47 +303,47 @@ void BossManager::HPG_Move(uint32_t now) {
     }
 
     if (ChkCount == BOSSHPG_HEIGHT)
-      this->hpg.State = BHPG_OPEN2;
+      hpg.State = BHPG_OPEN2;
   } break;
 
   case (BHPG_OPEN2):
-    this->hpg.Now += ((this->hpg.Max >> 7) + 1);
-    if (this->hpg.Now >= this->hpg.Max) {
-      this->hpg.Now = this->hpg.Max;
-      this->hpg.State = BHPG_NORM;
+    hpg.Now += ((hpg.Max >> 7) + 1);
+    if (hpg.Now >= hpg.Max) {
+      hpg.Now = hpg.Max;
+      hpg.State = BHPG_NORM;
     }
     break;
 
   case (BHPG_OPEN3):
-    this->hpg.Now += ((this->hpg.Max >> 7) + 1);
-    if (this->hpg.Now >= this->hpg.Update) {
-      this->hpg.Now = this->hpg.Update;
-      this->hpg.State = BHPG_NORM;
+    hpg.Now += ((hpg.Max >> 7) + 1);
+    if (hpg.Now >= hpg.Update) {
+      hpg.Now = hpg.Update;
+      hpg.State = BHPG_NORM;
     }
     break;
 
   case (BHPG_NORM):
-    if (this->hpg.Now > this->hpg.Next) {
-      // temp = max(this->hpg.Max>>10,1);
-      // temp = max((30*8*3)/max(this->hpg.Max,1),3);
+    if (hpg.Now > hpg.Next) {
+      // temp = max(hpg.Max>>10,1);
+      // temp = max((30*8*3)/max(hpg.Max,1),3);
       const auto temp =
-          (std::max)(((std::max)(this->hpg.Max, 1u) / (30 * 8 * 4)), 3u);
-      if (this->hpg.Now - this->hpg.Next > temp)
-        this->hpg.Now -= temp;
+          (std::max)(((std::max)(hpg.Max, 1u) / (30 * 8 * 4)), 3u);
+      if (hpg.Now - hpg.Next > temp)
+        hpg.Now -= temp;
       else
-        this->hpg.Now = this->hpg.Next;
+        hpg.Now = hpg.Next;
     }
-    if (this->hpg.Now == 0)
-      this->HPG_Close();
+    if (hpg.Now == 0)
+      HPG_Close();
     break;
 
   case (BHPG_CLOSE):
-    this->hpg.XTemp[BOSSHPG_HEIGHT - 1] += 6;
+    hpg.XTemp[BOSSHPG_HEIGHT - 1] += 6;
     for (i = BOSSHPG_HEIGHT - 2; i >= 0; i--) {
-      this->hpg.XTemp[i] = max(this->hpg.XTemp[i], this->hpg.XTemp[i + 1] - 20);
+      hpg.XTemp[i] = max(hpg.XTemp[i], hpg.XTemp[i + 1] - 20);
     }
-    if (this->hpg.XTemp[0] >= BOSSHPG_START_X)
-      this->HPG_Close();
+    if (hpg.XTemp[0] >= BOSSHPG_START_X)
+      HPG_Close();
     break;
 
   case (BHPG_DEAD):
@@ -367,13 +351,13 @@ void BossManager::HPG_Move(uint32_t now) {
     return;
   }
 
-  this->hpg.Count++;
+  hpg.Count++;
 }
 
 // ボスの体力ゲージをクローズする //
 void BossManager::HPG_Close(void) {
   // 後で変更のこと //
-  this->hpg.State = BHPG_CLOSE;
+  hpg.State = BHPG_CLOSE;
 }
 
 // ボスの体力ゲージを描画する //
@@ -381,13 +365,13 @@ void BossManager::DrawHPG(void) {
   PIXEL_LTRB src;
   int i;
 
-  switch (this->hpg.State) {
+  switch (hpg.State) {
   case (BHPG_OPEN1):
   case (BHPG_CLOSE):
     // エフェクト付き枠の描画 //
     for (i = 0; i < BOSSHPG_HEIGHT; i++) {
       src = {0, (104 + i), BOSSHPG_WIDTH, (104 + i + 1)};
-      GrpSurface_Blit({this->hpg.XTemp[i], (16 + i)}, SURFACE_ID::SYSTEM, src);
+      GrpSurface_Blit({hpg.XTemp[i], (16 + i)}, SURFACE_ID::SYSTEM, src);
     }
     break;
 
@@ -398,8 +382,8 @@ void BossManager::DrawHPG(void) {
     constexpr WINDOW_COORD left = (BOSSHPG_END_X + 3);
     constexpr WINDOW_COORD top = (16 + 3);
     constexpr WINDOW_COORD bottom = (top + 11);
-    const auto x1 = (left + ((this->hpg.Next * 30 * 8) / this->hpg.Max));
-    const auto x2 = (left + ((this->hpg.Now * 30 * 8) / this->hpg.Max));
+    const auto x1 = (left + ((hpg.Next * 30 * 8) / hpg.Max));
+    const auto x2 = (left + ((hpg.Now * 30 * 8) / hpg.Max));
     constexpr uint8_t alpha = (128 + 64);
     constexpr RGB216 col = {0, 1, 5};
 
@@ -463,11 +447,11 @@ void BossManager::KillAll(void) {
 
   ENEMY_DATA *e;
 
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->IsUsed) {
       e = &(b->Edat);
-      this->SnakyDelete(b);
+      SnakyDelete(b);
       Effects.SpawnFragment(e->x, e->y, FRG_FATCIRCLE);
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
@@ -480,14 +464,14 @@ void BossManager::KillAll(void) {
     }
   }
 
-  this->count = 0;
+  count = 0;
 }
 
 bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
   if (e.hp <= damage) { // ボスの死亡処理(後で変更すること!!)
-    this->SnakyDelete(&b);
-    this->BitDelete();
+    SnakyDelete(&b);
+    BitDelete();
     Enemies.Clear();
     Effects.SpawnFragment(e.x, e.y, FRG_FATCIRCLE);
     Effects.SpawnBombEffect(e.x, e.y, EXBOMB_STD);
@@ -502,7 +486,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     e.flag = EF_BOMB;
 
     // 最後の一匹だった場合 //
-    if (this->count == 1) {
+    if (count == 1) {
       char buf[100];
       const auto temp = Bullets.ScoreToItems(); // 弾→スコアエフェクト
       // sprintf(buf, "%3d Evade  %5dPts", Players.viv.evade, Players.viv.evadesc);
@@ -517,7 +501,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     score_add(e.score);
     Lasers.Clear();
     b.IsUsed = 0;
-    this->count--; // ボスの参照カウント？を使用する
+    count--; // ボスの参照カウント？を使用する
   } else {
     Snd_SEPlay(SOUND_ID_HIT, e.x);
     PowerUp(damage);
@@ -531,13 +515,13 @@ bool BossManager::DamageAt(int x, int y, int damage) {
   int i;
   ENEMY_DATA *e;
 
-  i = (this->BitGetNum() >> 1);
+  i = (BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0) {
     return false;
   }
 
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time)
@@ -551,7 +535,7 @@ bool BossManager::DamageAt(int x, int y, int damage) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
           continue;
         else {
-          return this->ApplyDamage(*b, *e, damage);
+          return ApplyDamage(*b, *e, damage);
         }
       }
     }
@@ -565,13 +549,13 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
   ENEMY_DATA *e;
   bool ret_val = false;
 
-  i = (this->BitGetNum() >> 1);
+  i = (BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0) {
     return false;
   }
 
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time)
@@ -584,7 +568,7 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
           continue;
         else {
-          ret_val = this->ApplyDamage(*b, *e, damage);
+          ret_val = ApplyDamage(*b, *e, damage);
         }
       }
     }
@@ -599,12 +583,12 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
   // BOOL			ret_val = FALSE;
   int damage = 2;
 
-  i = (this->BitGetNum() >> 1);
+  i = (BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0)
     return;
 
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time)
@@ -617,7 +601,7 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
           continue;
         else {
-          this->ApplyDamage(*b, *e, damage);
+          ApplyDamage(*b, *e, damage);
         }
       }
     }
@@ -629,12 +613,12 @@ void BossManager::DamageAll(int damage) {
   int i;
   ENEMY_DATA *e;
 
-  i = (this->BitGetNum() >> 1);
+  i = (BitGetNum() >> 1);
   damage -= i;
   if (damage <= 0)
     return;
 
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time)
@@ -647,7 +631,7 @@ void BossManager::DamageAll(int damage) {
         if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
           continue;
         else {
-          this->ApplyDamage(*b, *e, damage);
+          ApplyDamage(*b, *e, damage);
 
           // return TRUE;
         }
@@ -666,10 +650,10 @@ int BossManager::PutBoss(int x, int y, uint32_t id) {
   // e->y   = (*(short *)(&p[2]));	//((int)(*(short *)(&p[2])))*64;
 
   auto it =
-      std::ranges::find_if(this->bosses, [](const auto &it) { return !it.IsUsed; });
+      std::ranges::find_if(bosses, [](const auto &it) { return !it.IsUsed; });
 
   // まず、あり得ないのだが... //
-  if (it == std::end(this->bosses)) {
+  if (it == std::end(bosses)) {
     return BOSS_MAX;
   }
 
@@ -739,7 +723,7 @@ int BossManager::PutBoss(int x, int y, uint32_t id) {
   // 割り込みベクタの初期化 //
   Enemies.InitECLInterrupt(e);
 */
-  return std::distance(std::begin(this->bosses), it);
+  return std::distance(std::begin(bosses), it);
 }
 
 // ノーマルECL互換の移動 //
@@ -774,7 +758,7 @@ uint32_t BossManager::GetHPSum(void) {
   uint32_t HP_Sum = 0;
   ENEMY_DATA *e;
 
-  for (auto &it : this->bosses) {
+  for (auto &it : bosses) {
     auto *b = &it;
     if (b->IsUsed) {
       e = &(b->Edat);
@@ -788,15 +772,15 @@ uint32_t BossManager::GetHPSum(void) {
 // ボス用割り込み処理 //
 void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
   auto b = std::ranges::find_if(
-      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
-  if (b == std::end(this->bosses)) {
+      bosses, [e](const auto &b) { return ((&b.Edat) == e); });
+  if (b == std::end(bosses)) {
     return;
   }
 
   // 割り込み番号による分岐 //
   switch (IntID) {
   case (ECLINT_SNAKEON):
-    this->SnakySet(&*b, 30, 11);
+    SnakySet(&*b, 30, 11);
     break;
 
   case (ECLINT_LBWING01): // 蝶の羽も描画する
@@ -810,11 +794,11 @@ void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
     break;
 
   case (ECLINT_BITON5):
-    this->BitSet(&*b,5, 3);
+    BitSet(&*b,5, 3);
     break;
 
   case (ECLINT_BITON6):
-    this->BitSet(&*b,6, 3);
+    BitSet(&*b,6, 3);
     break;
 
   case (ECLINT_SHILD1):
@@ -830,35 +814,35 @@ void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
 // ビット攻撃アドレス指定 //
 void BossManager::BitAttack(ENEMY_DATA *e, uint32_t AtkID) {
   const auto b = std::ranges::find_if(
-      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
-  if (b == std::end(this->bosses)) {
+      bosses, [e](const auto &b) { return ((&b.Edat) == e); });
+  if (b == std::end(bosses)) {
     return;
   }
 
-  this->BitSelectAttack(AtkID);
+  BitSelectAttack(AtkID);
 }
 
 // ビットにレーザーコマンドセット //
 void BossManager::BitLaser(ENEMY_DATA *e, uint8_t cmd) {
   const auto b = std::ranges::find_if(
-      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
-  if (b == std::end(this->bosses)) {
+      bosses, [e](const auto &b) { return ((&b.Edat) == e); });
+  if (b == std::end(bosses)) {
     return;
   }
 
-  this->BitLaserCommand(cmd);
+  BitLaserCommand(cmd);
 }
 
 // ビット命令送信 //
 void BossManager::BitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param) {
   const auto b = std::ranges::find_if(
-      this->bosses, [e](const auto &b) { return ((&b.Edat) == e); });
-  if (b == std::end(this->bosses)) {
+      bosses, [e](const auto &b) { return ((&b.Edat) == e); });
+  if (b == std::end(bosses)) {
     return;
   }
 
-  this->BitSendCommand(Cmd, Param);
+  BitSendCommand(Cmd, Param);
 }
 
 // 残りビット数を返す //
-int BossManager::GetBitLeft(void) { return this->BitGetNum(); }
+int BossManager::GetBitLeft(void) { return BitGetNum(); }

@@ -63,45 +63,45 @@ void ScrollManager::Move(void) {
   int i;
 
   enemy_set();        // 敵をセット
-  Scroller.scroll.ExCmd(); // 特殊スクロール発動!!
+  scroll.ExCmd(); // 特殊スクロール発動!!
 
   // 振動エフェクトを動作させる(これは、特殊スクロールとは別物) //
-  if (Scroller.scroll.IsQuake)
-    Scroller.scroll.IsQuake += 2;
+  if (scroll.IsQuake)
+    scroll.IsQuake += 2;
 
   // 標準のスクロールスピードだけカウンタを進める //
-  if (Scroller.scroll.DataHead == nullptr) {
+  if (scroll.DataHead == nullptr) {
     return;
   }
-  if (Scroller.scroll.Count >= Scroller.scroll.InfEnd)
+  if (scroll.Count >= scroll.InfEnd)
     return;
 
   // スクロールしない場合は、リターンする //
-  if (Scroller.scroll.ScrollSpeed == 0)
+  if (scroll.ScrollSpeed == 0)
     return;
 
-  Scroller.scroll.Count += Scroller.scroll.ScrollSpeed;
+  scroll.Count += scroll.ScrollSpeed;
 
-  if (Scroller.scroll.ScrollSpeed > 0) {
+  if (scroll.ScrollSpeed > 0) {
     // 通常のスクロール //
-    for (i = 0; i < Scroller.scroll.NumLayer; i++) {
-      Scroller.scroll.LayerCount[i] += Scroller.scroll.ScrollSpeed;
-      while (Scroller.scroll.LayerCount[i] >= Scroller.scroll.LayerWait[i]) {
-        Scroller.scroll.LayerCount[i] -= Scroller.scroll.LayerWait[i];
-        Scroller.scroll.LayerDy[i] = (Scroller.scroll.LayerDy[i] + 1) % 16; //& 0x0f;
-        if (Scroller.scroll.LayerDy[i] == 0)
-          Scroller.scroll.LayerPtr[i] = ScNextLine(Scroller.scroll.LayerPtr[i]);
+    for (i = 0; i < scroll.NumLayer; i++) {
+      scroll.LayerCount[i] += scroll.ScrollSpeed;
+      while (scroll.LayerCount[i] >= scroll.LayerWait[i]) {
+        scroll.LayerCount[i] -= scroll.LayerWait[i];
+        scroll.LayerDy[i] = (scroll.LayerDy[i] + 1) % 16; //& 0x0f;
+        if (scroll.LayerDy[i] == 0)
+          scroll.LayerPtr[i] = ScNextLine(scroll.LayerPtr[i]);
       }
     }
   } else {
     // 逆方向のスクロール //
-    for (i = 0; i < Scroller.scroll.NumLayer; i++) {
-      Scroller.scroll.LayerCount[i] += Scroller.scroll.ScrollSpeed;
-      while (Scroller.scroll.LayerCount[i] < 0) {
-        if (Scroller.scroll.LayerDy[i] == 0)
-          Scroller.scroll.LayerPtr[i] = ScBeforeLine(Scroller.scroll.LayerPtr[i]);
-        Scroller.scroll.LayerCount[i] += Scroller.scroll.LayerWait[i];
-        Scroller.scroll.LayerDy[i] = (Scroller.scroll.LayerDy[i] + 15) % 16; //& 0x0f;
+    for (i = 0; i < scroll.NumLayer; i++) {
+      scroll.LayerCount[i] += scroll.ScrollSpeed;
+      while (scroll.LayerCount[i] < 0) {
+        if (scroll.LayerDy[i] == 0)
+          scroll.LayerPtr[i] = ScBeforeLine(scroll.LayerPtr[i]);
+        scroll.LayerCount[i] += scroll.LayerWait[i];
+        scroll.LayerDy[i] = (scroll.LayerDy[i] + 15) % 16; //& 0x0f;
       }
     }
   }
@@ -589,7 +589,7 @@ void ScrollManager::Draw(void) {
   int dx = 0;   // 振動用
   int RasterDx; // ラスター用
 
-  if (Scroller.scroll.DataHead == nullptr) {
+  if (scroll.DataHead == nullptr) {
     return;
   }
 
@@ -599,41 +599,41 @@ void ScrollManager::Draw(void) {
   //}
 
   // 特殊描画モード //
-  if (Scroller.scroll.ExCmd == ScrollCmdStg3Boss) {
+  if (scroll.ExCmd == ScrollCmdStg3Boss) {
     Stg3BossMapDraw();
     return;
-  } else if (Scroller.scroll.ExCmd == ScrollCmdStg6Cube) {
+  } else if (scroll.ExCmd == ScrollCmdStg6Cube) {
     Effects.Draw3DCubes();
     return;
-  } else if (Scroller.scroll.ExCmd == ScrollCmdStg6RndEcl) {
+  } else if (scroll.ExCmd == ScrollCmdStg6RndEcl) {
     Effects.DrawFakeECL();
     return;
-  } else if (Scroller.scroll.ExCmd == ScrollCmdStg6Raster) {
+  } else if (scroll.ExCmd == ScrollCmdStg6Raster) {
     Effects.DrawStg6Rasters();
     return;
-  } else if (Scroller.scroll.ExCmd == ScrollCmdStg3Star) {
+  } else if (scroll.ExCmd == ScrollCmdStg3Star) {
     Effects.DrawStg3Stars();
     return;
   }
 
   // 振動エフェクト用 //
-  // dx = sinl(Scroller.scroll.IsQuake*4,2);
-  // if(Scroller.scroll.IsQuake) dx =
-  // sinl(Scroller.scroll.IsQuake*8+i*6,(256-Scroller.scroll.IsQuake)>>2);	//4
-  if (Scroller.scroll.IsQuake)
-    dx = sinl(Scroller.scroll.IsQuake * 16, (256 - Scroller.scroll.IsQuake) >> 5); // 4
+  // dx = sinl(scroll.IsQuake*4,2);
+  // if(scroll.IsQuake) dx =
+  // sinl(scroll.IsQuake*8+i*6,(256-scroll.IsQuake)>>2);	//4
+  if (scroll.IsQuake)
+    dx = sinl(scroll.IsQuake * 16, (256 - scroll.IsQuake) >> 5); // 4
 
   // 全てのレイヤーの表示 //
-  for (k = 0; k < Scroller.scroll.NumLayer; k++) {
-    p = Scroller.scroll.LayerPtr[k];
+  for (k = 0; k < scroll.NumLayer; k++) {
+    p = scroll.LayerPtr[k];
     for (i = 29; i >= -1; i--) {
-      RasterDx = (k == 0) ? Scroller.scroll.RasterDx[i + 1] : 0;
+      RasterDx = (k == 0) ? scroll.RasterDx[i + 1] : 0;
       for (j = 0; j < MAP_WIDTH;) {
         // 通常の描画 //
         if (*p != MAPDATA_NONE) {
           x = (j << 4) + X_MIN + dx + RasterDx;
-          y = (i << 4) + Scroller.scroll.LayerDy[k];
-          const auto &src = Scroller.map_chip_rects[*p];
+          y = (i << 4) + scroll.LayerDy[k];
+          const auto &src = map_chip_rects[*p];
           GrpSurface_Blit({x, y}, SURFACE_ID::MAPCHIP, src);
           p++, j++;
         }
@@ -646,11 +646,11 @@ void ScrollManager::Draw(void) {
     }
   }
 
-  if (Scroller.scroll.ExCmd == ScrollCmdStg4Rock) {
+  if (scroll.ExCmd == ScrollCmdStg4Rock) {
     Effects.DrawStg4Rocks();
   }
   /*
-          if(Scroller.scroll.ExCmd==ScrollCmdStg2Boss){
+          if(scroll.ExCmd==ScrollCmdStg2Boss){
                   ExDraw();
           }
   */
@@ -660,79 +660,79 @@ void ScrollManager::Draw(void) {
 void ScrollManager::SetSpeed(int speed) {
   // if(speed<0) speed = 0;		// 逆方向スクロール禁止！！
 
-  Scroller.scroll.ScrollSpeed = speed;
+  scroll.ScrollSpeed = speed;
 }
 
 // ＳＣＬ用コマンド実行関数(引数:(1)スクロールコマンド) //
 void ScrollManager::Command(uint8_t cmd) {
   switch (cmd) {
   case (SCMD_QUAKE): // 振動エフェクト
-    Scroller.scroll.IsQuake = 2;
+    scroll.IsQuake = 2;
     break;
 
   case (SCMD_STG2BOSS): // ２面ボス
-    Scroller.scroll.ExCmd = ScrollCmdStg2Boss;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdStg2Boss;
+    scroll.ExCount = 0;
     break;
 
   case (SCMD_STG3BOSS): // ３面ボス
-    Scroller.scroll.ExCmd = ScrollCmdStg3Boss;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdStg3Boss;
+    scroll.ExCount = 0;
     // InitStg3Cloud();
     break;
 
   case (SCMD_STG3RESET):
-    Scroller.scroll.ExCmd = ScrollCmdDummy;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdDummy;
+    scroll.ExCount = 0;
     break;
 
   case (SCMD_STG6CUBE):
-    Scroller.scroll.ExCmd = ScrollCmdStg6Cube;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdStg6Cube;
+    scroll.ExCount = 0;
     Effects.Init3DCubes();
     break;
 
   case (SCMD_STG6RNDECL):
-    Scroller.scroll.ExCmd = ScrollCmdStg6RndEcl;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdStg6RndEcl;
+    scroll.ExCount = 0;
     Effects.InitFakeECL();
     break;
 
   case (SCMD_STG4ROCK):
-    Scroller.scroll.ExCmd = ScrollCmdStg4Rock;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdStg4Rock;
+    scroll.ExCount = 0;
     Effects.InitStg4Rocks();
     break;
 
   case (SCMD_STG4LEAVE):
-    if (Scroller.scroll.ExCmd != ScrollCmdStg4Rock)
+    if (scroll.ExCmd != ScrollCmdStg4Rock)
       break;
     Effects.SendCmdStg4Rocks(STG4ROCK_LEAVE, 0);
     break;
 
   case (SCMD_STG6RASTER):
-    Scroller.scroll.ExCmd = ScrollCmdStg6Raster;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdStg6Raster;
+    scroll.ExCount = 0;
     Effects.InitStg6Rasters();
     break;
 
   case (SCMD_STG3STAR):
-    Scroller.scroll.ExCmd = ScrollCmdStg3Star;
-    Scroller.scroll.ExCount = 0;
+    scroll.ExCmd = ScrollCmdStg3Star;
+    scroll.ExCount = 0;
     Effects.InitStg3Stars();
     Effects.SetScreenEffect(SCNEFC_WHITEIN);
     break;
 
   case (SCMD_RASTER_ON): // ラスタースクロール開始
-    Scroller.scroll.ExCmd = ScrollCmdRasterOpen;
-    Scroller.scroll.RasterDeg = 0;
-    Scroller.scroll.RasterWidth = 0;
+    scroll.ExCmd = ScrollCmdRasterOpen;
+    scroll.RasterDeg = 0;
+    scroll.RasterWidth = 0;
     break;
 
   case (SCMD_RASTER_OFF): // ラスタースクロール終了
-    Scroller.scroll.ExCmd = ScrollCmdRasterClose;
-    // Scroller.scroll.RasterDeg   = 0;
-    // Scroller.scroll.RasterWidth = 0;
+    scroll.ExCmd = ScrollCmdRasterClose;
+    // scroll.RasterDeg   = 0;
+    // scroll.RasterWidth = 0;
     break;
   }
 }
@@ -922,8 +922,8 @@ bool ScrollManager::Init(void) {
   int i;
   static bool bInitialized = false;
 
-  Scroller.scene.MsgFlag = false;
-  Scroller.scene.ReturnFlag = false;
+  scene.MsgFlag = false;
+  scene.ReturnFlag = false;
 
   if (!bInitialized) {
     InitMapChipRect();
@@ -938,9 +938,9 @@ bool ScrollManager::Init(void) {
           }
 
           // もしすでにロードが行われていた場合、メモリを解放する //
-          if(Scroller.scroll.DataHead != nullptr) {
-                  LocalFree(Scroller.scroll.DataHead);
-                  Scroller.scroll.DataHead = nullptr;
+          if(scroll.DataHead != nullptr) {
+                  LocalFree(scroll.DataHead);
+                  scroll.DataHead = nullptr;
           }
           // そうでなければ、スクロールに関する初期化を行う //
           else if(!InitScrollInfo()) {
@@ -948,42 +948,42 @@ bool ScrollManager::Init(void) {
           }
 
           // 解凍を行う(後で、ステージを考慮したものに変更すること) //
-          Scroller.scroll.DataHead = in->MemExpand(0);
-          if(!Scroller.scroll.DataHead) {
+          scroll.DataHead = in->MemExpand(0);
+          if(!scroll.DataHead) {
                   return false;
           }
   */
   // 標準のスクロールスピード(マップエディタと同じ) //
-  auto *head = Scroller.scroll.DataHead.get();
-  Scroller.scroll.ScrollSpeed = TIME_PER_FRAME; // 標準のスクロール速度
-  Scroller.scroll.NumLayer = U32LEAt(head);     // レイヤーの数
-  Scroller.scroll.Count = 0;                    // スクロール用カウンタ
-  Scroller.scroll.InfStart = 0;                 // 無限ループ開始時刻
-  Scroller.scroll.State = SST_NORMAL;           // 状態(デフォルトの標準で..)
-  Scroller.scroll.IsQuake = 0;                  // 振動中ではない
-  Scroller.scroll.ExCmd = ScrollCmdDummy;       // 特殊コマンド
-  Scroller.scroll.ExCount = 0;
-  Scroller.scroll.RasterWidth = 0;
-  Scroller.scroll.RasterDeg = 0;
+  auto *head = scroll.DataHead.get();
+  scroll.ScrollSpeed = TIME_PER_FRAME; // 標準のスクロール速度
+  scroll.NumLayer = U32LEAt(head);     // レイヤーの数
+  scroll.Count = 0;                    // スクロール用カウンタ
+  scroll.InfStart = 0;                 // 無限ループ開始時刻
+  scroll.State = SST_NORMAL;           // 状態(デフォルトの標準で..)
+  scroll.IsQuake = 0;                  // 振動中ではない
+  scroll.ExCmd = ScrollCmdDummy;       // 特殊コマンド
+  scroll.ExCount = 0;
+  scroll.RasterWidth = 0;
+  scroll.RasterDeg = 0;
 
   // ラスタースクロールの初期化 //
-  for (auto &it : Scroller.scroll.RasterDx) {
+  for (auto &it : scroll.RasterDx) {
     it = 0;
   }
 
   // レイヤー情報のロード(長さからループ用変数を調整すること) //
   LayerInfo = reinterpret_cast<ScrollSaveHeader *>(head + sizeof(U32LE));
-  for (i = 0; i < Scroller.scroll.NumLayer; i++) {
+  for (i = 0; i < scroll.NumLayer; i++) {
     auto *p = reinterpret_cast<PBGMAP *>(head + LayerInfo[i].Address);
-    Scroller.scroll.LayerHead[i] = p;                       // 先頭
-    Scroller.scroll.LayerPtr[i] = p;                        // 現在
-    Scroller.scroll.LayerWait[i] = LayerInfo[i].ScrollWait; // レイヤーの重み
-    Scroller.scroll.LayerCount[i] = 0;
-    Scroller.scroll.LayerDy[i] = 0;
+    scroll.LayerHead[i] = p;                       // 先頭
+    scroll.LayerPtr[i] = p;                        // 現在
+    scroll.LayerWait[i] = LayerInfo[i].ScrollWait; // レイヤーの重み
+    scroll.LayerCount[i] = 0;
+    scroll.LayerDy[i] = 0;
   }
 
   // 無限ループ終了時刻 //
-  Scroller.scroll.InfEnd =
+  scroll.InfEnd =
       16 * (LayerInfo[i - 1].Length - 1280 / 16) * LayerInfo[i - 1].ScrollWait;
 
   return true;

@@ -23,7 +23,7 @@
 // Viv → player_manager.cpp の PlayerManager に移動（MAID.h で Player& として宣言）
 
 ///// [ 関数(非公開) ] /////
-extern void StdStatusOutput(void) {
+void StdStatusOutput() {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
 
   static uint32_t prev;

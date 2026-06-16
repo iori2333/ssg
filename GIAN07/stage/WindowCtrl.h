@@ -24,6 +24,6 @@ extern struct tagWINDOW_SYSTEM GameOverSaveWindow;
 extern struct tagWINDOW_SYSTEM ReplayFilesWindow;
 
 ///// [関数] /////
-void InitMainWindow(void);     // メインメニューの初期化
-void InitExitWindow(void);     // 終了Ｙ／Ｎウィンドウの初期化
-void InitContinueWindow(void); // コンティニューＹ／Ｎウィンドウの初期化
+void InitMainWindow();     // メインメニューの初期化
+void InitExitWindow();     // 終了Ｙ／Ｎウィンドウの初期化
+void InitContinueWindow(); // コンティニューＹ／Ｎウィンドウの初期化

@@ -108,25 +108,9 @@ inline bool HITCHK(int a, int b, int h) { return std::abs(a - b) < h; }
 
 ///// [構造体] /////
 
-/*
-// スコア管理用構造体 //
-typedef struct tagSCORE_DATA{
-        int64_t	score;
-        uint8_t	weapon;
-        char	name[SCORE_NAME];
-} SCORE_DATA;
-
-typedef struct tagHIGH_SCORE{
-        SCORE_DATA		easy[8];
-        SCORE_DATA		normal[8];
-        SCORE_DATA		hard[8];
-        SCORE_DATA		lunatic[8];
-} HIGH_SCORE;
-*/
-
 ///// [グローバル変数] /////
 // extern HIGH_SCORE	*HighScore;
 // extern char			ScoreTable[8][80];
 // GameCount, GameStage, GameLevel, IsDemoplay → game_manager.h で参照として宣言
 
-void StdStatusOutput(void);
+void StdStatusOutput();

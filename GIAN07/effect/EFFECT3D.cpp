@@ -10,7 +10,7 @@
 #include "platform/graphics_backend.h"
 
 // CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h に移動
-// Effects.circles[], Effects.cubes[], Effects.stars[], Effects.rocks[], Effects.wf_line, Effects.fake_ecl_strs[] → effect_manager.cpp に移動
+// circles[], cubes[], stars[], rocks[], wf_line, fake_ecl_strs[] → effect_manager.cpp に移動
 
 #define _ PIXEL_POINT
 
@@ -120,16 +120,16 @@ void EffectManager::InitWarningText() {
 
   // Initialize warning_lines with center positions and point arrays
   // (was: LineList3D Warning[8] = { ... } file-static initialization)
-  this->warning_lines[0] = {{192, 39}, PList_W};
-  this->warning_lines[1] = {{192, 39}, PList_A1};
-  this->warning_lines[2] = {{192, 39}, PList_A2};
-  this->warning_lines[3] = {{192, 39}, PList_R};
-  this->warning_lines[4] = {{192, 39}, PList_N1};
-  this->warning_lines[5] = {{192, 39}, PList_I};
-  this->warning_lines[6] = {{(192 - (296 - 215)), 39}, PList_N2};
-  this->warning_lines[7] = {{192, 39}, PList_G};
+  warning_lines[0] = {{192, 39}, PList_W};
+  warning_lines[1] = {{192, 39}, PList_A1};
+  warning_lines[2] = {{192, 39}, PList_A2};
+  warning_lines[3] = {{192, 39}, PList_R};
+  warning_lines[4] = {{192, 39}, PList_N1};
+  warning_lines[5] = {{192, 39}, PList_I};
+  warning_lines[6] = {{(192 - (296 - 215)), 39}, PList_N2};
+  warning_lines[7] = {{192, 39}, PList_G};
 
-  InitLineList3D(this->warning_lines);
+  InitLineList3D(warning_lines);
   bInitialized = true;
 }
 
@@ -140,7 +140,7 @@ void EffectManager::DrawWarningText() {
 
   count += 8;
 
-  if (Effects.warning_lines[0].DegX == 0) {
+  if (warning_lines[0].DegX == 0) {
     GrpGeom->Lock();
     GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>(128 + sinl(count, 48)));
     GrpGeom->SetColor({5, 0, 0});
@@ -152,21 +152,21 @@ void EffectManager::DrawWarningText() {
   } else {
     GrpGeom->Lock();
 
-    if (Effects.warning_lines[0].DegX < 10) {
+    if (warning_lines[0].DegX < 10) {
       st = 0;
       det = 0;
       st = 0;
       det = 0;
-    } else if (Effects.warning_lines[0].DegX < 20) {
+    } else if (warning_lines[0].DegX < 20) {
       st = -4;
       det = 1;
     } else {
-      // if(Effects.warning_lines[0].DegX < 40){
+      // if(warning_lines[0].DegX < 40){
       st = -8;
       det = 2;
     }
 
-    const auto w = std::span(Effects.warning_lines);
+    const auto w = std::span(warning_lines);
     GrpGeom->SetColor({1, 1, 5});
     MoveWarningR(st);
     DrawLineList3D(w);
@@ -199,7 +199,7 @@ void MoveWarningR(char count) {
 }
 
 void EffectManager::MoveWarningText(uint8_t count) {
-  for (auto &llist : Effects.warning_lines) {
+  for (auto &llist : warning_lines) {
     llist.DegX = ((count < 64) ? ((64 - count) * 2) : 0);
     llist.DegY = ((count < 64) ? ((64 - count) * 1) : 0);
     llist.DegZ = ((count < 64) ? ((64 - count) * 4) : 0);
@@ -256,16 +256,16 @@ void EffectManager::Init3DCubes() {
   int i;
 
   for (i = 0; i < CUBE_MAX; i++) {
-    Effects.cubes[i].l = 30 * 64;
-    Effects.cubes[i].d.dx = rnd();
-    Effects.cubes[i].d.dy = rnd();
-    Effects.cubes[i].d.dz = rnd();
-    Effects.cubes[i].p.x = cosl(i * 256 / CUBE_MAX, 200 * 64);
-    Effects.cubes[i].p.y = sinl(i * 256 / CUBE_MAX, 200 * 64);
-    Effects.cubes[i].p.z = 0;
+    cubes[i].l = 30 * 64;
+    cubes[i].d.dx = rnd();
+    cubes[i].d.dy = rnd();
+    cubes[i].d.dz = rnd();
+    cubes[i].p.x = cosl(i * 256 / CUBE_MAX, 200 * 64);
+    cubes[i].p.y = sinl(i * 256 / CUBE_MAX, 200 * 64);
+    cubes[i].p.z = 0;
   }
 
-  for (auto &it : Effects.stars) {
+  for (auto &it : stars) {
     it.x = ((rnd() % (640 - 256)) + 128);
     it.y = -(rnd() % 480);
     it.vy = ((rnd() % 10) + 10);
@@ -273,13 +273,13 @@ void EffectManager::Init3DCubes() {
 }
 
 void EffectManager::Draw3DCubes() {
-  for (const auto &it : Effects.stars) {
+  for (const auto &it : stars) {
     constexpr PIXEL_LTWH rc = {136, 272, 16, 24};
     GrpSurface_Blit({it.x, it.y}, SURFACE_ID::SYSTEM, rc);
   }
 
   GrpGeom->Lock();
-  for (const auto &it : Effects.cubes) {
+  for (const auto &it : cubes) {
     __Draw3DCube(&it);
   }
   GrpGeom->Unlock();
@@ -300,18 +300,18 @@ void EffectManager::Move3DCubes() {
   l = sinl(d >> 7, 100 * 64) + (200 - 20) * 64;
 
   for (i = 0; i < CUBE_MAX; i++) {
-    Effects.cubes[i].l = 15 * 64 + (l >> 4) + i * 128;
-    Effects.cubes[i].d.dx += 4;
-    Effects.cubes[i].d.dy -= 4;
-    // Effects.cubes[i].p.x = cosl(i*256/CUBE_MAX+d2, l);
-    // Effects.cubes[i].p.y = sinl(i*256/CUBE_MAX+d2, l);
-    Effects.cubes[i].p.x = cosl(i * 500 / CUBE_MAX + d2, l);
-    Effects.cubes[i].p.y = sinl(i * 500 / CUBE_MAX + d2, l);
-    Effects.cubes[i].p.z = (i - CUBE_MAX / 2) * 64 * 40;
-    Transform3D(&Effects.cubes[i].p, dx >> 8, dy >> 8, dz >> 8);
+    cubes[i].l = 15 * 64 + (l >> 4) + i * 128;
+    cubes[i].d.dx += 4;
+    cubes[i].d.dy -= 4;
+    // cubes[i].p.x = cosl(i*256/CUBE_MAX+d2, l);
+    // cubes[i].p.y = sinl(i*256/CUBE_MAX+d2, l);
+    cubes[i].p.x = cosl(i * 500 / CUBE_MAX + d2, l);
+    cubes[i].p.y = sinl(i * 500 / CUBE_MAX + d2, l);
+    cubes[i].p.z = (i - CUBE_MAX / 2) * 64 * 40;
+    Transform3D(&cubes[i].p, dx >> 8, dy >> 8, dz >> 8);
   }
 
-  for (auto &it : Effects.stars) {
+  for (auto &it : stars) {
     it.y += it.vy;
     if (it.y > 480) {
       it.x = ((rnd() % (640 - 256)) + 128);
@@ -402,12 +402,12 @@ static void __Draw3DCube(const Cube3D *c) {
 void EffectManager::InitFakeECL() {
   int v;
 
-  Effects.wf_line.d = 0;
-  Effects.wf_line.ox = 640 * 64 / 2;
-  Effects.wf_line.oy = 480 * 64 / 2;
-  Effects.wf_line.w = 30;
+  wf_line.d = 0;
+  wf_line.ox = 640 * 64 / 2;
+  wf_line.oy = 480 * 64 / 2;
+  wf_line.w = 30;
 
-  for (auto &it : Effects.fake_ecl_strs) {
+  for (auto &it : fake_ecl_strs) {
     const uint8_t d = (rnd() % 128);
     v = rnd() % (64 * 5) + 64 * 5;
 
@@ -423,10 +423,10 @@ void EffectManager::InitFakeECL() {
 void EffectManager::MoveFakeECL() {
   int v;
 
-  Effects.wf_line.ox = (Effects.wf_line.ox + 1) % 64;
-  Effects.wf_line.oy = (Effects.wf_line.oy + 62) % 64;
+  wf_line.ox = (wf_line.ox + 1) % 64;
+  wf_line.oy = (wf_line.oy + 62) % 64;
 
-  for (auto &it : Effects.fake_ecl_strs) {
+  for (auto &it : fake_ecl_strs) {
     it.x += it.vx;
     it.y += it.vy;
 
@@ -454,25 +454,25 @@ void EffectManager::DrawFakeECL() {
   GrpGeom->SetColor({0, 2, 0});
   // GrpGeom->SetColor({ 0, 0, 3 });
 
-  for (i = 128 - Effects.wf_line.ox / 2; i < 640 - 128; i += 32)
+  for (i = 128 - wf_line.ox / 2; i < 640 - 128; i += 32)
     GrpGeom->DrawLine(i, 0, i, 480);
 
-  for (j = Effects.wf_line.oy / 2; j < 480; j += 32)
+  for (j = wf_line.oy / 2; j < 480; j += 32)
     GrpGeom->DrawLine(128, j, (640 - 128), j);
 
   // GrpGeom->SetColor({ 5, 3, 0 });	// 後半戦用
   GrpGeom->SetColor({0, 3, 0});
   // GrpGeom->SetColor({ 0, 0, 4 });
 
-  for (i = 128 - Effects.wf_line.ox; i < 640 - 128; i += 64)
+  for (i = 128 - wf_line.ox; i < 640 - 128; i += 64)
     GrpGeom->DrawLine(i, 0, i, 480);
 
-  for (j = -Effects.wf_line.oy; j < 480; j += 64)
+  for (j = -wf_line.oy; j < 480; j += 64)
     GrpGeom->DrawLine(128, j, (640 - 128), j);
 
   GrpGeom->Unlock();
 
-  for (const auto &it : Effects.fake_ecl_strs) {
+  for (const auto &it : fake_ecl_strs) {
     src = PIXEL_LTWH{it.SrcX, it.SrcY, 72, 16};
     GrpSurface_Blit({(it.x >> 6), (it.y >> 6)}, SURFACE_ID::MAPCHIP, src);
   }
@@ -579,25 +579,25 @@ void EffectManager::InitStg4Rocks() {
     y = (i % 4) * dy + (rnd() % dy2);
     //((380*64/16) * (i%(ROCK_MAX/16+1))) + rnd()%(380*64/16);
 
-    Effects.rocks[i].x = (rnd() % (500 * 64) - 250 * 64); //
-    Effects.rocks[i].y = -250 * 64 - y;                   // 上の方なのだ
-    Effects.rocks[i].z = (rnd() % (500 * 64) - 250 * 64); //
+    rocks[i].x = (rnd() % (500 * 64) - 250 * 64); //
+    rocks[i].y = -250 * 64 - y;                   // 上の方なのだ
+    rocks[i].z = (rnd() % (500 * 64) - 250 * 64); //
 
     if (i == ROCK_MAX * 5 / 8)
       id--;
     if (i == ROCK_MAX * 7 / 8)
       id--;
 
-    Effects.rocks[i].GrpID = id;
+    rocks[i].GrpID = id;
 
-    Effects.rocks[i].vx = 0;
-    Effects.rocks[i].vy = (4 - Effects.rocks[i].GrpID) * 16;
-    Effects.rocks[i].v = Effects.rocks[i].vy;
+    rocks[i].vx = 0;
+    rocks[i].vy = (4 - rocks[i].GrpID) * 16;
+    rocks[i].v = rocks[i].vy;
 
-    Effects.rocks[i].count = 0;
-    Effects.rocks[i].a = 0;
-    Effects.rocks[i].d = 64;
-    Effects.rocks[i].State = STG4ROCK_STDMOVE;
+    rocks[i].count = 0;
+    rocks[i].a = 0;
+    rocks[i].d = 64;
+    rocks[i].State = STG4ROCK_STDMOVE;
   }
 }
 
@@ -605,7 +605,7 @@ void EffectManager::MoveStg4Rocks() {
   constexpr int dy = (500 * (64 / 4));
   constexpr int dy2 = (dy / 2);
 
-  for (auto &it : Effects.rocks) {
+  for (auto &it : rocks) {
     auto *p = &it;
     p->count++;
 
@@ -725,7 +725,7 @@ void EffectManager::DrawStg4Rocks() {
 
   int x, y;
 
-  for (const auto &it : Effects.rocks) {
+  for (const auto &it : rocks) {
     const auto *p = &it;
     x = (p->x + GX_MID) >> 6;
     y = (p->y + GY_MID) >> 6;
@@ -737,19 +737,19 @@ void EffectManager::DrawStg4Rocks() {
 void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
   switch (Cmd) {
   case (STG4ROCK_LEAVE): {
-    for (auto &it : Effects.rocks) {
+    for (auto &it : rocks) {
       it.State = STG4ROCK_LEAVE;
     }
   } break;
 
   case (STG4ROCK_END): {
-    for (auto &it : Effects.rocks) {
+    for (auto &it : rocks) {
       it.State = STG4ROCK_END;
     }
   } break;
 
   case (STG4ROCK_ACCMOVE1): {
-    for (auto &it : Effects.rocks) {
+    for (auto &it : rocks) {
       it.State = STG4ROCK_ACCMOVE1;
       it.a = (it.v / 24); // ((3 - p->GrpID) * 3);
       it.count = 0;
@@ -757,12 +757,12 @@ void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
   } break;
 
   case (STG4ROCK_ACCMOVE2): {
-    for (auto &it : Effects.rocks) {
+    for (auto &it : rocks) {
       it.State = STG4ROCK_ACCMOVE2;
       it.a = (it.v / 12); // 24; // ((3 - p->GrpID) * 3);
       it.count = 0;
     }
-    /*		for(auto& it : Effects.rocks) {
+    /*		for(auto& it : rocks) {
                             it.State = STG4ROCK_ACCMOVE2;
                             it.a = -4;
                             it.count = 0;
@@ -778,25 +778,25 @@ void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
 }
 
 // S6RASTER_MAX, S6STAR_MAX, S3STAR_MAX, Stg6Raster, Stg6Star → effect_manager.h に移動
-// Effects.s6_ras[], Effects.s6_stars[] → effect_manager.cpp に移動
+// s6_ras[], s6_stars[] → effect_manager.cpp に移動
 
 // ６面ラスター初期化 //
 void EffectManager::InitStg6Rasters() {
   int i;
 
   for (i = 0; i < S6RASTER_MAX; i++) {
-    Effects.s6_ras[i].x = rnd() % (640 - 256) + 128;
-    Effects.s6_ras[i].y = -rnd() % (480 + 160); //(480+240)-240;
-    Effects.s6_ras[i].deg = rnd();
-    Effects.s6_ras[i].type = i % 3;
-    Effects.s6_ras[i].amp = rnd() % 80 + 70;
-    Effects.s6_ras[i].vy = 2 + rnd() % 3;
+    s6_ras[i].x = rnd() % (640 - 256) + 128;
+    s6_ras[i].y = -rnd() % (480 + 160); //(480+240)-240;
+    s6_ras[i].deg = rnd();
+    s6_ras[i].type = i % 3;
+    s6_ras[i].amp = rnd() % 80 + 70;
+    s6_ras[i].vy = 2 + rnd() % 3;
   }
 
   for (i = 0; i < S6STAR_MAX; i++) {
-    Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
-    Effects.s6_stars[i].y = rnd() % 480;
-    Effects.s6_stars[i].vy = rnd() % 20 + 8;
+    s6_stars[i].x = rnd() % (640 - 256) + 128;
+    s6_stars[i].y = rnd() % 480;
+    s6_stars[i].vy = rnd() % 20 + 8;
   }
 }
 
@@ -806,27 +806,27 @@ void EffectManager::MoveStg6Rasters() {
 
   for (i = 0; i < S6RASTER_MAX; i++) {
     if (i & 1)
-      Effects.s6_ras[i].deg += 2;
+      s6_ras[i].deg += 2;
     else
-      Effects.s6_ras[i].deg -= 2;
+      s6_ras[i].deg -= 2;
 
-    Effects.s6_ras[i].y += Effects.s6_ras[i].vy;
+    s6_ras[i].y += s6_ras[i].vy;
 
-    if (Effects.s6_ras[i].y > 480) {
-      Effects.s6_ras[i].x = rnd() % (640 - 256) + 128;
-      Effects.s6_ras[i].y = -160;
-      Effects.s6_ras[i].deg = rnd();
-      Effects.s6_ras[i].amp = rnd() % 80 + 70;
+    if (s6_ras[i].y > 480) {
+      s6_ras[i].x = rnd() % (640 - 256) + 128;
+      s6_ras[i].y = -160;
+      s6_ras[i].deg = rnd();
+      s6_ras[i].amp = rnd() % 80 + 70;
     }
   }
 
   for (i = 0; i < S6STAR_MAX; i++) {
-    Effects.s6_stars[i].y += Effects.s6_stars[i].vy;
+    s6_stars[i].y += s6_stars[i].vy;
 
-    if (Effects.s6_stars[i].y > 480) {
-      Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
-      Effects.s6_stars[i].y -= 480;
-      Effects.s6_stars[i].vy = rnd() % 20 + 8;
+    if (s6_stars[i].y > 480) {
+      s6_stars[i].x = rnd() % (640 - 256) + 128;
+      s6_stars[i].y -= 480;
+      s6_stars[i].vy = rnd() % 20 + 8;
     }
   }
 }
@@ -846,10 +846,10 @@ void EffectManager::DrawStg6Rasters() {
 
   for (i = 0; i < S6STAR_MAX; i++) {
     src = {624, 352, (624 + 16), (352 + 16)};
-    GrpSurface_Blit({Effects.s6_stars[i].x, Effects.s6_stars[i].y}, sid, src);
+    GrpSurface_Blit({s6_stars[i].x, s6_stars[i].y}, sid, src);
   }
 
-  for (const auto &it : Effects.s6_ras) {
+  for (const auto &it : s6_ras) {
     x1 = Target[it.type].left;
     x2 = Target[it.type].right;
     oy = Target[it.type].top;
@@ -868,9 +868,9 @@ void EffectManager::InitStg3Stars() {
   int i;
 
   for (i = 0; i < S3STAR_MAX; i++) {
-    Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
-    Effects.s6_stars[i].y = rnd() % 480;
-    Effects.s6_stars[i].vy = rnd() % 20 + 8;
+    s6_stars[i].x = rnd() % (640 - 256) + 128;
+    s6_stars[i].y = rnd() % 480;
+    s6_stars[i].vy = rnd() % 20 + 8;
   }
 }
 
@@ -879,12 +879,12 @@ void EffectManager::MoveStg3Stars() {
   int i;
 
   for (i = 0; i < S3STAR_MAX; i++) {
-    Effects.s6_stars[i].y += Effects.s6_stars[i].vy;
+    s6_stars[i].y += s6_stars[i].vy;
 
-    if (Effects.s6_stars[i].y > 480) {
-      Effects.s6_stars[i].x = rnd() % (640 - 256) + 128;
-      Effects.s6_stars[i].y -= 480;
-      Effects.s6_stars[i].vy = rnd() % 20 + 8;
+    if (s6_stars[i].y > 480) {
+      s6_stars[i].x = rnd() % (640 - 256) + 128;
+      s6_stars[i].y -= 480;
+      s6_stars[i].vy = rnd() % 20 + 8;
     }
   }
 }
@@ -895,6 +895,6 @@ void EffectManager::DrawStg3Stars() {
 
   for (i = 0; i < S3STAR_MAX; i++) {
     constexpr PIXEL_LTRB src = {(640 - 16), 0, 640, 16};
-    GrpSurface_Blit({Effects.s6_stars[i].x, Effects.s6_stars[i].y}, SURFACE_ID::MAPCHIP, src);
+    GrpSurface_Blit({s6_stars[i].x, s6_stars[i].y}, SURFACE_ID::MAPCHIP, src);
   }
 }

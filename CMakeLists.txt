@@ -158,3 +158,7 @@ set_target_properties(GIAN07 PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
+
+if(MSVC)
+    target_compile_options(GIAN07 PRIVATE /MP)
+endif()

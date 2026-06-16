@@ -26,10 +26,10 @@
 
 // WeaponSelectInit → inline wrapper in gameflow_manager.h
 bool GameInit(void (*NextProc)(bool &quit)); // ゲームの初期化をする
-void GameRestart(void);               // ゲームを再開する(ESC 抜けから)
+void GameRestart();               // ゲームを再開する(ESC 抜けから)
 bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
-void GameOverInit(void);                  // ゲームオーバーの前処理
-void GameContinue(void);                  // コンティニューを行う場合
+void GameOverInit();                  // ゲームオーバーの前処理
+void GameContinue();                  // コンティニューを行う場合
 
 bool GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
 

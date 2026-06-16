@@ -13,20 +13,13 @@
 #include "platform/graphics_backend.h"
 
 ////グローバル変数 → bullet_manager.cpp の BulletManager に移動
-// this->command, this->bullets, this->count_small, this->count_large → bullet_manager.cpp の参照 (クロスモジュール)
-// Bullets.indices_small, Bullets.indices_large, Bullets.max_small, Bullets.max_large, Bullets.speed
+// command, bullets, count_small, count_large → bullet_manager.cpp の参照 (クロスモジュール)
+// indices_small, indices_large, max_small, max_large, speed
 // → bullet_manager.h 経由で直接アクセス
 
 ////ローカルな関数////
 // プライベートメソッドは bullet_manager.h で宣言済み
 void _TamaEffectDraw(const TAMA_DATA *t); // 弾をエフェクトとして描画？
-
-/*
-inline Debug(uint32_t old, int id)
-{
-        RndBuf[id] += (random_ref-old);
-}
-*/
 
 void BulletManager::Spawn() {
   int v;
@@ -48,17 +41,17 @@ void BulletManager::Spawn() {
   }
 
   // 数値は単純に　(speed /2) *rank/32 + speed/2
-  v = SPEEDM(this->command.v); // 速度の基本値をセットする(GIAN.H)
-  if ((this->command.type & 0x0f) == T_NORM)
-    Bullets.speed = (((v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (v >> 1);
+  v = SPEEDM(command.v); // 速度の基本値をセットする(GIAN.H)
+  if ((command.type & 0x0f) == T_NORM)
+    speed = (((v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (v >> 1);
   else
-    Bullets.speed = v;
+    speed = v;
 
   TamaSetMain();
 }
 
 void BulletManager::SpawnEX() {
-  Bullets.speed = SPEEDM(this->command.v);
+  speed = SPEEDM(command.v);
 
   TamaSetMain();
 }
@@ -68,32 +61,32 @@ void BulletManager::SpawnLine() {
   // uint32_t temp;
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
-  Bullets.speed = SPEEDM(this->command.v);
+  speed = SPEEDM(command.v);
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
-  if ((this->command.c & 0xf0) == TAMA_SMALL)
-    indnow = &this->count_small, indmax = &Bullets.max_small, indp = &Bullets.indices_small[this->count_small];
+  if ((command.c & 0xf0) == TAMA_SMALL)
+    indnow = &count_small, indmax = &max_small, indp = &indices_small[count_small];
   else
-    indnow = &this->count_large, indmax = &Bullets.max_large, indp = &Bullets.indices_large[this->count_large];
+    indnow = &count_large, indmax = &max_large, indp = &indices_large[count_large];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
-      (this->command.n * ((this->command.cmd & TAMA_REN) ? this->command.ns : 1));
+      (command.n * ((command.cmd & TAMA_REN) ? command.ns : 1));
 
   // その他パラメータのセット //
-  this->command.cmd = (this->command.cmd & 0xf0) | TC_WAY;
+  command.cmd = (command.cmd & 0xf0) | TC_WAY;
 
   for (const auto i : std::views::iota(0u, setmax)) {
     if ((*indnow) + 1 >= (*indmax))
       return; // セットできない場合
 
     *indnow = *indnow + 1;    // 弾数をインクリメント
-    auto *t = &this->bullets[indp[i]]; // 弾ポインタをセット
+    auto *t = &bullets[indp[i]]; // 弾ポインタをセット
 
-    t->x = t->tx = this->command.x; // X座標のセット
-    t->y = t->ty = this->command.y; // Y座標のセット
+    t->x = t->tx = command.x; // X座標のセット
+    t->y = t->ty = command.y; // Y座標のセット
 
-    t->a = this->command.a; // 注意：サイズは char
+    t->a = command.a; // 注意：サイズは char
 
     // temp = random_ref;
     t->d = Dir(i); // 弾の発射角度
@@ -108,12 +101,12 @@ void BulletManager::SpawnLine() {
     t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
     t->vy = sinl(t->d, t->v); // 速度のＹ成分セット
 
-    t->vd = this->command.vd;             // 角速度もしくはホーミング率
-    t->c = this->command.c;               // 弾の色＆形状
-    t->rep = this->command.rep;           // 繰り返し回数
-    t->type = this->command.type;         // 弾の種類
-    t->option = this->command.option;     // 弾の属性(バイブ、反射等)
-    t->effect = this->command.cmd & 0xf0; // 弾のエフェクト
+    t->vd = command.vd;             // 角速度もしくはホーミング率
+    t->c = command.c;               // 弾の色＆形状
+    t->rep = command.rep;           // 繰り返し回数
+    t->type = command.type;         // 弾の種類
+    t->option = command.option;     // 弾の属性(バイブ、反射等)
+    t->effect = command.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
     t->flag = Flag();          // フラグの初期化
   }
@@ -124,32 +117,32 @@ void BulletManager::SpawnExtra01() {
   // uint32_t temp;
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
-  Bullets.speed = SPEEDM(this->command.v);
+  speed = SPEEDM(command.v);
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
-  if ((this->command.c & 0xf0) == TAMA_SMALL)
-    indnow = &this->count_small, indmax = &Bullets.max_small, indp = &Bullets.indices_small[this->count_small];
+  if ((command.c & 0xf0) == TAMA_SMALL)
+    indnow = &count_small, indmax = &max_small, indp = &indices_small[count_small];
   else
-    indnow = &this->count_large, indmax = &Bullets.max_large, indp = &Bullets.indices_large[this->count_large];
+    indnow = &count_large, indmax = &max_large, indp = &indices_large[count_large];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
-      (this->command.n * ((this->command.cmd & TAMA_REN) ? this->command.ns : 1));
+      (command.n * ((command.cmd & TAMA_REN) ? command.ns : 1));
 
   // その他パラメータのセット //
-  // this->command.cmd = (this->command.cmd & 0xf0);
+  // command.cmd = (command.cmd & 0xf0);
 
   for (const auto i : std::views::iota(0u, setmax)) {
     if ((*indnow) + 1 >= (*indmax))
       return; // セットできない場合
 
     *indnow = *indnow + 1;    // 弾数をインクリメント
-    auto *t = &this->bullets[indp[i]]; // 弾ポインタをセット
+    auto *t = &bullets[indp[i]]; // 弾ポインタをセット
 
-    t->x = t->tx = this->command.x; // X座標のセット
-    t->y = t->ty = this->command.y; // Y座標のセット
+    t->x = t->tx = command.x; // X座標のセット
+    t->y = t->ty = command.y; // Y座標のセット
 
-    t->a = this->command.a; // 注意：サイズは char
+    t->a = command.a; // 注意：サイズは char
 
     t->d = Dir(i);   // 弾の発射角度
     t->d16 = (t->d << 8); // 角速度のある運動で使用
@@ -159,12 +152,12 @@ void BulletManager::SpawnExtra01() {
     t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
     t->vy = sinl(t->d, t->v); // 速度のＹ成分セット
 
-    t->vd = this->command.vd;             // 角速度もしくはホーミング率
-    t->c = this->command.c;               // 弾の色＆形状
-    t->rep = this->command.rep;           // 繰り返し回数
-    t->type = this->command.type;         // 弾の種類
-    t->option = this->command.option;     // 弾の属性(バイブ、反射等)
-    t->effect = this->command.cmd & 0xf0; // 弾のエフェクト
+    t->vd = command.vd;             // 角速度もしくはホーミング率
+    t->c = command.c;               // 弾の色＆形状
+    t->rep = command.rep;           // 繰り返し回数
+    t->type = command.type;         // 弾の種類
+    t->option = command.option;     // 弾の属性(バイブ、反射等)
+    t->effect = command.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
     t->flag = Flag();          // フラグの初期化
   }
@@ -174,7 +167,7 @@ int BulletManager::SpeedEx(uint8_t d) {
   int temp = 0;
   int delta;
 
-  switch (this->command.v & 0xc0) {
+  switch (command.v & 0xc0) {
   case (TAMASP_RND1):
     temp = rnd() % 16 - 8; /* DebugOut(u8"2"); */
     break;
@@ -186,14 +179,14 @@ int BulletManager::SpeedEx(uint8_t d) {
     break;
   }
 
-  // d と this->command.d の値の離れ具合により、速度を変化させる //
-  delta = this->command.d - d;
+  // d と command.d の値の離れ具合により、速度を変化させる //
+  delta = command.d - d;
   if (delta > 128)
     delta -= 256;
   if (delta < -128)
     delta += 256;
 
-  return Bullets.speed - (Bullets.speed * abs(delta)) / 23 + temp;
+  return speed - (speed * abs(delta)) / 23 + temp;
 }
 
 void BulletManager::TamaSetMain() {
@@ -201,30 +194,30 @@ void BulletManager::TamaSetMain() {
   uint16_t *indnow, *indmax, *indp; // 上に同じ
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
-  if ((this->command.c & 0xf0) == TAMA_SMALL)
-    indnow = &this->count_small, indmax = &Bullets.max_small, indp = &Bullets.indices_small[this->count_small];
+  if ((command.c & 0xf0) == TAMA_SMALL)
+    indnow = &count_small, indmax = &max_small, indp = &indices_small[count_small];
   else
-    indnow = &this->count_large, indmax = &Bullets.max_large, indp = &Bullets.indices_large[this->count_large];
+    indnow = &count_large, indmax = &max_large, indp = &indices_large[count_large];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
-      (this->command.n * ((this->command.cmd & TAMA_REN) ? this->command.ns : 1));
+      (command.n * ((command.cmd & TAMA_REN) ? command.ns : 1));
 
   for (const auto i : std::views::iota(0u, setmax)) {
     if ((*indnow) + 1 >= (*indmax))
       return; // セットできない場合
 
     *indnow = *indnow + 1; // 弾数をインクリメント
-    auto *t = &this->bullets[indp[i]];
+    auto *t = &bullets[indp[i]];
 
-    t->x = t->tx = this->command.x; // X座標のセット
-    t->y = t->ty = this->command.y; // Y座標のセット
+    t->x = t->tx = command.x; // X座標のセット
+    t->y = t->ty = command.y; // Y座標のセット
 
     // temp = random_ref;
     t->v = t->v0 = NewSpeed(i); // 初速度のセット
     // Debug(temp,30);
 
-    t->a = this->command.a; // 注意：サイズは char
+    t->a = command.a; // 注意：サイズは char
 
     // temp = random_ref;
     t->d = Dir(i); // 弾の発射角度
@@ -235,12 +228,12 @@ void BulletManager::TamaSetMain() {
     t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
     t->vy = sinl(t->d, t->v); // 速度のＹ成分セット
 
-    t->vd = this->command.vd;             // 角速度もしくはホーミング率
-    t->c = this->command.c;               // 弾の色＆形状
-    t->rep = this->command.rep;           // 繰り返し回数
-    t->type = this->command.type;         // 弾の種類
-    t->option = this->command.option;     // 弾の属性(バイブ、反射等)
-    t->effect = this->command.cmd & 0xf0; // 弾のエフェクト
+    t->vd = command.vd;             // 角速度もしくはホーミング率
+    t->c = command.c;               // 弾の色＆形状
+    t->rep = command.rep;           // 繰り返し回数
+    t->type = command.type;         // 弾の種類
+    t->option = command.option;     // 弾の属性(バイブ、反射等)
+    t->effect = command.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
     t->flag = Flag();          // フラグの初期化
   }
@@ -251,8 +244,8 @@ void BulletManager::Move() {
   // よりも生きている時間のほうが長いからなのですが...                  //
 
   // 小型弾の処理 //
-  for (const auto i : std::views::iota(0u, this->count_small)) {
-    auto *t = &this->bullets[Bullets.indices_small[i]];
+  for (const auto i : std::views::iota(0u, count_small)) {
+    auto *t = &bullets[indices_small[i]];
     if (t->effect == TE_NONE) {
       MoveByType(t);
       MoveByOption(t);
@@ -276,11 +269,11 @@ void BulletManager::Move() {
       t->count++;
     }
   }
-  Indsort(Bullets.indices_small, this->count_small, this->bullets);
+  Indsort(indices_small, count_small, bullets);
 
   // 大型弾＆特殊弾の処理 //
-  for (const auto i : std::views::iota(0u, this->count_large)) {
-    auto *t = &this->bullets[Bullets.indices_large[i]];
+  for (const auto i : std::views::iota(0u, count_large)) {
+    auto *t = &bullets[indices_large[i]];
     if (t->effect == TE_NONE) {
       MoveByType(t);
       MoveByOption(t);
@@ -304,7 +297,7 @@ void BulletManager::Move() {
       t->count++;
     }
   }
-  Indsort(Bullets.indices_large, this->count_large, this->bullets);
+  Indsort(indices_large, count_large, bullets);
 }
 
 void BulletManager::Draw() {
@@ -321,8 +314,8 @@ void BulletManager::Draw() {
   static constexpr uint8_t sizeExtraTama[4] = {16, 12, 8, 4};
 
   // 大型弾＆特殊弾(16*16) の描画 //
-  for (const auto i : std::views::iota(0u, this->count_large)) {
-    auto *t = &this->bullets[Bullets.indices_large[i]];
+  for (const auto i : std::views::iota(0u, count_large)) {
+    auto *t = &bullets[indices_large[i]];
 
     x = (t->x >> 6) - 8; // -8 は座標の補正用です
     y = (t->y >> 6) - 8; // 上に同じ
@@ -424,8 +417,8 @@ void BulletManager::Draw() {
   }
 
   // 小型弾(8*8) の描画 //
-  for (const auto i : std::views::iota(0u, this->count_small)) {
-    auto *t = &this->bullets[Bullets.indices_small[i]];
+  for (const auto i : std::views::iota(0u, count_small)) {
+    auto *t = &bullets[indices_small[i]];
 
     x = (t->x >> 6) - 4; // -4 は座標の補正用です
     y = (t->y >> 6) - 4; // 上に同じ
@@ -545,8 +538,8 @@ void _TamaEffectDraw(const TAMA_DATA *t) {
 }
 
 void BulletManager::Clear() {
-  for (const auto i : std::views::iota(0u, this->count_small)) {
-    auto &t = this->bullets[Bullets.indices_small[i]];
+  for (const auto i : std::views::iota(0u, count_small)) {
+    auto &t = bullets[indices_small[i]];
     if (t.effect != TE_DELETE) {
       t.effect = TE_DELETE;
       t.count = 0;
@@ -555,8 +548,8 @@ void BulletManager::Clear() {
     }
   }
 
-  for (const auto i : std::views::iota(0u, this->count_large)) {
-    auto &t = this->bullets[Bullets.indices_large[i]];
+  for (const auto i : std::views::iota(0u, count_large)) {
+    auto &t = bullets[indices_large[i]];
     if (t.effect != TE_DELETE) {
       t.effect = TE_DELETE;
       t.count = 0;
@@ -572,8 +565,8 @@ uint32_t BulletManager::ScoreToItems() {
   uint32_t Score;
 
   Score = TAMA1_POINT + Players.viv.evade * 100;
-  for (const auto i : std::views::iota(0u, this->count_small)) {
-    auto *t = &this->bullets[Bullets.indices_small[i]];
+  for (const auto i : std::views::iota(0u, count_small)) {
+    auto *t = &bullets[indices_small[i]];
     if (t->effect != TE_DELETE) {
       Effects.SpawnPointEffect(t->x - 64 * 4, t->y - 64 * 4, Score);
       sum += Score;
@@ -583,11 +576,11 @@ uint32_t BulletManager::ScoreToItems() {
       t->d = 0;
     }
   }
-  Indsort(Bullets.indices_small, this->count_small, this->bullets);
+  Indsort(indices_small, count_small, bullets);
 
   Score = TAMA2_POINT + Players.viv.evade * 100;
-  for (const auto i : std::views::iota(0u, this->count_large)) {
-    auto *t = &this->bullets[Bullets.indices_large[i]];
+  for (const auto i : std::views::iota(0u, count_large)) {
+    auto *t = &bullets[indices_large[i]];
     if (t->effect != TE_DELETE) {
       Effects.SpawnPointEffect(t->x - 64 * 8, t->y - 64 * 8, Score);
       sum += Score;
@@ -597,7 +590,7 @@ uint32_t BulletManager::ScoreToItems() {
       t->d = 0;
     }
   }
-  Indsort(Bullets.indices_large, this->count_large, this->bullets);
+  Indsort(indices_large, count_large, bullets);
 
   return sum;
 }
@@ -610,12 +603,12 @@ void BulletManager::ToItems(uint8_t n) {
   //	Score = TAMA1_POINT + Players.viv.evade * 100;
 
   if (n == 0) {
-    this->Clear();
+    Clear();
     return;
   }
 
-  for (const auto i : std::views::iota(0u, this->count_small)) {
-    auto *t = &this->bullets[Bullets.indices_small[i]];
+  for (const auto i : std::views::iota(0u, count_small)) {
+    auto *t = &bullets[indices_small[i]];
     if (t->effect != TE_DELETE) {
       t->count = 0;
       t->d = 0;
@@ -631,11 +624,11 @@ void BulletManager::ToItems(uint8_t n) {
       }
     }
   }
-  Indsort(Bullets.indices_small, this->count_small, this->bullets);
+  Indsort(indices_small, count_small, bullets);
 
   //	Score = TAMA2_POINT + Players.viv.evade * 100;
-  for (const auto i : std::views::iota(0u, this->count_large)) {
-    auto *t = &this->bullets[Bullets.indices_large[i]];
+  for (const auto i : std::views::iota(0u, count_large)) {
+    auto *t = &bullets[indices_large[i]];
     if (t->effect != TE_DELETE) {
       t->count = 0;
       t->d = 0;
@@ -651,7 +644,7 @@ void BulletManager::ToItems(uint8_t n) {
       }
     }
   }
-  Indsort(Bullets.indices_large, this->count_large, this->bullets);
+  Indsort(indices_large, count_large, bullets);
 
   //	return sum;
 }
@@ -663,99 +656,99 @@ void BulletManager::SetIndices(uint16_t tama1) {
     tama1 = TAMA_MAX - 1;
 
   // 弾の最大数のセット //
-  Bullets.max_small = tama1;
-  Bullets.max_large = TAMA_MAX - tama1;
+  max_small = tama1;
+  max_large = TAMA_MAX - tama1;
 
   // 弾のインデックス用配列の初期化 //
   for (i = 0; i < tama1; i++)
-    Bullets.indices_small[i] = i;
+    indices_small[i] = i;
   for (i = tama1; i < TAMA_MAX; i++)
-    Bullets.indices_large[i - tama1] = i;
+    indices_large[i - tama1] = i;
 
-  // memset(this->bullets,0,sizeof(TAMA_DATA)*TAMA_MAX);
+  // memset(bullets,0,sizeof(TAMA_DATA)*TAMA_MAX);
 
-  this->count_small = this->count_large = 0;
+  count_small = count_large = 0;
 }
 
 void BulletManager::SetEasy() {
-  switch (this->command.cmd & 0x03) {
+  switch (command.cmd & 0x03) {
   case (TC_WAY):
-    if (this->command.n >= 3)
-      this->command.n -= 2;                // 奇数・偶数は変化させない
-    this->command.dw += (this->command.dw >> 2); // 幅を広げる
+    if (command.n >= 3)
+      command.n -= 2;                // 奇数・偶数は変化させない
+    command.dw += (command.dw >> 2); // 幅を広げる
     break;
 
   case (TC_ALL):
   case (TC_RND):
-    this->command.n >>= 1; // 弾数／２
+    command.n >>= 1; // 弾数／２
     break;
   }
 
-  if (this->command.ns >= 2)
-    this->command.ns--; // 連射数_減少
+  if (command.ns >= 2)
+    command.ns--; // 連射数_減少
 }
 
 void BulletManager::SetHard() {
-  switch (this->command.cmd & 0x03) {
+  switch (command.cmd & 0x03) {
   case (TC_WAY):
-    this->command.n += 2;                  // 奇数・偶数は変化させない
-    this->command.dw -= (this->command.dw >> 3); // 幅を狭める
+    command.n += 2;                  // 奇数・偶数は変化させない
+    command.dw -= (command.dw >> 3); // 幅を狭める
     break;
 
   case (TC_ALL):
-    this->command.n += (((this->command.n >> 2) > 6) ? 6 : (this->command.n >> 2));
+    command.n += (((command.n >> 2) > 6) ? 6 : (command.n >> 2));
     break;
 
   case (TC_RND):
-    this->command.n += (this->command.n >> 1); // 弾数５０％アップ
+    command.n += (command.n >> 1); // 弾数５０％アップ
     break;
   }
 
-  this->command.ns++; // 連射数_増加
+  command.ns++; // 連射数_増加
 }
 
 void BulletManager::SetLunatic() {
-  switch (this->command.cmd & 0x03) {
+  switch (command.cmd & 0x03) {
   case (TC_WAY):
-    this->command.n += 4;                 // 奇数・偶数は変化させない
-    this->command.dw -= (this->command.dw / 3); // 幅を狭める
+    command.n += 4;                 // 奇数・偶数は変化させない
+    command.dw -= (command.dw / 3); // 幅を狭める
     break;
 
   case (TC_ALL):
-    this->command.n += (((this->command.n / 3) > 12) ? 12 : (this->command.n / 3));
+    command.n += (((command.n / 3) > 12) ? 12 : (command.n / 3));
     break;
 
   case (TC_RND):
-    this->command.n <<= 1; // 弾数２倍
+    command.n <<= 1; // 弾数２倍
     break;
   }
 
-  this->command.ns += 2; // 連射数_増加
+  command.ns += 2; // 連射数_増加
 }
 
 uint8_t BulletManager::Dir(uint16_t i) {
-  uint8_t deg = ((this->command.cmd & TAMA_ZSET)
-                     ? atan8((Players.viv.x - this->command.x), (Players.viv.y - this->command.y))
+  uint8_t deg = ((command.cmd & TAMA_ZSET)
+                     ? atan8((Players.viv.x - command.x), (Players.viv.y - command.y))
                      : 0);
 
-  deg += this->command.d;  // 基本角のセット完了
-  i = i % this->command.n; // 連射弾対策
+  deg += command.d;  // 基本角のセット完了
+  i = i % command.n; // 連射弾対策
 
-  switch (this->command.cmd & 0x03) {
+  switch (command.cmd & 0x03) {
   case (TC_WAY):
     i++;
-    if (this->command.n & 1)
-      return deg + (i >> 1) * this->command.dw * (1 - ((i & 1) << 1));
+    if (command.n & 1)
+      return deg + (i >> 1) * command.dw * (1 - ((i & 1) << 1));
     else
-      return deg - (this->command.dw >> 1) +
-             (i >> 1) * this->command.dw * (1 - ((i & 1) << 1));
+      return deg - (command.dw >> 1) +
+             (i >> 1) * command.dw * (1 - ((i & 1) << 1));
 
   case (TC_ALL):
-    return deg + (i << 8) / this->command.n;
+    return deg + (i << 8) / command.n;
 
   case (TC_RND):
     // DebugOut(u8"1");
-    return deg + rnd() % this->command.dw - (this->command.dw >> 1);
+    return deg + rnd() % command.dw - (command.dw >> 1);
 
   default:
     return 0; // 絶対無いけれど、warning がうるさいので...
@@ -765,10 +758,10 @@ uint8_t BulletManager::Dir(uint16_t i) {
 int BulletManager::NewSpeed(uint16_t i) {
   int temp = 0; // ランダム要素の設定用
   const int vret =
-      Bullets.speed; // SPEEDM(this->command.v);	// 速度の基本値をセットする(GIAN.H)
+      speed; // SPEEDM(command.v);	// 速度の基本値をセットする(GIAN.H)
 
   // 速度ランダムは基本値のｎ％変化とするべきかもしれないが... //
-  switch (this->command.v & 0xc0) {
+  switch (command.v & 0xc0) {
   case (TAMASP_RND1):
     temp = rnd() % 16 - 8; /* DebugOut(u8"2"); */
     break;
@@ -780,25 +773,25 @@ int BulletManager::NewSpeed(uint16_t i) {
     break;
   }
 
-  if (this->command.cmd & TAMA_REN)
-    return vret + (vret >> 3) * (i / this->command.n) + temp;
+  if (command.cmd & TAMA_REN)
+    return vret + (vret >> 3) * (i / command.n) + temp;
   else
     return vret + temp;
 }
 
 int BulletManager::LineCmdNewSpeed(uint16_t i) {
-  int vret = Bullets.speed; // 速度の基本値をセットする(GIAN.H)
+  int vret = speed; // 速度の基本値をセットする(GIAN.H)
 
-  i = (i % this->command.n) + 1; // 連射弾対策
+  i = (i % command.n) + 1; // 連射弾対策
 
   // 中心からの角度
-  const auto deg_factor = ((i >> 1) * this->command.dw * (1 - ((i & 1) << 1)));
+  const auto deg_factor = ((i >> 1) * command.dw * (1 - ((i & 1) << 1)));
   const uint8_t deg =
-      ((this->command.n & 1) ? deg_factor : -(this->command.dw >> 1) + deg_factor);
+      ((command.n & 1) ? deg_factor : -(command.dw >> 1) + deg_factor);
 
   vret = cosDiv(deg, vret);
 
-  if (this->command.cmd & TAMA_REN)
+  if (command.cmd & TAMA_REN)
     return vret + (vret >> 3) * (i - 1);
   else
     return vret;
@@ -806,10 +799,10 @@ int BulletManager::LineCmdNewSpeed(uint16_t i) {
 
 int BulletManager::Speed(uint16_t i) {
   int temp = 0;                       // ランダム要素の設定用
-  const int vret = SPEEDM(this->command.v); // 速度の基本値をセットする(GIAN.H)
+  const int vret = SPEEDM(command.v); // 速度の基本値をセットする(GIAN.H)
 
   // 速度ランダムは基本値のｎ％変化とするべきかもしれないが... //
-  switch (this->command.v & 0xc0) {
+  switch (command.v & 0xc0) {
   case (TAMASP_RND1):
     temp = rnd() % 16 - 8; /* DebugOut(u8"2"); */
     break;
@@ -821,14 +814,14 @@ int BulletManager::Speed(uint16_t i) {
     break;
   }
 
-  if (this->command.cmd & TAMA_REN)
-    return vret + (vret >> 3) * (i / this->command.n) + temp;
+  if (command.cmd & TAMA_REN)
+    return vret + (vret >> 3) * (i / command.n) + temp;
   else
     return vret + temp;
 }
 
 uint8_t BulletManager::Flag() {
-  switch (this->command.type) {
+  switch (command.type) {
   case (T_HOMING):
   case (T_HOMING_M):
   case (T_ROLL):
@@ -1117,44 +1110,44 @@ void BulletManager::MoveByOption(TAMA_DATA *t) {
     t->y = t->ty;
     if ((t->tx) < GX_MIN || (t->tx) > GX_MAX) {
       op_temp = 1;
-      this->command.d = 128 - (t->d);
+      command.d = 128 - (t->d);
     } else if ((t->ty) < GY_MIN) {
       op_temp = 1;
-      this->command.d = -(t->d);
+      command.d = -(t->d);
     }
 
     if (op_temp == 1) {
-      this->command.x = t->tx + cosl(this->command.d, t->v);
-      this->command.y = t->ty + sinl(this->command.d, t->v);
+      command.x = t->tx + cosl(command.d, t->v);
+      command.y = t->ty + sinl(command.d, t->v);
       t->flag = TF_DELETE; // 消滅エフェクトに変更すべきか？
-      this->command.ns = 2;
-      this->command.c = (t->c) & 0x0f;
-      this->command.cmd = (t->option & 0x0f) | TE_CIRCLE1;
-      switch (this->command.cmd & 0x03) {
+      command.ns = 2;
+      command.c = (t->c) & 0x0f;
+      command.cmd = (t->option & 0x0f) | TE_CIRCLE1;
+      switch (command.cmd & 0x03) {
       case (TC_WAY):
-        this->command.n = 3;
-        this->command.dw = 16;
-        this->command.v = 13 - 2;
+        command.n = 3;
+        command.dw = 16;
+        command.v = 13 - 2;
         break;
       case (TC_ALL):
-        this->command.n = 10;
-        this->command.v = 13;
-        this->command.d = Cast::down<uint8_t>(rnd());
-        if (this->command.cmd & TAMA_REN)
-          this->command.v -= 2;
+        command.n = 10;
+        command.v = 13;
+        command.d = Cast::down<uint8_t>(rnd());
+        if (command.cmd & TAMA_REN)
+          command.v -= 2;
         break;
       case (TC_RND):
-        this->command.n = 4;
-        this->command.dw = 128 - 32;        // 128以上だと画面外に...
-        this->command.v = 13 | TAMASP_RND2; // 速度ランダムあり
+        command.n = 4;
+        command.dw = 128 - 32;        // 128以上だと画面外に...
+        command.v = 13 | TAMASP_RND2; // 速度ランダムあり
         break;
       }
-      if (this->command.cmd & TAMA_ZSET)
-        this->command.d = 0, this->command.dw -= 6;
-      this->command.type = T_NORM;
-      this->command.option = TOP_NONE;
-      Snd_SEPlay(12, this->command.x);
-      this->Spawn(); // 難易度で変化させるところがポイント
+      if (command.cmd & TAMA_ZSET)
+        command.d = 0, command.dw -= 6;
+      command.type = T_NORM;
+      command.option = TOP_NONE;
+      Snd_SEPlay(12, command.x);
+      Spawn(); // 難易度で変化させるところがポイント
     }
     return;
 

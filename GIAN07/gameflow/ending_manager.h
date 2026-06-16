@@ -59,7 +59,7 @@ struct EndingManager {
   GrpInfo grp_info;
   StTask stf_task;
   Text text;
-  uint16_t flash_state = 0; // was GameFlow.flash_state
+  uint16_t flash_state = 0;
 
   static constexpr std::array<PIXEL_LTRB, 7> staff_label = {{
       {0, 0, 160, 24},
@@ -80,9 +80,9 @@ struct EndingManager {
 
   // === 公開メソッド ===
 
-  bool Init();              // was EndingInit
-  void Proc(bool &);        // was EndingProc
-  void Draw();              // was EndingDraw
+  bool Init();
+  void Proc(bool &);
+  void Draw();
 
 private:
   // 内部ヘルパー

@@ -11,14 +11,14 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-// this->entities[], this->indices[], this->count → item_manager.cpp に移動
+// entities[], indices[], count → item_manager.cpp に移動
 
 // アイテムを発生させる //
 void ItemManager::Spawn(int x, int y, uint8_t type) {
-  if (this->count + 1 >= ITEM_MAX)
+  if (count + 1 >= ITEM_MAX)
     return;
 
-  auto *ip = &this->entities[this->indices[this->count++]];
+  auto *ip = &entities[indices[count++]];
 
   constexpr uint8_t deg = -64; // rnd()%(128-110)+128+55;
   ip->x = x;
@@ -55,8 +55,8 @@ void ItemManager::Move(void) {
   // point = 100+(Players.viv.evade)*100;
   const uint32_t point = ((((SY_MAX - Players.viv.y) >> 6) + (Players.viv.evade * 4)) * 160);
 
-  for (i = 0; i < this->count; i++) {
-    auto *ip = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *ip = &entities[indices[i]];
     if (!Players.viv.bomb_time) {
       if (Players.viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
         // 自機が回収ラインより上、または既に自動回収が発動済み
@@ -115,7 +115,7 @@ void ItemManager::Move(void) {
       ip->type = ITEM_DELETE;
   }
 
-  Indsort(Items.indices, this->count, Items.entities,
+  Indsort(indices, count, entities,
           [](const ITEM_DATA &i) { return (i.type == ITEM_DELETE); });
 }
 
@@ -124,8 +124,8 @@ void ItemManager::Draw(void) {
   int i, j, x, y;
   PIXEL_LTRB src;
 
-  for (i = 0; i < this->count; i++) {
-    auto *ip = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *ip = &entities[indices[i]];
     const uint8_t ptn = ((ip->count >> 2) & 3);
     switch (ip->type) {
     case (ITEM_SCORE):
@@ -178,9 +178,9 @@ void ItemManager::SetIndices(void) {
   int i;
 
   for (i = 0; i < ITEM_MAX; i++) {
-    this->indices[i] = i;
+    indices[i] = i;
     // memset(Item+i,0,sizeof(ITEM_DATA));
   }
 
-  this->count = 0;
+  count = 0;
 }

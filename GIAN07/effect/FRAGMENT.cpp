@@ -10,7 +10,7 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-// Effects.fragments[], Effects.fragment_ptr → effect_manager.cpp の EffectManager に移動
+// fragments[], fragment_ptr → effect_manager.cpp の EffectManager に移動
 
 static void _FDraw(const FRAGMENT_DATA *f);
 
@@ -18,11 +18,11 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
   int i;
   int l;
   uint8_t d;
-  FRAGMENT_DATA *f = Effects.fragments.data() + Effects.fragment_ptr;
+  FRAGMENT_DATA *f = fragments.data() + fragment_ptr;
 
   if (cmd == FRG_ESCAPE) {
     for (i = 0; i < FRAGMENT_MAX; i++) {
-      f = Effects.fragments.data() + i;
+      f = fragments.data() + i;
       if (f->count) {
         f->vx = ((f->x - x) / 16); // f->count;
         f->vy = ((f->y - y) / 16); // f->count;
@@ -30,7 +30,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
     }
   } else if (cmd == FRG_APPROACH) {
     for (i = 0; i < FRAGMENT_MAX; i++) {
-      f = Effects.fragments.data() + i;
+      f = fragments.data() + i;
       if (f->count) {
         f->vx = (x - f->x) / f->count;
         f->vy = (x - f->y) / f->count;
@@ -108,11 +108,11 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
     break;
   }
 
-  Effects.fragment_ptr = (Effects.fragment_ptr + 1) % FRAGMENT_MAX;
+  fragment_ptr = (fragment_ptr + 1) % FRAGMENT_MAX;
 }
 
 void EffectManager::MoveFragments() {
-  for (auto &it : Effects.fragments) {
+  for (auto &it : fragments) {
     auto *f = &it;
     if (f->count) {
       f->x += f->vx;
@@ -123,7 +123,7 @@ void EffectManager::MoveFragments() {
 }
 
 void EffectManager::DrawFragments() {
-  for (const auto &it : Effects.fragments) {
+  for (const auto &it : fragments) {
     if (it.count) {
       _FDraw(&it);
     }
@@ -131,12 +131,12 @@ void EffectManager::DrawFragments() {
 }
 
 void EffectManager::InitFragments() {
-  for (auto &it : Effects.fragments) {
-    // memset(Effects.fragments+i,0,sizeof(FRAGMENT_DATA));
+  for (auto &it : fragments) {
+    // memset(fragments+i,0,sizeof(FRAGMENT_DATA));
     it.count = 0;
   }
 
-  Effects.fragment_ptr = 0;
+  fragment_ptr = 0;
 }
 
 static void _FDraw(const FRAGMENT_DATA *f) {

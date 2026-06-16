@@ -14,7 +14,7 @@
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
-// this->homing_count → this->homing_count で直接アクセス
+// homing_count → homing_count で直接アクセス
 
 ///// [マクロ] /////
 constexpr int HLASER_GETNEXT(int current) {
@@ -32,16 +32,16 @@ constexpr int HLASER_GETPREV(int current, int n) {
 void LaserManager::InitHoming() {
   int i;
 
-  this->homing_count = 0;
+  homing_count = 0;
 
-  Lasers.active.Next = nullptr;
-  Lasers.free_list.Next = Lasers.homing_buf.data();
+  active.Next = nullptr;
+  free_list.Next = homing_buf.data();
 
   for (i = 0; i < HLASER_MAX - 2; i++) {
-    Lasers.homing_buf[i].Next = &Lasers.homing_buf[i + 1];
+    homing_buf[i].Next = &homing_buf[i + 1];
   }
 
-  Lasers.homing_buf[HLASER_MAX - 1].Next = nullptr;
+  homing_buf[HLASER_MAX - 1].Next = nullptr;
 }
 
 // ホーミングレーザーをセットする //
@@ -52,16 +52,16 @@ void LaserManager::SpawnHoming(const HLaserInfo *hinfo) {
 
   // 1-n としているのは、角度設定のためね... //
   for (i = 1; i <= (hinfo->n); i++) {
-    p = Lasers.free_list.Next;
+    p = free_list.Next;
     if (p == nullptr) {
       return; // データを確保できない
     }
 
     // ポインタ結合を行う //
-    Lasers.free_list.Next = Lasers.free_list.Next->Next;
-    p->Next = Lasers.active.Next;
-    Lasers.active.Next = p;
-    this->homing_count++;
+    free_list.Next = free_list.Next->Next;
+    p->Next = active.Next;
+    active.Next = p;
+    homing_count++;
 
     p->v = 64 * 4;  // 加速度セット
     p->a = 10;      // 速度セット
@@ -97,7 +97,7 @@ void LaserManager::MoveHoming() {
   int deg, deg2;
 
   // 次のフレームに移行する //
-  for (hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
+  for (hl = active.Next; hl != nullptr; hl = hl->Next) {
     // 前回の先頭を一時保存する //
     x = hl->p[hl->Current].x;
     y = hl->p[hl->Current].y;
@@ -187,14 +187,14 @@ void LaserManager::MoveHoming() {
   }
 
   // 不要なデータを削除する //
-  for (hl = &Lasers.active; (hl->Next) != nullptr;) {
+  for (hl = &active; (hl->Next) != nullptr;) {
     if (hl->Next->State == HLS_DEAD) {
       temp = hl->Next->Next;
-      hl->Next->Next = Lasers.free_list.Next;
-      Lasers.free_list.Next = hl->Next;
+      hl->Next->Next = free_list.Next;
+      free_list.Next = hl->Next;
       hl->Next = temp;
 
-      this->homing_count--;
+      homing_count--;
     }
     // そうでなければポインタを進める //
     else {
@@ -247,7 +247,7 @@ void LaserManager::DrawHoming() {
 
   GrpGeom->Lock();
 
-  for (hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
+  for (hl = active.Next; hl != nullptr; hl = hl->Next) {
     w = HOMINGL_WIDTH;
     current = hl->Current;
     p = &(hl->p[current]);
@@ -292,7 +292,7 @@ void LaserManager::DrawHoming() {
     gf->SetColor({5, 5, 5});
   }
 
-  for (hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
+  for (hl = active.Next; hl != nullptr; hl = hl->Next) {
     w = HOMINGL_WIDTH / 2;
     current = hl->Current;
     p = &(hl->p[current]);
@@ -340,9 +340,9 @@ void LaserManager::DrawHoming() {
 void LaserManager::ClearHoming() {
   //	HLaserData	*hl;
 
-  this->InitHoming();
+  InitHoming();
   /*
-  for(hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
+  for(hl = active.Next; hl != nullptr; hl = hl->Next) {
           hl->State = HLS_CLEAR;
   }
   */

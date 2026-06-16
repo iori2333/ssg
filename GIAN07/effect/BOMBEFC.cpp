@@ -17,7 +17,7 @@
 
 // 爆発系エフェクトの初期化 //
 void EffectManager::InitBombEffects() {
-  for (auto &it : Effects.bomb_effects) {
+  for (auto &it : bomb_effects) {
     it.bIsUsed = false;
   }
 }
@@ -25,10 +25,10 @@ void EffectManager::InitBombEffects() {
 // 爆発系エフェクトをセットする //
 void EffectManager::SpawnBombEffect(int x, int y, uint8_t type) {
   auto p =
-      std::ranges::find_if(Effects.bomb_effects, [](const auto &p) { return !p.bIsUsed; });
+      std::ranges::find_if(bomb_effects, [](const auto &p) { return !p.bIsUsed; });
 
   // 空いているオブジェクトが存在しない //
-  if (p == std::end(Effects.bomb_effects)) {
+  if (p == std::end(bomb_effects)) {
     return;
   }
 
@@ -40,7 +40,7 @@ void EffectManager::SpawnBombEffect(int x, int y, uint8_t type) {
 
   switch (type) {
   case EXBOMB_STD:
-    Effects.InitBombEffectSTD(&*p);
+    InitBombEffectSTD(&*p);
     break;
 
   default:
@@ -53,13 +53,13 @@ void EffectManager::SpawnBombEffect(int x, int y, uint8_t type) {
 
 // 爆発系エフェクトを描画する
 void EffectManager::DrawBombEffects() {
-  for (auto &it : Effects.bomb_effects) {
+  for (auto &it : bomb_effects) {
     if (!it.bIsUsed) {
       continue;
     }
     switch (it.type) {
     case EXBOMB_STD:
-      Effects.DrawBombEffectSTD(&it);
+      DrawBombEffectSTD(&it);
       break;
 
     default:
@@ -70,14 +70,14 @@ void EffectManager::DrawBombEffects() {
 
 // 爆発系エフェクトを動作させる
 void EffectManager::MoveBombEffects() {
-  for (auto &it : Effects.bomb_effects) {
+  for (auto &it : bomb_effects) {
     if (!it.bIsUsed) {
       continue;
     }
     it.count++;
     switch (it.type) {
     case EXBOMB_STD:
-      Effects.MoveBombEffectSTD(&it);
+      MoveBombEffectSTD(&it);
       if (it.count > ((64 * 3) + 32)) {
         it.bIsUsed = false;
       }

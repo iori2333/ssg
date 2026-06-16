@@ -23,7 +23,7 @@ static constexpr auto BIT_VIRTUAL_HP = 990000; // ビットの仮想ＨＰ
 // 蛇型の敵配列の初期化 //
 void BossManager::SnakyInit(void) {
   // 全ての蛇さんをダメダメにするの //
-  for (auto &it : this->snake_data) {
+  for (auto &it : snake_data) {
     it.bIsUse = false;
     it.Parent = nullptr;
   }
@@ -34,8 +34,8 @@ void BossManager::SnakySet(BOSS_DATA *b, int len, uint32_t TailID) {
   ENEMY_DATA *e;
 
   auto s =
-      std::ranges::find_if(this->snake_data, [](const auto &s) { return !s.bIsUse; });
-  if (s == std::end(this->snake_data)) {
+      std::ranges::find_if(snake_data, [](const auto &s) { return !s.bIsUse; });
+  if (s == std::end(snake_data)) {
     return;
   }
 
@@ -72,7 +72,7 @@ void BossManager::SnakySet(BOSS_DATA *b, int len, uint32_t TailID) {
 void BossManager::SnakyMove(void) {
   ENEMY_DATA *e;
 
-  for (auto &it : this->snake_data) {
+  for (auto &it : snake_data) {
     auto *s = &it;
     if (s->bIsUse == false) {
       continue;
@@ -104,9 +104,9 @@ void BossManager::SnakyMove(void) {
 
 // 蛇型の敵を殺す
 void BossManager::SnakyDelete(const BOSS_DATA *b) {
-  auto s = std::ranges::find_if(this->snake_data,
+  auto s = std::ranges::find_if(snake_data,
                                 [b](const auto &s) { return (s.Parent == b); });
-  if (s == std::end(this->snake_data)) {
+  if (s == std::end(snake_data)) {
     return;
   }
 
@@ -135,30 +135,30 @@ void BossManager::BitInit(void) {
   int i;
 
   // ここら辺の初期化には、あまり意味がない //
-  this->bit_data.x = 0;
-  this->bit_data.y = 0;
-  this->bit_data.BaseAngle = 0;
-  this->bit_data.Length = 0;
-  this->bit_data.FinalLength = 0;
-  this->bit_data.v = 0;
-  this->bit_data.d = 64;
-  this->bit_data.BitSpeed = 0;
-  this->bit_data.NumBits = 0;
-  //	this->bit_data.DeltaAngle  = 0;
-  this->bit_data.LaserState = BLASERCMD_DISABLE;
-  this->bit_data.bIsLaserEnable = false;
-  //	this->bit_data.ForceCount  = 0;
+  bit_data.x = 0;
+  bit_data.y = 0;
+  bit_data.BaseAngle = 0;
+  bit_data.Length = 0;
+  bit_data.FinalLength = 0;
+  bit_data.v = 0;
+  bit_data.d = 64;
+  bit_data.BitSpeed = 0;
+  bit_data.NumBits = 0;
+  //	bit_data.DeltaAngle  = 0;
+  bit_data.LaserState = BLASERCMD_DISABLE;
+  bit_data.bIsLaserEnable = false;
+  //	bit_data.ForceCount  = 0;
 
   // ここから下の初期化がメインとなる //
-  this->bit_data.State = BITCMD_DISABLE;
-  this->bit_data.Parent = nullptr;
+  bit_data.State = BITCMD_DISABLE;
+  bit_data.Parent = nullptr;
 
   for (i = 0; i < BIT_MAX; i++) {
-    this->bit_data.Bit[i].pEnemy = nullptr; // 敵データへのポインタ
-    this->bit_data.Bit[i].Angle = 0;        // 現在の角度
-    this->bit_data.Bit[i].Force = 0;        // その他の？力の加えられている方向
-    this->bit_data.Bit[i].BitID = i;        // ビットの先頭からの番号
-    this->bit_data.Bit[i].BitHP = 0;        // ビットの耐久度
+    bit_data.Bit[i].pEnemy = nullptr; // 敵データへのポインタ
+    bit_data.Bit[i].Angle = 0;        // 現在の角度
+    bit_data.Bit[i].Force = 0;        // その他の？力の加えられている方向
+    bit_data.Bit[i].BitID = i;        // ビットの先頭からの番号
+    bit_data.Bit[i].BitHP = 0;        // ビットの耐久度
   }
 }
 
@@ -171,28 +171,28 @@ void BossManager::BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID) {
   // 他の関数と違い、不等号なので注意すべし
   // このビット構造体が有効な場合、この関数の実行はできないので
   // すぐ、リターンする
-  if (this->bit_data.State != BITCMD_DISABLE)
+  if (bit_data.State != BITCMD_DISABLE)
     return;
 
   // ビット数が不正である //
   if (NumBits == 0 || NumBits > BIT_MAX)
     return;
 
-  this->bit_data.State = BITCMD_STDMOVE;
-  this->bit_data.Parent = b;
+  bit_data.State = BITCMD_STDMOVE;
+  bit_data.Parent = b;
 
-  this->bit_data.x = b->Edat.x;
-  this->bit_data.y = b->Edat.y;
+  bit_data.x = b->Edat.x;
+  bit_data.y = b->Edat.y;
 
-  this->bit_data.Length = 0;
-  this->bit_data.FinalLength = 64 * 80;
-  this->bit_data.NumBits = NumBits;
-  this->bit_data.BitSpeed = ((rnd() >> 1) & 1) ? 2 : -2;
-  //	this->bit_data.DeltaAngle  = (256*256)/NumBits;
-  this->bit_data.BaseAngle = 0; //(256*256)/NumBits;//0;
-  this->bit_data.LaserState = BLASERCMD_DISABLE;
-  this->bit_data.bIsLaserEnable = false;
-  //	this->bit_data.ForceCount  = 0;
+  bit_data.Length = 0;
+  bit_data.FinalLength = 64 * 80;
+  bit_data.NumBits = NumBits;
+  bit_data.BitSpeed = ((rnd() >> 1) & 1) ? 2 : -2;
+  //	bit_data.DeltaAngle  = (256*256)/NumBits;
+  bit_data.BaseAngle = 0; //(256*256)/NumBits;//0;
+  bit_data.LaserState = BLASERCMD_DISABLE;
+  bit_data.bIsLaserEnable = false;
+  //	bit_data.ForceCount  = 0;
 
   const auto n = (4 + (BitID << 2));
 
@@ -202,7 +202,7 @@ void BossManager::BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID) {
       auto *e = &Enemies.entities[Enemies.indices[Enemies.count++]];
 
       // データを初期化 //
-      Enemies.InitDataX64(e, this->bit_data.x, this->bit_data.y, n);
+      Enemies.InitDataX64(e, bit_data.x, bit_data.y, n);
       e->hp = BIT_VIRTUAL_HP;
       e->d = i * (256 / NumBits);
       e->GR[0] = i;
@@ -210,14 +210,14 @@ void BossManager::BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID) {
       Enemies.ParseECL(e);
 
       // この構造体と作成した敵を関連づける //
-      this->bit_data.Bit[i].pEnemy = e;   // 敵データへのポインタ
-      this->bit_data.Bit[i].Angle = e->d; // 現在の角度
-      this->bit_data.Bit[i].Force = 0;    // その他の？力の加えられている方向
-      this->bit_data.Bit[i].BitID = i;    // ビットの先頭からの番号
+      bit_data.Bit[i].pEnemy = e;   // 敵データへのポインタ
+      bit_data.Bit[i].Angle = e->d; // 現在の角度
+      bit_data.Bit[i].Force = 0;    // その他の？力の加えられている方向
+      bit_data.Bit[i].BitID = i;    // ビットの先頭からの番号
 
-      this->bit_data.Bit[i].BitHP = 95 * BitHPTable[i]; // ビットの耐久度
+      bit_data.Bit[i].BitHP = 95 * BitHPTable[i]; // ビットの耐久度
     } else {
-      this->bit_data.Bit[i].pEnemy = nullptr;
+      bit_data.Bit[i].pEnemy = nullptr;
     }
   }
 }
@@ -228,28 +228,28 @@ void BossManager::BitMove(void) {
   ENEMY_DATA *e;
   bool bIsDestroyed = false;
 
-  if (this->bit_data.NumBits == 0)
+  if (bit_data.NumBits == 0)
     return;
 
-  switch (this->bit_data.State) {
+  switch (bit_data.State) {
   case BITCMD_STDMOVE:
-    this->bit_data.x = this->bit_data.Parent->Edat.x;
-    this->bit_data.y = this->bit_data.Parent->Edat.y;
+    bit_data.x = bit_data.Parent->Edat.x;
+    bit_data.y = bit_data.Parent->Edat.y;
 
-    this->BitSTDRad();
-    this->BitSTDRoll();
+    BitSTDRad();
+    BitSTDRoll();
     break;
 
   case BITCMD_MOVTARGET:
-    this->bit_data.v += this->bit_data.a;
-    this->bit_data.x += cosl(this->bit_data.d, this->bit_data.v);
-    this->bit_data.y += sinl(this->bit_data.d, this->bit_data.v);
+    bit_data.v += bit_data.a;
+    bit_data.x += cosl(bit_data.d, bit_data.v);
+    bit_data.y += sinl(bit_data.d, bit_data.v);
 
-    if (this->bit_data.v <= -64 * 10)
-      this->bit_data.State = BITCMD_STDMOVE;
+    if (bit_data.v <= -64 * 10)
+      bit_data.State = BITCMD_STDMOVE;
 
-    this->BitSTDRad();
-    this->BitSTDRoll();
+    BitSTDRad();
+    BitSTDRoll();
     break;
 
   case BITCMD_DISABLE:
@@ -258,24 +258,24 @@ void BossManager::BitMove(void) {
   }
 
   // レーザー放出中はダメージが無効化される //
-  if (this->bit_data.bIsLaserEnable) {
+  if (bit_data.bIsLaserEnable) {
     // 敵のＨＰを仮想ＨＰに回復？させる //
     // -> ダメージを蓄積させたい場合は、下のforを注釈化する事 //
-    for (i = 0; i < this->bit_data.NumBits; i++) {
-      this->bit_data.Bit[i].pEnemy->hp = BIT_VIRTUAL_HP;
+    for (i = 0; i < bit_data.NumBits; i++) {
+      bit_data.Bit[i].pEnemy->hp = BIT_VIRTUAL_HP;
     }
     return;
   }
 
-  // this->bit_data.NumBits は、削除が行われるとその数が減ることに注意 //
-  for (i = 0; i < this->bit_data.NumBits; i++) {
-    e = this->bit_data.Bit[i].pEnemy;
+  // bit_data.NumBits は、削除が行われるとその数が減ることに注意 //
+  for (i = 0; i < bit_data.NumBits; i++) {
+    e = bit_data.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;
     }
 
     const uint32_t damage = (BIT_VIRTUAL_HP - e->hp);
-    if (this->bit_data.Bit[i].BitHP <= damage) {
+    if (bit_data.Bit[i].BitHP <= damage) {
       bIsDestroyed = true;
 
       // ビット配列に関連づけられた敵に削除要求を送出 //
@@ -287,32 +287,32 @@ void BossManager::BitMove(void) {
 
       Snd_SEPlay(SOUND_ID_BOMB, e->x);
 
-      for (j = i + 1; j < this->bit_data.NumBits; j++) {
-        this->bit_data.Bit[j - 1] = this->bit_data.Bit[j];
-        this->bit_data.Bit[j - 1].BitID--;
+      for (j = i + 1; j < bit_data.NumBits; j++) {
+        bit_data.Bit[j - 1] = bit_data.Bit[j];
+        bit_data.Bit[j - 1].BitID--;
       }
 
       // 基本角となっていたビットが破壊された場合 //
       if (i == 0) {
-        this->bit_data.BaseAngle += (256 / this->bit_data.NumBits);
+        bit_data.BaseAngle += (256 / bit_data.NumBits);
       }
 
       // ビットの総数を減らす //
-      this->bit_data.NumBits--;
+      bit_data.NumBits--;
 
       // ビット無効状態に推移する //
-      if (this->bit_data.NumBits == 0) {
-        this->bit_data.State = BITCMD_DISABLE;
+      if (bit_data.NumBits == 0) {
+        bit_data.State = BITCMD_DISABLE;
       }
 
       // 破壊されたビットの前後に力を加える                 //
       // 注意：この時点で総数はすでにデクリメントされている //
-      if (this->bit_data.NumBits) {
-        j = i - 1 + this->bit_data.NumBits;
-        this->bit_data.Bit[j % this->bit_data.NumBits].Force -= 30;
-        this->bit_data.Bit[i % this->bit_data.NumBits].Force += 30;
+      if (bit_data.NumBits) {
+        j = i - 1 + bit_data.NumBits;
+        bit_data.Bit[j % bit_data.NumBits].Force -= 30;
+        bit_data.Bit[i % bit_data.NumBits].Force += 30;
       }
-      // this->bit_data.ForceCount += 60;
+      // bit_data.ForceCount += 60;
 
       // ビットの消去を行ったので、もう一度 i 番目には次のデータが格納されている
       // // したがって、次のビットの参照に移行するために、i をデクリメントする
@@ -323,32 +323,32 @@ void BossManager::BitMove(void) {
       e->hp = BIT_VIRTUAL_HP;
 
       // 真の意味で、ダメージを与えるところ //
-      this->bit_data.Bit[i].BitHP -= damage;
+      bit_data.Bit[i].BitHP -= damage;
     }
   }
 
   // レジスタ更新 //
-  for (i = 0; i < this->bit_data.NumBits; i++) {
-    e = this->bit_data.Bit[i].pEnemy;
+  for (i = 0; i < bit_data.NumBits; i++) {
+    e = bit_data.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;
     }
-    e->GR[1] = this->bit_data.NumBits;
+    e->GR[1] = bit_data.NumBits;
   }
 }
 
 // 基本的な半径処理
 void BossManager::BitSTDRad(void) {
-  if (this->bit_data.Length > this->bit_data.FinalLength) {
-    this->bit_data.Length -= 64 * 2;
+  if (bit_data.Length > bit_data.FinalLength) {
+    bit_data.Length -= 64 * 2;
 
-    if (this->bit_data.Length < this->bit_data.FinalLength)
-      this->bit_data.Length = this->bit_data.FinalLength;
-  } else if (this->bit_data.Length < this->bit_data.FinalLength) {
-    this->bit_data.Length += 64 * 2;
+    if (bit_data.Length < bit_data.FinalLength)
+      bit_data.Length = bit_data.FinalLength;
+  } else if (bit_data.Length < bit_data.FinalLength) {
+    bit_data.Length += 64 * 2;
 
-    if (this->bit_data.Length > this->bit_data.FinalLength)
-      this->bit_data.Length = this->bit_data.FinalLength;
+    if (bit_data.Length > bit_data.FinalLength)
+      bit_data.Length = bit_data.FinalLength;
   }
 }
 
@@ -363,24 +363,24 @@ void BossManager::BitSTDRoll(void) {
   ENEMY_DATA *e;
   BIT_PARAM *bit;
 
-  if (this->bit_data.NumBits == 0)
+  if (bit_data.NumBits == 0)
     return;
 
-  this->bit_data.BaseAngle += this->bit_data.BitSpeed;
+  bit_data.BaseAngle += bit_data.BitSpeed;
 
-  //	if(this->bit_data.ForceCount) this->bit_data.ForceCount--;
+  //	if(bit_data.ForceCount) bit_data.ForceCount--;
 
-  n = this->bit_data.NumBits;
-  l = this->bit_data.Length;
+  n = bit_data.NumBits;
+  l = bit_data.Length;
 
-  ox = this->bit_data.x;
-  oy = this->bit_data.y;
+  ox = bit_data.x;
+  oy = bit_data.y;
 
-  const uint8_t delta = (256 / this->bit_data.NumBits);
-  const uint8_t ExSpeed = abs(this->bit_data.BitSpeed / 2);
+  const uint8_t delta = (256 / bit_data.NumBits);
+  const uint8_t ExSpeed = abs(bit_data.BitSpeed / 2);
 
-  /*	if((this->bit_data.DeltaAngle / 256) < delta){
-                  this->bit_data.DeltaAngle += 64;
+  /*	if((bit_data.DeltaAngle / 256) < delta){
+                  bit_data.DeltaAngle += 64;
           }
   */
 
@@ -388,14 +388,14 @@ void BossManager::BitSTDRoll(void) {
   // delta   : ビット間の理想とする角度(収束する角度)
   // ExSpeed : そのビットの回転速度の絶対値＋１
   for (i = 0; i < n; i++) {
-    bit = this->bit_data.Bit + i;
+    bit = bit_data.Bit + i;
     e = bit->pEnemy;
     if (e == nullptr) {
       continue;
     }
 
     // 目標とする角度を求める //
-    const uint8_t d = ((this->bit_data.BaseAngle >> 1) + (delta * bit->BitID));
+    const uint8_t d = ((bit_data.BaseAngle >> 1) + (delta * bit->BitID));
 
     // 通常の角度収束処理 //
     dir = (Cast::up_sign<int>(d) - Cast::up_sign<int>(bit->Angle));
@@ -408,8 +408,8 @@ void BossManager::BitSTDRoll(void) {
     if (dir > 0) {
       if (dir > 2)
         dir = 2;
-      // if(this->bit_data.ForceCount)        bit->Angle += min(dir, 2);
-      if (this->bit_data.BitSpeed > 0)
+      // if(bit_data.ForceCount)        bit->Angle += min(dir, 2);
+      if (bit_data.BitSpeed > 0)
         bit->Angle += max(dir, ExSpeed);
       else
         bit->Angle += max(dir, (ExSpeed + 1));
@@ -421,9 +421,9 @@ void BossManager::BitSTDRoll(void) {
     } else if (dir < 0) {
       if (dir < -2)
         dir = -2;
-      //			if(this->bit_data.ForceCount)        bit->Angle -=
+      //			if(bit_data.ForceCount)        bit->Angle -=
       // min(-dir, 2);
-      if (this->bit_data.BitSpeed < 0)
+      if (bit_data.BitSpeed < 0)
         bit->Angle -= max(-dir, ExSpeed);
       else
         bit->Angle -= max(-dir, (ExSpeed + 1));
@@ -437,14 +437,14 @@ void BossManager::BitSTDRoll(void) {
     // 力による影響を反映する //
     if (bit->Force > 0) {
       bit->Force--;
-      if (this->bit_data.BitSpeed > 0)
+      if (bit_data.BitSpeed > 0)
         bit->Angle++;
       else
         bit->Angle += (ExSpeed + 1);
       // Sleep(100);
     } else if (bit->Force < 0) {
       bit->Force++;
-      if (this->bit_data.BitSpeed < 0)
+      if (bit_data.BitSpeed < 0)
         bit->Angle--;
       else
         bit->Angle -= (ExSpeed + 1);
@@ -456,15 +456,15 @@ void BossManager::BitSTDRoll(void) {
     e->y = oy + sinl(e->d, l);
 
     // レーザーコマンドの反映 //
-    switch (this->bit_data.LaserState) {
+    switch (bit_data.LaserState) {
     case (BLASERCMD_TYPE_A): // 一方向・角度固定レーザーを放射
     case (BLASERCMD_TYPE_B): // 両方向角度固定レーザーを放射
       break;
 
     case (BLASERCMD_TYPE_C): // 角度同期ｎ芒星レーザー
-      if (this->bit_data.NumBits == 0)
+      if (bit_data.NumBits == 0)
         break;
-      LaserDeg = 64 + 256 / this->bit_data.NumBits;
+      LaserDeg = 64 + 256 / bit_data.NumBits;
       Lasers.RotateLongAbs(e, e->d + LaserDeg, 0);
       Lasers.RotateLongAbs(e, e->d - LaserDeg, 1);
       break;
@@ -477,12 +477,12 @@ void BossManager::BitDelete(void) {
   int i;
   ENEMY_DATA *e;
 
-  if (this->bit_data.State == BITCMD_DISABLE)
+  if (bit_data.State == BITCMD_DISABLE)
     return;
 
   // 各ビットを消滅させる //
-  for (i = 0; i < this->bit_data.NumBits; i++) {
-    e = this->bit_data.Bit[i].pEnemy;
+  for (i = 0; i < bit_data.NumBits; i++) {
+    e = bit_data.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;
     }
@@ -497,7 +497,7 @@ void BossManager::BitDelete(void) {
   }
 
   // 後は、この関数に任せる //
-  this->BitInit();
+  BitInit();
 }
 
 // ビット間のラインを描画する //
@@ -506,18 +506,18 @@ void BossManager::BitLineDraw(void) {
   int x1, x2, y1, y2;
   ENEMY_DATA *RefTable[BIT_MAX * 2];
 
-  if (this->bit_data.State == BITCMD_DISABLE)
+  if (bit_data.State == BITCMD_DISABLE)
     return;
 
-  n = this->bit_data.NumBits;
+  n = bit_data.NumBits;
   if (n == 0)
     return;
 
   for (i = 0, j = -1; i < n; i++) {
-    while (this->bit_data.Bit[++j].pEnemy == nullptr) {
+    while (bit_data.Bit[++j].pEnemy == nullptr) {
     }
 
-    RefTable[i] = RefTable[i + n] = this->bit_data.Bit[j].pEnemy;
+    RefTable[i] = RefTable[i + n] = bit_data.Bit[j].pEnemy;
   }
 
   GrpGeom->Lock();
@@ -545,8 +545,8 @@ void BossManager::BitSelectAttack(uint32_t BitID) {
 
   const auto n = (4 + (BitID << 2));
 
-  for (i = 0; i < this->bit_data.NumBits; i++) {
-    Enemies.ECL_LongJump(this->bit_data.Bit[i].pEnemy, n);
+  for (i = 0; i < bit_data.NumBits; i++) {
+    Enemies.ECL_LongJump(bit_data.Bit[i].pEnemy, n);
   }
 }
 
@@ -561,10 +561,10 @@ void BossManager::BitLaserCommand(uint8_t Command) {
   Lasers.long_cmd.v = 64;
   Lasers.long_cmd.w = 64 * 8;
 
-  this->bit_data.bIsLaserEnable = true;
+  bit_data.bIsLaserEnable = true;
 
-  for (i = 0; i < this->bit_data.NumBits; i++) {
-    e = this->bit_data.Bit[i].pEnemy;
+  for (i = 0; i < bit_data.NumBits; i++) {
+    e = bit_data.Bit[i].pEnemy;
     if (e == nullptr) {
       continue;
     }
@@ -596,7 +596,7 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       Lasers.long_cmd.type = LLS_LONG;
       Lasers.long_cmd.c = 0;
 
-      delta = 64 + 256 / this->bit_data.NumBits;
+      delta = 64 + 256 / bit_data.NumBits;
 
       Lasers.long_cmd.d = e->d + delta;
       if (Lasers.SpawnLongLaser(e->LLaserRef))
@@ -613,7 +613,7 @@ void BossManager::BitLaserCommand(uint8_t Command) {
     case (BLASERCMD_CLOSE):
       Lasers.CloseLong(e, ECLCST_LLASERALL);
       e->LLaserRef = 0;
-      this->bit_data.bIsLaserEnable = false;
+      bit_data.bIsLaserEnable = false;
       continue;
 
     case (BLASERCMD_CLOSEL):
@@ -621,7 +621,7 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       continue;
     }
 
-    this->bit_data.LaserState = Command;
+    bit_data.LaserState = Command;
   }
 }
 
@@ -631,29 +631,29 @@ void BossManager::BitSendCommand(uint8_t Command, int Param) {
   case (BITCMD_CHGSPD): // 回転速度を変更する
     // 同じ方向で、速度を変更する
     if (Param > 0) {
-      if (this->bit_data.BitSpeed > 0)
-        this->bit_data.BitSpeed = Param;
+      if (bit_data.BitSpeed > 0)
+        bit_data.BitSpeed = Param;
       else
-        this->bit_data.BitSpeed = -Param;
+        bit_data.BitSpeed = -Param;
     }
     // 回転方向を反転し、速度を変更する
     else {
-      if (this->bit_data.BitSpeed > 0)
-        this->bit_data.BitSpeed = Param;
+      if (bit_data.BitSpeed > 0)
+        bit_data.BitSpeed = Param;
       else
-        this->bit_data.BitSpeed = -Param;
+        bit_data.BitSpeed = -Param;
     }
     break;
 
   case (BITCMD_CHGRADIUS): // 半径を変更する
-    this->bit_data.FinalLength = Param;
+    bit_data.FinalLength = Param;
     break;
 
   case (BITCMD_MOVTARGET): // 目標(びびっと)に向けてブーメラン移動
-    this->bit_data.v = 64 * 10;
-    this->bit_data.a = -8;
-    this->bit_data.d = atan8(Players.viv.x - this->bit_data.x, Players.viv.y - this->bit_data.y);
-    this->bit_data.State = BITCMD_MOVTARGET;
+    bit_data.v = 64 * 10;
+    bit_data.a = -8;
+    bit_data.d = atan8(Players.viv.x - bit_data.x, Players.viv.y - bit_data.y);
+    bit_data.State = BITCMD_MOVTARGET;
     break;
 
   default:
@@ -663,7 +663,7 @@ void BossManager::BitSendCommand(uint8_t Command, int Param) {
 
 // 現在のビット数を取得する //
 int BossManager::BitGetNum(void) {
-  if (this->bit_data.State == BITCMD_DISABLE)
+  if (bit_data.State == BITCMD_DISABLE)
     return 0;
-  return this->bit_data.NumBits;
+  return bit_data.NumBits;
 }

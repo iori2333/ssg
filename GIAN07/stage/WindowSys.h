@@ -312,11 +312,11 @@ enum class MSG_WINDOW_FLAGS : uint8_t {
 void MWinInit(const WINDOW_LTRB &rc,
               MSG_WINDOW_FLAGS flags = MSG_WINDOW_FLAGS::NONE);
 
-void MWinOpen(void);       // メッセージウィンドウをオープンする
-void MWinClose(void);      // メッセージウィンドウをクローズする
-void MWinForceClose(void); // メッセージウィンドウを強制クローズする
-void MWinMove(void);       // メッセージウィンドウを動作させる(後で上と統合する)
-void MWinDraw(void);       // メッセージウィンドウを描画する(上に同じ)
+void MWinOpen();       // メッセージウィンドウをオープンする
+void MWinClose();      // メッセージウィンドウをクローズする
+void MWinForceClose(); // メッセージウィンドウを強制クローズする
+void MWinMove();       // メッセージウィンドウを動作させる(後で上と統合する)
+void MWinDraw();       // メッセージウィンドウを描画する(上に同じ)
 
 void MWinMsg(Narrow::string_view str); // メッセージ文字列を送る
 void MWinFace(uint8_t faceID);         // 顔をセットする

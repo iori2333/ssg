@@ -181,4 +181,4 @@ extern DEBUG_DATA DebugDat;
 
 void ConfigLoad();
 
-void ConfigSave(void); // コンフィグの内容を保存する
+void ConfigSave(); // コンフィグの内容を保存する

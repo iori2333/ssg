@@ -16,10 +16,6 @@
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
-/*
- * ECLコマンドのアドレス更新には ECL_CmdLen[ECLコマンド定数] を使用する
- *
- */
 
 // ＥＣＬデバッグ用マクロ //
 static void ECL_DEBUG(const char *s, auto param) {
@@ -35,8 +31,8 @@ static void ECL_DEBUG(const char *s, auto param) {
 
 // 変数の実体 → enemy_manager.cpp の EnemyManager に移動
 // 下記の参照が後方互換用:
-// Enemy, this->indices, this->count, this->ecl_head, this->scl_head, this->scl_now, Anime,
-// this->homing_x, this->homing_y, this->homing_flag — enemy_manager.cpp で参照として定義
+// Enemy, indices, count, ecl_head, scl_head, scl_now, Anime,
+// homing_x, homing_y, homing_flag — enemy_manager.cpp で参照として定義
 
 // Enemies.enemy_exdeg, Enemies.enemy_exdeg_d → enemy_manager.cpp の EnemyManager に移動
 
@@ -59,10 +55,10 @@ void EnemyManager::UpdateHoming(const EnemyData *e) {
   if (temp < 0)
     return;
 
-  if (temp < this->homing_flag) {
-    this->homing_flag = temp;
-    this->homing_x = e->x;
-    this->homing_y = e->y;
+  if (temp < homing_flag) {
+    homing_flag = temp;
+    homing_x = e->x;
+    homing_y = e->y;
   }
 }
 
@@ -77,13 +73,6 @@ bool EnemyManager::EnemyManager::LaserHITCHK(const EnemyData *e, int ox, int oy,
 
   return ((l > 0) && (w < chkw));
 }
-
-/*
-inline Debug(DWORD old,int id)
-{
-        RndBuf[id] += (random_ref-old);
-}
-*/
 
 void EnemyData::Draw() const {
   constexpr auto sid = SURFACE_ID::ENEMY;
@@ -114,15 +103,15 @@ void EnemyManager::Move(void) {
   int i; //,chkx,chky;
 
   if (Bosses.count == 0)
-    this->homing_flag = HOMING_DUMMY;
+    homing_flag = HOMING_DUMMY;
 
-  for (i = 0; i < this->count; i++) {
-    auto *e = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *e = &entities[indices[i]];
     e->IsDamaged = 0;
     if (!(e->flag & EF_BOMB)) {
       // 通常の敵の処理 //
-      this->CheckECLInterrupt(e);
-      this->ParseECL(e);
+      CheckECLInterrupt(e);
+      ParseECL(e);
 
       // 弾発射モードによる分岐 //
       if (e->t_rep && e->hp) {
@@ -158,23 +147,23 @@ void EnemyManager::Move(void) {
 
     // ホーミングの準備 //
     if ((Bosses.count == 0) && (e->flag & EF_DAMAGE))
-      this->UpdateHoming(e);
+      UpdateHoming(e);
 
     // アニメーションの動作 //
-    this->UpdateAnimation(e);
+    UpdateAnimation(e);
 
     e->count++;
   }
 
-  Indsort(this->indices, this->count, this->entities);
+  Indsort(indices, count, entities);
 }
 
 void EnemyManager::Draw(void) {
   int i, x, y;
   // HRESULT		ddrval;
 
-  for (i = 0; i < this->count; i++) {
-    auto *e = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *e = &entities[indices[i]];
 
     // 敵を描画する(クリッピング＆幅、高さ処理を追加すること) //
     x = (e->x >> 6);
@@ -194,8 +183,8 @@ void EnemyManager::Draw(void) {
 void EnemyManager::Clear(void) {
   int i;
 
-  for (i = 0; i < this->count; i++) {
-    auto *e = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *e = &entities[indices[i]];
     if (e->flag == EF_BOMB)
       continue;
 
@@ -218,7 +207,7 @@ void EnemyManager::Clear(void) {
     }
   }
 
-  Indsort(this->indices, this->count, this->entities);
+  Indsort(indices, count, entities);
 }
 
 void EnemyManager::InitIndices(void) {
@@ -226,10 +215,10 @@ void EnemyManager::InitIndices(void) {
 
   for (i = 0; i < ENEMY_MAX; i++) {
     // memset(Enemy+i,0,sizeof(Enemy));
-    this->indices[i] = i;
+    indices[i] = i;
   }
 
-  this->count = 0;
+  count = 0;
 }
 
 bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
@@ -262,14 +251,14 @@ bool EnemyManager::DamageAt(int x, int y, int damage) {
     return true;
   }
 
-  for (i = 0; i < this->count; i++) {
-    auto *e = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *e = &entities[indices[i]];
     if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
         (e->flag & EF_DAMAGE)) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
         continue;
       else {
-        return this->ApplyDamage(*e, damage);
+        return ApplyDamage(*e, damage);
       }
     }
   }
@@ -281,13 +270,13 @@ bool EnemyManager::DamageAt2(int x, int y, int damage) {
   int i;
   auto ret_val = Bosses.DamageAt2(x, y, damage);
 
-  for (i = 0; i < this->count; i++) {
-    auto *e = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *e = &entities[indices[i]];
     if (HITCHK(x, e->x, e->g_width) && (y > e->y) && (e->flag & EF_DAMAGE)) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
         continue;
       else {
-        ret_val = this->ApplyDamage(*e, damage);
+        ret_val = ApplyDamage(*e, damage);
       }
     }
   }
@@ -303,13 +292,13 @@ void EnemyManager::DamageAt3(int x, int y, uint8_t d) {
 
   Bosses.DamageAt3(x, y, d);
 
-  for (i = 0; i < this->count; i++) {
-    auto *e = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *e = &entities[indices[i]];
     if (EnemyManager::LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
         continue;
       else {
-        this->ApplyDamage(*e, damage);
+        ApplyDamage(*e, damage);
       }
     }
   }
@@ -321,13 +310,13 @@ void EnemyManager::DamageAll(int damage) {
 
   Bosses.DamageAll(damage);
 
-  for (i = 0; i < this->count; i++) {
-    auto *e = &this->entities[this->indices[i]];
+  for (i = 0; i < count; i++) {
+    auto *e = &entities[indices[i]];
     if (e->flag & EF_DAMAGE) {
       if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
         continue;
       else {
-        this->ApplyDamage(*e, damage);
+        ApplyDamage(*e, damage);
         // return true;
       }
     }
@@ -341,7 +330,7 @@ void EnemyManager::InitDataX64(EnemyData *e, int x, int y, uint32_t EclID) {
   e->x = x;
   e->y = y;
 
-  e->cmd = U32LEAt(&this->ecl_head[EclID]);
+  e->cmd = U32LEAt(&ecl_head[EclID]);
 
   e->call_addr = e->cmd;
 
@@ -399,12 +388,12 @@ void EnemyManager::InitDataX64(EnemyData *e, int x, int y, uint32_t EclID) {
   e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
 
   // 割り込みベクタの初期化 //
-  this->InitECLInterrupt(e);
+  InitECLInterrupt(e);
 }
 
 // 強制的に ECL ブロック間を移動する //
 void EnemyManager::ECL_LongJump(EnemyData *e, uint32_t EclID) {
-  e->cmd = U32LEAt(&this->ecl_head[EclID]);
+  e->cmd = U32LEAt(&ecl_head[EclID]);
 
   e->call_addr = e->cmd;
 
@@ -426,11 +415,11 @@ void EnemyManager::InitDataSTD(EnemyData *e, short x, short y, uint32_t EclID) {
   EnemyX = (EnemyX == X_RNDV) ? GX_RND() : (EnemyX << 6);
   EnemyY = (EnemyY == Y_RNDV) ? GY_RND() : (EnemyY << 6);
 
-  this->InitDataX64(e, EnemyX, EnemyY, EclID);
+  InitDataX64(e, EnemyX, EnemyY, EclID);
 }
 
 void EnemyManager::UpdateAnimation(EnemyData *e) {
-  const auto *a = &this->anime[e->anm_ptn];
+  const auto *a = &anime[e->anm_ptn];
 
   switch (a->mode) {
   case (ANM_NORM):
@@ -456,34 +445,6 @@ void EnemyManager::UpdateAnimation(EnemyData *e) {
 static void _EnemyDrawBomb(int x, int y, uint32_t count) {
   PIXEL_LTRB src;
 
-  /*
-          switch(count/ENEMY_BOMB_SPD){
-                  case(0):case(1):
-                          src = PIXEL_LTWH{ 520, 104,  8,  8 };
-                          x-=4;y-=4;
-                  break;
-
-                  case(2):case(3):
-                          src = PIXEL_LTWH{ 528, 104, 16, 16 };
-                          x-=8;y-=8;
-                  break;
-
-                  case(4):case(5):
-                          src = PIXEL_LTWH{ 544, 104, 24, 24 };
-                          x-=12;y-=12;
-                  break;
-
-                  case(6):
-                          src = PIXEL_LTWH{ 568, 104, 32, 32 };
-                          x-=16;y-=16;
-                  break;
-
-                  case(7):
-                          src = PIXEL_LTWH{ 600, 104, 48, 48 };
-                          x-=24;y-=24;
-                  break;
-          }
-  */
   src.top = 296;
   src.left = (count / ENEMY_BOMB_SPD) * 48;
   src.bottom = 296 + 48;
@@ -514,7 +475,7 @@ void EnemyManager::ParseECL(EnemyData *e) {
 // こんなところにＧＯＴＯ用ラベルが！！ //
 ECL_HEAD:
   bRetFlag = true;
-  auto *cmd = (this->ecl_head.get() + e->cmd);
+  auto *cmd = (ecl_head.get() + e->cmd);
 
   switch (*cmd) {
   case (ECL_CEFC): {
@@ -1128,8 +1089,8 @@ ECL_HEAD:
     break;
 
   case (ECL_DEGEX):
-    e->d = Enemies.enemy_exdeg;
-    Enemies.enemy_exdeg += Enemies.enemy_exdeg_d;
+    e->d = enemy_exdeg;
+    enemy_exdeg += enemy_exdeg_d;
     bRetFlag = false;
     break;
 
@@ -1301,7 +1262,7 @@ ECL_HEAD:
     Bullets.Clear();
     Lasers.Clear();
     Lasers.ClearHoming();
-    Enemies.Clear();
+    Clear();
     bRetFlag = false;
     break;
 
@@ -1473,10 +1434,10 @@ ECL_HEAD:
     e->anm_ptn = e->anm_ptnEx = cmd[1];
     e->anm_sp = Cast::sign<int8_t>(cmd[2]);
     // if(e->anm_sp==0) e->anm_sp=1;
-    e->g_height = (this->anime[e->anm_ptn].size.h << 5);
-    e->g_width = (this->anime[e->anm_ptn].size.w << 5);
-    // if(this->anime[e->anm_ptn].size.h>32) e->g_height = (e->g_height<<1)/3;
-    // if(this->anime[e->anm_ptn].size.w>32) e->g_width  = (e->g_width <<1)/3;
+    e->g_height = (anime[e->anm_ptn].size.h << 5);
+    e->g_width = (anime[e->anm_ptn].size.w << 5);
+    // if(anime[e->anm_ptn].size.h>32) e->g_height = (e->g_height<<1)/3;
+    // if(anime[e->anm_ptn].size.w>32) e->g_width  = (e->g_width <<1)/3;
     e->anm_c = 0;
     bRetFlag = false;
     break;
@@ -1514,7 +1475,7 @@ ECL_HEAD:
     break;
 
   case (ECL_EXDEGD): // 特殊角度増分変更
-    Enemies.enemy_exdeg_d = cmd[1];
+    enemy_exdeg_d = cmd[1];
     bRetFlag = false;
     break;
 
@@ -1525,9 +1486,9 @@ ECL_HEAD:
 
     bRetFlag = false;
 
-    if (this->count + 1 >= ENEMY_MAX)
+    if (count + 1 >= ENEMY_MAX)
       break;
-    auto *new_enemy = &this->entities[this->indices[this->count++]];
+    auto *new_enemy = &entities[indices[count++]];
 
     x = ((e->x >> 6) + I16LEAt(&cmd[1])); // PixelToWorld(I16LEAt(&p[0]));
     y = ((e->y >> 6) + I16LEAt(&cmd[3])); // PixelToWorld(I16LEAt(&p[2]));
@@ -1535,11 +1496,11 @@ ECL_HEAD:
     // バグに注意注意！！ //
     if (cmd[0] == ECL_ENEMYSETD) {
       const uint32_t n = (4 + (cmd[6] << 2));
-      this->InitDataSTD(new_enemy, x, y, n);
+      InitDataSTD(new_enemy, x, y, n);
       new_enemy->d = ID2Value(e, cmd[5]);
     } else {
       const uint32_t n = (4 + (cmd[5] << 2));
-      this->InitDataSTD(new_enemy, x, y, n);
+      InitDataSTD(new_enemy, x, y, n);
     }
   } break;
 

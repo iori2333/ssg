@@ -15,11 +15,11 @@ struct ScrollManager {
   std::array<PIXEL_LTRB, 1200> map_chip_rects; // rcMapChip[]
 
   // === メソッド ===
-  void Move();                   // was ScrollMove
-  void Draw();                   // was ScrollDraw
-  void SetSpeed(int speed);      // was ScrollSpeed
-  void Command(uint8_t cmd);     // was ScrollCommand
-  bool Init();                   // was ScrollInit
+  void Move();
+  void Draw();
+  void SetSpeed(int speed);
+  void Command(uint8_t cmd);
+  bool Init();
 };
 
 extern ScrollManager Scroller;

@@ -34,17 +34,17 @@ struct DemoManager {
   std::vector<INPUT_BITS> all_playback_buf;
 
   // === メソッド ===
-  void Init();                                                         // was DemoplayInit
-  bool HasRecordedStages();                                            // was DemoplayHasRecordedStages
-  void FlushStage();                                                   // was DemoplayFlushStage
-  bool LoadSetup();                                                    // was DemoplayLoadSetup
-  bool Record(INPUT_BITS key);                                         // was DemoplayRecord
-  void SaveDemo();                                                     // was DemoplaySaveDemo
-  bool LoadDemo(int stage);                                            // was DemoplayLoadDemo
-  INPUT_BITS Move();                                                   // was DemoplayMove
-  void Cleanup();                                                      // was DemoplayCleanup
-  void SaveReplayAll(bool exstg);                                    // was DemoplaySaveReplayAll
-  bool LoadReplayAll(const char8_t *fn);                              // was DemoplayLoadReplayAll
+  void Init();
+  bool HasRecordedStages();
+  void FlushStage();
+  bool LoadSetup();
+  bool Record(INPUT_BITS key);
+  void SaveDemo();
+  bool LoadDemo(int stage);
+  INPUT_BITS Move();
+  void Cleanup();
+  void SaveReplayAll(bool exstg);
+  bool LoadReplayAll(const char8_t *fn);
 };
 
 extern DemoManager Demos;

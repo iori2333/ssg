@@ -31,56 +31,56 @@ struct LaserManager {
   // ================================================================
   // Reflective laser methods (was LASER.cpp free functions)
   // ================================================================
-  void Spawn();                    // was laser_set (reads RankManager)
-  void SpawnEX();                  // was laser_setEX
-  int  SpawnLong(uint16_t* ind);   // was llaser_set
-  void Move();                     // was laser_move
-  void Draw();                     // was laser_draw
-  void Clear();                    // was laser_clear
-  void SetIndices();               // was laserind_set
+  void Spawn();
+  void SpawnEX();
+  int  SpawnLong(uint16_t* ind);
+  void Move();
+  void Draw();
+  void Clear();
+  void SetIndices();
 
 private:
-  void SetEasy();                  // was easy_cmdL
-  void SetHard();                  // was hard_cmdL
-  void SetLunatic();               // was luna_cmdL
-  uint8_t CalcDir(uint16_t i);     // was laser_dir
-  void SetupShort(LASER_DATA* lp); // was slaser_pset
-  void DrawShort(const LASER_DATA* lp); // was SLdraw
-  void MoveLaser(LASER_DATA* lp);  // was Lmove
-  void HitCheck(LASER_DATA* lp);   // was laser_hitchk
-  void MoveReflect(LASER_DATA* lp);// was REFL_move
-  int  HitReflect(const LASER_DATA* lp); // was REFL_hit
+  void SetEasy();
+  void SetHard();
+  void SetLunatic();
+  uint8_t CalcDir(uint16_t i);
+  void SetupShort(LASER_DATA* lp);
+  void DrawShort(const LASER_DATA* lp);
+  void MoveLaser(LASER_DATA* lp);
+  void HitCheck(LASER_DATA* lp);
+  void MoveReflect(LASER_DATA* lp);
+  int  HitReflect(const LASER_DATA* lp);
 
 public:
   // ================================================================
   // Long laser methods (was LLASER.cpp free functions)
   // ================================================================
-  bool SpawnLongLaser(uint8_t id);                    // was LLaserSet
-  void OpenLong(const EnemyData* e, uint8_t id);      // was LLaserOpen
-  void CloseLong(const EnemyData* e, uint8_t id);     // was LLaserClose
-  void LineLong(const EnemyData* e, uint8_t id);      // was LLaserLine
-  void RotateLongAbs(const EnemyData* e, uint8_t d, uint8_t id);  // was LLaserDegA
-  void RotateLongRel(const EnemyData* e, char d, uint8_t id);      // was LLaserDegR
-  void ForceCloseLong(const EnemyData* e);             // was LLaserForceClose
-  void MoveLong();             // was LLaserMove
-  void DrawLong();             // was LLaserDraw
-  void ClearLong();            // was LLaserClear
-  void SetupLong();            // was LLaserSetup
+  bool SpawnLongLaser(uint8_t id);
+  void OpenLong(const EnemyData* e, uint8_t id);
+  void CloseLong(const EnemyData* e, uint8_t id);
+  void LineLong(const EnemyData* e, uint8_t id);
+  void RotateLongAbs(const EnemyData* e, uint8_t d, uint8_t id);
+  void RotateLongRel(const EnemyData* e, char d, uint8_t id);
+  void ForceCloseLong(const EnemyData* e);
+  void MoveLong();
+  void DrawLong();
+  void ClearLong();
+  void SetupLong();
 
 private:
-  void SetLongPoint(LLASER_DATA* lp);   // was _LLaserPointSet
-  void HitCheckLong(const LLASER_DATA* lp); // was _LLaserHitCheck
-  void UpdateLongXY(int id);            // was _LLaserXYSet
+  void SetLongPoint(LLASER_DATA* lp);
+  void HitCheckLong(const LLASER_DATA* lp);
+  void UpdateLongXY(int id);
 
 public:
   // ================================================================
   // Homing laser methods (was HOMINGL.cpp free functions)
   // ================================================================
-  void InitHoming();           // was HLaserInit
-  void SpawnHoming(const HomingLaserInfo* info); // was HLaserSet
-  void MoveHoming();           // was HLaserMove (reads PlayerManager Viv)
-  void DrawHoming();           // was HLaserDraw
-  void ClearHoming();          // was HLaserClear
+  void InitHoming();
+  void SpawnHoming(const HomingLaserInfo* info);
+  void MoveHoming();
+  void DrawHoming();
+  void ClearHoming();
 };
 
 extern LaserManager Lasers;
