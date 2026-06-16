@@ -23,8 +23,6 @@
 #include "platform/midi_backend.h"
 #include "platform/text_backend.h"
 
-extern bool IsDraw();
-
 // Constants
 // ---------
 
@@ -175,7 +173,8 @@ bool MusicRoomInit(void) {
   */
   // BGM_Play();
 
-  GameMain = MusicRoomProc;
+  GameFlow.game_main = MusicRoomProc;
+  GameFlow.current_state = GameState::MusicRoom;
 
   return true;
 }
@@ -448,7 +447,7 @@ void MusicRoomProc(bool &) {
     DevChgWait = false;
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GrpBackend_Clear();
 
     auto BlitBG = [](const PIXEL_LTWH &rect) {

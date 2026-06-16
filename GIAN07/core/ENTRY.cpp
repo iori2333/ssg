@@ -246,6 +246,6 @@ bool GameFrame(void) {
         SYSKEY_GRP_SCALE_MODE | SYSKEY_GRP_TURBO | SYSKEY_GRP_API);
 
   bool quit = false;
-  GameMain(quit);
+  GameFlow.game_main(quit);
   return !quit;
 }

@@ -788,7 +788,7 @@ static void Main::Cfg::Inp::FnZSpeedDown(int_fast8_t) {
 static bool Main::FnGameStart(INPUT_BITS key) {
   if (Input_IsOK(key)) {
     // EndingInit();
-    WeaponSelectInit(false);
+    GameFlow.WeaponSelectInit(false);
   }
   return true;
 }
@@ -796,7 +796,7 @@ static bool Main::FnGameStart(INPUT_BITS key) {
 static bool Main::FnExStart(INPUT_BITS key) {
   if (Input_IsOK(key)) {
     if (ConfigDat.ExtraStgFlags.v) {
-      WeaponSelectInit(true);
+      GameFlow.WeaponSelectInit(true);
     }
   }
   return true;
@@ -871,7 +871,7 @@ static bool ContinueFnYes(INPUT_BITS key) {
 
 static bool ContinueFnNo(INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    NameRegistInit(true);
+    GameFlow.NameRegistInit(true);
     // GameExit();
     return false;
   }

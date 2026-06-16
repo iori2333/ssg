@@ -119,7 +119,8 @@ extern bool ScoreNameInit(void) {
   GrpBackend_SetClip(GRP_RES_RECT);
 
   GameFlow.input_locked = Key_Data;
-  GameMain = ScoreNameProc;
+  GameFlow.game_main = [](bool &q) { GameFlow.ScoreNameProc(q); };
+  GameFlow.current_state = GameState::ScoreName;
 
   return true;
 }
@@ -513,7 +514,8 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   GrpBackend_SetClip(GRP_RES_RECT);
 
   GameFlow.input_locked = Key_Data;
-  GameMain = ::NameRegistProc;
+  GameFlow.game_main = [](bool &q) { GameFlow.NameRegistProc(q); };
+  GameFlow.current_state = GameState::NameRegist;
 
   if (bNeedChgMusic) {
     BGM_Switch(19);
@@ -572,7 +574,8 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
 
   GameFlow.weapon_key_wait = 1;
   Players.viv.weapon = 0;
-  GameMain = ::WeaponSelectProc;
+  GameFlow.game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
+  GameFlow.current_state = GameState::WeaponSelect;
   if (ExStg) {
     GameStage = GRAPH_ID_EXSTAGE;
   }
@@ -605,7 +608,8 @@ bool GameInit(void (*NextProc)(bool &quit)) {
     }
   }
   GrpBackend_SetClip(PLAYFIELD_CLIP);
-  GameMain = NextProc;
+  GameFlow.game_main = NextProc;
+  GameFlow.current_state = GameState::External;
   return true;
 }
 
@@ -695,7 +699,7 @@ void ReplayProcAll(bool &) {
 
     GameMove();
 
-    if (!GameMainIs(ReplayProcAll)) {
+    if (GameFlow.current_state != GameState::ReplayAll) {
       Demos.Cleanup();
       Demos.load_all_enable = false;
       GameExit();
@@ -710,7 +714,7 @@ void ReplayProcAll(bool &) {
     }
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GameDraw();
 
     constexpr PIXEL_LTWH rc = {312, 80, 32, 8};
@@ -801,7 +805,7 @@ void SProjectProc(bool &) {
     return;
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GrpBackend_Clear(/* 255 */);
 
     GrpSurface_Blit({logo.left, logo.top}, SURFACE_ID::SPROJECT, rc);
@@ -836,13 +840,14 @@ bool SProjectInit(void) {
     return false;
   }
 
-  GameMain = SProjectProc;
+  GameFlow.game_main = SProjectProc;
+  GameFlow.current_state = GameState::SProject;
 
   return true;
 }
 
 // ゲームを再開する(ESC 抜けから) //
-extern void GameRestart(void) { GameMain = GameProc; }
+extern void GameRestart(void) { GameFlow.game_main = GameProc; GameFlow.current_state = GameState::Game; }
 
 // ゲームから抜ける //
 extern bool GameExit(bool bNeedChgMusic) {
@@ -870,7 +875,7 @@ extern bool GameExit(bool bNeedChgMusic) {
 
   GameStage = 0;
 
-  if (!GameMainIs(DemoProc)) {
+  if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
       BGM_Switch(0);
     }
@@ -885,7 +890,8 @@ extern bool GameExit(bool bNeedChgMusic) {
 
   Version::Init();
 
-  GameMain = TitleProc;
+  GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
+  GameFlow.current_state = GameState::Title;
 
   return true;
 }
@@ -896,7 +902,8 @@ extern void GameOverInit(void) {
 
   GameFlow.game_over_timer = 120;
 
-  GameMain = GameOverProc0;
+  GameFlow.game_main = [](bool &q) { GameFlow.GameOverProc0(q); };
+  GameFlow.current_state = GameState::GameOver0;
 }
 
 // コンティニューを行う場合
@@ -905,7 +912,8 @@ extern void GameContinue(void) {
   Players.viv.left = ConfigDat.PlayerStock.v;
   Players.viv.score = (Players.viv.score % 10 + 1);
 
-  GameMain = GameProc;
+  GameFlow.game_main = GameProc;
+  GameFlow.current_state = GameState::Game;
 
   // ここに入らなかったらバグなのだが... //
   if (Players.viv.credit) {
@@ -927,7 +935,8 @@ void GameProc(bool &) {
   if (Key_Data & KEY_ESC) {
     // Show exit dialog
     ExitWindow.Open({250, 150}, 1);
-    GameMain = PauseProc;
+    GameFlow.game_main = PauseProc;
+    GameFlow.current_state = GameState::Pause;
     return;
   }
   /*
@@ -943,10 +952,10 @@ void GameProc(bool &) {
           }
   */
   GameMove();
-  if (!GameMainIs(GameProc))
+  if (GameFlow.current_state != GameState::Game)
     return;
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GameDraw();
     if (Demos.save_all_enable) {
       constexpr PIXEL_LTRB rc = PIXEL_LTWH{288, 80, 24, 8};
@@ -981,7 +990,8 @@ void GameFlowManager::GameOverProc0(bool &) {
     // Multi-stage recording: show Save Replay dialog
     if (Demos.HasRecordedStages()) {
       GameOverSaveWindow.Open({250, 200}, 0);
-      GameMain = GameOverSaveProc;
+      GameFlow.game_main = GameOverSaveProc;
+      GameFlow.current_state = GameState::GameOverSave;
       return;
     }
 
@@ -992,11 +1002,12 @@ void GameFlowManager::GameOverProc0(bool &) {
     }
 
     ContinueWindow.Open({250, 200}, 0);
-    GameMain = GameOverProc;
+    GameFlow.game_main = GameOverProc;
+    GameFlow.current_state = GameState::GameOver;
     return;
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GameDraw();
     Grp_Flip();
   }
@@ -1005,11 +1016,11 @@ void GameFlowManager::GameOverProc0(bool &) {
 // Save Replay dialog for Game Over
 void GameOverSaveProc(bool &) {
   CWinMove(&GameOverSaveWindow);
-  if (!GameMainIs(GameOverSaveProc)) {
+  if (GameFlow.current_state != GameState::GameOverSave) {
     return;
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GameDraw();
     CWinDraw(&GameOverSaveWindow);
     Grp_Flip();
@@ -1019,12 +1030,12 @@ void GameOverSaveProc(bool &) {
 // ゲームオーバー
 void GameOverProc(bool &) {
   CWinMove(&ContinueWindow);
-  if (!GameMainIs(GameOverProc)) {
+  if (GameFlow.current_state != GameState::GameOver) {
     SEffectInit();
     return;
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GameDraw();
     CWinDraw(&ContinueWindow);
     /*
@@ -1059,14 +1070,14 @@ void DemoProc(bool &) {
 
   GameMove();
 
-  if (!GameMainIs(DemoProc)) {
+  if (GameFlow.current_state != GameState::Demo) {
     Demos.Cleanup(); // 後始末
     IsDemoplay = false;
     GameExit(); // 強制終了させる(ゲームオーバー対策)
     return;
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GameDraw();
     if (ExTimer < 64)
       GrpPut16(200, 200, "D E M O   P L A Y");
@@ -1223,7 +1234,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
 
   count = (count + 1) % (256 + 128);
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GrpBackend_Clear();
 
     rc = {0, (264 - 8), 224, (296 - 24)};
@@ -1372,7 +1383,7 @@ void GameFlowManager::TitleProc(bool &quit) {
     return;
   }
 
-  if (!GameMainIs(::TitleProc))
+  if (GameFlow.current_state != GameState::Title)
     return;
 
   if (MainWindow.State == CWIN_DEAD) {
@@ -1395,7 +1406,7 @@ void GameFlowManager::TitleProc(bool &quit) {
     }
   }
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GrpBackend_Clear();
     GrpSurface_Blit({0, 42}, SURFACE_ID::TITLE, src);
     // GrpSurface_Blit({ (320 - 175), 77 }, SURFACE_ID::TITLE, src);
@@ -1415,10 +1426,10 @@ void GameFlowManager::TitleProc(bool &quit) {
 
 void PauseProc(bool &) {
   CWinMove(&ExitWindow);
-  if (!GameMainIs(PauseProc))
+  if (GameFlow.current_state != GameState::Pause)
     return;
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GameDraw();
 
     GrpBackend_SetClip(GRP_RES_RECT);

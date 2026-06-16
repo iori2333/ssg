@@ -417,7 +417,7 @@ static void enemy_set(void) {
       if (Demos.load_all_enable)
         return;
 
-      NameRegistInit(true);
+      GameFlow.NameRegistInit(true);
       return;
 
     case (SCL_MAPPALETTE): // マップパーツ用Surface からパレットを

@@ -38,7 +38,8 @@ bool EndingManager::Init() {
   this->SetFixedColors(pal);
   GrpBackend_PaletteSet(pal);
 
-  GameMain = EndingProc;
+  GameFlow.game_main = EndingProc;
+  GameFlow.current_state = GameState::Ending;
 
   this->flash_state = 0;
 
@@ -53,16 +54,14 @@ bool EndingManager::Init() {
 }
 
 void EndingManager::Proc(bool &) {
-  extern bool IsDraw();
-
   if (this->flash_state)
     this->flash_state -= 32;
 
   this->SCLDecode();
-  if (!GameMainIs(EndingProc))
+  if (GameFlow.current_state != GameState::Ending)
     return;
 
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     this->UpdateGrpInfo();
     this->UpdateStfInfo();
     this->Draw();
@@ -365,7 +364,7 @@ void EndingManager::SCLDecode() {
     case (SCL_END): // カウントも変更させずにリターンするのだ
       this->grp_info.bWantDisp = false;
       this->stf_task.bWantDisp = false;
-      NameRegistInit(false);
+      GameFlow.NameRegistInit(false);
       return;
 
     case (SCL_MUSIC):

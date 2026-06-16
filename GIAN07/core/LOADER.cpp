@@ -389,8 +389,6 @@ bool LoadMusicByHash(const HASH &hash) {
 // Missing packfile screen
 // -----------------------
 
-extern bool IsDraw();
-
 namespace DAT_MISSING {
 constexpr Narrow::string_view TITLE = "Missing game data files";
 
@@ -433,7 +431,7 @@ void Proc(bool &quit) {
       quit = true;
     }
   }
-  if (IsDraw()) {
+  if (GameFlow.IsDraw()) {
     GrpBackend_Clear();
     CWinDraw(&Window);
     Grp_Flip();
@@ -456,7 +454,8 @@ void Init(void) {
 
   Window.Init(w);
   Window.OpenCentered(w, (Info.size() - 2));
-  GameMain = Proc;
+  GameFlow.game_main = Proc;
+  GameFlow.current_state = GameState::External;
 }
 } // namespace DAT_MISSING
 // -----------------------
