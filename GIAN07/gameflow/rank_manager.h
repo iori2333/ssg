@@ -15,7 +15,3 @@ struct RankManager {
 };
 
 extern RankManager Ranking;
-
-// === 後方互換 inline wrapper ===
-inline void PlayRankAdd(int n) { Ranking.Add(n); }
-inline void PlayRankReset(void) { Ranking.Reset(); }

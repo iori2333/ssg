@@ -101,7 +101,7 @@ private:
 
 extern EndingManager Ending;
 
-// === 後方互換 inline wrapper ===
-inline bool EndingInit(void) { return Ending.Init(); }
+// === 後方互換 inline wrapper (GameMain 状态机入口点，必须保留) ===
+inline bool EndingInit() { return Ending.Init(); }
 inline void EndingProc(bool &q) { Ending.Proc(q); }
-inline void EndingDraw(void) { Ending.Draw(); }
+inline void EndingDraw() { Ending.Draw(); }

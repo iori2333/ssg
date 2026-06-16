@@ -103,7 +103,7 @@ uint8_t CurrentLevel() {
 extern bool ScoreNameInit(void) {
   GameFlow.current_dif = CurrentLevel();
 
-  GameFlow.current_rank = SetScoreString(nullptr, GameFlow.current_dif);
+  GameFlow.current_rank = Scores.SetScoreString(nullptr, GameFlow.current_dif);
   if (GameFlow.current_rank == 0)
     return GameExit();
 
@@ -147,7 +147,7 @@ void GameFlowManager::ScoreNameProc(bool &) {
       break;
     Snd_SEPlay(SOUND_ID_SELECT);
     GameFlow.current_dif = (GameFlow.current_dif + 4) % 5;
-    GameFlow.current_rank = SetScoreString(nullptr, GameFlow.current_dif);
+    GameFlow.current_rank = Scores.SetScoreString(nullptr, GameFlow.current_dif);
     break;
 
   case (KEY_DOWN):
@@ -156,7 +156,7 @@ void GameFlowManager::ScoreNameProc(bool &) {
       break;
     Snd_SEPlay(SOUND_ID_SELECT);
     GameFlow.current_dif = (GameFlow.current_dif + 1) % 5;
-    GameFlow.current_rank = SetScoreString(nullptr, GameFlow.current_dif);
+    GameFlow.current_rank = Scores.SetScoreString(nullptr, GameFlow.current_dif);
     break;
 
   case 0:
@@ -400,7 +400,7 @@ void GameFlowManager::NameRegistProc(bool &) {
       Scores.score_strings[GameFlow.current_rank - 1].Name[NR_NAME_LEN - 1] = '\0';
 
       strcpy(GameFlow.current_name.Name, Scores.score_strings[GameFlow.current_rank - 1].Name);
-      SaveScoreData(&GameFlow.current_name, CurrentLevel());
+      Scores.SaveScoreData(&GameFlow.current_name, CurrentLevel());
 
       key_time = END_WAIT;
       break;
@@ -497,7 +497,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   Snd_SEStopAll();
 
   // ハイスコアで無いならばタイトルに移行する //
-  GameFlow.current_rank = SetScoreString(&GameFlow.current_name, CurrentLevel());
+  GameFlow.current_rank = Scores.SetScoreString(&GameFlow.current_name, CurrentLevel());
   if (GameFlow.current_rank == 0)
     return GameExit();
 
@@ -541,7 +541,7 @@ void GameSTD_Init(void) {
   SEffectInit();
   CEffectInit();
   ObjectLockOnInit();
-  ItemIndSet();
+  Items.SetIndices();
   fragment_setup();
   ScreenEffectInit();
   ScreenEffectSet(SCNEFC_CFADEIN);
@@ -564,7 +564,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GameLevel = (ExStg ? EXTRA_LEVEL : ConfigDat.GameLevel.v);
 
   GameSTD_Init();
-  PlayRankReset();
+  Ranking.Reset();
 
   MaidSet();
 
@@ -647,7 +647,7 @@ extern bool GameReplayInitAll(const char8_t *fn) {
 
   GameStage = Demos.multi_play_info.Stages[0];
 
-  PlayRankReset();
+  Ranking.Reset();
 
   GrpBackend_Clear();
   Grp_Flip();
@@ -752,7 +752,7 @@ bool DemoInit(void) {
     return false;
   }
 
-  PlayRankReset();
+  Ranking.Reset();
 
   if (!LoadGraph(GameStage)) {
     DebugOut(u8"GRAPH.DAT が破壊されています");
@@ -1443,7 +1443,7 @@ void GameMove(void) {
 
   BossMove();
   enemy_move();
-  ItemMove();
+  Items.Move();
   tama_move();
   laser_move();
   LLaserMove();
@@ -1487,7 +1487,7 @@ void GameDraw(void) {
   ObjectLockDraw();
 
   fragment_draw();
-  ItemDraw();
+  Items.Draw();
 
   if (GrpGeom_Poly()) {
     LLaserDraw();

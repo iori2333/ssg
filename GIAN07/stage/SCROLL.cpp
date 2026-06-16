@@ -406,7 +406,7 @@ static void enemy_set(void) {
         }
       }
       ConfigSave();
-      EndingInit();
+      Ending.Init();
       return;
 
     case (SCL_EXTRACLEAR):
@@ -446,9 +446,9 @@ static void enemy_set(void) {
 
   if ((GameCount & 0x3f) == 0) {
     if (GameStage == GRAPH_ID_EXSTAGE)
-      PlayRankAdd(1);
+      Ranking.Add(1);
     else
-      PlayRankAdd(1 + GameStage / 3);
+      Ranking.Add(1 + GameStage / 3);
   }
 }
 

@@ -33,7 +33,7 @@ void BulletManager::Spawn() {
 
   // NORMAL の場合は変更しない(ゲーム中に増減する難易度は考案中) //
   // おそらく switch 中に記述する事になるかと... //
-  switch (PlayRank.GameLevel) {
+  switch (Ranking.state.GameLevel) {
   case (GAME_EASY):
     SetEasy();
     break;
@@ -50,7 +50,7 @@ void BulletManager::Spawn() {
   // 数値は単純に　(speed /2) *rank/32 + speed/2
   v = SPEEDM(TamaCmd.v); // 速度の基本値をセットする(GIAN.H)
   if ((TamaCmd.type & 0x0f) == T_NORM)
-    Bullets.speed = (((v >> 1) * (PlayRank.Rank)) >> (5 + 8)) + (v >> 1);
+    Bullets.speed = (((v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (v >> 1);
   else
     Bullets.speed = v;
 
@@ -621,7 +621,7 @@ void BulletManager::ToItems(uint8_t n) {
       t->d = 0;
 
       if (rnd() % n == 0) {
-        ItemSet(t->x, t->y, ITEM_SCORE);
+        Items.Spawn(t->x, t->y, ITEM_SCORE);
         t->flag = TF_DELETE;
         t->c = 0x25;
       } else {
@@ -641,7 +641,7 @@ void BulletManager::ToItems(uint8_t n) {
       t->d = 0;
 
       if (rnd() % n == 0) {
-        ItemSet(t->x, t->y, ITEM_SCORE);
+        Items.Spawn(t->x, t->y, ITEM_SCORE);
         t->flag = TF_DELETE;
         t->c = 0x25;
       } else {

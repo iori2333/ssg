@@ -85,7 +85,7 @@ void ItemManager::Move(void) {
       switch (ip->type) {
       case (ITEM_SCORE):
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        // PlayRankAdd((SY_MAX-Viv.y)>>10);	// 道具回收不再增加 Rank
+        // Ranking.Add((SY_MAX-Viv.y)>>10);	// 道具回收不再增加 Rank
         score_add(point);
         StringEffect2(ip->x, ip->y, point);
         if (Viv.evade) {
@@ -115,7 +115,7 @@ void ItemManager::Move(void) {
       ip->type = ITEM_DELETE;
   }
 
-  Indsort(ItemInd, this->count, Item,
+  Indsort(Items.indices, this->count, Items.entities,
           [](const ITEM_DATA &i) { return (i.type == ITEM_DELETE); });
 }
 

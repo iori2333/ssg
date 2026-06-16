@@ -464,7 +464,7 @@ void Player::OnDeath() {
     muteki = BOMBMUTEKI_VAL;
     bomb--;
     bomb_used++;
-    PlayRankAdd(-25); // 自动Bomb降低Rank
+    Ranking.Add(-25); // 自动Bomb降低Rank
     tama_clear();
     laser_clear();
     return;
@@ -488,7 +488,7 @@ void Player::OnDeath() {
   bomb = ConfigDat.BombStock.v;
   muteki = VIVDEAD_VAL;
 
-  PlayRankAdd(-100); // 死亡降低Rank
+  Ranking.Add(-100); // 死亡降低Rank
 
   if (left) {
     left -= 1;

@@ -57,12 +57,6 @@ private:
 
 extern ScoreManager Scores;
 
-// === 後方互換 inline wrapper ===
-inline uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif) { return Scores.SetScoreString(NData, Dif); }
-inline uint8_t IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif) { return Scores.IsHighScore(NData, Dif); }
-inline bool SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif) { return Scores.SaveScoreData(NData, Dif); }
-
-// テンプレート実装はヘッダに必要なため
 template <std::unsigned_integral T>
 T ScoreManager::XGet(BIT_DEVICE_READ &bd, uint64_t &ExMask) {
   ExMask = (((ExMask & 0x800000000000000) >> 60) + (ExMask << 1));

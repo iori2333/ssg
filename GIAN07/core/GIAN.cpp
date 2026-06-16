@@ -70,7 +70,7 @@ extern void StdStatusOutput(void) {
   sprintf(buf, "%2dBppMode", ConfigDat.BitDepth.v.value());
   GrpPut16(0, 32, buf);
 #endif
-  // sprintf(buf,"%s",DItem[ConfigDat.GameState.game_level.v]);
+  // sprintf(buf,"%s",DItems.entities[ConfigDat.GameState.game_level.v]);
   // GrpPut16(0,50,buf);
 
   sprintf(buf, "Enemy %3d", Enemies.count);

@@ -512,7 +512,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     }
 
     if (e.item) {
-      ItemSet(e.x, e.y, e.item);
+      Items.Spawn(e.x, e.y, e.item);
     }
     score_add(e.score);
     laser_clear();

@@ -15,8 +15,6 @@ struct PlayRankState {
 using PlayRankInfo = PlayRankState;
 
 ///// [グローバル変数] /////
-extern PlayRankState& PlayRank;
 
 ///// [ 関数 ] /////
-// 後方互換 inline wrapper は rank_manager.h 末尾に移動
-// 実装は RankManager メソッドに移行
+// RankManager に移行済み

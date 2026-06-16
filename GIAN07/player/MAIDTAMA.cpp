@@ -120,7 +120,7 @@ void PlayerManager::SetMaidShot(void) {
     Viv.muteki = BOMBMUTEKI_VAL;
     Viv.bomb--;
     Viv.bomb_used++;
-    PlayRankAdd(-25); // 難易度ダウン
+    Ranking.Add(-25); // 難易度ダウン
   }
 
   if (Viv.bomb_time) {

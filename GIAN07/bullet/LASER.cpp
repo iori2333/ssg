@@ -88,7 +88,7 @@ static constexpr auto LF_NMOVE = 0x06; // レーザーの長さ変わらず(LF_S
 // private methods declared in laser_manager.h
 
 void LaserManager::Spawn() {
-  switch (PlayRank.GameLevel) {
+  switch (Ranking.state.GameLevel) {
   case (GAME_EASY):
     SetEasy();
     break;
@@ -103,7 +103,7 @@ void LaserManager::Spawn() {
   }
 
   LaserCmd.v =
-      (((LaserCmd.v >> 1) * (PlayRank.Rank)) >> (5 + 8)) + (LaserCmd.v >> 1);
+      (((LaserCmd.v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (LaserCmd.v >> 1);
 
   SpawnEX();
 }

@@ -122,7 +122,7 @@ void BossManager::SnakyDelete(const BOSS_DATA *b) {
     e->count = 0;
     e->flag = EF_BOMB;
     /// score_add(e->score);
-    // ItemSet(e->x,e->y,0);
+    // Items.Spawn(e->x,e->y,0);
   }
 
   s->bIsUse = false;

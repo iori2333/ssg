@@ -245,7 +245,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
     e.flag = EF_BOMB;
     score_add(e.score);
     if (e.item) {
-      ItemSet(e.x, e.y, e.item);
+      Items.Spawn(e.x, e.y, e.item);
     }
   } else {
     Snd_SEPlay(SOUND_ID_HIT, e.x);
@@ -699,7 +699,7 @@ ECL_HEAD:
 
   case (ECL_JDIF): // 難易度によるジャンプ
     ECL_DEBUG("ECL_JDIF", 0);
-    switch (PlayRank.GameLevel) {
+    switch (Ranking.state.GameLevel) {
     case (GAME_EASY):
       e->cmd = U32LEAt(&cmd[1 + 0]);
       break;
