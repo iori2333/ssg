@@ -87,22 +87,22 @@ void ItemManager::Move(void) {
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
         // Ranking.Add((SY_MAX-Players.viv.y)>>10);	// 道具回收不再增加 Rank
         score_add(point);
-        StringEffect2(ip->x, ip->y, point);
+        Effects.SpawnPointEffect(ip->x, ip->y, point);
         if (Players.viv.evade) {
-          fragment_set(ip->x, ip->y, FRG_STAR3);
-          fragment_set(ip->x, ip->y, FRG_STAR3);
+          Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
+          Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
         }
         break;
 
       case (ITEM_EXTEND):
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        StringEffect(180 + 64, 80, "E x t e n d  !");
+        Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
         Players.viv.left++;
         break;
 
       case (ITEM_BOMB):
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        StringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
+        Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
         Players.viv.bomb++;
         break;
       }

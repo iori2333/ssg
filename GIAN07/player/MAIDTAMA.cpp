@@ -190,7 +190,7 @@ void PlayerManager::MoveMaidShot(void) {
           MTamaSet();
         }
         t->flag = TF_DELETE;
-        fragment_set(t->x, t->y, FRG_HIT);
+        Effects.SpawnFragment(t->x, t->y, FRG_HIT);
       }
     } else
       Bullets.MoveByEffect(t);
@@ -862,9 +862,9 @@ static void SetWideBomb(void) {
   dx = GX_MID + 64 * 70 / 2 + cosl(d, l << 1);
   dy = GY_MID - 64 * 90 / 2 + sinl(d << 1, l);
 
-  fragment_set(dx, dy, FRG_STAR1);
-  fragment_set(dx, dy, FRG_STAR1);
-  fragment_set(dx, dy, FRG_STAR2);
+  Effects.SpawnFragment(dx, dy, FRG_STAR1);
+  Effects.SpawnFragment(dx, dy, FRG_STAR1);
+  Effects.SpawnFragment(dx, dy, FRG_STAR2);
 
   Enemies.DamageAll(1);
 }

@@ -575,7 +575,7 @@ uint32_t BulletManager::ScoreToItems() {
   for (const auto i : std::views::iota(0u, this->count_small)) {
     auto *t = &this->bullets[Bullets.indices_small[i]];
     if (t->effect != TE_DELETE) {
-      StringEffect2(t->x - 64 * 4, t->y - 64 * 4, Score);
+      Effects.SpawnPointEffect(t->x - 64 * 4, t->y - 64 * 4, Score);
       sum += Score;
       t->flag = TF_DELETE;
       t->count = 0;
@@ -589,7 +589,7 @@ uint32_t BulletManager::ScoreToItems() {
   for (const auto i : std::views::iota(0u, this->count_large)) {
     auto *t = &this->bullets[Bullets.indices_large[i]];
     if (t->effect != TE_DELETE) {
-      StringEffect2(t->x - 64 * 8, t->y - 64 * 8, Score);
+      Effects.SpawnPointEffect(t->x - 64 * 8, t->y - 64 * 8, Score);
       sum += Score;
       t->flag = TF_DELETE;
       t->count = 0;
@@ -978,7 +978,7 @@ void BulletManager::MoveByType(TAMA_DATA *t) {
 
   case (T_SBHOMING): // サボテン用ホーミング(煙を吐き出すぞ！)
     if (t->count & 1)
-      fragment_set(t->x, t->y, FRG_SMOKE);
+      Effects.SpawnFragment(t->x, t->y, FRG_SMOKE);
     t->tx += t->vx;
     t->ty += t->vy;
     if ((t->count < 130 - 60) && HomingFlag != HOMING_DUMMY) {

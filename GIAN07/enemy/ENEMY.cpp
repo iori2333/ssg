@@ -520,7 +520,7 @@ ECL_HEAD:
   case (ECL_CEFC): {
     const auto x = (e->x + PixelToWorld(I16LEAt(&cmd[1 + 0])));
     const auto y = (e->y + PixelToWorld(I16LEAt(&cmd[1 + 2])));
-    CEffectSet(x, y, cmd[1 + 2 + 2]);
+    Effects.SpawnCircleEffect(x, y, cmd[1 + 2 + 2]);
     bRetFlag = false;
   } break;
 
@@ -544,22 +544,22 @@ ECL_HEAD:
   case (ECL_STG4EFC):
     switch (cmd[1]) {
     case (STG4ROCK_STDMOVE):
-      SendCmdStg4Rock(cmd[1], 0);
+      Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
     case (STG4ROCK_ACCMOVE1):
-      SendCmdStg4Rock(cmd[1], 0);
+      Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
     case (STG4ROCK_ACCMOVE2):
-      SendCmdStg4Rock(cmd[1], e->d);
+      Effects.SendCmdStg4Rocks(cmd[1], e->d);
       break;
     case (STG4ROCK_3DMOVE):
-      SendCmdStg4Rock(cmd[1], 0);
+      Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
     case (STG4ROCK_LEAVE):
-      SendCmdStg4Rock(cmd[1], 0);
+      Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
     case (STG4ROCK_END):
-      SendCmdStg4Rock(cmd[1], 0);
+      Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
     }
 

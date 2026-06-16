@@ -468,8 +468,8 @@ void BossManager::KillAll(void) {
     if (b->IsUsed) {
       e = &(b->Edat);
       this->SnakyDelete(b);
-      fragment_set(e->x, e->y, FRG_FATCIRCLE);
-      ExBombEfcSet(e->x, e->y, EXBOMB_STD);
+      Effects.SpawnFragment(e->x, e->y, FRG_FATCIRCLE);
+      Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
       if (e->LLaserRef)
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
@@ -489,8 +489,8 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
     this->SnakyDelete(&b);
     this->BitDelete();
     Enemies.Clear();
-    fragment_set(e.x, e.y, FRG_FATCIRCLE);
-    ExBombEfcSet(e.x, e.y, EXBOMB_STD);
+    Effects.SpawnFragment(e.x, e.y, FRG_FATCIRCLE);
+    Effects.SpawnBombEffect(e.x, e.y, EXBOMB_STD);
     Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SOUND_ID_BOSSBOMB, e.x);
     if (e.LLaserRef) {
@@ -507,7 +507,7 @@ bool BossManager::ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage) {
       const auto temp = Bullets.ScoreToItems(); // 弾→スコアエフェクト
       // sprintf(buf, "%3d Evade  %5dPts", Players.viv.evade, Players.viv.evadesc);
       sprintf(buf, "  Bonus    %7uPts", temp);
-      StringEffect(180, 60, buf);
+      Effects.SpawnStringEffect(180, 60, buf);
       score_add(temp);
     }
 

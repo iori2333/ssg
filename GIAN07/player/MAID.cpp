@@ -271,7 +271,7 @@ void Player::Update() {
 
     if (evade_c == 0) {
       sprintf(buf, "%3d Evade  %7dPts", evade, evadesc);
-      StringEffect(180, 40, buf);
+      Effects.SpawnStringEffect(180, 40, buf);
       AddScore(evadesc);
       evade = 0;
       evadesc = 0;
@@ -447,9 +447,9 @@ void Player::OnDeath() {
 #endif
 
   if (ConfigDat.PracticeMode.v == PRACTICE_INVINCIBLE) {
-    fragment_set(x, y, FRG_FATCIRCLE);
+    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
     for (i = 0; i < 50; i++)
-      fragment_set(x, y, FRG_HEART);
+      Effects.SpawnFragment(x, y, FRG_HEART);
     Snd_SEPlay(SOUND_ID_DEAD);
     muteki = 30;
     return;
@@ -470,10 +470,10 @@ void Player::OnDeath() {
     return;
   }
 
-  fragment_set(x, y, FRG_FATCIRCLE);
+  Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
 
   for (i = 0; i < 50; i++)
-    fragment_set(x, y, FRG_HEART);
+    Effects.SpawnFragment(x, y, FRG_HEART);
 
   Snd_SEPlay(SOUND_ID_DEAD);
 
@@ -520,9 +520,9 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
       Snd_SEPlay(SOUND_ID_BUZZ, ex);
       BuzzSound = true;
     }
-    fragment_set(ex, ey, FRG_EVADE);
-    fragment_set(ex, ey, FRG_EVADE);
-    fragment_set(ex, ey, FRG_EVADE);
+    Effects.SpawnFragment(ex, ey, FRG_EVADE);
+    Effects.SpawnFragment(ex, ey, FRG_EVADE);
+    Effects.SpawnFragment(ex, ey, FRG_EVADE);
   }
 
   for (i = 0; i < n; i++) {

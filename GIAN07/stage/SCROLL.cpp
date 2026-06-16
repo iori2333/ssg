@@ -270,7 +270,7 @@ static void enemy_set(void) {
           BGM_Play();
           const auto mtitle = BGM_Title();
           if (!mtitle.empty()) {
-            SetMusicTitle(460, mtitle);
+            Effects.SetMusicTitle(460, mtitle);
           }
         }
       }
@@ -287,7 +287,7 @@ static void enemy_set(void) {
       case (SEFC_WARN):
         // effect_set(0,0,EFC_WARNBOSS,GameStage);
         Snd_SEPlay(8, GX_MID, true);
-        WarningEffectSet();
+        Effects.SetWarningEffect();
         // StringEffect3(GameStage);
         break;
 
@@ -313,10 +313,10 @@ static void enemy_set(void) {
         Scroller.Command(SCMD_STG3RESET);
         break; // ３面リセット
       case (SEFC_CFADEIN):
-        ScreenEffectSet(SCNEFC_CFADEIN);
+        Effects.SetScreenEffect(SCNEFC_CFADEIN);
         break; // ○フェードIn
       case (SEFC_CFADEOUT):
-        ScreenEffectSet(SCNEFC_CFADEOUT);
+        Effects.SetScreenEffect(SCNEFC_CFADEOUT);
         break; // ○フェードOut
       case (SEFC_STG6CUBE):
         Scroller.Command(SCMD_STG6CUBE);
@@ -331,10 +331,10 @@ static void enemy_set(void) {
         Scroller.Command(SCMD_STG4LEAVE);
         break; // ４面岩画面外へ
       case (SEFC_WHITEIN):
-        ScreenEffectSet(SCNEFC_WHITEIN);
+        Effects.SetScreenEffect(SCNEFC_WHITEIN);
         break; // ホワイトイン
       case (SEFC_WHITEOUT):
-        ScreenEffectSet(SCNEFC_WHITEOUT);
+        Effects.SetScreenEffect(SCNEFC_WHITEOUT);
         break; // ホワイトアウト
       case (SEFC_LOADEX01):
         LoadGraph(GRAPH_ID_EXBOSS1);
@@ -603,16 +603,16 @@ void ScrollManager::Draw(void) {
     Stg3BossMapDraw();
     return;
   } else if (Scroller.scroll.ExCmd == ScrollCmdStg6Cube) {
-    Draw3DCube();
+    Effects.Draw3DCubes();
     return;
   } else if (Scroller.scroll.ExCmd == ScrollCmdStg6RndEcl) {
-    DrawEffectFakeECL();
+    Effects.DrawFakeECL();
     return;
   } else if (Scroller.scroll.ExCmd == ScrollCmdStg6Raster) {
-    DrawStg6Raster();
+    Effects.DrawStg6Rasters();
     return;
   } else if (Scroller.scroll.ExCmd == ScrollCmdStg3Star) {
-    DrawStg3Star();
+    Effects.DrawStg3Stars();
     return;
   }
 
@@ -647,7 +647,7 @@ void ScrollManager::Draw(void) {
   }
 
   if (Scroller.scroll.ExCmd == ScrollCmdStg4Rock) {
-    DrawStg4Rock();
+    Effects.DrawStg4Rocks();
   }
   /*
           if(Scroller.scroll.ExCmd==ScrollCmdStg2Boss){
@@ -689,38 +689,38 @@ void ScrollManager::Command(uint8_t cmd) {
   case (SCMD_STG6CUBE):
     Scroller.scroll.ExCmd = ScrollCmdStg6Cube;
     Scroller.scroll.ExCount = 0;
-    Init3DCube();
+    Effects.Init3DCubes();
     break;
 
   case (SCMD_STG6RNDECL):
     Scroller.scroll.ExCmd = ScrollCmdStg6RndEcl;
     Scroller.scroll.ExCount = 0;
-    InitEffectFakeECL();
+    Effects.InitFakeECL();
     break;
 
   case (SCMD_STG4ROCK):
     Scroller.scroll.ExCmd = ScrollCmdStg4Rock;
     Scroller.scroll.ExCount = 0;
-    InitStg4Rock();
+    Effects.InitStg4Rocks();
     break;
 
   case (SCMD_STG4LEAVE):
     if (Scroller.scroll.ExCmd != ScrollCmdStg4Rock)
       break;
-    SendCmdStg4Rock(STG4ROCK_LEAVE, 0);
+    Effects.SendCmdStg4Rocks(STG4ROCK_LEAVE, 0);
     break;
 
   case (SCMD_STG6RASTER):
     Scroller.scroll.ExCmd = ScrollCmdStg6Raster;
     Scroller.scroll.ExCount = 0;
-    InitStg6Raster();
+    Effects.InitStg6Rasters();
     break;
 
   case (SCMD_STG3STAR):
     Scroller.scroll.ExCmd = ScrollCmdStg3Star;
     Scroller.scroll.ExCount = 0;
-    InitStg3Star();
-    ScreenEffectSet(SCNEFC_WHITEIN);
+    Effects.InitStg3Stars();
+    Effects.SetScreenEffect(SCNEFC_WHITEIN);
     break;
 
   case (SCMD_RASTER_ON): // ラスタースクロール開始
@@ -894,26 +894,26 @@ static void Stg3BossMapDraw(void) {
 }
 
 // ６面の３Ｄキューう゛ //
-static void ScrollCmdStg6Cube(void) { Move3DCube(); }
+static void ScrollCmdStg6Cube(void) { Effects.Move3DCubes(); }
 
 // ６面のランダムＥＣＬ列 //
-static void ScrollCmdStg6RndEcl(void) { MoveEffectFakeECL(); }
+static void ScrollCmdStg6RndEcl(void) { Effects.MoveFakeECL(); }
 
 // ６面ラスター //
-static void ScrollCmdStg6Raster(void) { MoveStg6Raster(); }
+static void ScrollCmdStg6Raster(void) { Effects.MoveStg6Rasters(); }
 
 // ４面岩 //
-static void ScrollCmdStg4Rock(void) { MoveStg4Rock(); }
+static void ScrollCmdStg4Rock(void) { Effects.MoveStg4Rocks(); }
 
 // ３面高速星 //
 static void ScrollCmdStg3Star(void) {
   Scroller.scroll.ExCount++;
 
   if (Scroller.scroll.ExCount == 32) {
-    ScreenEffectSet(SCNEFC_WHITEOUT);
+    Effects.SetScreenEffect(SCNEFC_WHITEOUT);
   }
 
-  MoveStg3Star();
+  Effects.MoveStg3Stars();
 }
 
 // マップデータをロードする(BMP含む) //

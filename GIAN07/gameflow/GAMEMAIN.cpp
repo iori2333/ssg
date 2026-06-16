@@ -540,18 +540,18 @@ void GameSTD_Init(void) {
   Lasers.SetIndices();
   Lasers.SetupLong();
   Lasers.InitHoming();
-  SEffectInit();
-  CEffectInit();
-  ObjectLockOnInit();
+  Effects.InitStringEffects();
+  Effects.InitCircleEffects();
+  Effects.InitLockOn();
   Items.SetIndices();
-  fragment_setup();
-  ScreenEffectInit();
-  ScreenEffectSet(SCNEFC_CFADEIN);
+  Effects.InitFragments();
+  Effects.InitScreenEffect();
+  Effects.SetScreenEffect(SCNEFC_CFADEIN);
 
-  ExBombEfcInit();
+  Effects.InitBombEffects();
 
-  InitWarning();
-  WarningEffectInit();
+  Effects.InitWarningText();
+  Effects.InitWarningEffect();
   // WarningEffectSet();
 
   BGM_SetTempo(0);
@@ -589,7 +589,7 @@ bool GameInit(void (*NextProc)(bool &quit)) {
   TextObj.Clear();
   if (NextProc != DemoProc) {
     BGM_FadeOut(240);
-    MTitleInit();
+    Effects.InitMusicTitle();
   }
   if (NextProc == GameProc || NextProc == ReplayProcAll) {
     // ウィンドウの表示位置を設定する //
@@ -902,7 +902,7 @@ extern bool GameExit(bool bNeedChgMusic) {
 
 // ゲームオーバーの前処理
 extern void GameOverInit(void) {
-  StringEffect3();
+  Effects.SpawnGameOverEffect();
 
   GameFlow.game_over_timer = 120;
 
@@ -974,8 +974,8 @@ void GameFlowManager::GameOverProc0(bool &) {
   switch (GameFlow.game_over_timer) {
   default:
     GameFlow.game_over_timer--;
-    fragment_move();
-    SEffectMove();
+    Effects.MoveFragments();
+    Effects.MoveStringEffects();
     break;
 
   case 0:
@@ -1035,7 +1035,7 @@ void GameOverSaveProc(bool &) {
 void GameOverProc(bool &) {
   CWinMove(&ContinueWindow);
   if (GameFlow.current_state != GameState::GameOver) {
-    SEffectInit();
+    Effects.InitStringEffects();
     return;
   }
 
@@ -1463,14 +1463,14 @@ void GameMove(void) {
   Lasers.Move();
   Lasers.MoveLong();
   Lasers.MoveHoming();
-  fragment_move();
-  SEffectMove();
-  CEffectMove();
-  ExBombEfcMove();
-  ObjectLockMove();
+  Effects.MoveFragments();
+  Effects.MoveStringEffects();
+  Effects.MoveCircleEffects();
+  Effects.MoveBombEffects();
+  Effects.MoveLockOn();
 
-  WarningEffectMove();
-  ScreenEffectMove();
+  Effects.MoveWarningEffect();
+  Effects.MoveScreenEffect();
 
   // この２行の位置を変更しました //
   MaidMove();
@@ -1481,13 +1481,13 @@ void GameDraw(void) {
   GrpBackend_Clear();
 
   Scroller.Draw();
-  CEffectDraw();
+  Effects.DrawCircleEffects();
 
   Bosses.Draw();
 
   WideBombDraw(); // 多分、ここで良いと思うが...
 
-  ExBombEfcDraw();
+  Effects.DrawBombEffects();
 
   Enemies.Draw();
 
@@ -1499,9 +1499,9 @@ void GameDraw(void) {
     Lasers.DrawLong();
   }
 
-  ObjectLockDraw();
+  Effects.DrawLockOn();
 
-  fragment_draw();
+  Effects.DrawFragments();
   Items.Draw();
 
   if (GrpGeom_Poly()) {
@@ -1516,15 +1516,15 @@ void GameDraw(void) {
 
   // if((Key_Data&KEY_UP  ) && test<64) test++;
   // if((Key_Data&KEY_DOWN) && test!=0 ) test--;
-  WarningEffectDraw();
+  Effects.DrawWarningEffect();
   // MoveWarning(test++);
   // DrawWarning();
 
-  SEffectDraw();
+  Effects.DrawStringEffects();
   StateDraw();
 
   Bosses.DrawHPG();
-  ScreenEffectDraw();
+  Effects.DrawScreenEffect();
 
   MWinDraw();
   // GrpBackend_SetClip(PLAYFIELD_CLIP);
