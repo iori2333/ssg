@@ -4,13 +4,10 @@
 
 #include "ecl_interpreter.h"
 #include "ECL_LEN.h"
+#include "enemy_manager.h"
 #include "game/endian.h"
 
-// Forward declarations from ENEMY.cpp
-extern void parse_ECL(EnemyData* e);
-extern void CheckECLInterrupt(EnemyData* e);
-extern void InitECLInterrupt(EnemyData* e);
-extern void EnemyECL_LongJump(EnemyData* e, uint32_t ecl_id);
+// 後方互換 inline wrapper は enemy_manager.h で提供
 
 void EclInterpreter::Execute(EnemyData& e) {
   parse_ECL(&e);

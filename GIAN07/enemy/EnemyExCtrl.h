@@ -89,19 +89,6 @@ struct BitData {
 using BIT_DATA = BitData;
 
 ///// [ 関数 ] /////
-void SnakyInit(void);                                  // 蛇型の敵配列の初期化
-void SnakySet(BOSS_DATA *b, int len, uint32_t TailID); // 蛇型の敵をセットする
-void SnakyMove(void);                                  // 蛇型の敵の移動処理
-void SnakyDelete(const BOSS_DATA *b);                  // 蛇型の敵を殺す
-
-void BitInit(void); // ビット配列の初期化
-void BitSet(BOSS_DATA *b, uint8_t NumBits,
-            uint32_t BitID);                     // ビットをセットする
-void BitMove(void);                              // ビットを動作させる
-void BitDelete(void);                            // ビットを消滅させる
-void BitLineDraw(void);                          // ビット間のラインを描画する
-void BitSelectAttack(uint32_t BitID);            // 攻撃パターンをセットor変更
-void BitLaserCommand(uint8_t Command);           // レーザー系命令を発行
-void BitSendCommand(uint8_t Command, int Param); // ビット命令を送信
-int BitGetNum(void);                             // 現在のビット数を取得する
+// 後方互換 inline wrapper は boss_manager.h 末尾に移動
+// 実装は BossManager メソッドに移行
 

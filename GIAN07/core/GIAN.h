@@ -16,6 +16,8 @@
 #include "constants.h"
 
 #include "enemy/BOSS.h"      // ボスの定義＆ボス用エフェクトなど
+#include "enemy/boss_manager.h"   // BossManager + backward-compat wrappers
+#include "enemy/enemy_manager.h" // EnemyManager + backward-compat wrappers
 #include "effect/EFFECT.h"    // 主にテキストベースのエフェクト処理
 #include "effect/EFFECT3D.h"  // ３Ｄエフェクト
 #include "effect/FRAGMENT.h"  // 破片系エフェクト処理
