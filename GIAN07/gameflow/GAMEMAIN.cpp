@@ -612,7 +612,7 @@ bool GameInit(void (*NextProc)(bool &quit)) {
 // 次のステージに移行する //
 extern bool GameNextStage(void) {
 #ifdef PBG_DEBUG
-  DemoplaySaveDemo();
+  Demos.SaveDemo();
 #endif
 
   GameStage++;
@@ -641,7 +641,7 @@ extern bool GameNextStage(void) {
 extern bool GameReplayInitAll(const char8_t *fn) {
   MaidSet();
 
-  if (!DemoplayLoadReplayAll(fn)) {
+  if (!Demos.LoadReplayAll(fn)) {
     return false;
   }
 
@@ -655,14 +655,14 @@ extern bool GameReplayInitAll(const char8_t *fn) {
 
   if (!LoadGraph(GameStage)) {
     DebugOut(u8"GRAPH.DAT が破壊されています");
-    DemoplayCleanup();
-    DemoplayLoadAllEnable = false;
+    Demos.Cleanup();
+    Demos.load_all_enable = false;
     return false;
   }
   if (!LoadStageData(GameStage)) {
     DebugOut(u8"ENEMY.DAT が破壊されています");
-    DemoplayCleanup();
-    DemoplayLoadAllEnable = false;
+    Demos.Cleanup();
+    Demos.load_all_enable = false;
     return false;
   }
 
@@ -683,12 +683,12 @@ void ReplayProcAll(bool &) {
 
   for (int i = 0; i < speed; i++) {
     if (Key_Data != KEY_ESC) {
-      Key_Data = DemoplayMove();
+      Key_Data = Demos.Move();
     }
 
     if (Key_Data & KEY_ESC) {
-      DemoplayCleanup();
-      DemoplayLoadAllEnable = false;
+      Demos.Cleanup();
+      Demos.load_all_enable = false;
       GameExit();
       return;
     }
@@ -696,15 +696,15 @@ void ReplayProcAll(bool &) {
     GameMove();
 
     if (!GameMainIs(ReplayProcAll)) {
-      DemoplayCleanup();
-      DemoplayLoadAllEnable = false;
+      Demos.Cleanup();
+      Demos.load_all_enable = false;
       GameExit();
       return;
     }
 
-    if (!DemoplayLoadEnable) {
-      DemoplayCleanup();
-      DemoplayLoadAllEnable = false;
+    if (!Demos.load_enable) {
+      Demos.Cleanup();
+      Demos.load_all_enable = false;
       GameExit();
       return;
     }
@@ -747,7 +747,7 @@ bool DemoInit(void) {
   //// 	GameStage = 1;					// こっちはＨＰ体験版用
   ////
 
-  if (!DemoplayLoadDemo(GameStage)) {
+  if (!Demos.LoadDemo(GameStage)) {
     // DebugOut(u8"デモプレイデータが存在せず");
     return false;
   }
@@ -916,11 +916,11 @@ extern void GameContinue(void) {
 
 void GameProc(bool &) {
   // Record current input (always-on multi-stage or legacy single-stage)
-  const auto replay_over = DemoplayRecord(Key_Data);
+  const auto replay_over = Demos.Record(Key_Data);
 
 #ifdef PBG_DEBUG
   if (DebugDat.DemoSave && replay_over) {
-    DemoplaySaveDemo();
+    Demos.SaveDemo();
   }
 #endif
 
@@ -948,7 +948,7 @@ void GameProc(bool &) {
 
   if (IsDraw()) {
     GameDraw();
-    if (DemoplaySaveAllEnable) {
+    if (Demos.save_all_enable) {
       constexpr PIXEL_LTRB rc = PIXEL_LTWH{288, 80, 24, 8};
       GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, rc);
     }
@@ -979,7 +979,7 @@ void GameFlowManager::GameOverProc0(bool &) {
     }
 
     // Multi-stage recording: show Save Replay dialog
-    if (DemoplayHasRecordedStages()) {
+    if (Demos.HasRecordedStages()) {
       GameOverSaveWindow.Open({250, 200}, 0);
       GameMain = GameOverSaveProc;
       return;
@@ -1045,13 +1045,13 @@ void DemoProc(bool &) {
   if (Key_Data)
     Key_Data = KEY_ESC;
   else
-    Key_Data = DemoplayMove();
+    Key_Data = Demos.Move();
 
   IsDemoplay = true;
 
   // ＥＳＣが押されたら即、終了 //
   if (Key_Data & KEY_ESC) {
-    DemoplayCleanup();
+    Demos.Cleanup();
     IsDemoplay = false;
     GameExit();
     return;
@@ -1060,7 +1060,7 @@ void DemoProc(bool &) {
   GameMove();
 
   if (!GameMainIs(DemoProc)) {
-    DemoplayCleanup(); // 後始末
+    Demos.Cleanup(); // 後始末
     IsDemoplay = false;
     GameExit(); // 強制終了させる(ゲームオーバー対策)
     return;
@@ -1198,7 +1198,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
       Viv.exp = 255;
     }
 
-    DemoplayInit();
+    Demos.Init();
 
     if (!LoadGraph(GameStage)) {
       DebugOut(u8"GRAPH.DAT が破壊されています");
@@ -1365,9 +1365,9 @@ void GameFlowManager::TitleProc(bool &quit) {
   MWinMove();
 
   // Start pending replay after menu closes
-  if (!PendingReplayFile.empty()) {
-    auto fn = PendingReplayFile;
-    PendingReplayFile.clear();
+  if (!Demos.pending_replay_file.empty()) {
+    auto fn = Demos.pending_replay_file;
+    Demos.pending_replay_file.clear();
     GameReplayInitAll(fn.c_str());
     return;
   }

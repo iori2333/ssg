@@ -735,7 +735,7 @@ static bool Handle(INPUT_BITS key, size_t selected) {
       return false;
     }
     if (selected < Files.size()) {
-      ::PendingReplayFile = Files[selected];
+      ::Demos.pending_replay_file = Files[selected];
       return false;
     }
   }
@@ -819,7 +819,7 @@ static bool Main::FnMusic(INPUT_BITS key) {
 
 static bool ExitFnYes(INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    DemoplaySaveAllEnable = false;
+    Demos.save_all_enable = false;
     GameExit();
     return false;
   }
@@ -836,7 +836,7 @@ static bool ExitFnNo(INPUT_BITS key) {
 
 static bool ExitFnSaveExit(INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    DemoplaySaveReplayAll();
+    Demos.SaveReplayAll(false);
     GameExit();
     return false;
   }
@@ -845,7 +845,7 @@ static bool ExitFnSaveExit(INPUT_BITS key) {
 
 static bool GameOverSaveFnYes(INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    DemoplaySaveReplayAll();
+    Demos.SaveReplayAll(false);
     GameExit(true);
     return false;
   }
@@ -854,7 +854,7 @@ static bool GameOverSaveFnYes(INPUT_BITS key) {
 
 static bool GameOverSaveFnNo(INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    DemoplaySaveAllEnable = false;
+    Demos.save_all_enable = false;
     GameExit(true);
     return false;
   }

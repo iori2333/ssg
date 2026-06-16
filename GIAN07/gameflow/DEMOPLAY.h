@@ -54,13 +54,6 @@ struct MULTI_REPLAY_INFO {
 // 実装は DemoManager メソッドに移行
 
 ///// [ 変数 ] /////
-// DemoplayLoadEnable, DemoplaySaveAllEnable, DemoplayLoadAllEnable,
-// MultiPlayInfo, PlaybackMaxStage, PendingReplayFile, DemoInfo, DemoBuffer
-// → demo_manager.cpp で参照として定義
-extern bool& DemoplayLoadEnable;
-extern bool& DemoplaySaveAllEnable;
-extern bool& DemoplayLoadAllEnable;
-extern uint8_t& PlaybackMaxStage;
-extern std::u8string& PendingReplayFile;
-// MultiPlayInfo, DemoInfo, DemoBuffer → Demos.xxx で直接アクセス
+// Demos.load_enable, Demos.save_all_enable, Demos.load_all_enable,
+// Demos.playback_max_stage, Demos.pending_replay_file で直接アクセス
 

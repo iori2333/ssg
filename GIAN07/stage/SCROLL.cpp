@@ -263,7 +263,7 @@ static void enemy_set(void) {
       break;
 
     case (SCL_MUSIC):
-      //				if(!(/*DemoplaySaveEnable||*/DemoplayLoadEnable)){
+      //				if(!(/*DemoplaySaveEnable||*/Demos.load_enable)){
       if (!IsDemoplay) {
         BGM_Stop();
         if (BGM_Switch(cmd[1])) {
@@ -366,13 +366,13 @@ static void enemy_set(void) {
       break;
 
     case (SCL_STAGECLEAR): // ステージクリア
-      if (DemoplaySaveAllEnable) {
-        DemoplayFlushStage();
+      if (Demos.save_all_enable) {
+        Demos.FlushStage();
         GameNextStage();
         return;
       }
-      if (DemoplayLoadAllEnable) {
-        if (GameStage < PlaybackMaxStage) {
+      if (Demos.load_all_enable) {
+        if (GameStage < Demos.playback_max_stage) {
           GameNextStage();
         }
         return;
@@ -382,12 +382,12 @@ static void enemy_set(void) {
       return;
 
     case (SCL_GAMECLEAR):
-      if (DemoplaySaveAllEnable) {
-        DemoplayFlushStage();
-        DemoplaySaveReplayAll();
+      if (Demos.save_all_enable) {
+        Demos.FlushStage();
+        Demos.SaveReplayAll(false);
         // Fall through to normal ending logic
       }
-      if (DemoplayLoadAllEnable)
+      if (Demos.load_all_enable)
         return;
 
       if (GameStage == STAGE_MAX)
@@ -410,11 +410,11 @@ static void enemy_set(void) {
       return;
 
     case (SCL_EXTRACLEAR):
-      if (DemoplaySaveAllEnable) {
-        DemoplayFlushStage();
-        DemoplaySaveReplayAll(true);
+      if (Demos.save_all_enable) {
+        Demos.FlushStage();
+        Demos.SaveReplayAll(true);
       }
-      if (DemoplayLoadAllEnable)
+      if (Demos.load_all_enable)
         return;
 
       NameRegistInit(true);
