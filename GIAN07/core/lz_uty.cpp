@@ -3,7 +3,7 @@
  *
  */
 
-#include "LZ_UTY.h"
+#include "lz_uty.h"
 #include "game/defer.h"
 #include "platform/file.h"
 #include <SDL3/SDL_iostream.h>

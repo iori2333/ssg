@@ -4,8 +4,8 @@
 /*                                                                           */
 
 #include "PRankCtrl.h"
-#include "GIAN.h"
-#include "LEVEL.h"
+#include "gian.h"
+#include "level.h"
 
 // PlayRank → rank_manager.cpp に移動
 

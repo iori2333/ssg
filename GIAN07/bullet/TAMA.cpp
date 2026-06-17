@@ -3,8 +3,8 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include "GIAN.h"
-#include "LEVEL.h"
+#include "gian.h"
+#include "level.h"
 #include "TAMA.h"
 #include "bullet_manager.h"
 #include "game/cast.h"

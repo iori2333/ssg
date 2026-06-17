@@ -3,11 +3,11 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "CONFIG.h"
+#include "config.h"
 #include "DEMOPLAY.h"
 #include "demo_manager.h"
-#include "GIAN.h"
-#include "LZ_UTY.h"
+#include "gian.h"
+#include "lz_uty.h"
 #include "game/input.h"
 #include "game/ut_math.h"
 #include "platform/file.h"

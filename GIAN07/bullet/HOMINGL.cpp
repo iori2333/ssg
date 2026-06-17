@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "GEOMETRY.h"
-#include "GIAN.h"
+#include "gian.h"
 #include "HOMINGL.h"
 #include "laser_manager.h"
 #include "MAID.h"

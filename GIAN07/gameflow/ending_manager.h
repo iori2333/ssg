@@ -5,7 +5,7 @@
 #pragma once
 
 #include "ENDING.h"
-#include "LOADER.h"
+#include "loader.h"
 #include "game/coords.h"
 #include "game/graphics.h"
 #include "platform/text_backend.h"

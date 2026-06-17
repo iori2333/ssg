@@ -3,15 +3,15 @@
 /*                                                                           */
 /*                                                                           */
 #include "BOMBEFC.h" // 爆発エフェクト処理
-#include "CONFIG.h"
+#include "config.h"
 #include "DEMOPLAY.h"
 #include "demo_manager.h"
 #include "FONTUTY.h"
 #include "GAMEMAIN.h"
 #include "GEOMETRY.h"
-#include "GIAN.h"
+#include "gian.h"
 #include "LENS.h"
-#include "LEVEL.h"
+#include "level.h"
 #include "MUSIC.h"
 #include "SCORE.h"
 #include "WindowCtrl.h" // ウィンドウ定義

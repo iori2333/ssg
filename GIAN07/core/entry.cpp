@@ -3,11 +3,11 @@
  *
  */
 
-#include "CONFIG.h"
-#include "ENTRY.h"
+#include "config.h"
+#include "entry.h"
 #include "gameflow/GAMEMAIN.h"
 #include "gameflow/gameflow_manager.h"
-#include "LOADER.h"
+#include "loader.h"
 #include "game/bgm.h"
 #include "game/debug.h"
 #include "game/frame.h"

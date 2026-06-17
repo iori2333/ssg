@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "GIAN.h"
+#include "gian.h"
 #include "core/entity.h"
 #include "ITEM.h"
 #include "item_manager.h"

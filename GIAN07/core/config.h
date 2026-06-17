@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "LEVEL.h"
+#include "level.h"
 #include "game/input.h"
 #include "game/midi.h"
 #include "game/volume.h"

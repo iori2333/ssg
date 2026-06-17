@@ -6,14 +6,14 @@
 #include <SDL3/SDL_misc.h>
 #include <numeric>
 
-#include "CONFIG.h"
+#include "config.h"
 #include "DEMOPLAY.h"
 #include "gameflow/demo_manager.h"
-#include "ENTRY.h"
+#include "entry.h"
 #include "GAMEMAIN.h"
 #include "gameflow/gameflow_manager.h"
-#include "LEVEL.h"
-#include "LOADER.h"
+#include "level.h"
+#include "loader.h"
 #include "MUSIC.h"
 #include "WindowCtrl.h"
 #include "WindowSys.h"

@@ -29,7 +29,7 @@
 #include "bullet/LLASER.h"    // なが～いレーザーの処理
 #include "bullet/bullet_manager.h" // BulletManager + backward-compat wrappers
 #include "bullet/laser_manager.h"  // LaserManager + backward-compat wrappers
-#include "LOADER.h"    // 各種ローダー
+#include "loader.h"    // 各種ローダー
 #include "player/MAID.h"      // その名の通り
 #include "player/MAIDTAMA.h"  // 自機ショットの処理
 #include "player/player_manager.h" // PlayerManager + backward-compat wrappers

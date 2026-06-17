@@ -5,7 +5,7 @@
 
 #include "WindowSys.h"
 #include "FONTUTY.h"
-#include "LOADER.h"
+#include "loader.h"
 #include "game/enum_flags.h"
 #include "game/snd.h"
 #include "game/ut_math.h"

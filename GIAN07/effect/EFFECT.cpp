@@ -6,7 +6,7 @@
 #include "EFFECT.h"
 #include "FONTUTY.h"
 #include "GEOMETRY.h"
-#include "GIAN.h"
+#include "gian.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"

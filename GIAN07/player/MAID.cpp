@@ -7,10 +7,10 @@
 // imaxdiv_t'` if this appears after a module import.
 #include <inttypes.h> // for PRId64
 
-#include "CONFIG.h"
+#include "config.h"
 #include "FONTUTY.h"
 #include "GEOMETRY.h"
-#include "GIAN.h"
+#include "gian.h"
 #include "MAID.h"
 #include "game/input.h"
 #include "game/snd.h"

@@ -4,11 +4,11 @@
 /*************************************************************************************************/
 
 #include "GEOMETRY.h"
-#include "GIAN.h"
+#include "gian.h"
 #include "core/entity.h"
 #include "LASER.h"
 #include "laser_manager.h"
-#include "LEVEL.h"
+#include "level.h"
 #include "LLASER.h"
 #include "PRankCtrl.h"
 #include "game/ut_math.h"

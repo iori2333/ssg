@@ -5,7 +5,7 @@
 
 #include <SDL3/SDL_iostream.h>
 
-#include "CONFIG.h"
+#include "config.h"
 #include "game/bgm.h"
 #include "game/defer.h"
 #include "game/endian.h"

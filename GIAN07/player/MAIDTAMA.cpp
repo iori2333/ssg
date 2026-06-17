@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "GIAN.h"
+#include "gian.h"
 #include "MAIDTAMA.h"
 #include "player_manager.h"
 #include "game/cast.h"

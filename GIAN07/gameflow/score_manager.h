@@ -5,7 +5,7 @@
 #pragma once
 
 #include "SCORE.h"
-#include "LZ_UTY.h"
+#include "lz_uty.h"
 #include <array>
 #include <cstdint>
 #include <memory>

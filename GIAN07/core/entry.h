@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "CONFIG.h"
+#include "config.h"
 
 [[nodiscard]] bool XInit();
 void XCleanup();

@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "EFFECT3D.h"
-#include "GIAN.h"
+#include "gian.h"
 #include "game/cast.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"

@@ -7,7 +7,7 @@
 
 #include "BOSS.h"
 #include "ENEMY.h"
-#include "core/EXDEF.h"
+#include "core/point.h"
 
 ///// [更新履歴] /////
 

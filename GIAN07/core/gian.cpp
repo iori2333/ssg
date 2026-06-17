@@ -3,10 +3,10 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "CONFIG.h"
+#include "config.h"
 #include "FONTUTY.h"
-#include "GIAN.h"
-#include "LEVEL.h"
+#include "gian.h"
+#include "level.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser_manager.h"
 #include "enemy/enemy_manager.h"

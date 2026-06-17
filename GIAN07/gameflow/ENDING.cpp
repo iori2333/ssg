@@ -5,7 +5,7 @@
 
 #include "ENDING.h"
 #include "ending_manager.h"
-#include "GIAN.h"
+#include "gian.h"
 #include "SCL.h" // ＳＣＬ定義ファイル
 #include "game/bgm.h"
 #include "game/cast.h"

@@ -3,10 +3,10 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "CONFIG.h"
+#include "config.h"
 #include "DEMOPLAY.h"
-#include "GIAN.h"
-#include "LEVEL.h"
+#include "gian.h"
+#include "level.h"
 #include "SCL.h" // ＳＣＬ定義ファイル
 #include "SCROLL.h"
 #include "WindowSys.h"

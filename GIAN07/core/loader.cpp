@@ -3,10 +3,10 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "CONFIG.h"
+#include "config.h"
 #include "ENEMY.h"
-#include "GIAN.h"
-#include "LZ_UTY.h"
+#include "gian.h"
+#include "lz_uty.h"
 #include "MUSIC.h"
 #include "WindowSys.h"
 #include "game/enum_array.h"

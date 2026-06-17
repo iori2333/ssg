@@ -8,7 +8,7 @@
 #include "enemy_manager.h"
 #include "LLASER.h"
 #include "laser_manager.h"
-#include "LOADER.h"
+#include "loader.h"
 #include "MAID.h"
 #include "player_manager.h"
 #include "game/cast.h"

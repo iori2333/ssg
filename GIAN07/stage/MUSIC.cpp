@@ -11,7 +11,7 @@
 #include "FONTUTY.h"
 #include "GAMEMAIN.h"
 #include "gameflow/gameflow_manager.h"
-#include "LOADER.h"
+#include "loader.h"
 #include "MUSIC.h"
 #include "game/bgm.h"
 #include "game/debug.h"
