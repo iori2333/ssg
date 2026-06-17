@@ -12,6 +12,7 @@
 #include "score_manager.h"
 #include <array>
 #include <cinttypes> // for PRId64
+#include <format>
 #include <ranges>
 #include <utility>
 
@@ -76,13 +77,16 @@ uint8_t ScoreManager::SetScoreString(NrNameData *NData, uint8_t Dif) {
     Res[i].y = (100 + (i * 48)) << 6;
     Res[i].bMoveEnable = true;
 
-    strcpy(Res[i].Name, p[i].Name);
+    std::format_to_n(Res[i].Name, NR_NAME_LEN, "{}", p[i].Name);
 
     Res[i].Weapon = p[i].Weapon % 4;
 
-    sprintf(Res[i].Score, "%11" PRId64, p[i].Score);
-    sprintf(Res[i].Evade, "%6u", p[i].Evade);
-    sprintf(Res[i].Stage, "%1d", p[i].Stage);
+    std::format_to_n(Res[i].Score, sizeof(Res[i].Score), "{:11}",
+                     p[i].Score);
+    std::format_to_n(Res[i].Evade, sizeof(Res[i].Evade), "{:6}",
+                     p[i].Evade);
+    std::format_to_n(Res[i].Stage, sizeof(Res[i].Stage), "{:1}",
+                     p[i].Stage);
   }
 
   ReleaseScoreData();
@@ -244,7 +248,7 @@ bool ScoreManager::SetDefaultScoreData() {
     }
     auto temp = maybe_temp.value();
     for (size_t j = 0; j < temp.size(); j++) {
-      strcpy(temp[j].Name, "????????");
+      std::format_to_n(temp[j].Name, NR_NAME_LEN, "????????");
       temp[j].Score = ((temp.size() - j) * uint64_t{1200000});
       temp[j].Evade = ((temp.size() - j) * 50);
       temp[j].Stage = ((i < 4) ? (temp.size() - j) : 1);

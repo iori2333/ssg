@@ -6,6 +6,7 @@
 #include "boss.h"
 
 #include <algorithm>
+#include <format>
 
 #include "bomb_efc.h" // 爆発エフェクト処理
 #include "boss_manager.h"
@@ -505,12 +506,12 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
 
     // 最後の一匹だった場合 //
     if (count == 1) {
-      char buf[100];
       const auto temp = Bullets.ScoreToItems(); // 弾→スコアエフェクト
       // sprintf(buf, "%3d Evade  %5dPts", Players.viv.evade,
       // Players.viv.evadesc);
-      sprintf(buf, "  Bonus    %7uPts", temp);
-      Effects.SpawnStringEffect(180, 60, buf);
+      Effects.SpawnStringEffect(
+          180, 60,
+          std::format("  Bonus    {:7}Pts", temp).c_str());
       score_add(temp);
     }
 

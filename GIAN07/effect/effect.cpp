@@ -354,7 +354,7 @@ void EffectManager::DrawStringEffects() {
   int y = 0;
   int temp = 0;
   PIXEL_LTWH src;
-  char buf[20];
+  static constexpr const char GAME_OVER[] = "GAME OVER";
 
   for (const auto &it : string_effects) {
     const auto *e = &it;
@@ -365,19 +365,19 @@ void EffectManager::DrawStringEffects() {
       GrpPutc(e->x >> 6, e->y >> 6, e->c);
       break;
 
-    case SEFC_STR2:
-      sprintf(buf, "%u", e->point);
-      GrpPutScore(e->x >> 6, e->y >> 6, buf);
+    case SEFC_STR2: {
+      auto point_str = std::format("{}", e->point);
+      GrpPutScore(e->x >> 6, e->y >> 6, point_str.c_str());
       break;
+    }
 
     case SEFC_GAMEOVER:
-      strcpy(buf, "GAME OVER");
       for (j = 0; j < 9; j++) {
         // *37 //
         const auto angle = Cast::down<uint8_t>((e->time * 3) + (j * 26));
         x = (e->x >> 6) + cosl(angle, e->time * 4);
         y = (e->y >> 6) + sinl(angle, e->time * 4);
-        GrpPutc(x, y, buf[j]);
+        GrpPutc(x, y, GAME_OVER[j]);
       }
       break;
 
@@ -391,12 +391,11 @@ void EffectManager::DrawStringEffects() {
       GrpGeom->DrawBoxA((x - 170), (y - j), (x + 170), (y + j));
       GrpGeom->Unlock();
 
-      strcpy(buf, "GAME OVER");
       for (j = 0; j < 9; j++) {
         // *37 //
         x = (e->x >> 6) + ((j - 4) * (35 - e->time));
         y = (e->y >> 6);
-        GrpPutc(x, y, buf[j]);
+        GrpPutc(x, y, GAME_OVER[j]);
       }
       break;
 

@@ -641,7 +641,8 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
       (ws->OldKey == KEY_LEFT) || (ws->OldKey == KEY_RIGHT)) {
     ws->KeyCount = CWIN_KEYWAIT;
     return;
-  } else if (Input_IsOK(ws->OldKey) || Input_IsCancel(ws->OldKey)) {
+  }
+  if (Input_IsOK(ws->OldKey) || Input_IsCancel(ws->OldKey)) {
     // いかなる場合もリピートを許可しないキー //
     if (Key_Data == ws->OldKey) {
       return;

@@ -7,6 +7,7 @@
 #include "loader.h"
 #include "platform/graphics_backend.h"
 #include "platform/text_backend.h"
+#include <format>
 
 #ifdef WIN32
 #include <windows.h>
@@ -273,11 +274,9 @@ void GrpPut55(WINDOW_POINT topleft, const std::string_view s) {
 
 // MIDI 用フォントを描画する //
 void GrpPutMidNum(int x, int y, int n) {
-  char buf[10];
+  auto buf = std::format("{:3}", n);
   int i = 0;
   PIXEL_LTRB src;
-
-  sprintf(buf, "%3d", n);
 
   // n = 1Byte ならば３桁以内に収まるハズ //
   for (i = 0; i < 3; i++, x += 5) {

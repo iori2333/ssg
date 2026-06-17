@@ -9,6 +9,7 @@
 
 #include <algorithm>
 
+#include <format>
 #include <utility>
 
 #include "config.h"
@@ -248,7 +249,6 @@ void Player::DrawStatus() const {
   int i = 0;
   int temp = 0;
   constexpr PIXEL_LTRB src = {0, 80, 128, (80 + 24)};
-  char buf[100];
 
   if (evade_c != 0U) {
     GrpGeom->Lock();
@@ -263,14 +263,11 @@ void Player::DrawStatus() const {
     GrpGeom->Unlock();
   }
   GrpSurface_Blit({128, 16}, SURFACE_ID::SYSTEM, src);
-  sprintf(buf, "%3d", evade);
-  GrpPut57(128 + 95, 16 + 91 - 80, buf);
+  GrpPut57(128 + 95, 16 + 91 - 80, std::format("{:3}", evade).c_str());
 
-  sprintf(buf, "%9" PRId64, score);
-  GrpPut16(128, 0, buf);
+  GrpPut16(128, 0, std::format("{:9}", score).c_str());
 
-  sprintf(buf, "       Bomb %1d", bomb);
-  GrpPut16(280, 0, buf);
+  GrpPut16(280, 0, std::format("       Bomb {}", bomb).c_str());
 
   for (i = 0; std::cmp_less(i, left); i++) {
     constexpr PIXEL_LTWH life_src = {608, 432, 16, 16};
@@ -283,7 +280,6 @@ void Player::Update() {
   int vy = 0;
   int v = 0;
   constexpr int VivSpeed = (64 * 18);
-  char buf[100];
 
   // かすり残り時間を減らす //
   if (evade_c != 0U) {
@@ -294,8 +290,9 @@ void Player::Update() {
     }
 
     if (evade_c == 0) {
-      sprintf(buf, "%3d Evade  %7dPts", evade, evadesc);
-      Effects.SpawnStringEffect(180, 40, buf);
+      Effects.SpawnStringEffect(
+          180, 40,
+          std::format("{:3} Evade  {:7}Pts", evade, evadesc).c_str());
       AddScore(evadesc);
       evade = 0;
       evadesc = 0;

@@ -7,6 +7,8 @@
 // imaxdiv_t'` if this appears after a module import.
 #include <cinttypes> // for PRId64
 
+#include <format>
+
 #include "effect.h"
 #include "font_uty.h"
 #include "game/bgm.h"
@@ -81,9 +83,8 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
   // Some modders might assign the same title to consecutive tracks, but it's
   // not possible to change the track title without switching to a different
   // track first.
-  char num_buf[1 + STRING_NUM_CAP<decltype(MidiPlayID)> + 1];
-  const size_t num_len = sprintf(num_buf, "#%02u", (MidiPlayID + 1));
-  Narrow::string_view num = {num_buf, num_len};
+  auto num_str = std::format("#{:02}", (MidiPlayID + 1));
+  Narrow::string_view num = {num_str.c_str(), num_str.size()};
 
   TextObj.Render(topleft, title, num, [&num](TEXTRENDER_SESSION &s) {
     const auto &title = BGM_Title();
@@ -396,7 +397,6 @@ void MusicRoomProc(bool & /*unused*/) {
   }
   auto &text = MusicRoomText.value();
 
-  char buf[100];
   static decltype(Key_Data) Old_Key;
   static bool DevChgWait;
 
@@ -482,19 +482,17 @@ void MusicRoomProc(bool & /*unused*/) {
     const auto millis = BGM_PlayTime().count();
     const auto m = ((millis / 1000) / 60);
     const auto s = ((millis / 1000) % 60);
-    sprintf(buf, "%02d : %02d", m, s);
-    GrpPut7B(560, 44, buf);
+    GrpPut7B(560, 44, std::format("{:02} : {:02}", m, s).c_str());
     // TextOut(hdc,561,40+2,buf,strlen(buf));
 
     if (Mid_Loaded()) {
       BlitBG({504, 59, 136, 24}); // MIDI TIMER
-      sprintf(buf, "%07" PRId64, Mid_PlayTime.pulse_interpolated);
-      GrpPut7B(560, 68, buf);
+      GrpPut7B(560, 68,
+               std::format("{:07}", Mid_PlayTime.pulse_interpolated).c_str());
       // TextOut(hdc,561,64+2,buf,strlen(buf));
     }
 
-    sprintf(buf, "%3d", BGM_GetTempo());
-    GrpPut7B(560, 116, buf);
+    GrpPut7B(560, 116, std::format("{:3}", BGM_GetTempo()).c_str());
     // TextOut(hdc,561,112+2,buf,strlen(buf));
     // SetTextColor(hdc,RGB(255*5/5,255*2/5,255*1/5));
 

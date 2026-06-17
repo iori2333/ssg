@@ -636,10 +636,12 @@ void ScrollManager::Draw() {
   if (scroll.ExCmd == ScrollCmdStg6RndEcl) {
     Effects.DrawFakeECL();
     return;
-  } else if (scroll.ExCmd == ScrollCmdStg6Raster) {
+  }
+  if (scroll.ExCmd == ScrollCmdStg6Raster) {
     Effects.DrawStg6Rasters();
     return;
-  } else if (scroll.ExCmd == ScrollCmdStg3Star) {
+  }
+  if (scroll.ExCmd == ScrollCmdStg3Star) {
     Effects.DrawStg3Stars();
     return;
   }

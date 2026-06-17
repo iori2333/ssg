@@ -25,6 +25,7 @@
 #include "window_sys.h"
 #include <algorithm>
 #include <chrono>
+#include <format>
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
 
@@ -414,12 +415,14 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
     // ネームレジスト終了処理 //
     EXIT_NR_PROC:
       if (strlen(Scores.score_strings[current_rank - 1].Name) == 0) {
-        strcpy(Scores.score_strings[current_rank - 1].Name, "Vivit!");
+        std::format_to_n(Scores.score_strings[current_rank - 1].Name,
+                         NR_NAME_LEN, "Vivit!");
       }
 
       Scores.score_strings[current_rank - 1].Name[NR_NAME_LEN - 1] = '\0';
 
-      strcpy(current_name.Name, Scores.score_strings[current_rank - 1].Name);
+      std::format_to_n(current_name.Name, NR_NAME_LEN, "{}",
+                       Scores.score_strings[current_rank - 1].Name);
       Scores.SaveScoreData(&current_name, CurrentLevel());
 
       key_time = END_WAIT;
@@ -1116,7 +1119,6 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   int i = 0;
   int x = 0;
   int y = 0;
-  char buf[100];
 
   static char deg = 0;
   static char spd = 0;
@@ -1338,8 +1340,10 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     rc = PIXEL_LTWH{72, (272 + 16), 56, 8};
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
-    sprintf(buf, "%d", ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5));
-    GrpPutScore(500, 400, buf);
+    GrpPutScore(500, 400,
+                std::format("{}",
+                            ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5))
+                    .c_str());
 
     GrpBackend_SetClip(GRP_RES_RECT);
 
