@@ -146,8 +146,8 @@ struct Bullet {
 };
 
 // 後方互換用エイリアス
-using TAMA_CMD = BulletCommand;
-using TAMA_DATA = Bullet;
+// (TAMA_CMD alias removed — use BulletCommand directly)
+// (TAMA_DATA alias removed — use Bullet directly)
 
 ////弾の各種変数たち////
 // Bullets.bullets, Bullets.command, Bullets.indices_small/large, Bullets.count_small/large で直接アクセス
@@ -159,7 +159,7 @@ using TAMA_DATA = Bullet;
 //// かすり用マクロ ////
 void evade_addEx(int x, int y, uint8_t n); // かすりゲージを上昇させる
 
-inline void TamaEvadeAdd(TAMA_DATA *t) {
+inline void TamaEvadeAdd(Bullet *t) {
   if (t->flag & TF_EVADE)
     evade_addEx(t->x, t->y, 0);
   else {
@@ -168,10 +168,5 @@ inline void TamaEvadeAdd(TAMA_DATA *t) {
   }
 }
 
-template <size_t N>
-void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
-             const std::array<TAMA_DATA, N> &entities) {
-  Indsort(indices, count, entities,
-          [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
-}
+// (Indsort<Bullet> wrapper removed — pass predicate directly)
 

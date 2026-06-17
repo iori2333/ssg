@@ -73,7 +73,7 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   return true;
 }
 
-void LaserManager::OpenLong(const ENEMY_DATA *e, uint8_t id) {
+void LaserManager::OpenLong(const EnemyData *e, uint8_t id) {
   for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL) &&
@@ -84,7 +84,7 @@ void LaserManager::OpenLong(const ENEMY_DATA *e, uint8_t id) {
   }
 }
 
-void LaserManager::CloseLong(const ENEMY_DATA *e, uint8_t id) {
+void LaserManager::CloseLong(const EnemyData *e, uint8_t id) {
   if (id == ECLCST_LLASERALL) {
     ForceCloseLong(e);
     return;
@@ -99,7 +99,7 @@ void LaserManager::CloseLong(const ENEMY_DATA *e, uint8_t id) {
   }
 }
 
-void LaserManager::LineLong(const ENEMY_DATA *e, uint8_t id) {
+void LaserManager::LineLong(const EnemyData *e, uint8_t id) {
   for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
@@ -118,7 +118,7 @@ void LaserManager::UpdateLongXY(int id) {
   SetLongPoint(&long_lasers[id]); // p[4] をセット
 }
 
-void LaserManager::RotateLongAbs(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
+void LaserManager::RotateLongAbs(const EnemyData *e, uint8_t d, uint8_t id) {
   for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
@@ -138,7 +138,7 @@ void LaserManager::RotateLongAbs(const ENEMY_DATA *e, uint8_t d, uint8_t id) {
   }
 }
 
-void LaserManager::RotateLongRel(const ENEMY_DATA *e, char d, uint8_t id) {
+void LaserManager::RotateLongRel(const EnemyData *e, char d, uint8_t id) {
   for (auto &it : long_lasers) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
@@ -159,7 +159,7 @@ void LaserManager::RotateLongRel(const ENEMY_DATA *e, char d, uint8_t id) {
 }
 
 // 敵に関連づけられたレーザーを強制クローズ(Level2...) //
-void LaserManager::ForceCloseLong(const ENEMY_DATA *e) {
+void LaserManager::ForceCloseLong(const EnemyData *e) {
   for (auto &it : long_lasers) {
     auto *lp = &it;
 
@@ -174,7 +174,7 @@ void LaserManager::ForceCloseLong(const ENEMY_DATA *e) {
 
 void LaserManager::MoveLong() {
   int i;
-  LLASER_DATA *lp;
+  LongLaserData *lp;
 
   for (i = 0, lp = long_lasers.data(); i < LLASER_MAX; i++, lp++) {
 
@@ -407,7 +407,7 @@ void LaserManager::SetupLong() {
   Snd_SEStop(2);
 }
 
-void LaserManager::SetLongPoint(LLASER_DATA *lp) {
+void LaserManager::SetLongPoint(LongLaserData *lp) {
   auto *pp = lp->p;
 
   pp[1].x = pp[0].x = (lp->x >> 6) + lp->wx + lp->lx;
@@ -423,7 +423,7 @@ void LaserManager::SetLongPoint(LLASER_DATA *lp) {
   pp[2].y += lp->infy;
 }
 
-void LaserManager::HitCheckLong(const LLASER_DATA *lp) {
+void LaserManager::HitCheckLong(const LongLaserData *lp) {
   //	long tx,ty,w1,w2,length;
 
   int tx, ty;

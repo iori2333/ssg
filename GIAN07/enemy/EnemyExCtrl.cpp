@@ -31,7 +31,7 @@ void BossManager::SnakyInit(void) {
 
 // 蛇型の敵をセットする //
 void BossManager::SnakySet(BossData *b, int len, uint32_t TailID) {
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   auto s =
       std::ranges::find_if(snake_data, [](const auto &s) { return !s.bIsUse; });
@@ -70,7 +70,7 @@ void BossManager::SnakySet(BossData *b, int len, uint32_t TailID) {
 
 // 蛇型の敵の移動処理 //
 void BossManager::SnakyMove(void) {
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   for (auto &it : snake_data) {
     auto *s = &it;
@@ -207,7 +207,7 @@ void BossManager::BitSet(BossData *b, uint8_t NumBits, uint32_t BitID) {
       e->d = i * (256 / NumBits);
       e->GR[0] = i;
       e->GR[1] = NumBits;
-      Enemies.ParseECL(e);
+      Enemies.Execute(e);
 
       // この構造体と作成した敵を関連づける //
       bit_data.Bit[i].pEnemy = e;   // 敵データへのポインタ
@@ -225,7 +225,7 @@ void BossManager::BitSet(BossData *b, uint8_t NumBits, uint32_t BitID) {
 // ビットを動作させる //
 void BossManager::BitMove(void) {
   int i, j;
-  ENEMY_DATA *e;
+  EnemyData *e;
   bool bIsDestroyed = false;
 
   if (bit_data.NumBits == 0)
@@ -360,7 +360,7 @@ void BossManager::BitSTDRoll(void) {
   int dir;
   uint8_t LaserDeg;
 
-  ENEMY_DATA *e;
+  EnemyData *e;
   BitParam *bit;
 
   if (bit_data.NumBits == 0)
@@ -475,7 +475,7 @@ void BossManager::BitSTDRoll(void) {
 // ビットを消滅させる //
 void BossManager::BitDelete(void) {
   int i;
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   if (bit_data.State == BITCMD_DISABLE)
     return;
@@ -504,7 +504,7 @@ void BossManager::BitDelete(void) {
 void BossManager::BitLineDraw(void) {
   int i, j, n;
   int x1, x2, y1, y2;
-  ENEMY_DATA *RefTable[BIT_MAX * 2];
+  EnemyData *RefTable[BIT_MAX * 2];
 
   if (bit_data.State == BITCMD_DISABLE)
     return;
@@ -546,14 +546,14 @@ void BossManager::BitSelectAttack(uint32_t BitID) {
   const auto n = (4 + (BitID << 2));
 
   for (i = 0; i < bit_data.NumBits; i++) {
-    Enemies.ECL_LongJump(bit_data.Bit[i].pEnemy, n);
+    Enemies.LongJump(bit_data.Bit[i].pEnemy, n);
   }
 }
 
 // レーザー系命令を発行 //
 void BossManager::BitLaserCommand(uint8_t Command) {
   int i;
-  ENEMY_DATA *e;
+  EnemyData *e;
   uint8_t delta;
 
   Lasers.long_cmd.dx = 0;

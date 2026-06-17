@@ -585,13 +585,14 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   return true;
 }
 
-bool GameInit(void (*NextProc)(bool &quit)) {
+bool GameInit(std::function<void(bool &)> next_proc) {
   TextObj.Clear();
-  if (NextProc != DemoProc) {
+  if (GameFlow.current_state != GameState::Demo) {
     BGM_FadeOut(240);
     Effects.InitMusicTitle();
   }
-  if (NextProc == GameProc || NextProc == ReplayProcAll) {
+  if (GameFlow.current_state == GameState::Game ||
+      GameFlow.current_state == GameState::ReplayAll) {
     // ウィンドウの表示位置を設定する //
     // Replays don't show dialog, so this is the only place where we need
     // to do this.
@@ -602,18 +603,13 @@ bool GameInit(void (*NextProc)(bool &quit)) {
       MWinInit({128, 400, (640 - 128), 480}, flags);
     }
 
-    if (NextProc == GameProc) {
+    if (GameFlow.current_state == GameState::Game) {
       InitExitWindow();
       InitContinueWindow();
     }
   }
   GrpBackend_SetClip(PLAYFIELD_CLIP);
-  GameFlow.game_main = NextProc;
-  // Map known proc pointers to their states for GameMainIs-equiv checks
-  if (NextProc == GameProc)           GameFlow.current_state = GameState::Game;
-  else if (NextProc == DemoProc)      GameFlow.current_state = GameState::Demo;
-  else if (NextProc == ReplayProcAll) GameFlow.current_state = GameState::ReplayAll;
-  else                                GameFlow.current_state = GameState::External;
+  GameFlow.game_main = std::move(next_proc);
   return true;
 }
 
@@ -678,7 +674,8 @@ bool GameReplayInitAll(const char8_t *fn) {
     Players.viv.credit = 0;
   }
 
-  return GameInit(ReplayProcAll);
+  GameFlow.current_state = GameState::ReplayAll;
+  return GameInit([](bool &q) { ReplayProcAll(q); });
 }
 
 // Multi-stage replay playback
@@ -765,7 +762,8 @@ bool DemoInit(void) {
     return false;
   }
 
-  return GameInit(DemoProc);
+  GameFlow.current_state = GameState::Demo;
+  return GameInit([](bool &q) { DemoProc(q); });
 }
 
 // 西方Ｐｒｏｊｅｃｔ表示動作部 //
@@ -1218,7 +1216,8 @@ void GameFlowManager::WeaponSelectProc(bool &) {
       return;
     }
 
-    GameInit(GameProc);
+    GameFlow.current_state = GameState::Game;
+    GameInit([](bool &q) { GameProc(q); });
     return;
 
   case (KEY_ESC):

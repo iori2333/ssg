@@ -68,8 +68,8 @@ public:
   void SetupLong();
 
 private:
-  void SetLongPoint(LLASER_DATA* lp);
-  void HitCheckLong(const LLASER_DATA* lp);
+  void SetLongPoint(LongLaserData* lp);
+  void HitCheckLong(const LongLaserData* lp);
   void UpdateLongXY(int id);
 
 public:

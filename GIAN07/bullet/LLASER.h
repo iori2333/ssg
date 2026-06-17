@@ -33,7 +33,7 @@ inline constexpr auto LLF_LINE = 0x10; // レーザーはライン状態
 
 //// レーザー発動コマンド構造体２ ////
 struct LongLaserCommand {
-  ENEMY_DATA *e; // 敵データへのポインタ
+  EnemyData *e; // 敵データへのポインタ
 
   int dx, dy; // レーザーの発射座標ずらし値
   int v;      // レーザーの速度
@@ -45,11 +45,11 @@ struct LongLaserCommand {
   uint8_t c;    // レーザーの色
   uint8_t type; // レーザーの種類
 };
-using LLASER_CMD = LongLaserCommand;
+// (LLASER_CMD alias removed — use LongLaserCommand directly)
 
 //// レーザー用構造体２ ////
 struct LongLaserData {
-  ENEMY_DATA
+  EnemyData
   *e; // 敵データへのポインタ(ここら辺でボスでも雑魚でも発射できるように)
 
   int x, y;       // 現在の表示座標
@@ -72,7 +72,7 @@ struct LongLaserData {
   uint8_t type;    // レーザーの種類
   uint8_t EnemyID; // 敵から見た番号
 };
-using LLASER_DATA = LongLaserData;
+// (LLASER_DATA alias removed — use LongLaserData directly)
 
 //// レーザー関数２ ////
 // 後方互換 inline wrapper は laser_manager.h 末尾に移動

@@ -43,7 +43,7 @@ template <size_t Len> struct SNAKYMOVE_DATA {
   // 頂点バッファ(ExDef.h)
   DegPoint PointBuffer[Len * SNAKEYMOVE_POINTS_PER_ENEMY];
 
-  ENEMY_DATA *EnemyPtr[Len]; // 尾となるデータ配列
+  EnemyData *EnemyPtr[Len]; // 尾となるデータ配列
   BossData *Parent;         // 親(頭となるデータ)
   size_t Head;               // 頭を格納している地点のポインタ
   bool bIsUse;               // この構造体を使用しているか
@@ -52,7 +52,7 @@ template <size_t Len> struct SNAKYMOVE_DATA {
 };
 
 struct BitParam {
-  ENEMY_DATA *pEnemy; // 対象となる敵へのポインタ
+  EnemyData *pEnemy; // 対象となる敵へのポインタ
 
   uint32_t BitHP; // ビットの耐久力
   uint8_t BitID;  // 基準角から何番目(0～)に相当するビットか

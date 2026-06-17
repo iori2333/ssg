@@ -19,7 +19,7 @@
 
 ////ローカルな関数////
 // プライベートメソッドは bullet_manager.h で宣言済み
-void _TamaEffectDraw(const TAMA_DATA *t); // 弾をエフェクトとして描画？
+void _TamaEffectDraw(const Bullet *t); // 弾をエフェクトとして描画？
 
 void BulletManager::Spawn() {
   int v;
@@ -269,7 +269,8 @@ void BulletManager::Move() {
       t->count++;
     }
   }
-  Indsort(indices_small, count_small, bullets);
+  Indsort(indices_small, count_small, bullets,
+          [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
   // 大型弾＆特殊弾の処理 //
   for (const auto i : std::views::iota(0u, count_large)) {
@@ -297,7 +298,8 @@ void BulletManager::Move() {
       t->count++;
     }
   }
-  Indsort(indices_large, count_large, bullets);
+  Indsort(indices_large, count_large, bullets,
+          [](const Bullet &t) { return (t.flag & TF_DELETE); });
 }
 
 void BulletManager::Draw() {
@@ -454,7 +456,7 @@ void BulletManager::Draw() {
 
 // 弾をエフェクトとして描画？ //
 namespace { constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB { return {x, y, x + w, y + w}; } }
-void _TamaEffectDraw(const TAMA_DATA *t) {
+void _TamaEffectDraw(const Bullet *t) {
 
   static constexpr PIXEL_LTRB Data[6][5] = {
       // [色][パターン]
@@ -576,7 +578,8 @@ uint32_t BulletManager::ScoreToItems() {
       t->d = 0;
     }
   }
-  Indsort(indices_small, count_small, bullets);
+  Indsort(indices_small, count_small, bullets,
+          [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
   Score = TAMA2_POINT + Players.viv.evade * 100;
   for (const auto i : std::views::iota(0u, count_large)) {
@@ -590,7 +593,8 @@ uint32_t BulletManager::ScoreToItems() {
       t->d = 0;
     }
   }
-  Indsort(indices_large, count_large, bullets);
+  Indsort(indices_large, count_large, bullets,
+          [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
   return sum;
 }
@@ -624,7 +628,8 @@ void BulletManager::ToItems(uint8_t n) {
       }
     }
   }
-  Indsort(indices_small, count_small, bullets);
+  Indsort(indices_small, count_small, bullets,
+          [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
   //	Score = TAMA2_POINT + Players.viv.evade * 100;
   for (const auto i : std::views::iota(0u, count_large)) {
@@ -644,7 +649,8 @@ void BulletManager::ToItems(uint8_t n) {
       }
     }
   }
-  Indsort(indices_large, count_large, bullets);
+  Indsort(indices_large, count_large, bullets,
+          [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
   //	return sum;
 }
@@ -835,7 +841,7 @@ uint8_t BulletManager::Flag() {
   }
 }
 
-void BulletManager::MoveByType(TAMA_DATA *t) {
+void BulletManager::MoveByType(Bullet *t) {
   short deg_t;
   // ENEMY_DATA	*e;
 
@@ -1015,7 +1021,7 @@ void BulletManager::MoveByType(TAMA_DATA *t) {
   }
 }
 
-void BulletManager::MoveByOption(TAMA_DATA *t) {
+void BulletManager::MoveByOption(Bullet *t) {
   int op_temp = 0;
 
   // 分裂はとボムは消去要請フラグを立てる必要がある //
@@ -1156,7 +1162,7 @@ void BulletManager::MoveByOption(TAMA_DATA *t) {
   }
 }
 
-void BulletManager::MoveByEffect(TAMA_DATA *t) {
+void BulletManager::MoveByEffect(Bullet *t) {
   // TE_NONE:エフェクト無しはこの関数にこないので記述しても意味無し //
   // TE_DELETE:消去要請フラグを立てる事を忘れないように！ //
   switch (t->effect & 0xf0) {

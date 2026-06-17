@@ -39,12 +39,7 @@ static void ECL_DEBUG(const char *s, auto param) {
 // 関数 //
 static void _EnemyDrawBomb(int x, int y, uint32_t count);
 
-template <size_t N>
-void Indsort(std::array<uint16_t, N> &indices, uint16_t &count,
-             const std::array<EnemyData, N> &entities) {
-  Indsort(indices, count, entities,
-          [](const EnemyData &e) { return (e.flag & EF_DELETE); });
-}
+// (Indsort<EnemyData> wrapper removed — pass predicate directly)
 
 // ECLCST_?? からその値に変換する
 static uint32_t ID2Value(const EnemyData *e, uint8_t id);
@@ -110,8 +105,8 @@ void EnemyManager::Move(void) {
     e->IsDamaged = 0;
     if (!(e->flag & EF_BOMB)) {
       // 通常の敵の処理 //
-      CheckECLInterrupt(e);
-      ParseECL(e);
+      CheckInterrupts(e);
+      Execute(e);
 
       // 弾発射モードによる分岐 //
       if (e->t_rep && e->hp) {
@@ -155,7 +150,8 @@ void EnemyManager::Move(void) {
     e->count++;
   }
 
-  Indsort(indices, count, entities);
+  Indsort(indices, count, entities,
+          [](const EnemyData &e) { return (e.flag & EF_DELETE); });
 }
 
 void EnemyManager::Draw(void) {
@@ -207,7 +203,8 @@ void EnemyManager::Clear(void) {
     }
   }
 
-  Indsort(indices, count, entities);
+  Indsort(indices, count, entities,
+          [](const EnemyData &e) { return (e.flag & EF_DELETE); });
 }
 
 void EnemyManager::InitIndices(void) {
@@ -388,11 +385,11 @@ void EnemyManager::InitDataX64(EnemyData *e, int x, int y, uint32_t EclID) {
   e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
 
   // 割り込みベクタの初期化 //
-  InitECLInterrupt(e);
+  InitInterrupts(e);
 }
 
 // 強制的に ECL ブロック間を移動する //
-void EnemyManager::ECL_LongJump(EnemyData *e, uint32_t EclID) {
+void EnemyManager::LongJump(EnemyData *e, uint32_t EclID) {
   e->cmd = U32LEAt(&ecl_head[EclID]);
 
   e->call_addr = e->cmd;
@@ -456,7 +453,7 @@ static void _EnemyDrawBomb(int x, int y, uint32_t count) {
   GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
 }
 
-void EnemyManager::ParseECL(EnemyData *e) {
+void EnemyManager::Execute(EnemyData *e) {
   // 左右反転用ラムダ（旧マクロ ABS_DEGRL/ABS_VXRL/REL_DEGRL）
   auto AbsDegRL = [e](uint8_t d) -> uint8_t { return (e->flag & EF_RLCHG) ? (128 - d) : d; };
   auto AbsVxRL  = [e](int vx)            { return (e->flag & EF_RLCHG) ? (-vx) : vx; };
@@ -1807,7 +1804,7 @@ ECL_HEAD:
 }
 
 // 割り込みジャンプを調べる //
-void EnemyManager::CheckECLInterrupt(EnemyData *e) {
+void EnemyManager::CheckInterrupts(EnemyData *e) {
   int i;
 
   for (i = 0; i < ECLVECT_MAX; i++) {
@@ -1868,7 +1865,7 @@ void EnemyManager::CheckECLInterrupt(EnemyData *e) {
 }
 
 // 割り込みベクタの初期化 //
-void EnemyManager::InitECLInterrupt(EnemyData *e) {
+void EnemyManager::InitInterrupts(EnemyData *e) {
   for (auto &it : e->Vect) {
     it.vect = 0;
   }

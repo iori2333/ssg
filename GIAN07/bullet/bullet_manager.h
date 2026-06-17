@@ -37,9 +37,9 @@ struct BulletManager {
   int LineCmdNewSpeed(uint16_t i);
   int Speed(uint16_t i);
   uint8_t Flag();
-  void MoveByType(TAMA_DATA* t);
-  void MoveByOption(TAMA_DATA* t);
-  void MoveByEffect(TAMA_DATA* t);
+  void MoveByType(Bullet* t);
+  void MoveByOption(Bullet* t);
+  void MoveByEffect(Bullet* t);
 
 private:
   void TamaSetMain();

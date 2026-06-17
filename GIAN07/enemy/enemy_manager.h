@@ -56,15 +56,15 @@ struct EnemyManager {
   // 敵データ初期化
   void InitDataX64(EnemyData *e, int x, int y, uint32_t EclID);
   void InitDataSTD(EnemyData *e, short x, short y, uint32_t EclID);
-  void ECL_LongJump(EnemyData *e, uint32_t EclID);
+  void LongJump(EnemyData *e, uint32_t ecl_id);
 
   // アニメーション
   void UpdateAnimation(EnemyData *e);
 
   // ECL
-  void ParseECL(EnemyData *e);
-  void CheckECLInterrupt(EnemyData *e);
-  void InitECLInterrupt(EnemyData *e);
+  void Execute(EnemyData *e);
+  void CheckInterrupts(EnemyData *e);
+  void InitInterrupts(EnemyData *e);
 };
 
 extern EnemyManager Enemies;

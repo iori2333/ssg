@@ -49,7 +49,7 @@ struct LaserCommand {
   uint8_t type; // ショート、無限遠など
   uint8_t notr; // 反射しないリフレクターの番号
 };
-using LASER_CMD = LaserCommand;
+// (LASER_CMD alias removed — use LaserCommand directly)
 
 ////レーザー用構造体////
 inline constexpr auto LF_DELETE = 0x80; // レーザーを消去する(処理対象から外す)

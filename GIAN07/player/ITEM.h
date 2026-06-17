@@ -32,7 +32,7 @@ struct ItemData {
   uint8_t type;
   bool auto_collect; // 自動回収が発動済みか
 };
-using ITEM_DATA = ItemData;
+// (ITEM_DATA alias removed — use ItemData directly)
 
 ///// [ 関数 ] /////
 // ItemManager に移行済み

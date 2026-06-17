@@ -89,8 +89,8 @@ struct EnemyData {
 
   uint8_t LLaserRef; // 太レーザーの参照カウント
 
-  TAMA_CMD t_cmd;  // 弾発射用コマンド
-  LASER_CMD l_cmd; // レーザー発射用コマンド
+  BulletCommand t_cmd;  // 弾発射用コマンド
+  LaserCommand l_cmd; // レーザー発射用コマンド
 
   // --- メソッド ---
   void Draw() const;
@@ -98,7 +98,7 @@ struct EnemyData {
 };
 
 // 後方互換用エイリアス
-using ENEMY_DATA = EnemyData;
+// (ENEMY_DATA alias removed — use EnemyData directly)
 // (INT_VECTOR alias removed — use InterruptVector directly)
 
 struct ANIME_DATA {

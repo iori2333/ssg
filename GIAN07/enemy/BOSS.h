@@ -19,7 +19,7 @@ struct ExHitCheck {
 
 // ボスデータ //
 struct BossData {
-  ENEMY_DATA Edat; // 標準の敵データ(実体であることに注意)
+  EnemyData Edat; // 標準の敵データ(実体であることに注意)
   ExHitCheck *Hit;   // 特殊当たり判定(NULL なら使用しない)
 
   void (*ExMove)(BossData *); // 特殊移動用関数

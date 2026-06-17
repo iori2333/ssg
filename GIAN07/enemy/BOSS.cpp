@@ -97,7 +97,7 @@ void BossManager::Set(int x, int y, uint32_t BossID) {
   bosses[n].ExState = BEXST_NORM;
   bosses[n].IsUsed = true;
 
-  Enemies.ParseECL(&(bosses[n].Edat));
+  Enemies.Execute(&(bosses[n].Edat));
   // ObjectLockOn(&(bosses[n].Edat.x),&(bosses[n].Edat.y),bosses[n].Edat.g_width,bosses[n].Edat.g_height);
 
   for (const auto &it : bosses) {
@@ -126,7 +126,7 @@ void BossManager::SetEx(int x, int y, uint32_t BossID) {
   bosses[n].ExState = BEXST_NORM;
   bosses[n].IsUsed = true;
 
-  Enemies.ParseECL(&(bosses[n].Edat));
+  Enemies.Execute(&(bosses[n].Edat));
   // ObjectLockOn(&(bosses[n].Edat.x),&(bosses[n].Edat.y),bosses[n].Edat.g_width,bosses[n].Edat.g_height);
 
   for (const auto &it : bosses) {
@@ -142,7 +142,7 @@ void BossManager::SetEx(int x, int y, uint32_t BossID) {
 // ボスを動かす //
 void BossManager::Move(void) {
   uint32_t HP_Sum = 0;
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   Enemies.homing_flag = HOMING_DUMMY;
 
@@ -185,7 +185,7 @@ void BossManager::Draw(void) {
   constexpr auto sid = SURFACE_ID::ENEMY;
   int x, y;
   int w, h, t;
-  ENEMY_DATA *e;
+  EnemyData *e;
   PIXEL_LTRB wing;
 
   BitLineDraw();
@@ -445,7 +445,7 @@ void BossManager::KillAll(void) {
   // 使用するが、当然のごとく、得点＆経験値？は入手できない                 //
   // レーザークローズも忘れずに！！                                         //
 
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   for (auto &it : bosses) {
     auto *b = &it;
@@ -513,7 +513,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
 // ボスにダメージを与える //
 bool BossManager::DamageAt(int x, int y, int damage) {
   int i;
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   i = (BitGetNum() >> 1);
   damage -= i;
@@ -546,7 +546,7 @@ bool BossManager::DamageAt(int x, int y, int damage) {
 // ボスにダメージを与える(ｙ上方向無限Ver) //
 bool BossManager::DamageAt2(int x, int y, int damage) {
   int i;
-  ENEMY_DATA *e;
+  EnemyData *e;
   bool ret_val = false;
 
   i = (BitGetNum() >> 1);
@@ -579,7 +579,7 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
 // ボスにダメージを与える(ナナメレーザー) //
 void BossManager::DamageAt3(int x, int y, uint8_t d) {
   int i;
-  ENEMY_DATA *e;
+  EnemyData *e;
   // BOOL			ret_val = FALSE;
   int damage = 2;
 
@@ -611,7 +611,7 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
 // ボスにダメージを与える(すべての敵)
 void BossManager::DamageAll(int damage) {
   int i;
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   i = (BitGetNum() >> 1);
   damage -= i;
@@ -721,7 +721,7 @@ int BossManager::PutBoss(int x, int y, uint32_t id) {
   e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
 
   // 割り込みベクタの初期化 //
-  Enemies.InitECLInterrupt(e);
+  Enemies.InitInterrupts(e);
 */
   return std::distance(std::begin(bosses), it);
 }
@@ -731,8 +731,8 @@ void BossManager::STDMove(BossData *b) {
   EnemyData *e = &(b->Edat);
 
   // 通常の敵の処理 //
-  Enemies.CheckECLInterrupt(e);
-  Enemies.ParseECL(e);
+  Enemies.CheckInterrupts(e);
+  Enemies.Execute(e);
 
   // 弾発射モードによる分岐 //
   if (e->t_rep) {
@@ -756,7 +756,7 @@ void BossManager::STDMove(BossData *b) {
 // ボスの体力の総和を求める //
 uint32_t BossManager::GetHPSum(void) {
   uint32_t HP_Sum = 0;
-  ENEMY_DATA *e;
+  EnemyData *e;
 
   for (auto &it : bosses) {
     auto *b = &it;
@@ -770,7 +770,7 @@ uint32_t BossManager::GetHPSum(void) {
 }
 
 // ボス用割り込み処理 //
-void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
+void BossManager::Interrupt(EnemyData *e, uint8_t IntID) {
   auto b = std::ranges::find_if(
       bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(bosses)) {
@@ -812,7 +812,7 @@ void BossManager::Interrupt(ENEMY_DATA *e, uint8_t IntID) {
 }
 
 // ビット攻撃アドレス指定 //
-void BossManager::BitAttack(ENEMY_DATA *e, uint32_t AtkID) {
+void BossManager::BitAttack(EnemyData *e, uint32_t AtkID) {
   const auto b = std::ranges::find_if(
       bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(bosses)) {
@@ -823,7 +823,7 @@ void BossManager::BitAttack(ENEMY_DATA *e, uint32_t AtkID) {
 }
 
 // ビットにレーザーコマンドセット //
-void BossManager::BitLaser(ENEMY_DATA *e, uint8_t cmd) {
+void BossManager::BitLaser(EnemyData *e, uint8_t cmd) {
   const auto b = std::ranges::find_if(
       bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(bosses)) {
@@ -834,7 +834,7 @@ void BossManager::BitLaser(ENEMY_DATA *e, uint8_t cmd) {
 }
 
 // ビット命令送信 //
-void BossManager::BitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param) {
+void BossManager::BitCommand(EnemyData *e, uint8_t Cmd, int Param) {
   const auto b = std::ranges::find_if(
       bosses, [e](const auto &b) { return ((&b.Edat) == e); });
   if (b == std::end(bosses)) {

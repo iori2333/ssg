@@ -458,7 +458,7 @@ static void _PutEnemy(const uint8_t *p) {
    *  p[0-1]:EnemyX  p[2-3]:EnemyY  p[4]:EnemyID
    *  Enemies.ecl_head[0-3]:Num  Enemies.ecl_head[n*4-(n*4+3)] (n>1):StartAddr(ABS)
    */
-  ENEMY_DATA *e;
+  EnemyData *e;
   short x, y;
 
   if (Enemies.count + 1 >= ENEMY_MAX)
@@ -528,7 +528,7 @@ static void _PutEnemy(const uint8_t *p) {
           e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
 
           // 割り込みベクタの初期化 //
-          Enemies.InitECLInterrupt(e);
+          Enemies.InitInterrupts(e);
   */
 }
 

@@ -116,7 +116,7 @@ void ItemManager::Move(void) {
   }
 
   Indsort(indices, count, entities,
-          [](const ITEM_DATA &i) { return (i.type == ITEM_DELETE); });
+          [](const ItemData &i) { return (i.type == ITEM_DELETE); });
 }
 
 // アイテムを描画する //

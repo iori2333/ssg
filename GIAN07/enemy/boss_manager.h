@@ -43,10 +43,10 @@ struct BossManager {
   void DamageAll(int damage);
 
   // 割り込み・ビット制御
-  void Interrupt(ENEMY_DATA *e, uint8_t IntID);
-  void BitAttack(ENEMY_DATA *e, uint32_t AtkID);
-  void BitLaser(ENEMY_DATA *e, uint8_t cmd);
-  void BitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param);
+  void Interrupt(EnemyData *e, uint8_t IntID);
+  void BitAttack(EnemyData *e, uint32_t AtkID);
+  void BitLaser(EnemyData *e, uint8_t cmd);
+  void BitCommand(EnemyData *e, uint8_t Cmd, int Param);
   int GetBitLeft();
 
   // 蛇型の敵 (was in EnemyExCtrl.cpp)

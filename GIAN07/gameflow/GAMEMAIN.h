@@ -11,6 +11,7 @@
 
 ///// [Include Files] /////
 #include "ENDING.h"
+#include <functional>
 
 ///// [ 定数 ] /////
 ///// [マクロ] /////
@@ -25,7 +26,7 @@
 ///// [関数] /////
 
 // WeaponSelectInit → inline wrapper in gameflow_manager.h
-[[nodiscard]] bool GameInit(void (*NextProc)(bool &quit)); // ゲームの初期化をする
+[[nodiscard]] bool GameInit(std::function<void(bool &)> next_proc); // ゲームの初期化をする
 void GameRestart();               // ゲームを再開する(ESC 抜けから)
 [[nodiscard]] bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
 void GameOverInit();                  // ゲームオーバーの前処理

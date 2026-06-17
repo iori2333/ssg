@@ -196,7 +196,7 @@ void PlayerManager::MoveMaidShot(void) {
       Bullets.MoveByEffect(t);
   }
   Indsort(maid_tama_ind, maid_tama_now, maid_tama,
-          [](const TAMA_DATA &t) { return (t.flag & TF_DELETE); });
+          [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
   // レーザーの当たり判定 //
   if (viv.weapon == 2 && viv.lay_grp) {

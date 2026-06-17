@@ -539,7 +539,7 @@ void LaserManager::MoveReflect(LASER_DATA *lp) {
 
 int LaserManager::HitReflect(const LASER_DATA *lp) {
   // REFLECTOR *rp;
-  LLASER_DATA *ll;
+  LongLaserData *ll;
   int i;
 
   // レーザーの進行方向に対して先端??? //
