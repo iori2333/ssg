@@ -39,10 +39,7 @@ if %errorlevel% neq 0 (
 git submodule update --init --recursive
 
 :: Configure and build (CMake generates version header from git)
-cmake -B build -S . -G "Ninja" ^
-	-DCMAKE_BUILD_TYPE=Release ^
-	-DCMAKE_C_COMPILER=cl ^
-	-DCMAKE_CXX_COMPILER=cl
+cmake -B build -S . -G "Ninja" -DCMAKE_BUILD_TYPE=Release
 
 if %errorlevel% neq 0 exit /b %errorlevel%
 

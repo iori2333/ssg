@@ -1,120 +1,96 @@
 # 秋霜玉
 
+Source code for **Shuusou Gyoku**, the first Touhou Project-adjacent game by Project Shrine Maiden (pbg).
+
 ## Building
 
-This project uses [Tup](https://gittup.org/tup/) as its build system, so install a fitting version for your operating system.
+This project uses **CMake + Ninja**. All vendored dependencies are Git submodules under `libs/`.
 
-All binaries will be put into the `bin/` subdirectory.
+Binaries are written to `build/bin/`:
+
+- Windows: `build/bin/GIAN07.exe`
+- Linux: `build/bin/GIAN07`
 
 ### Windows
 
-Visual Studio ≥2022 is the only compiler supported right now.
-However, since IDE integration is horribly broken for both Makefile and directory projects, we strongly recommend literally *anything else* to edit the code.
-This repo includes a ready-to-use configuration for Visual Studio Code; If you want to use this editor, make sure to install the default recommended C++ extensions when asked.
+Requirements: Visual Studio 2022+, CMake ≥3.21, Ninja, Git.
 
-To build:
+Run from a Visual Studio **x64_x86 Cross Tools Command Prompt**:
 
-1. Install [Git for Windows](https://gitforwindows.org/).
-2. Install Visual Studio Community ≥2022, with the *Desktop development for C++* workload.\
-   If you haven't already installed the IDE for other projects and don't plan to, you can install only the command-line compilers via the [Build Tools installer](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022).
-3. Make sure that `tup.exe` and its DLLs are somewhere in your `PATH`.
+```bat
+build_windows.bat
+```
 
-4. Open Visual Studio's *x64_x86 Cross Tools Command Prompt*.
-5. Navigate to the checkout directory of this repository.
-6. Invoke `build_windows.bat` in your way of choice:
-   * If you use Visual Studio Code, open the editor from this command-line environment:
-
-     ```batch
-     code .
-     ```
-
-     Then, you can run the build task with the default `Ctrl-Shift-B` keybinding.
-
-   * Or you can always run `build_windows.bat` directly from this shell.
+The script initializes submodules, configures CMake, and builds a Release binary.
 
 ### Linux
 
-The build is driven by `build_linux.sh`, which sets up the required submodules and environment variables for Tup.
-
-Both GCC ≥15 and Clang ≥18 are supported. The build process honors the `CC` environment variable or otherwise falls back on your system's default C/C++ compiler indicated by the `cc` binary, picking the respective toolchain depending on that compiler's `--version` string.
-
-Use `install_linux.sh` to copy a compiled release build to its standard install locations.
-
-### Filtering build outputs
-
-By default, the process builds both Debug and Release configurations of all binaries.
-If you only need a few of them and want to speed up the build process, you can specify any number of target binary filenames as a parameter to the build batch file.
-
-On Windows:
+Requirements: GCC ≥15 or Clang ≥18, CMake ≥3.21, Ninja, Git, `pkg-config`, `pangocairo`, `fontconfig`.
 
 ```sh
-build_windows.bat bin/GIAN07.exe  # builds only the modern Release binary
-build_windows.bat bin/GIAN07d.exe # builds only the modern Debug binary
-build_windows.bat                 # builds all binaries, including the vintage ones
+./build_linux.sh
 ```
 
-The Visual Studio Code configuration contains build tasks for all five possibilities.
+The build script honors `CC`/`CXX` if set; otherwise it falls back to the system `cc`.
 
-On Linux:
+### Configurations
+
+Both scripts build Release by default. To build Debug, run CMake manually:
 
 ```sh
-./build_linux.sh bin/GIAN07  # builds only the Release binary
-./build_linux.sh bin/GIAN07d # builds only the Debug binary
-./build_linux.sh             # builds both Debug and Release binaries
+cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --config Debug
 ```
 
-## Debugging (Windows only)
+## Project layout
 
-.PDB files are generated for Debug and Release builds, so you should get symbol support with any Windows debugger.
+| Directory | Purpose |
+| --- | --- |
+| `GIAN07/` | Original pbg game code |
+| `game/` | Modern platform-independent layer (graphics, audio, input abstractions) |
+| `platform/` | Platform backend interfaces |
+| `platform/sdl/` | SDL3 backend (Windows and Linux) |
+| `platform/windows/` | Win32-native backends (GDI text, WinMM MIDI, file I/O) |
+| `platform/c/` | Standard-library fallback implementations |
+| `platform/miniaudio/` | Audio backend |
+| `platform/pangocairo/` | Linux text rendering |
+| `libs/` | Vendored Git submodules (SDL3, miniaudio, BLAKE3, dr_libs, libogg, libvorbis, libwebp) |
 
-### Visual Studio Code
+Entry point: `platform/sdl/main.cpp`.
 
-Select between Debug and Release modes in the *Run and Debug* menu (`Ctrl-Shift-D` by default), and start debugging with the ▶ button or its keybinding.
+## Tooling
 
-### Visual Studio IDE
+- C++23, extensions off
+- Formatter: `.clang-format` (LLVM style)
+- Linter: `.clang-tidy`
 
-We don't support it for compilation, but you can still use it for debugging by running
+## Resources
 
-```bat
-devenv bin/GIAN07d.exe &::to run the Debug binary
-devenv bin/GIAN07.exe  &::to run the Release binary
-```
+This repository contains source code only. Image, music, sound effect, and script resources are not included.
 
-from the *x64_x86 Cross Tools Command Prompt*.
-Strangely enough, this yields a superior IntelliSense performance than creating any sort of project. 🤷
+## License
+
+[MIT](LICENSE)
 
 ----
 
-Original README by pbg below.
+## Original README by pbg
 
-----
+### これは何？
 
-## これは何？
 * 西方プロジェクト第一弾 **秋霜玉** のソースコードです。
-* コンパイルできるかもしれませんが, すべてのソースコードが含まれているわけではないのでリンクはできません。
+* コンパイルできるかもしれませんが、すべてのソースコードが含まれているわけではないのでリンクはできません。
 * 画像、音楽、効果音、スクリプト等のリソースは含まれません。
 
+### 参考までに
 
-## 参考までに
 * 基本、開発当時（2000年前後）のままですが、文字コードを utf-8 に変更し、一部コメント（黒歴史ポエム）は削除してあります。インデント等も当時のままなので、読みにくい箇所があるかもしれません。
 * 8bit/16bitカラーの混在、MIDI再生関連、浮動小数点数演算を避ける、あたりが懐かしポイントになるかと思います。
 * 8.3形式のファイル名が多いのは、PC-98 時代に書いたコードの一部を流用していたためです。
 * リソースのアーカイブ展開に関するコードはもろもろの影響を考え、このリポジトリには含めていません。
 
+### たぶん紛失してしまったソースコード
 
-## ディレクトリ構成
-* /**MAIN** : 秋霜玉WinMainあたり
-* /**GIAN07** : 秋霜玉本体
-* /**DirectXUTYs** : DirectX, MIDI再生、数学関数等の共通処理
-* /**MapEdit2** : マップエディタ
-* /**ECLC** : ECL(敵制御用) スクリプトコンパイラ
-* /**SCLC** : SCL(敵配置用) スクリプトコンパイラ
-
-
-## たぶん紛失してしまったソースコード
 以下のコードについては、見つかり次第追加するかもしれません。
+
 * リソースのアーカイバ
-
-
-## ライセンス
-* [MIT](LICENSE)
