@@ -424,11 +424,11 @@ std::array<WINDOW_CHOICE, (DAT::BASENAMES.size() + 6)> Info = {{
     {"Quit", "", CWinExitFn, CENTER},
 }};
 WINDOW_MENU Menu = {std::span(Info), [](bool) {}, &Title};
-WINDOW_SYSTEM Window = {.Parent = Menu};
+WINDOW_SYSTEM Window(Menu);
 
 void Proc(bool &quit) {
   CWinMove(&Window);
-  if (Window.State == CWIN_DEAD) {
+  if (!Window.Active()) {
     if (FoundAll) {
       SProjectInit();
     } else {

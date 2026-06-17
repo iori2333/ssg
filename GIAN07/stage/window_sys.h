@@ -185,30 +185,63 @@ struct WINDOW_MENU {
 };
 
 // ウィンドウ群 //
-struct WINDOW_SYSTEM {
-  WINDOW_MENU &Parent; // 親ウィンドウ
-  int x, y;            // ウィンドウ左上の座標
-  PIXEL_COORD W;
-  uint32_t Count;               // フレームカウンタ
-  uint8_t Select[WINDOW_DEPTH]; // 選択中の項目スタック
-  uint8_t SelectDepth;          // 選択中の項目に対するＳＰ
-  uint8_t State;                // 状態
+class MenuController {
+public:
+  explicit MenuController(WINDOW_MENU &parent) : Parent(parent) {}
 
-  INPUT_BITS OldKey;      // 前に押されていたキー
-  uint8_t KeyCount;       // キーボードウェイト
-  uint8_t FastRepeatWait; // Current wait time for FAST_REPEAT items
-  bool FirstWait;         // 最初のキー解放待ち
-
-  TEXTRENDER_RECT_ID TRRs[1 + WINITEM_MAX]; // Initialized by Init().
-
-  // Prepares text rendering for a window with the given width.
-  void Init(PIXEL_COORD w);
-
-  // コマンドウィンドウの初期化 //
-  void Open(WINDOW_POINT topleft, int select);
-
+  // --- 初期化 ---
+  void Init(PIXEL_COORD w);                    // Prepares text rendering.
+  void Open(WINDOW_POINT topleft, int select); // コマンドウィンドウの初期化
   void OpenCentered(PIXEL_COORD w, int select);
+
+  // --- 毎フレーム処理 ---
+  void Tick(INPUT_BITS key); // CWinMove を置き換え (キーを引数で受け取る)
+  void Draw();               // CWinDraw を置き換え
+
+  // --- 検索 ---
+  WINDOW_MENU *SearchActive(); // CWinSearchActive を置き換え
+
+  // --- 状態検査 ---
+  bool Active() const { return State != CWIN_DEAD; }
+  uint8_t Depth() const { return SelectDepth; }
+  uint8_t CurrentSelection() const { return Select[SelectDepth]; }
+  uint8_t SelectionAt(uint8_t depth) const { return Select[depth]; }
+  INPUT_BITS LastKey() const { return OldKey; }
+  int Y() const { return y; }
+
+  // --- 状態操作 (コールバック / スクロールメニュー用) ---
+  void SetCurrentSelection(uint8_t sel) { Select[SelectDepth] = sel; }
+  void PopLevel() {
+    if (SelectDepth > 0) SelectDepth--;
+  }
+  void Close() { State = CWIN_DEAD; }
+  void SetLastKey(INPUT_BITS key) { OldKey = key; }
+  void SetY(int new_y) { y = new_y; }
+  void AdjustYForTallMenu(int baseline_y, int max_visible);
+
+  WINDOW_MENU &Root() { return Parent; }
+
+private:
+  void KeyEvent(INPUT_BITS key); // CWinKeyEvent を置き換え
+
+  WINDOW_MENU &Parent;                       // 親ウィンドウ
+  int x = 0, y = 0;                          // ウィンドウ左上の座標
+  PIXEL_COORD W = 0;
+  uint32_t Count = 0;                        // フレームカウンタ
+  uint8_t Select[WINDOW_DEPTH] = {};         // 選択中の項目スタック
+  uint8_t SelectDepth = 0;                   // 選択中の項目に対するＳＰ
+  uint8_t State = CWIN_DEAD;                 // 状態
+
+  INPUT_BITS OldKey = 0;                     // 前に押されていたキー
+  uint8_t KeyCount = 0;                      // キーボードウェイト
+  uint8_t FastRepeatWait = 0;                // FAST_REPEAT 項目のウェイト
+  bool FirstWait = false;                    // 最初のキー解放待ち
+
+  TEXTRENDER_RECT_ID TRRs[1 + WINITEM_MAX] = {}; // Init() で初期化。
 };
+
+// 後方互換エイリアス
+using WINDOW_SYSTEM = MenuController;
 
 // Vertically scrolling menu with elements generated on the fly.
 // Unfortunately has to be a template because [WINDOW_SYSTEM::CallBackFn]
@@ -238,7 +271,7 @@ class WINDOW_MENU_SCROLL {
       Item[item_i].CallBackFn = Fn;
       Generate(Item[item_i], generated_i, Sel);
       if (generated_i == Sel) {
-        Sys->Select[Sys->SelectDepth] = item_i;
+        Sys->SetCurrentSelection(item_i);
       }
       generated_i++;
     }
@@ -258,13 +291,13 @@ class WINDOW_MENU_SCROLL {
       }
       Scroll();
     } else if ((key == KEY_BOMB) || (key == KEY_ESC)) {
-      if (Sys->SelectDepth > 0) {
-        Sys->SelectDepth--;
+      if (Sys->Depth() > 0) {
+        Sys->PopLevel();
       } else {
-        Sys->State = CWIN_DEAD;
+        Sys->Close();
       }
       if (ReturnTo != nullptr) {
-        ReturnTo->OldKey = key;
+        ReturnTo->SetLastKey(key);
       }
       return false;
     }

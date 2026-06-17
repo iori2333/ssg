@@ -181,13 +181,11 @@ WINDOW_MENU Menu = {std::span<WINDOW_CHOICE, 0>(), SetItem};
 #endif
 } // namespace API
 
-static void FnChgDevice(int_fast8_t delta);
 static void FnDisp(int_fast8_t delta);
 static void FnFSMode(int_fast8_t delta);
 static void FnScale(int_fast8_t delta);
 static void FnScMode(int_fast8_t delta);
 static void FnSkip(int_fast8_t delta);
-static void FnBpp(int_fast8_t delta);
 static void FnWinLocate(int_fast8_t delta);
 static void SetItem(bool tick = true);
 
@@ -201,9 +199,6 @@ static char TitleScale[50];
 static char TitleScMode[50];
 #endif
 static char TitleSkip[50];
-#ifdef SUPPORT_GRP_BITDEPTH
-static char TitleBpp[50];
-#endif
 static char TitleMsg[50];
 
 #ifdef SUPPORT_GRP_WINDOWED
@@ -214,9 +209,6 @@ static char HelpScale[50];
 static char HelpScMode[50];
 #endif
 
-// WINDOW_CHOICE ItemDevice = {
-// 	TitleDevice, "ビデオカードの選択", FnChgDevice
-// };
 #ifdef SUPPORT_GRP_WINDOWED
 WINDOW_CHOICE ItemDisp = {TitleDisp,
                           "Switch between window and fullscreen modes", FnDisp};
@@ -227,9 +219,6 @@ WINDOW_CHOICE ItemScale = {TitleScale, HelpScale, FnScale};
 WINDOW_CHOICE ItemScMode = {TitleScMode, HelpScMode, FnScMode};
 #endif
 WINDOW_CHOICE ItemSkip = {TitleSkip, "描画スキップの設定です", FnSkip};
-#ifdef SUPPORT_GRP_BITDEPTH
-WINDOW_CHOICE ItemBpp = {TitleBpp, "使用する色数を指定します", FnBpp};
-#endif
 WINDOW_CHOICE ItemMsg = {TitleMsg, "ウィンドウの表示位置を決めます",
                          FnWinLocate};
 WINDOW_CHOICE ItemScreenshot = {
@@ -249,9 +238,6 @@ WINDOW_MENU Menu = {SetItem,
                         &ItemScMode,
 #endif
                         &ItemSkip,
-#ifdef SUPPORT_GRP_BITDEPTH
-                        &ItemBpp,
-#endif
                         &ItemScreenshot,
 #ifdef SUPPORT_GRP_API
                         &ItemAPI,
@@ -406,27 +392,18 @@ WINDOW_CHOICE GameOverSaveItems[] = {{"   お っ け ～ ", "", GameOverSaveFnY
 WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](bool) {},
                                 &GameOverSaveTitle};
 
-WINDOW_MENU_SCROLL<BGMPack::TitleItem, BGMPack::ListSize, BGMPack::Generate,
-                   BGMPack::Handle>
-    BGMPackMenu;
-
-WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, ReplayFiles::ListSize,
-                   ReplayFiles::Generate, ReplayFiles::Handle>
-    ReplayFilesMenu;
-
 ///// [グローバル変数(公開)] /////
-WINDOW_SYSTEM MainWindow = {.Parent = Main::Menu};
-WINDOW_SYSTEM ExitWindow = {.Parent = ExitMenu};
-WINDOW_SYSTEM ContinueWindow = {.Parent = ContinueMenu};
-WINDOW_SYSTEM BGMPackWindow = {
-    .Parent =
-        WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize,
-                           &BGMPack::Generate, &BGMPack::Handle, 20>::Menu};
-WINDOW_SYSTEM GameOverSaveWindow = {.Parent = GameOverSaveMenu};
-WINDOW_SYSTEM ReplayFilesWindow = {
-    .Parent = WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
-                                 &ReplayFiles::Generate, &ReplayFiles::Handle,
-                                 20>::Menu};
+WINDOW_SYSTEM MainWindow(Main::Menu);
+WINDOW_SYSTEM ExitWindow(ExitMenu);
+WINDOW_SYSTEM ContinueWindow(ContinueMenu);
+WINDOW_SYSTEM BGMPackWindow(
+    WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize,
+                       &BGMPack::Generate, &BGMPack::Handle, 20>::Menu);
+WINDOW_SYSTEM GameOverSaveWindow(GameOverSaveMenu);
+WINDOW_SYSTEM ReplayFilesWindow(
+    WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
+                       &ReplayFiles::Generate, &ReplayFiles::Handle,
+                       20>::Menu);
 
 // メインメニューの初期化 //
 void InitMainWindow() {
@@ -508,23 +485,9 @@ static void Main::Cfg::Grp::API::FnDef(int_fast8_t /*unused*/) {
   XGrpTry([](auto &params) { params.api = -1; });
 }
 
-static void Main::Cfg::Grp::FnChgDevice(int_fast8_t delta) {
-  XGrpTry([&](auto &params) {
-    // 一つしかデバイスが存在しないときは変更できない //
-    const auto device_count = GrpBackend_DeviceCount();
-    if (device_count <= 1) {
-      return;
-    }
-
-    // 次のデバイスへ //
-    params.device_id =
-        ((ConfigDat.DeviceID.v + device_count + delta) % device_count);
-  });
-}
-
 static void Main::Cfg::Grp::API::FnOverride(int_fast8_t /*unused*/) {
   XGrpTry([](auto &params) {
-    params.api = (MainWindow.Select[MainWindow.SelectDepth] - 1);
+    params.api = (MainWindow.CurrentSelection() - 1);
   });
 }
 
@@ -549,12 +512,6 @@ static void Main::Cfg::Grp::FnScMode(int_fast8_t /*unused*/) {
 static void Main::Cfg::Grp::FnSkip(int_fast8_t delta) {
   RingStep(ConfigDat.FPSDivisor.v, delta, 0, FPS_DIVISOR_MAX);
   Grp_FPSDivisor = ConfigDat.FPSDivisor.v;
-}
-
-static void Main::Cfg::Grp::FnBpp(int_fast8_t delta) {
-  XGrpTry([delta](auto &params) {
-    params.bitdepth = ConfigDat.BitDepth.v.cycle(delta < 0);
-  });
 }
 
 static void Main::Cfg::Grp::FnWinLocate(int_fast8_t delta) {
@@ -650,7 +607,7 @@ void Open() {
                      &BGMPack::Handle, 20>::Init(BGMPackWindow, SelAtOpen,
                                                  &MainWindow);
   BGMPackWindow.Init(w);
-  BGMPackWindow.OpenCentered(w, BGMPackWindow.Select[0]);
+  BGMPackWindow.OpenCentered(w, BGMPackWindow.SelectionAt(0));
 }
 
 static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
@@ -769,7 +726,7 @@ void Open() {
                      &ReplayFiles::Generate, &ReplayFiles::Handle,
                      20>::Init(ReplayFilesWindow, 0, &MainWindow);
   ReplayFilesWindow.Init(w);
-  ReplayFilesWindow.OpenCentered(w, ReplayFilesWindow.Select[0]);
+  ReplayFilesWindow.OpenCentered(w, ReplayFilesWindow.SelectionAt(0));
 }
 } // namespace ReplayFiles
 
@@ -1019,9 +976,6 @@ static void Main::Cfg::Grp::SetItem(bool /*unused*/) {
 	sprintf(TitleScMode, "ScaleMode[%s]", sc_mode_label);
 #endif
 	sprintf(TitleSkip,   "FrameRate[ %s ]", FRate[ConfigDat.FPSDivisor.v]);
-#ifdef SUPPORT_GRP_BITDEPTH
-	sprintf(TitleBpp,    "BitDepth [ %dBit ]", ConfigDat.BitDepth.v.value());
-#endif
 	sprintf(TitleMsg,    "MsgWindow[%s]", UorD[u_or_d]);
   // clang-format on
 
@@ -1091,7 +1045,7 @@ static void Main::Cfg::Grp::Screenshot::SetItem(bool /*unused*/) {
 
   for (const auto i : std::views::iota(0U, GRP_SCREENSHOT_EFFORT_COUNT)) {
     auto &item = Item[2 + i];
-    const auto hovered = (MainWindow.Select[MainWindow.SelectDepth] == (2 + i));
+    const auto hovered = (MainWindow.CurrentSelection() == (2 + i));
     const auto *const format = format_for(i, ALIGN::LEFT);
     const auto time = Grp_ScreenshotTimes[i];
     EnumFlagSet(
@@ -1155,8 +1109,8 @@ static void Main::Cfg::Snd::SetItem(bool /*unused*/) {
 
   // Additionally purge the cache at the initialization of the main menu,
   // and when moving between options.
-  if ((MainWindow.State == CWIN_DEAD) || (MainWindow.OldKey == KEY_UP) ||
-      (MainWindow.OldKey == KEY_DOWN)) {
+  if ((!MainWindow.Active()) || (MainWindow.LastKey() == KEY_UP) ||
+      (MainWindow.LastKey() == KEY_DOWN)) {
     BGM_PacksAvailable(true);
   }
 

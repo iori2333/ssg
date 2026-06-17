@@ -1402,7 +1402,7 @@ void GameFlowManager::TitleProc(bool &quit) {
   } else {
     demo_timer = 0;
   }
-  if (MainWindow.SelectDepth != 0) {
+  if (MainWindow.Depth() != 0) {
     demo_timer = 0;
   }
 
@@ -1412,9 +1412,9 @@ void GameFlowManager::TitleProc(bool &quit) {
   }
 
   auto *window_active =
-      ((ReplayFilesWindow.State != CWIN_DEAD) ? &ReplayFilesWindow
-       : (BGMPackWindow.State != CWIN_DEAD)   ? &BGMPackWindow
-                                              : &MainWindow);
+      ((ReplayFilesWindow.Active()) ? &ReplayFilesWindow
+       : (BGMPackWindow.Active())   ? &BGMPackWindow
+                                    : &MainWindow);
   CWinMove(window_active);
   MWinHelp(window_active);
   MWinMove();
@@ -1431,8 +1431,8 @@ void GameFlowManager::TitleProc(bool &quit) {
     return;
   }
 
-  if (MainWindow.State == CWIN_DEAD) {
-    switch (MainWindow.Select[0]) {
+  if (!MainWindow.Active()) {
+    switch (MainWindow.SelectionAt(0)) {
     case 0:
       WeaponSelectInit(false);
       return;
@@ -1444,12 +1444,7 @@ void GameFlowManager::TitleProc(bool &quit) {
   }
 
   // Silly hack for excessively tall submenus...
-  if (const auto *active_menu = CWinSearchActive(&MainWindow)) {
-    MainWindow.y = MAIN_WINDOW_TOPLEFT.y;
-    if (active_menu->NumItems > 9) {
-      MainWindow.y -= ((active_menu->NumItems - 9) * CWIN_ITEM_H);
-    }
-  }
+  MainWindow.AdjustYForTallMenu(MAIN_WINDOW_TOPLEFT.y, 9);
 
   if (IsDraw()) {
     GrpBackend_Clear();
