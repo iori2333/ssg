@@ -74,7 +74,7 @@ constexpr Narrow::string_view TITLE_DOWNLOAD = "<Download>";
 constexpr auto HELP_NONE = "デフォルトのMIDIサントラに戻ります";
 
 char Title[TITLE_FMT.size() + (STRING_NUM_CAP<size_t> * 2)];
-WINDOW_LABEL TitleItem = {Title};
+MenuLabel TitleItem = {Title};
 
 std::vector<std::u8string> Packs;
 size_t SelAtOpen = 0;
@@ -83,7 +83,7 @@ size_t SelAtOpen = 0;
 // ----------------
 
 static size_t ListSize() { return (1 + Packs.size() + 1); }
-static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
+static void Generate(MenuItem &ret, size_t generated, size_t selected);
 static bool Handle(MenuController &ctrl, INPUT_BITS key, size_t selected);
 // ----------------
 } // namespace BGMPack
@@ -93,12 +93,12 @@ void Open();
 
 constexpr Narrow::string_view TITLE = "    Replay Files";
 char TitleBuf[64] = {};
-WINDOW_LABEL TitleItem = {TitleBuf};
+MenuLabel TitleItem = {TitleBuf};
 
 std::vector<std::u8string> Files;
 
 static size_t ListSize() { return (!Files.empty() ? Files.size() + 1 : 2); }
-static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
+static void Generate(MenuItem &ret, size_t generated, size_t selected);
 static bool Handle(MenuController &ctrl, INPUT_BITS key, size_t selected);
 } // namespace ReplayFiles
 
@@ -106,11 +106,11 @@ constexpr auto HELP_SUBMENU_EXIT = "一つ前のメニューにもどります";
 constexpr auto HELP_API_DEFAULT = "Let the backend choose a graphics API";
 constexpr auto HELP_API_SPECIFIC = "Select to override default API selection";
 
-WINDOW_CHOICE HRuleItemForArray = {"-------------------"};
-WINDOW_CHOICE SubmenuExitItemForArray = {"Exit", HELP_SUBMENU_EXIT,
+MenuItem HRuleItemForArray = {"-------------------"};
+MenuItem SubmenuExitItemForArray = {"Exit", HELP_SUBMENU_EXIT,
                                                     CWinExitFn};
-WINDOW_CHOICE SubmenuExitItem = SubmenuExitItemForArray;
-WINDOW_CHOICE HRuleItem = HRuleItemForArray;
+MenuItem SubmenuExitItem = SubmenuExitItemForArray;
+MenuItem HRuleItem = HRuleItemForArray;
 
 namespace Main {
 namespace Cfg {
@@ -128,7 +128,7 @@ static void FnDemo(MenuController &ctrl, int_fast8_t delta);
 static void SetItem(MenuController &ctrl, bool tick = true);
 
 char Title[8][20];
-WINDOW_CHOICE Item[] = {
+MenuItem Item[] = {
     {Title[0], "残り人数?を設定します", FnPlayerStock},
     {Title[1], "ボムの数を設定します", FnBombStock},
     {Title[2], "難易度を設定します", FnDifficulty},
@@ -142,7 +142,7 @@ WINDOW_CHOICE Item[] = {
 #endif
     SubmenuExitItemForArray,
 };
-WINDOW_MENU Menu = {std::span(Item), SetItem};
+MenuDef Menu = {std::span(Item), SetItem};
 } // namespace Dif
 
 namespace Grp {
@@ -154,18 +154,18 @@ static char TitleFormat[50];
 static char TitlePerf[GRP_SCREENSHOT_EFFORT_COUNT][50];
 static char HelpPerf[50];
 static auto Item = ([] {
-  std::array<WINDOW_CHOICE, (2 + GRP_SCREENSHOT_EFFORT_COUNT + 2)> ret{};
+  std::array<MenuItem, (2 + GRP_SCREENSHOT_EFFORT_COUNT + 2)> ret{};
   auto item_p = ret.begin();
   *(item_p++) = {TitleFormat, "", FnFormat};
   *(item_p++) = {"--- Performance ---"};
   for (const auto &title : Screenshot::TitlePerf) {
-    *(item_p++) = WINDOW_CHOICE{title, HelpPerf, FnFormat};
+    *(item_p++) = MenuItem{title, HelpPerf, FnFormat};
   }
   *(item_p++) = HRuleItemForArray;
   *(item_p++) = SubmenuExitItemForArray;
   return ret;
 })();
-WINDOW_MENU Menu = {std::span(Item), SetItem};
+MenuDef Menu = {std::span(Item), SetItem};
 static auto &ItemFormat = Item[0];
 } // namespace Screenshot
 
@@ -176,9 +176,9 @@ static void SetItem(MenuController &ctrl, bool tick = true);
 
 #ifdef SUPPORT_GRP_API
 char TitleDef[26];
-WINDOW_CHOICE ItemDef = {TitleDef, HELP_API_DEFAULT, FnDef};
-WINDOW_CHOICE Item[8];
-WINDOW_MENU Menu = {std::span<WINDOW_CHOICE, 0>(), SetItem};
+MenuItem ItemDef = {TitleDef, HELP_API_DEFAULT, FnDef};
+MenuItem Item[8];
+MenuDef Menu = {std::span<MenuItem, 0>(), SetItem};
 #endif
 } // namespace API
 
@@ -211,24 +211,24 @@ static char HelpScMode[50];
 #endif
 
 #ifdef SUPPORT_GRP_WINDOWED
-WINDOW_CHOICE ItemDisp = {TitleDisp,
+MenuItem ItemDisp = {TitleDisp,
                           "Switch between window and fullscreen modes", FnDisp};
-WINDOW_CHOICE ItemFSMode = {TitleFSMode, HelpFSMode, FnFSMode};
+MenuItem ItemFSMode = {TitleFSMode, HelpFSMode, FnFSMode};
 #endif
 #ifdef SUPPORT_GRP_SCALING
-WINDOW_CHOICE ItemScale = {TitleScale, HelpScale, FnScale};
-WINDOW_CHOICE ItemScMode = {TitleScMode, HelpScMode, FnScMode};
+MenuItem ItemScale = {TitleScale, HelpScale, FnScale};
+MenuItem ItemScMode = {TitleScMode, HelpScMode, FnScMode};
 #endif
-WINDOW_CHOICE ItemSkip = {TitleSkip, "描画スキップの設定です", FnSkip};
-WINDOW_CHOICE ItemMsg = {TitleMsg, "ウィンドウの表示位置を決めます",
+MenuItem ItemSkip = {TitleSkip, "描画スキップの設定です", FnSkip};
+MenuItem ItemMsg = {TitleMsg, "ウィンドウの表示位置を決めます",
                          FnWinLocate};
-WINDOW_CHOICE ItemScreenshot = {
+MenuItem ItemScreenshot = {
     "Screenshots", "Customize the screenshot format", Screenshot::Menu};
 #ifdef SUPPORT_GRP_API
-WINDOW_CHOICE ItemAPI = {"API", "Select rendering API", API::Menu};
+MenuItem ItemAPI = {"API", "Select rendering API", API::Menu};
 #endif
-WINDOW_CHOICE ItemExit = SubmenuExitItemForArray;
-WINDOW_MENU Menu = {SetItem,
+MenuItem ItemExit = SubmenuExitItemForArray;
+MenuDef Menu = {SetItem,
                     {
 #ifdef SUPPORT_GRP_WINDOWED
                         &ItemDisp,
@@ -257,13 +257,13 @@ static void SetItem(MenuController &ctrl, bool tick = true);
 
 static char TitlePort[26];
 static char TitleFixes[26];
-WINDOW_CHOICE Item[] = {
+MenuItem Item[] = {
     {TitlePort, "MIDI Port (保存はされません)", FnDev},
     {TitleFixes, "Retain SC-88Pro echo on other Roland synths", FnFixes},
     SubmenuExitItemForArray,
 };
 #ifdef SUPPORT_MIDI_BACKEND
-WINDOW_MENU Menu = {std::span(Item), SetItem};
+MenuDef Menu = {std::span(Item), SetItem};
 static auto &ItemPort = Item[0];
 #endif
 } // namespace Mid
@@ -282,11 +282,11 @@ static char TitleSEVol[26];
 static char TitleBGMVol[26];
 static char TitleBGMGain[26];
 static char TitleBGMPack[26];
-WINDOW_CHOICE Item[] = {
+MenuItem Item[] = {
     {TitleSE, "SEを鳴らすかどうかの設定", FnSE},
     {TitleBGM, "BGMを鳴らすかどうかの設定", FnBGM},
-    {TitleSEVol, "効果音の音量", FnSEVol, WINDOW_FLAGS::FAST_REPEAT},
-    {TitleBGMVol, "音楽の音量", FnBGMVol, WINDOW_FLAGS::FAST_REPEAT},
+    {TitleSEVol, "効果音の音量", FnSEVol, MenuFlags::FAST_REPEAT},
+    {TitleBGMVol, "音楽の音量", FnBGMVol, MenuFlags::FAST_REPEAT},
     {TitleBGMGain, "毎に曲から音量の違うことが外します", FnBGMGain},
     {TitleBGMPack, BGMPack::HELP_DOWNLOAD, FnBGMPack},
 #ifdef SUPPORT_MIDI_BACKEND
@@ -294,7 +294,7 @@ WINDOW_CHOICE Item[] = {
 #endif
     SubmenuExitItemForArray,
 };
-WINDOW_MENU Menu = {std::span(Item), SetItem};
+MenuDef Menu = {std::span(Item), SetItem};
 static auto &ItemSE = Item[0];
 static auto &ItemBGM = Item[1];
 static auto &ItemSEVol = Item[2];
@@ -313,14 +313,14 @@ static void SetItem(MenuController &ctrl, bool tick = true);
 
 char Title[4][20];
 char Help[] = "パッド上のボタンを押すと変更";
-WINDOW_CHOICE InpKey[] = {
+MenuItem InpKey[] = {
     {Title[0], Help, Fn<ConfigDat.PadTama.v>},
     {Title[1], Help, Fn<ConfigDat.PadBomb.v>},
     {Title[2], Help, Fn<ConfigDat.PadShift.v>},
     {Title[3], Help, Fn<ConfigDat.PadCancel.v>},
     SubmenuExitItemForArray,
 };
-WINDOW_MENU Menu = {std::span(InpKey), SetItem};
+MenuDef Menu = {std::span(InpKey), SetItem};
 } // namespace Pad
 
 static void FnMsgSkip(MenuController &ctrl, int_fast8_t delta);
@@ -328,23 +328,23 @@ static void FnZSpeedDown(MenuController &ctrl, int_fast8_t delta);
 static void SetItem(MenuController &ctrl, bool tick = true);
 
 char Title[2][23];
-WINDOW_CHOICE Item[] = {
+MenuItem Item[] = {
     {Title[0], "弾キーのメッセージスキップ設定", FnMsgSkip},
     {Title[1], "弾キーの押しっぱなしで低速移動", FnZSpeedDown},
     {"Joy Pad", "パッドの設定をします", Pad::Menu},
     SubmenuExitItemForArray,
 };
-WINDOW_MENU Menu = {std::span(Item), SetItem};
+MenuDef Menu = {std::span(Item), SetItem};
 } // namespace Inp
 
-WINDOW_CHOICE Item[] = {
+MenuItem Item[] = {
     {" Difficulty", "難易度に関する設定", Dif::Menu},
     {" Graphic", "グラフィックに関する設定", Grp::Menu},
     {" Sound / Music", "ＳＥ／ＢＧＭに関する設定", Snd::Menu},
     {" Input", "入力デバイスに関する設定", Inp::Menu},
     {" Exit", HELP_SUBMENU_EXIT, CWinExitFn},
 };
-WINDOW_MENU Menu = {std::span(Item)};
+MenuDef Menu = {std::span(Item)};
 } // namespace Cfg
 
 static bool ReplayFilesMenuOpen(MenuController &ctrl, INPUT_BITS key) {
@@ -360,8 +360,8 @@ static bool FnMusic(MenuController &ctrl, INPUT_BITS key);
 static bool FnScore(MenuController &ctrl, INPUT_BITS key);
 static void SetItem(MenuController &ctrl, bool tick = true);
 
-WINDOW_LABEL Title = {"     Main Menu"};
-WINDOW_CHOICE Item[] = {
+MenuLabel Title = {"     Main Menu"};
+MenuItem Item[] = {
     // { "   Game  Start",	"ゲームを開始します(使用不可)" },
     {"   Game  Start", "ゲームを開始します", FnGameStart},
     {"   Extra Start", "ゲームを開始します(Extra)", FnExStart},
@@ -371,40 +371,40 @@ WINDOW_CHOICE Item[] = {
     {"   Music", "音楽室に入ります", FnMusic},
     {"   Exit", "ゲームを終了します", CWinExitFn},
 };
-WINDOW_MENU Menu = {std::span(Item), SetItem, &Title};
+MenuDef Menu = {std::span(Item), SetItem, &Title};
 static auto &ItemMusic = Item[5];
 } // namespace Main
 
-WINDOW_LABEL ExitTitle = {"    終了するの？"};
-WINDOW_CHOICE ExitItems[] = {{"  Save && Exit  ", "", ExitFnSaveExit},
+MenuLabel ExitTitle = {"    終了するの？"};
+MenuItem ExitItems[] = {{"  Save && Exit  ", "", ExitFnSaveExit},
                              {"   お っ け ～ ", "", ExitFnYes},
                              {"   だ め だ め", "", ExitFnNo}};
-WINDOW_MENU ExitMenu = {std::span(ExitItems), [](MenuController &, bool) {}, &ExitTitle};
+MenuDef ExitMenu = {std::span(ExitItems), [](MenuController &, bool) {}, &ExitTitle};
 
-WINDOW_LABEL ContinueTitle = {" Ｃｏｎｔｉｎｕｅ？"};
-WINDOW_CHOICE ContinueYesNoItem[] = {{"   お っ け ～", "", ContinueFnYes},
+MenuLabel ContinueTitle = {" Ｃｏｎｔｉｎｕｅ？"};
+MenuItem ContinueYesNoItem[] = {{"   お っ け ～", "", ContinueFnYes},
                                      {"   や だ や だ", "", ContinueFnNo}};
-WINDOW_MENU ContinueMenu = {std::span(ContinueYesNoItem), [](MenuController &, bool) {},
+MenuDef ContinueMenu = {std::span(ContinueYesNoItem), [](MenuController &, bool) {},
                             &ContinueTitle};
 
-WINDOW_LABEL GameOverSaveTitle = {"  Save Replay?"};
-WINDOW_CHOICE GameOverSaveItems[] = {{"   お っ け ～ ", "", GameOverSaveFnYes},
+MenuLabel GameOverSaveTitle = {"  Save Replay?"};
+MenuItem GameOverSaveItems[] = {{"   お っ け ～ ", "", GameOverSaveFnYes},
                                      {"   や だ や だ", "", GameOverSaveFnNo}};
-WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](MenuController &, bool) {},
+MenuDef GameOverSaveMenu = {std::span(GameOverSaveItems), [](MenuController &, bool) {},
                                 &GameOverSaveTitle};
 
 ///// [グローバル変数(公開)] /////
-WINDOW_SYSTEM MainWindow(Main::Menu);
-WINDOW_SYSTEM ExitWindow(ExitMenu);
-WINDOW_SYSTEM ContinueWindow(ContinueMenu);
+MenuController MainWindow(Main::Menu);
+MenuController ExitWindow(ExitMenu);
+MenuController ContinueWindow(ContinueMenu);
 ScrollMenu BGMPackScrollMenu(BGMPack::TitleItem, &BGMPack::ListSize,
                              &BGMPack::Generate, &BGMPack::Handle, 20);
-WINDOW_SYSTEM BGMPackWindow(BGMPackScrollMenu.Menu());
-WINDOW_SYSTEM GameOverSaveWindow(GameOverSaveMenu);
+MenuController BGMPackWindow(BGMPackScrollMenu.Menu());
+MenuController GameOverSaveWindow(GameOverSaveMenu);
 ScrollMenu ReplayFilesScrollMenu(ReplayFiles::TitleItem, &ReplayFiles::ListSize,
                                  &ReplayFiles::Generate, &ReplayFiles::Handle,
                                  20);
-WINDOW_SYSTEM ReplayFilesWindow(ReplayFilesScrollMenu.Menu());
+MenuController ReplayFilesWindow(ReplayFilesScrollMenu.Menu());
 
 // メインメニューの初期化 //
 void InitMainWindow() {
@@ -428,7 +428,7 @@ void InitMainWindow() {
     *(menu_p++) = &SubmenuExitItem;
     API::Menu.NumItems = std::distance(API::Menu.ItemPtr, menu_p);
   } else {
-    ItemAPI.Flags |= WINDOW_FLAGS::DISABLED;
+    ItemAPI.Flags |= MenuFlags::DISABLED;
   }
 #endif
 
@@ -609,7 +609,7 @@ void Open() {
   BGMPackWindow.OpenCentered(w, BGMPackWindow.SelectionAt(0));
 }
 
-static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
+static void Generate(MenuItem &ret, size_t generated, size_t selected) {
   const auto sel_none = SelNone();
   const auto sel_download = SelDownload();
   if (generated == sel_none) {
@@ -623,11 +623,11 @@ static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
     ret.Help = "";
   }
 
-  // `WINDOW_FLAGS::DISABLED` is set by default if a `WINDOW_CHOICE` is
+  // `MenuFlags::DISABLED` is set by default if a `MenuItem` is
   // constructed without text, so we must indeed overwrite the entire
   // flag field.
   ret.Flags =
-      ((generated == SelAtOpen) ? WINDOW_FLAGS::HIGHLIGHT : WINDOW_FLAGS::NONE);
+      ((generated == SelAtOpen) ? MenuFlags::HIGHLIGHT : MenuFlags::NONE);
 
   if (generated == selected) {
     if ((generated == sel_none) || (generated == sel_download)) {
@@ -677,7 +677,7 @@ static void ScanFiles() {
   std::ranges::sort(Files, std::greater{});
 }
 
-static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
+static void Generate(MenuItem &ret, size_t generated, size_t selected) {
   if (generated == (ListSize() - 1)) {
     ret.Title = " Exit";
     ret.Help = HELP_SUBMENU_EXIT;
@@ -688,7 +688,7 @@ static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
     ret.Title = " No replays found";
     ret.Help = "";
   }
-  ret.Flags = WINDOW_FLAGS::NONE;
+  ret.Flags = MenuFlags::NONE;
   if (generated == selected) {
     if (selected < Files.size()) {
       strcpy(TitleBuf, reinterpret_cast<const char *>(Files[selected].c_str()));
@@ -959,8 +959,8 @@ static void Main::Cfg::Grp::SetItem(MenuController &ctrl, bool /*unused*/) {
 
   ItemScale.SetActive(!(fs.fullscreen && fs.exclusive));
   EnumFlagSet(
-      ItemScMode.Flags, WINDOW_FLAGS::DISABLED,
-      static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(sc_mode_disabled));
+      ItemScMode.Flags, MenuFlags::DISABLED,
+      static_cast<std::underlying_type_t<enum MenuFlags>>(sc_mode_disabled));
 #endif
 
   // clang-format off
@@ -1047,8 +1047,8 @@ static void Main::Cfg::Grp::Screenshot::SetItem(MenuController &ctrl, bool /*unu
     const auto *const format = format_for(i, ALIGN::LEFT);
     const auto time = Grp_ScreenshotTimes[i];
     EnumFlagSet(
-        item.Flags, WINDOW_FLAGS::HIGHLIGHT,
-        static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(i == effort));
+        item.Flags, MenuFlags::HIGHLIGHT,
+        static_cast<std::underlying_type_t<enum MenuFlags>>(i == effort));
     if (time < 0s) {
       sprintf(TitlePerf[i], "%s[  FAILED  ]", format);
       if (hovered) {
@@ -1093,8 +1093,8 @@ static void Main::Cfg::Grp::API::SetItem(MenuController &ctrl, bool /*unused*/) 
   for (auto &api : Item | std::views::take(GrpBackend_APICount())) {
     const auto is_selected = strcmp(api_active.data(), api.Title.ptr) == 0;
     EnumFlagSet(
-        api.Flags, WINDOW_FLAGS::HIGHLIGHT,
-        static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(is_selected));
+        api.Flags, MenuFlags::HIGHLIGHT,
+        static_cast<std::underlying_type_t<enum MenuFlags>>(is_selected));
   }
 
   sprintf(TitleDef, "UseDefault  %s", CHOICE_OFF_ON[is_def_api]);
@@ -1160,8 +1160,8 @@ static void Main::Cfg::Snd::Mid::SetItem(MenuController &ctrl, bool tick) {
     strcpy(TitlePort, ">");
   }
   EnumFlagSet(
-      ItemPort.Flags, WINDOW_FLAGS::DISABLED,
-      static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(!maybe_dev));
+      ItemPort.Flags, MenuFlags::DISABLED,
+      static_cast<std::underlying_type_t<enum MenuFlags>>(!maybe_dev));
   const auto fixes = !!(ConfigDat.MidFlags.v & MID_FLAGS::FIX_SYSEX_BUGS);
 
   sprintf(TitleFixes, "SC88ProFXCompat%s", CHOICE_OFF_ON_NARROW[fixes]);

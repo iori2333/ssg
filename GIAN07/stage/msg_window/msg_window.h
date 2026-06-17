@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "window_sys.h" // MSG_WINDOW_FLAGS, WINDOW_LTRB, FONT_ID, etc.
+#include "window_sys.h" // MsgWindowFlags, WINDOW_LTRB, FONT_ID, etc.
 
 #include <optional>
 
@@ -16,7 +16,7 @@
 class MsgWindow {
 public:
   void Init(const WINDOW_LTRB &rc,
-            MSG_WINDOW_FLAGS flags = MSG_WINDOW_FLAGS::NONE);
+            MsgWindowFlags flags = MsgWindowFlags::NONE);
   void Open();       // メッセージウィンドウをオープンする
   void Close();      // メッセージウィンドウをクローズする
   void ForceClose(); // メッセージウィンドウを強制クローズする
@@ -25,7 +25,7 @@ public:
   void Msg(Narrow::string_view str); // メッセージ文字列を送る
   void Face(uint8_t faceID);         // 顔をセットする
   void Cmd(uint8_t cmd);             // コマンドを送る
-  void Help(WINDOW_SYSTEM *ws);      // メッセージウィンドウにヘルプ文字列を送る
+  void Help(MenuController *ws);      // メッセージウィンドウにヘルプ文字列を送る
 
 private:
   void MsgBlank(); // 文字列をクリアし、最初の行へ戻す
@@ -34,7 +34,7 @@ private:
   WINDOW_LTRB now_size{}; // ウィンドウの現在のサイズ
   PIXEL_POINT text_topleft{};
 
-  MSG_WINDOW_FLAGS flags{};
+  MsgWindowFlags flags{};
   FONT_ID font_id{};   // 使用するフォント
   uint8_t font_dy{};   // フォントのＹ増量値
   uint8_t state{};     // 状態

@@ -9,7 +9,7 @@
 #include <cassert>
 #include <utility>
 
-ScrollMenu::ScrollMenu(WINDOW_LABEL &title, ListSizeFn list_size,
+ScrollMenu::ScrollMenu(MenuLabel &title, ListSizeFn list_size,
                        GenerateFn generate, HandleFn handle,
                        size_t max_visible)
     : menu_(), max_visible_(max_visible), list_size_(std::move(list_size)),

@@ -18,12 +18,12 @@
 ///// [構造体] /////
 
 ///// [グローバル変数] /////
-extern WINDOW_SYSTEM MainWindow;
-extern WINDOW_SYSTEM BGMPackWindow;
-extern WINDOW_SYSTEM ExitWindow;
-extern WINDOW_SYSTEM ContinueWindow;
-extern WINDOW_SYSTEM GameOverSaveWindow;
-extern WINDOW_SYSTEM ReplayFilesWindow;
+extern MenuController MainWindow;
+extern MenuController BGMPackWindow;
+extern MenuController ExitWindow;
+extern MenuController ContinueWindow;
+extern MenuController GameOverSaveWindow;
+extern MenuController ReplayFilesWindow;
 
 ///// [関数] /////
 void InitMainWindow();     // メインメニューの初期化

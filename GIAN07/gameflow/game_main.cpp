@@ -622,7 +622,7 @@ bool GameInit(std::function<void(bool &)> next_proc) {
     // ウィンドウの表示位置を設定する //
     // Replays don't show dialog, so this is the only place where we need
     // to do this.
-    const auto flags = MSG_WINDOW_FLAGS::WITH_FACE;
+    const auto flags = MsgWindowFlags::WITH_FACE;
     if ((ConfigDat.GraphFlags.v & GRPF_WINDOW_UPPER) != 0) {
       MWinInit({128, 16, (640 - 128), 96}, flags);
     } else if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
@@ -890,7 +890,7 @@ bool GameExit(bool bNeedChgMusic) {
   Lasers.SetupLong(); // 音を止める
   Snd_SEStop(8);      // ワーニング音を止めるのだ
 
-  const auto flags = MSG_WINDOW_FLAGS::CENTER;
+  const auto flags = MsgWindowFlags::CENTER;
   MWinForceClose();
   MWinInit({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480}, flags);
   MWinOpen();

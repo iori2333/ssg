@@ -16,12 +16,12 @@
 
 ///// [非公開関数] /////
 
-static void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
+static void CWinDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
                           bool is_title);
 
-///// [WINDOW_MENU / WINDOW_CHOICE メソッド] /////
+///// [MenuDef / MenuItem メソッド] /////
 
-uint8_t WINDOW_MENU::MaxItems() const {
+uint8_t MenuDef::MaxItems() const {
   uint8_t ret = NumItems;
   for (auto i = 0; std::cmp_less(i, NumItems); i++) {
     if (ItemPtr[i]->Submenu != nullptr) {
@@ -31,9 +31,9 @@ uint8_t WINDOW_MENU::MaxItems() const {
   return ret;
 }
 
-void WINDOW_CHOICE::SetActive(bool active) {
-  EnumFlagSet(Flags, WINDOW_FLAGS::DISABLED,
-              static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(!active));
+void MenuItem::SetActive(bool active) {
+  EnumFlagSet(Flags, MenuFlags::DISABLED,
+              static_cast<std::underlying_type_t<enum MenuFlags>>(!active));
 }
 
 ///// [MenuController メソッド] /////
@@ -161,7 +161,7 @@ void MenuController::Draw() {
 }
 
 // アクティブなウィンドウを探す //
-WINDOW_MENU *MenuController::SearchActive() {
+MenuDef *MenuController::SearchActive() {
   // 現在アクティブな項目を探す //
   auto *p = &Parent;
   for (auto i = 0; std::cmp_less(i, SelectDepth); i++) {
@@ -203,7 +203,7 @@ void MenuController::KeyEvent(INPUT_BITS key) {
   auto Depth = SelectDepth;
 
   // In case the item just disabled itself...
-  while (!!(p->ItemPtr[Select[Depth]]->Flags & WINDOW_FLAGS::DISABLED)) {
+  while (!!(p->ItemPtr[Select[Depth]]->Flags & MenuFlags::DISABLED)) {
     Select[Depth] = ((Select[Depth] + 1) % p->NumItems);
   }
 
@@ -218,7 +218,7 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     }
     return;
   }
-  if (!!(p2->Flags & WINDOW_FLAGS::FAST_REPEAT) &&
+  if (!!(p2->Flags & MenuFlags::FAST_REPEAT) &&
       (Input_OptionKeyDelta(OldKey) != 0)) {
     KeyCount = FastRepeatWait;
     FastRepeatWait = (std::max)((FastRepeatWait - 2), 0);
@@ -243,11 +243,11 @@ void MenuController::KeyEvent(INPUT_BITS key) {
 
   OldKey = key;
 
-  const auto next_active = [](const WINDOW_MENU &menu, auto cur,
+  const auto next_active = [](const MenuDef &menu, auto cur,
                               int_fast8_t direction) {
     do {
       cur = ((cur + menu.NumItems + direction) % menu.NumItems);
-    } while (!!(menu.ItemPtr[cur]->Flags & WINDOW_FLAGS::DISABLED));
+    } while (!!(menu.ItemPtr[cur]->Flags & MenuFlags::DISABLED));
     return cur;
   };
 
@@ -331,9 +331,9 @@ void MenuController::KeyEvent(INPUT_BITS key) {
 
 ///// [CWin* 転調ファサード] /////
 
-void CWinMove(WINDOW_SYSTEM *ws) { ws->Tick(Key_Data); }
-void CWinDraw(WINDOW_SYSTEM *ws) { ws->Draw(); }
-WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws) { return ws->SearchActive(); }
+void CWinMove(MenuController *ws) { ws->Tick(Key_Data); }
+void CWinDraw(MenuController *ws) { ws->Draw(); }
+MenuDef *CWinSearchActive(MenuController *ws) { return ws->SearchActive(); }
 
 // コマンド [Exit] のデフォルト処理関数 //
 bool CWinExitFn(MenuController & /*ctrl*/, INPUT_BITS key) {
@@ -353,7 +353,7 @@ PIXEL_SIZE CWinItemExtent(Narrow::string_view str) {
 
 ///// [メッセージウィンドウ転調] /////
 
-void MWinInit(const WINDOW_LTRB &rc, MSG_WINDOW_FLAGS flags) {
+void MWinInit(const WINDOW_LTRB &rc, MsgWindowFlags flags) {
   MsgWin.Init(rc, flags);
 }
 void MWinOpen() { MsgWin.Open(); }
@@ -364,11 +364,11 @@ void MWinDraw() { MsgWin.Draw(); }
 void MWinMsg(Narrow::string_view str) { MsgWin.Msg(str); }
 void MWinFace(uint8_t faceID) { MsgWin.Face(faceID); }
 void MWinCmd(uint8_t cmd) { MsgWin.Cmd(cmd); }
-void MWinHelp(WINDOW_SYSTEM *ws) { MsgWin.Help(ws); }
+void MWinHelp(MenuController *ws) { MsgWin.Help(ws); }
 
 ///// [非公開関数実装] /////
 
-static void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
+static void CWinDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
                           bool is_title) {
   struct COLOR_PAIR {
     RGB shadow;
@@ -386,8 +386,8 @@ static void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
                  .text = {.r = 192, .g = 192, .b = 70}}, // Disabled, HL
   };
 
-  const auto disabled = !!(label.Flags & WINDOW_FLAGS::DISABLED);
-  const auto highlight = !!(label.Flags & WINDOW_FLAGS::HIGHLIGHT);
+  const auto disabled = !!(label.Flags & MenuFlags::DISABLED);
+  const auto highlight = !!(label.Flags & MenuFlags::HIGHLIGHT);
   const auto &col = COL[disabled][highlight];
   s.SetFont(CWIN_FONT);
 
@@ -397,7 +397,7 @@ static void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
   const auto starts_with_space =
       ((label.Title.ptr != nullptr) && (*label.Title.ptr == ' '));
   const auto left =
-      (!!(label.Flags & WINDOW_FLAGS::CENTER)
+      (!!(label.Flags & MenuFlags::CENTER)
            ? TextLayoutXCenter(s, label.Title)
            : ((is_title && starts_with_space) ? 0 : CWIN_ITEM_LEFT));
   s.Put({.x = (left + 1), .y = 0}, label.Title, col.shadow);

@@ -408,9 +408,9 @@ bool FnRecheck(MenuController & /*ctrl*/, INPUT_BITS key) {
   return true;
 }
 
-constexpr auto CENTER = WINDOW_FLAGS::CENTER;
-WINDOW_LABEL Title = {TITLE.data(), CENTER};
-std::array<WINDOW_CHOICE, (DAT::BASENAMES.size() + 6)> Info = {{
+constexpr auto CENTER = MenuFlags::CENTER;
+MenuLabel Title = {TITLE.data(), CENTER};
+std::array<MenuItem, (DAT::BASENAMES.size() + 6)> Info = {{
     {},
     {},
     {},
@@ -423,8 +423,8 @@ std::array<WINDOW_CHOICE, (DAT::BASENAMES.size() + 6)> Info = {{
     {"Recheck", "", FnRecheck, CENTER},
     {"Quit", "", CWinExitFn, CENTER},
 }};
-WINDOW_MENU Menu = {std::span(Info), [](MenuController &, bool) {}, &Title};
-WINDOW_SYSTEM Window(Menu);
+MenuDef Menu = {std::span(Info), [](MenuController &, bool) {}, &Title};
+MenuController Window(Menu);
 
 void Proc(bool &quit) {
   CWinMove(&Window);

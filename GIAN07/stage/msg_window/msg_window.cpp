@@ -52,11 +52,11 @@ void MsgWindow::MsgBlank() {
   text.clear();
 }
 
-void MsgWindow::Init(const WINDOW_LTRB &rc, MSG_WINDOW_FLAGS flags) {
+void MsgWindow::Init(const WINDOW_LTRB &rc, MsgWindowFlags flags) {
   max_size = rc;
   this->flags = flags;
   text_topleft = {
-      .x = (!!(flags & MSG_WINDOW_FLAGS::WITH_FACE) ? FACE_W : 8),
+      .x = (!!(flags & MsgWindowFlags::WITH_FACE) ? FACE_W : 8),
       .y = 8,
   };
   trr = TextObj.Register(rc.Size() - text_topleft);
@@ -201,7 +201,7 @@ void MsgWindow::Draw() {
           continue;
         }
         const PIXEL_COORD top = (i * font_dy);
-        const auto left = (!!(flags & MSG_WINDOW_FLAGS::CENTER)
+        const auto left = (!!(flags & MsgWindowFlags::CENTER)
                                ? TextLayoutXCenter(s, m)
                                : 0);
 
@@ -341,7 +341,7 @@ void MsgWindow::Cmd(uint8_t cmd) {
 }
 
 // ヘルプ文字列を送る //
-void MsgWindow::Help(WINDOW_SYSTEM *ws) {
+void MsgWindow::Help(MenuController *ws) {
   // アクティブなウィンドウを検索し、メッセージ領域をクリアする //
   const auto *p = CWinSearchActive(ws);
   MsgBlank();
