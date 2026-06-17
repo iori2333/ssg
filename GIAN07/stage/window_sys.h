@@ -166,10 +166,12 @@ struct WINDOW_CHOICE : public WINDOW_LABEL {
 struct WINDOW_MENU {
   using RefreshFn = std::function<void(MenuController &, bool tick)>;
 
-  WINDOW_LABEL *Title;
+  WINDOW_LABEL *Title = nullptr;
   WINDOW_CHOICE *ItemPtr[WINITEM_MAX] = {nullptr}; // 次の項目へのポインタ
   RefreshFn SetItems = [](MenuController &, bool) {};
-  uint8_t NumItems; // 項目数(<ITEM_MAX)
+  uint8_t NumItems = 0; // 項目数(<ITEM_MAX)
+
+  WINDOW_MENU() = default;
 
   template <size_t N>
   WINDOW_MENU(
@@ -253,80 +255,6 @@ private:
 
 // 後方互換エイリアス
 using WINDOW_SYSTEM = MenuController;
-
-// Vertically scrolling menu with elements generated on the fly.
-// Unfortunately has to be a template because [WINDOW_SYSTEM::CallBackFn]
-// doesn't take a reference to a window system object.
-template <WINDOW_LABEL &Title, size_t (*ListSize)(),
-          void (*Generate)(WINDOW_CHOICE &ret, size_t generated,
-                           size_t selected),
-          bool (*Handle)(MenuController &ctrl, INPUT_BITS key, size_t selected),
-          size_t MaxVisible = WINITEM_MAX>
-class WINDOW_MENU_SCROLL {
-  // Rewritten when scrolling.
-  static inline std::array<WINDOW_CHOICE, MaxVisible> Item = {};
-
-  static inline size_t Sel = 0;
-  static inline WINDOW_SYSTEM *Sys = nullptr;
-  static inline WINDOW_SYSTEM *ReturnTo = nullptr;
-
-  static void Scroll() {
-    const auto total = ListSize();
-    const auto visible = Menu.NumItems;
-    const auto visible_half = (Menu.NumItems / 2);
-    size_t generated_i =
-        ((std::cmp_less(Sel, visible_half)) ? 0
-         : (Sel >= (total - visible_half))  ? (total - visible)
-                                            : (Sel - visible_half));
-    for (auto item_i = decltype(visible){0}; item_i < visible; item_i++) {
-      Item[item_i].CallBackFn = Fn;
-      Generate(Item[item_i], generated_i, Sel);
-      if (generated_i == Sel) {
-        Sys->SetCurrentSelection(item_i);
-      }
-      generated_i++;
-    }
-  }
-
-  static bool Fn(MenuController &ctrl, INPUT_BITS key) {
-    if (key == KEY_UP) {
-      if (Sel == 0) {
-        Sel = ListSize();
-      }
-      Sel--;
-      Scroll();
-    } else if (key == KEY_DOWN) {
-      Sel++;
-      if (Sel >= ListSize()) {
-        Sel = 0;
-      }
-      Scroll();
-    } else if ((key == KEY_BOMB) || (key == KEY_ESC)) {
-      if (Sys->Depth() > 0) {
-        Sys->PopLevel();
-      } else {
-        Sys->Close();
-      }
-      if (ReturnTo != nullptr) {
-        ReturnTo->SetLastKey(key);
-      }
-      return false;
-    }
-    return Handle(ctrl, key, Sel);
-  }
-
-public:
-  static inline WINDOW_MENU Menu = {std::span(Item), [](MenuController &, bool) {},
-                                    &Title};
-
-  static void Init(WINDOW_SYSTEM &sys, size_t sel, WINDOW_SYSTEM *return_to) {
-    assert(sel < ListSize());
-    Sys = &sys;
-    ReturnTo = return_to;
-    Menu.NumItems = (std::min)(ListSize(), Item.size());
-    Scroll();
-  }
-};
 
 ///// [ 関数 ] /////
 

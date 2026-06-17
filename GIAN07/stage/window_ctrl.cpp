@@ -18,6 +18,7 @@
 #include "gameflow/gameflow_manager.h"
 #include "level.h"
 #include "loader.h"
+#include "menu/scroll_menu.h"
 #include "music.h"
 #include "platform/input.h"
 #include "platform/midi_backend.h"
@@ -396,14 +397,14 @@ WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](MenuController 
 WINDOW_SYSTEM MainWindow(Main::Menu);
 WINDOW_SYSTEM ExitWindow(ExitMenu);
 WINDOW_SYSTEM ContinueWindow(ContinueMenu);
-WINDOW_SYSTEM BGMPackWindow(
-    WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize,
-                       &BGMPack::Generate, &BGMPack::Handle, 20>::Menu);
+ScrollMenu BGMPackScrollMenu(BGMPack::TitleItem, &BGMPack::ListSize,
+                             &BGMPack::Generate, &BGMPack::Handle, 20);
+WINDOW_SYSTEM BGMPackWindow(BGMPackScrollMenu.Menu());
 WINDOW_SYSTEM GameOverSaveWindow(GameOverSaveMenu);
-WINDOW_SYSTEM ReplayFilesWindow(
-    WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
-                       &ReplayFiles::Generate, &ReplayFiles::Handle,
-                       20>::Menu);
+ScrollMenu ReplayFilesScrollMenu(ReplayFiles::TitleItem, &ReplayFiles::ListSize,
+                                 &ReplayFiles::Generate, &ReplayFiles::Handle,
+                                 20);
+WINDOW_SYSTEM ReplayFilesWindow(ReplayFilesScrollMenu.Menu());
 
 // メインメニューの初期化 //
 void InitMainWindow() {
@@ -603,9 +604,7 @@ void Open() {
   }
   w = (std::min)(w, GRP_RES.w);
 
-  WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize, &BGMPack::Generate,
-                     &BGMPack::Handle, 20>::Init(BGMPackWindow, SelAtOpen,
-                                                 &MainWindow);
+  BGMPackScrollMenu.Init(BGMPackWindow, SelAtOpen, &MainWindow);
   BGMPackWindow.Init(w);
   BGMPackWindow.OpenCentered(w, BGMPackWindow.SelectionAt(0));
 }
@@ -722,9 +721,7 @@ void Open() {
   w = (std::max)(w, CWinItemExtent(" Exit").w);
   w = (std::min)(w, GRP_RES.w);
 
-  WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
-                     &ReplayFiles::Generate, &ReplayFiles::Handle,
-                     20>::Init(ReplayFilesWindow, 0, &MainWindow);
+  ReplayFilesScrollMenu.Init(ReplayFilesWindow, 0, &MainWindow);
   ReplayFilesWindow.Init(w);
   ReplayFilesWindow.OpenCentered(w, ReplayFilesWindow.SelectionAt(0));
 }
