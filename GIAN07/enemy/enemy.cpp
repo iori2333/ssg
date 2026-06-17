@@ -59,7 +59,7 @@ void EnemyManager::UpdateHoming(const EnemyData *e) {
 
 bool EnemyManager::EnemyManager::LaserHITCHK(const EnemyData *e, int ox, int oy,
                                              uint8_t d) {
-  const int chkw = (min(e->g_height, e->g_width) + (3 * 64));
+  const int chkw = (std::min(e->g_height, e->g_width) + (3 * 64));
 
   const int tx = (e->x - ox);
   const int ty = (e->y - oy);

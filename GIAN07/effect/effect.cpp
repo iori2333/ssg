@@ -87,7 +87,7 @@ void EffectManager::DrawCircleEffects() {
 
     case (CEFC_CIRCLE1): // 集
       for (uint8_t k = 0; k < 4; k++) {
-        r = ce->r - max(2, (k * ce->r) / 8);
+        r = ce->r - std::max(2, (k * ce->r) / 8);
         if (r < 0)
           continue;
         GrpGeom->SetColor({5u, (k + 2u), (k + 2u)});
@@ -97,7 +97,7 @@ void EffectManager::DrawCircleEffects() {
 
     case (CEFC_CIRCLE2): // 離
       for (uint8_t k = 0; k < 4; k++) {
-        r = ce->r - max(2, (k * ce->r) / 12);
+        r = ce->r - std::max(2, (k * ce->r) / 12);
         // r = ce->r - max(2, (k * (600-ce->r))/16);
         if (r < 0)
           continue;

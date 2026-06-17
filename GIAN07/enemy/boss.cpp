@@ -343,7 +343,7 @@ void BossManager::HPG_Move(uint32_t now) {
   case (BHPG_CLOSE):
     hpg.XTemp[BOSSHPG_HEIGHT - 1] += 6;
     for (i = BOSSHPG_HEIGHT - 2; i >= 0; i--) {
-      hpg.XTemp[i] = max(hpg.XTemp[i], hpg.XTemp[i + 1] - 20);
+      hpg.XTemp[i] = std::max(hpg.XTemp[i], hpg.XTemp[i + 1] - 20);
     }
     if (hpg.XTemp[0] >= BOSSHPG_START_X)
       HPG_Close();

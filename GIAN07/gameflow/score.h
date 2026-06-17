@@ -9,8 +9,9 @@
 #include <cstdint>
 
 ///// [ 定数 ] /////
-inline constexpr auto NR_NAME_LEN = 9; // ネームレジストの名前の長さ('\0' 含む)
-inline constexpr auto NR_RANK_MAX = 5; // 順位付け(Save)される最大数
+inline constexpr std::size_t NR_NAME_LEN =
+    9; // ネームレジストの名前の長さ('\0' 含む)
+inline constexpr std::size_t NR_RANK_MAX = 5; // 順位付け(Save)される最大数
 
 ///// [構造体] /////
 

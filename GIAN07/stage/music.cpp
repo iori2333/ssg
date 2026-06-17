@@ -67,7 +67,8 @@ void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
     return;
   }
   const auto dev_full = maybe_dev_full.value();
-  const Narrow::string_view dev = {dev_full.data(), min(dev_full.size(), 13)};
+  const Narrow::string_view dev = {dev_full.data(),
+                                   std::min(dev_full.size(), 13uz)};
   TextObj.Render(topleft, mid_dev, dev, [&dev](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);

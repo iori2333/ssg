@@ -41,8 +41,8 @@ struct BossHpgInfo {
   uint32_t Update;   // 更新用の値
   uint32_t Count;    // フレーム数保持
 
-  uint16_t XTemp[BOSSHPG_HEIGHT]; // ＨＰゲージの演出用
-  uint8_t State;                  // 状態
+  std::array<int, BOSSHPG_HEIGHT> XTemp; // ＨＰゲージの演出用
+  uint8_t State;                         // 状態
 };
 
 ///// [ 関数 ] /////

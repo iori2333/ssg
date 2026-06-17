@@ -445,8 +445,8 @@ void GameFlowManager::NameRegistProc(bool &) {
 
   if (time % 64 > 32) {
     GrpGeom->SetColor({4, 0, 0});
-    len = min(strlen(Scores.score_strings[current_rank - 1].Name),
-              NR_NAME_LEN - 2);
+    len = std::min(strlen(Scores.score_strings[current_rank - 1].Name),
+                   NR_NAME_LEN - 2);
     gx += (len * 16 + 88);
     gy += (4);
     GrpGeom->DrawBox(gx, gy, (gx + 14), (gy + 16));
@@ -1096,7 +1096,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
 
   static char deg = 0;
   static char spd = 0;
-  static uint16_t count = 0;
+  static int count = 0;
 
   constexpr PIXEL_LTRB src[4] = {
       PIXEL_LTWH{0, 344, 56, 48},
@@ -1276,7 +1276,7 @@ void GameFlowManager::WeaponSelectProc(bool &) {
     }
     GrpGeom->Unlock();
 
-    Players.viv.exp = min(count, 255);
+    Players.viv.exp = std::min(count, 255);
     if (Players.viv.exp < 31)
       Players.viv.lay_time = Players.viv.lay_grp = 0;
 

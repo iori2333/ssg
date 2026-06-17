@@ -376,8 +376,8 @@ void BossManager::BitSTDRoll(void) {
   ox = bit_data.x;
   oy = bit_data.y;
 
-  const uint8_t delta = (256 / bit_data.NumBits);
-  const uint8_t ExSpeed = abs(bit_data.BitSpeed / 2);
+  const int delta = (256 / bit_data.NumBits);
+  const int ExSpeed = abs(bit_data.BitSpeed / 2);
 
   /*	if((bit_data.DeltaAngle / 256) < delta){
                   bit_data.DeltaAngle += 64;
@@ -410,9 +410,9 @@ void BossManager::BitSTDRoll(void) {
         dir = 2;
       // if(bit_data.ForceCount)        bit->Angle += min(dir, 2);
       if (bit_data.BitSpeed > 0)
-        bit->Angle += max(dir, ExSpeed);
+        bit->Angle += std::max(dir, ExSpeed);
       else
-        bit->Angle += max(dir, (ExSpeed + 1));
+        bit->Angle += std::max(dir, (ExSpeed + 1));
       //			if(dir > 2) bit->Angle+=ExSpeed;
       //			else        bit->Angle+=(ExSpeed-1);
       //			char	buf[100];
@@ -424,9 +424,9 @@ void BossManager::BitSTDRoll(void) {
       //			if(bit_data.ForceCount)        bit->Angle -=
       // min(-dir, 2);
       if (bit_data.BitSpeed < 0)
-        bit->Angle -= max(-dir, ExSpeed);
+        bit->Angle -= std::max(-dir, ExSpeed);
       else
-        bit->Angle -= max(-dir, (ExSpeed + 1));
+        bit->Angle -= std::max(-dir, (ExSpeed + 1));
       //			if(dir < -2) bit->Angle-=ExSpeed;
       //			else         bit->Angle-=(ExSpeed-1);
       //			char	buf[100];
