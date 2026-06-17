@@ -6,7 +6,7 @@
 #include "EnemyExCtrl.h"
 #include "boss_manager.h"
 #include "enemy_manager.h"
-#include "LLASER.h"
+#include "long_laser.h"
 #include "laser_manager.h"
 #include "loader.h"
 #include "MAID.h"

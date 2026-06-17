@@ -24,9 +24,9 @@
 #include "effect/effect_manager.h" // Effects 参照宣言
 #include "gameflow/GAMEMAIN.h"  // メインのルーチン切り替え処理
 #include "gameflow/gameflow_manager.h" // GameMain, DemoTimer, ... 参照宣言
-#include "bullet/HOMINGL.h"   // ホーミングレーザーの処理
-#include "bullet/LASER.h"     // 短いレーザー＆リフレクトレーザー処理
-#include "bullet/LLASER.h"    // なが～いレーザーの処理
+#include "bullet/homing_laser.h"   // ホーミングレーザーの処理
+#include "bullet/laser.h"     // 短いレーザー＆リフレクトレーザー処理
+#include "bullet/long_laser.h"    // なが～いレーザーの処理
 #include "bullet/bullet_manager.h" // BulletManager + backward-compat wrappers
 #include "bullet/laser_manager.h"  // LaserManager + backward-compat wrappers
 #include "loader.h"    // 各種ローダー

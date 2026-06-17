@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "TAMA.h"
+#include "bullet.h"
 #include <array>
 #include <cstdint>
 

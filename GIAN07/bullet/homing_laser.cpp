@@ -5,7 +5,7 @@
 
 #include "GEOMETRY.h"
 #include "gian.h"
-#include "HOMINGL.h"
+#include "homing_laser.h"
 #include "laser_manager.h"
 #include "MAID.h"
 #include "game/snd.h"

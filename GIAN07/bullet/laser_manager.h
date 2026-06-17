@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "HOMINGL.h"
-#include "LASER.h"
-#include "LLASER.h"
+#include "homing_laser.h"
+#include "laser.h"
+#include "long_laser.h"
 #include <array>
 #include <cstdint>
 
