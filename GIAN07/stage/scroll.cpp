@@ -4,12 +4,12 @@
 /*                                                                           */
 
 #include "config.h"
-#include "DEMOPLAY.h"
+#include "demo_play.h"
 #include "gian.h"
 #include "level.h"
-#include "SCL.h" // ＳＣＬ定義ファイル
-#include "SCROLL.h"
-#include "WindowSys.h"
+#include "scene.h" // ＳＣＬ定義ファイル
+#include "scroll.h"
+#include "window_sys.h"
 #include "game/bgm.h"
 #include "game/cast.h"
 #include "game/debug.h"

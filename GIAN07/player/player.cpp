@@ -11,7 +11,7 @@
 #include "FONTUTY.h"
 #include "GEOMETRY.h"
 #include "gian.h"
-#include "MAID.h"
+#include "player.h"
 #include "game/input.h"
 #include "game/snd.h"
 #include "game/ut_math.h"

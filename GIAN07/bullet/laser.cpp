@@ -10,7 +10,7 @@
 #include "laser_manager.h"
 #include "level.h"
 #include "long_laser.h"
-#include "PRankCtrl.h"
+#include "play_rank.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 

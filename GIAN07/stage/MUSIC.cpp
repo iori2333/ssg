@@ -7,9 +7,9 @@
 // imaxdiv_t'` if this appears after a module import.
 #include <inttypes.h> // for PRId64
 
-#include "EFFECT.h"
+#include "effect.h"
 #include "FONTUTY.h"
-#include "GAMEMAIN.h"
+#include "game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "loader.h"
 #include "MUSIC.h"

@@ -4,18 +4,18 @@
 /*                                                                           */
 #include "BOMBEFC.h" // 爆発エフェクト処理
 #include "config.h"
-#include "DEMOPLAY.h"
+#include "demo_play.h"
 #include "demo_manager.h"
 #include "FONTUTY.h"
-#include "GAMEMAIN.h"
+#include "game_main.h"
 #include "GEOMETRY.h"
 #include "gian.h"
 #include "LENS.h"
 #include "level.h"
 #include "MUSIC.h"
-#include "SCORE.h"
-#include "WindowCtrl.h" // ウィンドウ定義
-#include "WindowSys.h"
+#include "score.h"
+#include "window_ctrl.h" // ウィンドウ定義
+#include "window_sys.h"
 #include "game/bgm.h"
 #include "game/debug.h"
 #include "game/input.h"

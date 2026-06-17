@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "config.h"
-#include "DEMOPLAY.h"
+#include "demo_play.h"
 #include "demo_manager.h"
 #include "gian.h"
 #include "lz_uty.h"

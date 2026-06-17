@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "gian.h"
-#include "MAIDTAMA.h"
+#include "player_shot.h"
 #include "player_manager.h"
 #include "game/cast.h"
 #include "game/input.h"

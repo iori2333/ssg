@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "GAMEMAIN.h"
-#include "SCORE.h"
+#include "game_main.h"
+#include "score.h"
 #include "player/player_types.h"
 #include <array>
 #include <cstdint>

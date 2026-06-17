@@ -9,7 +9,7 @@
 #include "long_laser.h"
 #include "laser_manager.h"
 #include "loader.h"
-#include "MAID.h"
+#include "player.h"
 #include "player_manager.h"
 #include "game/cast.h"
 #include "game/snd.h"

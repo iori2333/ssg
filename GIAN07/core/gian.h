@@ -15,14 +15,14 @@
 ///// [Include Files] /////
 #include "constants.h"
 
-#include "enemy/BOSS.h"      // ボスの定義＆ボス用エフェクトなど
+#include "enemy/boss.h"      // ボスの定義＆ボス用エフェクトなど
 #include "enemy/boss_manager.h"   // BossManager + backward-compat wrappers
 #include "enemy/enemy_manager.h" // EnemyManager + backward-compat wrappers
-#include "effect/EFFECT.h"    // 主にテキストベースのエフェクト処理
-#include "effect/EFFECT3D.h"  // ３Ｄエフェクト
+#include "effect/effect.h"    // 主にテキストベースのエフェクト処理
+#include "effect/effect3d.h"  // ３Ｄエフェクト
 #include "effect/FRAGMENT.h"  // 破片系エフェクト処理
 #include "effect/effect_manager.h" // Effects 参照宣言
-#include "gameflow/GAMEMAIN.h"  // メインのルーチン切り替え処理
+#include "gameflow/game_main.h"  // メインのルーチン切り替え処理
 #include "gameflow/gameflow_manager.h" // GameMain, DemoTimer, ... 参照宣言
 #include "bullet/homing_laser.h"   // ホーミングレーザーの処理
 #include "bullet/laser.h"     // 短いレーザー＆リフレクトレーザー処理
@@ -30,16 +30,16 @@
 #include "bullet/bullet_manager.h" // BulletManager + backward-compat wrappers
 #include "bullet/laser_manager.h"  // LaserManager + backward-compat wrappers
 #include "loader.h"    // 各種ローダー
-#include "player/MAID.h"      // その名の通り
-#include "player/MAIDTAMA.h"  // 自機ショットの処理
+#include "player/player.h"      // その名の通り
+#include "player/player_shot.h"  // 自機ショットの処理
 #include "player/player_manager.h" // PlayerManager + backward-compat wrappers
 #include "player/item_manager.h"   // ItemManager + backward-compat wrappers
-#include "gameflow/PRankCtrl.h" // プレイランク管理
+#include "gameflow/play_rank.h" // プレイランク管理
 #include "gameflow/rank_manager.h"   // RankManager + backward-compat wrappers
 #include "gameflow/demo_manager.h"   // DemoManager + backward-compat wrappers
 #include "gameflow/score_manager.h"  // ScoreManager + backward-compat wrappers
 #include "gameflow/ending_manager.h" // EndingManager + backward-compat wrappers
-#include "stage/SCROLL.h"    // 背景スクロール＆ＳＣＬ管理
+#include "stage/scroll.h"    // 背景スクロール＆ＳＣＬ管理
 #include "stage/scroll_manager.h"    // ScrollManager + backward-compat wrappers
 
 #include "game/ut_math.h" // for rnd()

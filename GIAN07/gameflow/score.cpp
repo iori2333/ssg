@@ -7,7 +7,7 @@
 // imaxdiv_t'` if this appears after a module import.
 #include "level.h"
 #include "lz_uty.h"
-#include "SCORE.h"
+#include "score.h"
 #include "score_manager.h"
 #include "game/defer.h"
 #include <array>

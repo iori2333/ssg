@@ -10,7 +10,7 @@
 // 2000/02/03 : 製作開始
 
 ///// [Include Files] /////
-#include "ENDING.h"
+#include "ending.h"
 #include <functional>
 
 ///// [ 定数 ] /////

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "SCROLL.h"
+#include "scroll.h"
 #include "game/coords.h"
 #include <array>
 

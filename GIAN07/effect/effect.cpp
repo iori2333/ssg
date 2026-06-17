@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "EFFECT.h"
+#include "effect.h"
 #include "FONTUTY.h"
 #include "GEOMETRY.h"
 #include "gian.h"

@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "entry.h"
-#include "gameflow/GAMEMAIN.h"
+#include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "loader.h"
 #include "game/bgm.h"

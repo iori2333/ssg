@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "EFFECT3D.h"
+#include "effect3d.h"
 #include "gian.h"
 #include "game/cast.h"
 #include "game/ut_math.h"

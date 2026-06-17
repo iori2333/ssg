@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "BOMBEFC.h" // 爆発エフェクト処理
-#include "BOSS.h"
+#include "boss.h"
 #include "boss_manager.h"
 #include "EnemyExCtrl.h"
 #include "GEOMETRY.h"

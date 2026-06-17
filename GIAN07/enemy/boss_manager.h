@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "BOSS.h"
+#include "boss.h"
 #include "EnemyExCtrl.h"
 #include <array>
 #include <cstdint>

@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "WindowSys.h"
+#include "window_sys.h"
 #include "FONTUTY.h"
 #include "loader.h"
 #include "game/enum_flags.h"

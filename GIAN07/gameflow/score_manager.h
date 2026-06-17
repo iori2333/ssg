@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "SCORE.h"
+#include "score.h"
 #include "lz_uty.h"
 #include <array>
 #include <cstdint>

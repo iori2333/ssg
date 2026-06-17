@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "PRankCtrl.h"
+#include "play_rank.h"
 
 struct RankManager {
   PlayRankState state; // PlayRank

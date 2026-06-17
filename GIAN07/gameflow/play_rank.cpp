@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "PRankCtrl.h"
+#include "play_rank.h"
 #include "gian.h"
 #include "level.h"
 

@@ -6,7 +6,7 @@
 #include "GEOMETRY.h"
 #include "long_laser.h"
 #include "laser_manager.h"
-#include "MAID.h"
+#include "player.h"
 #include "player_manager.h"
 #include "game/snd.h"
 #include "game/ut_math.h"

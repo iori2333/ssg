@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "ENEMY.h"
+#include "enemy.h"
 #include <array>
 #include <cstdint>
 

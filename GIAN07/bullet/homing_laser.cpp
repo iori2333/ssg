@@ -7,7 +7,7 @@
 #include "gian.h"
 #include "homing_laser.h"
 #include "laser_manager.h"
-#include "MAID.h"
+#include "player.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"

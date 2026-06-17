@@ -4,11 +4,11 @@
 /*                                                                           */
 
 #include "config.h"
-#include "ENEMY.h"
+#include "enemy.h"
 #include "gian.h"
 #include "lz_uty.h"
 #include "MUSIC.h"
-#include "WindowSys.h"
+#include "window_sys.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
 #include "game/graphics.h"

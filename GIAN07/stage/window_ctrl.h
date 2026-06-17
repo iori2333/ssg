@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "WindowSys.h"
+#include "window_sys.h"
 
 ///// [更新履歴] /////
 

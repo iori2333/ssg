@@ -10,7 +10,7 @@
 // 2000/03/22 : レーザー関数のＩＤの意味がレーザー配列のＩＤからその敵が
 //            : 発射しているレーザーの何番目か、に変更された
 
-#include "enemy/ENEMY.h"
+#include "enemy/enemy.h"
 #include "platform/graphics_backend.h"
 
 //// レーザー用定数２ ////

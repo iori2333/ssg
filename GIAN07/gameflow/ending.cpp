@@ -3,10 +3,10 @@
  *
  */
 
-#include "ENDING.h"
+#include "ending.h"
 #include "ending_manager.h"
 #include "gian.h"
-#include "SCL.h" // ＳＣＬ定義ファイル
+#include "scene.h" // ＳＣＬ定義ファイル
 #include "game/bgm.h"
 #include "game/cast.h"
 #include "game/endian.h"

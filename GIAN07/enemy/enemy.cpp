@@ -4,7 +4,7 @@
 /*************************************************************************************************/
 
 #include "ECL_LEN.h"
-#include "ENEMY.h"
+#include "enemy.h"
 #include "enemy_manager.h"
 #include "gian.h"
 #include "core/entity.h"

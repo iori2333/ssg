@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "BOSS.h"
-#include "ENEMY.h"
+#include "boss.h"
+#include "enemy.h"
 #include "core/point.h"
 
 ///// [更新履歴] /////

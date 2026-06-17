@@ -5,7 +5,7 @@
 #pragma once
 
 #include "player_types.h"
-#include "MAIDTAMA.h"
+#include "player_shot.h"
 #include <array>
 #include <cstdint>
 

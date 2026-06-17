@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "ENEMY.h"
+#include "enemy.h"
 #include "platform/buffer.h"
 #include <array>
 #include <cstdint>
