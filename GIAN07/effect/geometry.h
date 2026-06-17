@@ -30,7 +30,7 @@ void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
 
 void Circle_Approximated(GRAPHICS_GEOMETRY_POLY auto &gc, WINDOW_POINT center,
                          PIXEL_COORD radius) {
-  std::array<VERTEX_XY, CIRCLE_POINTS> xys;
+  std::array<VERTEX_XY, CIRCLE_POINTS> xys{};
   ApproximateCircle(xys, center, radius);
   gc.DrawLineStrip(xys);
 }
@@ -68,7 +68,7 @@ void Circle_Exact(GRAPHICS_GEOMETRY_FB auto &gf, WINDOW_POINT c,
 
 void CircleF_Approximated(GRAPHICS_GEOMETRY_POLY auto &gp, WINDOW_POINT center,
                           PIXEL_COORD radius, bool alpha) {
-  std::array<VERTEX_XY, (1 + CIRCLE_POINTS)> xys;
+  std::array<VERTEX_XY, (1 + CIRCLE_POINTS)> xys{};
   xys[0].x = static_cast<VERTEX_COORD>(center.x);
   xys[0].y = static_cast<VERTEX_COORD>(center.y);
   ApproximateCircle(std::span(xys).template subspan<1, CIRCLE_POINTS>(), center,
@@ -109,14 +109,14 @@ void FatCircleA_Approximated(GRAPHICS_GEOMETRY_POLY auto &gp,
   if (w >= r) {
     Geometry::CircleF_Approximated(gp, center, (r + w), true);
   }
-  std::array<VERTEX_XY, (CIRCLE_POINTS * 2)> xys;
+  std::array<VERTEX_XY, (CIRCLE_POINTS * 2)> xys{};
   ApproximateFatCircle(xys, center, r, w);
   gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, xys);
 }
 
 void GrdRect(GRAPHICS_GEOMETRY_POLY auto &gp, std::span<const VERTEX_XY, 4> p,
              RGBA col_edge, bool alpha) {
-  const RGBA col_center = {255, 255, 255, col_edge.a};
+  const RGBA col_center = {.r = 255, .g = 255, .b = 255, .a = col_edge.a};
 
   // Use an explicit integer division for a pixel-perfect match of the
   // original look, even if VERTEX_XY is a floating-point type.

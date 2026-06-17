@@ -15,6 +15,7 @@
 #include "player/item_manager.h"
 #include "player/player_manager.h"
 #include "stage/scroll_manager.h"
+#include <format>
 
 ///// [グローバル変数] /////
 // HIGH_SCORE		*HighScore;
@@ -28,10 +29,10 @@ void StdStatusOutput() {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
 
   static uint32_t prev;
-  static uint32_t fps, count;
+  static uint32_t fps;
+  static uint32_t count;
   // extern InputConfig			IConfig;
   const char *const DItem[4] = {"Easy", "Norm", "Hard", "Luna"};
-  char buf[100];
 
 #ifdef PBG_DEBUG
   if (!DebugDat.MsgDisplay)
@@ -47,8 +48,7 @@ void StdStatusOutput() {
     prev = now;
   }
 
-  sprintf(buf, "%03u FPS", fps);
-  GrpPut16(0, 0, buf);
+  GrpPut16(0, 0, std::format("{:03} FPS", fps).c_str());
 
   // ---- RANK 表示 ----
   {
@@ -58,54 +58,46 @@ void StdStatusOutput() {
                         ? GAME_EXTRA
                         : GameState.game_level;
 
-    sprintf(buf, "RK  %5d", Ranking.state.Rank);
-    GrpPut16(0, 34, buf);
-    sprintf(buf, "LV%7s", (lv < 5) ? DiffName[lv] : "????");
-    GrpPut16(0, 50, buf);
-    sprintf(buf, "Miss%5d", Players.viv.miss_count);
-    GrpPut16(0, 82, buf);
-    sprintf(buf, "Bomb%5d", Players.viv.bomb_used);
-    GrpPut16(0, 98, buf);
+    GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
+    GrpPut16(0, 50,
+             std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
+    GrpPut16(0, 82, std::format("Miss{:5}", Players.viv.miss_count).c_str());
+    GrpPut16(0, 98, std::format("Bomb{:5}", Players.viv.bomb_used).c_str());
   }
 
 #ifdef PBG_DEBUG
 #ifdef SUPPORT_GRP_BITDEPTH
-  sprintf(buf, "%2dBppMode", ConfigDat.BitDepth.v.value());
-  GrpPut16(0, 32, buf);
+  GrpPut16(0, 32,
+           std::format("{:2}BppMode", ConfigDat.BitDepth.v.value()).c_str());
 #endif
   // sprintf(buf,"%s",DItems.entities[ConfigDat.GameState.game_level.v]);
   // GrpPut16(0,50,buf);
 
-  sprintf(buf, "Enemy %3d", Enemies.count);
-  GrpPut16(0, 96 + 40, buf);
+  GrpPut16(0, 96 + 40, std::format("Enemy {:3}", Enemies.count).c_str());
 
-  sprintf(buf, "Tama1 %3d", Bullets.count_small);
-  GrpPut16(0, 128 + 40, buf);
-  sprintf(buf, "Tama2 %3d", Bullets.count_large);
-  GrpPut16(0, 148 + 40, buf);
-  sprintf(buf, "Laser %3d", Lasers.count);
-  GrpPut16(0, 176 + 40, buf);
-  sprintf(buf, "HLaser %2d", Lasers.homing_count);
-  GrpPut16(0, 196 + 40, buf);
+  GrpPut16(0, 128 + 40, std::format("Tama1 {:3}", Bullets.count_small).c_str());
+  GrpPut16(0, 148 + 40,
+           std::format("Tama2 {:3}", Bullets.count_large).c_str());
+  GrpPut16(0, 176 + 40, std::format("Laser {:3}", Lasers.count).c_str());
+  GrpPut16(0, 196 + 40,
+           std::format("HLaser {:2}", Lasers.homing_count).c_str());
 
-  sprintf(buf, "MTama %3d", Players.maid_tama_now);
-  GrpPut16(0, 224 + 40, buf);
+  GrpPut16(0, 224 + 40,
+           std::format("MTama {:3}", Players.maid_tama_now).c_str());
 
-  sprintf(buf, "Item  %3d", Items.count);
-  GrpPut16(0, 252 + 40, buf);
+  GrpPut16(0, 252 + 40, std::format("Item  {:3}", Items.count).c_str());
 
-  sprintf(buf, "Pow   %3d", Players.viv.exp);
-  GrpPut16(0, 290 + 40, buf);
+  GrpPut16(0, 290 + 40, std::format("Pow   {:3}", Players.viv.exp).c_str());
 
-  sprintf(buf, "SSPD  %3d", Scroller.scroll.ScrollSpeed);
-  GrpPut16(0, 320 + 40, buf);
+  GrpPut16(0, 320 + 40,
+           std::format("SSPD  {:3}", Scroller.scroll.ScrollSpeed).c_str());
 
   GrpPut16(0, 440, "Gian07");
   GrpPut16(0, 460, "DebugMode");
 
   GrpPut16(column2_left, 100, "SCL Count");
-  sprintf(buf, " %5d", GameState.game_count);
-  GrpPut16(column2_left, 120, buf);
+  GrpPut16(column2_left, 120,
+           std::format(" {:5}", GameState.game_count).c_str());
 #else
   // GrpPut16(0,440,"G07");
   // GrpPut16(0,460,"12/5 Ver");
@@ -113,21 +105,24 @@ void StdStatusOutput() {
 
   const auto tm = Time_NowLocal();
 
-  sprintf(buf, "%02u/%02u/%02u", tm.month, tm.day, (tm.year % 100u));
   GrpPut16(column2_left, 0, "Date");
-  GrpPut16(column2_left, 20, buf);
+  GrpPut16(column2_left, 20,
+           std::format("{:02}/{:02}/{:02}", tm.month, tm.day,
+                       (tm.year % 100U))
+               .c_str());
 
-  sprintf(buf, "%02u:%02u:%02u", tm.hour, tm.minute, tm.second);
   GrpPut16(column2_left, 50, "Time");
-  GrpPut16(column2_left, 70, buf);
+  GrpPut16(column2_left, 70,
+           std::format("{:02}:{:02}:{:02}", tm.hour, tm.minute, tm.second)
+               .c_str());
 
 #ifndef PBG_DEBUG // pbg quirk
-  sprintf(buf, "Bomb   %d", Players.viv.bomb);
-  GrpPut16(column2_left, 400, buf);
+  GrpPut16(column2_left, 400,
+           std::format("Bomb   {}", Players.viv.bomb).c_str());
 #endif
 
-  sprintf(buf, "Left   %d", Players.viv.left);
-  GrpPut16(column2_left, 440, buf);
-  sprintf(buf, "Credit %d", Players.viv.credit); // -1 に注意だ！！
-  GrpPut16(column2_left, 460, buf);
+  GrpPut16(column2_left, 440,
+           std::format("Left   {}", Players.viv.left).c_str());
+  GrpPut16(column2_left, 460,
+           std::format("Credit {}", Players.viv.credit).c_str()); // -1 に注意だ！！
 }

@@ -4,6 +4,7 @@
 /*                                                                           */
 
 #include "homing_laser.h"
+
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "geometry.h"
@@ -11,6 +12,7 @@
 #include "laser_manager.h"
 #include "platform/graphics_backend.h"
 #include "player.h"
+#include <utility>
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
@@ -19,7 +21,7 @@ static constexpr auto HOMINGL_WIDTH = (8 * 64);
 ///// [マクロ] /////
 constexpr int HLASER_GETNEXT(int current) {
   // 後で mod -> and に変更すること //
-  return (current + HLASER_LEN * HLASER_SECTION - 1) %
+  return (current + (HLASER_LEN * HLASER_SECTION) - 1) %
          (HLASER_LEN * HLASER_SECTION);
 }
 
@@ -30,7 +32,7 @@ constexpr int HLASER_GETPREV(int current, int n) {
 
 // ホーミングレーザーの初期化を行う //
 void LaserManager::InitHoming() {
-  int i;
+  int i = 0;
 
   homing_count = 0;
 
@@ -46,12 +48,13 @@ void LaserManager::InitHoming() {
 
 // ホーミングレーザーをセットする //
 void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
-  int i, j;
-  uint8_t deg;
-  HomingLaserData *p;
+  int i = 0;
+  int j = 0;
+  uint8_t deg = 0;
+  HomingLaserData *p = nullptr;
 
   // 1-n としているのは、角度設定のためね... //
-  for (i = 1; i <= (hinfo->n); i++) {
+  for (i = 1; std::cmp_less_equal(i, (hinfo->n)); i++) {
     p = free_list.Next;
     if (p == nullptr) {
       return; // データを確保できない
@@ -73,11 +76,12 @@ void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
     p->Type = hinfo->type; // 種類
     p->State = HLS_NORM;   // 状態
 
-    if (hinfo->n & 1)
-      deg = hinfo->d + (i >> 1) * (hinfo->dw) * (1 - ((i & 1) << 1));
-    else
+    if ((hinfo->n & 1) != 0) {
+      deg = hinfo->d + ((i >> 1) * (hinfo->dw) * (1 - ((i & 1) << 1)));
+    } else {
       deg = hinfo->d - ((hinfo->dw) >> 1) +
-            (i >> 1) * (hinfo->dw) * (1 - ((i & 1) << 1));
+            ((i >> 1) * (hinfo->dw) * (1 - ((i & 1) << 1)));
+    }
 
     // しっぽ情報を初期化する //
     for (j = 0; j < HLASER_LEN * HLASER_SECTION; j++) {
@@ -90,11 +94,14 @@ void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
 
 // ホーミングレーザーを動作させる //
 void LaserManager::MoveHoming() {
-  HomingLaserData *hl;
-  HomingLaserData *temp;
-  int x, y;
-  int i, j;
-  int deg, deg2;
+  HomingLaserData *hl = nullptr;
+  HomingLaserData *temp = nullptr;
+  int x = 0;
+  int y = 0;
+  int i = 0;
+  int j = 0;
+  int deg = 0;
+  int deg2 = 0;
 
   // 次のフレームに移行する //
   for (hl = active.Next; hl != nullptr; hl = hl->Next) {
@@ -109,36 +116,40 @@ void LaserManager::MoveHoming() {
 
     // 種類別の移動処理 //
     switch (hl->Type) {
-    case (HL_TYPE1):
+    case HL_TYPE1:
       deg2 = -deg + atan8(Players.viv.x - x, Players.viv.y - y);
-      if (deg2 < -128)
+      if (deg2 < -128) {
         deg2 += 256;
-      else if (deg2 > 128)
+      } else if (deg2 > 128) {
         deg2 -= 256;
+      }
 
       if (abs(deg2) < 8) {
         hl->Type = HL_NONE;
         Snd_SEPlay(17, hl->p[hl->Current].x);
       } else {
-        if (hl->v > 2 * 64)
+        if (hl->v > 2 * 64) {
           hl->v -= hl->a;
-        i = 1 + (hl->Count) / 32;
+        }
+        i = 1 + ((hl->Count) / 32);
         i = (deg2 * i) / 32;
-        if (i)
+        if (i != 0) {
           deg = deg + i;
-        else
+        } else {
           deg = deg + deg2;
+        }
       }
 
-      if (hl->Count > 120)
+      if (hl->Count > 120) {
         hl->Type = HL_NONE;
+      }
 
       hl->p[hl->Current].d = deg;
       hl->p[hl->Current].x = x + cosl(deg, hl->v);
       hl->p[hl->Current].y = y + sinl(deg, hl->v);
       break;
 
-    case (HL_NONE):
+    case HL_NONE:
       hl->v += hl->a * 2;
       hl->p[hl->Current].d = deg;
       hl->p[hl->Current].x = x + cosl(deg, hl->v);
@@ -155,14 +166,15 @@ void LaserManager::MoveHoming() {
     y = hl->p[i].y;
 
     // 範囲外チェック //
-    if (x < GX_MIN - 4 * 64 || x > GX_MAX + 4 * 64 || y < GY_MIN - 4 * 64 ||
-        y > GY_MAX + 4 * 64) {
+    if (x < GX_MIN - (4 * 64) || x > GX_MAX + (4 * 64) ||
+        y < GY_MIN - (4 * 64) || y > GY_MAX + (4 * 64)) {
       hl->State = HLS_DEAD;
       continue;
     }
 
-    if (Players.viv.muteki)
+    if (Players.viv.muteki != 0U) {
       continue;
+    }
 
     auto ev_flag = false;
     for (j = 0; j < HLASER_LEN * HLASER_SECTION; j++) {
@@ -170,8 +182,8 @@ void LaserManager::MoveHoming() {
       y = hl->p[j].y;
 
       // かすり判定 //
-      if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH + 15 * 64) &&
-          HITCHK(y, Players.viv.y, HOMINGL_WIDTH + 15 * 64)) {
+      if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH + (15 * 64)) &&
+          HITCHK(y, Players.viv.y, HOMINGL_WIDTH + (15 * 64))) {
         ev_flag = true;
       }
 
@@ -182,8 +194,9 @@ void LaserManager::MoveHoming() {
         MaidDead(); // 殺っておしまい
       }
     }
-    if (ev_flag)
+    if (ev_flag) {
       evade_add(1);
+    }
   }
 
   // 不要なデータを削除する //
@@ -203,10 +216,11 @@ void LaserManager::MoveHoming() {
   }
 }
 
-void _CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
-                uint8_t d) {
+void CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
+               uint8_t d) {
   VERTEX_XY src[9 + 1];
-  int i, j;
+  int i = 0;
+  int j = 0;
 
   for (j = 0, i = -64; j <= 8; j++) {
     src[j].x = (x + cosl(d + i, r)) >> 6;
@@ -220,10 +234,12 @@ void _CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
 }
 
 // ホーミングレーザーを描画する //
-void LaserManager::DrawHoming() {
-  HomingLaserData *hl;
-  int i, w, current;
-  DegPoint *p;
+void LaserManager::DrawHoming() const {
+  HomingLaserData *hl = nullptr;
+  int i = 0;
+  int w = 0;
+  int current = 0;
+  DegPoint *p = nullptr;
   VERTEX_XY src[4];
   auto *gp = GrpGeom_Poly();
   auto *gf = GrpGeom_FB();
@@ -236,11 +252,11 @@ void LaserManager::DrawHoming() {
   };
   // void (*AlphaCircle)(WINDOW_POINT center, WINDOW_POINT radius);
 
-  if (gp) {
+  if (gp != nullptr) {
     // AlphaCircle  = GeomCircleFA;
     gp->SetColor({1, 2, 5});
     gp->SetAlphaOne();
-  } else if (gf) {
+  } else if (gf != nullptr) {
     // AlphaCircle  = GeomCircle;
     gf->SetColor({2, 2, 5});
   }
@@ -258,8 +274,8 @@ void LaserManager::DrawHoming() {
     src[1].x = (p->x - cosl(p->d - 64, w)) >> 6;
     src[1].y = (p->y - sinl(p->d - 64, w)) >> 6;
 
-    if (gp) {
-      _CircleA16(*gp, p->x, p->y, w, p->d);
+    if (gp != nullptr) {
+      CircleA16(*gp, p->x, p->y, w, p->d);
     } else {
       GeomCircleF({(p->x >> 6), (p->y >> 6)}, (w >> 6));
     }
@@ -281,14 +297,15 @@ void LaserManager::DrawHoming() {
       src[0] = src[3];
       src[1] = src[2];
 
-      if (w > 64 * 2)
+      if (w > 64 * 2) {
         w -= 64;
+      }
     }
   }
 
-  if (gp) {
+  if (gp != nullptr) {
     gp->SetColor({3, 4, 5});
-  } else if (gf) {
+  } else if (gf != nullptr) {
     gf->SetColor({5, 5, 5});
   }
 
@@ -303,8 +320,8 @@ void LaserManager::DrawHoming() {
     src[1].y = (p->y - sinl(p->d - 64, w)) >> 6;
 
     // AlphaCircle(p->x>>6, p->y>>6, w>>6);
-    if (gp) {
-      _CircleA16(*gp, p->x, p->y, w, p->d);
+    if (gp != nullptr) {
+      CircleA16(*gp, p->x, p->y, w, p->d);
     } else {
       GeomCircleF({(p->x >> 6), (p->y >> 6)}, (w >> 6));
     }
@@ -326,10 +343,11 @@ void LaserManager::DrawHoming() {
       src[0] = src[3];
       src[1] = src[2];
 
-      if (w > 64)
+      if (w > 64) {
         w -= 64;
-      else
+      } else {
         break;
+      }
     }
   }
 

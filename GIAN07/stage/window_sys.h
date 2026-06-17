@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "game/enum_flags.h"
 #include "game/input.h"
 #include "game/text.h"
@@ -75,7 +77,7 @@ inline constexpr auto CWIN_KEYWAIT = 8;
 ///// [構造体] /////
 
 enum class WINDOW_FLAGS : uint8_t {
-  _HAS_BITFLAG_OPERATORS,
+  HAS_BITFLAG_OPERATORS = 0,
   NONE = 0x00,
 
   // Shortens the key repeat times for option items.
@@ -126,7 +128,7 @@ struct WINDOW_CHOICE : public WINDOW_LABEL {
                           decltype(CallBackFn) callback_fn = nullptr,
                           WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
       : WINDOW_LABEL(title, flags), Help(help), CallBackFn(callback_fn) {
-    if (!callback_fn) {
+    if (callback_fn == nullptr) {
       Flags |= WINDOW_FLAGS::DISABLED;
     }
   }
@@ -173,13 +175,13 @@ struct WINDOW_MENU {
   constexpr WINDOW_MENU(void (*set_items)(bool),
                         std::initializer_list<WINDOW_CHOICE *> children)
       : Title(nullptr), SetItems(set_items), NumItems(children.size()) {
-    for (size_t i = 0; auto &item : children) {
+    for (size_t i = 0; const auto &item : children) {
       ItemPtr[i++] = item;
     }
   }
 
   // Returns the maximum number of items among all submenus.
-  uint8_t MaxItems() const;
+  [[nodiscard]] uint8_t MaxItems() const;
 };
 
 // ウィンドウ群 //
@@ -224,14 +226,14 @@ class WINDOW_MENU_SCROLL {
   static inline WINDOW_SYSTEM *Sys = nullptr;
   static inline WINDOW_SYSTEM *ReturnTo = nullptr;
 
-  static void Scroll(void) {
+  static void Scroll() {
     const auto total = ListSize();
     const auto visible = Menu.NumItems;
     const auto visible_half = (Menu.NumItems / 2);
     size_t generated_i =
-        ((Sel < visible_half)              ? 0
-         : (Sel >= (total - visible_half)) ? (total - visible)
-                                           : (Sel - visible_half));
+        ((std::cmp_less(Sel, visible_half)) ? 0
+         : (Sel >= (total - visible_half))  ? (total - visible)
+                                            : (Sel - visible_half));
     for (auto item_i = decltype(visible){0}; item_i < visible; item_i++) {
       Item[item_i].CallBackFn = Fn;
       Generate(Item[item_i], generated_i, Sel);
@@ -261,7 +263,7 @@ class WINDOW_MENU_SCROLL {
       } else {
         Sys->State = CWIN_DEAD;
       }
-      if (ReturnTo) {
+      if (ReturnTo != nullptr) {
         ReturnTo->OldKey = key;
       }
       return false;
@@ -305,7 +307,7 @@ enum class MSG_WINDOW_FLAGS : uint8_t {
   NONE = 0x0,
   WITH_FACE = 0x1, // Pads all text to leave room for a face portrait.
   CENTER = 0x2,    // Horizontally centers all text.
-  _HAS_BITFLAG_OPERATORS,
+  HAS_BITFLAG_OPERATORS = 3,
 };
 
 // Prepares text rendering for a window with the given dimensions.

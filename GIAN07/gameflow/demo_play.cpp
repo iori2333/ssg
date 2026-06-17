@@ -13,8 +13,10 @@
 #include "platform/file.h"
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
+#include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <utility>
 
 // ファイル静的変数 → demo_manager.h の DemoManager struct に移動
 
@@ -34,10 +36,10 @@ std::u8string ReplayAllFN(bool exstg) {
   return std::u8string(reinterpret_cast<const char8_t *>(buf));
 }
 
-void DemoManager::Init(void) {
+void DemoManager::Init() {
   // 乱数の準備 //
   demo_info.RndSeed =
-      ((Cast::up<uint32_t>(rnd()) + 1u) * (Cast::up<uint32_t>(rnd()) + 1u));
+      ((Cast::up<uint32_t>(rnd()) + 1U) * (Cast::up<uint32_t>(rnd()) + 1U));
   rnd_seed_set(demo_info.RndSeed);
 
   demo_info.Exp = Players.viv.exp;
@@ -53,15 +55,17 @@ void DemoManager::Init(void) {
   stage_record_bufs.clear();
 }
 
-bool DemoManager::HasRecordedStages(void) {
+bool DemoManager::HasRecordedStages() const {
   return (save_all_enable && (multi_stage_count > 0 || demo_frame_cur > 0));
 }
 
-void DemoManager::FlushStage(void) {
-  if (!save_all_enable)
+void DemoManager::FlushStage() {
+  if (!save_all_enable) {
     return;
-  if (demo_frame_cur == 0)
+  }
+  if (demo_frame_cur == 0) {
     return;
+  }
 
   if (multi_stage_count < REPLAY_STAGE_MAX) {
     multi_stage_nums[multi_stage_count] = GameState.game_stage;
@@ -114,16 +118,17 @@ bool DemoManager::Record(INPUT_BITS key) {
   demo_buffer[demo_frame_cur++] = key;
 
   // バッファが最後に来たか、ＥＳＣが押された場合 //
-  if ((demo_frame_cur == DEMOBUF_MAX) || (key & KEY_ESC)) {
+  if ((demo_frame_cur == DEMOBUF_MAX) || ((key & KEY_ESC) != 0)) {
     demo_frame_cur--;
     return true;
   }
   return false;
 }
 
-void DemoManager::SaveDemo(void) {
-  if (!save_all_enable)
+void DemoManager::SaveDemo() {
+  if (!save_all_enable) {
     return;
+  }
 
   demo_buffer[demo_frame_cur] = KEY_ESC;
   demo_info.FrameCount = (demo_frame_cur + 1);
@@ -132,7 +137,7 @@ void DemoManager::SaveDemo(void) {
   fn[3] = ('0' + GameState.game_stage);
 
   auto *f = SDL_IOFromFile(fn, "wb");
-  if (f) {
+  if (f != nullptr) {
     SDL_WriteIO(f, &demo_info, sizeof(demo_info));
     SDL_WriteIO(f, demo_buffer.data(),
                 (sizeof(demo_buffer[0]) * demo_info.FrameCount));
@@ -162,9 +167,10 @@ bool DemoManager::LoadDemo(int stage) {
   return LoadSetup();
 }
 
-INPUT_BITS DemoManager::Move(void) {
-  if (!load_enable)
+INPUT_BITS DemoManager::Move() {
+  if (!load_enable) {
     return KEY_ESC;
+  }
 
   const auto ptr = demo_frame_cur;
   if (ptr >= demo_info.FrameCount) {
@@ -176,7 +182,7 @@ INPUT_BITS DemoManager::Move(void) {
   return demo_buffer[ptr];
 }
 
-void DemoManager::Cleanup(void) {
+void DemoManager::Cleanup() {
   ConfigDat.PlayerStock.v = config_temp.PlayerStock;
   ConfigDat.BombStock.v = config_temp.BombStock;
   ConfigDat.InputFlags.v = config_temp.InputFlags;
@@ -186,8 +192,9 @@ void DemoManager::Cleanup(void) {
 }
 
 void DemoManager::SaveReplayAll(bool exstg) {
-  if (!save_all_enable)
+  if (!save_all_enable) {
     return;
+  }
 
   // Flush current stage data if any (not yet flushed by stage clear)
   if (demo_frame_cur > 0 && multi_stage_count < REPLAY_STAGE_MAX) {
@@ -207,16 +214,17 @@ void DemoManager::SaveReplayAll(bool exstg) {
   info.CfgDat = demo_info.CfgDat;
   info.Exp = demo_info.Exp;
   info.Weapon = demo_info.Weapon;
-  for (int i = 0; i < multi_stage_count; i++) {
+  for (int i = 0; std::cmp_less(i, multi_stage_count); i++) {
     info.Stages[i] = multi_stage_nums[i];
     info.FrameCounts[i] = multi_stage_frames[i];
   }
 
   PACKFILE_WRITE out;
-  out.files.push_back({reinterpret_cast<const uint8_t *>(&info), sizeof(info)});
+  out.files.emplace_back(reinterpret_cast<const uint8_t *>(&info),
+                         sizeof(info));
   for (auto &buf : stage_record_bufs) {
-    out.files.push_back({reinterpret_cast<const uint8_t *>(buf.data()),
-                         buf.size() * sizeof(INPUT_BITS)});
+    out.files.emplace_back(reinterpret_cast<const uint8_t *>(buf.data()),
+                           buf.size() * sizeof(INPUT_BITS));
   }
 
   const auto fn = ReplayAllFN(exstg);
@@ -228,36 +236,38 @@ void DemoManager::SaveReplayAll(bool exstg) {
 
 bool DemoManager::LoadReplayAll(const char8_t *fn) {
   const auto in = FilStartR(fn);
-  if (!in)
+  if (!in) {
     return false;
+  }
 
   BYTE_BUFFER_OWNED temp = in.MemExpand(0);
-  if (nullptr == temp)
+  if (nullptr == temp) {
     return false;
+  }
   memcpy(&multi_play_info, temp.get(), sizeof(MULTI_REPLAY_INFO));
 
   // Compute max stage for stage transition gating
   playback_max_stage = 0;
   for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
-    if (multi_play_info.Stages[i] > playback_max_stage)
-      playback_max_stage = multi_play_info.Stages[i];
+    playback_max_stage =
+        std::max(multi_play_info.Stages[i], playback_max_stage);
   }
 
   all_playback_buf.clear();
   uint32_t total_frames = 0;
   for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
     temp = in.MemExpand(i + 1);
-    if (nullptr == temp)
+    if (nullptr == temp) {
       return false;
+    }
     uint32_t n_frames = multi_play_info.FrameCounts[i];
-    const auto src = reinterpret_cast<const INPUT_BITS *>(temp.get());
+    const auto *const src = reinterpret_cast<const INPUT_BITS *>(temp.get());
     all_playback_buf.insert(all_playback_buf.end(), src, src + n_frames);
     total_frames += n_frames;
   }
 
   // Copy combined data into demo_buffer for DemoplayMove()
-  if (total_frames > DEMOBUF_MAX)
-    total_frames = DEMOBUF_MAX;
+  total_frames = std::min<uint32_t>(total_frames, DEMOBUF_MAX);
   memcpy(demo_buffer.data(), all_playback_buf.data(),
          total_frames * sizeof(INPUT_BITS));
   demo_info.FrameCount = total_frames;

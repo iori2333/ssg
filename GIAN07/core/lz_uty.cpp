@@ -50,9 +50,9 @@ uint8_t BIT_DEVICE_READ::GetBit() {
   if (cursor.byte >= buffer.size()) {
     return 0xFF;
   }
-  const bool ret = ((buffer[cursor.byte] >> (7 - cursor.bit)) & 1);
+  const bool ret = ((buffer[cursor.byte] >> (7 - cursor.bit)) & 1) != 0;
   cursor += 1;
-  return ret;
+  return static_cast<uint8_t>(ret);
 }
 
 uint32_t BIT_DEVICE_READ::GetBits(size_t bitcount) {
@@ -90,7 +90,7 @@ void BIT_DEVICE_WRITE::PutBit(uint8_t bit) {
 void BIT_DEVICE_WRITE::PutBits(uint32_t bits, unsigned int bitcount) {
   uint32_t mask = (1 << (bitcount - 1));
   for (decltype(bitcount) i = 0; i < bitcount; i++) {
-    PutBit((bits & mask) != 0);
+    PutBit(static_cast<uint8_t>((bits & mask) != 0));
     mask >>= 1;
   }
 }
@@ -112,7 +112,7 @@ BYTE_BUFFER_OWNED PACKFILE_READ::MemExpand(fil_no_t filno) const {
   }
 
   // Textbook LZSS.
-  std::array<uint8_t, (1 << LZSS_DICT_BITS)> dict;
+  std::array<uint8_t, (1 << LZSS_DICT_BITS)> dict{};
   fil_size_t out_i = 0;
 
   auto output = [&uncompressed, &dict, &out_i](uint8_t literal) {
@@ -123,16 +123,16 @@ BYTE_BUFFER_OWNED PACKFILE_READ::MemExpand(fil_no_t filno) const {
 
   BIT_DEVICE_READ device = {maybe_compressed.value()};
   while (out_i < info[filno].size_uncompressed) {
-    const bool is_literal = device.GetBit();
+    const bool is_literal = device.GetBit() != 0U;
     if (is_literal) {
       output(device.GetBits(8));
     } else {
       auto seq_offset = device.GetBits(LZSS_DICT_BITS);
       if (seq_offset == 0) {
         break;
-      } else {
-        seq_offset--;
       }
+      seq_offset--;
+
       const auto seq_length = (device.GetBits(LZSS_SEQ_BITS) + LZSS_SEQ_MIN);
       for (auto i = decltype(seq_length){0}; i < seq_length; i++) {
         output(dict[seq_offset++ & LZSS_DICT_MASK]);
@@ -179,11 +179,11 @@ BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
     }
     if (seq_length < LZSS_SEQ_MIN) {
       auto literal = buffer[in_i];
-      device.PutBit(true);
+      device.PutBit(1U);
       device.PutBits(literal, 8);
       in_i++;
     } else {
-      device.PutBit(false);
+      device.PutBit(0U);
       device.PutBits((seq_offset + 1), LZSS_DICT_BITS);
       device.PutBits((seq_length - LZSS_SEQ_MIN), LZSS_SEQ_BITS);
       in_i += seq_length;
@@ -191,7 +191,7 @@ BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
   }
 
   // Write the sentinel offset
-  device.PutBit(false);
+  device.PutBit(0U);
   device.PutBits(0, LZSS_DICT_BITS);
 
   return device.buffer;
@@ -210,7 +210,7 @@ bool PACKFILE_WRITE::Write(
   };
 
   auto *stream = SDL_IOFromFile(s, "wb");
-  if (!stream) {
+  if (stream == nullptr) {
     return false;
   }
   defer(
@@ -288,7 +288,7 @@ PACKFILE_READ FilStartR(BYTE_BUFFER_OWNED packfile) {
   return {std::move(packfile), info};
 }
 
-PACKFILE_READ FilStartR(SDL_IOStream *&&stream) {
+PACKFILE_READ FilStartR(SDL_IOStream *stream) {
   return FilStartR(SDL_LoadFile_IO(stream, true));
 }
 

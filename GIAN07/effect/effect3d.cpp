@@ -16,60 +16,69 @@
 #define _ PIXEL_POINT
 
 WORLD_POINT PList_W[11] = {
-    _{0, 15},  _{15, 66}, _{32, 47}, _{48, 66}, _{63, 14}, _{52, 11},
-    _{42, 38}, _{32, 26}, _{21, 38}, _{11, 10}, _{0, 15},
+    _{.x = 0, .y = 15},  _{.x = 15, .y = 66}, _{.x = 32, .y = 47},
+    _{.x = 48, .y = 66}, _{.x = 63, .y = 14}, _{.x = 52, .y = 11},
+    _{.x = 42, .y = 38}, _{.x = 32, .y = 26}, _{.x = 21, .y = 38},
+    _{.x = 11, .y = 10}, _{.x = 0, .y = 15},
 };
 
 WORLD_POINT PList_A1[8] = {
-    _{96, 12},  _{66, 61},  _{75, 67},  _{83, 56},
-    _{107, 56}, _{115, 67}, _{125, 61}, _{96, 12},
+    _{.x = 96, .y = 12},  _{.x = 66, .y = 61},  _{.x = 75, .y = 67},
+    _{.x = 83, .y = 56},  _{.x = 107, .y = 56}, _{.x = 115, .y = 67},
+    _{.x = 125, .y = 61}, _{.x = 96, .y = 12},
 };
 
 WORLD_POINT PList_A2[4] = {
-    _{96, 34},
-    _{90, 44},
-    _{101, 44},
-    _{96, 34},
+    _{.x = 96, .y = 34},
+    _{.x = 90, .y = 44},
+    _{.x = 101, .y = 44},
+    _{.x = 96, .y = 34},
 };
 
 WORLD_POINT PList_R[15 - 1] = {
-    _{132, 14},
-    _{132, 64},
-    _{145, 64},
-    _{145, 27},
-    _{164, 27},
+    _{.x = 132, .y = 14},
+    _{.x = 132, .y = 64},
+    _{.x = 145, .y = 64},
+    _{.x = 145, .y = 27},
+    _{.x = 164, .y = 27},
 
     //_{ 150, 41 }, _{ 150, 43 },
-    _{150, 42},
+    _{.x = 150, .y = 42},
 
-    _{171, 66},
-    _{173, 66},
-    _{181, 57},
-    _{167, 43},
-    _{180, 29},
-    _{180, 27},
-    _{170, 14},
-    _{132, 14},
+    _{.x = 171, .y = 66},
+    _{.x = 173, .y = 66},
+    _{.x = 181, .y = 57},
+    _{.x = 167, .y = 43},
+    _{.x = 180, .y = 29},
+    _{.x = 180, .y = 27},
+    _{.x = 170, .y = 14},
+    _{.x = 132, .y = 14},
 };
 
 WORLD_POINT PList_N1[9] = {
-    _{189, 12}, _{189, 64}, _{201, 64}, _{201, 40}, _{239, 66},
-    _{239, 14}, _{227, 14}, _{227, 38}, _{189, 12},
+    _{.x = 189, .y = 12}, _{.x = 189, .y = 64}, _{.x = 201, .y = 64},
+    _{.x = 201, .y = 40}, _{.x = 239, .y = 66}, _{.x = 239, .y = 14},
+    _{.x = 227, .y = 14}, _{.x = 227, .y = 38}, _{.x = 189, .y = 12},
 };
 
 WORLD_POINT PList_N2[9] = {
-    _{189, 12}, _{189, 64}, _{201, 64}, _{201, 40}, _{239, 66},
-    _{239, 14}, _{227, 14}, _{227, 38}, _{189, 12},
+    _{.x = 189, .y = 12}, _{.x = 189, .y = 64}, _{.x = 201, .y = 64},
+    _{.x = 201, .y = 40}, _{.x = 239, .y = 66}, _{.x = 239, .y = 14},
+    _{.x = 227, .y = 14}, _{.x = 227, .y = 38}, _{.x = 189, .y = 12},
 };
 
 WORLD_POINT PList_I[5] = {
-    _{248, 14}, _{248, 64}, _{262, 64}, _{262, 14}, _{248, 14},
+    _{.x = 248, .y = 14}, _{.x = 248, .y = 64}, _{.x = 262, .y = 64},
+    _{.x = 262, .y = 14}, _{.x = 248, .y = 14},
 };
 
 WORLD_POINT PList_G[17] = {
-    _{354, 11}, _{328, 22}, _{328, 57}, _{354, 68}, _{380, 59}, _{380, 34},
-    _{355, 34}, _{354, 45}, _{367, 46}, _{367, 51}, _{355, 55}, _{342, 50},
-    _{342, 29}, _{354, 24}, _{372, 30}, _{377, 19}, _{354, 11},
+    _{.x = 354, .y = 11}, _{.x = 328, .y = 22}, _{.x = 328, .y = 57},
+    _{.x = 354, .y = 68}, _{.x = 380, .y = 59}, _{.x = 380, .y = 34},
+    _{.x = 355, .y = 34}, _{.x = 354, .y = 45}, _{.x = 367, .y = 46},
+    _{.x = 367, .y = 51}, _{.x = 355, .y = 55}, _{.x = 342, .y = 50},
+    _{.x = 342, .y = 29}, _{.x = 354, .y = 24}, _{.x = 372, .y = 30},
+    _{.x = 377, .y = 19}, _{.x = 354, .y = 11},
 };
 
 #undef _
@@ -88,7 +97,7 @@ LineList3D	LList_W = {32,39,PList_W,11,PWork_W};
 // で初期化
 
 static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz);
-static void __Draw3DCube(const Cube3D *c); // 汎用３Ｄキューブ描画
+static void Draw3DCube(const Cube3D *c); // 汎用３Ｄキューブ描画
 
 void Transform3D(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
   static Point3D temp;
@@ -117,19 +126,21 @@ void ShiftRight6Bit(const Point3D *o, Point3D *p) {
 void EffectManager::InitWarningText() {
   static bool bInitialized = false;
 
-  if (bInitialized)
+  if (bInitialized) {
     return;
+  }
 
   // Initialize warning_lines with center positions and point arrays
   // (was: LineList3D Warning[8] = { ... } file-static initialization)
-  warning_lines[0] = {{192, 39}, PList_W};
-  warning_lines[1] = {{192, 39}, PList_A1};
-  warning_lines[2] = {{192, 39}, PList_A2};
-  warning_lines[3] = {{192, 39}, PList_R};
-  warning_lines[4] = {{192, 39}, PList_N1};
-  warning_lines[5] = {{192, 39}, PList_I};
-  warning_lines[6] = {{(192 - (296 - 215)), 39}, PList_N2};
-  warning_lines[7] = {{192, 39}, PList_G};
+  warning_lines[0] = {.center = {.x = 192, .y = 39}, .p = PList_W};
+  warning_lines[1] = {.center = {.x = 192, .y = 39}, .p = PList_A1};
+  warning_lines[2] = {.center = {.x = 192, .y = 39}, .p = PList_A2};
+  warning_lines[3] = {.center = {.x = 192, .y = 39}, .p = PList_R};
+  warning_lines[4] = {.center = {.x = 192, .y = 39}, .p = PList_N1};
+  warning_lines[5] = {.center = {.x = 192, .y = 39}, .p = PList_I};
+  warning_lines[6] = {.center = {.x = (192 - (296 - 215)), .y = 39},
+                      .p = PList_N2};
+  warning_lines[7] = {.center = {.x = 192, .y = 39}, .p = PList_G};
 
   InitLineList3D(warning_lines);
   bInitialized = true;
@@ -137,7 +148,8 @@ void EffectManager::InitWarningText() {
 
 void EffectManager::DrawWarningText() {
   constexpr PIXEL_LTRB src = {0, (152 + 16), 384, (232 + 16)};
-  int st, det;
+  int st = 0;
+  int det = 0;
   static int count;
 
   count += 8;
@@ -190,8 +202,9 @@ void EffectManager::DrawWarningText() {
 }
 
 void MoveWarningR(char count) {
-  if (count == 0)
+  if (count == 0) {
     return;
+  }
 
   for (auto &llist : Effects.warning_lines) {
     llist.DegX += (count * 2);
@@ -218,7 +231,7 @@ void InitLineList3D(std::span<LineList3D> w) {
 
 void DrawLineList3D(std::span<const LineList3D> w) {
   const auto roll = [](const LineList3D &llist, const WORLD_POINT &point) {
-    Point3D temp = {point.x, point.y, 0};
+    Point3D temp = {.x = point.x, .y = point.y, .z = 0};
     RollPoint(&temp, llist.DegX, llist.DegY, llist.DegZ);
     return WORLD_POINT{&temp.x, &temp.y};
   };
@@ -227,8 +240,8 @@ void DrawLineList3D(std::span<const LineList3D> w) {
     WORLD_POINT line_p[2] = {roll(llist, llist.p.front())};
     for (const auto &point : (llist.p | std::views::drop(1))) {
       line_p[1] = roll(llist, point);
-      const auto p1 = (PIXEL_POINT{320, 100} + line_p[0].ToPixel());
-      const auto p2 = (PIXEL_POINT{320, 100} + line_p[1].ToPixel());
+      const auto p1 = (PIXEL_POINT{.x = 320, .y = 100} + line_p[0].ToPixel());
+      const auto p2 = (PIXEL_POINT{.x = 320, .y = 100} + line_p[1].ToPixel());
       GrpGeom->DrawLine(p1.x, p1.y, p2.x, p2.y);
       std::swap(line_p[1], line_p[0]);
     }
@@ -236,7 +249,7 @@ void DrawLineList3D(std::span<const LineList3D> w) {
 }
 
 static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
-  Point3D temp;
+  Point3D temp{};
 
   temp.y = p->y;
   temp.z = p->z;
@@ -255,7 +268,7 @@ static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
 }
 
 void EffectManager::Init3DCubes() {
-  int i;
+  int i = 0;
 
   for (i = 0; i < CUBE_MAX; i++) {
     cubes[i].l = 30 * 64;
@@ -282,16 +295,19 @@ void EffectManager::Draw3DCubes() {
 
   GrpGeom->Lock();
   for (const auto &it : cubes) {
-    __Draw3DCube(&it);
+    Draw3DCube(&it);
   }
   GrpGeom->Unlock();
 }
 
 void EffectManager::Move3DCubes() {
-  int i;
-  int l, d2;
+  int i = 0;
+  int l = 0;
+  int d2 = 0;
   static uint16_t d;
-  static uint16_t dx, dy, dz;
+  static uint16_t dx;
+  static uint16_t dy;
+  static uint16_t dz;
 
   d += 64 * 4;
 
@@ -299,17 +315,17 @@ void EffectManager::Move3DCubes() {
   dy -= 16 * 4;
 
   d2 = sinl(d >> 8, 512 / CUBE_MAX);
-  l = sinl(d >> 7, 100 * 64) + (200 - 20) * 64;
+  l = sinl(d >> 7, 100 * 64) + ((200 - 20) * 64);
 
   for (i = 0; i < CUBE_MAX; i++) {
-    cubes[i].l = 15 * 64 + (l >> 4) + i * 128;
+    cubes[i].l = (15 * 64) + (l >> 4) + (i * 128);
     cubes[i].d.dx += 4;
     cubes[i].d.dy -= 4;
     // cubes[i].p.x = cosl(i*256/CUBE_MAX+d2, l);
     // cubes[i].p.y = sinl(i*256/CUBE_MAX+d2, l);
-    cubes[i].p.x = cosl(i * 500 / CUBE_MAX + d2, l);
-    cubes[i].p.y = sinl(i * 500 / CUBE_MAX + d2, l);
-    cubes[i].p.z = (i - CUBE_MAX / 2) * 64 * 40;
+    cubes[i].p.x = cosl((i * 500 / CUBE_MAX) + d2, l);
+    cubes[i].p.y = sinl((i * 500 / CUBE_MAX) + d2, l);
+    cubes[i].p.z = (i - (CUBE_MAX / 2)) * 64 * 40;
     Transform3D(&cubes[i].p, dx >> 8, dy >> 8, dz >> 8);
   }
 
@@ -324,14 +340,18 @@ void EffectManager::Move3DCubes() {
 }
 
 // 汎用３Ｄキューブ描画 //
-static void __Draw3DCube(const Cube3D *c) {
+static void Draw3DCube(const Cube3D *c) {
   // ３Ｄで透過色付きorアルファ比較ポリゴンを使えばもっともっと早いのだが... //
   // ８ビット対応のため、まぁ仕方が無いか... //
 
-  int x, y, z;
-  int l, l2;
-  Point3D p1, p2;
-  Point3D o;
+  int x = 0;
+  int y = 0;
+  int z = 0;
+  int l = 0;
+  int l2 = 0;
+  Point3D p1{};
+  Point3D p2{};
+  Point3D o{};
 
   o = c->p;
   l = c->l;
@@ -402,7 +422,7 @@ static void __Draw3DCube(const Cube3D *c) {
 }
 
 void EffectManager::InitFakeECL() {
-  int v;
+  int v = 0;
 
   wf_line.d = 0;
   wf_line.ox = 640 * 64 / 2;
@@ -411,7 +431,7 @@ void EffectManager::InitFakeECL() {
 
   for (auto &it : fake_ecl_strs) {
     const uint8_t d = (rnd() % 128);
-    v = rnd() % (64 * 5) + 64 * 5;
+    v = (rnd() % (64 * 5)) + (64 * 5);
 
     it.SrcX = (((rnd() % 7) * 9) * 8);
     it.SrcY = ((rnd() % 16) * 16);
@@ -423,7 +443,7 @@ void EffectManager::InitFakeECL() {
 }
 
 void EffectManager::MoveFakeECL() {
-  int v;
+  int v = 0;
 
   wf_line.ox = (wf_line.ox + 1) % 64;
   wf_line.oy = (wf_line.oy + 62) % 64;
@@ -434,7 +454,7 @@ void EffectManager::MoveFakeECL() {
 
     if (it.y >= (480 * 64)) {
       const uint8_t d = (rnd() % 128);
-      v = rnd() % (64 * 5) + 64 * 5;
+      v = (rnd() % (64 * 5)) + (64 * 5);
 
       it.SrcX = (((rnd() % 7) * 9) * 8);
       it.SrcY = ((rnd() % 16) * 16);
@@ -448,7 +468,8 @@ void EffectManager::MoveFakeECL() {
 
 void EffectManager::DrawFakeECL() {
   PIXEL_LTRB src;
-  int i, j;
+  int i = 0;
+  int j = 0;
 
   GrpGeom->Lock();
 
@@ -456,21 +477,25 @@ void EffectManager::DrawFakeECL() {
   GrpGeom->SetColor({0, 2, 0});
   // GrpGeom->SetColor({ 0, 0, 3 });
 
-  for (i = 128 - wf_line.ox / 2; i < 640 - 128; i += 32)
+  for (i = 128 - (wf_line.ox / 2); i < 640 - 128; i += 32) {
     GrpGeom->DrawLine(i, 0, i, 480);
+  }
 
-  for (j = wf_line.oy / 2; j < 480; j += 32)
+  for (j = wf_line.oy / 2; j < 480; j += 32) {
     GrpGeom->DrawLine(128, j, (640 - 128), j);
+  }
 
   // GrpGeom->SetColor({ 5, 3, 0 });	// 後半戦用
   GrpGeom->SetColor({0, 3, 0});
   // GrpGeom->SetColor({ 0, 0, 4 });
 
-  for (i = 128 - wf_line.ox; i < 640 - 128; i += 64)
+  for (i = 128 - wf_line.ox; i < 640 - 128; i += 64) {
     GrpGeom->DrawLine(i, 0, i, 480);
+  }
 
-  for (j = -wf_line.oy; j < 480; j += 64)
+  for (j = -wf_line.oy; j < 480; j += 64) {
     GrpGeom->DrawLine(128, j, (640 - 128), j);
+  }
 
   GrpGeom->Unlock();
 
@@ -570,24 +595,26 @@ Small_1 RsetMacro(144, 400,  32,  48),			// Small_2
 */
 
 void EffectManager::InitStg4Rocks() {
-  int i;
+  int i = 0;
   int id = 2;
   int y = 0;
   constexpr int dy = (500 * (64 / 4));
   constexpr int dy2 = (dy / 2);
 
   for (i = 0; i < ROCK_MAX; i++) {
-    y = (i % 4) * dy + (rnd() % dy2);
+    y = ((i % 4) * dy) + (rnd() % dy2);
     //((380*64/16) * (i%(ROCK_MAX/16+1))) + rnd()%(380*64/16);
 
-    rocks[i].x = (rnd() % (500 * 64) - 250 * 64); //
-    rocks[i].y = -250 * 64 - y;                   // 上の方なのだ
-    rocks[i].z = (rnd() % (500 * 64) - 250 * 64); //
+    rocks[i].x = ((rnd() % (500 * 64)) - (250 * 64)); //
+    rocks[i].y = (-250 * 64) - y;                     // 上の方なのだ
+    rocks[i].z = ((rnd() % (500 * 64)) - (250 * 64)); //
 
-    if (i == ROCK_MAX * 5 / 8)
+    if (i == ROCK_MAX * 5 / 8) {
       id--;
-    if (i == ROCK_MAX * 7 / 8)
+    }
+    if (i == ROCK_MAX * 7 / 8) {
       id--;
+    }
 
     rocks[i].GrpID = id;
 
@@ -611,39 +638,39 @@ void EffectManager::MoveStg4Rocks() {
     p->count++;
 
     switch (p->State) {
-    case (STG4ROCK_STDMOVE):
+    case STG4ROCK_STDMOVE:
       p->y += p->vy;
       if (p->y > (250 + 40) * 64) {
-        p->x = (rnd() % (500 * 64) - 250 * 64);
-        p->y = (-250 - 40 - rnd() % 250) * 64;
+        p->x = ((rnd() % (500 * 64)) - (250 * 64));
+        p->y = (-250 - 40 - (rnd() % 250)) * 64;
         p->vy = ((4 - p->GrpID) * 16);
         p->v = p->vy;
       }
       break;
 
-    case (STG4ROCK_ACCMOVE1):
+    case STG4ROCK_ACCMOVE1:
       p->v += p->a;
       p->vy = p->v;
       p->y += p->vy;
 
       if (p->y > (250 + 40) * 64) {
-        p->x = (rnd() % (500 * 64) - 250 * 64);
-        p->y = (-250 - 40 - rnd() % 250) * 64;
+        p->x = ((rnd() % (500 * 64)) - (250 * 64));
+        p->y = (-250 - 40 - (rnd() % 250)) * 64;
         p->vy = ((4 - p->GrpID) * 32 * 3);
         p->v = p->vy;
         p->a = 0;
       }
       break;
 
-    case (STG4ROCK_ACCMOVE2):
+    case STG4ROCK_ACCMOVE2:
       p->v -= p->a;
       p->vy = p->v;
       p->y += p->vy;
 
       if (p->count > 60 * 2) {
         if (p->y > (250 + 40) * 64 || p->y < (-250 - 40) * 64) {
-          p->x = (rnd() % (500 * 64) - 250 * 64);
-          p->y = (-250 - 40 - rnd() % 250) * 64;
+          p->x = ((rnd() % (500 * 64)) - (250 * 64));
+          p->y = (-250 - 40 - (rnd() % 250)) * 64;
           p->vy = ((4 - p->GrpID) * 32);
           p->v = p->vy;
         }
@@ -657,8 +684,8 @@ void EffectManager::MoveStg4Rocks() {
       }
 
       if (p->y > (250 + 40) * 64 || p->y < (-250 - 40) * 64) {
-        p->x = (rnd() % (500 * 64) - 250 * 64);
-        p->y = (250 + 40) * 64 + rnd() % 250;
+        p->x = ((rnd() % (500 * 64)) - (250 * 64));
+        p->y = ((250 + 40) * 64) + (rnd() % 250);
         p->vy = (-(4 - p->GrpID) * 32 * 3);
         p->v = p->vy;
         p->a = 0;
@@ -696,17 +723,20 @@ void EffectManager::MoveStg4Rocks() {
                               }*/
       break;
 
-    case (STG4ROCK_LEAVE):
-      if (p->y > (500 + 40) * 64)
+    case STG4ROCK_LEAVE:
+      if (p->y > (500 + 40) * 64) {
         break;
-      else
+      } else {
         p->y += p->vy;
+      }
       break;
 
-    case (STG4ROCK_END):
-      if (p->y > (500 + 40) * 64)
-        break;
-      else {
+    case STG4ROCK_END:
+      if (p->y > (500 + 40) * 64) {
+        {
+          break;
+        }
+      } else {
         p->y += ((4 - p->GrpID) * 32 * 6);
       }
       break;
@@ -724,7 +754,8 @@ void EffectManager::DrawStg4Rocks() {
   static int dx[3] = {80 / 2, 48 / 2, 32 / 2};
   static int dy[3] = {64 / 2, 48 / 2, 32 / 2};
 
-  int x, y;
+  int x = 0;
+  int y = 0;
 
   for (const auto &it : rocks) {
     const auto *p = &it;
@@ -737,19 +768,19 @@ void EffectManager::DrawStg4Rocks() {
 
 void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
   switch (Cmd) {
-  case (STG4ROCK_LEAVE): {
+  case STG4ROCK_LEAVE: {
     for (auto &it : rocks) {
       it.State = STG4ROCK_LEAVE;
     }
   } break;
 
-  case (STG4ROCK_END): {
+  case STG4ROCK_END: {
     for (auto &it : rocks) {
       it.State = STG4ROCK_END;
     }
   } break;
 
-  case (STG4ROCK_ACCMOVE1): {
+  case STG4ROCK_ACCMOVE1: {
     for (auto &it : rocks) {
       it.State = STG4ROCK_ACCMOVE1;
       it.a = (it.v / 24); // ((3 - p->GrpID) * 3);
@@ -757,7 +788,7 @@ void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
     }
   } break;
 
-  case (STG4ROCK_ACCMOVE2): {
+  case STG4ROCK_ACCMOVE2: {
     for (auto &it : rocks) {
       it.State = STG4ROCK_ACCMOVE2;
       it.a = (it.v / 12); // 24; // ((3 - p->GrpID) * 3);
@@ -783,41 +814,42 @@ void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
 
 // ６面ラスター初期化 //
 void EffectManager::InitStg6Rasters() {
-  int i;
+  int i = 0;
 
   for (i = 0; i < S6RASTER_MAX; i++) {
-    s6_ras[i].x = rnd() % (640 - 256) + 128;
+    s6_ras[i].x = (rnd() % (640 - 256)) + 128;
     s6_ras[i].y = -rnd() % (480 + 160); //(480+240)-240;
     s6_ras[i].deg = rnd();
     s6_ras[i].type = i % 3;
-    s6_ras[i].amp = rnd() % 80 + 70;
-    s6_ras[i].vy = 2 + rnd() % 3;
+    s6_ras[i].amp = (rnd() % 80) + 70;
+    s6_ras[i].vy = 2 + (rnd() % 3);
   }
 
   for (i = 0; i < S6STAR_MAX; i++) {
-    s6_stars[i].x = rnd() % (640 - 256) + 128;
+    s6_stars[i].x = (rnd() % (640 - 256)) + 128;
     s6_stars[i].y = rnd() % 480;
-    s6_stars[i].vy = rnd() % 20 + 8;
+    s6_stars[i].vy = (rnd() % 20) + 8;
   }
 }
 
 // ６面ラスター動作 //
 void EffectManager::MoveStg6Rasters() {
-  int i;
+  int i = 0;
 
   for (i = 0; i < S6RASTER_MAX; i++) {
-    if (i & 1)
+    if ((i & 1) != 0) {
       s6_ras[i].deg += 2;
-    else
+    } else {
       s6_ras[i].deg -= 2;
+    }
 
     s6_ras[i].y += s6_ras[i].vy;
 
     if (s6_ras[i].y > 480) {
-      s6_ras[i].x = rnd() % (640 - 256) + 128;
+      s6_ras[i].x = (rnd() % (640 - 256)) + 128;
       s6_ras[i].y = -160;
       s6_ras[i].deg = rnd();
-      s6_ras[i].amp = rnd() % 80 + 70;
+      s6_ras[i].amp = (rnd() % 80) + 70;
     }
   }
 
@@ -825,9 +857,9 @@ void EffectManager::MoveStg6Rasters() {
     s6_stars[i].y += s6_stars[i].vy;
 
     if (s6_stars[i].y > 480) {
-      s6_stars[i].x = rnd() % (640 - 256) + 128;
+      s6_stars[i].x = (rnd() % (640 - 256)) + 128;
       s6_stars[i].y -= 480;
-      s6_stars[i].vy = rnd() % 20 + 8;
+      s6_stars[i].vy = (rnd() % 20) + 8;
     }
   }
 }
@@ -842,8 +874,14 @@ void EffectManager::DrawStg6Rasters() {
   };
 
   PIXEL_LTRB src;
-  int i, j, h, w;
-  int x1, x2, dx, oy;
+  int i = 0;
+  int j = 0;
+  int h = 0;
+  int w = 0;
+  int x1 = 0;
+  int x2 = 0;
+  int dx = 0;
+  int oy = 0;
 
   for (i = 0; i < S6STAR_MAX; i++) {
     src = {624, 352, (624 + 16), (352 + 16)};
@@ -866,33 +904,33 @@ void EffectManager::DrawStg6Rasters() {
 
 // ３面高速星初期化 //
 void EffectManager::InitStg3Stars() {
-  int i;
+  int i = 0;
 
   for (i = 0; i < S3STAR_MAX; i++) {
-    s6_stars[i].x = rnd() % (640 - 256) + 128;
+    s6_stars[i].x = (rnd() % (640 - 256)) + 128;
     s6_stars[i].y = rnd() % 480;
-    s6_stars[i].vy = rnd() % 20 + 8;
+    s6_stars[i].vy = (rnd() % 20) + 8;
   }
 }
 
 // ３面高速星動作 //
 void EffectManager::MoveStg3Stars() {
-  int i;
+  int i = 0;
 
   for (i = 0; i < S3STAR_MAX; i++) {
     s6_stars[i].y += s6_stars[i].vy;
 
     if (s6_stars[i].y > 480) {
-      s6_stars[i].x = rnd() % (640 - 256) + 128;
+      s6_stars[i].x = (rnd() % (640 - 256)) + 128;
       s6_stars[i].y -= 480;
-      s6_stars[i].vy = rnd() % 20 + 8;
+      s6_stars[i].vy = (rnd() % 20) + 8;
     }
   }
 }
 
 // ３面高速星描画 //
 void EffectManager::DrawStg3Stars() {
-  int i;
+  int i = 0;
 
   for (i = 0; i < S3STAR_MAX; i++) {
     constexpr PIXEL_LTRB src = {(640 - 16), 0, 640, 16};

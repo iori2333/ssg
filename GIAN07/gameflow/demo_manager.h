@@ -35,7 +35,7 @@ struct DemoManager {
 
   // === メソッド ===
   void Init();
-  [[nodiscard]] bool HasRecordedStages();
+  [[nodiscard]] bool HasRecordedStages() const;
   void FlushStage();
   [[nodiscard]] bool LoadSetup();
   [[nodiscard]] bool Record(INPUT_BITS key);

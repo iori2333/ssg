@@ -22,7 +22,7 @@ static_assert(SDL_SCANCODE_COUNT <= std::numeric_limits<uint16_t>::max());
 static_assert(SDL_KMOD_SCROLL <= std::numeric_limits<uint16_t>::max());
 
 enum class KEY_MOD : uint8_t {
-  _HAS_BITFLAG_OPERATORS,
+  HAS_BITFLAG_OPERATORS,
   NONE = 0x00,
   LALT = 0x01,
 };

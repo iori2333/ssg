@@ -29,56 +29,64 @@ void RankManager::Add(int n) {
 
   // この分岐に関しては、基本的にコンフィグの値に基づく //
   switch (GameState.game_level) {
-  case (GAME_EASY):
-    if (state.Rank < 0)
+  case GAME_EASY:
+    if (state.Rank < 0) {
       state.Rank = 0;
-    else if (state.Rank > 24 * 256)
+    } else if (state.Rank > 24 * 256) {
       state.Rank = 24 * 256;
+    }
 
-    if (state.Rank < 20 * 256)
+    if (state.Rank < 20 * 256) {
       state.GameLevel = GAME_EASY;
-    else
+    } else {
       state.GameLevel = GAME_NORMAL;
+    }
     break;
 
-  case (GAME_NORMAL):
-    if (state.Rank < 16 * 256)
+  case GAME_NORMAL:
+    if (state.Rank < 16 * 256) {
       state.Rank = 16 * 256;
-    else if (state.Rank > 40 * 256)
+    } else if (state.Rank > 40 * 256) {
       state.Rank = 40 * 256;
+    }
 
-    if (state.Rank < 20 * 256)
+    if (state.Rank < 20 * 256) {
       state.GameLevel = GAME_EASY;
-    else if (state.Rank < 36 * 256)
+    } else if (state.Rank < 36 * 256) {
       state.GameLevel = GAME_NORMAL;
-    else
+    } else {
       state.GameLevel = GAME_HARD;
+    }
     break;
 
-  case (GAME_HARD):
-    if (state.Rank < 32 * 256)
+  case GAME_HARD:
+    if (state.Rank < 32 * 256) {
       state.Rank = 32 * 256;
-    else if (state.Rank > 48 * 256)
+    } else if (state.Rank > 48 * 256) {
       state.Rank = 48 * 256;
+    }
 
-    if (state.Rank < 36 * 256)
+    if (state.Rank < 36 * 256) {
       state.GameLevel = GAME_NORMAL;
-    else if (state.Rank < 44 * 256)
+    } else if (state.Rank < 44 * 256) {
       state.GameLevel = GAME_HARD;
-    else
+    } else {
       state.GameLevel = GAME_LUNATIC;
+    }
     break;
 
-  case (GAME_LUNATIC):
-    if (state.Rank < 40 * 256)
+  case GAME_LUNATIC:
+    if (state.Rank < 40 * 256) {
       state.Rank = 40 * 256;
-    else if (state.Rank > 64 * 256)
+    } else if (state.Rank > 64 * 256) {
       state.Rank = 64 * 256;
+    }
 
-    if (state.Rank < 44 * 256)
+    if (state.Rank < 44 * 256) {
       state.GameLevel = GAME_HARD;
-    else
+    } else {
       state.GameLevel = GAME_LUNATIC;
+    }
     break;
 
     // case(GAME_EXTRA):
@@ -87,20 +95,20 @@ void RankManager::Add(int n) {
 }
 
 // 現在の難易度に応じてプレイランクを初期化
-void RankManager::Reset(void) {
+void RankManager::Reset() {
   state.GameLevel = GameState.game_level;
 
   switch (GameState.game_level) {
-  case (GAME_EASY):
+  case GAME_EASY:
     state.Rank = 16 * 256;
     break;
-  case (GAME_NORMAL):
+  case GAME_NORMAL:
     state.Rank = 32 * 256;
     break;
-  case (GAME_HARD):
+  case GAME_HARD:
     state.Rank = 44 * 256;
     break;
-  case (GAME_LUNATIC):
+  case GAME_LUNATIC:
     state.Rank = 60 * 256;
     break;
     // case(GAME_EXTRA):		break;

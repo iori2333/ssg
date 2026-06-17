@@ -11,7 +11,7 @@
 
 template <typename T>
 concept ENUMFLAGS = (std::is_enum_v<T> && requires {
-  { T::_HAS_BITFLAG_OPERATORS };
+  { T::HAS_BITFLAG_OPERATORS };
 });
 
 template <ENUMFLAGS T> constexpr inline bool operator!(const T &v) noexcept {

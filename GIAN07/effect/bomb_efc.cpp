@@ -90,8 +90,10 @@ void EffectManager::MoveBombEffects() {
 }
 
 void EffectManager::InitBombEffectSTD(BombEfcCtrl *p) {
-  int i, x, y;
-  SpObj *target;
+  int i = 0;
+  int x = 0;
+  int y = 0;
+  SpObj *target = nullptr;
 
   x = p->x;
   y = p->y;
@@ -105,7 +107,9 @@ void EffectManager::InitBombEffectSTD(BombEfcCtrl *p) {
 }
 
 void EffectManager::DrawBombEffectSTD(BombEfcCtrl *p) {
-  int x, y, dx;
+  int x = 0;
+  int y = 0;
+  int dx = 0;
 
   // Graphic 48 * 48 //
   for (const auto &it : p->Obj) {
@@ -122,27 +126,31 @@ void EffectManager::DrawBombEffectSTD(BombEfcCtrl *p) {
 
 void EffectManager::MoveBombEffectSTD(BombEfcCtrl *p) {
   int j = 0;
-  int x, y, v, rv;
+  int x = 0;
+  int y = 0;
+  int v = 0;
+  int rv = 0;
 
   x = p->x;
   y = p->y;
   const auto t = p->count;
-  v = sinl(t / 2 - 64, 200 * 64) + (200 * 64);
+  v = sinl((t / 2) - 64, 200 * 64) + (200 * 64);
 
   for (auto &it : p->Obj) {
     auto *target = &it;
     if (target->d > 7 * 2) {
-      if (t > 64 * 3)
+      if (t > 64 * 3) {
         continue;
+      }
       const uint8_t rd = rnd();
-      rv = rnd() % 256 + 128;
+      rv = (rnd() % 256) + 128;
       target->vx = cosl(rd, rv);
       target->vy = sinl(rd, rv);
 
       const uint8_t d = ((t * 2) + ((j % 8) << 5)); // + (rnd() % 8) - 4;
       // v = sinl(degx,64*90)+64*90;
 
-      rv = v - rnd() % (v >> 2);
+      rv = v - (rnd() % (v >> 2));
       target->x = cosl(d, rv) + x;
       target->y = sinl(d, rv) + y;
       target->d = 0;

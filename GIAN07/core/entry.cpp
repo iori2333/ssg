@@ -57,7 +57,7 @@ static constexpr std::array<INPUT_PAD_BINDING, 4> PadBindings = {{
 std::span<const INPUT_PAD_BINDING> Key_PadBindings = PadBindings;
 // ------------
 
-bool XInit(void) {
+bool XInit() {
   const auto path_data = PathForData();
   std::error_code ec;
   std::filesystem::current_path(path_data, ec);
@@ -90,7 +90,7 @@ bool XInit(void) {
         return SDL_ENUM_CONTINUE;
       },
       nullptr);
-#elif !defined(PATH_SKELETON)
+#elifndef PATH_SKELETON
 #pragma message(                                                               \
     "No user data skeleton directory defined. This does not matter for development builds, but package builds should set the environment variable `PATH_SKELETON` accordingly.")
 #else
@@ -124,19 +124,19 @@ bool XInit(void) {
   Key_Start();
 
   // ＢＧＭの初期化 //
-  if (ConfigDat.SoundFlags.v & SNDF_BGM_ENABLE) {
+  if ((ConfigDat.SoundFlags.v & SNDF_BGM_ENABLE) != 0) {
     BGM_Init();
   }
   if (!BGM_PackSet(ConfigDat.BGMPack)) {
     ConfigDat.BGMPack.clear();
   }
-  BGM_SetGainApply(!(ConfigDat.SoundFlags.v & SNDF_BGM_NOT_VOL_NORM));
+  BGM_SetGainApply((ConfigDat.SoundFlags.v & SNDF_BGM_NOT_VOL_NORM) == 0);
   Grp_ScreenshotSetPrefix(u8"screenshots/");
   LoaderInit();
   return true;
 }
 
-void XCleanup(void) {
+void XCleanup() {
   LoaderCleanup();
   ConfigSave();
   TextBackend_Cleanup();
@@ -192,35 +192,35 @@ void XGrpTryCycleScale(int_fast8_t delta, bool include_max) {
   });
 }
 
-void XGrpTryCycleDisp(void) {
+void XGrpTryCycleDisp() {
   XGrpTry(
       [](auto &params) { params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN; });
 }
 
-void XGrpTryCycleScMode(void) {
+void XGrpTryCycleScMode() {
   XGrpTry([](auto &params) {
     params.flags ^= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
   });
 }
 
-bool GameFrame(void) {
+bool GameFrame() {
 #ifdef SUPPORT_GRP_WINDOWED
-  if (SystemKey_Data & SYSKEY_GRP_FULLSCREEN) {
+  if ((SystemKey_Data & SYSKEY_GRP_FULLSCREEN) != 0) {
     XGrpTryCycleDisp();
   }
 #endif
 #ifdef SUPPORT_GRP_SCALING
-  if (SystemKey_Data & SYSKEY_GRP_SCALE_UP) {
+  if ((SystemKey_Data & SYSKEY_GRP_SCALE_UP) != 0) {
     XGrpTryCycleScale(+1, false);
   }
-  if (SystemKey_Data & SYSKEY_GRP_SCALE_DOWN) {
+  if ((SystemKey_Data & SYSKEY_GRP_SCALE_DOWN) != 0) {
     XGrpTryCycleScale(-1, false);
   }
-  if (SystemKey_Data & SYSKEY_GRP_SCALE_MODE) {
+  if ((SystemKey_Data & SYSKEY_GRP_SCALE_MODE) != 0) {
     XGrpTryCycleScMode();
   }
 #endif
-  if (SystemKey_Data & SYSKEY_GRP_TURBO) {
+  if ((SystemKey_Data & SYSKEY_GRP_TURBO) != 0) {
     static decltype(Grp_FPSDivisor) fps_divisor_prev =
         ((Grp_FPSDivisor != 0) ? Grp_FPSDivisor : 1);
     if (Grp_FPSDivisor != 0) {
@@ -231,7 +231,7 @@ bool GameFrame(void) {
     }
   }
 #ifdef SUPPORT_GRP_API
-  if (SystemKey_Data & SYSKEY_GRP_API) {
+  if ((SystemKey_Data & SYSKEY_GRP_API) != 0) {
     XGrpTry([](auto &params) {
       params.api = ((params.api + 1) % GrpBackend_APICount());
     });

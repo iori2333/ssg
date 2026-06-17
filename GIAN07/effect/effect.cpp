@@ -4,6 +4,7 @@
 /*                                                                           */
 
 #include "effect.h"
+
 #include "font_uty.h"
 #include "game/cast.h"
 #include "game/snd.h"
@@ -11,6 +12,7 @@
 #include "geometry.h"
 #include "gian.h"
 #include "platform/text_backend.h"
+#include <algorithm>
 
 // string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect,
 // mtitle_strs[] → effect_manager.cpp の EffectManager に移動
@@ -29,7 +31,7 @@ void EffectManager::MoveCircleEffects() {
     ce->count++;
 
     switch (ce->type) {
-    case (CEFC_STAR):
+    case CEFC_STAR:
       ce->r -= 3;
       ce->d += 2;
       if (ce->r <= 0) {
@@ -37,14 +39,14 @@ void EffectManager::MoveCircleEffects() {
       }
       break;
 
-    case (CEFC_CIRCLE1): // 集
+    case CEFC_CIRCLE1: // 集
       ce->r -= (10 + 5);
       if (ce->r <= 0) {
         ce->type = CEFC_NONE;
       }
       break;
 
-    case (CEFC_CIRCLE2): // 離
+    case CEFC_CIRCLE2: // 離
       ce->r += (8 + 5);
       if (ce->r >= ce->rmax) {
         ce->type = CEFC_NONE;
@@ -56,8 +58,12 @@ void EffectManager::MoveCircleEffects() {
 
 // 円エフェクトを描画する //
 void EffectManager::DrawCircleEffects() {
-  int j, r;
-  int x1, x2, y1, y2;
+  int j = 0;
+  int r = 0;
+  int x1 = 0;
+  int x2 = 0;
+  int y1 = 0;
+  int y2 = 0;
   static constexpr uint8_t dtable[4] = {0, 1, 3, 7};
 
   GrpGeom->Lock();
@@ -65,43 +71,48 @@ void EffectManager::DrawCircleEffects() {
   for (const auto &it : circle_effects) {
     const auto *ce = &it;
     switch (ce->type) {
-    case (CEFC_STAR):
+    case CEFC_STAR:
       for (uint8_t k = 0; k < 4; k++) {
-        r = ce->r - k * 7;
-        if (r < 0)
+        r = ce->r - (k * 7);
+        if (r < 0) {
           continue;
-        GrpGeom->SetColor({5u, (k + 2u), (k + 2u)});
+        }
+        GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
         for (j = 0; j < 5; j++) {
-          x1 =
-              ce->x + cosl(ce->d + dtable[k] * ce->count / 10 + j * 256 / 5, r);
-          y1 =
-              ce->y + sinl(ce->d + dtable[k] * ce->count / 10 + j * 256 / 5, r);
+          x1 = ce->x +
+               cosl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
+          y1 = ce->y +
+               sinl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
           x2 = ce->x +
-               cosl(ce->d + dtable[k] * ce->count / 10 + (j + 2) * 256 / 5, r);
+               cosl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
+                    r);
           y2 = ce->y +
-               sinl(ce->d + dtable[k] * ce->count / 10 + (j + 2) * 256 / 5, r);
+               sinl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
+                    r);
           GrpGeom->DrawLine(x1, y1, x2, y2);
         }
       }
       break;
 
-    case (CEFC_CIRCLE1): // 集
+    case CEFC_CIRCLE1: // 集
       for (uint8_t k = 0; k < 4; k++) {
         r = ce->r - std::max(2, (k * ce->r) / 8);
-        if (r < 0)
+        if (r < 0) {
           continue;
-        GrpGeom->SetColor({5u, (k + 2u), (k + 2u)});
+        }
+        GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
         GeomCircle({ce->x, ce->y}, r);
       }
       break;
 
-    case (CEFC_CIRCLE2): // 離
+    case CEFC_CIRCLE2: // 離
       for (uint8_t k = 0; k < 4; k++) {
         r = ce->r - std::max(2, (k * ce->r) / 12);
         // r = ce->r - max(2, (k * (600-ce->r))/16);
-        if (r < 0)
+        if (r < 0) {
           continue;
-        GrpGeom->SetColor({5u, (k + 2u), (k + 2u)});
+        }
+        GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
         GeomCircle({ce->x, ce->y}, r);
       }
       break;
@@ -125,16 +136,16 @@ void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
   ce->count = ce->d = 0;
 
   switch (type) {
-  case (CEFC_STAR):
+  case CEFC_STAR:
     Snd_SEPlay(SOUND_ID_TAMEFAST);
     ce->rmax = ce->r = 400;
     break;
 
-  case (CEFC_CIRCLE1): // 集
+  case CEFC_CIRCLE1: // 集
     ce->rmax = ce->r = 600 + 50;
     break;
 
-  case (CEFC_CIRCLE2): // 離
+  case CEFC_CIRCLE2: // 離
     ce->rmax = 900 - 100;
     ce->r = 0;
     break;
@@ -145,7 +156,7 @@ void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
 }
 
 void EffectManager::InitMusicTitle() {
-  mtitle_rect = TextObj.Register({((X_MAX + 1) - X_MIN), 20});
+  mtitle_rect = TextObj.Register({.w = ((X_MAX + 1) - X_MIN), .h = 20});
 }
 
 // エフェクトの初期化を行う //
@@ -158,20 +169,23 @@ void EffectManager::InitStringEffects() {
 
 // 文字列系エフェクト //
 void EffectManager::SpawnStringEffect(int x, int y, const char *s) {
-  int i, j, len;
+  int i = 0;
+  int j = 0;
+  int len = 0;
 
   len = strlen(s);
   for (i = j = 0; i < len; i++) {
     while (string_effects[j].cmd != SEFC_NONE) {
       j++;
-      if (j >= SEFFECT_MAX)
+      if (j >= SEFFECT_MAX) {
         return;
+      }
     }
     string_effects[j].c = s[i];
     string_effects[j].x = (x + (i << 4) + 512) << 6;
-    string_effects[j].y = (y) << 6;
+    string_effects[j].y = y << 6;
     string_effects[j].vx = (-20) << 6;
-    string_effects[j].vy = (0) << 6;
+    string_effects[j].vy = 0 << 6;
     string_effects[j].cmd = SEFC_STR1;
     string_effects[j].time = 26;
   }
@@ -222,7 +236,7 @@ void EffectManager::SetMusicTitle(int y, Narrow::string_view s) {
   }
 
   mtitle_strs[1] = s;
-  PIXEL_SIZE extent = {0, 0};
+  PIXEL_SIZE extent = {.w = 0, .h = 0};
   for (const auto s : mtitle_strs) {
     const auto s_extent = TextObj.TextExtent(FONT_ID::NORMAL, s);
     extent.w += s_extent.w;
@@ -260,7 +274,7 @@ void EffectManager::MoveStringEffects() {
   for (auto &it : string_effects) {
     auto *e = &it;
     switch (e->cmd) {
-    case (SEFC_STR1):
+    case SEFC_STR1:
       e->x += e->vx;
       e->y += e->vy;
       if (e->time == 0) {
@@ -269,14 +283,15 @@ void EffectManager::MoveStringEffects() {
       }
       break;
 
-    case (SEFC_STR1_3):
+    case SEFC_STR1_3:
       e->x += e->vx;
       e->y += (e->vy += 16);
-      if (e->time == 0)
+      if (e->time == 0) {
         e->cmd = SEFC_NONE;
+      }
       break;
 
-    case (SEFC_STR1_2):
+    case SEFC_STR1_2:
       if (e->time == 0) {
         const uint8_t deg = (128 + (rnd() % 128));
         e->cmd = SEFC_STR1_3;
@@ -286,21 +301,22 @@ void EffectManager::MoveStringEffects() {
       }
       break;
 
-    case (SEFC_STR2):
-      if (e->time == 0)
+    case SEFC_STR2:
+      if (e->time == 0) {
         e->cmd = SEFC_NONE;
+      }
       e->x += e->vx;
       e->y += (e->vy += 3);
       break;
 
-    case (SEFC_GAMEOVER):
+    case SEFC_GAMEOVER:
       if (e->time == 0) {
         e->cmd = SEFC_GAMEOVER2;
         e->time = 35;
       }
       break;
 
-    case (SEFC_MTITLE1): // 曲名出現
+    case SEFC_MTITLE1: // 曲名出現
       // e->x -= 16;
       if (e->time == 0) {
         e->cmd = SEFC_MTITLE2;
@@ -308,21 +324,21 @@ void EffectManager::MoveStringEffects() {
       }
       break;
 
-    case (SEFC_MTITLE2): // 曲名停止
+    case SEFC_MTITLE2: // 曲名停止
       if (e->time == 0) {
         e->cmd = SEFC_MTITLE3;
         e->time = 64 * 2;
       }
       break;
 
-    case (SEFC_MTITLE3): // 曲名消去
+    case SEFC_MTITLE3: // 曲名消去
       e->x += 64;
       if (e->time == 0) {
         e->cmd = SEFC_NONE;
       }
       break;
 
-    case (SEFC_NONE):
+    case SEFC_NONE:
     default:
       break;
     }
@@ -332,38 +348,40 @@ void EffectManager::MoveStringEffects() {
 
 // エフェクトを描画する(仕様変更の可能性があります) //
 void EffectManager::DrawStringEffects() {
-  int j, k;
-  int x, y;
-  int temp;
+  int j = 0;
+  int k = 0;
+  int x = 0;
+  int y = 0;
+  int temp = 0;
   PIXEL_LTWH src;
-  char buf[20];
+  static constexpr const char GAME_OVER[] = "GAME OVER";
 
   for (const auto &it : string_effects) {
     const auto *e = &it;
     switch (e->cmd) {
-    case (SEFC_STR1):
-    case (SEFC_STR1_2):
-    case (SEFC_STR1_3):
+    case SEFC_STR1:
+    case SEFC_STR1_2:
+    case SEFC_STR1_3:
       GrpPutc(e->x >> 6, e->y >> 6, e->c);
       break;
 
-    case (SEFC_STR2):
-      sprintf(buf, "%u", e->point);
-      GrpPutScore(e->x >> 6, e->y >> 6, buf);
+    case SEFC_STR2: {
+      auto point_str = std::format("{}", e->point);
+      GrpPutScore(e->x >> 6, e->y >> 6, point_str.c_str());
       break;
+    }
 
-    case (SEFC_GAMEOVER):
-      strcpy(buf, "GAME OVER");
+    case SEFC_GAMEOVER:
       for (j = 0; j < 9; j++) {
         // *37 //
         const auto angle = Cast::down<uint8_t>((e->time * 3) + (j * 26));
         x = (e->x >> 6) + cosl(angle, e->time * 4);
         y = (e->y >> 6) + sinl(angle, e->time * 4);
-        GrpPutc(x, y, buf[j]);
+        GrpPutc(x, y, GAME_OVER[j]);
       }
       break;
 
-    case (SEFC_GAMEOVER2):
+    case SEFC_GAMEOVER2:
       x = (e->x >> 6) + 8;
       y = (e->y >> 6) + 8;
       j = (35 - e->time) / 2;
@@ -373,16 +391,15 @@ void EffectManager::DrawStringEffects() {
       GrpGeom->DrawBoxA((x - 170), (y - j), (x + 170), (y + j));
       GrpGeom->Unlock();
 
-      strcpy(buf, "GAME OVER");
       for (j = 0; j < 9; j++) {
         // *37 //
-        x = (e->x >> 6) + (j - 4) * (35 - e->time);
+        x = (e->x >> 6) + ((j - 4) * (35 - e->time));
         y = (e->y >> 6);
-        GrpPutc(x, y, buf[j]);
+        GrpPutc(x, y, GAME_OVER[j]);
       }
       break;
 
-    case (SEFC_MTITLE3): {
+    case SEFC_MTITLE3: {
       const auto degx = Cast::down<uint8_t>((64 * 2) - e->time);
       for (j = 0; j < e->vx; j++) {
         src = {j, 0, 1, e->vy};
@@ -395,7 +412,7 @@ void EffectManager::DrawStringEffects() {
       }
     } break;
 
-    case (SEFC_MTITLE1): {
+    case SEFC_MTITLE1: {
       const auto degx = Cast::down<uint8_t>(e->time);
       for (j = 0; j < e->vx; j++) {
         src = {j, 0, 1, e->vy};
@@ -408,12 +425,12 @@ void EffectManager::DrawStringEffects() {
       }
     } break;
 
-    case (SEFC_MTITLE2): {
+    case SEFC_MTITLE2: {
       GrpGeom->Lock();
       GrpGeom->SetColor({0, 0, 0});
       GrpGeom->SetAlphaNorm((sinl(Cast::down<uint8_t>(e->time - 32), 80) + 80));
       for (j = 0; j < 16; j++) {
-        temp = sinl(128 + j * 16, 16);
+        temp = sinl(128 + (j * 16), 16);
         GrpGeom->DrawBoxA(((e->x >> 6) + temp - 16), ((e->y >> 6) + j),
                           ((X_MAX - 16) - temp), ((e->y >> 6) + j + 1));
       }
@@ -422,7 +439,7 @@ void EffectManager::DrawStringEffects() {
       RenderMusicTitle({(e->x >> 6), (e->y >> 6)}, src);
     } break;
 
-    case (SEFC_NONE):
+    case SEFC_NONE:
     default:
       break;
     }
@@ -445,12 +462,12 @@ void EffectManager::SetScreenEffect(uint8_t cmd) {
   screen_info.count = 0;
 
   switch (cmd) {
-  case (SCNEFC_CFADEIN):  // 円形フェードイン
-  case (SCNEFC_CFADEOUT): // 円形フェードアウト
+  case SCNEFC_CFADEIN:  // 円形フェードイン
+  case SCNEFC_CFADEOUT: // 円形フェードアウト
     break;
 
-  case (SCNEFC_WHITEIN):  // ホワイトイン
-  case (SCNEFC_WHITEOUT): // ホワイトアウト
+  case SCNEFC_WHITEIN:  // ホワイトイン
+  case SCNEFC_WHITEOUT: // ホワイトアウト
     break;
 
   default:                         // ばぐばぐ
@@ -462,21 +479,21 @@ void EffectManager::SetScreenEffect(uint8_t cmd) {
 // 画面全体に対するエフェクトを動かす //
 void EffectManager::MoveScreenEffect() {
   switch (screen_info.cmd) {
-  case (SCNEFC_CFADEIN): // 円形フェードイン
-    screen_info.count += 10;
-    if (screen_info.count > 600)
-      screen_info.cmd = SCNEFC_NONE;
-    break;
-
-  case (SCNEFC_CFADEOUT): // 円形フェードアウト
+  case SCNEFC_CFADEIN: // 円形フェードイン
     screen_info.count += 10;
     if (screen_info.count > 600) {
-      screen_info.count = 600;
-      // screen_info.cmd = SCNEFC_NONE;
+      screen_info.cmd = SCNEFC_NONE;
     }
     break;
 
-  case (SCNEFC_WHITEIN): // ホワイトイン
+  case SCNEFC_CFADEOUT: // 円形フェードアウト
+    screen_info.count += 10;
+    screen_info.count = std::min<uint32_t>(
+        screen_info.count, 600); // screen_info.cmd = SCNEFC_NONE;
+
+    break;
+
+  case SCNEFC_WHITEIN: // ホワイトイン
     screen_info.count += 10;
     if (screen_info.count >= 160) {
       // screen_info.cmd   = SCNEFC_WHITEOUT;
@@ -485,10 +502,11 @@ void EffectManager::MoveScreenEffect() {
     }
     break;
 
-  case (SCNEFC_WHITEOUT): // ホワイトアウト
+  case SCNEFC_WHITEOUT: // ホワイトアウト
     screen_info.count += 10;
-    if (screen_info.count >= 160)
+    if (screen_info.count >= 160) {
       screen_info.cmd = SCNEFC_NONE;
+    }
     break;
 
   default: // ばぐばぐ
@@ -498,19 +516,20 @@ void EffectManager::MoveScreenEffect() {
 
 // 画面全体に対するエフェクトを描画する //
 void EffectManager::DrawScreenEffect() {
-  int i, j;
+  int i = 0;
+  int j = 0;
   PIXEL_LTRB src;
 
   switch (screen_info.cmd) {
-  case (SCNEFC_CFADEIN): // 円形フェードイン
+  case SCNEFC_CFADEIN: // 円形フェードイン
     CircleFadeOut(X_MID, Y_MID, screen_info.count);
     break;
 
-  case (SCNEFC_CFADEOUT): // 円形フェードアウト
+  case SCNEFC_CFADEOUT: // 円形フェードアウト
     CircleFadeOut(X_MID, Y_MID, 400 - screen_info.count);
     break;
 
-  case (SCNEFC_WHITEIN): // ホワイトイン
+  case SCNEFC_WHITEIN: // ホワイトイン
     src = PIXEL_LTWH{((15 - (Cast::sign<int>(screen_info.count) / 10)) * 16),
                      (128 + 16), 16, 16};
     for (i = 128; i < 640 - 128; i += 16) {
@@ -520,7 +539,7 @@ void EffectManager::DrawScreenEffect() {
     }
     break;
 
-  case (SCNEFC_WHITEOUT): // ホワイトアウト
+  case SCNEFC_WHITEOUT: // ホワイトアウト
     src = PIXEL_LTWH{((Cast::sign<int>(screen_info.count) / 10) * 16),
                      (128 + 16), 16, 16};
     for (i = 128; i < 640 - 128; i += 16) {
@@ -538,14 +557,13 @@ void EffectManager::DrawScreenEffect() {
 // 円形フェードサポート関数 //
 void EffectManager::CircleFadeOut(int x, int y, int r) {
   PIXEL_LTRB src;
-  int temp;
+  int temp = 0;
 
-  if (r < 0)
-    r = 0;
+  r = std::max(r, 0);
 
   for (auto i = 0; i < GRP_RES.w; i += 16) {
     for (auto j = 0; j < GRP_RES.h; j += 16) {
-      temp = isqrt((i - x) * (i - x) + (j - y) * (j - y));
+      temp = isqrt(((i - x) * (i - x)) + ((j - y) * (j - y)));
       if (temp < r && r - temp < 8 * 16 && temp >= 0) {
         temp = (r - temp) >> 3;
         // temp = (r-temp)>>4;
@@ -606,7 +624,7 @@ void EffectManager::MoveLockOn() {
   for (auto &it : lock_info) {
     auto *l = &it;
     switch (l->state) {
-    case (LOCKON_01):
+    case LOCKON_01:
       l->count--;
       l->width += l->vx;
       l->height += l->vy;
@@ -615,14 +633,14 @@ void EffectManager::MoveLockOn() {
         l->count = 30;          // 120;
       }
       break;
-    case (LOCKON_02):
+    case LOCKON_02:
       l->count--;
       if (l->count == 0) {
         l->state = LOCKON_NONE; // LOCKON_03;
         l->count = 30;
       }
       break;
-    case (LOCKON_03):
+    case LOCKON_03:
       l->count--;
       l->width -= l->vx;
       l->height -= l->vy;
@@ -685,8 +703,9 @@ void EffectManager::SetWarningEffect() {
 
 // ワーニングの動作 //
 void EffectManager::MoveWarningEffect() {
-  if (!enable_warn_efc)
+  if (!enable_warn_efc) {
     return;
+  }
 
   if (warn_efc_time < 64 + 128) { // 64+256){
     MoveWarningText(Cast::down<uint8_t>(warn_efc_time));
@@ -701,13 +720,15 @@ void EffectManager::MoveWarningEffect() {
 
 // ワーニングの描画 //
 void EffectManager::DrawWarningEffect() {
-  int r;
+  int r = 0;
 
-  if (!enable_warn_efc)
+  if (!enable_warn_efc) {
     return;
+  }
 
-  if (warn_efc_time < 256 - 20)
+  if (warn_efc_time < 256 - 20) {
     DrawWarningText();
+  }
 
   if (warn_efc_time > 256 - 40) {
     GrpGeom->Lock();

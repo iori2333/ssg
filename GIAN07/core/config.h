@@ -157,7 +157,7 @@ struct CONFIG_DATA {
   // ワケ有りでここにいるのです(チェックサムの範囲外)
   OPTION<uint8_t> StageSelect = {0, U8Below<STAGE_MAX>};
 
-  GRAPHICS_PARAMS GraphicsParams(void) const;
+  [[nodiscard]] GRAPHICS_PARAMS GraphicsParams() const;
   void GraphicsParamsApply(const GRAPHICS_PARAMS &params);
 };
 

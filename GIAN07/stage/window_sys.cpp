@@ -4,32 +4,34 @@
 /*                                                                           */
 
 #include "window_sys.h"
+
 #include "font_uty.h"
 #include "game/enum_flags.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "loader.h"
 #include "platform/text_backend.h"
+#include <utility>
 
 ///// [構造体] /////
 
 // メッセージウィンドウ管理用構造体 //
 struct MSG_WINDOW {
-  WINDOW_LTRB MaxSize; // ウィンドウの最終的な大きさ
-  WINDOW_LTRB NowSize; // ウィンドウの現在のサイズ
-  PIXEL_POINT TextTopleft;
+  WINDOW_LTRB MaxSize{}; // ウィンドウの最終的な大きさ
+  WINDOW_LTRB NowSize{}; // ウィンドウの現在のサイズ
+  PIXEL_POINT TextTopleft{};
 
   MSG_WINDOW_FLAGS Flags;
-  FONT_ID FontID;  // 使用するフォント
-  uint8_t FontDy;  // フォントのＹ増量値
-  uint8_t State;   // 状態
-  uint8_t MaxLine; // 最大表示可能行数
-  uint8_t Line;    // 次に挿入する行
+  FONT_ID FontID;    // 使用するフォント
+  uint8_t FontDy{};  // フォントのＹ増量値
+  uint8_t State{};   // 状態
+  uint8_t MaxLine{}; // 最大表示可能行数
+  uint8_t Line{};    // 次に挿入する行
 
-  uint8_t FaceID;    // 使用する顔番号
-  uint8_t NextFace;  // 次に表示する顔番号
-  uint8_t FaceState; // 顔の状態
-  uint8_t FaceTime;  // 顔表示用カウンタ
+  uint8_t FaceID{};    // 使用する顔番号
+  uint8_t NextFace{};  // 次に表示する顔番号
+  uint8_t FaceState{}; // 顔の状態
+  uint8_t FaceTime{};  // 顔表示用カウンタ
 
   Narrow::string_view Msg[MSG_HEIGHT]; // 表示するメッセージへのポインタ
 
@@ -61,8 +63,8 @@ MSG_WINDOW MsgWindow; // メッセージウィンドウ
 
 uint8_t WINDOW_MENU::MaxItems() const {
   uint8_t ret = NumItems;
-  for (auto i = 0; i < NumItems; i++) {
-    if (ItemPtr[i]->Submenu) {
+  for (auto i = 0; std::cmp_less(i, NumItems); i++) {
+    if (ItemPtr[i]->Submenu != nullptr) {
       ret = (std::max)(ret, ItemPtr[i]->Submenu->MaxItems());
     }
   }
@@ -70,7 +72,8 @@ uint8_t WINDOW_MENU::MaxItems() const {
 }
 
 void WINDOW_CHOICE::SetActive(bool active) {
-  EnumFlagSet(Flags, WINDOW_FLAGS::DISABLED, !active);
+  EnumFlagSet(Flags, WINDOW_FLAGS::DISABLED,
+              static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(!active));
 }
 
 void WINDOW_SYSTEM::Init(PIXEL_COORD w) {
@@ -81,7 +84,7 @@ void WINDOW_SYSTEM::Init(PIXEL_COORD w) {
   const auto max_items = (1 + Parent.MaxItems());
 
   for (auto i = 0; i < max_items; i++) {
-    TRRs[i] = TextObj.Register({W, CWIN_ITEM_H});
+    TRRs[i] = TextObj.Register({.w = W, .h = CWIN_ITEM_H});
   }
 }
 
@@ -106,33 +109,33 @@ void WINDOW_SYSTEM::OpenCentered(PIXEL_COORD w, int select) {
   const WINDOW_POINT topleft = {
       (320 - (w / 2)),
       (73 + (CWIN_MAX_H / 2) - (((Parent.NumItems + 1) * CWIN_ITEM_H) / 2))};
-  return Open(topleft, select);
+  Open(topleft, select);
 }
 
 // コマンドウィンドウを１フレーム動作させる //
 void CWinMove(WINDOW_SYSTEM *ws) {
   switch (ws->State) {
-  case (CWIN_DEAD): // 使用されていない
+  case CWIN_DEAD: // 使用されていない
     return;
 
-  case (CWIN_FREE): // 入力待ち状態
+  case CWIN_FREE: // 入力待ち状態
     CWinKeyEvent(ws);
     ws->Count = 0;
     return;
 
-  case (CWIN_OPEN): // 項目移動中(進む)
+  case CWIN_OPEN: // 項目移動中(進む)
     break;
 
-  case (CWIN_CLOSE): // 項目移動中(戻る)
+  case CWIN_CLOSE: // 項目移動中(戻る)
     break;
 
-  case (CWIN_NEXT): // 次のウィンドウに移行中
+  case CWIN_NEXT: // 次のウィンドウに移行中
     break;
 
-  case (CWIN_BEFORE): // 前のウィンドウに移行中
+  case CWIN_BEFORE: // 前のウィンドウに移行中
     break;
 
-  case (CWIN_INIT): // 初期化処理中
+  case CWIN_INIT: // 初期化処理中
     ws->State = CWIN_FREE;
     break;
   }
@@ -148,10 +151,14 @@ void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
   };
 
   static constexpr COLOR_PAIR COL[2][2] = {
-      COLOR_PAIR{{128, 128, 128}, {255, 255, 255}}, // Active, regular
-      COLOR_PAIR{{128, 128, 128}, {255, 255, 70}},  // Active, HL
-      COLOR_PAIR{{96, 96, 96}, {192, 192, 192}},    // Disabled, regular
-      COLOR_PAIR{{96, 96, 96}, {192, 192, 70}},     // Disabled, HL
+      COLOR_PAIR{.shadow = {.r = 128, .g = 128, .b = 128},
+                 .text = {.r = 255, .g = 255, .b = 255}}, // Active, regular
+      COLOR_PAIR{.shadow = {.r = 128, .g = 128, .b = 128},
+                 .text = {.r = 255, .g = 255, .b = 70}}, // Active, HL
+      COLOR_PAIR{.shadow = {.r = 96, .g = 96, .b = 96},
+                 .text = {.r = 192, .g = 192, .b = 192}}, // Disabled, regular
+      COLOR_PAIR{.shadow = {.r = 96, .g = 96, .b = 96},
+                 .text = {.r = 192, .g = 192, .b = 70}}, // Disabled, HL
   };
 
   const auto disabled = !!(label.Flags & WINDOW_FLAGS::DISABLED);
@@ -162,25 +169,26 @@ void CWinDrawLabel(TEXTRENDER_SESSION &s, const WINDOW_LABEL &label,
   // Adding CWIN_ITEM_LEFT to centered text would throw it off-center,
   // obviously. Also, non-centered titles that don't start with spaces
   // shouldn't be dedented relative to the menu items.
-  const auto starts_with_space = (label.Title.ptr && (*label.Title.ptr == ' '));
+  const auto starts_with_space =
+      ((label.Title.ptr != nullptr) && (*label.Title.ptr == ' '));
   const auto left =
       (!!(label.Flags & WINDOW_FLAGS::CENTER)
            ? TextLayoutXCenter(s, label.Title)
            : ((is_title && starts_with_space) ? 0 : CWIN_ITEM_LEFT));
-  s.Put({(left + 1), 0}, label.Title, col.shadow);
-  s.Put({(left + 0), 0}, label.Title, col.text);
+  s.Put({.x = (left + 1), .y = 0}, label.Title, col.shadow);
+  s.Put({.x = (left + 0), .y = 0}, label.Title, col.text);
 }
 
 // コマンドウィンドウの描画 //
 void CWinDraw(WINDOW_SYSTEM *ws) {
-  int i;
+  int i = 0;
   WINDOW_COORD top = ws->y;
 
   // アクティブな項目を検索する //
   auto *p = CWinSearchActive(ws);
 
   // 半透明ＢＯＸの描画 //
-  const uint8_t alpha = (GrpGeom_FB() ? (64 + 32) : 128);
+  const uint8_t alpha = ((GrpGeom_FB() != nullptr) ? (64 + 32) : 128);
 
   GrpGeom->Lock();
   GrpGeom->SetAlphaNorm(alpha);
@@ -190,14 +198,14 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
   top += CWIN_ITEM_H;
 
   GrpGeom->SetColor({0, 0, 2});
-  for (i = 0; i < p->NumItems; i++) {
-    if (i == ws->Select[ws->SelectDepth]) {
+  for (i = 0; std::cmp_less(i, p->NumItems); i++) {
+    if (std::cmp_equal(i, ws->Select[ws->SelectDepth])) {
       GrpGeom->SetAlphaNorm(128);
       GrpGeom->SetColor({5, 0, 0});
     }
     GrpGeom->DrawBoxA(ws->x, top, (ws->x + ws->W), (top + CWIN_ITEM_H));
     top += CWIN_ITEM_H;
-    if (i == ws->Select[ws->SelectDepth]) {
+    if (std::cmp_equal(i, ws->Select[ws->SelectDepth])) {
       GrpGeom->SetAlphaNorm(alpha);
       GrpGeom->SetColor({0, 0, 2});
     }
@@ -213,7 +221,7 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
   });
   topleft.y += (CWIN_ITEM_H + 1); // ???
 
-  for (i = 0; i < p->NumItems; i++) {
+  for (i = 0; std::cmp_less(i, p->NumItems); i++) {
     const auto trr = ws->TRRs[1 + i];
     auto *item = p->ItemPtr[i];
     const Narrow::string_view c =
@@ -228,10 +236,7 @@ void CWinDraw(WINDOW_SYSTEM *ws) {
 
 // コマンド [Exit] のデフォルト処理関数 //
 bool CWinExitFn(INPUT_BITS key) {
-  if (Input_IsOK(key) || Input_IsCancel(key)) {
-    return false;
-  }
-  return true;
+  return !(Input_IsOK(key) || Input_IsCancel(key));
 }
 
 PIXEL_SIZE CWinTextExtent(Narrow::string_view str) {
@@ -255,9 +260,10 @@ void MWinInit(const WINDOW_LTRB &rc, MSG_WINDOW_FLAGS flags) {
   MsgWindow.TRR = TextObj.Register(rc.Size() - MsgWindow.TextTopleft);
 }
 
-void MWinOpen(void) {
-  if (MsgWindow.State != MWIN_DEAD)
+void MWinOpen() {
+  if (MsgWindow.State != MWIN_DEAD) {
     return;
+  }
 
   // 状態および、最終値のセット //
   MsgWindow.State = MWIN_OPEN;
@@ -279,7 +285,7 @@ void MWinOpen(void) {
 }
 
 // メッセージウィンドウをクローズする //
-void MWinClose(void) {
+void MWinClose() {
   //	if(MsgWindow.State != MWIN_FREE) return;
 
   MsgWindow.FaceState = MFACE_CLOSE;
@@ -287,21 +293,22 @@ void MWinClose(void) {
 }
 
 // メッセージウィンドウを強制クローズする //
-void MWinForceClose(void) {
+void MWinForceClose() {
   MsgWindow.FaceState = MFACE_NONE;
   MsgWindow.State = MWIN_DEAD;
 }
 
 // メッセージウィンドウを動作させる //
-void MWinMove(void) {
+void MWinMove() {
   switch (MsgWindow.FaceState) {
-  case (MFACE_OPEN): // 顔を表示しようとしている
+  case MFACE_OPEN: // 顔を表示しようとしている
     MsgWindow.FaceTime += 16;
-    if (MsgWindow.FaceTime == 0)
+    if (MsgWindow.FaceTime == 0) {
       MsgWindow.FaceState = MFACE_WAIT;
+    }
     break;
 
-  case (MFACE_NEXT):
+  case MFACE_NEXT:
     MsgWindow.FaceTime += 16;
     if (MsgWindow.FaceTime == 0) {
       MsgWindow.FaceState = MFACE_OPEN;
@@ -310,10 +317,11 @@ void MWinMove(void) {
     }
     break;
 
-  case (MFACE_CLOSE): // 顔を消そうとしている
+  case MFACE_CLOSE: // 顔を消そうとしている
     MsgWindow.FaceTime += 16;
-    if (MsgWindow.FaceTime == 0)
+    if (MsgWindow.FaceTime == 0) {
       MsgWindow.FaceState = MFACE_NONE;
+    }
     break;
 
   default:
@@ -321,7 +329,7 @@ void MWinMove(void) {
   }
 
   switch (MsgWindow.State) {
-  case (MWIN_OPEN):
+  case MWIN_OPEN:
     MsgWindow.NowSize.top -= 2;
     MsgWindow.NowSize.bottom += 2;
 
@@ -332,7 +340,7 @@ void MWinMove(void) {
     }
     break;
 
-  case (MWIN_CLOSE):
+  case MWIN_CLOSE:
     MsgWindow.NowSize.top += 3;
     MsgWindow.NowSize.bottom -= 3;
     MsgWindow.NowSize.right += 6;
@@ -344,29 +352,32 @@ void MWinMove(void) {
     }
     break;
 
-  case (MWIN_DEAD):
-  case (MWIN_FREE):
+  case MWIN_DEAD:
+  case MWIN_FREE:
     break;
   }
 }
 
 // メッセージウィンドウを描画する(上に同じ) //
-void MWinDraw(void) {
+void MWinDraw() {
   PIXEL_LTRB src;
 
   const auto x = MsgWindow.NowSize.left;         // ウィンドウ左上Ｘ
   const auto y = MsgWindow.NowSize.top;          // ウィンドウ左上Ｙ
   const auto w = (MsgWindow.NowSize.right - x);  // ウィンドウ幅
   const auto h = (MsgWindow.NowSize.bottom - y); // ウィンドウ高さ
-  int len, time, oy;
+  int len = 0;
+  int time = 0;
+  int oy = 0;
 
   // メッセージウィンドウが死んでいたら何もしない //
-  if (MsgWindow.State == MWIN_DEAD)
+  if (MsgWindow.State == MWIN_DEAD) {
     return;
+  }
 
   // 半透明部の描画 //
   GrpGeom->Lock();
-  GrpGeom->SetAlphaNorm(GrpGeom_FB() ? (64 + 32) : 110);
+  GrpGeom->SetAlphaNorm((GrpGeom_FB() != nullptr) ? (64 + 32) : 110);
   GrpGeom->SetColor({0, 0, 3});
   GrpGeom->DrawBoxA((x + 4), (y + 4), (x + w - 4), (y + h - 4));
   GrpGeom->Unlock();
@@ -380,7 +391,7 @@ void MWinDraw(void) {
     TextObj.Render(topleft, trr, text, [](TEXTRENDER_SESSION &s) {
       // セットされたフォントで描画
       s.SetFont(MsgWindow.FontID);
-      for (auto i = 0; i < MsgWindow.Line; i++) {
+      for (auto i = 0; std::cmp_less(i, MsgWindow.Line); i++) {
         const auto line = MsgWindow.Msg[i];
 
         // 一応安全対策
@@ -393,9 +404,11 @@ void MWinDraw(void) {
                                : 0);
 
         // 灰色で１どっとずらして描画
-        s.Put({(left + 1), top}, line, RGB{128, 128, 128});
+        s.Put({.x = (left + 1), .y = top}, line,
+              RGB{.r = 128, .g = 128, .b = 128});
         // 白で表示すべき位置に表示
-        s.Put({(left + 0), top}, line, RGB{255, 255, 255});
+        s.Put({.x = (left + 0), .y = top}, line,
+              RGB{.r = 255, .g = 255, .b = 255});
       }
     });
   }
@@ -405,18 +418,18 @@ void MWinDraw(void) {
   // お顔をかきましょう(表示を要請されている場合にだけ) //
   const auto sid = (SURFACE_ID::FACE + (MsgWindow.FaceID / FACE_NUMX));
   switch (MsgWindow.FaceState) {
-  case (MFACE_WAIT):
+  case MFACE_WAIT:
     oy = MsgWindow.MaxSize.bottom - 100;
     src = PIXEL_LTWH{((MsgWindow.FaceID % FACE_NUMX) * FACE_W), 0, FACE_W,
                      FACE_H};
     GrpSurface_Blit({(x + 2), oy}, sid, src);
     break;
 
-  case (MFACE_OPEN):
+  case MFACE_OPEN:
     time = MsgWindow.FaceTime >> 2;
     oy = MsgWindow.MaxSize.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
-      len = cosl(time + i * 153, (64 - time) / 2);
+      len = cosl(time + (i * 153), (64 - time) / 2);
       // len = cosl(time+i*4,64-time);
       src = PIXEL_LTWH{((MsgWindow.FaceID % FACE_NUMX) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
@@ -425,11 +438,11 @@ void MWinDraw(void) {
     }
     break;
 
-  case (MFACE_NEXT):
+  case MFACE_NEXT:
     time = (255 - MsgWindow.FaceTime) >> 2;
     oy = MsgWindow.MaxSize.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
-      len = cosl(time + i * 153, (64 - time) / 2);
+      len = cosl(time + (i * 153), (64 - time) / 2);
       // len = cosl(time+i*4,64-time);
       src = PIXEL_LTWH{((MsgWindow.FaceID % FACE_NUMX) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
@@ -438,13 +451,13 @@ void MWinDraw(void) {
     }
     break;
 
-  case (MFACE_CLOSE):
+  case MFACE_CLOSE:
     time = MsgWindow.FaceTime >> 1;
     oy = MsgWindow.MaxSize.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
-      len = cosl(time + i * 4, time);
+      len = cosl(time + (i * 4), time);
       src = PIXEL_LTWH{((MsgWindow.FaceID % FACE_NUMX) * FACE_W), i, FACE_W, 1};
-      if (i & 1) {
+      if ((i & 1) != 0) {
         GrpSurface_Blit({(x - len + 2), (oy + i)}, sid, src);
       } else {
         GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
@@ -455,14 +468,16 @@ void MWinDraw(void) {
 }
 
 void MWinMsg(Narrow::string_view s) {
-  int Line, i;
+  int Line = 0;
+  int i = 0;
 
   Line = MsgWindow.Line;
 
-  if (Line == MsgWindow.MaxLine) {
+  if (std::cmp_equal(Line, MsgWindow.MaxLine)) {
     // すでに表示最大行数を超えていた場合 //
-    for (i = 1; i < MsgWindow.MaxLine - 1; i++)
+    for (i = 1; i < MsgWindow.MaxLine - 1; i++) {
       MsgWindow.Msg[i] = MsgWindow.Msg[i + 1];
+    }
     MsgWindow.Msg[Line - 1] = s;
   } else {
     // ポインタセット＆行数更新 //
@@ -479,10 +494,12 @@ void MWinMsg(Narrow::string_view s) {
 
 // 顔をセットする //
 void MWinFace(uint8_t faceID) {
-  if (MsgWindow.State == MWIN_DEAD)
+  if (MsgWindow.State == MWIN_DEAD) {
     return; // 表示不可
-  if (faceID / FACE_NUMX >= FACE_MAX)
+  }
+  if (faceID / FACE_NUMX >= FACE_MAX) {
     return; // あり得ない数字
+  }
 
   assert(MsgWindow.TextTopleft.x == FACE_W);
 
@@ -500,25 +517,25 @@ void MWinFace(uint8_t faceID) {
 
 // コマンドを送る //
 void MWinCmd(uint8_t cmd) {
-  int temp;
+  int temp = 0;
   int Ysize = 0;
 
   switch (cmd) {
-  case (MWCMD_LARGEFONT): // ラージフォントを使用する
+  case MWCMD_LARGEFONT: // ラージフォントを使用する
     Ysize += 8;
     [[fallthrough]];
-  case (MWCMD_NORMALFONT): // ノーマルフォントを使用する
+  case MWCMD_NORMALFONT: // ノーマルフォントを使用する
     Ysize += 2;
     [[fallthrough]];
-  case (MWCMD_SMALLFONT): // スモールフォントを使用する
+  case MWCMD_SMALLFONT: // スモールフォントを使用する
     Ysize += 14;
     temp = MsgWindow.MaxSize.bottom - MsgWindow.MaxSize.top - 16;
     MsgWindow.MaxLine = temp / Ysize; // 表示可能最大行数
-    MsgWindow.FontDy = (temp % Ysize) / (temp / Ysize) + Ysize + 1; // Ｙ増量
+    MsgWindow.FontDy = ((temp % Ysize) / (temp / Ysize)) + Ysize + 1; // Ｙ増量
     MsgWindow.FontID = Cast::down_enum<FONT_ID>(cmd); // 使用フォント
     [[fallthrough]];
 
-  case (MWCMD_NEWPAGE): // 改ページする
+  case MWCMD_NEWPAGE: // 改ページする
     // 文字列無効化, 最初の行へ
     MsgWindow.MsgBlank();
     break;
@@ -564,11 +581,11 @@ void MWinHelp(WINDOW_SYSTEM *ws) {
 
 // アクティブなウィンドウを探す //
 WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws) {
-  int i;
+  int i = 0;
 
   // 現在アクティブな項目を探す //
   auto *p = &(ws->Parent);
-  for (i = 0; i < ws->SelectDepth; i++) {
+  for (i = 0; std::cmp_less(i, ws->SelectDepth); i++) {
     p = p->ItemPtr[ws->Select[i]]->Submenu;
   }
 
@@ -578,15 +595,14 @@ WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws) {
 // キーボード入力を処理する //
 static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
   if (ws->FirstWait) {
-    if (Key_Data) {
+    if (Key_Data != 0U) {
       return;
-    } else {
-      ws->FirstWait = false;
     }
+    ws->FirstWait = false;
   }
 
   // 操作性が悪かった点を修正 //
-  if (Key_Data == 0 && ws->KeyCount) {
+  if (Key_Data == 0 && (ws->KeyCount != 0U)) {
     ws->OldKey = 0;
     ws->KeyCount = 0;
     return;
@@ -605,25 +621,28 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
   auto *p2 = p->ItemPtr[ws->Select[Depth]];
 
   // キーボードの過剰なリピート防止 //
-  if (ws->KeyCount) {
+  if (ws->KeyCount != 0U) {
     ws->KeyCount--;
     if (ws->KeyCount == 0) {
       ws->OldKey = 0;
     }
     return;
-  } else if (!!(p2->Flags & WINDOW_FLAGS::FAST_REPEAT) &&
-             Input_OptionKeyDelta(ws->OldKey)) {
+  }
+  if (!!(p2->Flags & WINDOW_FLAGS::FAST_REPEAT) &&
+      (Input_OptionKeyDelta(ws->OldKey) != 0)) {
     ws->KeyCount = ws->FastRepeatWait;
     ws->FastRepeatWait = (std::max)((ws->FastRepeatWait - 2), 0);
     if (ws->KeyCount == 0) {
       ws->OldKey = 0;
     }
     return;
-  } else if ((ws->OldKey == KEY_UP) || (ws->OldKey == KEY_DOWN) ||
-             (ws->OldKey == KEY_LEFT) || (ws->OldKey == KEY_RIGHT)) {
+  }
+  if ((ws->OldKey == KEY_UP) || (ws->OldKey == KEY_DOWN) ||
+      (ws->OldKey == KEY_LEFT) || (ws->OldKey == KEY_RIGHT)) {
     ws->KeyCount = CWIN_KEYWAIT;
     return;
-  } else if (Input_IsOK(ws->OldKey) || Input_IsCancel(ws->OldKey)) {
+  }
+  if (Input_IsOK(ws->OldKey) || Input_IsCancel(ws->OldKey)) {
     // いかなる場合もリピートを許可しないキー //
     if (Key_Data == ws->OldKey) {
       return;
@@ -660,19 +679,20 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
     Snd_SEPlay(SOUND_ID_SELECT);
   } else if (Input_IsCancel(Key_Data)) {
     Snd_SEPlay(SOUND_ID_CANCEL);
-  } else if (Input_OptionKeyDelta(Key_Data)) {
+  } else if (Input_OptionKeyDelta(Key_Data) != 0) {
     Snd_SEPlay(SOUND_ID_SELECT);
   } else if (Key_Data == 0) {
     ws->FastRepeatWait = CWIN_KEYWAIT;
   }
 
-  if (p2->OptionFn || p2->CallBackFn) {
+  if ((p2->OptionFn != nullptr) || (p2->CallBackFn != nullptr)) {
     // コールバック動作時の処理 //
     const auto ret = ([p, p2] {
       if (p2->OptionFn) {
         if (Input_IsCancel(Key_Data)) {
           return false;
-        } else if (const auto delta = Input_OptionKeyDelta(Key_Data)) {
+        }
+        if (const auto delta = Input_OptionKeyDelta(Key_Data)) {
           p2->OptionFn(delta);
         }
         p->SetItems(true);
@@ -685,7 +705,7 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
 
       return p2->CallBackFn(Key_Data);
     })();
-    if (ret == false) {
+    if (!ret) {
       if (Depth == 0) {
         if (!Input_IsCancel(Key_Data)) {
           // 後で (CWIN_CLOSE) に変更すること//
@@ -704,7 +724,7 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
     // デフォルトのキーボード動作 //
     if (Input_IsOK(Key_Data)) {
       // 決定・選択
-      if (p2->Submenu && (p2->Submenu->NumItems != 0)) {
+      if ((p2->Submenu != nullptr) && (p2->Submenu->NumItems != 0)) {
         p2->Submenu->Title = p2;
         p2->Submenu->SetItems(false);
 
@@ -723,8 +743,9 @@ static void CWinKeyEvent(WINDOW_SYSTEM *ws) {
 
 // 平行四辺形ＢＯＸ描画 //
 static void GrpBoxA2(int x1, int y1, int x2, int y2) {
-  int i;
+  int i = 0;
 
-  for (i = 0; i <= y2 - y1; i++)
+  for (i = 0; i <= y2 - y1; i++) {
     GrpGeom->DrawBoxA(x1, (y1 + i), (x2 + (i * 2)), (y1 + i + 1));
+  }
 }
