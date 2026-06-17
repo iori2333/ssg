@@ -3,7 +3,7 @@ Checks: >
   -*,
   bugprone-*,
   -bugprone-narrowing-conversions,
-  -bugprone-reserved-identifier,
+  -bugprone-easily-swappable-parameters,
   cert-*,
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-non-const-global-variables,
@@ -13,12 +13,14 @@ Checks: >
   -cppcoreguidelines-pro-type-cstyle-cast,
   -cppcoreguidelines-pro-type-reinterpret-cast,
   -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-avoid-magic-numbers,
   modernize-*,
   -modernize-avoid-c-arrays,
   -modernize-use-trailing-return-type,
   performance-*,
   readability-*,
   -readability-magic-numbers,
+  -readability-identifier-length,
 
 HeaderFilterRegex: '.*\.(h|hpp)$'
 ImplementationFileExtensions:
@@ -26,8 +28,8 @@ ImplementationFileExtensions:
   - cxx
   - cc
 
-WarningsAsErrors: ''
+WarningsAsErrors: ""
 
 ExtraArgs:
-  - -std=c++20
+  - -std=c++23
   - -I.
