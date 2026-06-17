@@ -5,7 +5,6 @@
 
 #include "scroll.h"
 
-#include <utility>
 #include "config.h"
 #include "demo_play.h"
 #include "game/bgm.h"
@@ -20,6 +19,7 @@
 #include "platform/graphics_backend.h"
 #include "scene.h" // ＳＣＬ定義ファイル
 #include "window_sys.h"
+#include <utility>
 
 // マップデータ保存用ヘッダ //
 struct ScrollSaveHeader {
@@ -31,9 +31,9 @@ struct ScrollSaveHeader {
 // ScrollInfo, SclInfo, Scroller.map_chip_rects[] → scroll_manager.cpp の
 // ScrollManager に移動
 
-static void enemy_set();             // 敵をセットする
+static void enemy_set();                // 敵をセットする
 static void PutEnemy(const uint8_t *p); // p:SCL_ENEMY以降の敵配置データ
-static void InitMapChipRect();       // スクロールに関する情報の初期化を行う
+static void InitMapChipRect();          // スクロールに関する情報の初期化を行う
 
 static PBGMAP *ScNextLine(PBGMAP *p);   // 次の行にＧＯ！！
 static PBGMAP *ScBeforeLine(PBGMAP *p); // 前の行にＧＯ！！
@@ -71,7 +71,7 @@ void ScrollManager::Move() {
   // 振動エフェクトを動作させる(これは、特殊スクロールとは別物) //
   if (scroll.IsQuake != 0U) {
     scroll.IsQuake += 2;
-}
+  }
 
   // 標準のスクロールスピードだけカウンタを進める //
   if (scroll.DataHead == nullptr) {
@@ -79,12 +79,12 @@ void ScrollManager::Move() {
   }
   if (scroll.Count >= scroll.InfEnd) {
     return;
-}
+  }
 
   // スクロールしない場合は、リターンする //
   if (scroll.ScrollSpeed == 0) {
     return;
-}
+  }
 
   scroll.Count += scroll.ScrollSpeed;
 
@@ -92,12 +92,13 @@ void ScrollManager::Move() {
     // 通常のスクロール //
     for (i = 0; i < scroll.NumLayer; i++) {
       scroll.LayerCount[i] += scroll.ScrollSpeed;
-      while (std::cmp_greater_equal(scroll.LayerCount[i] , scroll.LayerWait[i])) {
+      while (
+          std::cmp_greater_equal(scroll.LayerCount[i], scroll.LayerWait[i])) {
         scroll.LayerCount[i] -= scroll.LayerWait[i];
         scroll.LayerDy[i] = (scroll.LayerDy[i] + 1) % 16; //& 0x0f;
         if (scroll.LayerDy[i] == 0) {
           scroll.LayerPtr[i] = ScNextLine(scroll.LayerPtr[i]);
-}
+        }
       }
     }
   } else {
@@ -107,7 +108,7 @@ void ScrollManager::Move() {
       while (scroll.LayerCount[i] < 0) {
         if (scroll.LayerDy[i] == 0) {
           scroll.LayerPtr[i] = ScBeforeLine(scroll.LayerPtr[i]);
-}
+        }
         scroll.LayerCount[i] += scroll.LayerWait[i];
         scroll.LayerDy[i] = (scroll.LayerDy[i] + 15) % 16; //& 0x0f;
       }
@@ -119,9 +120,11 @@ static PBGMAP *ScNextLine(PBGMAP *p) {
   int i = 0;
 
   for (i = 0; i < MAP_WIDTH;) {
-    if (*p != MAPDATA_NONE) { {
-      p++, i++;
-    } } else {
+    if (*p != MAPDATA_NONE) {
+      {
+        p++, i++;
+      }
+    } else {
       i = i + (*(p + 1));
       p = p + 2;
     }
@@ -134,9 +137,11 @@ static PBGMAP *ScBeforeLine(PBGMAP *p) {
   int i = 0;
 
   for (i = 0; i < MAP_WIDTH;) {
-    if (*(p - 2) != MAPDATA_NONE) { {
-      p--, i++;
-    } } else {
+    if (*(p - 2) != MAPDATA_NONE) {
+      {
+        p--, i++;
+      }
+    } else {
       i = i + (*(p - 1));
       p = p - 2;
     }
@@ -202,7 +207,7 @@ static void enemy_set() {
     case SCL_ENEMY:
       if (Bosses.count == 0) {
         PutEnemy(cmd + 1); // ボス出現中は出て来ちゃダメ
-}
+      }
       Enemies.scl_now += 6; // cmd(1)+x(2)+y(2)+id(1)
       SCL_DEBUG(u8"--- SCL_ENEMY ---");
       break;
@@ -258,13 +263,13 @@ static void enemy_set() {
       break;
 
     case SCL_END: // カウントも変更させずにリターンする
-                    /*
-                    MWinOpen();
-                    MWinCmd(MWCMD_NEWPAGE);
-                    MWinCmd(MWCMD_LARGEFONT);
-                    MWinMsg("ＳＣＬ完了ですの");
-                    SCL_DEBUG(u8"--- SCL_END ---");
-                    */
+                  /*
+                  MWinOpen();
+                  MWinCmd(MWCMD_NEWPAGE);
+                  MWinCmd(MWCMD_LARGEFONT);
+                  MWinMsg("ＳＣＬ完了ですの");
+                  SCL_DEBUG(u8"--- SCL_END ---");
+                  */
       return;
 
     case SCL_SSP: // スクロールスピード変更
@@ -399,11 +404,11 @@ static void enemy_set() {
       }
       if (Demos.load_all_enable) {
         return;
-}
+      }
 
       if (GameState.game_stage == STAGE_MAX) {
         GameState.game_stage = 7;
-}
+      }
       if (GameState.game_level != GAME_EASY) {
         switch (Players.viv.weapon) {
         case 0:
@@ -428,7 +433,7 @@ static void enemy_set() {
       }
       if (Demos.load_all_enable) {
         return;
-}
+      }
 
       GameFlow.NameRegistInit(true);
       return;
@@ -462,7 +467,7 @@ static void enemy_set() {
       Ranking.Add(1);
     } else {
       Ranking.Add(1 + (GameState.game_stage / 3));
-}
+    }
   }
 }
 
@@ -479,7 +484,7 @@ static void PutEnemy(const uint8_t *p) {
 
   if (Enemies.count + 1 >= ENEMY_MAX) {
     return;
-}
+  }
 
   e = &Enemies.entities[Enemies.indices[Enemies.count++]];
 
@@ -607,7 +612,7 @@ void ScrollManager::Draw() {
   int k = 0;
   int x = 0;
   int y = 0;
-  int dx = 0;   // 振動用
+  int dx = 0;       // 振動用
   int RasterDx = 0; // ラスター用
 
   if (scroll.DataHead == nullptr) {
@@ -623,10 +628,12 @@ void ScrollManager::Draw() {
   if (scroll.ExCmd == ScrollCmdStg3Boss) {
     Stg3BossMapDraw();
     return;
-  } if (scroll.ExCmd == ScrollCmdStg6Cube) {
+  }
+  if (scroll.ExCmd == ScrollCmdStg6Cube) {
     Effects.Draw3DCubes();
     return;
-  } if (scroll.ExCmd == ScrollCmdStg6RndEcl) {
+  }
+  if (scroll.ExCmd == ScrollCmdStg6RndEcl) {
     Effects.DrawFakeECL();
     return;
   } else if (scroll.ExCmd == ScrollCmdStg6Raster) {
@@ -643,7 +650,7 @@ void ScrollManager::Draw() {
   // sinl(scroll.IsQuake*8+i*6,(256-scroll.IsQuake)>>2);	//4
   if (scroll.IsQuake != 0U) {
     dx = sinl(scroll.IsQuake * 16, (256 - scroll.IsQuake) >> 5); // 4
-}
+  }
 
   // 全てのレイヤーの表示 //
   for (k = 0; k < scroll.NumLayer; k++) {
@@ -729,7 +736,7 @@ void ScrollManager::Command(uint8_t cmd) {
   case SCMD_STG4LEAVE:
     if (scroll.ExCmd != ScrollCmdStg4Rock) {
       break;
-}
+    }
     Effects.SendCmdStg4Rocks(STG4ROCK_LEAVE, 0);
     break;
 
@@ -875,7 +882,7 @@ static void ScrollCmdRasterOpen() {
 
   if (Scroller.scroll.RasterWidth < 2) {
     Scroller.scroll.RasterWidth++;
-}
+  }
 }
 
 // ラスタースクロールクローズ //
@@ -1010,8 +1017,8 @@ bool ScrollManager::Init() {
   }
 
   // 無限ループ終了時刻 //
-  scroll.InfEnd =
-      16 * (LayerInfo[i - 1].Length - (1280 / 16)) * LayerInfo[i - 1].ScrollWait;
+  scroll.InfEnd = 16 * (LayerInfo[i - 1].Length - (1280 / 16)) *
+                  LayerInfo[i - 1].ScrollWait;
 
   return true;
 }

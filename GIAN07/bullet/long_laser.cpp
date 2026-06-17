@@ -56,10 +56,11 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   if (long_cmd.type == LLS_LONGZ) {
     lp->d += atan8(Players.viv.x - lp->x, Players.viv.y - lp->y);
     lp->type = LLS_LONG;
-  } else { {
-    lp->type = long_cmd.type;
-}
-}
+  } else {
+    {
+      lp->type = long_cmd.type;
+    }
+  }
 
   lp->infx = cosl(lp->d, 800);
   lp->infy = sinl(lp->d, 800);
@@ -227,10 +228,11 @@ void LaserManager::MoveLong() {
         if (lp->flag == LLF_CLOSE) {
           lp->flag = LLF_DISABLE;
           lp->e = nullptr;
-        } else { {
-          lp->flag = LLF_LINE;
-}
-}
+        } else {
+          {
+            lp->flag = LLF_LINE;
+          }
+        }
       }
 
       lp->lx = cosl(lp->d, lp->w >> 6);
@@ -334,7 +336,8 @@ void LaserManager::DrawLong() {
           }
           gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, p2, vcs);
           break;
-        } if (auto *gf = GrpGeom_FB()) {
+        }
+        if (auto *gf = GrpGeom_FB()) {
           // gf->SetColor({ 2, 0, 2 });
           gf->SetColor(Table8BitA[c]);
           gf->DrawTriangleFan(lp->p);
@@ -440,7 +443,7 @@ void LaserManager::HitCheckLong(const LongLaserData *lp) {
 
   if (Players.viv.muteki != 0U) {
     return;
-}
+  }
 
   tx = Players.viv.x - lp->x;
   ty = Players.viv.y - lp->y;

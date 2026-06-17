@@ -5,7 +5,6 @@
 
 #include "ending.h"
 
-#include <utility>
 #include "ending_manager.h"
 #include "game/bgm.h"
 #include "game/cast.h"
@@ -13,13 +12,14 @@
 #include "gian.h"
 #include "platform/text_backend.h"
 #include "scene.h" // ＳＣＬ定義ファイル
+#include <utility>
 
 // ファイル静的変数 → ending_manager.h の EndingManager に移動
 
 void EndingManager::SetFixedColors(PALETTE &pal) {
-  pal[255] = {.r=0x00, .g=0x00, .b=0x00};
-  pal[199] = {.r=0xFF, .g=0xFF, .b=0xFF};
-  pal[198] = {.r=0x80, .g=0x80, .b=0x80};
+  pal[255] = {.r = 0x00, .g = 0x00, .b = 0x00};
+  pal[199] = {.r = 0xFF, .g = 0xFF, .b = 0xFF};
+  pal[198] = {.r = 0x80, .g = 0x80, .b = 0x80};
 }
 
 // エンディングまわりの初期化 //
@@ -50,7 +50,7 @@ bool EndingManager::Init() {
 
   TextObj.Clear();
   text.Blank();
-  text.Rect = TextObj.Register({.w=GRP_RES.w, .h=131});
+  text.Rect = TextObj.Register({.w = GRP_RES.w, .h = 131});
 
   return true;
 }
@@ -58,12 +58,12 @@ bool EndingManager::Init() {
 void EndingManager::Proc(bool & /*unused*/) {
   if (flash_state != 0U) {
     flash_state -= 32;
-}
+  }
 
   SCLDecode();
   if (GameFlow.current_state != GameState::Ending) {
     return;
-}
+  }
 
   if (GameFlow.IsDraw()) {
     UpdateGrpInfo();
@@ -75,7 +75,7 @@ void EndingManager::Proc(bool & /*unused*/) {
 // エンディング時の描画処理 //
 void EndingManager::Draw() {
   // 画面消去 //
-  GrpBackend_Clear(255, RGB{.r=0, .g=0, .b=0});
+  GrpBackend_Clear(255, RGB{.r = 0, .g = 0, .b = 0});
 
   // それぞれのグラフィックを描画するで //
   DrawGrpInfo();
@@ -110,18 +110,18 @@ void EndingManager::UpdateGrpInfo() {
       grp_info.alpha -= 3;
     } else {
       grp_info.alpha = 0;
-}
+    }
   } else if (grp_info.timer > grp_info.fadein) {
     if (grp_info.alpha + 3 < 255) {
       grp_info.alpha += 3;
     } else {
       grp_info.alpha = 255;
-}
+    }
   }
 
   if (grp_info.bWantDisp && grp_info.alpha == 0) {
     grp_info.bWantDisp = false;
-}
+  }
 }
 
 // スタッフの更新(内部データ)
@@ -132,25 +132,25 @@ void EndingManager::UpdateStfInfo() {
       stf_task.alpha -= 3;
     } else {
       stf_task.alpha = 0;
-}
+    }
   } else if (stf_task.timer > stf_task.fadein) {
     if (stf_task.alpha + 3 < 255) {
       stf_task.alpha += 3;
     } else {
       stf_task.alpha = 255;
-}
+    }
   }
 
   if (stf_task.bWantDisp && stf_task.alpha == 0) {
     stf_task.bWantDisp = false;
-}
+  }
 }
 
 // グラフィックの描画 //
 void EndingManager::DrawGrpInfo() {
   if (!grp_info.bWantDisp) {
     return;
-}
+  }
 
   // 驚異の画像表示 //
   const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - ending_pic));
@@ -161,7 +161,7 @@ void EndingManager::DrawGrpInfo() {
 void EndingManager::DrawStfInfo() {
   if (!stf_task.bWantDisp) {
     return;
-}
+  }
 
   auto Blit = [](WINDOW_POINT dst, const PIXEL_LTRB &src) {
     dst -= (src.Size() / 2);
@@ -187,17 +187,17 @@ void EndingManager::Text::Render(WINDOW_POINT topleft) {
     const auto dx = (8 * (39 - (max / 2)));
 
     s.SetFont(FONT_ID::NORMAL);
-    s.SetColor({.r=128, .g=128, .b=128});
+    s.SetColor({.r = 128, .g = 128, .b = 128});
     for (decltype(NumText) i = 0; i < NumText; i++) {
-      s.Put({.x=(dx + 21), .y=(1 + (i * 25))}, Text[i]);
-      s.Put({.x=(dx + 19), .y=(1 + (i * 25))}, Text[i]);
-      s.Put({.x=(dx + 20), .y=(0 + (i * 25))}, Text[i]);
-      s.Put({.x=(dx + 20), .y=(2 + (i * 25))}, Text[i]);
+      s.Put({.x = (dx + 21), .y = (1 + (i * 25))}, Text[i]);
+      s.Put({.x = (dx + 19), .y = (1 + (i * 25))}, Text[i]);
+      s.Put({.x = (dx + 20), .y = (0 + (i * 25))}, Text[i]);
+      s.Put({.x = (dx + 20), .y = (2 + (i * 25))}, Text[i]);
     }
 
-    s.SetColor({.r=255, .g=255, .b=255});
+    s.SetColor({.r = 255, .g = 255, .b = 255});
     for (decltype(NumText) i = 0; i < NumText; i++) {
-      s.Put({.x=(dx + 20), .y=(1 + (i * 25))}, Text[i]);
+      s.Put({.x = (dx + 20), .y = (1 + (i * 25))}, Text[i]);
     }
   });
 }
@@ -271,7 +271,7 @@ void EndingManager::SCLDecode() {
     switch (cmd[0]) {
     case SCL_TIME: {
       const auto temp = I32LEAt(&cmd[1]);
-      if (std::cmp_greater(temp , GameState.game_count)) {
+      if (std::cmp_greater(temp, GameState.game_count)) {
         bFlag = false;
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)

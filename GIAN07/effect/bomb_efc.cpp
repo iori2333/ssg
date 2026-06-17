@@ -141,7 +141,7 @@ void EffectManager::MoveBombEffectSTD(BombEfcCtrl *p) {
     if (target->d > 7 * 2) {
       if (t > 64 * 3) {
         continue;
-}
+      }
       const uint8_t rd = rnd();
       rv = (rnd() % 256) + 128;
       target->vx = cosl(rd, rv);

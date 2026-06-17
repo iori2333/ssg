@@ -128,7 +128,7 @@ struct ANIME_DATA {
   }
 
   template <PIXEL_COORD Size> void SetSheetDeg(PIXEL_POINT topleft) {
-    SetSheet<16>(topleft, {.w=Size, .h=Size}, ANM_DEG);
+    SetSheet<16>(topleft, {.w = Size, .h = Size}, ANM_DEG);
   }
 };
 

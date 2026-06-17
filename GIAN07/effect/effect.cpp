@@ -5,7 +5,6 @@
 
 #include "effect.h"
 
-#include <algorithm>
 #include "font_uty.h"
 #include "game/cast.h"
 #include "game/snd.h"
@@ -13,6 +12,7 @@
 #include "geometry.h"
 #include "gian.h"
 #include "platform/text_backend.h"
+#include <algorithm>
 
 // string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect,
 // mtitle_strs[] → effect_manager.cpp の EffectManager に移動
@@ -76,17 +76,19 @@ void EffectManager::DrawCircleEffects() {
         r = ce->r - (k * 7);
         if (r < 0) {
           continue;
-}
+        }
         GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
         for (j = 0; j < 5; j++) {
-          x1 =
-              ce->x + cosl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
-          y1 =
-              ce->y + sinl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
+          x1 = ce->x +
+               cosl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
+          y1 = ce->y +
+               sinl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
           x2 = ce->x +
-               cosl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5), r);
+               cosl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
+                    r);
           y2 = ce->y +
-               sinl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5), r);
+               sinl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
+                    r);
           GrpGeom->DrawLine(x1, y1, x2, y2);
         }
       }
@@ -97,7 +99,7 @@ void EffectManager::DrawCircleEffects() {
         r = ce->r - std::max(2, (k * ce->r) / 8);
         if (r < 0) {
           continue;
-}
+        }
         GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
         GeomCircle({ce->x, ce->y}, r);
       }
@@ -109,7 +111,7 @@ void EffectManager::DrawCircleEffects() {
         // r = ce->r - max(2, (k * (600-ce->r))/16);
         if (r < 0) {
           continue;
-}
+        }
         GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
         GeomCircle({ce->x, ce->y}, r);
       }
@@ -154,7 +156,7 @@ void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
 }
 
 void EffectManager::InitMusicTitle() {
-  mtitle_rect = TextObj.Register({.w=((X_MAX + 1) - X_MIN), .h=20});
+  mtitle_rect = TextObj.Register({.w = ((X_MAX + 1) - X_MIN), .h = 20});
 }
 
 // エフェクトの初期化を行う //
@@ -177,7 +179,7 @@ void EffectManager::SpawnStringEffect(int x, int y, const char *s) {
       j++;
       if (j >= SEFFECT_MAX) {
         return;
-}
+      }
     }
     string_effects[j].c = s[i];
     string_effects[j].x = (x + (i << 4) + 512) << 6;
@@ -234,7 +236,7 @@ void EffectManager::SetMusicTitle(int y, Narrow::string_view s) {
   }
 
   mtitle_strs[1] = s;
-  PIXEL_SIZE extent = {.w=0, .h=0};
+  PIXEL_SIZE extent = {.w = 0, .h = 0};
   for (const auto s : mtitle_strs) {
     const auto s_extent = TextObj.TextExtent(FONT_ID::NORMAL, s);
     extent.w += s_extent.w;
@@ -286,7 +288,7 @@ void EffectManager::MoveStringEffects() {
       e->y += (e->vy += 16);
       if (e->time == 0) {
         e->cmd = SEFC_NONE;
-}
+      }
       break;
 
     case SEFC_STR1_2:
@@ -302,7 +304,7 @@ void EffectManager::MoveStringEffects() {
     case SEFC_STR2:
       if (e->time == 0) {
         e->cmd = SEFC_NONE;
-}
+      }
       e->x += e->vx;
       e->y += (e->vy += 3);
       break;
@@ -482,13 +484,14 @@ void EffectManager::MoveScreenEffect() {
     screen_info.count += 10;
     if (screen_info.count > 600) {
       screen_info.cmd = SCNEFC_NONE;
-}
+    }
     break;
 
   case SCNEFC_CFADEOUT: // 円形フェードアウト
     screen_info.count += 10;
-    screen_info.count = std::min<uint32_t>(screen_info.count, 600); // screen_info.cmd = SCNEFC_NONE;
-    
+    screen_info.count = std::min<uint32_t>(
+        screen_info.count, 600); // screen_info.cmd = SCNEFC_NONE;
+
     break;
 
   case SCNEFC_WHITEIN: // ホワイトイン
@@ -504,7 +507,7 @@ void EffectManager::MoveScreenEffect() {
     screen_info.count += 10;
     if (screen_info.count >= 160) {
       screen_info.cmd = SCNEFC_NONE;
-}
+    }
     break;
 
   default: // ばぐばぐ
@@ -703,7 +706,7 @@ void EffectManager::SetWarningEffect() {
 void EffectManager::MoveWarningEffect() {
   if (!enable_warn_efc) {
     return;
-}
+  }
 
   if (warn_efc_time < 64 + 128) { // 64+256){
     MoveWarningText(Cast::down<uint8_t>(warn_efc_time));
@@ -722,11 +725,11 @@ void EffectManager::DrawWarningEffect() {
 
   if (!enable_warn_efc) {
     return;
-}
+  }
 
   if (warn_efc_time < 256 - 20) {
     DrawWarningText();
-}
+  }
 
   if (warn_efc_time > 256 - 40) {
     GrpGeom->Lock();

@@ -16,8 +16,8 @@
 #include <utility>
 
 // The game's native resolution.
-constexpr WINDOW_SIZE GRP_RES = {.w=640, .h=480};
-constexpr WINDOW_LTRB GRP_RES_RECT = {{.x=0, .y=0}, GRP_RES};
+constexpr WINDOW_SIZE GRP_RES = {.w = 640, .h = 480};
+constexpr WINDOW_LTRB GRP_RES_RECT = {{.x = 0, .y = 0}, GRP_RES};
 
 // Maximum number of triangles rendered in a single draw call.
 constexpr auto GRP_TRIANGLES_MAX = 66;
@@ -46,7 +46,7 @@ enum class SURFACE_ID : uint8_t {
   // In-game
   MAPCHIP = 1, // 背景用
   ENEMY = 2,   // 敵(雑魚＆ボス)用
-  FACE = 3,        // 顔グラ用
+  FACE = 3,    // 顔グラ用
   FACE_last = (FACE + FACE_MAX - 1),
   BOMBER = 6, // ボム用グラフィック用
 

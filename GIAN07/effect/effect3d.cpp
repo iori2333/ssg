@@ -16,60 +16,69 @@
 #define _ PIXEL_POINT
 
 WORLD_POINT PList_W[11] = {
-    _{.x=0, .y=15},  _{.x=15, .y=66}, _{.x=32, .y=47}, _{.x=48, .y=66}, _{.x=63, .y=14}, _{.x=52, .y=11},
-    _{.x=42, .y=38}, _{.x=32, .y=26}, _{.x=21, .y=38}, _{.x=11, .y=10}, _{.x=0, .y=15},
+    _{.x = 0, .y = 15},  _{.x = 15, .y = 66}, _{.x = 32, .y = 47},
+    _{.x = 48, .y = 66}, _{.x = 63, .y = 14}, _{.x = 52, .y = 11},
+    _{.x = 42, .y = 38}, _{.x = 32, .y = 26}, _{.x = 21, .y = 38},
+    _{.x = 11, .y = 10}, _{.x = 0, .y = 15},
 };
 
 WORLD_POINT PList_A1[8] = {
-    _{.x=96, .y=12},  _{.x=66, .y=61},  _{.x=75, .y=67},  _{.x=83, .y=56},
-    _{.x=107, .y=56}, _{.x=115, .y=67}, _{.x=125, .y=61}, _{.x=96, .y=12},
+    _{.x = 96, .y = 12},  _{.x = 66, .y = 61},  _{.x = 75, .y = 67},
+    _{.x = 83, .y = 56},  _{.x = 107, .y = 56}, _{.x = 115, .y = 67},
+    _{.x = 125, .y = 61}, _{.x = 96, .y = 12},
 };
 
 WORLD_POINT PList_A2[4] = {
-    _{.x=96, .y=34},
-    _{.x=90, .y=44},
-    _{.x=101, .y=44},
-    _{.x=96, .y=34},
+    _{.x = 96, .y = 34},
+    _{.x = 90, .y = 44},
+    _{.x = 101, .y = 44},
+    _{.x = 96, .y = 34},
 };
 
 WORLD_POINT PList_R[15 - 1] = {
-    _{.x=132, .y=14},
-    _{.x=132, .y=64},
-    _{.x=145, .y=64},
-    _{.x=145, .y=27},
-    _{.x=164, .y=27},
+    _{.x = 132, .y = 14},
+    _{.x = 132, .y = 64},
+    _{.x = 145, .y = 64},
+    _{.x = 145, .y = 27},
+    _{.x = 164, .y = 27},
 
     //_{ 150, 41 }, _{ 150, 43 },
-    _{.x=150, .y=42},
+    _{.x = 150, .y = 42},
 
-    _{.x=171, .y=66},
-    _{.x=173, .y=66},
-    _{.x=181, .y=57},
-    _{.x=167, .y=43},
-    _{.x=180, .y=29},
-    _{.x=180, .y=27},
-    _{.x=170, .y=14},
-    _{.x=132, .y=14},
+    _{.x = 171, .y = 66},
+    _{.x = 173, .y = 66},
+    _{.x = 181, .y = 57},
+    _{.x = 167, .y = 43},
+    _{.x = 180, .y = 29},
+    _{.x = 180, .y = 27},
+    _{.x = 170, .y = 14},
+    _{.x = 132, .y = 14},
 };
 
 WORLD_POINT PList_N1[9] = {
-    _{.x=189, .y=12}, _{.x=189, .y=64}, _{.x=201, .y=64}, _{.x=201, .y=40}, _{.x=239, .y=66},
-    _{.x=239, .y=14}, _{.x=227, .y=14}, _{.x=227, .y=38}, _{.x=189, .y=12},
+    _{.x = 189, .y = 12}, _{.x = 189, .y = 64}, _{.x = 201, .y = 64},
+    _{.x = 201, .y = 40}, _{.x = 239, .y = 66}, _{.x = 239, .y = 14},
+    _{.x = 227, .y = 14}, _{.x = 227, .y = 38}, _{.x = 189, .y = 12},
 };
 
 WORLD_POINT PList_N2[9] = {
-    _{.x=189, .y=12}, _{.x=189, .y=64}, _{.x=201, .y=64}, _{.x=201, .y=40}, _{.x=239, .y=66},
-    _{.x=239, .y=14}, _{.x=227, .y=14}, _{.x=227, .y=38}, _{.x=189, .y=12},
+    _{.x = 189, .y = 12}, _{.x = 189, .y = 64}, _{.x = 201, .y = 64},
+    _{.x = 201, .y = 40}, _{.x = 239, .y = 66}, _{.x = 239, .y = 14},
+    _{.x = 227, .y = 14}, _{.x = 227, .y = 38}, _{.x = 189, .y = 12},
 };
 
 WORLD_POINT PList_I[5] = {
-    _{.x=248, .y=14}, _{.x=248, .y=64}, _{.x=262, .y=64}, _{.x=262, .y=14}, _{.x=248, .y=14},
+    _{.x = 248, .y = 14}, _{.x = 248, .y = 64}, _{.x = 262, .y = 64},
+    _{.x = 262, .y = 14}, _{.x = 248, .y = 14},
 };
 
 WORLD_POINT PList_G[17] = {
-    _{.x=354, .y=11}, _{.x=328, .y=22}, _{.x=328, .y=57}, _{.x=354, .y=68}, _{.x=380, .y=59}, _{.x=380, .y=34},
-    _{.x=355, .y=34}, _{.x=354, .y=45}, _{.x=367, .y=46}, _{.x=367, .y=51}, _{.x=355, .y=55}, _{.x=342, .y=50},
-    _{.x=342, .y=29}, _{.x=354, .y=24}, _{.x=372, .y=30}, _{.x=377, .y=19}, _{.x=354, .y=11},
+    _{.x = 354, .y = 11}, _{.x = 328, .y = 22}, _{.x = 328, .y = 57},
+    _{.x = 354, .y = 68}, _{.x = 380, .y = 59}, _{.x = 380, .y = 34},
+    _{.x = 355, .y = 34}, _{.x = 354, .y = 45}, _{.x = 367, .y = 46},
+    _{.x = 367, .y = 51}, _{.x = 355, .y = 55}, _{.x = 342, .y = 50},
+    _{.x = 342, .y = 29}, _{.x = 354, .y = 24}, _{.x = 372, .y = 30},
+    _{.x = 377, .y = 19}, _{.x = 354, .y = 11},
 };
 
 #undef _
@@ -119,18 +128,19 @@ void EffectManager::InitWarningText() {
 
   if (bInitialized) {
     return;
-}
+  }
 
   // Initialize warning_lines with center positions and point arrays
   // (was: LineList3D Warning[8] = { ... } file-static initialization)
-  warning_lines[0] = {.center={.x=192, .y=39}, .p=PList_W};
-  warning_lines[1] = {.center={.x=192, .y=39}, .p=PList_A1};
-  warning_lines[2] = {.center={.x=192, .y=39}, .p=PList_A2};
-  warning_lines[3] = {.center={.x=192, .y=39}, .p=PList_R};
-  warning_lines[4] = {.center={.x=192, .y=39}, .p=PList_N1};
-  warning_lines[5] = {.center={.x=192, .y=39}, .p=PList_I};
-  warning_lines[6] = {.center={.x=(192 - (296 - 215)), .y=39}, .p=PList_N2};
-  warning_lines[7] = {.center={.x=192, .y=39}, .p=PList_G};
+  warning_lines[0] = {.center = {.x = 192, .y = 39}, .p = PList_W};
+  warning_lines[1] = {.center = {.x = 192, .y = 39}, .p = PList_A1};
+  warning_lines[2] = {.center = {.x = 192, .y = 39}, .p = PList_A2};
+  warning_lines[3] = {.center = {.x = 192, .y = 39}, .p = PList_R};
+  warning_lines[4] = {.center = {.x = 192, .y = 39}, .p = PList_N1};
+  warning_lines[5] = {.center = {.x = 192, .y = 39}, .p = PList_I};
+  warning_lines[6] = {.center = {.x = (192 - (296 - 215)), .y = 39},
+                      .p = PList_N2};
+  warning_lines[7] = {.center = {.x = 192, .y = 39}, .p = PList_G};
 
   InitLineList3D(warning_lines);
   bInitialized = true;
@@ -194,7 +204,7 @@ void EffectManager::DrawWarningText() {
 void MoveWarningR(char count) {
   if (count == 0) {
     return;
-}
+  }
 
   for (auto &llist : Effects.warning_lines) {
     llist.DegX += (count * 2);
@@ -221,7 +231,7 @@ void InitLineList3D(std::span<LineList3D> w) {
 
 void DrawLineList3D(std::span<const LineList3D> w) {
   const auto roll = [](const LineList3D &llist, const WORLD_POINT &point) {
-    Point3D temp = {.x=point.x, .y=point.y, .z=0};
+    Point3D temp = {.x = point.x, .y = point.y, .z = 0};
     RollPoint(&temp, llist.DegX, llist.DegY, llist.DegZ);
     return WORLD_POINT{&temp.x, &temp.y};
   };
@@ -230,8 +240,8 @@ void DrawLineList3D(std::span<const LineList3D> w) {
     WORLD_POINT line_p[2] = {roll(llist, llist.p.front())};
     for (const auto &point : (llist.p | std::views::drop(1))) {
       line_p[1] = roll(llist, point);
-      const auto p1 = (PIXEL_POINT{.x=320, .y=100} + line_p[0].ToPixel());
-      const auto p2 = (PIXEL_POINT{.x=320, .y=100} + line_p[1].ToPixel());
+      const auto p1 = (PIXEL_POINT{.x = 320, .y = 100} + line_p[0].ToPixel());
+      const auto p2 = (PIXEL_POINT{.x = 320, .y = 100} + line_p[1].ToPixel());
       GrpGeom->DrawLine(p1.x, p1.y, p2.x, p2.y);
       std::swap(line_p[1], line_p[0]);
     }
@@ -469,11 +479,11 @@ void EffectManager::DrawFakeECL() {
 
   for (i = 128 - (wf_line.ox / 2); i < 640 - 128; i += 32) {
     GrpGeom->DrawLine(i, 0, i, 480);
-}
+  }
 
   for (j = wf_line.oy / 2; j < 480; j += 32) {
     GrpGeom->DrawLine(128, j, (640 - 128), j);
-}
+  }
 
   // GrpGeom->SetColor({ 5, 3, 0 });	// 後半戦用
   GrpGeom->SetColor({0, 3, 0});
@@ -481,11 +491,11 @@ void EffectManager::DrawFakeECL() {
 
   for (i = 128 - wf_line.ox; i < 640 - 128; i += 64) {
     GrpGeom->DrawLine(i, 0, i, 480);
-}
+  }
 
   for (j = -wf_line.oy; j < 480; j += 64) {
     GrpGeom->DrawLine(128, j, (640 - 128), j);
-}
+  }
 
   GrpGeom->Unlock();
 
@@ -596,15 +606,15 @@ void EffectManager::InitStg4Rocks() {
     //((380*64/16) * (i%(ROCK_MAX/16+1))) + rnd()%(380*64/16);
 
     rocks[i].x = ((rnd() % (500 * 64)) - (250 * 64)); //
-    rocks[i].y = (-250 * 64) - y;                   // 上の方なのだ
+    rocks[i].y = (-250 * 64) - y;                     // 上の方なのだ
     rocks[i].z = ((rnd() % (500 * 64)) - (250 * 64)); //
 
     if (i == ROCK_MAX * 5 / 8) {
       id--;
-}
+    }
     if (i == ROCK_MAX * 7 / 8) {
       id--;
-}
+    }
 
     rocks[i].GrpID = id;
 
@@ -718,13 +728,15 @@ void EffectManager::MoveStg4Rocks() {
         break;
       } else {
         p->y += p->vy;
-}
+      }
       break;
 
     case STG4ROCK_END:
-      if (p->y > (500 + 40) * 64) { {
-        break;
-      } } else {
+      if (p->y > (500 + 40) * 64) {
+        {
+          break;
+        }
+      } else {
         p->y += ((4 - p->GrpID) * 32 * 6);
       }
       break;
@@ -829,7 +841,7 @@ void EffectManager::MoveStg6Rasters() {
       s6_ras[i].deg += 2;
     } else {
       s6_ras[i].deg -= 2;
-}
+    }
 
     s6_ras[i].y += s6_ras[i].vy;
 

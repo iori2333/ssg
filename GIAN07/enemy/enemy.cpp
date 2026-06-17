@@ -5,7 +5,6 @@
 
 #include "enemy.h"
 
-#include <utility>
 #include "core/entity.h"
 #include "ecl_len.h"
 #include "enemy_manager.h"
@@ -17,6 +16,7 @@
 #include "gian.h"
 #include "level.h"
 #include "platform/graphics_backend.h"
+#include <utility>
 
 // ＥＣＬデバッグ用マクロ //
 static void ECL_DEBUG(const char *s, auto param) {
@@ -51,7 +51,7 @@ void EnemyManager::UpdateHoming(const EnemyData *e) {
 
   if (temp < 0) {
     return;
-}
+  }
 
   if (temp < homing_flag) {
     homing_flag = temp;
@@ -84,7 +84,8 @@ void EnemyData::Draw() const {
 
   // 描画モード選択 //
   const auto &src =
-      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(d - 64 + 8) >> 4] : a.ptn[anm_c]);
+      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(d - 64 + 8) >> 4]
+                           : a.ptn[anm_c]);
   if (GrpSurface_Blit({topleft.x, topleft.y}, sid, src)) {
     if ((anm_ptn != anm_ptnEx) && (IsDamaged != 0U)) {
       const auto &a = Enemies.anime[anm_ptnEx];
@@ -101,9 +102,9 @@ void EnemyManager::Move() {
 
   if (Bosses.count == 0) {
     homing_flag = HOMING_DUMMY;
-}
+  }
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *e = &entities[indices[i]];
     e->IsDamaged = 0;
     if ((e->flag & EF_BOMB) == 0) {
@@ -128,7 +129,7 @@ void EnemyManager::Move() {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
         if ((e->flag & EF_HITSB) != 0) {
           MaidDead();
-}
+        }
       }
 
       // 範囲外チェック //
@@ -137,7 +138,7 @@ void EnemyManager::Move() {
         if ((e->flag & EF_CLIP) == 0) {
           if (e->LLaserRef != 0U) {
             Lasers.ForceCloseLong(e);
-}
+          }
           e->flag = EF_DELETE;
         }
       }
@@ -148,7 +149,7 @@ void EnemyManager::Move() {
     // ホーミングの準備 //
     if ((Bosses.count == 0) && ((e->flag & EF_DAMAGE) != 0)) {
       UpdateHoming(e);
-}
+    }
 
     // アニメーションの動作 //
     UpdateAnimation(e);
@@ -166,7 +167,7 @@ void EnemyManager::Draw() {
   int y = 0;
   // HRESULT		ddrval;
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *e = &entities[indices[i]];
 
     // 敵を描画する(クリッピング＆幅、高さ処理を追加すること) //
@@ -187,11 +188,11 @@ void EnemyManager::Draw() {
 void EnemyManager::Clear() {
   int i = 0;
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *e = &entities[indices[i]];
     if (e->flag == EF_BOMB) {
       continue;
-}
+    }
 
     if ((e->flag & EF_DRAW) != 0) {
       e->flag = EF_BOMB;
@@ -199,7 +200,7 @@ void EnemyManager::Clear() {
       e->count = 0;
       if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
-}
+      }
       Snd_SEPlay(SOUND_ID_BOMB, e->x);
     } else {
       // 描画しないタイプの敵の消去の仕方は他の場合と異なり、 //
@@ -209,8 +210,8 @@ void EnemyManager::Clear() {
       e->count = 0;
       if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
-}
-                                  // 爆発音の再生は行わない //
+      }
+      // 爆発音の再生は行わない //
     }
   }
 
@@ -221,7 +222,7 @@ void EnemyManager::Clear() {
 void EnemyManager::InitIndices() {
   int i = 0;
 
-  for (i = 0; std::cmp_less(i , ENEMY_MAX); i++) {
+  for (i = 0; std::cmp_less(i, ENEMY_MAX); i++) {
     // memset(Enemy+i,0,sizeof(Enemy));
     indices[i] = i;
   }
@@ -231,7 +232,7 @@ void EnemyManager::InitIndices() {
 
 bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (std::cmp_less_equal(e.hp , damage)) {
+  if (std::cmp_less_equal(e.hp, damage)) {
     Snd_SEPlay(SOUND_ID_BOMB, e.x);
     if (e.LLaserRef != 0U) {
       Lasers.ForceCloseLong(&e); // レーザーの強制クローズ
@@ -259,15 +260,16 @@ bool EnemyManager::DamageAt(int x, int y, int damage) {
     return true;
   }
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *e = &entities[indices[i]];
     if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
         ((e->flag & EF_DAMAGE) != 0)) {
-      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-        continue;
-      } } 
-        return ApplyDamage(*e, damage);
-     
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+        {
+          continue;
+        }
+      }
+      return ApplyDamage(*e, damage);
     }
   }
 
@@ -278,14 +280,16 @@ bool EnemyManager::DamageAt2(int x, int y, int damage) {
   int i = 0;
   auto ret_val = Bosses.DamageAt2(x, y, damage);
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *e = &entities[indices[i]];
-    if (HITCHK(x, e->x, e->g_width) && (y > e->y) && ((e->flag & EF_DAMAGE) != 0)) {
-      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-        continue;
-      } } 
-        ret_val = ApplyDamage(*e, damage);
-     
+    if (HITCHK(x, e->x, e->g_width) && (y > e->y) &&
+        ((e->flag & EF_DAMAGE) != 0)) {
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+        {
+          continue;
+        }
+      }
+      ret_val = ApplyDamage(*e, damage);
     }
   }
 
@@ -300,14 +304,15 @@ void EnemyManager::DamageAt3(int x, int y, uint8_t d) {
 
   Bosses.DamageAt3(x, y, d);
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *e = &entities[indices[i]];
     if (EnemyManager::LaserHITCHK(e, x, y, d) && ((e->flag & EF_DAMAGE) != 0)) {
-      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-        continue;
-      } } 
-        ApplyDamage(*e, damage);
-     
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+        {
+          continue;
+        }
+      }
+      ApplyDamage(*e, damage);
     }
   }
 }
@@ -318,15 +323,16 @@ void EnemyManager::DamageAll(int damage) {
 
   Bosses.DamageAll(damage);
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *e = &entities[indices[i]];
     if ((e->flag & EF_DAMAGE) != 0) {
-      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-        continue;
-      } } 
-        ApplyDamage(*e, damage);
-        // return true;
-     
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+        {
+          continue;
+        }
+      }
+      ApplyDamage(*e, damage);
+      // return true;
     }
   }
 
@@ -435,7 +441,7 @@ void EnemyManager::UpdateAnimation(EnemyData *e) {
       e->anm_c = (e->anm_c + 1) % (a->n);
     } else if (e->anm_sp < 0 && (e->count % (-e->anm_sp) == 0)) {
       e->anm_c = (e->anm_c + a->n - 1) % (a->n);
-}
+    }
     break;
 
   // 逆方向は不可としておきましょうか... //
@@ -443,7 +449,7 @@ void EnemyManager::UpdateAnimation(EnemyData *e) {
     if (e->anm_sp > 0 && (e->count % e->anm_sp == 0)) {
       if (e->anm_c < (a->n - 1)) {
         e->anm_c++;
-}
+      }
     }
     break;
 
@@ -482,7 +488,8 @@ void EnemyManager::Execute(EnemyData *e) {
 
   const PIXEL_LTRB rcDegX2 = {
       GX_MIN + (150 * 64), GY_MIN + ((GY_MID - GY_MIN - (40 * 64)) / 3),
-      GX_MAX - (150 * 64), GY_MID - ((GY_MID - GY_MIN - (40 * 64)) / 3) - (40 * 64)};
+      GX_MAX - (150 * 64),
+      GY_MID - ((GY_MID - GY_MIN - (40 * 64)) / 3) - (40 * 64)};
   uint16_t BaseAngle = 0;
   uint16_t DeltaAngle = 0;
 
@@ -580,7 +587,7 @@ ECL_HEAD:
     // 失敗した場合は、参照カウントを増やさない //
     if (Lasers.SpawnLongLaser(e->LLaserRef)) {
       e->LLaserRef++;
-}
+    }
     bRetFlag = false;
     break;
 
@@ -595,7 +602,7 @@ ECL_HEAD:
       e->LLaserRef = 0;
     } else {
       e->LLaserRef -= 1; // ちょっとバグ有りなので注意
-}
+    }
     bRetFlag = false;
     break;
 
@@ -616,7 +623,7 @@ ECL_HEAD:
     e->score = U32LEAt(&cmd[1 + 4]);
     if (e->hp == 0) {
       Bosses.KillAll();
-}
+    }
     bRetFlag = false;
     break;
 
@@ -624,9 +631,9 @@ ECL_HEAD:
     ECL_DEBUG("ECL_END", 0);
     if (e->LLaserRef != 0U) {
       Lasers.ForceCloseLong(e); // レーザーの強制クローズ
-}
-    e->flag = EF_DELETE;        // 後で変更するように
-    return;                     // バグ防止(かも)
+    }
+    e->flag = EF_DELETE; // 後で変更するように
+    return;              // バグ防止(かも)
 
   case ECL_JMP: // ◎ＥＣＬ無条件ジャンプ(少々特殊な動作をします)
     ECL_DEBUG("ECL_JMP", 0);
@@ -782,7 +789,7 @@ ECL_HEAD:
     }
     if ((--e->cmd_c) != 0) {
       return;
-}
+    }
     bRetFlag = false;
     break;
 
@@ -823,7 +830,7 @@ ECL_HEAD:
     break;
 
   case ECL_ACCXYA: // ＸＹ指定加速移動
-                     // ちょっと、待ってね //
+                   // ちょっと、待ってね //
     break;
 
   case ECL_DEGX2: // 制限付き角度ランダム
@@ -1277,7 +1284,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case ECL_TCLR:     // 敵弾を全消去(レーザー含む)
+  case ECL_TCLR:       // 敵弾を全消去(レーザー含む)
     Bosses.ClearCmd(); // この処理を何よりも優先させる(ビット消去等を含む)
     Bullets.Clear();
     Lasers.Clear();
@@ -1441,7 +1448,7 @@ ECL_HEAD:
       e->flag |= EF_RLCHG;
     } else {
       e->flag &= (~EF_RLCHG);
-}
+    }
     break;
 
   case ECL_RLCHG_OFF: // ＠左右反転無し
@@ -1510,7 +1517,7 @@ ECL_HEAD:
 
     if (count + 1 >= ENEMY_MAX) {
       break;
-}
+    }
     auto *new_enemy = &entities[indices[count++]];
 
     x = ((e->x >> 6) + I16LEAt(&cmd[1])); // PixelToWorld(I16LEAt(&p[0]));
@@ -1780,7 +1787,7 @@ ECL_HEAD:
   case ECL_CMPR: // レジスタ～レジスタの比較(Reg0,Reg1)
     if (cmd[1] >= ECLREG_MAX || cmd[2] >= ECLREG_MAX) {
       return; // エラー
-}
+    }
     RegCmp = (ID2Value(e, cmd[1]) - ID2Value(e, cmd[2]));
     bRetFlag = false;
     break;
@@ -1788,7 +1795,7 @@ ECL_HEAD:
   case ECL_CMPC: // レジスタ～定数の比較(Reg,Const)
     if (cmd[1] >= ECLREG_MAX) {
       return; // エラー
-}
+    }
     RegCmp = (ID2Value(e, cmd[1]) - I32LEAt(&cmd[1 + 1]));
     bRetFlag = false;
     break;
@@ -1797,30 +1804,33 @@ ECL_HEAD:
     if (RegCmp > 0) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
-    } else { {
-      bRetFlag = false;
-}
-}
+    } else {
+      {
+        bRetFlag = false;
+      }
+    }
     break;
 
   case ECL_JS: // 比較結果 < 0 ならばジャンプ
     if (RegCmp < 0) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
-    } else { {
-      bRetFlag = false;
-}
-}
+    } else {
+      {
+        bRetFlag = false;
+      }
+    }
     break;
 
   case ECL_JEQ: // 比較結果 == 0 ならばジャンプ
     if (RegCmp == 0) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
-    } else { {
-      bRetFlag = false;
-}
-}
+    } else {
+      {
+        bRetFlag = false;
+      }
+    }
     break;
 
   default: // 未定義の命令が発生！！
@@ -1833,8 +1843,8 @@ ECL_HEAD:
 
   if (bRetFlag) {
     return;
-  } 
-    goto ECL_HEAD;
+  }
+  goto ECL_HEAD;
 }
 
 // 割り込みジャンプを調べる //
@@ -1844,7 +1854,7 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
   for (i = 0; i < ECLVECT_MAX; i++) {
     if (e->Vect[i].vect == 0) {
       continue; // 割り込みがかかっていない
-}
+    }
     switch (i) {
     case ECLVECT_BITLEFT: // ビット残り割り込み
       if (Bosses.GetBitLeft() <= e->Vect[ECLVECT_BITLEFT].value) {
@@ -1857,7 +1867,7 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
       break;
 
     case ECLVECT_BOSSLEFT: // ボス残り割り込み
-      if (std::cmp_less_equal(Bosses.count , e->Vect[ECLVECT_BOSSLEFT].value)) {
+      if (std::cmp_less_equal(Bosses.count, e->Vect[ECLVECT_BOSSLEFT].value)) {
         e->cmd = e->Vect[ECLVECT_BOSSLEFT].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1870,7 +1880,7 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
       // char buf[100];
       // sprintf(buf,"hp = %d",e->hp);
       //  DebugOut(buf);
-      if (std::cmp_less_equal(e->hp , e->Vect[ECLVECT_HP].value)) {
+      if (std::cmp_less_equal(e->hp, e->Vect[ECLVECT_HP].value)) {
         e->cmd = e->Vect[ECLVECT_HP].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1881,7 +1891,7 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
       break;
 
     case ECLVECT_TIMER: // タイマー割り込み
-      if (std::cmp_greater(e->IntTimer , e->Vect[ECLVECT_TIMER].value)) {
+      if (std::cmp_greater(e->IntTimer, e->Vect[ECLVECT_TIMER].value)) {
         e->cmd = e->Vect[ECLVECT_TIMER].vect;
         e->cmd_c = 0;    // コマンド繰り返しカウンタ
         e->rep_c = 0;    // LOOP(旧REP)命令カウンタ

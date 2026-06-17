@@ -116,7 +116,7 @@ void FatCircleA_Approximated(GRAPHICS_GEOMETRY_POLY auto &gp,
 
 void GrdRect(GRAPHICS_GEOMETRY_POLY auto &gp, std::span<const VERTEX_XY, 4> p,
              RGBA col_edge, bool alpha) {
-  const RGBA col_center = {.r=255, .g=255, .b=255, .a=col_edge.a};
+  const RGBA col_center = {.r = 255, .g = 255, .b = 255, .a = col_edge.a};
 
   // Use an explicit integer division for a pixel-perfect match of the
   // original look, even if VERTEX_XY is a floating-point type.

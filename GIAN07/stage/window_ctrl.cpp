@@ -96,9 +96,7 @@ WINDOW_LABEL TitleItem = {TitleBuf};
 
 std::vector<std::u8string> Files;
 
-static size_t ListSize() {
-  return (!Files.empty() ? Files.size() + 1 : 2);
-}
+static size_t ListSize() { return (!Files.empty() ? Files.size() + 1 : 2); }
 static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
 static bool Handle(INPUT_BITS key, size_t selected);
 } // namespace ReplayFiles
@@ -417,12 +415,18 @@ WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, ReplayFiles::ListSize,
     ReplayFilesMenu;
 
 ///// [グローバル変数(公開)] /////
-WINDOW_SYSTEM MainWindow = {.Parent=Main::Menu};
-WINDOW_SYSTEM ExitWindow = {.Parent=ExitMenu};
-WINDOW_SYSTEM ContinueWindow = {.Parent=ContinueMenu};
-WINDOW_SYSTEM BGMPackWindow = {.Parent=WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize, &BGMPack::Generate, &BGMPack::Handle, 20>::Menu};
-WINDOW_SYSTEM GameOverSaveWindow = {.Parent=GameOverSaveMenu};
-WINDOW_SYSTEM ReplayFilesWindow = {.Parent=WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize, &ReplayFiles::Generate, &ReplayFiles::Handle, 20>::Menu};
+WINDOW_SYSTEM MainWindow = {.Parent = Main::Menu};
+WINDOW_SYSTEM ExitWindow = {.Parent = ExitMenu};
+WINDOW_SYSTEM ContinueWindow = {.Parent = ContinueMenu};
+WINDOW_SYSTEM BGMPackWindow = {
+    .Parent =
+        WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize,
+                           &BGMPack::Generate, &BGMPack::Handle, 20>::Menu};
+WINDOW_SYSTEM GameOverSaveWindow = {.Parent = GameOverSaveMenu};
+WINDOW_SYSTEM ReplayFilesWindow = {
+    .Parent = WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
+                                 &ReplayFiles::Generate, &ReplayFiles::Handle,
+                                 20>::Menu};
 
 // メインメニューの初期化 //
 void InitMainWindow() {
@@ -524,7 +528,9 @@ static void Main::Cfg::Grp::API::FnOverride(int_fast8_t /*unused*/) {
   });
 }
 
-static void Main::Cfg::Grp::FnDisp(int_fast8_t /*unused*/) { XGrpTryCycleDisp(); }
+static void Main::Cfg::Grp::FnDisp(int_fast8_t /*unused*/) {
+  XGrpTryCycleDisp();
+}
 
 static void Main::Cfg::Grp::FnFSMode(int_fast8_t /*unused*/) {
   XGrpTry([](auto &params) {
@@ -536,7 +542,9 @@ static void Main::Cfg::Grp::FnScale(int_fast8_t delta) {
   XGrpTryCycleScale(delta, true);
 }
 
-static void Main::Cfg::Grp::FnScMode(int_fast8_t /*unused*/) { XGrpTryCycleScMode(); }
+static void Main::Cfg::Grp::FnScMode(int_fast8_t /*unused*/) {
+  XGrpTryCycleScMode();
+}
 
 static void Main::Cfg::Grp::FnSkip(int_fast8_t delta) {
   RingStep(ConfigDat.FPSDivisor.v, delta, 0, FPS_DIVISOR_MAX);
@@ -638,7 +646,9 @@ void Open() {
   }
   w = (std::min)(w, GRP_RES.w);
 
-  WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize, &BGMPack::Generate, &BGMPack::Handle, 20>::Init(BGMPackWindow, SelAtOpen, &MainWindow);
+  WINDOW_MENU_SCROLL<BGMPack::TitleItem, &BGMPack::ListSize, &BGMPack::Generate,
+                     &BGMPack::Handle, 20>::Init(BGMPackWindow, SelAtOpen,
+                                                 &MainWindow);
   BGMPackWindow.Init(w);
   BGMPackWindow.OpenCentered(w, BGMPackWindow.Select[0]);
 }
@@ -691,7 +701,9 @@ static bool Handle(INPUT_BITS key, size_t selected) {
 }
 } // namespace BGMPack
 
-static void Main::SetItem(bool /*unused*/) { ItemMusic.SetActive(BGM_Enabled()); }
+static void Main::SetItem(bool /*unused*/) {
+  ItemMusic.SetActive(BGM_Enabled());
+}
 
 namespace ReplayFiles {
 static void ScanFiles() {
@@ -753,7 +765,9 @@ void Open() {
   w = (std::max)(w, CWinItemExtent(" Exit").w);
   w = (std::min)(w, GRP_RES.w);
 
-  WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize, &ReplayFiles::Generate, &ReplayFiles::Handle, 20>::Init(ReplayFilesWindow, 0, &MainWindow);
+  WINDOW_MENU_SCROLL<ReplayFiles::TitleItem, &ReplayFiles::ListSize,
+                     &ReplayFiles::Generate, &ReplayFiles::Handle,
+                     20>::Init(ReplayFilesWindow, 0, &MainWindow);
   ReplayFilesWindow.Init(w);
   ReplayFilesWindow.OpenCentered(w, ReplayFilesWindow.Select[0]);
 }
@@ -989,7 +1003,9 @@ static void Main::Cfg::Grp::SetItem(bool /*unused*/) {
                                 : SCALE_MODES[0]);
 
   ItemScale.SetActive(!(fs.fullscreen && fs.exclusive));
-  EnumFlagSet(ItemScMode.Flags, WINDOW_FLAGS::DISABLED, static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(sc_mode_disabled));
+  EnumFlagSet(
+      ItemScMode.Flags, WINDOW_FLAGS::DISABLED,
+      static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(sc_mode_disabled));
 #endif
 
   // clang-format off
@@ -1078,7 +1094,9 @@ static void Main::Cfg::Grp::Screenshot::SetItem(bool /*unused*/) {
     const auto hovered = (MainWindow.Select[MainWindow.SelectDepth] == (2 + i));
     const auto *const format = format_for(i, ALIGN::LEFT);
     const auto time = Grp_ScreenshotTimes[i];
-    EnumFlagSet(item.Flags, WINDOW_FLAGS::HIGHLIGHT, static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(i == effort));
+    EnumFlagSet(
+        item.Flags, WINDOW_FLAGS::HIGHLIGHT,
+        static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(i == effort));
     if (time < 0s) {
       sprintf(TitlePerf[i], "%s[  FAILED  ]", format);
       if (hovered) {
@@ -1122,7 +1140,9 @@ static void Main::Cfg::Grp::API::SetItem(bool /*unused*/) {
   ItemDef.SetActive(!is_def_api);
   for (auto &api : Item | std::views::take(GrpBackend_APICount())) {
     const auto is_selected = strcmp(api_active.data(), api.Title.ptr) == 0;
-    EnumFlagSet(api.Flags, WINDOW_FLAGS::HIGHLIGHT, static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(is_selected));
+    EnumFlagSet(
+        api.Flags, WINDOW_FLAGS::HIGHLIGHT,
+        static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(is_selected));
   }
 
   sprintf(TitleDef, "UseDefault  %s", CHOICE_OFF_ON[is_def_api]);
@@ -1187,7 +1207,9 @@ static void Main::Cfg::Snd::Mid::SetItem(bool tick) {
   } else {
     strcpy(TitlePort, ">");
   }
-  EnumFlagSet(ItemPort.Flags, WINDOW_FLAGS::DISABLED, static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(!maybe_dev));
+  EnumFlagSet(
+      ItemPort.Flags, WINDOW_FLAGS::DISABLED,
+      static_cast<std::underlying_type_t<enum WINDOW_FLAGS>>(!maybe_dev));
   const auto fixes = !!(ConfigDat.MidFlags.v & MID_FLAGS::FIX_SYSEX_BUGS);
 
   sprintf(TitleFixes, "SC88ProFXCompat%s", CHOICE_OFF_ON_NARROW[fixes]);

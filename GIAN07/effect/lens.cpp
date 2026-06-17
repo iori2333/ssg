@@ -48,7 +48,7 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
   const auto r2 = (Cast::up_sign<int32_t>(r) * r);
   const auto s = isqrt(r2 - (Cast::up_sign<int32_t>(m) * m));
 
-  for (auto i = -Cast::up_sign<int32_t>(r); std::cmp_less(i , r); i++) {
+  for (auto i = -Cast::up_sign<int32_t>(r); std::cmp_less(i, r); i++) {
     // ｘ座標の測定だ //
     dx = (s * s) - (i * i);
 
@@ -70,7 +70,7 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
       z = (dx - w) * (dx - w);
       z = isqrt(r2 - z - (i * i));
 
-      *Table = ((i * m) / z) + r;                       // ｙ座標
+      *Table = ((i * m) / z) + r;                     // ｙ座標
       *Table = (*Table * Diameter);                   // 幅を掛ける
       *Table = (*Table + ((((dx - w) * m) / z) + r)); // ｘ座標
 

@@ -62,10 +62,10 @@ bool DemoManager::HasRecordedStages() const {
 void DemoManager::FlushStage() {
   if (!save_all_enable) {
     return;
-}
+  }
   if (demo_frame_cur == 0) {
     return;
-}
+  }
 
   if (multi_stage_count < REPLAY_STAGE_MAX) {
     multi_stage_nums[multi_stage_count] = GameState.game_stage;
@@ -128,7 +128,7 @@ bool DemoManager::Record(INPUT_BITS key) {
 void DemoManager::SaveDemo() {
   if (!save_all_enable) {
     return;
-}
+  }
 
   demo_buffer[demo_frame_cur] = KEY_ESC;
   demo_info.FrameCount = (demo_frame_cur + 1);
@@ -170,7 +170,7 @@ bool DemoManager::LoadDemo(int stage) {
 INPUT_BITS DemoManager::Move() {
   if (!load_enable) {
     return KEY_ESC;
-}
+  }
 
   const auto ptr = demo_frame_cur;
   if (ptr >= demo_info.FrameCount) {
@@ -194,7 +194,7 @@ void DemoManager::Cleanup() {
 void DemoManager::SaveReplayAll(bool exstg) {
   if (!save_all_enable) {
     return;
-}
+  }
 
   // Flush current stage data if any (not yet flushed by stage clear)
   if (demo_frame_cur > 0 && multi_stage_count < REPLAY_STAGE_MAX) {
@@ -214,16 +214,17 @@ void DemoManager::SaveReplayAll(bool exstg) {
   info.CfgDat = demo_info.CfgDat;
   info.Exp = demo_info.Exp;
   info.Weapon = demo_info.Weapon;
-  for (int i = 0; std::cmp_less(i , multi_stage_count); i++) {
+  for (int i = 0; std::cmp_less(i, multi_stage_count); i++) {
     info.Stages[i] = multi_stage_nums[i];
     info.FrameCounts[i] = multi_stage_frames[i];
   }
 
   PACKFILE_WRITE out;
-  out.files.emplace_back(reinterpret_cast<const uint8_t *>(&info), sizeof(info));
+  out.files.emplace_back(reinterpret_cast<const uint8_t *>(&info),
+                         sizeof(info));
   for (auto &buf : stage_record_bufs) {
     out.files.emplace_back(reinterpret_cast<const uint8_t *>(buf.data()),
-                         buf.size() * sizeof(INPUT_BITS));
+                           buf.size() * sizeof(INPUT_BITS));
   }
 
   const auto fn = ReplayAllFN(exstg);
@@ -237,18 +238,19 @@ bool DemoManager::LoadReplayAll(const char8_t *fn) {
   const auto in = FilStartR(fn);
   if (!in) {
     return false;
-}
+  }
 
   BYTE_BUFFER_OWNED temp = in.MemExpand(0);
   if (nullptr == temp) {
     return false;
-}
+  }
   memcpy(&multi_play_info, temp.get(), sizeof(MULTI_REPLAY_INFO));
 
   // Compute max stage for stage transition gating
   playback_max_stage = 0;
   for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
-    playback_max_stage = std::max(multi_play_info.Stages[i], playback_max_stage);
+    playback_max_stage =
+        std::max(multi_play_info.Stages[i], playback_max_stage);
   }
 
   all_playback_buf.clear();
@@ -257,7 +259,7 @@ bool DemoManager::LoadReplayAll(const char8_t *fn) {
     temp = in.MemExpand(i + 1);
     if (nullptr == temp) {
       return false;
-}
+    }
     uint32_t n_frames = multi_play_info.FrameCounts[i];
     const auto *const src = reinterpret_cast<const INPUT_BITS *>(temp.get());
     all_playback_buf.insert(all_playback_buf.end(), src, src + n_frames);

@@ -177,7 +177,8 @@ void ConfigSave() {
   // Sync runtime audio state into config
   ConfigDat.SoundFlags.v &= SNDF_SE_ENABLE;
   ConfigDat.SoundFlags.v |= (static_cast<int>(BGM_Enabled()) * SNDF_BGM_ENABLE);
-  ConfigDat.SoundFlags.v |= (static_cast<int>(!BGM_GainApply()) * SNDF_BGM_NOT_VOL_NORM);
+  ConfigDat.SoundFlags.v |=
+      (static_cast<int>(!BGM_GainApply()) * SNDF_BGM_NOT_VOL_NORM);
 
   if (const auto maybe_topleft = WndBackend_Topleft()) {
     const auto &topleft = maybe_topleft.value();

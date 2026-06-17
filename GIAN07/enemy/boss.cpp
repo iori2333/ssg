@@ -7,7 +7,6 @@
 
 #include <algorithm>
 
-#include <utility>
 #include "bomb_efc.h" // 爆発エフェクト処理
 #include "boss_manager.h"
 #include "enemy_ex_ctrl.h"
@@ -17,6 +16,7 @@
 #include "geometry.h"
 #include "gian.h"
 #include "platform/graphics_backend.h"
+#include <utility>
 
 ///// [ 定数 ] /////
 
@@ -55,7 +55,7 @@ static constexpr auto BHPG_OPEN3 = 0x05; // 体力ゲージを更新する
 // 秘密の関数 //
 static void HPG_Open(uint32_t max);    // ボスの体力ゲージをオープンする
 static void HPG_Move(uint32_t now);    // ボスの体力ゲージを増減する
-static void HPG_Close();           // ボスの体力ゲージをクローズする
+static void HPG_Close();               // ボスの体力ゲージをクローズする
 static void HPG_Update(uint32_t next); // ボスの体力ゲージを上昇させる
 
 static int PutBoss(int x, int y, uint32_t id); // ボスをセットする
@@ -96,7 +96,7 @@ void BossManager::Set(int x, int y, uint32_t BossID) {
 
   if (n == BOSS_MAX) {
     return; // ここに来たらバグ
-}
+  }
 
   bosses[n].ExCount = 0;
   bosses[n].ExMove = BossManager::STDMove;
@@ -126,7 +126,7 @@ void BossManager::SetEx(int x, int y, uint32_t BossID) {
 
   if (n == BOSS_MAX) {
     return; // ここに来たらバグ
-}
+  }
 
   bosses[n].ExCount = 0;
   bosses[n].ExMove = BossManager::STDMove;
@@ -166,13 +166,13 @@ void BossManager::Move() {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
         if ((e->flag & EF_HITSB) != 0) {
           MaidDead();
-}
+        }
       }
 
       // ホーミングの準備 //
       if ((e->flag & EF_DAMAGE) != 0) {
         Enemies.UpdateHoming(e);
-}
+      }
 
       // 体力の総和を表示する //
       HP_Sum += b->Edat.hp;
@@ -213,8 +213,8 @@ void BossManager::Draw() {
       // 霊魂状態 //
       if (b->ExState == BEXST_SHILD2 && (Players.viv.bomb_time != 0U) &&
           ((e->flag & EF_DRAW) != 0)) {
-        wing = PIXEL_LTWH{(160 + ((Cast::sign<int32_t>(e->count / 2) % 4) * 40)),
-                          80, 40, 40};
+        wing = PIXEL_LTWH{
+            (160 + ((Cast::sign<int32_t>(e->count / 2) % 4) * 40)), 80, 40, 40};
 
         // pbg quirk: Blitted without clipping?! I'd consider this a
         // bug if it wasn't explicitly commented as such. Fine then...
@@ -317,7 +317,7 @@ void BossManager::HPG_Move(uint32_t now) {
 
     if (ChkCount == BOSSHPG_HEIGHT) {
       hpg.State = BHPG_OPEN2;
-}
+    }
   } break;
 
   case BHPG_OPEN2:
@@ -346,11 +346,11 @@ void BossManager::HPG_Move(uint32_t now) {
         hpg.Now -= temp;
       } else {
         hpg.Now = hpg.Next;
-}
+      }
     }
     if (hpg.Now == 0) {
       HPG_Close();
-}
+    }
     break;
 
   case BHPG_CLOSE:
@@ -360,7 +360,7 @@ void BossManager::HPG_Move(uint32_t now) {
     }
     if (hpg.XTemp[0] >= BOSSHPG_START_X) {
       HPG_Close();
-}
+    }
     break;
 
   case BHPG_DEAD:
@@ -474,7 +474,7 @@ void BossManager::KillAll() {
       Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
       if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
-}
+      }
       e->hp = 0;
       e->count = 0;
       e->flag = EF_BOMB;
@@ -487,7 +487,7 @@ void BossManager::KillAll() {
 
 bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (std::cmp_less_equal(e.hp , damage)) { // ボスの死亡処理(後で変更すること!!)
+  if (std::cmp_less_equal(e.hp, damage)) { // ボスの死亡処理(後で変更すること!!)
     SnakyDelete(&b);
     BitDelete();
     Enemies.Clear();
@@ -545,18 +545,19 @@ bool BossManager::DamageAt(int x, int y, int damage) {
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time != 0U) {
         continue;
-}
+      }
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
       if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
           ((e->flag & EF_DAMAGE) != 0)) {
-        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-          continue;
-        } } 
-          return ApplyDamage(*b, *e, damage);
-       
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+          {
+            continue;
+          }
+        }
+        return ApplyDamage(*b, *e, damage);
       }
     }
   }
@@ -580,17 +581,19 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time != 0U) {
         continue;
-}
+      }
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
-      if (HITCHK(x, e->x, e->g_width) && (y > e->y) && ((e->flag & EF_DAMAGE) != 0)) {
-        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-          continue;
-        } } 
-          ret_val = ApplyDamage(*b, *e, damage);
-       
+      if (HITCHK(x, e->x, e->g_width) && (y > e->y) &&
+          ((e->flag & EF_DAMAGE) != 0)) {
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+          {
+            continue;
+          }
+        }
+        ret_val = ApplyDamage(*b, *e, damage);
       }
     }
   }
@@ -608,24 +611,26 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
   damage -= i;
   if (damage <= 0) {
     return;
-}
+  }
 
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time != 0U) {
         continue;
-}
+      }
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
-      if (EnemyManager::LaserHITCHK(e, x, y, d) && ((e->flag & EF_DAMAGE) != 0)) {
-        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-          continue;
-        } } 
-          ApplyDamage(*b, *e, damage);
-       
+      if (EnemyManager::LaserHITCHK(e, x, y, d) &&
+          ((e->flag & EF_DAMAGE) != 0)) {
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+          {
+            continue;
+          }
+        }
+        ApplyDamage(*b, *e, damage);
       }
     }
   }
@@ -640,26 +645,27 @@ void BossManager::DamageAll(int damage) {
   damage -= i;
   if (damage <= 0) {
     return;
-}
+  }
 
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
       if (Players.viv.bomb_time != 0U) {
         continue;
-}
+      }
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
       if ((e->flag & EF_DAMAGE) != 0) {
-        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
-          continue;
-        } } 
-          ApplyDamage(*b, *e, damage);
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) {
+          {
+            continue;
+          }
+        }
+        ApplyDamage(*b, *e, damage);
 
-          // return TRUE;
-       
+        // return TRUE;
       }
     }
   }
@@ -774,7 +780,7 @@ void BossManager::STDMove(BossData *b) {
   case BEXST_WING01:
     if (b->ExCount < 64 + 16 + 8) {
       b->ExCount++;
-}
+    }
     break;
   }
 }

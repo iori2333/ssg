@@ -5,7 +5,6 @@
 
 #include "laser.h"
 
-#include <utility>
 #include "core/entity.h"
 #include "game/ut_math.h"
 #include "geometry.h"
@@ -15,6 +14,7 @@
 #include "long_laser.h"
 #include "platform/graphics_backend.h"
 #include "play_rank.h"
+#include <utility>
 
 /*
  * レーザーの座標管理について、今回は次のような構造体をもたせる事にする
@@ -115,7 +115,7 @@ void LaserManager::SpawnEX() {
   for (decltype(cmd.n) i = 0; i < cmd.n; i++) {
     if (count + 1 == LASER_MAX) {
       return; // 最大数を越えた場合
-}
+    }
 
     auto *lp = &lasers[laser_indices[count++]];
 
@@ -150,7 +150,7 @@ void LaserManager::SpawnEX() {
       lp->flag = LF_SHOT;
     } else {
       lp->flag = LF_NONE; // フラグの初期化
-}
+    }
 
     lp->evade = 0; // かすり用フラグ
 
@@ -169,11 +169,11 @@ void LaserManager::Move() {
     if ((lp->x) < GX_MIN || (lp->x) > GX_MAX || (lp->y) < GY_MIN ||
         (lp->y) > GY_MAX) {
       lp->flag = LF_DELETE;
-}
+    }
 
     if (Players.viv.muteki == 0 && ((lp->flag & (LF_CLEAR | LF_DELETE)) == 0)) {
       HitCheck(lp);
-}
+    }
   }
   Indsort(laser_indices, count, lasers,
           [](const LASER_DATA &l) { return (l.flag & LF_DELETE); });
@@ -184,7 +184,7 @@ void LaserManager::Draw() {
 
   GrpGeom->Lock();
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *lp = &lasers[laser_indices[i]];
     switch (lp->type) {
     // ノーマルショートレーザー＆反射レーザー //
@@ -236,8 +236,8 @@ void LaserManager::SetEasy() {
   switch (cmd.cmd & 0x03) {
   case LC_WAY:
     if (cmd.n >= 3) {
-      cmd.n -= 2;            // 奇数・偶数は変化させない
-}
+      cmd.n -= 2; // 奇数・偶数は変化させない
+    }
     cmd.dw += (cmd.dw >> 2); // 幅を広げる
     break;
 
@@ -293,7 +293,7 @@ uint8_t LaserManager::CalcDir(uint16_t i) const {
 
   if ((cmd.cmd & LS_ZSET) != 0) {
     deg = atan8(Players.viv.x - cmd.x, Players.viv.y - cmd.y);
-}
+  }
 
   deg += cmd.d; // 基本角のセット完了
 
@@ -302,8 +302,8 @@ uint8_t LaserManager::CalcDir(uint16_t i) const {
     i++;
     if ((cmd.n & 1) != 0) {
       return deg + ((i >> 1) * cmd.dw * (1 - ((i & 1) << 1)));
-    } 
-      return deg - (cmd.dw >> 1) + ((i >> 1) * cmd.dw * (1 - ((i & 1) << 1)));
+    }
+    return deg - (cmd.dw >> 1) + ((i >> 1) * cmd.dw * (1 - ((i & 1) << 1)));
 
   case LC_ALL:
     return deg + ((i << 8) / cmd.n);
@@ -401,10 +401,11 @@ void LaserManager::MoveLaser(LASER_DATA *lp) {
       lp->p[1].y = lp->p[0].y + lp->ly;
       lp->p[2].x = lp->p[3].x + lp->lx;
       lp->p[2].y = lp->p[3].y + lp->ly;
-    } else { {
-      lp->w += 64;
-}
-}
+    } else {
+      {
+        lp->w += 64;
+      }
+    }
 
     lp->wx = -sinl(lp->d, lp->w >> 6);
     lp->wy = cosl(lp->d, lp->w >> 6);
@@ -412,7 +413,7 @@ void LaserManager::MoveLaser(LASER_DATA *lp) {
 
     if (lp->count > 30) {
       lp->flag = LF_DELETE;
-}
+    }
     return;
   }
 
@@ -433,7 +434,7 @@ void LaserManager::MoveLaser(LASER_DATA *lp) {
     }
     return;
 
-  case LS_REF:     // 反射レーザー
+  case LS_REF:       // 反射レーザー
     MoveReflect(lp); // 長いので関数にしよう！
     return;
 
@@ -479,9 +480,11 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
       MaidDead();
     } else if (length > 0 && length <= (lp->l) &&
                w1 <= (lp->w + LASER_EVADE_WIDTH)) {
-      if (lp->evade != 0U) { {
-        evade_add(0);
-      } } else {
+      if (lp->evade != 0U) {
+        {
+          evade_add(0);
+        }
+      } else {
         lp->evade = 0xff;
         evade_add(SLASER_EVADE);
       }
@@ -508,7 +511,7 @@ void LaserManager::MoveReflect(LASER_DATA *lp) {
     // ここにヒットチェックを記述だ！ //
     if (HitReflect(lp) != 0) {
       lp->flag = LF_HIT;
-}
+    }
     return;
 
   case LF_SHOT: // E-->    R	発射中
@@ -521,7 +524,7 @@ void LaserManager::MoveReflect(LASER_DATA *lp) {
     lp->p[2].y = lp->p[3].y + lp->ly;
     if ((lp->l) >= (lp->lmax)) {
       lp->flag = LF_NONE;
-}
+    }
 
     // ここにもヒットチェックがいるぞ！ //
     // 注意 ltemp:=l を必ず実行する事 //
@@ -536,7 +539,7 @@ void LaserManager::MoveReflect(LASER_DATA *lp) {
       lp->flag = LF_DELETE;
     } else {
       lp->l -= lp->v;
-}
+    }
 
     lp->x += lp->vx;
     lp->y += lp->vy;
@@ -552,7 +555,7 @@ void LaserManager::MoveReflect(LASER_DATA *lp) {
     lp->ltemp += lp->v;
     if ((lp->ltemp) >= (lp->lmax)) {
       lp->flag = LF_HIT;
-}
+    }
     return;
   }
 }
@@ -567,7 +570,7 @@ int LaserManager::HitReflect(const LASER_DATA *lp) {
   const long ly = (lp->y + sinl(lp->d, lp->l)); // レーザーの判定ポイントY
 
   long tx = 0;
-  long ty = 0;        // 演算用座標
+  long ty = 0; // 演算用座標
   long length = 0;
   long width = 0; // ヒットチェック用
 
@@ -576,13 +579,13 @@ int LaserManager::HitReflect(const LASER_DATA *lp) {
 
   // 太レーザーに対して反射する //
   for (i = 0; i < LLASER_MAX; i++) {
-    if (std::cmp_equal(i , lp->notr)) {
+    if (std::cmp_equal(i, lp->notr)) {
       continue; // 前回反射したなら無視する
-}
+    }
     ll = &long_lasers[i];
     if (ll->flag != LLF_NORM) {
       continue; // 完全オープンでなければ次へ
-}
+    }
 
     tx = lx - ll->x;
     ty = ly - ll->y;

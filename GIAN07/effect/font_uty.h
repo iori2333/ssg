@@ -52,7 +52,7 @@ constexpr PIXEL_COORD GrpExtent5(const char c) {
 }
 
 constexpr PIXEL_SIZE GrpExtent5(const std::string_view s) {
-  PIXEL_SIZE ret = {.w=0, .h=5};
+  PIXEL_SIZE ret = {.w = 0, .h = 5};
   for (const char c : s) {
     ret.w += (GrpExtent5(c) + 1);
   }

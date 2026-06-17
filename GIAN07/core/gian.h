@@ -76,7 +76,7 @@ inline constexpr int SY_WID = (64 * 10);         // サボテンのＹ幅？
 inline constexpr int SX_MIN = (GX_MIN + SX_WID); // サボテンのＸ座標最小値
 inline constexpr int SX_MAX = (GX_MAX - SX_WID); // サボテンのＸ座標最大値
 inline constexpr int SY_MIN =
-    (GY_MIN + SY_WID + (30 * 64));                 // サボテンのＹ座標最小値
+    (GY_MIN + SY_WID + (30 * 64));               // サボテンのＹ座標最小値
 inline constexpr int SY_MAX = (GY_MAX - SY_WID); // サボテンのＹ座標最大値
 inline constexpr int SX_START = GX_MID;          // サボテンの開始Ｘ座標
 inline constexpr int SY_START =

@@ -5,13 +5,13 @@
 
 #include "item.h"
 
-#include <utility>
 #include "core/entity.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "gian.h"
 #include "item_manager.h"
 #include "platform/graphics_backend.h"
+#include <utility>
 
 // entities[], indices[], count → item_manager.cpp に移動
 
@@ -19,7 +19,7 @@
 void ItemManager::Spawn(int x, int y, uint8_t type) {
   if (count + 1 >= ITEM_MAX) {
     return;
-}
+  }
 
   auto *ip = &entities[indices[count++]];
 
@@ -62,7 +62,7 @@ void ItemManager::Move() {
   const uint32_t point =
       ((((SY_MAX - Players.viv.y) >> 6) + (Players.viv.evade * 4)) * 160);
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *ip = &entities[indices[i]];
     if (Players.viv.bomb_time == 0U) {
       if (Players.viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
@@ -87,7 +87,7 @@ void ItemManager::Move() {
 
     if (ip->vy < 64 * 6) {
       ip->vy += ITEM_GRAVITY;
-}
+    }
     ip->count++;
     if (HITCHK(ip->x, Players.viv.x, ITEM_HITX) &&
         HITCHK(ip->y, Players.viv.y, ITEM_HITY)) {
@@ -122,7 +122,7 @@ void ItemManager::Move() {
     if ((ip->x) < GX_MIN - (8 * 64) || (ip->x) > GX_MAX + (8 * 64) ||
         (ip->y) > GY_MAX + (8 * 64)) {
       ip->type = ITEM_DELETE;
-}
+    }
   }
 
   Indsort(indices, count, entities,
@@ -137,7 +137,7 @@ void ItemManager::Draw() {
   int y = 0;
   PIXEL_LTRB src;
 
-  for (i = 0; std::cmp_less(i , count); i++) {
+  for (i = 0; std::cmp_less(i, count); i++) {
     auto *ip = &entities[indices[i]];
     const uint8_t ptn = ((ip->count >> 2) & 3);
     switch (ip->type) {

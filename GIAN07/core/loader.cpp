@@ -333,7 +333,7 @@ bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
     const auto cap = (NOT_FOUND.size() + path_data.size() + basename.size());
     filename_with_found_prefix.resize_and_overwrite(
         cap, [&](char8_t *buf, size_t) {
-          std::ranges::in_out_result p = {.in=path_data.begin(), .out=buf};
+          std::ranges::in_out_result p = {.in = path_data.begin(), .out = buf};
           p = std::ranges::copy(NOT_FOUND, p.out);
           p = std::ranges::copy(path_data, p.out);
           p = std::ranges::copy(basename, p.out);

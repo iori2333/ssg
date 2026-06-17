@@ -5,7 +5,6 @@
 
 #include "bullet.h"
 
-#include <utility>
 #include "bullet_manager.h"
 #include "game/cast.h"
 #include "game/snd.h"
@@ -13,6 +12,7 @@
 #include "gian.h"
 #include "level.h"
 #include "platform/graphics_backend.h"
+#include <utility>
 
 ////グローバル変数 → bullet_manager.cpp の BulletManager に移動
 // command, bullets, count_small, count_large → bullet_manager.cpp の参照
@@ -48,7 +48,7 @@ void BulletManager::Spawn() {
     speed = (((v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (v >> 1);
   } else {
     speed = v;
-}
+  }
 
   TamaSetMain();
 }
@@ -75,7 +75,7 @@ void BulletManager::SpawnLine() {
   } else {
     indnow = &count_large, indmax = &max_large,
     indp = &indices_large[count_large];
-}
+  }
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -87,7 +87,7 @@ void BulletManager::SpawnLine() {
   for (const auto i : std::views::iota(0U, setmax)) {
     if ((*indnow) + 1 >= (*indmax)) {
       return; // セットできない場合
-}
+    }
 
     *indnow = *indnow + 1;       // 弾数をインクリメント
     auto *t = &bullets[indp[i]]; // 弾ポインタをセット
@@ -137,7 +137,7 @@ void BulletManager::SpawnExtra01() {
   } else {
     indnow = &count_large, indmax = &max_large,
     indp = &indices_large[count_large];
-}
+  }
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -149,7 +149,7 @@ void BulletManager::SpawnExtra01() {
   for (const auto i : std::views::iota(0U, setmax)) {
     if ((*indnow) + 1 >= (*indmax)) {
       return; // セットできない場合
-}
+    }
 
     *indnow = *indnow + 1;       // 弾数をインクリメント
     auto *t = &bullets[indp[i]]; // 弾ポインタをセット
@@ -198,10 +198,10 @@ int BulletManager::SpeedEx(uint8_t d) const {
   delta = command.d - d;
   if (delta > 128) {
     delta -= 256;
-}
+  }
   if (delta < -128) {
     delta += 256;
-}
+  }
 
   return speed - ((speed * abs(delta)) / 23) + temp;
 }
@@ -219,7 +219,7 @@ void BulletManager::TamaSetMain() {
   } else {
     indnow = &count_large, indmax = &max_large,
     indp = &indices_large[count_large];
-}
+  }
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -228,7 +228,7 @@ void BulletManager::TamaSetMain() {
   for (const auto i : std::views::iota(0U, setmax)) {
     if ((*indnow) + 1 >= (*indmax)) {
       return; // セットできない場合
-}
+    }
 
     *indnow = *indnow + 1; // 弾数をインクリメント
     auto *t = &bullets[indp[i]];
@@ -276,11 +276,11 @@ void BulletManager::Move() {
           ((t->x) < GX_MIN - (4 * 64) || (t->x) > GX_MAX + (4 * 64) ||
            (t->y) < GY_MIN - (4 * 64) || (t->y) > GY_MAX + (4 * 64))) {
         t->flag = TF_DELETE;
-}
+      }
       t->count++;
       if (Players.viv.muteki != 0U) {
         continue;
-}
+      }
       if (HITCHK(t->x, Players.viv.x, TAMA_EVX_SMALL) &&
           HITCHK(t->y, Players.viv.y, TAMA_EVY_SMALL)) {
         TamaEvadeAdd(t);
@@ -308,11 +308,11 @@ void BulletManager::Move() {
           ((t->x) < GX_MIN - (8 * 64) || (t->x) > GX_MAX + (8 * 64) ||
            (t->y) < GY_MIN - (8 * 64) || (t->y) > GY_MAX + (8 * 64))) {
         t->flag = TF_DELETE;
-}
+      }
       t->count++;
       if (Players.viv.muteki != 0U) {
         continue;
-}
+      }
       if (HITCHK(t->x, Players.viv.x, TAMA_EVX_LARGE) &&
           HITCHK(t->y, Players.viv.y, TAMA_EVY_LARGE)) {
         TamaEvadeAdd(t);
@@ -572,7 +572,7 @@ void TamaEffectDraw(const Bullet *t) {
     temp = Target[3][ptn];
   } else {
     temp = Target[t->c][ptn];
-}
+  }
   GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, temp);
 }
 
@@ -697,19 +697,19 @@ void BulletManager::SetIndices(uint16_t tama1) {
 
   if (tama1 >= TAMA_MAX) {
     tama1 = TAMA_MAX - 1;
-}
+  }
 
   // 弾の最大数のセット //
   max_small = tama1;
   max_large = TAMA_MAX - tama1;
 
   // 弾のインデックス用配列の初期化 //
-  for (i = 0; std::cmp_less(i , tama1); i++) {
+  for (i = 0; std::cmp_less(i, tama1); i++) {
     indices_small[i] = i;
-}
+  }
   for (i = tama1; i < TAMA_MAX; i++) {
     indices_large[i - tama1] = i;
-}
+  }
 
   // memset(bullets,0,sizeof(TAMA_DATA)*TAMA_MAX);
 
@@ -720,8 +720,8 @@ void BulletManager::SetEasy() {
   switch (command.cmd & 0x03) {
   case TC_WAY:
     if (command.n >= 3) {
-      command.n -= 2;                // 奇数・偶数は変化させない
-}
+      command.n -= 2; // 奇数・偶数は変化させない
+    }
     command.dw += (command.dw >> 2); // 幅を広げる
     break;
 
@@ -733,7 +733,7 @@ void BulletManager::SetEasy() {
 
   if (command.ns >= 2) {
     command.ns--; // 連射数_減少
-}
+  }
 }
 
 void BulletManager::SetHard() {
@@ -775,9 +775,10 @@ void BulletManager::SetLunatic() {
 }
 
 uint8_t BulletManager::Dir(uint16_t i) const {
-  uint8_t deg = (((command.cmd & TAMA_ZSET) != 0) ? atan8((Players.viv.x - command.x),
-                                                   (Players.viv.y - command.y))
-                                           : 0);
+  uint8_t deg =
+      (((command.cmd & TAMA_ZSET) != 0)
+           ? atan8((Players.viv.x - command.x), (Players.viv.y - command.y))
+           : 0);
 
   deg += command.d;  // 基本角のセット完了
   i = i % command.n; // 連射弾対策
@@ -787,9 +788,9 @@ uint8_t BulletManager::Dir(uint16_t i) const {
     i++;
     if ((command.n & 1) != 0) {
       return deg + ((i >> 1) * command.dw * (1 - ((i & 1) << 1)));
-    } 
-      return deg - (command.dw >> 1) +
-             ((i >> 1) * command.dw * (1 - ((i & 1) << 1)));
+    }
+    return deg - (command.dw >> 1) +
+           ((i >> 1) * command.dw * (1 - ((i & 1) << 1)));
 
   case TC_ALL:
     return deg + ((i << 8) / command.n);
@@ -823,8 +824,8 @@ int BulletManager::NewSpeed(uint16_t i) const {
 
   if ((command.cmd & TAMA_REN) != 0) {
     return vret + ((vret >> 3) * (i / command.n)) + temp;
-  } 
-    return vret + temp;
+  }
+  return vret + temp;
 }
 
 int BulletManager::LineCmdNewSpeed(uint16_t i) const {
@@ -841,8 +842,8 @@ int BulletManager::LineCmdNewSpeed(uint16_t i) const {
 
   if ((command.cmd & TAMA_REN) != 0) {
     return vret + ((vret >> 3) * (i - 1));
-  } 
-    return vret;
+  }
+  return vret;
 }
 
 int BulletManager::Speed(uint16_t i) const {
@@ -864,8 +865,8 @@ int BulletManager::Speed(uint16_t i) const {
 
   if ((command.cmd & TAMA_REN) != 0) {
     return vret + ((vret >> 3) * (i / command.n)) + temp;
-  } 
-    return vret + temp;
+  }
+  return vret + temp;
 }
 
 uint8_t BulletManager::Flag() const {
@@ -932,10 +933,10 @@ void BulletManager::MoveByType(Bullet *t) {
           atan8((Players.viv.x) - (t->x), (Players.viv.y) - (t->y)) - (t->d);
       if (deg_t < -128) {
         deg_t += 256;
-}
+      }
       if (deg_t > 128) {
         deg_t -= 256;
-}
+      }
       t->d = t->d + (deg_t * (t->vd) / 255);
     }
     t->v += t->a;
@@ -970,7 +971,7 @@ void BulletManager::MoveByType(Bullet *t) {
     t->ty += sinl(t->d, t->v);
     if ((t->a < 0) && (t->v <= 0)) {
       t->a = -(t->a);
-}
+    }
     if ((t->a > 0) && (t->v >= t->v0)) {
       t->a = -(t->a);
       if (--(t->rep) == 0) {
@@ -1024,7 +1025,7 @@ void BulletManager::MoveByType(Bullet *t) {
   case T_SBHOMING: // サボテン用ホーミング(煙を吐き出すぞ！)
     if ((t->count & 1) != 0) {
       Effects.SpawnFragment(t->x, t->y, FRG_SMOKE);
-}
+    }
     t->tx += t->vx;
     t->ty += t->vy;
     if ((t->count < 130 - 60) && Enemies.homing_flag != HOMING_DUMMY) {
@@ -1039,15 +1040,15 @@ void BulletManager::MoveByType(Bullet *t) {
 
     if (deg_t < -128) {
       deg_t += 256;
-}
+    }
     if (deg_t > 128) {
       deg_t -= 256;
-}
+    }
     // if(deg_t>-2 && deg_t<2){
     if (deg_t == 0) {
       if (t->vd != 0) {
         t->vd--;
-}
+      }
       t->v += t->a;
     } else {
       // pbg quirk: Was probably intended to compare the unsigned
@@ -1068,7 +1069,7 @@ void BulletManager::MoveByType(Bullet *t) {
     // ちゅうい : この case はダミーです決して実行されてはいけません //
     if (t->count >= 49) {
       t->flag = TF_DELETE;
-}
+    }
     return;
   }
 }
@@ -1113,7 +1114,7 @@ void BulletManager::MoveByOption(Bullet *t) {
         t->option = TOP_NONE;
       } else {
         t->option = TOP_REFX | (op_temp - 1);
-}
+      }
     } else {
       t->x = t->tx;
       t->y = t->ty;
@@ -1131,7 +1132,7 @@ void BulletManager::MoveByOption(Bullet *t) {
         t->option = TOP_NONE;
       } else {
         t->option = TOP_REFY | (op_temp - 1);
-}
+      }
     } else {
       t->x = t->tx;
       t->y = t->ty;
@@ -1149,7 +1150,7 @@ void BulletManager::MoveByOption(Bullet *t) {
         t->option = TOP_NONE;
       } else {
         t->option = TOP_REFXY | (op_temp - 1);
-}
+      }
     } else if ((t->ty) < GY_MIN) {
       t->d = -t->d;
       t->vy = -(t->vy);
@@ -1160,7 +1161,7 @@ void BulletManager::MoveByOption(Bullet *t) {
         t->option = TOP_NONE;
       } else {
         t->option = TOP_REFXY | (op_temp - 1);
-}
+      }
     } else {
       t->x = t->tx;
       t->y = t->ty;
@@ -1197,7 +1198,7 @@ void BulletManager::MoveByOption(Bullet *t) {
         command.d = Cast::down<uint8_t>(rnd());
         if ((command.cmd & TAMA_REN) != 0) {
           command.v -= 2;
-}
+        }
         break;
       case TC_RND:
         command.n = 4;
@@ -1207,7 +1208,7 @@ void BulletManager::MoveByOption(Bullet *t) {
       }
       if ((command.cmd & TAMA_ZSET) != 0) {
         command.d = 0, command.dw -= 6;
-}
+      }
       command.type = T_NORM;
       command.option = TOP_NONE;
       Snd_SEPlay(12, command.x);

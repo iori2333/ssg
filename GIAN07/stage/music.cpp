@@ -26,8 +26,8 @@
 // Constants
 // ---------
 
-static constexpr RGB ColorHighlight = {.r=51, .g=102, .b=153};
-static constexpr RGB ColorDefault = {.r=153, .g=204, .b=255};
+static constexpr RGB ColorHighlight = {.r = 51, .g = 102, .b = 153};
+static constexpr RGB ColorDefault = {.r = 153, .g = 204, .b = 255};
 // ---------
 
 // State
@@ -56,7 +56,7 @@ void MUSICROOM_TEXT::RenderVersion(WINDOW_POINT topleft) const {
   TextObj.Render(topleft, version, VERSION, [](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
-    s.Put({.x=0, .y=0}, VERSION);
+    s.Put({.x = 0, .y = 0}, VERSION);
   });
 }
 
@@ -72,7 +72,7 @@ void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
   TextObj.Render(topleft, mid_dev, dev, [&dev](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
-    s.Put({.x=0, .y=0}, dev);
+    s.Put({.x = 0, .y = 0}, dev);
   });
 #endif
 }
@@ -92,10 +92,10 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
     const auto title_left = (s.Extent(num).w + 8);
 
     s.SetFont(FONT_ID::NORMAL);
-    s.Put({.x=1, .y=0}, num, ColorHighlight);
-    s.Put({.x=(title_left + 1), .y=0}, title, ColorHighlight);
-    s.Put({.x=0, .y=0}, num, ColorDefault);
-    s.Put({.x=(title_left + 0), .y=0}, title, ColorDefault);
+    s.Put({.x = 1, .y = 0}, num, ColorHighlight);
+    s.Put({.x = (title_left + 1), .y = 0}, title, ColorHighlight);
+    s.Put({.x = 0, .y = 0}, num, ColorDefault);
+    s.Put({.x = (title_left + 0), .y = 0}, title, ColorDefault);
   });
 }
 
@@ -122,7 +122,7 @@ void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
     while (const auto line = cursor.next<LINE>()) {
-      s.Put({.x=0, .y=y}, line.value()[0]);
+      s.Put({.x = 0, .y = y}, line.value()[0]);
       y += 16;
     }
   });
@@ -157,10 +157,10 @@ bool MusicRoomInit() {
   }
 
   MusicRoomText = MUSICROOM_TEXT{
-      .mid_dev = TextObj.Register({.w=98, .h=13}),
-      .title = TextObj.Register({.w=240, .h=16}),
-      .comment = TextObj.Register({.w=272, .h=192}),
-      .version = TextObj.Register({.w=490, .h=13}),
+      .mid_dev = TextObj.Register({.w = 98, .h = 13}),
+      .title = TextObj.Register({.w = 240, .h = 16}),
+      .comment = TextObj.Register({.w = 272, .h = 192}),
+      .version = TextObj.Register({.w = 490, .h = 13}),
 
       .comment_buf = std::move(comment_buf),
   };
@@ -265,8 +265,8 @@ void GrpDrawSpect(int x, int y) {
   if (auto *gp = GrpGeom_Poly()) {
     for (int i = 0; i < std::size(ftable); i++) {
       // WORD c2 = 0;	//5
-      constexpr RGB c1 = {.r=200, .g=0, .b=0};
-      constexpr RGB c2 = {.r=250, .g=250, .b=0};
+      constexpr RGB c1 = {.r = 200, .g = 0, .b = 0};
+      constexpr RGB c2 = {.r = 250, .g = 250, .b = 0};
       gp->DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
     }
   } else if (auto *gf = GrpGeom_FB()) {
@@ -439,7 +439,8 @@ void MusicRoomProc(bool & /*unused*/) {
 
   BGM_UpdateMIDITables();
 
-  if ((playing == BGM_PLAYING::MIDI) && ((SystemKey_Data & SYSKEY_BGM_DEVICE) != 0)) {
+  if ((playing == BGM_PLAYING::MIDI) &&
+      ((SystemKey_Data & SYSKEY_BGM_DEVICE) != 0)) {
     if (!DevChgWait) {
       BGM_ChangeMIDIDevice(1);
       DevChgWait = true;
@@ -457,7 +458,7 @@ void MusicRoomProc(bool & /*unused*/) {
     };
 
     auto BlitLegend = [](const PIXEL_LTWH &rect) {
-      const PIXEL_LTRB src = (rect + PIXEL_POINT{.x=0, .y=392});
+      const PIXEL_LTRB src = (rect + PIXEL_POINT{.x = 0, .y = 392});
       GrpSurface_Blit({(8 + rect.left), (410 + rect.top)}, SURFACE_ID::MUSIC,
                       src);
     };

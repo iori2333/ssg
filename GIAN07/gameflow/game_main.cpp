@@ -41,7 +41,7 @@ constexpr Narrow::string_view BUILD_VALUE = (" " VERSION_TAG);
 
 void Init() {
   const auto build_w = TextObj.TextExtent(FONT_ID::TINY, BUILD_VALUE).w;
-  Line[0].trr = TextObj.Register({.w=136, .h=10});
+  Line[0].trr = TextObj.Register({.w = 136, .h = 10});
   Line[0].left = (GRP_RES.w - build_w);
 }
 
@@ -84,7 +84,7 @@ void DemoProc(bool & /*unused*/); // デモプレイ
 void ReplayProcAll(bool & /*unused*/);
 void GameOverSaveProc(bool & /*unused*/);
 
-  // 西方Ｐｒｏｊｅｃｔ初期化部
+// 西方Ｐｒｏｊｅｃｔ初期化部
 void SProjectProc(bool & /*unused*/); // 西方Ｐｒｏｊｅｃｔ表示動作部
 
 void GameSTD_Init(); // ゲームを立ち上げる際に必ず行う初期化関数群
@@ -109,7 +109,7 @@ bool ScoreNameInit() {
   GameFlow.current_rank = Scores.SetScoreString(nullptr, GameFlow.current_dif);
   if (GameFlow.current_rank == 0) {
     return GameExit();
-}
+  }
 
   MWinForceClose();
   GrpBackend_Clear();
@@ -150,7 +150,7 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
   case KEY_LEFT:
     if (Scores.score_strings[4].bMoveEnable) {
       break;
-}
+    }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 4) % 5;
     current_rank = Scores.SetScoreString(nullptr, current_dif);
@@ -160,7 +160,7 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
   case KEY_RIGHT:
     if (Scores.score_strings[4].bMoveEnable) {
       break;
-}
+    }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 1) % 5;
     current_rank = Scores.SetScoreString(nullptr, current_dif);
@@ -222,10 +222,11 @@ void GameFlowManager::ScoreDraw() {
     if (Scores.score_strings[i].Stage[0] == '7') {
       src = {288, 88, (288 + 16), (88 + 8)};
       GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::SYSTEM, src);
-    } else { {
-      GrpPutScore(gx, gy, Scores.score_strings[i].Stage);
-}
-}
+    } else {
+      {
+        GrpPutScore(gx, gy, Scores.score_strings[i].Stage);
+      }
+    }
 
     gx = (Scores.score_strings[i].x >> 6) + 224 + 80;
     gy = (Scores.score_strings[i].y >> 6) + 25;
@@ -249,61 +250,60 @@ char GameFlowManager::GetAddr2Char(int x, int y) {
     return ('a' + (x % 26));
   }
   // その他記号など //
-  
-    switch (x) {
-    case 0:
-      return '0';
-    case 1:
-      return '1';
-    case 2:
-      return '2';
-    case 3:
-      return '3';
-    case 4:
-      return '4';
-    case 5:
-      return '5';
-    case 6:
-      return '6';
-    case 7:
-      return '7';
-    case 8:
-      return '8';
-    case 9:
-      return '9';
-    case 10:
-      return '!';
-    case 11:
-      return '?';
-    case 12:
-      return '#';
-    case 13:
-      return '\\';
-    case 14:
-      return '<';
-    case 15:
-      return '>';
-    case 16:
-      return '=';
-    case 17:
-      return ',';
-    case 18:
-      return '+';
-    case 19:
-      return '-';
-    case 20:
-      return ' '; // SPACE
-    // case 21:
-    case 22:
-      return NR_EXCHAR_BACK;
-    // case 23:
-    case 24:
-      return NR_EXCHAR_END;
-    // case 25:
-    default:
-      return NR_EXCHAR_ERROR;
-    }
- 
+
+  switch (x) {
+  case 0:
+    return '0';
+  case 1:
+    return '1';
+  case 2:
+    return '2';
+  case 3:
+    return '3';
+  case 4:
+    return '4';
+  case 5:
+    return '5';
+  case 6:
+    return '6';
+  case 7:
+    return '7';
+  case 8:
+    return '8';
+  case 9:
+    return '9';
+  case 10:
+    return '!';
+  case 11:
+    return '?';
+  case 12:
+    return '#';
+  case 13:
+    return '\\';
+  case 14:
+    return '<';
+  case 15:
+    return '>';
+  case 16:
+    return '=';
+  case 17:
+    return ',';
+  case 18:
+    return '+';
+  case 19:
+    return '-';
+  case 20:
+    return ' '; // SPACE
+  // case 21:
+  case 22:
+    return NR_EXCHAR_BACK;
+  // case 23:
+  case 24:
+    return NR_EXCHAR_END;
+  // case 25:
+  default:
+    return NR_EXCHAR_ERROR;
+  }
 }
 
 // お名前入力 //
@@ -342,7 +342,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
         x = (x - 2) % 26;
       } else {
         x = (x + 25) % 26;
-}
+      }
       Snd_SEPlay(SOUND_ID_SELECT);
       break;
 
@@ -351,7 +351,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
         x = (x + 2) % 26;
       } else {
         x = (x + 1) % 26;
-}
+      }
       Snd_SEPlay(SOUND_ID_SELECT);
       break;
 
@@ -408,14 +408,14 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       len = strlen(Scores.score_strings[current_rank - 1].Name);
       if (len != 0) {
         Scores.score_strings[current_rank - 1].Name[len - 1] = '\0';
-}
+      }
       break;
 
     // ネームレジスト終了処理 //
     EXIT_NR_PROC:
       if (strlen(Scores.score_strings[current_rank - 1].Name) == 0) {
         strcpy(Scores.score_strings[current_rank - 1].Name, "Vivit!");
-}
+      }
 
       Scores.score_strings[current_rank - 1].Name[NR_NAME_LEN - 1] = '\0';
 
@@ -432,7 +432,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
 
     if (x > 20 && y == 2) {
       x &= (~1);
-}
+    }
   } else if (key_time != END_WAIT) {
     key_time--;
   }
@@ -513,7 +513,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
     current_name.Stage = 1;
   } else {
     current_name.Stage = GameState.game_stage;
-}
+  }
 
   // デバッグ用... //
   Snd_SEStop(8); // ワーニング音を止める
@@ -523,7 +523,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_rank = Scores.SetScoreString(&current_name, CurrentLevel());
   if (current_rank == 0) {
     return GameExit();
-}
+  }
 
   MWinForceClose();
   GrpBackend_Clear();
@@ -645,8 +645,8 @@ bool GameNextStage() {
   GameState.game_stage++;
 
   // エンディングに移行する //
-  GameState.game_stage = std::min<int>(GameState.game_stage, STAGE_MAX); // 後で変更のこと
-  
+  GameState.game_stage =
+      std::min<int>(GameState.game_stage, STAGE_MAX); // 後で変更のこと
 
   GameSTD_Init();
   MaidNextStage();
@@ -794,7 +794,7 @@ std::optional<LensInfo> Lens;
 void SProjectProc(bool & /*unused*/) {
   static uint16_t timer = 0;
 
-  constexpr PIXEL_SIZE logo_size = {.w=320, .h=42};
+  constexpr PIXEL_SIZE logo_size = {.w = 320, .h = 42};
   constexpr WINDOW_LTRB logo = WINDOW_LTWH{
       (320 - (logo_size.w / 2)), (240 + 40), logo_size.w, logo_size.h};
 
@@ -976,7 +976,7 @@ void GameProc(bool & /*unused*/) {
   GameMove();
   if (GameFlow.current_state != GameState::Game) {
     return;
-}
+  }
 
   if (GameFlow.IsDraw()) {
     GameDraw();
@@ -1080,7 +1080,7 @@ void DemoProc(bool & /*unused*/) {
     Key_Data = KEY_ESC;
   } else {
     Key_Data = Demos.Move();
-}
+  }
 
   GameState.is_demoplay = true;
 
@@ -1105,7 +1105,7 @@ void DemoProc(bool & /*unused*/) {
     GameDraw();
     if (ExTimer < 64) {
       GrpPut16(200, 200, "D E M O   P L A Y");
-}
+    }
     Grp_Flip();
   }
 }
@@ -1138,7 +1138,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       Players.viv.weapon = (Players.viv.weapon + 2) % 3;
     } else {
       Players.viv.weapon = (Players.viv.weapon + 1) % 3;
-}
+    }
     spd = 0;
     deg = 0;
     Snd_SEPlay(SOUND_ID_BUZZ);
@@ -1149,7 +1149,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       weapon_key_wait = 0;
     } else {
       Key_Data = 0;
-}
+    }
   }
 
   int forceStage = 0;
@@ -1165,7 +1165,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     forceStage = 5;
   } else if ((Key_Data & KEY_STAGE6) != 0) {
     forceStage = 6;
-}
+  }
   Key_Data &= ~(KEY_STAGE1 | KEY_STAGE2 | KEY_STAGE3 | KEY_STAGE4 | KEY_STAGE5 |
                 KEY_STAGE6);
 
@@ -1194,7 +1194,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   case KEY_RETURN:
     if (spd != 0) {
       break;
-}
+    }
     if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
       if (((1 << Players.viv.weapon) & ConfigDat.ExtraStgFlags.v) == 0) {
         break;
@@ -1222,18 +1222,18 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
         GameState.game_stage = forceStage;
         if (GameState.game_stage == 2) {
           Players.viv.exp = 160;
-}
+        }
         if (GameState.game_stage >= 3) {
           Players.viv.exp = 255;
-}
+        }
       } else if (ConfigDat.StageSelect.v != 0U) {
         GameState.game_stage = ConfigDat.StageSelect.v;
         if (GameState.game_stage == 2) {
           Players.viv.exp = 160;
-}
+        }
         if (GameState.game_stage >= 3) {
           Players.viv.exp = 255;
-}
+        }
       } else {
         GameState.game_stage = 1;
       }
@@ -1263,7 +1263,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   case KEY_BOMB:
     if (spd != 0) {
       break;
-}
+    }
     Snd_SEPlay(SOUND_ID_CANCEL);
     GameExit(false);
     return;
@@ -1312,7 +1312,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     Players.viv.exp = std::min(count, 255);
     if (Players.viv.exp < 31) {
       Players.viv.lay_time = Players.viv.lay_grp = 0;
-}
+    }
 
     Enemies.homing_flag = HOMING_DUMMY;
     Key_Data = KEY_TAMA;
@@ -1397,10 +1397,10 @@ void GameFlowManager::TitleProc(bool &quit) {
     demo_timer += 1;
   } else {
     demo_timer = 0;
-}
+  }
   if (MainWindow.SelectDepth != 0) {
     demo_timer = 0;
-}
+  }
 
   if (demo_timer == 60 * 10) { // 60*3
     DemoInit();
@@ -1425,7 +1425,7 @@ void GameFlowManager::TitleProc(bool &quit) {
 
   if (current_state != GameState::Title) {
     return;
-}
+  }
 
   if (MainWindow.State == CWIN_DEAD) {
     switch (MainWindow.Select[0]) {
@@ -1469,7 +1469,7 @@ void PauseProc(bool & /*unused*/) {
   CWinMove(&ExitWindow);
   if (GameFlow.current_state != GameState::Pause) {
     return;
-}
+  }
 
   if (GameFlow.IsDraw()) {
     GameDraw();

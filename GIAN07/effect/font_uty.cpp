@@ -159,7 +159,7 @@ void GrpPut16(int x, int y, const char *s) {
       ty = y;
       if (tx >= 0 && tx < 630) { // 安全対策???
         GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, maybe_src.value());
-}
+      }
     }
   }
 }
@@ -211,7 +211,7 @@ void GrpPut57(int x, int y, const char *s) {
     ty = y;
     if (tx >= 0 && tx < 630) { // 安全対策???
       GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, src);
-}
+    }
   }
 }
 
@@ -255,7 +255,7 @@ void GrpPutScore(int x, int y, const char *s) {
     ty = y;
     if (tx >= 0 && tx < 630) { // 安全対策???
       GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, src);
-}
+    }
   }
 }
 
@@ -295,13 +295,13 @@ void GrpPutMidNum(int x, int y, int n) {
 PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
                        std::span<const Narrow::string_view> strs, FONT_ID font,
                        bool shadow, uint8_t (*gradient_func)(PIXEL_COORD y)) {
-  PIXEL_SIZE extent = {.w=0, .h=0};
+  PIXEL_SIZE extent = {.w = 0, .h = 0};
 
   // ここら辺は、一種の常套手段か？ //
   const auto temp = s.PixelAccess([](TEXTRENDER_SESSION::PIXELACCESS &p) {
-    const PIXEL_POINT coord = {.x=0, .y=0};
+    const PIXEL_POINT coord = {.x = 0, .y = 0};
     const auto old = p.GetRaw(coord);
-    p.Set(coord, RGB{.r=255, .g=255, .b=255});
+    p.Set(coord, RGB{.r = 255, .g = 255, .b = 255});
     const auto temp = p.GetRaw(coord);
     p.SetRaw(coord, old);
     return temp;
@@ -310,12 +310,14 @@ PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
   s.SetFont(font);
   for (const auto &str : strs) {
     if (shadow) {
-      s.Put({.x=(extent.w + 2), .y=2}, str, RGB{.r=0, .g=0, .b=128});
-      s.Put({.x=(extent.w + 1), .y=2}, str, RGB{.r=0, .g=0, .b=128});
-      s.Put({.x=(extent.w + 1), .y=1}, str, RGB{.r=255, .g=255, .b=255});
-      s.Put({.x=(extent.w + 0), .y=1}, str, RGB{.r=255, .g=255, .b=255});
+      s.Put({.x = (extent.w + 2), .y = 2}, str, RGB{.r = 0, .g = 0, .b = 128});
+      s.Put({.x = (extent.w + 1), .y = 2}, str, RGB{.r = 0, .g = 0, .b = 128});
+      s.Put({.x = (extent.w + 1), .y = 1}, str,
+            RGB{.r = 255, .g = 255, .b = 255});
+      s.Put({.x = (extent.w + 0), .y = 1}, str,
+            RGB{.r = 255, .g = 255, .b = 255});
     } else {
-      s.Put({.x=extent.w, .y=0}, str, RGB{.r=255, .g=255, .b=255});
+      s.Put({.x = extent.w, .y = 0}, str, RGB{.r = 255, .g = 255, .b = 255});
     }
     extent += s.Extent(str);
   }
@@ -323,10 +325,10 @@ PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
   s.PixelAccess([&](TEXTRENDER_SESSION::PIXELACCESS &p) {
     for (PIXEL_COORD y = shadow; y < extent.h; y++) {
       const uint8_t gradient = gradient_func(y);
-      const RGB color = {.r=gradient, .g=gradient, .b=255};
+      const RGB color = {.r = gradient, .g = gradient, .b = 255};
       for (PIXEL_COORD x = shadow; x < extent.w; x++) {
-        if (p.GetRaw({.x=x, .y=y}) == temp) { // RGB(255, 255, 255)
-          p.Set({.x=x, .y=y}, color);
+        if (p.GetRaw({.x = x, .y = y}) == temp) { // RGB(255, 255, 255)
+          p.Set({.x = x, .y = y}, color);
         }
       }
     }

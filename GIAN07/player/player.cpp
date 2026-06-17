@@ -39,7 +39,7 @@ void Player::DrawWideBomb() const {
 
   if (weapon != 0 || bomb_time == 0) {
     return;
-}
+  }
 
   x = BX_MIN;
   y = BY_MIN;
@@ -223,7 +223,7 @@ void Player::Draw() {
 
   if (muteki == VIVDEAD_VAL) {
     draw_flag = 0;
-}
+  }
 
   if (muteki == 0 || (draw_flag != 0U)) {
     src = PIXEL_LTWH{(384 + (GrpID * 32)), 128, (16 * 2), (16 * 3)};
@@ -241,7 +241,7 @@ void Player::Draw() {
 
   if ((bomb_time != 0U) && weapon == 2) {
     DrawLaserBomb();
-}
+  }
 }
 
 void Player::DrawStatus() const {
@@ -272,7 +272,7 @@ void Player::DrawStatus() const {
   sprintf(buf, "       Bomb %1d", bomb);
   GrpPut16(280, 0, buf);
 
-  for (i = 0; std::cmp_less(i , left); i++) {
+  for (i = 0; std::cmp_less(i, left); i++) {
     constexpr PIXEL_LTWH life_src = {608, 432, 16, 16};
     GrpSurface_Blit({(280 + (i * 14)), 0}, SURFACE_ID::SYSTEM, life_src);
   }
@@ -291,7 +291,7 @@ void Player::Update() {
       evade_c -= 2;
     } else {
       evade_c -= 1;
-}
+    }
 
     if (evade_c == 0) {
       sprintf(buf, "%3d Evade  %7dPts", evade, evadesc);
@@ -305,7 +305,7 @@ void Player::Update() {
   // 無敵時間を減らす(ボム中は減らさない) //
   if ((muteki != 0U) && bomb_time == 0) {
     muteki--;
-}
+  }
 
   // 得点変化処理 //
   if (dscore >= 100000) {
@@ -320,7 +320,7 @@ void Player::Update() {
     score += 20, dscore -= 20;
   } else if (dscore >= 10) {
     score += 10, dscore -= 10;
-}
+  }
 
   // 押しっぱなし減速を有効にするのか //
   if ((ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) != 0) {
@@ -329,7 +329,7 @@ void Player::Update() {
         ShiftCounter++;
       } else {
         Key_Data = Key_Data | KEY_SHIFT;
-}
+      }
     } else {
       ShiftCounter = 0;
     }
@@ -340,16 +340,16 @@ void Player::Update() {
     v = ((Key_Data & KEY_SHIFT) != 0) ? (VivSpeed / 3) : VivSpeed;
     if ((Key_Data & KEY_UP) != 0) {
       vy -= v;
-}
+    }
     if ((Key_Data & KEY_DOWN) != 0) {
       vy += v;
-}
+    }
     if ((Key_Data & KEY_LEFT) != 0) {
       vx -= v;
-}
+    }
     if ((Key_Data & KEY_RIGHT) != 0) {
       vx += v;
-}
+    }
 
     if ((vx != 0) && (vy != 0)) {
       x += (vx / 6);
@@ -363,13 +363,13 @@ void Player::Update() {
       y = SY_MIN;
     } else if (y > SY_MAX) {
       y = SY_MAX;
-}
+    }
 
     if (x < SX_MIN) {
       x = SX_MIN;
     } else if (x > SX_MAX) {
       x = SX_MAX;
-}
+    }
   } else {
     vx = 0;
     vy = -(64 + 32);
@@ -382,7 +382,7 @@ void Player::Update() {
     GrpID = 0;
   } else {
     GrpID = 1;
-}
+  }
 
   opx = x;
   opy = y;
@@ -390,29 +390,29 @@ void Player::Update() {
   // オプションの処理 //
   if (vx < 0) {
     vx += 64;
-}
+  }
   if (vx > 0) {
     vx -= 64;
-}
+  }
   if (vy < 0) {
     vy += 64;
-}
+  }
   if (vy > 0) {
     vy -= 64;
-}
+  }
 
   if (vx < 0 && vx < 6 * 64) {
     vx += 2 * 64;
-}
+  }
   if (vx > 0 && vx > -6 * 64) {
     vx -= 2 * 64;
-}
+  }
   if (vy < 0 && vy < 10 * 64) {
     vy += 2 * 64;
-}
+  }
   if (vy > 0 && vy > -10 * 64) {
     vy -= 2 * 64;
-}
+  }
 
   opx = x + vx;
   opy = y + vy + (64 * 6);
@@ -492,7 +492,7 @@ void Player::OnDeath() {
     Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
     for (i = 0; i < 50; i++) {
       Effects.SpawnFragment(x, y, FRG_HEART);
-}
+    }
     Snd_SEPlay(SOUND_ID_DEAD);
     muteki = 30;
     return;
@@ -500,8 +500,9 @@ void Player::OnDeath() {
 
   // 自動ボム：练习模式为自动Bomb以上时，Bomb キーが押されておらず、かつ Bomb
   // 残量がある場合、 死亡の代わりに自動で Bomb を発動する
-  if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB && ((Key_Data & KEY_BOMB) == 0) &&
-      (bomb_time == 0) && (bomb > 0) && (!Scroller.scene.MsgFlag)) {
+  if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB &&
+      ((Key_Data & KEY_BOMB) == 0) && (bomb_time == 0) && (bomb > 0) &&
+      (!Scroller.scene.MsgFlag)) {
     static constexpr uint8_t bomb_time_tbl[4] = {60 * 4, 60 * 3, 60 * 2, 0};
     bomb_time = bomb_time_tbl[weapon & 3];
     muteki = BOMBMUTEKI_VAL;
@@ -517,7 +518,7 @@ void Player::OnDeath() {
 
   for (i = 0; i < 50; i++) {
     Effects.SpawnFragment(x, y, FRG_HEART);
-}
+  }
 
   Snd_SEPlay(SOUND_ID_DEAD);
 
@@ -567,7 +568,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
     Effects.SpawnFragment(ex, ey, FRG_EVADE);
   }
 
-  for (i = 0; std::cmp_less(i , n); i++) {
+  for (i = 0; std::cmp_less(i, n); i++) {
     if (evade == 999) {
       evade_c = 1;
       return;
@@ -579,7 +580,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
 
   if (evade != 0U) {
     evade_c = EVADETIME_MAX;
-}
+  }
 }
 
 void Player::AddScore(int sc) { dscore += sc; }
@@ -591,42 +592,42 @@ void Player::PowerUp(uint8_t damage) {
   case 0:
     if (exp2 > 5 - 3) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 1:
     if (exp2 > 25 - 15) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 2:
     if (exp2 > 50 - 20) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 3:
     if (exp2 > 80) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 4:
     if (exp2 > 120) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 5:
     if (exp2 > 140) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 6:
     if (exp2 > 160) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 7:
     if (exp2 > 180) {
       exp++, exp2 = 0;
-}
+    }
     return;
   case 8:
     return; // フルパワーアップ時

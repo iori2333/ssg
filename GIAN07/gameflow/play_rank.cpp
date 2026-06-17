@@ -34,13 +34,13 @@ void RankManager::Add(int n) {
       state.Rank = 0;
     } else if (state.Rank > 24 * 256) {
       state.Rank = 24 * 256;
-}
+    }
 
     if (state.Rank < 20 * 256) {
       state.GameLevel = GAME_EASY;
     } else {
       state.GameLevel = GAME_NORMAL;
-}
+    }
     break;
 
   case GAME_NORMAL:
@@ -48,7 +48,7 @@ void RankManager::Add(int n) {
       state.Rank = 16 * 256;
     } else if (state.Rank > 40 * 256) {
       state.Rank = 40 * 256;
-}
+    }
 
     if (state.Rank < 20 * 256) {
       state.GameLevel = GAME_EASY;
@@ -56,7 +56,7 @@ void RankManager::Add(int n) {
       state.GameLevel = GAME_NORMAL;
     } else {
       state.GameLevel = GAME_HARD;
-}
+    }
     break;
 
   case GAME_HARD:
@@ -64,7 +64,7 @@ void RankManager::Add(int n) {
       state.Rank = 32 * 256;
     } else if (state.Rank > 48 * 256) {
       state.Rank = 48 * 256;
-}
+    }
 
     if (state.Rank < 36 * 256) {
       state.GameLevel = GAME_NORMAL;
@@ -72,7 +72,7 @@ void RankManager::Add(int n) {
       state.GameLevel = GAME_HARD;
     } else {
       state.GameLevel = GAME_LUNATIC;
-}
+    }
     break;
 
   case GAME_LUNATIC:
@@ -80,13 +80,13 @@ void RankManager::Add(int n) {
       state.Rank = 40 * 256;
     } else if (state.Rank > 64 * 256) {
       state.Rank = 64 * 256;
-}
+    }
 
     if (state.Rank < 44 * 256) {
       state.GameLevel = GAME_HARD;
     } else {
       state.GameLevel = GAME_LUNATIC;
-}
+    }
     break;
 
     // case(GAME_EXTRA):

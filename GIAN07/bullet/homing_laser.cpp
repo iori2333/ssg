@@ -5,7 +5,6 @@
 
 #include "homing_laser.h"
 
-#include <utility>
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "geometry.h"
@@ -13,6 +12,7 @@
 #include "laser_manager.h"
 #include "platform/graphics_backend.h"
 #include "player.h"
+#include <utility>
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
@@ -54,7 +54,7 @@ void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
   HomingLaserData *p = nullptr;
 
   // 1-n としているのは、角度設定のためね... //
-  for (i = 1; std::cmp_less_equal(i , (hinfo->n)); i++) {
+  for (i = 1; std::cmp_less_equal(i, (hinfo->n)); i++) {
     p = free_list.Next;
     if (p == nullptr) {
       return; // データを確保できない
@@ -81,7 +81,7 @@ void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
     } else {
       deg = hinfo->d - ((hinfo->dw) >> 1) +
             ((i >> 1) * (hinfo->dw) * (1 - ((i & 1) << 1)));
-}
+    }
 
     // しっぽ情報を初期化する //
     for (j = 0; j < HLASER_LEN * HLASER_SECTION; j++) {
@@ -122,7 +122,7 @@ void LaserManager::MoveHoming() {
         deg2 += 256;
       } else if (deg2 > 128) {
         deg2 -= 256;
-}
+      }
 
       if (abs(deg2) < 8) {
         hl->Type = HL_NONE;
@@ -130,19 +130,19 @@ void LaserManager::MoveHoming() {
       } else {
         if (hl->v > 2 * 64) {
           hl->v -= hl->a;
-}
+        }
         i = 1 + ((hl->Count) / 32);
         i = (deg2 * i) / 32;
         if (i != 0) {
           deg = deg + i;
         } else {
           deg = deg + deg2;
-}
+        }
       }
 
       if (hl->Count > 120) {
         hl->Type = HL_NONE;
-}
+      }
 
       hl->p[hl->Current].d = deg;
       hl->p[hl->Current].x = x + cosl(deg, hl->v);
@@ -166,15 +166,15 @@ void LaserManager::MoveHoming() {
     y = hl->p[i].y;
 
     // 範囲外チェック //
-    if (x < GX_MIN - (4 * 64) || x > GX_MAX + (4 * 64) || y < GY_MIN - (4 * 64) ||
-        y > GY_MAX + (4 * 64)) {
+    if (x < GX_MIN - (4 * 64) || x > GX_MAX + (4 * 64) ||
+        y < GY_MIN - (4 * 64) || y > GY_MAX + (4 * 64)) {
       hl->State = HLS_DEAD;
       continue;
     }
 
     if (Players.viv.muteki != 0U) {
       continue;
-}
+    }
 
     auto ev_flag = false;
     for (j = 0; j < HLASER_LEN * HLASER_SECTION; j++) {
@@ -196,7 +196,7 @@ void LaserManager::MoveHoming() {
     }
     if (ev_flag) {
       evade_add(1);
-}
+    }
   }
 
   // 不要なデータを削除する //
@@ -217,7 +217,7 @@ void LaserManager::MoveHoming() {
 }
 
 void CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
-                uint8_t d) {
+               uint8_t d) {
   VERTEX_XY src[9 + 1];
   int i = 0;
   int j = 0;
@@ -299,7 +299,7 @@ void LaserManager::DrawHoming() const {
 
       if (w > 64 * 2) {
         w -= 64;
-}
+      }
     }
   }
 
@@ -347,7 +347,7 @@ void LaserManager::DrawHoming() const {
         w -= 64;
       } else {
         break;
-}
+      }
     }
   }
 

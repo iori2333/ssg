@@ -5,7 +5,6 @@
 
 #include "player_shot.h"
 
-#include <utility>
 #include "game/cast.h"
 #include "game/input.h"
 #include "game/snd.h"
@@ -13,6 +12,7 @@
 #include "gian.h"
 #include "platform/graphics_backend.h"
 #include "player_manager.h"
+#include <utility>
 
 ///// [ひみつの関数] /////
 static void MTamaSet();
@@ -152,7 +152,7 @@ void PlayerManager::SetMaidShot() {
       viv.lay_grp = 3;
     } else {
       viv.lay_grp = 4;
-}
+    }
     // viv.lay_grp = (viv.lay_time+63)>>6;
   }
 }
@@ -166,14 +166,14 @@ void PlayerManager::MoveMaidShot() {
 
   int i = 0;
 
-  for (i = 0; std::cmp_less(i , maid_tama_now); i++) {
+  for (i = 0; std::cmp_less(i, maid_tama_now); i++) {
     auto *t = &maid_tama[maid_tama_ind[i]];
     if (t->c == TID_HOMING_BOMB_B) {
       Enemies.DamageAt(t->x, t->y, TogeDamage[t->c]);
       t->count++;
       if (t->count >= 19) {
         t->flag = TF_DELETE;
-}
+      }
       continue;
     }
     if (t->effect == TE_NONE) {
@@ -183,7 +183,7 @@ void PlayerManager::MoveMaidShot() {
       if (((t->flag & TF_CLIP) == 0) && ((t->x) < GX_MIN || (t->x) > GX_MAX ||
                                          (t->y) < GY_MIN || (t->y) > GY_MAX)) {
         t->flag = TF_DELETE;
-}
+      }
 
       if (Enemies.DamageAt(t->x, t->y, TogeDamage[t->c])) {
         if (t->c == TID_HOMING_BOMB_A) {
@@ -198,10 +198,11 @@ void PlayerManager::MoveMaidShot() {
         t->flag = TF_DELETE;
         Effects.SpawnFragment(t->x, t->y, FRG_HIT);
       }
-    } else { {
-      BulletManager::MoveByEffect(t);
-}
-}
+    } else {
+      {
+        BulletManager::MoveByEffect(t);
+      }
+    }
   }
   Indsort(maid_tama_ind, maid_tama_now, maid_tama,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
@@ -210,8 +211,10 @@ void PlayerManager::MoveMaidShot() {
   if (viv.weapon == 2 && (viv.lay_grp != 0U)) {
     // x = (viv.opx>>6)+4 -8 + SBOPT_DX;
     // y = (viv.opy>>6)-20;
-    Enemies.DamageAt2(viv.opx + (SBOPT_DX << 6), viv.opy, (viv.lay_grp / 3) + 1);
-    Enemies.DamageAt2(viv.opx - (SBOPT_DX << 6), viv.opy, (viv.lay_grp / 3) + 1);
+    Enemies.DamageAt2(viv.opx + (SBOPT_DX << 6), viv.opy,
+                      (viv.lay_grp / 3) + 1);
+    Enemies.DamageAt2(viv.opx - (SBOPT_DX << 6), viv.opy,
+                      (viv.lay_grp / 3) + 1);
   }
 }
 
@@ -231,7 +234,7 @@ void PlayerManager::DrawMaidShot() {
                                      {568, 104, 568 + 32, 104 + 32},
                                      {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; std::cmp_less(i , maid_tama_now); i++) {
+  for (i = 0; std::cmp_less(i, maid_tama_now); i++) {
     auto *t = &maid_tama[maid_tama_ind[i]];
 
     x = (t->x >> 6) - 8; // -8 は座標の補正用です
@@ -311,7 +314,7 @@ static void MTamaSet() {
   for (decltype(Bullets.command.n) i = 0; i < Bullets.command.n; i++) {
     if (Players.maid_tama_now + 1 >= MAIDTAMA_MAX) {
       return; // セットできない場合
-}
+    }
 
     auto *t =
         &Players.maid_tama[Players.maid_tama_ind
@@ -350,7 +353,8 @@ inline bool IsSubShot(uint16_t t) {
 }
 
 void PlayerManager::SetMLaser(uint16_t time) {
-  if ((Players.viv.bomb_time != 0U) || Players.viv.muteki > MAID_MOVE_DISABLE_TIME) {
+  if ((Players.viv.bomb_time != 0U) ||
+      Players.viv.muteki > MAID_MOVE_DISABLE_TIME) {
     Players.viv.lay_time = 0;
     Players.viv.lay_grp = 0;
     return;
@@ -873,7 +877,7 @@ static void SetWideBomb() {
 
   if (Players.viv.bomb_time > WIDE_BOMB_TIME - 30) {
     return;
-}
+  }
 
   const auto d = Cast::down<uint8_t>(Players.viv.bomb_time * 3U);
   l = (WIDE_BOMB_TIME - Players.viv.bomb_time) * 26; // 16-32
