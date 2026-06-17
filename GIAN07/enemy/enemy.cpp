@@ -4,6 +4,8 @@
 /*************************************************************************************************/
 
 #include "enemy.h"
+
+#include <utility>
 #include "core/entity.h"
 #include "ecl_len.h"
 #include "enemy_manager.h"
@@ -37,7 +39,7 @@ static void ECL_DEBUG(const char *s, auto param) {
 // EnemyManager に移動
 
 // 関数 //
-static void _EnemyDrawBomb(int x, int y, uint32_t count);
+static void EnemyDrawBomb(int x, int y, uint32_t count);
 
 // (Indsort<EnemyData> wrapper removed — pass predicate directly)
 
@@ -47,8 +49,9 @@ static uint32_t ID2Value(const EnemyData *e, uint8_t id);
 void EnemyManager::UpdateHoming(const EnemyData *e) {
   const int temp = (Players.viv.y - e->y);
 
-  if (temp < 0)
+  if (temp < 0) {
     return;
+}
 
   if (temp < homing_flag) {
     homing_flag = temp;
@@ -81,9 +84,9 @@ void EnemyData::Draw() const {
 
   // 描画モード選択 //
   const auto &src =
-      ((a.mode == ANM_DEG) ? a.ptn[uint8_t(d - 64 + 8) >> 4] : a.ptn[anm_c]);
+      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(d - 64 + 8) >> 4] : a.ptn[anm_c]);
   if (GrpSurface_Blit({topleft.x, topleft.y}, sid, src)) {
-    if ((anm_ptn != anm_ptnEx) && IsDamaged) {
+    if ((anm_ptn != anm_ptnEx) && (IsDamaged != 0U)) {
       const auto &a = Enemies.anime[anm_ptnEx];
       const auto topleft = center.ToPixel(a.size); // 座標セット //
       GrpSurface_Blit({topleft.x, topleft.y}, sid, a.ptn[0]);
@@ -93,22 +96,23 @@ void EnemyData::Draw() const {
 
 void EnemyData::UpdateAnimation() { Enemies.UpdateAnimation(this); }
 
-void EnemyManager::Move(void) {
-  int i; //,chkx,chky;
+void EnemyManager::Move() {
+  int i = 0; //,chkx,chky;
 
-  if (Bosses.count == 0)
+  if (Bosses.count == 0) {
     homing_flag = HOMING_DUMMY;
+}
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; std::cmp_less(i , count); i++) {
     auto *e = &entities[indices[i]];
     e->IsDamaged = 0;
-    if (!(e->flag & EF_BOMB)) {
+    if ((e->flag & EF_BOMB) == 0) {
       // 通常の敵の処理 //
       CheckInterrupts(e);
       Execute(e);
 
       // 弾発射モードによる分岐 //
-      if (e->t_rep && e->hp) {
+      if ((e->t_rep != 0U) && (e->hp != 0U)) {
         e->tama_c = (e->tama_c + 1) % (e->t_rep);
         if (e->tama_c == 0) {
           Bullets.command = e->t_cmd;
@@ -122,26 +126,29 @@ void EnemyManager::Move(void) {
       if (HITCHK(e->x, Players.viv.x, e->g_width) &&
           HITCHK(e->y, Players.viv.y, e->g_height) && Players.viv.muteki == 0) {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
-        if (e->flag & EF_HITSB)
+        if ((e->flag & EF_HITSB) != 0) {
           MaidDead();
+}
       }
 
       // 範囲外チェック //
       if ((e->y < GY_MIN - (e->g_height)) || (e->y > GY_MAX + (e->g_height)) ||
           (e->x < GX_MIN - (e->g_width)) || (e->x > GX_MAX + (e->g_width))) {
         if ((e->flag & EF_CLIP) == 0) {
-          if (e->LLaserRef)
+          if (e->LLaserRef != 0U) {
             Lasers.ForceCloseLong(e);
+}
           e->flag = EF_DELETE;
         }
       }
-    } else if (e->count >= 8 * ENEMY_BOMB_SPD - 1) {
+    } else if (e->count >= (8 * ENEMY_BOMB_SPD) - 1) {
       e->flag = EF_DELETE;
     }
 
     // ホーミングの準備 //
-    if ((Bosses.count == 0) && (e->flag & EF_DAMAGE))
+    if ((Bosses.count == 0) && ((e->flag & EF_DAMAGE) != 0)) {
       UpdateHoming(e);
+}
 
     // アニメーションの動作 //
     UpdateAnimation(e);
@@ -153,42 +160,46 @@ void EnemyManager::Move(void) {
           [](const EnemyData &e) { return (e.flag & EF_DELETE); });
 }
 
-void EnemyManager::Draw(void) {
-  int i, x, y;
+void EnemyManager::Draw() {
+  int i = 0;
+  int x = 0;
+  int y = 0;
   // HRESULT		ddrval;
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; std::cmp_less(i , count); i++) {
     auto *e = &entities[indices[i]];
 
     // 敵を描画する(クリッピング＆幅、高さ処理を追加すること) //
     x = (e->x >> 6);
     y = (e->y >> 6);
     if (e->flag == EF_BOMB) {
-      _EnemyDrawBomb(x, y, e->count);
+      EnemyDrawBomb(x, y, e->count);
       continue;
     }
 
-    if (e->flag & EF_DRAW) {
+    if ((e->flag & EF_DRAW) != 0) {
       e->Draw();
     }
   }
 }
 
 // 雑魚を消滅させる //
-void EnemyManager::Clear(void) {
-  int i;
+void EnemyManager::Clear() {
+  int i = 0;
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; std::cmp_less(i , count); i++) {
     auto *e = &entities[indices[i]];
-    if (e->flag == EF_BOMB)
+    if (e->flag == EF_BOMB) {
       continue;
+}
 
-    if (e->flag & EF_DRAW) {
+    if ((e->flag & EF_DRAW) != 0) {
       e->flag = EF_BOMB;
       e->hp = 0;
       e->count = 0;
-      if (e->LLaserRef)
+      if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
+}
       Snd_SEPlay(SOUND_ID_BOMB, e->x);
     } else {
       // 描画しないタイプの敵の消去の仕方は他の場合と異なり、 //
@@ -196,8 +207,9 @@ void EnemyManager::Clear(void) {
       e->flag = EF_DELETE;
       e->hp = 0;
       e->count = 0;
-      if (e->LLaserRef)
+      if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
+}
                                   // 爆発音の再生は行わない //
     }
   }
@@ -206,10 +218,10 @@ void EnemyManager::Clear(void) {
           [](const EnemyData &e) { return (e.flag & EF_DELETE); });
 }
 
-void EnemyManager::InitIndices(void) {
-  int i;
+void EnemyManager::InitIndices() {
+  int i = 0;
 
-  for (i = 0; i < ENEMY_MAX; i++) {
+  for (i = 0; std::cmp_less(i , ENEMY_MAX); i++) {
     // memset(Enemy+i,0,sizeof(Enemy));
     indices[i] = i;
   }
@@ -219,9 +231,9 @@ void EnemyManager::InitIndices(void) {
 
 bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (e.hp <= damage) {
+  if (std::cmp_less_equal(e.hp , damage)) {
     Snd_SEPlay(SOUND_ID_BOMB, e.x);
-    if (e.LLaserRef) {
+    if (e.LLaserRef != 0U) {
       Lasers.ForceCloseLong(&e); // レーザーの強制クローズ
     }
     PowerUp(static_cast<uint8_t>(e.hp)); // パワーアップ
@@ -229,7 +241,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
     e.count = 0;
     e.flag = EF_BOMB;
     score_add(e.score);
-    if (e.item) {
+    if (e.item != 0U) {
       Items.Spawn(e.x, e.y, e.item);
     }
   } else {
@@ -241,21 +253,21 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
 }
 
 bool EnemyManager::DamageAt(int x, int y, int damage) {
-  int i;
+  int i = 0;
 
   if (Bosses.DamageAt(x, y, damage)) {
     return true;
   }
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; std::cmp_less(i , count); i++) {
     auto *e = &entities[indices[i]];
     if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
-        (e->flag & EF_DAMAGE)) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+        ((e->flag & EF_DAMAGE) != 0)) {
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
         continue;
-      else {
+      } } 
         return ApplyDamage(*e, damage);
-      }
+     
     }
   }
 
@@ -263,17 +275,17 @@ bool EnemyManager::DamageAt(int x, int y, int damage) {
 }
 
 bool EnemyManager::DamageAt2(int x, int y, int damage) {
-  int i;
+  int i = 0;
   auto ret_val = Bosses.DamageAt2(x, y, damage);
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; std::cmp_less(i , count); i++) {
     auto *e = &entities[indices[i]];
-    if (HITCHK(x, e->x, e->g_width) && (y > e->y) && (e->flag & EF_DAMAGE)) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+    if (HITCHK(x, e->x, e->g_width) && (y > e->y) && ((e->flag & EF_DAMAGE) != 0)) {
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
         continue;
-      else {
+      } } 
         ret_val = ApplyDamage(*e, damage);
-      }
+     
     }
   }
 
@@ -282,39 +294,39 @@ bool EnemyManager::DamageAt2(int x, int y, int damage) {
 
 // ナナメレーザーの当たり判定 //
 void EnemyManager::DamageAt3(int x, int y, uint8_t d) {
-  int i;
+  int i = 0;
   // bool	ret_val = false;
   constexpr int damage = 8;
 
   Bosses.DamageAt3(x, y, d);
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; std::cmp_less(i , count); i++) {
     auto *e = &entities[indices[i]];
-    if (EnemyManager::LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+    if (EnemyManager::LaserHITCHK(e, x, y, d) && ((e->flag & EF_DAMAGE) != 0)) {
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
         continue;
-      else {
+      } } 
         ApplyDamage(*e, damage);
-      }
+     
     }
   }
 }
 
 // すべての敵にダメージを与える /
 void EnemyManager::DamageAll(int damage) {
-  int i;
+  int i = 0;
 
   Bosses.DamageAll(damage);
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; std::cmp_less(i , count); i++) {
     auto *e = &entities[indices[i]];
-    if (e->flag & EF_DAMAGE) {
-      if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+    if ((e->flag & EF_DAMAGE) != 0) {
+      if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
         continue;
-      else {
+      } } 
         ApplyDamage(*e, damage);
         // return true;
-      }
+     
     }
   }
 
@@ -418,18 +430,20 @@ void EnemyManager::UpdateAnimation(EnemyData *e) {
   const auto *a = &anime[e->anm_ptn];
 
   switch (a->mode) {
-  case (ANM_NORM):
-    if (e->anm_sp > 0 && (e->count % e->anm_sp == 0))
+  case ANM_NORM:
+    if (e->anm_sp > 0 && (e->count % e->anm_sp == 0)) {
       e->anm_c = (e->anm_c + 1) % (a->n);
-    else if (e->anm_sp < 0 && (e->count % (-e->anm_sp) == 0))
+    } else if (e->anm_sp < 0 && (e->count % (-e->anm_sp) == 0)) {
       e->anm_c = (e->anm_c + a->n - 1) % (a->n);
+}
     break;
 
   // 逆方向は不可としておきましょうか... //
-  case (ANM_STOP):
+  case ANM_STOP:
     if (e->anm_sp > 0 && (e->count % e->anm_sp == 0)) {
-      if (e->anm_c < (a->n - 1))
+      if (e->anm_c < (a->n - 1)) {
         e->anm_c++;
+}
     }
     break;
 
@@ -438,7 +452,7 @@ void EnemyManager::UpdateAnimation(EnemyData *e) {
   }
 }
 
-static void _EnemyDrawBomb(int x, int y, uint32_t count) {
+static void EnemyDrawBomb(int x, int y, uint32_t count) {
   PIXEL_LTRB src;
 
   src.top = 296;
@@ -462,15 +476,15 @@ void EnemyManager::Execute(EnemyData *e) {
     return (e->flag & EF_RLCHG) ? static_cast<int8_t>(-d) : d;
   };
 
-  bool bRetFlag; // 実行クロック０命令の場合はfalseにすること
-  int RegCmp;
-  HomingLaserInfo HInfo;
+  bool bRetFlag = false; // 実行クロック０命令の場合はfalseにすること
+  int RegCmp = 0;
+  HomingLaserInfo HInfo{};
 
   const PIXEL_LTRB rcDegX2 = {
-      GX_MIN + 150 * 64, GY_MIN + (GY_MID - GY_MIN - 40 * 64) / 3,
-      GX_MAX - 150 * 64, GY_MID - (GY_MID - GY_MIN - 40 * 64) / 3 - 40 * 64};
-  uint16_t BaseAngle;
-  uint16_t DeltaAngle;
+      GX_MIN + (150 * 64), GY_MIN + ((GY_MID - GY_MIN - (40 * 64)) / 3),
+      GX_MAX - (150 * 64), GY_MID - ((GY_MID - GY_MIN - (40 * 64)) / 3) - (40 * 64)};
+  uint16_t BaseAngle = 0;
+  uint16_t DeltaAngle = 0;
 
 // こんなところにＧＯＴＯ用ラベルが！！ //
 ECL_HEAD:
@@ -478,48 +492,48 @@ ECL_HEAD:
   auto *cmd = (ecl_head.get() + e->cmd);
 
   switch (*cmd) {
-  case (ECL_CEFC): {
+  case ECL_CEFC: {
     const auto x = (e->x + PixelToWorld(I16LEAt(&cmd[1 + 0])));
     const auto y = (e->y + PixelToWorld(I16LEAt(&cmd[1 + 2])));
     Effects.SpawnCircleEffect(x, y, cmd[1 + 2 + 2]);
     bRetFlag = false;
   } break;
 
-  case (ECL_XYRND):
+  case ECL_XYRND:
     if (e->x > GX_MID) {
-      e->x = X_MID * 64 - (rnd() % (X_MAX - X_MIN - 100)) * 32;
+      e->x = (X_MID * 64) - ((rnd() % (X_MAX - X_MIN - 100)) * 32);
     } else {
-      e->x = X_MID * 64 + (rnd() % (X_MAX - X_MIN - 100)) * 32;
+      e->x = (X_MID * 64) + ((rnd() % (X_MAX - X_MIN - 100)) * 32);
     }
 
-    e->y = (rnd() % (Y_MID - Y_MIN - 160)) * 64 + (Y_MIN + 40) * 64;
+    e->y = ((rnd() % (Y_MID - Y_MIN - 160)) * 64) + ((Y_MIN + 40) * 64);
     bRetFlag = false;
     break;
 
-  case (ECL_XYL): // 1+2 Bytes Param
+  case ECL_XYL: // 1+2 Bytes Param
     e->x += cosl(e->d, PixelToWorld(I16LEAt(&cmd[1])));
     e->y += sinl(e->d, PixelToWorld(I16LEAt(&cmd[1])));
     bRetFlag = false;
     break;
 
-  case (ECL_STG4EFC):
+  case ECL_STG4EFC:
     switch (cmd[1]) {
-    case (STG4ROCK_STDMOVE):
+    case STG4ROCK_STDMOVE:
       Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
-    case (STG4ROCK_ACCMOVE1):
+    case STG4ROCK_ACCMOVE1:
       Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
-    case (STG4ROCK_ACCMOVE2):
+    case STG4ROCK_ACCMOVE2:
       Effects.SendCmdStg4Rocks(cmd[1], e->d);
       break;
-    case (STG4ROCK_3DMOVE):
+    case STG4ROCK_3DMOVE:
       Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
-    case (STG4ROCK_LEAVE):
+    case STG4ROCK_LEAVE:
       Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
-    case (STG4ROCK_END):
+    case STG4ROCK_END:
       Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
     }
@@ -527,21 +541,21 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_STG3EFC):
+  case ECL_STG3EFC:
     Scroller.Command(SCMD_STG3STAR);
     break;
 
-  case (ECL_ITEM):
+  case ECL_ITEM:
     e->item = cmd[1];
     break;
 
-  case (ECL_HITXY): // 当たり判定を変更する
+  case ECL_HITXY: // 当たり判定を変更する
     e->g_width = PixelToWorld(U16LEAt(&cmd[1]));
     e->g_height = PixelToWorld(U16LEAt(&cmd[3]));
     bRetFlag = false;
     break;
 
-  case (ECL_HLASER): // ホーミングレーザーセット
+  case ECL_HLASER: // ホーミングレーザーセット
     HInfo.c = e->l_cmd.c;
     HInfo.d = e->l_cmd.d;
     HInfo.dw = e->l_cmd.dw;
@@ -552,7 +566,7 @@ ECL_HEAD:
     Lasers.SpawnHoming(&HInfo);
     break;
 
-  case (ECL_LLSET): // 太レーザーセット
+  case ECL_LLSET: // 太レーザーセット
     Lasers.long_cmd.c = e->l_cmd.c;
     Lasers.long_cmd.d = e->l_cmd.d;
     Lasers.long_cmd.dx = e->l_cmd.x;
@@ -564,58 +578,62 @@ ECL_HEAD:
     Lasers.long_cmd.w = e->l_cmd.w;
 
     // 失敗した場合は、参照カウントを増やさない //
-    if (Lasers.SpawnLongLaser(e->LLaserRef))
+    if (Lasers.SpawnLongLaser(e->LLaserRef)) {
       e->LLaserRef++;
+}
     bRetFlag = false;
     break;
 
-  case (ECL_LLOPEN): // 太レーザーオープン cmd,id
+  case ECL_LLOPEN: // 太レーザーオープン cmd,id
     Lasers.OpenLong(e, cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LLCLOSE): // 太レーザークローズ(消去＆参照カウント減少) cmd,id
+  case ECL_LLCLOSE: // 太レーザークローズ(消去＆参照カウント減少) cmd,id
     Lasers.CloseLong(e, cmd[1]);
-    if (cmd[1] == ECLCST_LLASERALL)
+    if (cmd[1] == ECLCST_LLASERALL) {
       e->LLaserRef = 0;
-    else
+    } else {
       e->LLaserRef -= 1; // ちょっとバグ有りなので注意
+}
     bRetFlag = false;
     break;
 
-  case (ECL_LLCLOSEL): // 太レーザーライン状態へ cmd,id
+  case ECL_LLCLOSEL: // 太レーザーライン状態へ cmd,id
     Lasers.LineLong(e, cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LLDEGR): // 太レーザー角度相対変更 cmd,id,deg
+  case ECL_LLDEGR: // 太レーザー角度相対変更 cmd,id,deg
     // 順番が逆だから注意ね
     Lasers.RotateLongRel(e, Cast::sign<int8_t>(cmd[2]), cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_SETUP): // 敵の初期化
+  case ECL_SETUP: // 敵の初期化
     ECL_DEBUG("ECL_SETUP", 0);
     e->hp = U32LEAt(&cmd[1 + 0]);
     e->score = U32LEAt(&cmd[1 + 4]);
-    if (e->hp == 0)
+    if (e->hp == 0) {
       Bosses.KillAll();
+}
     bRetFlag = false;
     break;
 
-  case (ECL_END): // 敵の強制消滅
+  case ECL_END: // 敵の強制消滅
     ECL_DEBUG("ECL_END", 0);
-    if (e->LLaserRef)
+    if (e->LLaserRef != 0U) {
       Lasers.ForceCloseLong(e); // レーザーの強制クローズ
+}
     e->flag = EF_DELETE;        // 後で変更するように
     return;                     // バグ防止(かも)
 
-  case (ECL_JMP): // ◎ＥＣＬ無条件ジャンプ(少々特殊な動作をします)
+  case ECL_JMP: // ◎ＥＣＬ無条件ジャンプ(少々特殊な動作をします)
     ECL_DEBUG("ECL_JMP", 0);
     e->cmd = U32LEAt(&cmd[1]);
     goto ECL_HEAD;
 
-  case (ECL_LOOP): // ◎一定区間を繰り返す
+  case ECL_LOOP: // ◎一定区間を繰り返す
     ECL_DEBUG("ECL_LOOP : %d", e->rep_c);
     if (e->rep_c == 0) {
       e->rep_c = (U16LEAt(&cmd[1 + 4]) + 1);
@@ -627,18 +645,18 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_CALL): // ＠サブルーチンを呼ぶ
+  case ECL_CALL: // ＠サブルーチンを呼ぶ
     ECL_DEBUG("ECL_CALL", 0);
     e->call_addr = e->cmd + ECL_CmdLen[ECL_CALL];
     e->cmd = U32LEAt(&cmd[1]);
     goto ECL_HEAD;
 
-  case (ECL_RET): // ＠サブルーチンから復帰する
+  case ECL_RET: // ＠サブルーチンから復帰する
     ECL_DEBUG("ECL_RET", 0);
     e->cmd = e->call_addr;
     goto ECL_HEAD;
 
-  case (ECL_JHPL): { // ◎ＨＰが指定値より大きければジャンプ
+  case ECL_JHPL: { // ◎ＨＰが指定値より大きければジャンプ
     const auto target = U32LEAt(&cmd[1]);
     ECL_DEBUG("ECL_JHPL : %u", target);
     if (e->hp > U32LEAt(&cmd[1 + 4])) {
@@ -648,7 +666,7 @@ ECL_HEAD:
     bRetFlag = false;
   } break;
 
-  case (ECL_JHPS): { // ◎ＨＰが指定値より小さければジャンプ
+  case ECL_JHPS: { // ◎ＨＰが指定値より小さければジャンプ
     const auto target = U32LEAt(&cmd[1]);
     ECL_DEBUG("ECL_JHPS : %u", target);
     if (e->hp < U32LEAt(&cmd[1 + 4])) {
@@ -658,26 +676,26 @@ ECL_HEAD:
     bRetFlag = false;
   } break;
 
-  case (ECL_JDIF): // 難易度によるジャンプ
+  case ECL_JDIF: // 難易度によるジャンプ
     ECL_DEBUG("ECL_JDIF", 0);
     switch (Ranking.state.GameLevel) {
-    case (GAME_EASY):
+    case GAME_EASY:
       e->cmd = U32LEAt(&cmd[1 + 0]);
       break;
     default:
-    case (GAME_NORMAL):
+    case GAME_NORMAL:
       e->cmd = U32LEAt(&cmd[1 + 4]);
       break;
-    case (GAME_HARD):
+    case GAME_HARD:
       e->cmd = U32LEAt(&cmd[1 + 8]);
       break;
-    case (GAME_LUNATIC):
+    case GAME_LUNATIC:
       e->cmd = U32LEAt(&cmd[1 + 12]);
       break;
     }
     goto ECL_HEAD;
 
-  case (ECL_JDSB): { // 自機と進行角が一致したらジャンプ
+  case ECL_JDSB: { // 自機と進行角が一致したらジャンプ
     ECL_DEBUG("ECL_JDSB", 0);
     const uint8_t temp =
         abs(atan8((Players.viv.x - e->x), (Players.viv.y - e->y)) - (e->d));
@@ -688,7 +706,7 @@ ECL_HEAD:
     bRetFlag = false;
   } break;
 
-  case (ECL_JFCL): // フレームカウンタが大きければジャンプ
+  case ECL_JFCL: // フレームカウンタが大きければジャンプ
     ECL_DEBUG("ECL_JFCL", 0);
     if (e->count > U32LEAt(&cmd[1 + 4])) {
       e->cmd = U32LEAt(&cmd[1]);
@@ -697,7 +715,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_JFCS): // フレームカウンタが小さければジャンプ
+  case ECL_JFCS: // フレームカウンタが小さければジャンプ
     ECL_DEBUG("ECL_JFCS", 0);
     if (e->count < U32LEAt(&cmd[1 + 4])) {
       e->cmd = U32LEAt(&cmd[1]);
@@ -706,24 +724,24 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_STI): // 割り込みベクタをセットする Addr(4),条件(1),比較値(4)
+  case ECL_STI: // 割り込みベクタをセットする Addr(4),条件(1),比較値(4)
     switch (cmd[1 + 4]) {
-    case (ECLVECT_BITLEFT):
+    case ECLVECT_BITLEFT:
       e->Vect[ECLVECT_BITLEFT].vect = U32LEAt(&cmd[1]);
       e->Vect[ECLVECT_BITLEFT].value = U32LEAt(&cmd[1 + 4 + 1]);
       break;
 
-    case (ECLVECT_BOSSLEFT):
+    case ECLVECT_BOSSLEFT:
       e->Vect[ECLVECT_BOSSLEFT].vect = U32LEAt(&cmd[1]);
       e->Vect[ECLVECT_BOSSLEFT].value = U32LEAt(&cmd[1 + 4 + 1]);
       break;
 
-    case (ECLVECT_HP):
+    case ECLVECT_HP:
       e->Vect[ECLVECT_HP].vect = U32LEAt(&cmd[1]);
       e->Vect[ECLVECT_HP].value = U32LEAt(&cmd[1 + 4 + 1]);
       break;
 
-    case (ECLVECT_TIMER):
+    case ECLVECT_TIMER:
       e->Vect[ECLVECT_TIMER].vect = U32LEAt(&cmd[1]);
       e->Vect[ECLVECT_TIMER].value = U32LEAt(&cmd[1 + 4 + 1]);
       e->IntTimer = 0;
@@ -736,38 +754,39 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_CLI): // 割り込みベクタをクリアする
+  case ECL_CLI: // 割り込みベクタをクリアする
     switch (cmd[1]) {
-    case (ECLVECT_BITLEFT):
+    case ECLVECT_BITLEFT:
       e->Vect[ECLVECT_BITLEFT].vect = 0;
       break;
 
-    case (ECLVECT_BOSSLEFT):
+    case ECLVECT_BOSSLEFT:
       e->Vect[ECLVECT_BOSSLEFT].vect = 0;
       break;
 
-    case (ECLVECT_HP):
+    case ECLVECT_HP:
       e->Vect[ECLVECT_HP].vect = 0;
       break;
 
-    case (ECLVECT_TIMER):
+    case ECLVECT_TIMER:
       e->Vect[ECLVECT_TIMER].vect = 0;
       break;
     }
     bRetFlag = false;
     break;
 
-  case (ECL_NOP): // ＠何もしない
+  case ECL_NOP: // ＠何もしない
     ECL_DEBUG("ECL_NOP : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
     }
-    if ((--e->cmd_c) != 0)
+    if ((--e->cmd_c) != 0) {
       return;
+}
     bRetFlag = false;
     break;
 
-  case (ECL_NOPSC): // スクロールに流される
+  case ECL_NOPSC: // スクロールに流される
     ECL_DEBUG("ECL_NOPSC : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
@@ -779,12 +798,12 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_T2ITEM): // 弾の何％かをアイテム化する
+  case ECL_T2ITEM: // 弾の何％かをアイテム化する
     Bullets.ToItems(cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_ACC): // 加速移動
+  case ECL_ACC: // 加速移動
     ECL_DEBUG("ECL_ACC : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       // 初期化 //
@@ -803,11 +822,11 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_ACCXYA): // ＸＹ指定加速移動
+  case ECL_ACCXYA: // ＸＹ指定加速移動
                      // ちょっと、待ってね //
     break;
 
-  case (ECL_DEGX2): // 制限付き角度ランダム
+  case ECL_DEGX2: // 制限付き角度ランダム
     if (e->y < rcDegX2.top) {
       if (e->x < rcDegX2.left) {
         // 左上 //
@@ -820,7 +839,7 @@ ECL_HEAD:
       } else {
         // 上端 //
         // BaseAngle  = 24+(rnd()>>1)%(64-16)-16;//0;
-        BaseAngle = 32 + ((rnd() >> 1) & 1) * 64 - 16;
+        BaseAngle = 32 + (((rnd() >> 1) & 1) * 64) - 16;
         DeltaAngle = 32; // 128;
       }
     } else if (e->y > rcDegX2.bottom) {
@@ -848,18 +867,18 @@ ECL_HEAD:
         DeltaAngle = 32;      // 128;
       } else {
         // 真ん中 //
-        BaseAngle = ((rnd() >> 1) & 1) ? (-16) : (128 - 16);
+        BaseAngle = (((rnd() >> 1) & 1) != 0) ? (-16) : (128 - 16);
         DeltaAngle = 32;
       }
     }
 
     // 実際に角度を確定する //
-    e->d = BaseAngle + (rnd() >> 1) % DeltaAngle;
+    e->d = BaseAngle + ((rnd() >> 1) % DeltaAngle);
 
     bRetFlag = false;
     break;
 
-  case (ECL_MOV): // ＠直線移動
+  case ECL_MOV: // ＠直線移動
     ECL_DEBUG("ECL_MOV : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
@@ -874,7 +893,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_ROL): // ＠回転移動
+  case ECL_ROL: // ＠回転移動
     ECL_DEBUG("ECL_ROL : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 1]) + 1);
@@ -889,13 +908,13 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_LROL): // ＠回転＆直線移動
+  case ECL_LROL: // ＠回転＆直線移動
     ECL_DEBUG("ECL_LROL : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 9]) + 1);
       e->vx = AbsVxRL(I32LEAt(&cmd[1]));
       e->vy = I32LEAt(&cmd[1 + 4]);
-      e->vd = RelDegRL((char)cmd[1 + 8]);
+      e->vd = RelDegRL(static_cast<char>(cmd[1 + 8]));
     }
     if ((--e->cmd_c) != 0) {
       e->x += (cosl(e->d, e->v) + e->vx);
@@ -906,7 +925,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_WAVX): // ＠波Ｘ移動
+  case ECL_WAVX: // ＠波Ｘ移動
     ECL_DEBUG("ECL_WAVX : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 6]) + 1);
@@ -925,7 +944,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_WAVY): // ＠波Ｙ移動
+  case ECL_WAVY: // ＠波Ｙ移動
     ECL_DEBUG("ECL_WAVY : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 6]) + 1);
@@ -944,7 +963,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_MXA): // Ｘ絶対移動
+  case ECL_MXA: // Ｘ絶対移動
     ECL_DEBUG("ECL_MXA : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 2]) + 1);
@@ -958,7 +977,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_MYA): // Ｙ絶対移動
+  case ECL_MYA: // Ｙ絶対移動
     ECL_DEBUG("ECL_MYA : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 2])) + 1;
@@ -972,7 +991,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_MXYA): // ＸＹ絶対移動
+  case ECL_MXYA: // ＸＹ絶対移動
     ECL_DEBUG("ECL_MXYA : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1 + 4]) + 1);
@@ -987,7 +1006,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_MXS): // Ｘサボテンセット移動
+  case ECL_MXS: // Ｘサボテンセット移動
     ECL_DEBUG("ECL_MXS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
@@ -1001,7 +1020,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_MYS): // Ｙサボテンセット移動
+  case ECL_MYS: // Ｙサボテンセット移動
     ECL_DEBUG("ECL_MYS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
@@ -1015,7 +1034,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_MXYS): // ＸＹサボテンセット移動
+  case ECL_MXYS: // ＸＹサボテンセット移動
     ECL_DEBUG("ECL_MXYS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
@@ -1030,7 +1049,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_GRAX): // 重力付きＸ反射移動(Y_MIN 含むけど...)
+  case ECL_GRAX: // 重力付きＸ反射移動(Y_MIN 含むけど...)
     // 注意：この命令から脱出する方法は割り込み以外に存在しない //
     if (e->cmd_c == 0) {
       e->cmd_c = 9999; // 非ゼロ値であれば、どのような値でも良い
@@ -1061,79 +1080,79 @@ ECL_HEAD:
     }
     return;
 
-  case (ECL_DEGA): // ＠角度絶対指定
+  case ECL_DEGA: // ＠角度絶対指定
     ECL_DEBUG("ECL_DEGA : %u", cmd[1]);
     e->d = AbsDegRL(cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_DEGR): // ＠角度相対指定
+  case ECL_DEGR: // ＠角度相対指定
     ECL_DEBUG("ECL_DEGR : %d", Cast::sign<int8_t>(cmd[1]));
     e->d += RelDegRL(Cast::sign<int8_t>(cmd[1]));
     bRetFlag = false;
     break;
 
-  case (ECL_DEGX): // ＠角度ランダムセット
+  case ECL_DEGX: // ＠角度ランダムセット
     ECL_DEBUG("ECL_DEGX", 0);
     e->d = rnd() & 0xff;
     bRetFlag = false;
     break;
 
-  case (ECL_DEGXU): // ＠角度ランダムセット(上)
+  case ECL_DEGXU: // ＠角度ランダムセット(上)
     e->d = 128 + (rnd() & 0x7f);
     bRetFlag = false;
     break;
 
-  case (ECL_DEGXD): // ＠角度ランダムセット(下)
+  case ECL_DEGXD: // ＠角度ランダムセット(下)
     e->d = rnd() & 0x7f;
     bRetFlag = false;
     break;
 
-  case (ECL_DEGEX):
+  case ECL_DEGEX:
     e->d = enemy_exdeg;
     enemy_exdeg += enemy_exdeg_d;
     bRetFlag = false;
     break;
 
-  case (ECL_DEGS): // ＠角度自機セット
+  case ECL_DEGS: // ＠角度自機セット
     ECL_DEBUG("ECL_DEGS", 0);
     e->d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
     bRetFlag = false;
     break;
 
-  case (ECL_SPDA): // ＠速度絶対指定
+  case ECL_SPDA: // ＠速度絶対指定
     ECL_DEBUG("ECL_SPDA", 0);
     e->v = I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_SPDR): // ＠速度相対指定
+  case ECL_SPDR: // ＠速度相対指定
     ECL_DEBUG("ECL_SPDR", 0);
     e->v += I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_XYA): // ＠座標絶対指定
+  case ECL_XYA: // ＠座標絶対指定
     ECL_DEBUG("ECL_XYA", 0);
     e->x = PixelToWorld(I16LEAt(&cmd[1 + 0]));
     e->y = PixelToWorld(I16LEAt(&cmd[1 + 2]));
     bRetFlag = false;
     break;
 
-  case (ECL_XYR): // ＠座標相対指定
+  case ECL_XYR: // ＠座標相対指定
     ECL_DEBUG("ECL_XYR", 0);
     e->x += PixelToWorld(I16LEAt(&cmd[1 + 0]));
     e->y += PixelToWorld(I16LEAt(&cmd[1 + 2]));
     bRetFlag = false;
     break;
 
-  case (ECL_XYS):
+  case ECL_XYS:
     e->x = Players.viv.x;
     e->y = Players.viv.y;
     bRetFlag = false;
     break;
 
-  case (ECL_TAMA): // ＠弾発射
+  case ECL_TAMA: // ＠弾発射
     Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
@@ -1141,7 +1160,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_TAMA2): // ＠弾発射(難易度変化なし)
+  case ECL_TAMA2: // ＠弾発射(難易度変化なし)
     Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
@@ -1149,7 +1168,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_TAMAL): // ライン状に弾を発射する
+  case ECL_TAMAL: // ライン状に弾を発射する
     Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
@@ -1157,7 +1176,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_TAMAEX):
+  case ECL_TAMAEX:
     Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
@@ -1165,64 +1184,64 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_TAUTO): // 弾発射モード変更
+  case ECL_TAUTO: // 弾発射モード変更
     e->t_rep = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_TXYR): // ＠弾発射位置相対指定
+  case ECL_TXYR: // ＠弾発射位置相対指定
     e->t_cmd.x = PixelToWorld(I16LEAt(&cmd[1 + 0]));
     e->t_cmd.y = PixelToWorld(I16LEAt(&cmd[1 + 2]));
     bRetFlag = false;
     break;
 
-  case (ECL_TCMD): // ＠弾コマンド
+  case ECL_TCMD: // ＠弾コマンド
     e->t_cmd.cmd = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_TDEGA): // ＠弾発射角絶対指定
+  case ECL_TDEGA: // ＠弾発射角絶対指定
     e->t_cmd.d = cmd[1];
     e->t_cmd.dw = cmd[1 + 1];
     bRetFlag = false;
     break;
 
-  case (ECL_TDEGR): // ＠弾発射角相対指定
+  case ECL_TDEGR: // ＠弾発射角相対指定
     e->t_cmd.d += Cast::sign<int8_t>(cmd[1]);
     e->t_cmd.dw += Cast::sign<int8_t>(cmd[1 + 1]);
     bRetFlag = false;
     break;
 
-  case (ECL_TDEGS): // ＠弾発射角サボテンセット
+  case ECL_TDEGS: // ＠弾発射角サボテンセット
     // 正確には、TamaCmd の x,y も使うべきだが...
     e->t_cmd.d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
     bRetFlag = false;
     break;
 
-  case (ECL_TDEGE): // ＠弾発射角の同期をとる
+  case ECL_TDEGE: // ＠弾発射角の同期をとる
     e->t_cmd.d = e->d;
     bRetFlag = false;
     break;
 
-  case (ECL_TNUMA): // ＠弾発射数絶対指定
+  case ECL_TNUMA: // ＠弾発射数絶対指定
     e->t_cmd.n = cmd[1];
     e->t_cmd.ns = cmd[1 + 1];
     bRetFlag = false;
     break;
 
-  case (ECL_TNUMR): // ＠弾発射数相対指定
+  case ECL_TNUMR: // ＠弾発射数相対指定
     e->t_cmd.n += Cast::sign<int8_t>(cmd[1]);
     e->t_cmd.ns += Cast::sign<int8_t>(cmd[1 + 1]);
     bRetFlag = false;
     break;
 
-  case (ECL_TSPDA): // ＠弾速度絶対指定
+  case ECL_TSPDA: // ＠弾速度絶対指定
     e->t_cmd.v = cmd[1];
     e->t_cmd.a = Cast::sign<int8_t>(cmd[1 + 1]);
     bRetFlag = false;
     break;
 
-  case (ECL_TSPDR): { // ＠弾速度相対指定
+  case ECL_TSPDR: { // ＠弾速度相対指定
     const auto temp = e->t_cmd.v;
 
     // フラグを外して演算
@@ -1233,32 +1252,32 @@ ECL_HEAD:
     bRetFlag = false;
   } break;
 
-  case (ECL_TOPT): // ＠弾オプション
+  case ECL_TOPT: // ＠弾オプション
     e->t_cmd.option = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_TTYPE): // ＠弾タイプ
+  case ECL_TTYPE: // ＠弾タイプ
     e->t_cmd.type = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_TCOL): // ＠弾の色もしくは形状
+  case ECL_TCOL: // ＠弾の色もしくは形状
     e->t_cmd.c = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_TVDEG): // ＠弾の角速度
+  case ECL_TVDEG: // ＠弾の角速度
     e->t_cmd.vd = Cast::sign<int8_t>(cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_TREP): // ＠弾の REP 指定
+  case ECL_TREP: // ＠弾の REP 指定
     e->t_cmd.rep = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_TCLR):     // 敵弾を全消去(レーザー含む)
+  case ECL_TCLR:     // 敵弾を全消去(レーザー含む)
     Bosses.ClearCmd(); // この処理を何よりも優先させる(ビット消去等を含む)
     Bullets.Clear();
     Lasers.Clear();
@@ -1267,7 +1286,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_LASER): // レーザー発射
+  case ECL_LASER: // レーザー発射
     Lasers.cmd = e->l_cmd;
     Lasers.cmd.x += e->x;
     Lasers.cmd.y += e->y;
@@ -1275,7 +1294,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_LASER2): // レーザー発射
+  case ECL_LASER2: // レーザー発射
     Lasers.cmd = e->l_cmd;
     Lasers.cmd.x += e->x;
     Lasers.cmd.y += e->y;
@@ -1283,154 +1302,155 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_LCMD): // レーザーコマンドセット
+  case ECL_LCMD: // レーザーコマンドセット
     e->l_cmd.cmd = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_LLA): // レーザー長・絶対指定
+  case ECL_LLA: // レーザー長・絶対指定
     e->l_cmd.l = I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LLR): // レーザー長・相対指定
+  case ECL_LLR: // レーザー長・相対指定
     e->l_cmd.l += I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LL2): // レーザー発射位置
+  case ECL_LL2: // レーザー発射位置
     e->l_cmd.l2 = I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LDEGA): // レーザー発射角＆幅絶対指定
+  case ECL_LDEGA: // レーザー発射角＆幅絶対指定
     e->l_cmd.d = cmd[1];
     e->l_cmd.dw = cmd[2];
     bRetFlag = false;
     break;
 
-  case (ECL_LDEGR): // レーザー発射角＆幅相対指定
+  case ECL_LDEGR: // レーザー発射角＆幅相対指定
     e->l_cmd.d += Cast::sign<int8_t>(cmd[1]);
     e->l_cmd.dw += Cast::sign<int8_t>(cmd[2]);
     bRetFlag = false;
     break;
 
-  case (ECL_LDEGS): // レーザー発射角サボテンセット
+  case ECL_LDEGS: // レーザー発射角サボテンセット
     // 正確には、LaserCmd の x,y も使うべきだが...
     e->l_cmd.d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
     bRetFlag = false;
     break;
 
-  case (ECL_LDEGE): // レーザー発射角を自分の向きにセット
+  case ECL_LDEGE: // レーザー発射角を自分の向きにセット
     e->l_cmd.d = e->d;
     bRetFlag = false;
     break;
 
-  case (ECL_LNUMA): // レーザーの本数絶対指定
+  case ECL_LNUMA: // レーザーの本数絶対指定
     e->l_cmd.n = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_LNUMR): // レーザーの本数相対指定
+  case ECL_LNUMR: // レーザーの本数相対指定
     e->l_cmd.n += Cast::sign<int8_t>(cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LSPDA): // レーザーの速度絶対指定
+  case ECL_LSPDA: // レーザーの速度絶対指定
     e->l_cmd.v = I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LSPDR): // レーザーの速度相対指定
+  case ECL_LSPDR: // レーザーの速度相対指定
     e->l_cmd.v = I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LCOL): // レーザーの色
+  case ECL_LCOL: // レーザーの色
     e->l_cmd.c = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_LTYPE): // レーザーの種類
+  case ECL_LTYPE: // レーザーの種類
     e->l_cmd.type = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_LWA): // レーザーの太さ絶対指定
+  case ECL_LWA: // レーザーの太さ絶対指定
     e->l_cmd.w = I32LEAt(&cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_LXY): // レーザーの発射位置指定
+  case ECL_LXY: // レーザーの発射位置指定
     e->l_cmd.x = PixelToWorld(I16LEAt(&cmd[1 + 0]));
     e->l_cmd.y = PixelToWorld(I16LEAt(&cmd[1 + 2]));
     bRetFlag = false;
     break;
 
-  case (ECL_DRAW_ON): // ＠描画する
+  case ECL_DRAW_ON: // ＠描画する
     ECL_DEBUG("ECL_DRAW_ON", 0);
     bRetFlag = false;
     e->flag |= EF_DRAW;
     break;
 
-  case (ECL_DRAW_OFF): // ＠描画しない
+  case ECL_DRAW_OFF: // ＠描画しない
     ECL_DEBUG("ECL_DRAW_OFF", 0);
     bRetFlag = false;
     e->flag &= (~EF_DRAW);
     break;
 
-  case (ECL_CLIP_ON): // ＠画面外消去しない
+  case ECL_CLIP_ON: // ＠画面外消去しない
     ECL_DEBUG("ECL_CLIP_ON", 0);
     bRetFlag = false;
     e->flag |= EF_CLIP;
     break;
 
-  case (ECL_CLIP_OFF): // ＠画面外消去する
+  case ECL_CLIP_OFF: // ＠画面外消去する
     ECL_DEBUG("ECL_CLIP_OFF", 0);
     bRetFlag = false;
     e->flag &= (~EF_CLIP);
     break;
 
-  case (ECL_DAMAGE_ON): // ＠ダメージ有り
+  case ECL_DAMAGE_ON: // ＠ダメージ有り
     ECL_DEBUG("ECL_DAMAGE_ON", 0);
     bRetFlag = false;
     e->flag |= EF_DAMAGE;
     break;
 
-  case (ECL_DAMAGE_OFF): // ＠ダメージ無し
+  case ECL_DAMAGE_OFF: // ＠ダメージ無し
     ECL_DEBUG("ECL_DAMAGE_OFF", 0);
     bRetFlag = false;
     e->flag &= (~EF_DAMAGE);
     break;
 
-  case (ECL_HITSB_ON): // ＠自機との当たり判定有り
+  case ECL_HITSB_ON: // ＠自機との当たり判定有り
     ECL_DEBUG("ECL_HITSB_ON", 0);
     bRetFlag = false;
     e->flag |= EF_HITSB;
     break;
 
-  case (ECL_HITSB_OFF): // ＠自機との当たり判定無し
+  case ECL_HITSB_OFF: // ＠自機との当たり判定無し
     ECL_DEBUG("ECL_HITSB_OFF", 0);
     bRetFlag = false;
     e->flag &= (~EF_HITSB);
     break;
 
-  case (ECL_RLCHG_ON): // ＠左右反転有り(左側にいればセット)
+  case ECL_RLCHG_ON: // ＠左右反転有り(左側にいればセット)
     ECL_DEBUG("ECL_RLCHG_ON", 0);
     bRetFlag = false;
-    if (e->x < GX_MID)
+    if (e->x < GX_MID) {
       e->flag |= EF_RLCHG;
-    else
+    } else {
       e->flag &= (~EF_RLCHG);
+}
     break;
 
-  case (ECL_RLCHG_OFF): // ＠左右反転無し
+  case ECL_RLCHG_OFF: // ＠左右反転無し
     ECL_DEBUG("ECL_RLCHG_OFF", 0);
     bRetFlag = false;
     e->flag &= (~EF_RLCHG);
     break;
 
-  case (ECL_ANM): // アニメーションセット
+  case ECL_ANM: // アニメーションセット
     // anm_ptnEx をセットするのは互換性を保つための配慮 //
     e->anm_ptn = e->anm_ptnEx = cmd[1];
     e->anm_sp = Cast::sign<int8_t>(cmd[2]);
@@ -1443,52 +1463,54 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_ANMEX):
+  case ECL_ANMEX:
     // 他のパラメータはいっさい変更しない //
     e->anm_ptnEx = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_PSE): // 効果音を鳴らす
+  case ECL_PSE: // 効果音を鳴らす
     ECL_DEBUG("ECL_PSE", 0);
     Snd_SEPlay(cmd[1], e->x);
     bRetFlag = false;
     break;
 
-  case (ECL_INT): // ボス用割り込み発生
+  case ECL_INT: // ボス用割り込み発生
     Bosses.Interrupt(e, cmd[1]);
     bRetFlag = false;
     break; // cmd を動かさない
 
-  case (ECL_BITATTACK): // (ボス特権命令)ビットに攻撃パターンをセットする
+  case ECL_BITATTACK: // (ボス特権命令)ビットに攻撃パターンをセットする
     Bosses.BitAttack(e, U32LEAt(&cmd[1]));
     bRetFlag = false;
     break;
 
-  case (ECL_BITLASER): // (ボス特権命令)ビットにレーザー系コマンドをセットする
+  case ECL_BITLASER: // (ボス特権命令)ビットにレーザー系コマンドをセットする
     Bosses.BitLaser(e, cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_BITCMD):
+  case ECL_BITCMD:
     Bosses.BitCommand(e, cmd[1], I32LEAt(&cmd[2]));
     bRetFlag = false;
     break;
 
-  case (ECL_EXDEGD): // 特殊角度増分変更
+  case ECL_EXDEGD: // 特殊角度増分変更
     enemy_exdeg_d = cmd[1];
     bRetFlag = false;
     break;
 
-  case (ECL_ENEMYSET):  // 敵を雑魚指定で発生させる
-  case (ECL_ENEMYSETD): // ＋角度指定(レジスタ)
+  case ECL_ENEMYSET:  // 敵を雑魚指定で発生させる
+  case ECL_ENEMYSETD: // ＋角度指定(レジスタ)
   {
-    short x, y;
+    short x = 0;
+    short y = 0;
 
     bRetFlag = false;
 
-    if (count + 1 >= ENEMY_MAX)
+    if (count + 1 >= ENEMY_MAX) {
       break;
+}
     auto *new_enemy = &entities[indices[count++]];
 
     x = ((e->x >> 6) + I16LEAt(&cmd[1])); // PixelToWorld(I16LEAt(&p[0]));
@@ -1505,84 +1527,84 @@ ECL_HEAD:
     }
   } break;
 
-  case (ECL_BOSSSET): // ボスを発生させる
+  case ECL_BOSSSET: // ボスを発生させる
     Bosses.SetEx((e->x) >> 6, (e->y) >> 6, cmd[1]);
     bRetFlag = false;
     break;
 
-  case (ECL_MOVR): { // レジスタ<->構造体変数の代入
+  case ECL_MOVR: { // レジスタ<->構造体変数の代入
     const auto dwTemp = ID2Value(e, cmd[2]);
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       e->GR[cmd[1]] = dwTemp;
       break;
 
-    case (ECLCST_LCMD_D):
+    case ECLCST_LCMD_D:
       e->l_cmd.d = dwTemp;
       break; // レーザーコマンド(角度)
-    case (ECLCST_LCMD_DW):
+    case ECLCST_LCMD_DW:
       e->l_cmd.dw = dwTemp;
       break; // レーザーコマンド(角度差)
-    case (ECLCST_LCMD_N):
+    case ECLCST_LCMD_N:
       e->l_cmd.n = dwTemp;
       break; // レーザーコマンド(本数)
-    case (ECLCST_LCMD_C):
+    case ECLCST_LCMD_C:
       e->l_cmd.c = dwTemp;
       break; // レーザーコマンド(色)
-    case (ECLCST_LCMD_L):
+    case ECLCST_LCMD_L:
       e->l_cmd.l = dwTemp;
       break; // レーザーコマンド(長さ)
-    case (ECLCST_LCMD_V):
+    case ECLCST_LCMD_V:
       e->l_cmd.v = dwTemp;
       break; // レーザーコマンド(速度)
 
-    case (ECLCST_TCMD_D):
+    case ECLCST_TCMD_D:
       e->t_cmd.d = dwTemp;
       break; // 弾コマンド(角度)
-    case (ECLCST_TCMD_DW):
+    case ECLCST_TCMD_DW:
       e->t_cmd.dw = dwTemp;
       break; // 弾コマンド(角度差)
-    case (ECLCST_TCMD_N):
+    case ECLCST_TCMD_N:
       e->t_cmd.n = dwTemp;
       break; // 弾コマンド(個数)
-    case (ECLCST_TCMD_NS):
+    case ECLCST_TCMD_NS:
       e->t_cmd.ns = dwTemp;
       break; // 弾コマンド(連射数)
-    case (ECLCST_TCMD_V):
+    case ECLCST_TCMD_V:
       e->t_cmd.v = dwTemp;
       break; // 弾コマンド(速度)
-    case (ECLCST_TCMD_C):
+    case ECLCST_TCMD_C:
       e->t_cmd.c = dwTemp;
       break; // 弾コマンド(色)
-    case (ECLCST_TCMD_A):
+    case ECLCST_TCMD_A:
       e->t_cmd.a = dwTemp;
       break; // 弾コマンド(加速度)
 
-    case (ECLCST_TCMD_REP):
+    case ECLCST_TCMD_REP:
       // char buf[100];
       // sprintf(buf,"REP=%d [REG:%d]",dwTemp,cmd[2]);
       //  DebugOut(buf);
       e->t_cmd.rep = dwTemp;
       break; // 弾コマンド(繰り返し)
 
-    case (ECLCST_TCMD_VD):
+    case ECLCST_TCMD_VD:
       e->t_cmd.vd = dwTemp;
       break; // 弾コマンド(角速度)
 
-    case (ECLCST_ENEMY_X):
+    case ECLCST_ENEMY_X:
       e->x = dwTemp;
       break; // 敵のＸ座標
-    case (ECLCST_ENEMY_Y):
+    case ECLCST_ENEMY_Y:
       e->y = dwTemp;
       break; // 敵のＸ座標
-    case (ECLCST_ENEMY_D):
+    case ECLCST_ENEMY_D:
       e->d = dwTemp;
       break; // 敵の角度
 
@@ -1593,16 +1615,16 @@ ECL_HEAD:
     bRetFlag = false;
   } break;
 
-  case (ECL_MOVC): // レジスタ<- 定数(即値)の代入
+  case ECL_MOVC: // レジスタ<- 定数(即値)の代入
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       e->GR[cmd[1]] = U32LEAt(&cmd[2]);
       break;
 
@@ -1613,16 +1635,16 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_INC): // レジスタ＋１
+  case ECL_INC: // レジスタ＋１
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       e->GR[cmd[1]]++;
       break;
 
@@ -1633,16 +1655,16 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_DEC): // レジスタ－１
+  case ECL_DEC: // レジスタ－１
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       e->GR[cmd[1]]--;
       break;
 
@@ -1653,16 +1675,16 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_ADD): // 加算命令(第２引数はレジスタでなくてもよい)
+  case ECL_ADD: // 加算命令(第２引数はレジスタでなくてもよい)
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       e->GR[cmd[1]] += ID2Value(e, cmd[2]);
       break;
 
@@ -1673,16 +1695,16 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_SUB): // 減算命令(第２引数はレジスタでなくてもよい)
+  case ECL_SUB: // 減算命令(第２引数はレジスタでなくてもよい)
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       e->GR[cmd[1]] -= ID2Value(e, cmd[2]);
       break;
 
@@ -1693,7 +1715,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_SINL): // sinl(Gr0,Gr1)
+  case ECL_SINL: // sinl(Gr0,Gr1)
     if (cmd[1] < ECLREG_MAX && cmd[2] < ECLREG_MAX) {
       e->GR[cmd[1]] = sinl(Cast::down<uint8_t>(e->GR[cmd[2]]), e->GR[cmd[1]]);
     } // else {
@@ -1702,7 +1724,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_COSL): // cosl(Gr0,Gr1)
+  case ECL_COSL: // cosl(Gr0,Gr1)
     if (cmd[1] < ECLREG_MAX && cmd[2] < ECLREG_MAX) {
       e->GR[cmd[1]] = cosl(Cast::down<uint8_t>(e->GR[cmd[2]]), e->GR[cmd[1]]);
     } // else {
@@ -1711,16 +1733,16 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_MOD): // Gr0 = Gr0 % Const
+  case ECL_MOD: // Gr0 = Gr0 % Const
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       if (U32LEAt(&cmd[2]) != 0) {
         e->GR[cmd[1]] %= U32LEAt(&cmd[2]);
       }
@@ -1735,16 +1757,16 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_RND): // Gr0 = rnd()
+  case ECL_RND: // Gr0 = rnd()
     switch (cmd[1]) {
-    case (ECLCST_GR0):
-    case (ECLCST_GR1):
-    case (ECLCST_GR2):
-    case (ECLCST_GR3):
-    case (ECLCST_GR4):
-    case (ECLCST_GR5):
-    case (ECLCST_GR6):
-    case (ECLCST_GR7):
+    case ECLCST_GR0:
+    case ECLCST_GR1:
+    case ECLCST_GR2:
+    case ECLCST_GR3:
+    case ECLCST_GR4:
+    case ECLCST_GR5:
+    case ECLCST_GR6:
+    case ECLCST_GR7:
       e->GR[cmd[1]] = (Cast::up<uint32_t>(rnd()) * rnd());
       break;
 
@@ -1755,42 +1777,50 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_CMPR): // レジスタ～レジスタの比較(Reg0,Reg1)
-    if (cmd[1] >= ECLREG_MAX || cmd[2] >= ECLREG_MAX)
+  case ECL_CMPR: // レジスタ～レジスタの比較(Reg0,Reg1)
+    if (cmd[1] >= ECLREG_MAX || cmd[2] >= ECLREG_MAX) {
       return; // エラー
+}
     RegCmp = (ID2Value(e, cmd[1]) - ID2Value(e, cmd[2]));
     bRetFlag = false;
     break;
 
-  case (ECL_CMPC): // レジスタ～定数の比較(Reg,Const)
-    if (cmd[1] >= ECLREG_MAX)
+  case ECL_CMPC: // レジスタ～定数の比較(Reg,Const)
+    if (cmd[1] >= ECLREG_MAX) {
       return; // エラー
+}
     RegCmp = (ID2Value(e, cmd[1]) - I32LEAt(&cmd[1 + 1]));
     bRetFlag = false;
     break;
 
-  case (ECL_JL): // 比較結果 > 0 ならばジャンプ
+  case ECL_JL: // 比較結果 > 0 ならばジャンプ
     if (RegCmp > 0) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
-    } else
+    } else { {
       bRetFlag = false;
+}
+}
     break;
 
-  case (ECL_JS): // 比較結果 < 0 ならばジャンプ
+  case ECL_JS: // 比較結果 < 0 ならばジャンプ
     if (RegCmp < 0) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
-    } else
+    } else { {
       bRetFlag = false;
+}
+}
     break;
 
-  case (ECL_JEQ): // 比較結果 == 0 ならばジャンプ
+  case ECL_JEQ: // 比較結果 == 0 ならばジャンプ
     if (RegCmp == 0) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
-    } else
+    } else { {
       bRetFlag = false;
+}
+}
     break;
 
   default: // 未定義の命令が発生！！
@@ -1801,21 +1831,22 @@ ECL_HEAD:
   // 次の命令への準備(実行させたくないときは上の switch 内で return する) //
   e->cmd += ECL_CmdLen[*cmd];
 
-  if (bRetFlag)
+  if (bRetFlag) {
     return;
-  else
+  } 
     goto ECL_HEAD;
 }
 
 // 割り込みジャンプを調べる //
 void EnemyManager::CheckInterrupts(EnemyData *e) {
-  int i;
+  int i = 0;
 
   for (i = 0; i < ECLVECT_MAX; i++) {
-    if (e->Vect[i].vect == 0)
+    if (e->Vect[i].vect == 0) {
       continue; // 割り込みがかかっていない
+}
     switch (i) {
-    case (ECLVECT_BITLEFT): // ビット残り割り込み
+    case ECLVECT_BITLEFT: // ビット残り割り込み
       if (Bosses.GetBitLeft() <= e->Vect[ECLVECT_BITLEFT].value) {
         e->cmd = e->Vect[ECLVECT_BITLEFT].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
@@ -1825,8 +1856,8 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
       }
       break;
 
-    case (ECLVECT_BOSSLEFT): // ボス残り割り込み
-      if (Bosses.count <= e->Vect[ECLVECT_BOSSLEFT].value) {
+    case ECLVECT_BOSSLEFT: // ボス残り割り込み
+      if (std::cmp_less_equal(Bosses.count , e->Vect[ECLVECT_BOSSLEFT].value)) {
         e->cmd = e->Vect[ECLVECT_BOSSLEFT].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1835,11 +1866,11 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
       }
       break;
 
-    case (ECLVECT_HP): // HPL 割り込み
+    case ECLVECT_HP: // HPL 割り込み
       // char buf[100];
       // sprintf(buf,"hp = %d",e->hp);
       //  DebugOut(buf);
-      if (e->hp <= e->Vect[ECLVECT_HP].value) {
+      if (std::cmp_less_equal(e->hp , e->Vect[ECLVECT_HP].value)) {
         e->cmd = e->Vect[ECLVECT_HP].vect;
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
@@ -1849,8 +1880,8 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
       }
       break;
 
-    case (ECLVECT_TIMER): // タイマー割り込み
-      if (e->IntTimer > e->Vect[ECLVECT_TIMER].value) {
+    case ECLVECT_TIMER: // タイマー割り込み
+      if (std::cmp_greater(e->IntTimer , e->Vect[ECLVECT_TIMER].value)) {
         e->cmd = e->Vect[ECLVECT_TIMER].vect;
         e->cmd_c = 0;    // コマンド繰り返しカウンタ
         e->rep_c = 0;    // LOOP(旧REP)命令カウンタ
@@ -1884,53 +1915,53 @@ void EnemyManager::InitInterrupts(EnemyData *e) {
 static uint32_t ID2Value(const EnemyData *e, uint8_t id) {
   switch (id) {
   // レジスタ指定の場合 //
-  case (ECLCST_GR0):
-  case (ECLCST_GR1):
-  case (ECLCST_GR2):
-  case (ECLCST_GR3):
-  case (ECLCST_GR4):
-  case (ECLCST_GR5):
-  case (ECLCST_GR6):
-  case (ECLCST_GR7):
+  case ECLCST_GR0:
+  case ECLCST_GR1:
+  case ECLCST_GR2:
+  case ECLCST_GR3:
+  case ECLCST_GR4:
+  case ECLCST_GR5:
+  case ECLCST_GR6:
+  case ECLCST_GR7:
     return e->GR[id];
 
-  case (ECLCST_LCMD_D):
+  case ECLCST_LCMD_D:
     return e->l_cmd.d; // レーザーコマンド(角度)
-  case (ECLCST_LCMD_DW):
+  case ECLCST_LCMD_DW:
     return e->l_cmd.dw; // レーザーコマンド(角度差)
-  case (ECLCST_LCMD_N):
+  case ECLCST_LCMD_N:
     return e->l_cmd.n; // レーザーコマンド(本数)
-  case (ECLCST_LCMD_C):
+  case ECLCST_LCMD_C:
     return e->l_cmd.c; // レーザーコマンド(色)
-  case (ECLCST_LCMD_L):
+  case ECLCST_LCMD_L:
     return e->l_cmd.l; // レーザーコマンド(長さ)
-  case (ECLCST_LCMD_V):
+  case ECLCST_LCMD_V:
     return e->l_cmd.v; // レーザーコマンド(速度)
 
-  case (ECLCST_TCMD_D):
+  case ECLCST_TCMD_D:
     return e->t_cmd.d; // 弾コマンド(角度)
-  case (ECLCST_TCMD_DW):
+  case ECLCST_TCMD_DW:
     return e->t_cmd.dw; // 弾コマンド(角度差)
-  case (ECLCST_TCMD_N):
+  case ECLCST_TCMD_N:
     return e->t_cmd.n; // 弾コマンド(個数)
-  case (ECLCST_TCMD_NS):
+  case ECLCST_TCMD_NS:
     return e->t_cmd.ns; // 弾コマンド(連射数)
-  case (ECLCST_TCMD_V):
+  case ECLCST_TCMD_V:
     return e->t_cmd.v; // 弾コマンド(速度)
-  case (ECLCST_TCMD_C):
+  case ECLCST_TCMD_C:
     return e->t_cmd.c; // 弾コマンド(色)
-  case (ECLCST_TCMD_A):
+  case ECLCST_TCMD_A:
     return e->t_cmd.a; // 弾コマンド(加速度)
-  case (ECLCST_TCMD_REP):
+  case ECLCST_TCMD_REP:
     return e->t_cmd.rep; // 弾コマンド(繰り返し)
-  case (ECLCST_TCMD_VD):
+  case ECLCST_TCMD_VD:
     return e->t_cmd.vd; // 弾コマンド(角速度)
 
-  case (ECLCST_ENEMY_X):
+  case ECLCST_ENEMY_X:
     return e->x; // 敵のＸ座標
-  case (ECLCST_ENEMY_Y):
+  case ECLCST_ENEMY_Y:
     return e->y; // 敵のＹ座標
-  case (ECLCST_ENEMY_D):
+  case ECLCST_ENEMY_D:
     return e->d; // 敵の角度
 
   default:

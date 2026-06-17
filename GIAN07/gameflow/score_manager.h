@@ -42,7 +42,7 @@ private:
   // 内部ヘルパー
   bool LoadScoreData();
   void ReleaseScoreData();
-  std::optional<NR_SCORE_LIST> GetNList(uint8_t Dif);
+  std::optional<NR_SCORE_LIST> GetNList(uint8_t Dif) const;
   bool SetDefaultScoreData();
 
   bool LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd);

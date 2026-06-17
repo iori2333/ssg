@@ -23,7 +23,7 @@ void ApproximateCircle(std::span<VERTEX_XY, CIRCLE_POINTS> ret,
 void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
                           WINDOW_POINT center, PIXEL_COORD r, PIXEL_COORD w) {
   auto v = ret.begin();
-  for (const auto i : std::views::iota(0u, CIRCLE_POINTS)) {
+  for (const auto i : std::views::iota(0U, CIRCLE_POINTS)) {
     const uint8_t angle = (i * CIRCLE_STEP);
     const auto [lx, ly] = std::pair(cosl(angle, r), sinl(angle, r));
     const auto [wx, wy] = std::pair(cosl(angle, w), sinl(angle, w));

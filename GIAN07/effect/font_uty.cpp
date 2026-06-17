@@ -55,14 +55,14 @@ extern constinit const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs = [] {
 
 static constexpr auto FONT_MODERN = L"msgothic.ttc";
 
-void TextBackend_GDIInit(void) {
-  AddFontResourceExW(FONT_MODERN, FR_PRIVATE, 0);
+void TextBackend_GDIInit() {
+  AddFontResourceExW(FONT_MODERN, FR_PRIVATE, nullptr);
 }
 
-void TextBackend_GDICleanup(void) {
-  RemoveFontResourceExW(FONT_MODERN, FR_PRIVATE, 0);
+void TextBackend_GDICleanup() {
+  RemoveFontResourceExW(FONT_MODERN, FR_PRIVATE, nullptr);
 }
-#elif defined(LINUX)
+#elifdef LINUX
 static constexpr auto GOTHIC = "MS Gothic,IPAMonaGothic ";
 
 extern constinit const ENUMARRAY<const char *, FONT_ID> FontSpecs = {
@@ -97,43 +97,43 @@ std::optional<PIXEL_LTRB> Glyph16x16(char c) {
     src.top = (480 - 32);
   } else {
     switch (c) {
-    case ('!'):
+    case '!':
       src.left = ((0 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('?'):
+    case '?':
       src.left = ((1 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('#'):
+    case '#':
       src.left = ((2 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('\\'):
+    case '\\':
       src.left = ((3 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('<'):
+    case '<':
       src.left = ((4 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('>'):
+    case '>':
       src.left = ((5 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('='):
+    case '=':
       src.left = ((6 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case (','):
+    case ',':
       src.left = ((7 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('+'):
+    case '+':
       src.left = ((8 << 4) + 416);
       src.top = (480 - 16);
       break;
-    case ('-'):
+    case '-':
       src.left = ((9 << 4) + 416);
       src.top = (480 - 16);
       break;
@@ -146,7 +146,9 @@ std::optional<PIXEL_LTRB> Glyph16x16(char c) {
 
 // 16x16 透過フォントで文字列出力(高速) //
 void GrpPut16(int x, int y, const char *s) {
-  int sx, tx, ty;
+  int sx = 0;
+  int tx = 0;
+  int ty = 0;
 
   sx = x;
 
@@ -155,15 +157,18 @@ void GrpPut16(int x, int y, const char *s) {
     if (maybe_src) {
       tx = x;
       ty = y;
-      if (tx >= 0 && tx < 630) // 安全対策???
+      if (tx >= 0 && tx < 630) { // 安全対策???
         GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, maybe_src.value());
+}
     }
   }
 }
 
 // 上と同じだが、ｘ移動幅が１６ //
 void GrpPut16c2(int x, int y, const char *s) {
-  int sx, tx, ty;
+  int sx = 0;
+  int tx = 0;
+  int ty = 0;
 
   sx = x;
 
@@ -189,7 +194,9 @@ void GrpPutc(int x, int y, char c) {
 // 05x07 べた貼りフォント //
 void GrpPut57(int x, int y, const char *s) {
   PIXEL_LTRB src;
-  int sx, tx, ty;
+  int sx = 0;
+  int tx = 0;
+  int ty = 0;
 
   sx = x;
 
@@ -202,8 +209,9 @@ void GrpPut57(int x, int y, const char *s) {
 
     tx = x;
     ty = y;
-    if (tx >= 0 && tx < 630) // 安全対策???
+    if (tx >= 0 && tx < 630) { // 安全対策???
       GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, src);
+}
   }
 }
 
@@ -230,7 +238,9 @@ void GrpPut7B(int x, int y, const char *s) {
 // 得点アイテムのスコアを描画 //
 void GrpPutScore(int x, int y, const char *s) {
   PIXEL_LTRB src;
-  int sx, tx, ty;
+  int sx = 0;
+  int tx = 0;
+  int ty = 0;
 
   sx = x;
 
@@ -243,8 +253,9 @@ void GrpPutScore(int x, int y, const char *s) {
 
     tx = x;
     ty = y;
-    if (tx >= 0 && tx < 630) // 安全対策???
+    if (tx >= 0 && tx < 630) { // 安全対策???
       GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, src);
+}
   }
 }
 
@@ -263,7 +274,7 @@ void GrpPut55(WINDOW_POINT topleft, const std::string_view s) {
 // MIDI 用フォントを描画する //
 void GrpPutMidNum(int x, int y, int n) {
   char buf[10];
-  int i;
+  int i = 0;
   PIXEL_LTRB src;
 
   sprintf(buf, "%3d", n);
@@ -284,13 +295,13 @@ void GrpPutMidNum(int x, int y, int n) {
 PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
                        std::span<const Narrow::string_view> strs, FONT_ID font,
                        bool shadow, uint8_t (*gradient_func)(PIXEL_COORD y)) {
-  PIXEL_SIZE extent = {0, 0};
+  PIXEL_SIZE extent = {.w=0, .h=0};
 
   // ここら辺は、一種の常套手段か？ //
   const auto temp = s.PixelAccess([](TEXTRENDER_SESSION::PIXELACCESS &p) {
-    const PIXEL_POINT coord = {0, 0};
+    const PIXEL_POINT coord = {.x=0, .y=0};
     const auto old = p.GetRaw(coord);
-    p.Set(coord, RGB{255, 255, 255});
+    p.Set(coord, RGB{.r=255, .g=255, .b=255});
     const auto temp = p.GetRaw(coord);
     p.SetRaw(coord, old);
     return temp;
@@ -299,12 +310,12 @@ PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
   s.SetFont(font);
   for (const auto &str : strs) {
     if (shadow) {
-      s.Put({(extent.w + 2), 2}, str, RGB{0, 0, 128});
-      s.Put({(extent.w + 1), 2}, str, RGB{0, 0, 128});
-      s.Put({(extent.w + 1), 1}, str, RGB{255, 255, 255});
-      s.Put({(extent.w + 0), 1}, str, RGB{255, 255, 255});
+      s.Put({.x=(extent.w + 2), .y=2}, str, RGB{.r=0, .g=0, .b=128});
+      s.Put({.x=(extent.w + 1), .y=2}, str, RGB{.r=0, .g=0, .b=128});
+      s.Put({.x=(extent.w + 1), .y=1}, str, RGB{.r=255, .g=255, .b=255});
+      s.Put({.x=(extent.w + 0), .y=1}, str, RGB{.r=255, .g=255, .b=255});
     } else {
-      s.Put({extent.w, 0}, str, RGB{255, 255, 255});
+      s.Put({.x=extent.w, .y=0}, str, RGB{.r=255, .g=255, .b=255});
     }
     extent += s.Extent(str);
   }
@@ -312,10 +323,10 @@ PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
   s.PixelAccess([&](TEXTRENDER_SESSION::PIXELACCESS &p) {
     for (PIXEL_COORD y = shadow; y < extent.h; y++) {
       const uint8_t gradient = gradient_func(y);
-      const RGB color = {gradient, gradient, 255};
+      const RGB color = {.r=gradient, .g=gradient, .b=255};
       for (PIXEL_COORD x = shadow; x < extent.w; x++) {
-        if (p.GetRaw({x, y}) == temp) { // RGB(255, 255, 255)
-          p.Set({x, y}, color);
+        if (p.GetRaw({.x=x, .y=y}) == temp) { // RGB(255, 255, 255)
+          p.Set({.x=x, .y=y}, color);
         }
       }
     }

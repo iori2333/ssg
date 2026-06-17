@@ -76,29 +76,29 @@ inline constexpr int SY_WID = (64 * 10);         // サボテンのＹ幅？
 inline constexpr int SX_MIN = (GX_MIN + SX_WID); // サボテンのＸ座標最小値
 inline constexpr int SX_MAX = (GX_MAX - SX_WID); // サボテンのＸ座標最大値
 inline constexpr int SY_MIN =
-    (GY_MIN + SY_WID + 30 * 64);                 // サボテンのＹ座標最小値
+    (GY_MIN + SY_WID + (30 * 64));                 // サボテンのＹ座標最小値
 inline constexpr int SY_MAX = (GY_MAX - SY_WID); // サボテンのＹ座標最大値
 inline constexpr int SX_START = GX_MID;          // サボテンの開始Ｘ座標
 inline constexpr int SY_START =
-    (GY_MAX + 180 * 64 /*- 50*64*/); // サボテンの開始Ｙ座標
+    (GY_MAX + (180 * 64) /*- 50*64*/); // サボテンの開始Ｙ座標
 
 inline constexpr int RL_WIDX = (32 - 4); // 反射レーザー用_Ｘ座標_補正値
 inline constexpr int RL_WIDY = 16;       // 反射レーザー用_Ｙ座標_補正値
 inline constexpr int RLX_MIN =
-    (GX_MIN / 64 + RL_WIDX); // 反射レーザーの反射Ｘ座標最小値
+    ((GX_MIN / 64) + RL_WIDX); // 反射レーザーの反射Ｘ座標最小値
 inline constexpr int RLX_MAX =
-    (GX_MAX / 64 - RL_WIDX); // 反射レーザーの反射Ｘ座標最大値
+    ((GX_MAX / 64) - RL_WIDX); // 反射レーザーの反射Ｘ座標最大値
 inline constexpr int RLY_MIN =
-    (GY_MIN / 64 + RL_WIDY); // 反射レーザーの反射Ｙ座標最小値
+    ((GY_MIN / 64) + RL_WIDY); // 反射レーザーの反射Ｙ座標最小値
 inline constexpr int RLY_MAX =
-    (GX_MAX / 64 - RL_WIDY); // 反射レーザーの反射Ｙ座標最大値
+    ((GX_MAX / 64) - RL_WIDY); // 反射レーザーの反射Ｙ座標最大値
 
 inline constexpr int NREG_SX =
-    (X_MID - 13 * 9); // ネームレジスト用ウィンドウの開始Ｘ
+    (X_MID - (13 * 9)); // ネームレジスト用ウィンドウの開始Ｘ
 inline constexpr int NREG_SY =
     (Y_MID + 100); // ネームレジスト用ウィンドウの開始Ｙ
 inline constexpr int NREGI_X =
-    (X_MID - 8 * 7); // ネームレジスト用ウィンドウ(名前表示部)の開始Ｘ
+    (X_MID - (8 * 7)); // ネームレジスト用ウィンドウ(名前表示部)の開始Ｘ
 inline constexpr int NREGI_Y =
     (Y_MID + 60); // ネームレジスト用ウィンドウ(名前表示部)の開始Ｙ
 
@@ -117,9 +117,9 @@ inline short WAVESP(uint8_t v) {
 } // WAVE?用の速度セット
 
 // Ｘ座標ランダム (requires runtime rnd(), so not constexpr)
-inline int GX_RND() { return (X_MIN + rnd() % (X_MAX - X_MIN)) << 6; }
+inline int GX_RND() { return (X_MIN + (rnd() % (X_MAX - X_MIN))) << 6; }
 // Ｙ座標ランダム
-inline int GY_RND() { return (Y_MIN + rnd() % (Y_MAX - Y_MIN)) << 6; }
+inline int GY_RND() { return (Y_MIN + (rnd() % (Y_MAX - Y_MIN))) << 6; }
 
 // ヒットチェック: ヒットなら非ゼロ
 inline bool HITCHK(int a, int b, int h) { return std::abs(a - b) < h; }

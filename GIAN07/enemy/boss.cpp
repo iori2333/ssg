@@ -4,6 +4,10 @@
 /*                                                                           */
 
 #include "boss.h"
+
+#include <algorithm>
+
+#include <utility>
 #include "bomb_efc.h" // 爆発エフェクト処理
 #include "boss_manager.h"
 #include "enemy_ex_ctrl.h"
@@ -51,14 +55,14 @@ static constexpr auto BHPG_OPEN3 = 0x05; // 体力ゲージを更新する
 // 秘密の関数 //
 static void HPG_Open(uint32_t max);    // ボスの体力ゲージをオープンする
 static void HPG_Move(uint32_t now);    // ボスの体力ゲージを増減する
-static void HPG_Close(void);           // ボスの体力ゲージをクローズする
+static void HPG_Close();           // ボスの体力ゲージをクローズする
 static void HPG_Update(uint32_t next); // ボスの体力ゲージを上昇させる
 
 static int PutBoss(int x, int y, uint32_t id); // ボスをセットする
 static void STDMove(BossData *b);              // ノーマルECL互換の移動
 
 // ボスデータ配列を初期化する(中断、ステージクリア時に使用) //
-void BossManager::Init(void) {
+void BossManager::Init() {
   for (auto &it : bosses) {
     it.IsUsed = false; // 要はこれをゼロにすれば良い
 
@@ -84,14 +88,15 @@ void BossManager::Init(void) {
 
 // ボスをセットする //
 void BossManager::Set(int x, int y, uint32_t BossID) {
-  int n;
+  int n = 0;
   uint32_t HP_Sum = 0;
 
   // ｘ６４座標に変換してボスをセットする //
   n = PutBoss(x << 6, y << 6, BossID);
 
-  if (n == BOSS_MAX)
+  if (n == BOSS_MAX) {
     return; // ここに来たらバグ
+}
 
   bosses[n].ExCount = 0;
   bosses[n].ExMove = BossManager::STDMove;
@@ -113,14 +118,15 @@ void BossManager::Set(int x, int y, uint32_t BossID) {
 
 // ボスをセットする(ＥＣＬ用) //
 void BossManager::SetEx(int x, int y, uint32_t BossID) {
-  int n;
+  int n = 0;
   uint32_t HP_Sum = 0;
 
   // ｘ６４座標に変換してボスをセットする //
   n = PutBoss(x << 6, y << 6, BossID);
 
-  if (n == BOSS_MAX)
+  if (n == BOSS_MAX) {
     return; // ここに来たらバグ
+}
 
   bosses[n].ExCount = 0;
   bosses[n].ExMove = BossManager::STDMove;
@@ -141,9 +147,9 @@ void BossManager::SetEx(int x, int y, uint32_t BossID) {
 }
 
 // ボスを動かす //
-void BossManager::Move(void) {
+void BossManager::Move() {
   uint32_t HP_Sum = 0;
-  EnemyData *e;
+  EnemyData *e = nullptr;
 
   Enemies.homing_flag = HOMING_DUMMY;
 
@@ -158,13 +164,15 @@ void BossManager::Move(void) {
       if (HITCHK(e->x, Players.viv.x, e->g_width) &&
           HITCHK(e->y, Players.viv.y, e->g_height) && Players.viv.muteki == 0) {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
-        if (e->flag & EF_HITSB)
+        if ((e->flag & EF_HITSB) != 0) {
           MaidDead();
+}
       }
 
       // ホーミングの準備 //
-      if (e->flag & EF_DAMAGE)
+      if ((e->flag & EF_DAMAGE) != 0) {
         Enemies.UpdateHoming(e);
+}
 
       // 体力の総和を表示する //
       HP_Sum += b->Edat.hp;
@@ -182,11 +190,14 @@ void BossManager::Move(void) {
 }
 
 // ボスを描画する
-void BossManager::Draw(void) {
+void BossManager::Draw() {
   constexpr auto sid = SURFACE_ID::ENEMY;
-  int x, y;
-  int w, h, t;
-  EnemyData *e;
+  int x = 0;
+  int y = 0;
+  int w = 0;
+  int h = 0;
+  int t = 0;
+  EnemyData *e = nullptr;
   PIXEL_LTRB wing;
 
   BitLineDraw();
@@ -200,9 +211,9 @@ void BossManager::Draw(void) {
       y = (e->y >> 6);
 
       // 霊魂状態 //
-      if (b->ExState == BEXST_SHILD2 && Players.viv.bomb_time &&
-          (e->flag & EF_DRAW)) {
-        wing = PIXEL_LTWH{(160 + (Cast::sign<int32_t>(e->count / 2) % 4) * 40),
+      if (b->ExState == BEXST_SHILD2 && (Players.viv.bomb_time != 0U) &&
+          ((e->flag & EF_DRAW) != 0)) {
+        wing = PIXEL_LTWH{(160 + ((Cast::sign<int32_t>(e->count / 2) % 4) * 40)),
                           80, 40, 40};
 
         // pbg quirk: Blitted without clipping?! I'd consider this a
@@ -217,21 +228,20 @@ void BossManager::Draw(void) {
       }
 
       // バリア状態 //
-      if (b->ExState == BEXST_SHILD1 && Players.viv.bomb_time &&
-          (e->flag & EF_DRAW)) {
+      if (b->ExState == BEXST_SHILD1 && (Players.viv.bomb_time != 0U) &&
+          ((e->flag & EF_DRAW) != 0)) {
         GrpGeom->Lock();
         for (uint8_t j = 0; j <= 5; j++) {
-          GrpGeom->SetColor({(5u - j), (5u - j), 5u});
+          GrpGeom->SetColor({(5U - j), (5U - j), 5U});
           GeomCircle({x, y}, (sinl((e->count * 4), (30 + (j * 4))) + 80));
         }
         GrpGeom->Unlock();
       }
 
       switch (b->ExState) {
-      case (BEXST_WING01):
+      case BEXST_WING01:
         t = (b->ExCount - 64 - 8) << 2;
-        if (t < 0)
-          t = 0;
+        t = std::max(t, 0);
         w = 64;
         h = 92;
         wing = {0, 176, 128, 360};
@@ -240,7 +250,7 @@ void BossManager::Draw(void) {
         GrpSurface_Blit({(x - w + t), (y - h)}, sid, wing);
         break;
 
-      case (BEXST_WING02):
+      case BEXST_WING02:
         w = 44;
         h = 52;
         wing = {552, 0, 640, 104};
@@ -250,7 +260,7 @@ void BossManager::Draw(void) {
         break;
       }
 
-      if (e->flag & EF_DRAW) {
+      if ((e->flag & EF_DRAW) != 0) {
         e->Draw();
       }
     }
@@ -258,11 +268,11 @@ void BossManager::Draw(void) {
 }
 
 // ボス用・敵弾クリアの前処理関数 //
-void BossManager::ClearCmd(void) { BitDelete(); }
+void BossManager::ClearCmd() { BitDelete(); }
 
 // ボスの体力ゲージをオープンする //
 void BossManager::HPG_Open(uint32_t max) {
-  int i;
+  int i = 0;
 
   hpg.Max = max;    // 最大値
   hpg.Now = 0;      // 最初のエフェクトで上昇して行くので
@@ -274,7 +284,7 @@ void BossManager::HPG_Open(uint32_t max) {
 
   // 表示用初期Ｘを指定する(乱数を使用するが...) //
   for (i = 0; i < BOSSHPG_HEIGHT; i++) {
-    hpg.XTemp[i] = BOSSHPG_START_X + i * 20;
+    hpg.XTemp[i] = BOSSHPG_START_X + (i * 20);
   }
 }
 
@@ -290,13 +300,13 @@ void BossManager::HPG_Update(uint32_t next) {
 
 // ボスの体力ゲージを増減する //
 void BossManager::HPG_Move(uint32_t now) {
-  int i;
+  int i = 0;
   int ChkCount = 0;
 
   hpg.Next = now;
 
   switch (hpg.State) {
-  case (BHPG_OPEN1): {
+  case BHPG_OPEN1: {
     for (auto &it : hpg.XTemp) {
       it -= 6;
       if (it <= BOSSHPG_END_X) {
@@ -305,11 +315,12 @@ void BossManager::HPG_Move(uint32_t now) {
       }
     }
 
-    if (ChkCount == BOSSHPG_HEIGHT)
+    if (ChkCount == BOSSHPG_HEIGHT) {
       hpg.State = BHPG_OPEN2;
+}
   } break;
 
-  case (BHPG_OPEN2):
+  case BHPG_OPEN2:
     hpg.Now += ((hpg.Max >> 7) + 1);
     if (hpg.Now >= hpg.Max) {
       hpg.Now = hpg.Max;
@@ -317,7 +328,7 @@ void BossManager::HPG_Move(uint32_t now) {
     }
     break;
 
-  case (BHPG_OPEN3):
+  case BHPG_OPEN3:
     hpg.Now += ((hpg.Max >> 7) + 1);
     if (hpg.Now >= hpg.Update) {
       hpg.Now = hpg.Update;
@@ -325,31 +336,34 @@ void BossManager::HPG_Move(uint32_t now) {
     }
     break;
 
-  case (BHPG_NORM):
+  case BHPG_NORM:
     if (hpg.Now > hpg.Next) {
       // temp = max(hpg.Max>>10,1);
       // temp = max((30*8*3)/max(hpg.Max,1),3);
       const auto temp =
-          (std::max)(((std::max)(hpg.Max, 1u) / (30 * 8 * 4)), 3u);
-      if (hpg.Now - hpg.Next > temp)
+          (std::max)(((std::max)(hpg.Max, 1U) / (30 * 8 * 4)), 3U);
+      if (hpg.Now - hpg.Next > temp) {
         hpg.Now -= temp;
-      else
+      } else {
         hpg.Now = hpg.Next;
+}
     }
-    if (hpg.Now == 0)
+    if (hpg.Now == 0) {
       HPG_Close();
+}
     break;
 
-  case (BHPG_CLOSE):
+  case BHPG_CLOSE:
     hpg.XTemp[BOSSHPG_HEIGHT - 1] += 6;
     for (i = BOSSHPG_HEIGHT - 2; i >= 0; i--) {
       hpg.XTemp[i] = std::max(hpg.XTemp[i], hpg.XTemp[i + 1] - 20);
     }
-    if (hpg.XTemp[0] >= BOSSHPG_START_X)
+    if (hpg.XTemp[0] >= BOSSHPG_START_X) {
       HPG_Close();
+}
     break;
 
-  case (BHPG_DEAD):
+  case BHPG_DEAD:
     // もちろん何もしない //
     return;
   }
@@ -358,19 +372,19 @@ void BossManager::HPG_Move(uint32_t now) {
 }
 
 // ボスの体力ゲージをクローズする //
-void BossManager::HPG_Close(void) {
+void BossManager::HPG_Close() {
   // 後で変更のこと //
   hpg.State = BHPG_CLOSE;
 }
 
 // ボスの体力ゲージを描画する //
-void BossManager::DrawHPG(void) {
+void BossManager::DrawHPG() {
   PIXEL_LTRB src;
-  int i;
+  int i = 0;
 
   switch (hpg.State) {
-  case (BHPG_OPEN1):
-  case (BHPG_CLOSE):
+  case BHPG_OPEN1:
+  case BHPG_CLOSE:
     // エフェクト付き枠の描画 //
     for (i = 0; i < BOSSHPG_HEIGHT; i++) {
       src = {0, (104 + i), BOSSHPG_WIDTH, (104 + i + 1)};
@@ -378,9 +392,9 @@ void BossManager::DrawHPG(void) {
     }
     break;
 
-  case (BHPG_OPEN2):
-  case (BHPG_NORM):
-  case (BHPG_OPEN3): {
+  case BHPG_OPEN2:
+  case BHPG_NORM:
+  case BHPG_OPEN3: {
     // 体力ゲージの描画 //
     constexpr WINDOW_COORD left = (BOSSHPG_END_X + 3);
     constexpr WINDOW_COORD top = (16 + 3);
@@ -436,19 +450,19 @@ void BossManager::DrawHPG(void) {
     GrpSurface_Blit({BOSSHPG_END_X, 16}, SURFACE_ID::SYSTEM, src);
   } break;
 
-  case (BHPG_DEAD):
+  case BHPG_DEAD:
     // もちろん何もしない //
     break;
   }
 }
 
 // 現在出現しているボス全てのＨＰを０にする //
-void BossManager::KillAll(void) {
+void BossManager::KillAll() {
   // 破壊後の破片放出などの処理は、ダメージを与えて破壊するのと同等の関数を //
   // 使用するが、当然のごとく、得点＆経験値？は入手できない                 //
   // レーザークローズも忘れずに！！                                         //
 
-  EnemyData *e;
+  EnemyData *e = nullptr;
 
   for (auto &it : bosses) {
     auto *b = &it;
@@ -458,8 +472,9 @@ void BossManager::KillAll(void) {
       Effects.SpawnFragment(e->x, e->y, FRG_FATCIRCLE);
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
-      if (e->LLaserRef)
+      if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
+}
       e->hp = 0;
       e->count = 0;
       e->flag = EF_BOMB;
@@ -472,7 +487,7 @@ void BossManager::KillAll(void) {
 
 bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
-  if (e.hp <= damage) { // ボスの死亡処理(後で変更すること!!)
+  if (std::cmp_less_equal(e.hp , damage)) { // ボスの死亡処理(後で変更すること!!)
     SnakyDelete(&b);
     BitDelete();
     Enemies.Clear();
@@ -480,7 +495,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     Effects.SpawnBombEffect(e.x, e.y, EXBOMB_STD);
     Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SOUND_ID_BOSSBOMB, e.x);
-    if (e.LLaserRef) {
+    if (e.LLaserRef != 0U) {
       Lasers.ForceCloseLong(&e); // レーザーの強制クローズ
     }
     PowerUp(Cast::down<uint8_t>(e.hp));
@@ -499,7 +514,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
       score_add(temp);
     }
 
-    if (e.item) {
+    if (e.item != 0U) {
       Items.Spawn(e.x, e.y, e.item);
     }
     score_add(e.score);
@@ -516,8 +531,8 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
 
 // ボスにダメージを与える //
 bool BossManager::DamageAt(int x, int y, int damage) {
-  int i;
-  EnemyData *e;
+  int i = 0;
+  EnemyData *e = nullptr;
 
   i = (BitGetNum() >> 1);
   damage -= i;
@@ -528,19 +543,20 @@ bool BossManager::DamageAt(int x, int y, int damage) {
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.viv.bomb_time)
+      if (Players.viv.bomb_time != 0U) {
         continue;
+}
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
       if (HITCHK(x, e->x, e->g_width) && HITCHK(y, e->y, e->g_height) &&
-          (e->flag & EF_DAMAGE)) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+          ((e->flag & EF_DAMAGE) != 0)) {
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
           continue;
-        else {
+        } } 
           return ApplyDamage(*b, *e, damage);
-        }
+       
       }
     }
   }
@@ -549,8 +565,8 @@ bool BossManager::DamageAt(int x, int y, int damage) {
 
 // ボスにダメージを与える(ｙ上方向無限Ver) //
 bool BossManager::DamageAt2(int x, int y, int damage) {
-  int i;
-  EnemyData *e;
+  int i = 0;
+  EnemyData *e = nullptr;
   bool ret_val = false;
 
   i = (BitGetNum() >> 1);
@@ -562,18 +578,19 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.viv.bomb_time)
+      if (Players.viv.bomb_time != 0U) {
         continue;
+}
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
-      if (HITCHK(x, e->x, e->g_width) && (y > e->y) && (e->flag & EF_DAMAGE)) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+      if (HITCHK(x, e->x, e->g_width) && (y > e->y) && ((e->flag & EF_DAMAGE) != 0)) {
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
           continue;
-        else {
+        } } 
           ret_val = ApplyDamage(*b, *e, damage);
-        }
+       
       }
     }
   }
@@ -582,31 +599,33 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
 
 // ボスにダメージを与える(ナナメレーザー) //
 void BossManager::DamageAt3(int x, int y, uint8_t d) {
-  int i;
-  EnemyData *e;
+  int i = 0;
+  EnemyData *e = nullptr;
   // BOOL			ret_val = FALSE;
   int damage = 2;
 
   i = (BitGetNum() >> 1);
   damage -= i;
-  if (damage <= 0)
+  if (damage <= 0) {
     return;
+}
 
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.viv.bomb_time)
+      if (Players.viv.bomb_time != 0U) {
         continue;
+}
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
-      if (EnemyManager::LaserHITCHK(e, x, y, d) && (e->flag & EF_DAMAGE)) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+      if (EnemyManager::LaserHITCHK(e, x, y, d) && ((e->flag & EF_DAMAGE) != 0)) {
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
           continue;
-        else {
+        } } 
           ApplyDamage(*b, *e, damage);
-        }
+       
       }
     }
   }
@@ -614,31 +633,33 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
 
 // ボスにダメージを与える(すべての敵)
 void BossManager::DamageAll(int damage) {
-  int i;
-  EnemyData *e;
+  int i = 0;
+  EnemyData *e = nullptr;
 
   i = (BitGetNum() >> 1);
   damage -= i;
-  if (damage <= 0)
+  if (damage <= 0) {
     return;
+}
 
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.viv.bomb_time)
+      if (Players.viv.bomb_time != 0U) {
         continue;
+}
     }
 
     if (b->IsUsed) {
       e = &(b->Edat);
-      if (e->flag & EF_DAMAGE) {
-        if (e->flag == EF_BOMB || !(e->flag & EF_DAMAGE))
+      if ((e->flag & EF_DAMAGE) != 0) {
+        if (e->flag == EF_BOMB || ((e->flag & EF_DAMAGE) == 0)) { {
           continue;
-        else {
+        } } 
           ApplyDamage(*b, *e, damage);
 
           // return TRUE;
-        }
+       
       }
     }
   }
@@ -735,11 +756,11 @@ void BossManager::STDMove(BossData *b) {
   EnemyData *e = &(b->Edat);
 
   // 通常の敵の処理 //
-  Enemies.CheckInterrupts(e);
+  EnemyManager::CheckInterrupts(e);
   Enemies.Execute(e);
 
   // 弾発射モードによる分岐 //
-  if (e->t_rep) {
+  if (e->t_rep != 0U) {
     e->tama_c = (e->tama_c + 1) % (e->t_rep);
     if (e->tama_c == 0) {
       Bullets.command = e->t_cmd;
@@ -750,17 +771,18 @@ void BossManager::STDMove(BossData *b) {
   }
 
   switch (b->ExState) {
-  case (BEXST_WING01):
-    if (b->ExCount < 64 + 16 + 8)
+  case BEXST_WING01:
+    if (b->ExCount < 64 + 16 + 8) {
       b->ExCount++;
+}
     break;
   }
 }
 
 // ボスの体力の総和を求める //
-uint32_t BossManager::GetHPSum(void) {
+uint32_t BossManager::GetHPSum() {
   uint32_t HP_Sum = 0;
-  EnemyData *e;
+  EnemyData *e = nullptr;
 
   for (auto &it : bosses) {
     auto *b = &it;
@@ -783,33 +805,33 @@ void BossManager::Interrupt(EnemyData *e, uint8_t IntID) {
 
   // 割り込み番号による分岐 //
   switch (IntID) {
-  case (ECLINT_SNAKEON):
+  case ECLINT_SNAKEON:
     SnakySet(&*b, 30, 11);
     break;
 
-  case (ECLINT_LBWING01): // 蝶の羽も描画する
+  case ECLINT_LBWING01: // 蝶の羽も描画する
     b->ExState = BEXST_WING01;
     b->ExCount = 0;
     break;
 
-  case (ECLINT_LBWING02): // 鳥の羽も描画する
+  case ECLINT_LBWING02: // 鳥の羽も描画する
     b->ExState = BEXST_WING02;
     b->ExCount = 0;
     break;
 
-  case (ECLINT_BITON5):
+  case ECLINT_BITON5:
     BitSet(&*b, 5, 3);
     break;
 
-  case (ECLINT_BITON6):
+  case ECLINT_BITON6:
     BitSet(&*b, 6, 3);
     break;
 
-  case (ECLINT_SHILD1):
+  case ECLINT_SHILD1:
     b->ExState = BEXST_SHILD1;
     break;
 
-  case (ECLINT_SHILD2):
+  case ECLINT_SHILD2:
     b->ExState = BEXST_SHILD2;
     break;
   }
@@ -849,4 +871,4 @@ void BossManager::BitCommand(EnemyData *e, uint8_t Cmd, int Param) {
 }
 
 // 残りビット数を返す //
-int BossManager::GetBitLeft(void) { return BitGetNum(); }
+int BossManager::GetBitLeft() const { return BitGetNum(); }

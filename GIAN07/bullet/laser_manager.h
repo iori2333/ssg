@@ -12,21 +12,21 @@
 
 struct LaserManager {
   // --- 反射レーザー ---
-  LaserCommand cmd;                              // LaserCmd
+  LaserCommand cmd{};                              // LaserCmd
   uint16_t count = 0;                            // LaserNow
-  std::array<LASER_DATA, LASER_MAX> lasers;      // Laser[]
-  std::array<uint16_t, LASER_MAX> laser_indices; // LaserInd[]
+  std::array<LASER_DATA, LASER_MAX> lasers{};      // Laser[]
+  std::array<uint16_t, LASER_MAX> laser_indices{}; // LaserInd[]
 
   // --- 長レーザー ---
-  std::array<LongLaserData, LLASER_MAX> long_lasers; // LLaser[]
-  LongLaserCommand long_cmd;                         // LLaserCmd
+  std::array<LongLaserData, LLASER_MAX> long_lasers{}; // LLaser[]
+  LongLaserCommand long_cmd{};                         // LLaserCmd
 
   // --- ホーミングレーザー ---
   uint16_t homing_count = 0;                          // HLaserNow
-  HomingLaserInfo homing_cmd;                         // HLaserCmd
-  std::array<HomingLaserData, HLASER_MAX> homing_buf; // HLaserBuf[]
-  HomingLaserData active;                             // ActiveHL
-  HomingLaserData free_list;                          // FreeHL
+  HomingLaserInfo homing_cmd{};                         // HLaserCmd
+  std::array<HomingLaserData, HLASER_MAX> homing_buf{}; // HLaserBuf[]
+  HomingLaserData active{};                             // ActiveHL
+  HomingLaserData free_list{};                          // FreeHL
 
   // ================================================================
   // Reflective laser methods (was LASER.cpp free functions)
@@ -43,11 +43,11 @@ private:
   void SetEasy();
   void SetHard();
   void SetLunatic();
-  uint8_t CalcDir(uint16_t i);
-  void SetupShort(LASER_DATA *lp);
-  void DrawShort(const LASER_DATA *lp);
+  [[nodiscard]] uint8_t CalcDir(uint16_t i) const;
+  static void SetupShort(LASER_DATA *lp);
+  static void DrawShort(const LASER_DATA *lp);
   void MoveLaser(LASER_DATA *lp);
-  void HitCheck(LASER_DATA *lp);
+  static void HitCheck(LASER_DATA *lp);
   void MoveReflect(LASER_DATA *lp);
   int HitReflect(const LASER_DATA *lp);
 
@@ -68,8 +68,8 @@ public:
   void SetupLong();
 
 private:
-  void SetLongPoint(LongLaserData *lp);
-  void HitCheckLong(const LongLaserData *lp);
+  static void SetLongPoint(LongLaserData *lp);
+  static void HitCheckLong(const LongLaserData *lp);
   void UpdateLongXY(int id);
 
 public:
@@ -79,7 +79,7 @@ public:
   void InitHoming();
   void SpawnHoming(const HomingLaserInfo *info);
   void MoveHoming();
-  void DrawHoming();
+  void DrawHoming() const;
   void ClearHoming();
 };
 

@@ -20,7 +20,7 @@
 #include <chrono>
 
 enum class MID_FLAGS : uint8_t {
-  _HAS_BITFLAG_OPERATORS,
+  HAS_BITFLAG_OPERATORS,
   NONE = 0x00,
   FIX_SYSEX_BUGS = 0x01,
 

@@ -36,11 +36,11 @@ void GameContinue(); // コンティニューを行う場合
 [[nodiscard]] bool
 GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
 
-[[nodiscard]] bool SProjectInit(void); // 西方Ｐｒｏｊｅｃｔ表示の初期化
+[[nodiscard]] bool SProjectInit(); // 西方Ｐｒｏｊｅｃｔ表示の初期化
 
-[[nodiscard]] bool GameExstgInit(void); // エキストラステージを始める
+[[nodiscard]] bool GameExstgInit(); // エキストラステージを始める
 
 // NameRegistInit → inline wrapper in gameflow_manager.h
-[[nodiscard]] bool ScoreNameInit(void); // お名前表示画面
+[[nodiscard]] bool ScoreNameInit(); // お名前表示画面
 
-[[nodiscard]] bool GameNextStage(void); // 次のステージに移行する
+[[nodiscard]] bool GameNextStage(); // 次のステージに移行する

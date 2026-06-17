@@ -56,8 +56,10 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   if (long_cmd.type == LLS_LONGZ) {
     lp->d += atan8(Players.viv.x - lp->x, Players.viv.y - lp->y);
     lp->type = LLS_LONG;
-  } else
+  } else { {
     lp->type = long_cmd.type;
+}
+}
 
   lp->infx = cosl(lp->d, 800);
   lp->infy = sinl(lp->d, 800);
@@ -173,13 +175,13 @@ void LaserManager::ForceCloseLong(const EnemyData *e) {
 }
 
 void LaserManager::MoveLong() {
-  int i;
-  LongLaserData *lp;
+  int i = 0;
+  LongLaserData *lp = nullptr;
 
   for (i = 0, lp = long_lasers.data(); i < LLASER_MAX; i++, lp++) {
 
     // 角度セットモードで、敵の角度と現在の角度が異なっていたら再度セット //
-    if (lp->type == LLS_SETDEG && lp->e && lp->d != lp->e->d) {
+    if (lp->type == LLS_SETDEG && (lp->e != nullptr) && lp->d != lp->e->d) {
       lp->d = lp->e->d;
 
       lp->lx = cosl(lp->d, lp->w >> 6);
@@ -196,7 +198,7 @@ void LaserManager::MoveLong() {
 
     switch (lp->flag) {
     // 太くなる場合 //
-    case (LLF_OPEN):
+    case LLF_OPEN:
       UpdateLongXY(i);
       lp->w += lp->v;
 
@@ -215,8 +217,8 @@ void LaserManager::MoveLong() {
       break;
 
     // 細くなる場合 //
-    case (LLF_CLOSE):
-    case (LLF_CLOSEL):
+    case LLF_CLOSE:
+    case LLF_CLOSEL:
       UpdateLongXY(i);
       lp->w -= lp->v;
 
@@ -225,8 +227,10 @@ void LaserManager::MoveLong() {
         if (lp->flag == LLF_CLOSE) {
           lp->flag = LLF_DISABLE;
           lp->e = nullptr;
-        } else
+        } else { {
           lp->flag = LLF_LINE;
+}
+}
       }
 
       lp->lx = cosl(lp->d, lp->w >> 6);
@@ -239,28 +243,31 @@ void LaserManager::MoveLong() {
       break;
 
     // 直線状態 //
-    case (LLF_LINE):
+    case LLF_LINE:
       UpdateLongXY(i);
       // この部分にレーザー溜めエフェクトを仕掛ける //
       // fragment_set(lp->x,lp->y,FRG_LASER);
       break;
 
     // ノーマル //
-    case (LLF_NORM):
+    case LLF_NORM:
       UpdateLongXY(i);
       HitCheckLong(lp);
       break;
 
-    case (LLF_DISABLE):
+    case LLF_DISABLE:
       break;
     }
   }
 }
 
 void LaserManager::DrawLong() {
-  int x, y;
+  int x = 0;
+  int y = 0;
   VERTEX_XY p[4];
-  int wx, wy, len;
+  int wx = 0;
+  int wy = 0;
+  int len = 0;
 
   static const RGB216 Table16Bit[16] = {
       {3, 0, 3}, {0, 2, 0}, {0, 0, 4}, {4, 2, 0}, {0, 0, 1}};
@@ -273,7 +280,7 @@ void LaserManager::DrawLong() {
       {5, 4, 5}, {5, 5, 5}, {4, 4, 5}, {5, 5, 4}, {4, 4, 5}};
 
   constexpr size_t VERTEX_COUNT = 34;
-  std::array<VERTEX_XY, VERTEX_COUNT> p2;
+  std::array<VERTEX_XY, VERTEX_COUNT> p2{};
 
   GrpGeom->Lock();
 
@@ -282,17 +289,17 @@ void LaserManager::DrawLong() {
     const auto c = lp->c;
     switch (lp->flag) {
     // 太さを持った状態 //
-    case (LLF_OPEN):
-    case (LLF_NORM):
-    case (LLF_CLOSE):
-    case (LLF_CLOSEL):
+    case LLF_OPEN:
+    case LLF_NORM:
+    case LLF_CLOSE:
+    case LLF_CLOSEL:
       x = ((lp->x) >> 6) + lp->lx;
       y = ((lp->y) >> 6) + lp->ly;
       wx = lp->wx;
       wy = lp->wy;
-      len = isqrt(wx * wx + wy * wy);
+      len = isqrt((wx * wx) + (wy * wy));
 
-      if (len) {
+      if (len != 0) {
         /*
         p[0].x = p[1].x = lp->p[0].x ;//- wx*4/len;
         p[0].y = p[1].y = lp->p[0].y ;//- wy*4/len;
@@ -309,7 +316,7 @@ void LaserManager::DrawLong() {
           gp->SetAlphaOne();
           GeomGrdRectA(*gp, lp->p, col);
 
-          std::array<VERTEX_RGBA, VERTEX_COUNT> vcs;
+          std::array<VERTEX_RGBA, VERTEX_COUNT> vcs{};
           vcs[0] = {255, 255, 255, 0xFF};
           for (auto &vc : vcs | std::views::drop(1)) {
             vc = col;
@@ -322,17 +329,17 @@ void LaserManager::DrawLong() {
           p2[VERTEX_COUNT - 1].x = lp->p[3].x;
           p2[VERTEX_COUNT - 1].y = lp->p[3].y;
           for (auto n = 2; n < (VERTEX_COUNT - 1); n++) {
-            p2[n].x = p2[0].x + cosl(lp->d + 64 + 128 * (n - 1) / 32, len);
-            p2[n].y = p2[0].y + sinl(lp->d + 64 + 128 * (n - 1) / 32, len);
+            p2[n].x = p2[0].x + cosl(lp->d + 64 + (128 * (n - 1) / 32), len);
+            p2[n].y = p2[0].y + sinl(lp->d + 64 + (128 * (n - 1) / 32), len);
           }
           gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, p2, vcs);
           break;
-        } else if (auto *gf = GrpGeom_FB()) {
+        } if (auto *gf = GrpGeom_FB()) {
           // gf->SetColor({ 2, 0, 2 });
           gf->SetColor(Table8BitA[c]);
           gf->DrawTriangleFan(lp->p);
         }
-      } else if (GrpGeom_Poly()) {
+      } else if (GrpGeom_Poly() != nullptr) {
         break;
       }
 
@@ -340,37 +347,37 @@ void LaserManager::DrawLong() {
 
       // GrpGeom->SetColor({ 3, 0, 3 }); // lp->c;
       GrpGeom->SetColor(Table8BitB[c]);
-      if (len) {
-        p[0].x = p[1].x = lp->p[0].x - wx / 8; //+ wx*2/len;
-        p[0].y = p[1].y = lp->p[0].y - wy / 8; //+ wy*2/len;
-        p[3].x = p[2].x = lp->p[3].x + wx / 8; //- wx*2/len;
-        p[3].y = p[2].y = lp->p[3].y + wy / 8; //- wy*2/len;
+      if (len != 0) {
+        p[0].x = p[1].x = lp->p[0].x - (wx / 8); //+ wx*2/len;
+        p[0].y = p[1].y = lp->p[0].y - (wy / 8); //+ wy*2/len;
+        p[3].x = p[2].x = lp->p[3].x + (wx / 8); //- wx*2/len;
+        p[3].y = p[2].y = lp->p[3].y + (wy / 8); //- wy*2/len;
         p[1].x += lp->infx;
         p[1].y += lp->infy;
         p[2].x += lp->infx;
         p[2].y += lp->infy;
         GrpGeom->DrawTriangleFan(p);
       }
-      GeomCircleF({x, y}, (len - len / 8)); // (lp->w >> 6) + 2);
+      GeomCircleF({x, y}, (len - (len / 8))); // (lp->w >> 6) + 2);
 
       // GrpGeom->SetColor({ 5, 4, 5 }); // lp->c;
       GrpGeom->SetColor(Table8BitC[c]);
-      if (len) {
-        p[0].x = p[1].x = lp->p[0].x - wx / 4; //+ wx*2/len;
-        p[0].y = p[1].y = lp->p[0].y - wy / 4; //+ wy*2/len;
-        p[3].x = p[2].x = lp->p[3].x + wx / 4; //- wx*2/len;
-        p[3].y = p[2].y = lp->p[3].y + wy / 4; //- wy*2/len;
+      if (len != 0) {
+        p[0].x = p[1].x = lp->p[0].x - (wx / 4); //+ wx*2/len;
+        p[0].y = p[1].y = lp->p[0].y - (wy / 4); //+ wy*2/len;
+        p[3].x = p[2].x = lp->p[3].x + (wx / 4); //- wx*2/len;
+        p[3].y = p[2].y = lp->p[3].y + (wy / 4); //- wy*2/len;
         p[1].x += lp->infx;
         p[1].y += lp->infy;
         p[2].x += lp->infx;
         p[2].y += lp->infy;
         GrpGeom->DrawTriangleFan(p);
       }
-      GeomCircleF({x, y}, (len - len / 4)); // (lp->w >> 6));
+      GeomCircleF({x, y}, (len - (len / 4))); // (lp->w >> 6));
       break;
 
     // ライン状態の場合 //
-    case (LLF_LINE):
+    case LLF_LINE:
       x = (lp->x) >> 6;
       y = (lp->y) >> 6;
       GrpGeom->SetColor({4, 4, 4});
@@ -378,7 +385,7 @@ void LaserManager::DrawLong() {
       break;
 
     // 使用中で無い場合 //
-    case (LLF_DISABLE):
+    case LLF_DISABLE:
       break;
     }
   }
@@ -426,11 +433,14 @@ void LaserManager::SetLongPoint(LongLaserData *lp) {
 void LaserManager::HitCheckLong(const LongLaserData *lp) {
   //	long tx,ty,w1,w2,length;
 
-  int tx, ty;
-  int length, width;
+  int tx = 0;
+  int ty = 0;
+  int length = 0;
+  int width = 0;
 
-  if (Players.viv.muteki)
+  if (Players.viv.muteki != 0U) {
     return;
+}
 
   tx = Players.viv.x - lp->x;
   ty = Players.viv.y - lp->y;
@@ -455,7 +465,7 @@ void LaserManager::HitCheckLong(const LongLaserData *lp) {
                   w1 = (w1+w2)/2;	// 精度アップ
           }
   */
-  if (length > 0 && width <= (lp->w + 64 * 15)) {
+  if (length > 0 && width <= (lp->w + (64 * 15))) {
     evade_add(LLASER_EVADE);
   }
   if (length > 0 && width <= (lp->w)) {

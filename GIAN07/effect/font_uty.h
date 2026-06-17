@@ -30,7 +30,7 @@ void GrpPutMidNum(int x, int y, int n); // MIDI 用フォントを描画する
 // ------------------------------------------------------------------
 
 constexpr PIXEL_COORD GrpExtent5(const char c) {
-  if (!((c >= 'A') && (c <= 'Z'))) {
+  if ((c < 'A') || (c > 'Z')) {
     assert(!"Character not supported in 5-pixel system font");
     return 0;
   }
@@ -52,7 +52,7 @@ constexpr PIXEL_COORD GrpExtent5(const char c) {
 }
 
 constexpr PIXEL_SIZE GrpExtent5(const std::string_view s) {
-  PIXEL_SIZE ret = {0, 5};
+  PIXEL_SIZE ret = {.w=0, .h=5};
   for (const char c : s) {
     ret.w += (GrpExtent5(c) + 1);
   }
@@ -60,7 +60,7 @@ constexpr PIXEL_SIZE GrpExtent5(const std::string_view s) {
   return ret;
 }
 
-void GrpPut55(WINDOW_POINT topleft, const std::string_view s);
+void GrpPut55(WINDOW_POINT topleft, std::string_view s);
 // ------------------------------------------------------------------
 
 // グラデーション付きフォントを描画する

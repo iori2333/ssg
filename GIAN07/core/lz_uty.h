@@ -84,9 +84,9 @@ struct PACKFILE_READ {
                 const std::span<const PBG_FILEINFO> info)
       : packfile(std::move(packfile)), info(info) {}
 
-  BYTE_BUFFER_OWNED MemExpand(fil_no_t filno) const;
+  [[nodiscard]] BYTE_BUFFER_OWNED MemExpand(fil_no_t filno) const;
 
-  explicit operator bool() const { return packfile.get(); }
+  explicit operator bool() const { return packfile.get() != nullptr; }
 };
 
 struct PACKFILE_WRITE {
@@ -98,5 +98,5 @@ struct PACKFILE_WRITE {
 
 BIT_FILE_READ BitFilCreateR(const char8_t *s);
 PACKFILE_READ FilStartR(BYTE_BUFFER_OWNED packfile);
-PACKFILE_READ FilStartR(SDL_IOStream *&&stream);
+PACKFILE_READ FilStartR(SDL_IOStream *stream);
 PACKFILE_READ FilStartR(const char8_t *s);

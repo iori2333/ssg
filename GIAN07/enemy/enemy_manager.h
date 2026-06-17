@@ -47,7 +47,7 @@ struct EnemyManager {
   void InitIndices();
 
   // ダメージ
-  bool ApplyDamage(EnemyData &e, int damage);
+  static bool ApplyDamage(EnemyData &e, int damage);
   bool DamageAt(int x, int y, int damage);
   bool DamageAt2(int x, int y, int damage);
   void DamageAt3(int x, int y, uint8_t d);
@@ -56,15 +56,15 @@ struct EnemyManager {
   // 敵データ初期化
   void InitDataX64(EnemyData *e, int x, int y, uint32_t EclID);
   void InitDataSTD(EnemyData *e, short x, short y, uint32_t EclID);
-  void LongJump(EnemyData *e, uint32_t ecl_id);
+  void LongJump(EnemyData *e, uint32_t EclID);
 
   // アニメーション
   void UpdateAnimation(EnemyData *e);
 
   // ECL
   void Execute(EnemyData *e);
-  void CheckInterrupts(EnemyData *e);
-  void InitInterrupts(EnemyData *e);
+  static void CheckInterrupts(EnemyData *e);
+  static void InitInterrupts(EnemyData *e);
 };
 
 extern EnemyManager Enemies;

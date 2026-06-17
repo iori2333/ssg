@@ -25,21 +25,21 @@ struct BulletManager {
   void SpawnEX();
   void SpawnLine();
   void SpawnExtra01();
-  int SpeedEx(uint8_t d);
+  int SpeedEx(uint8_t d) const;
   void Move();
   void Draw();
   void Clear();
   uint32_t ScoreToItems();
   void ToItems(uint8_t n);
-  void SetIndices(uint16_t count1);
-  uint8_t Dir(uint16_t i);
-  int NewSpeed(uint16_t i);
-  int LineCmdNewSpeed(uint16_t i);
-  int Speed(uint16_t i);
-  uint8_t Flag();
-  void MoveByType(Bullet *t);
+  void SetIndices(uint16_t tama1);
+  uint8_t Dir(uint16_t i) const;
+  int NewSpeed(uint16_t i) const;
+  int LineCmdNewSpeed(uint16_t i) const;
+  int Speed(uint16_t i) const;
+  uint8_t Flag() const;
+  static void MoveByType(Bullet *t);
   void MoveByOption(Bullet *t);
-  void MoveByEffect(Bullet *t);
+  static void MoveByEffect(Bullet *t);
 
 private:
   void TamaSetMain();

@@ -54,7 +54,7 @@ bool OptionRead(std::u8string &opt, SDL_IOStream &f) {
 }
 
 bool OptionWrite(SDL_IOStream &f, const std::u8string &opt) {
-  if (opt.size() > (std::numeric_limits<uint32_t>::max)()) {
+  if (opt.size() > std::numeric_limits<uint32_t>::max()) {
     return false;
   }
   const auto d_size = static_cast<U32BE>(opt.size());
@@ -96,7 +96,7 @@ static constexpr auto CFG_OPTIONS =
 
 static bool ConfigFileLoad() {
   SDL_IOStream *f = SDL_IOFromFile(CFG_FN, "rb");
-  if (!f) {
+  if (f == nullptr) {
     return false;
   }
   defer(SDL_CloseIO(f));
@@ -105,7 +105,7 @@ static bool ConfigFileLoad() {
 
 static void ConfigFileSave() {
   SDL_IOStream *f = SDL_IOFromFile(CFG_FN, "wb");
-  if (!f) {
+  if (f == nullptr) {
     return;
   }
   defer(SDL_CloseIO(f));
@@ -113,7 +113,7 @@ static void ConfigFileSave() {
 }
 // -------------------
 
-GRAPHICS_PARAMS CONFIG_DATA::GraphicsParams(void) const {
+GRAPHICS_PARAMS CONFIG_DATA::GraphicsParams() const {
   const auto flags_shifted = (GraphFlags.v >> GRPF_PARAM_SHIFT);
   return {
       .flags = static_cast<GRAPHICS_PARAM_FLAGS>(flags_shifted),
@@ -176,8 +176,8 @@ void ConfigLoad() {
 void ConfigSave() {
   // Sync runtime audio state into config
   ConfigDat.SoundFlags.v &= SNDF_SE_ENABLE;
-  ConfigDat.SoundFlags.v |= (BGM_Enabled() * SNDF_BGM_ENABLE);
-  ConfigDat.SoundFlags.v |= (!BGM_GainApply() * SNDF_BGM_NOT_VOL_NORM);
+  ConfigDat.SoundFlags.v |= (static_cast<int>(BGM_Enabled()) * SNDF_BGM_ENABLE);
+  ConfigDat.SoundFlags.v |= (static_cast<int>(!BGM_GainApply()) * SNDF_BGM_NOT_VOL_NORM);
 
   if (const auto maybe_topleft = WndBackend_Topleft()) {
     const auto &topleft = maybe_topleft.value();

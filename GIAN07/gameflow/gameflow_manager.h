@@ -46,7 +46,7 @@ struct GameFlowManager {
   // === メソッド ===
   void TitleProc(bool &);
   void ScoreNameProc(bool &);
-  void ScoreDraw();
+  static void ScoreDraw();
   void NameRegistProc(bool &);
   bool NameRegistInit(bool bNeedChgMusic = false);
   bool WeaponSelectInit(bool ExStg);

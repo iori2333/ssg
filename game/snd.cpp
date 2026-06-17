@@ -14,7 +14,7 @@
 float Snd_BGMGainFactor = 1.0f;
 
 static enum class SND_SYS {
-  _HAS_BITFLAG_OPERATORS,
+  HAS_BITFLAG_OPERATORS,
   NOTHING = 0x0,
   SYSTEM = 0x1,
   BGM = 0x2,

@@ -110,7 +110,7 @@ struct EffectManager {
   void MoveWarningEffect();
   void DrawWarningEffect();
 
-  void CircleFadeOut(int x, int y, int r);
+  static void CircleFadeOut(int x, int y, int r);
 
   void RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH &subrect);
 
@@ -160,9 +160,9 @@ struct EffectManager {
 
 private:
   // Internal helpers (BOMBEFC.cpp)
-  void InitBombEffectSTD(BombEfcCtrl *p);
-  void DrawBombEffectSTD(BombEfcCtrl *p);
-  void MoveBombEffectSTD(BombEfcCtrl *p);
+  static void InitBombEffectSTD(BombEfcCtrl *p);
+  static void DrawBombEffectSTD(BombEfcCtrl *p);
+  static void MoveBombEffectSTD(BombEfcCtrl *p);
 };
 
 extern EffectManager Effects;

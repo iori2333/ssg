@@ -28,7 +28,8 @@ void StdStatusOutput() {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
 
   static uint32_t prev;
-  static uint32_t fps, count;
+  static uint32_t fps;
+  static uint32_t count;
   // extern InputConfig			IConfig;
   const char *const DItem[4] = {"Easy", "Norm", "Hard", "Luna"};
   char buf[100];
@@ -113,7 +114,7 @@ void StdStatusOutput() {
 
   const auto tm = Time_NowLocal();
 
-  sprintf(buf, "%02u/%02u/%02u", tm.month, tm.day, (tm.year % 100u));
+  sprintf(buf, "%02u/%02u/%02u", tm.month, tm.day, (tm.year % 100U));
   GrpPut16(column2_left, 0, "Date");
   GrpPut16(column2_left, 20, buf);
 

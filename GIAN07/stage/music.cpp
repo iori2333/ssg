@@ -5,7 +5,7 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include <inttypes.h> // for PRId64
+#include <cinttypes> // for PRId64
 
 #include "effect.h"
 #include "font_uty.h"
@@ -26,8 +26,8 @@
 // Constants
 // ---------
 
-static constexpr RGB ColorHighlight = {51, 102, 153};
-static constexpr RGB ColorDefault = {153, 204, 255};
+static constexpr RGB ColorHighlight = {.r=51, .g=102, .b=153};
+static constexpr RGB ColorDefault = {.r=153, .g=204, .b=255};
 // ---------
 
 // State
@@ -52,11 +52,11 @@ std::optional<MUSICROOM_TEXT> MusicRoomText;
 
 void MUSICROOM_TEXT::RenderVersion(WINDOW_POINT topleft) const {
   static constexpr Narrow::string_view VERSION =
-      ("秋霜玉    Version 1.005     ★デモ対応版＃★");
+      "秋霜玉    Version 1.005     ★デモ対応版＃★";
   TextObj.Render(topleft, version, VERSION, [](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
-    s.Put({0, 0}, VERSION);
+    s.Put({.x=0, .y=0}, VERSION);
   });
 }
 
@@ -68,11 +68,11 @@ void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
   }
   const auto dev_full = maybe_dev_full.value();
   const Narrow::string_view dev = {dev_full.data(),
-                                   std::min(dev_full.size(), 13uz)};
+                                   std::min(dev_full.size(), 13UZ)};
   TextObj.Render(topleft, mid_dev, dev, [&dev](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
-    s.Put({0, 0}, dev);
+    s.Put({.x=0, .y=0}, dev);
   });
 #endif
 }
@@ -92,10 +92,10 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
     const auto title_left = (s.Extent(num).w + 8);
 
     s.SetFont(FONT_ID::NORMAL);
-    s.Put({1, 0}, num, ColorHighlight);
-    s.Put({(title_left + 1), 0}, title, ColorHighlight);
-    s.Put({0, 0}, num, ColorDefault);
-    s.Put({(title_left + 0), 0}, title, ColorDefault);
+    s.Put({.x=1, .y=0}, num, ColorHighlight);
+    s.Put({.x=(title_left + 1), .y=0}, title, ColorHighlight);
+    s.Put({.x=0, .y=0}, num, ColorDefault);
+    s.Put({.x=(title_left + 0), .y=0}, title, ColorDefault);
   });
 }
 
@@ -122,13 +122,13 @@ void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
     while (const auto line = cursor.next<LINE>()) {
-      s.Put({0, y}, line.value()[0]);
+      s.Put({.x=0, .y=y}, line.value()[0]);
       y += 16;
     }
   });
 }
 
-bool MusicRoomInit(void) {
+bool MusicRoomInit() {
   TextObj.Clear();
   GrpBackend_Clear();
   Grp_Flip();
@@ -157,10 +157,10 @@ bool MusicRoomInit(void) {
   }
 
   MusicRoomText = MUSICROOM_TEXT{
-      .mid_dev = TextObj.Register({98, 13}),
-      .title = TextObj.Register({240, 16}),
-      .comment = TextObj.Register({272, 192}),
-      .version = TextObj.Register({490, 13}),
+      .mid_dev = TextObj.Register({.w=98, .h=13}),
+      .title = TextObj.Register({.w=240, .h=16}),
+      .comment = TextObj.Register({.w=272, .h=192}),
+      .version = TextObj.Register({.w=490, .h=13}),
 
       .comment_buf = std::move(comment_buf),
   };
@@ -182,7 +182,8 @@ bool MusicRoomInit(void) {
 
 // スペアナ描画 //
 void GrpDrawSpect(int x, int y) {
-  uint16_t ftable[128 + 8 + 8], ftable2[128];
+  uint16_t ftable[128 + 8 + 8];
+  uint16_t ftable2[128];
 
   static uint16_t ftable3[128 + 8 + 8];
   static uint8_t ftable3flag;
@@ -197,7 +198,7 @@ void GrpDrawSpect(int x, int y) {
     int temp2 = 0;
     for (const auto j : std::views::iota(0, 16)) {
       temp += Mid_PlayTable[j][i];
-      temp2 += (Mid_PlayTable[j][i] ? 1 : 0);
+      temp2 += ((Mid_PlayTable[j][i] != 0U) ? 1 : 0);
       if (Mid_PlayTable[j][i] != 0) {
         Mid_PlayTable[j][i] -= ((Mid_PlayTable[j][i] >> 3) + 1); // 4
       }
@@ -252,7 +253,7 @@ void GrpDrawSpect(int x, int y) {
 
     if (ftable3[i] < ftable[i]) {
       ftable3[i] = ftable[i];
-    } else if (!ftable3flag && ftable3[i]) {
+    } else if ((ftable3flag == 0U) && (ftable3[i] != 0U)) {
       ftable3[i]--;
     }
   }
@@ -264,15 +265,15 @@ void GrpDrawSpect(int x, int y) {
   if (auto *gp = GrpGeom_Poly()) {
     for (int i = 0; i < std::size(ftable); i++) {
       // WORD c2 = 0;	//5
-      constexpr RGB c1 = {200, 0, 0};
-      constexpr RGB c2 = {250, 250, 0};
+      constexpr RGB c1 = {.r=200, .g=0, .b=0};
+      constexpr RGB c2 = {.r=250, .g=250, .b=0};
       gp->DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
     }
   } else if (auto *gf = GrpGeom_FB()) {
     gf->SetColor({4, 2, 1});
     for (int i = 0; i < std::size(ftable); i++) {
       // WORD c2 = 0;	//5
-      if (ftable[i]) {
+      if (ftable[i] != 0U) {
         gf->DrawLine((i + x), (y - (ftable[i] * 2)), (i + x), y);
       }
     }
@@ -282,7 +283,7 @@ void GrpDrawSpect(int x, int y) {
 }
 
 // 押されているところを表示 //
-void GrpDrawNote(void) {
+void GrpDrawNote() {
   // 0123456789ab (Mod c)
   // o#o#oo#o#o#o
   // o o oo o o o
@@ -359,19 +360,19 @@ void GrpDrawNote(void) {
     int LevelSum = 0;
     int num = 0;
     for (const auto NoteNo : std::views::iota(0, 128)) {
-      if (Mid_NoteWTable[Track][NoteNo]) {
+      if (Mid_NoteWTable[Track][NoteNo] != 0U) {
         const auto x = (40 + destX[NoteNo % 12] + ((NoteNo / 12) * 28));
         const auto y = (9 + (Track * 24));
         GrpSurface_Blit({x, y}, SURFACE_ID::MUSIC, src[NoteNo % 12]);
         Mid_NoteWTable[Track][NoteNo]--;
       }
 
-      if (Mid_NoteTable[Track][NoteNo]) {
+      if (Mid_NoteTable[Track][NoteNo] != 0U) {
         const auto x = (40 + destX[NoteNo % 12] + ((NoteNo / 12) * 28));
         const auto y = (9 + (Track * 24));
         GrpSurface_Blit({x, y}, SURFACE_ID::MUSIC, src[NoteNo % 12]);
       }
-      if (Mid_PlayTable2[Track][NoteNo]) {
+      if (Mid_PlayTable2[Track][NoteNo] != 0U) {
         LevelSum += (Mid_PlayTable2[Track][NoteNo]);
         // if(Mid_PlayTable2[Track][NoteNo]>128)
         // Mid_PlayTable2[Track][NoteNo]=128;
@@ -381,14 +382,14 @@ void GrpDrawNote(void) {
       }
     }
 
-    if (num) {
+    if (num != 0) {
       rc = PIXEL_LTWH{80, 456, (std::min)((LevelSum / num), 96), 5};
       GrpSurface_Blit({240, (22 + (Track * 24))}, SURFACE_ID::MUSIC, rc);
     }
   }
 }
 
-void MusicRoomProc(bool &) {
+void MusicRoomProc(bool & /*unused*/) {
   if (!MusicRoomText) {
     assert(!"Music Room not initialized?");
     std::unreachable();
@@ -432,13 +433,13 @@ void MusicRoomProc(bool &) {
     break;
   }
 
-  if (SystemKey_Data & SYSKEY_BGM_FADE) {
+  if ((SystemKey_Data & SYSKEY_BGM_FADE) != 0) {
     BGM_FadeOut(120);
   }
 
   BGM_UpdateMIDITables();
 
-  if ((playing == BGM_PLAYING::MIDI) && (SystemKey_Data & SYSKEY_BGM_DEVICE)) {
+  if ((playing == BGM_PLAYING::MIDI) && ((SystemKey_Data & SYSKEY_BGM_DEVICE) != 0)) {
     if (!DevChgWait) {
       BGM_ChangeMIDIDevice(1);
       DevChgWait = true;
@@ -456,7 +457,7 @@ void MusicRoomProc(bool &) {
     };
 
     auto BlitLegend = [](const PIXEL_LTWH &rect) {
-      const PIXEL_LTRB src = (rect + PIXEL_POINT{0, 392});
+      const PIXEL_LTRB src = (rect + PIXEL_POINT{.x=0, .y=392});
       GrpSurface_Blit({(8 + rect.left), (410 + rect.top)}, SURFACE_ID::MUSIC,
                       src);
     };

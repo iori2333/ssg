@@ -4,6 +4,8 @@
 /*                                                                           */
 
 #include "scroll.h"
+
+#include <utility>
 #include "config.h"
 #include "demo_play.h"
 #include "game/bgm.h"
@@ -29,28 +31,28 @@ struct ScrollSaveHeader {
 // ScrollInfo, SclInfo, Scroller.map_chip_rects[] → scroll_manager.cpp の
 // ScrollManager に移動
 
-static void enemy_set(void);             // 敵をセットする
-static void _PutEnemy(const uint8_t *p); // p:SCL_ENEMY以降の敵配置データ
-static void InitMapChipRect(void);       // スクロールに関する情報の初期化を行う
+static void enemy_set();             // 敵をセットする
+static void PutEnemy(const uint8_t *p); // p:SCL_ENEMY以降の敵配置データ
+static void InitMapChipRect();       // スクロールに関する情報の初期化を行う
 
 static PBGMAP *ScNextLine(PBGMAP *p);   // 次の行にＧＯ！！
 static PBGMAP *ScBeforeLine(PBGMAP *p); // 前の行にＧＯ！！
 
-static void ScrollCmdDummy(void);       // 特殊スクロール無し
-static void ScrollCmdStg2Boss(void);    // ２面ボスのスクロール
-static void ScrollCmdRasterOpen(void);  // ラスタースクロールオープン
-static void ScrollCmdRasterClose(void); // ラスタースクロールクローズ
-static void ScrollCmdStg3Boss(void);    // ゲイツ雲
+static void ScrollCmdDummy();       // 特殊スクロール無し
+static void ScrollCmdStg2Boss();    // ２面ボスのスクロール
+static void ScrollCmdRasterOpen();  // ラスタースクロールオープン
+static void ScrollCmdRasterClose(); // ラスタースクロールクローズ
+static void ScrollCmdStg3Boss();    // ゲイツ雲
 
-static void ScrollCmdStg6Cube(void);   // ６面の３Ｄキューう゛
-static void ScrollCmdStg6RndEcl(void); // ６面のランダムＥＣＬ列
-static void ScrollCmdStg6Raster(void); // ６面ラスター
+static void ScrollCmdStg6Cube();   // ６面の３Ｄキューう゛
+static void ScrollCmdStg6RndEcl(); // ６面のランダムＥＣＬ列
+static void ScrollCmdStg6Raster(); // ６面ラスター
 
-static void ScrollCmdStg3Star(void); // ３面高速星
+static void ScrollCmdStg3Star(); // ３面高速星
 
-static void Stg3BossMapDraw(void); // ゲイツ雲描画
+static void Stg3BossMapDraw(); // ゲイツ雲描画
 
-static void ScrollCmdStg4Rock(void); // ４面岩
+static void ScrollCmdStg4Rock(); // ４面岩
 
 // デバッグ用マクロ //
 static void SCL_DEBUG(std::u8string_view s) {
@@ -60,26 +62,29 @@ static void SCL_DEBUG(std::u8string_view s) {
 }
 
 // 背景を動かす(１フレーム分) //
-void ScrollManager::Move(void) {
-  int i;
+void ScrollManager::Move() {
+  int i = 0;
 
   enemy_set();    // 敵をセット
   scroll.ExCmd(); // 特殊スクロール発動!!
 
   // 振動エフェクトを動作させる(これは、特殊スクロールとは別物) //
-  if (scroll.IsQuake)
+  if (scroll.IsQuake != 0U) {
     scroll.IsQuake += 2;
+}
 
   // 標準のスクロールスピードだけカウンタを進める //
   if (scroll.DataHead == nullptr) {
     return;
   }
-  if (scroll.Count >= scroll.InfEnd)
+  if (scroll.Count >= scroll.InfEnd) {
     return;
+}
 
   // スクロールしない場合は、リターンする //
-  if (scroll.ScrollSpeed == 0)
+  if (scroll.ScrollSpeed == 0) {
     return;
+}
 
   scroll.Count += scroll.ScrollSpeed;
 
@@ -87,11 +92,12 @@ void ScrollManager::Move(void) {
     // 通常のスクロール //
     for (i = 0; i < scroll.NumLayer; i++) {
       scroll.LayerCount[i] += scroll.ScrollSpeed;
-      while (scroll.LayerCount[i] >= scroll.LayerWait[i]) {
+      while (std::cmp_greater_equal(scroll.LayerCount[i] , scroll.LayerWait[i])) {
         scroll.LayerCount[i] -= scroll.LayerWait[i];
         scroll.LayerDy[i] = (scroll.LayerDy[i] + 1) % 16; //& 0x0f;
-        if (scroll.LayerDy[i] == 0)
+        if (scroll.LayerDy[i] == 0) {
           scroll.LayerPtr[i] = ScNextLine(scroll.LayerPtr[i]);
+}
       }
     }
   } else {
@@ -99,8 +105,9 @@ void ScrollManager::Move(void) {
     for (i = 0; i < scroll.NumLayer; i++) {
       scroll.LayerCount[i] += scroll.ScrollSpeed;
       while (scroll.LayerCount[i] < 0) {
-        if (scroll.LayerDy[i] == 0)
+        if (scroll.LayerDy[i] == 0) {
           scroll.LayerPtr[i] = ScBeforeLine(scroll.LayerPtr[i]);
+}
         scroll.LayerCount[i] += scroll.LayerWait[i];
         scroll.LayerDy[i] = (scroll.LayerDy[i] + 15) % 16; //& 0x0f;
       }
@@ -109,12 +116,12 @@ void ScrollManager::Move(void) {
 }
 
 static PBGMAP *ScNextLine(PBGMAP *p) {
-  int i;
+  int i = 0;
 
   for (i = 0; i < MAP_WIDTH;) {
-    if (*p != MAPDATA_NONE)
+    if (*p != MAPDATA_NONE) { {
       p++, i++;
-    else {
+    } } else {
       i = i + (*(p + 1));
       p = p + 2;
     }
@@ -124,12 +131,12 @@ static PBGMAP *ScNextLine(PBGMAP *p) {
 }
 
 static PBGMAP *ScBeforeLine(PBGMAP *p) {
-  int i;
+  int i = 0;
 
   for (i = 0; i < MAP_WIDTH;) {
-    if (*(p - 2) != MAPDATA_NONE)
+    if (*(p - 2) != MAPDATA_NONE) { {
       p--, i++;
-    else {
+    } } else {
       i = i + (*(p - 1));
       p = p - 2;
     }
@@ -141,7 +148,7 @@ static PBGMAP *ScBeforeLine(PBGMAP *p) {
 // p:SCL_ENEMY以降の敵配置データ //
 // Scroller.key_wait_count → scroll_manager.cpp の Scroller に移動
 
-static void enemy_set(void) {
+static void enemy_set() {
   bool bFlag = true;
   //	BIT_DEVICE	*in;				// やばやば...
   bool CtrlFlag = false;
@@ -149,8 +156,8 @@ static void enemy_set(void) {
   while (bFlag) {
     const auto *cmd = Enemies.scl_now;
     switch (cmd[0]) {
-    case (SCL_KEY): // キー入力待ち
-      if ((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) ||
+    case SCL_KEY: // キー入力待ち
+      if (((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) != 0) ||
           ++Scroller.key_wait_count >= 180) {
         Enemies.scl_now++;
         Scroller.key_wait_count = 0;
@@ -159,12 +166,12 @@ static void enemy_set(void) {
       }
       break;
 
-    case (SCL_TIME): {
+    case SCL_TIME: {
       const auto temp = U32LEAt(&cmd[1]);
       // メッセージウィンドウがオープンしている場合 //
       if (Scroller.scene.MsgFlag) {
-        if ((Key_Data & KEY_TAMA) || (Key_Data & KEY_RETURN) ||
-            (Key_Data & KEY_BOMB)) {
+        if (((Key_Data & KEY_TAMA) != 0) || ((Key_Data & KEY_RETURN) != 0) ||
+            ((Key_Data & KEY_BOMB) != 0)) {
           if (!Scroller.scene.ReturnFlag) {
             GameState.game_count = temp;
             Scroller.scene.ReturnFlag = true;
@@ -192,14 +199,15 @@ static void enemy_set(void) {
       SCL_DEBUG(u8"--- SCL_TIME ---");
     } break;
 
-    case (SCL_ENEMY):
-      if (Bosses.count == 0)
-        _PutEnemy(cmd + 1); // ボス出現中は出て来ちゃダメ
+    case SCL_ENEMY:
+      if (Bosses.count == 0) {
+        PutEnemy(cmd + 1); // ボス出現中は出て来ちゃダメ
+}
       Enemies.scl_now += 6; // cmd(1)+x(2)+y(2)+id(1)
       SCL_DEBUG(u8"--- SCL_ENEMY ---");
       break;
 
-    case (SCL_BOSS): { // ボスをセットする(X(16),Y(16),ID(8))
+    case SCL_BOSS: { // ボスをセットする(X(16),Y(16),ID(8))
       const auto x = I16LEAt(&cmd[1 + 0]); // ボス初期Ｘ
       const auto y = I16LEAt(&cmd[1 + 2]); // ボス初期Ｙ
       const auto id = cmd[1 + 2 + 2];      // ボスＩＤ
@@ -207,49 +215,49 @@ static void enemy_set(void) {
       Enemies.scl_now += (1 + 2 + 2 + 1); // cmd+x+y+id
     } break;
 
-    case (SCL_BOSSDEAD): // ボスを強制的に破壊する(Level2 命令Only)
+    case SCL_BOSSDEAD: // ボスを強制的に破壊する(Level2 命令Only)
       Bosses.KillAll();
       Enemies.scl_now++;
       break;
 
-    case (SCL_MWOPEN): // メッセージウィンドウを開く
-      if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE)) {
+    case SCL_MWOPEN: // メッセージウィンドウを開く
+      if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
         MWinOpen();
       }
       Scroller.scene.MsgFlag = true;
       Enemies.scl_now++;
       break;
 
-    case (SCL_MWCLOSE): // メッセージウィンドウを閉じる
-      if (!(ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE)) {
+    case SCL_MWCLOSE: // メッセージウィンドウを閉じる
+      if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
         MWinClose();
       }
       Scroller.scene.MsgFlag = false;
       Enemies.scl_now++;
       break;
 
-    case (SCL_MSG): // メッセージを出力する
+    case SCL_MSG: // メッセージを出力する
       // MWinCmd(MWCMD_SMALLFONT);
       MWinMsg(reinterpret_cast<const char *>(cmd + 1));
       Enemies.scl_now += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
       break;
 
-    case (SCL_FACE): // 顔を表示する
+    case SCL_FACE: // 顔を表示する
       MWinFace(cmd[1]);
       Enemies.scl_now += 2;
       break;
 
-    case (SCL_LOADFACE): // 顔グラをロードする(SurfaceID,FileNo)
+    case SCL_LOADFACE: // 顔グラをロードする(SurfaceID,FileNo)
       LoadFace(cmd[1], cmd[2]);
       Enemies.scl_now += 3;
       break;
 
-    case (SCL_NPG): // 新しいページに変更する
+    case SCL_NPG: // 新しいページに変更する
       MWinCmd(MWCMD_NEWPAGE);
       Enemies.scl_now++;
       break;
 
-    case (SCL_END): // カウントも変更させずにリターンする
+    case SCL_END: // カウントも変更させずにリターンする
                     /*
                     MWinOpen();
                     MWinCmd(MWCMD_NEWPAGE);
@@ -259,12 +267,12 @@ static void enemy_set(void) {
                     */
       return;
 
-    case (SCL_SSP): // スクロールスピード変更
+    case SCL_SSP: // スクロールスピード変更
       Scroller.SetSpeed(I16LEAt(&cmd[1]));
       Enemies.scl_now += 3;
       break;
 
-    case (SCL_MUSIC):
+    case SCL_MUSIC:
       //				if(!(/*DemoplaySaveEnable||*/Demos.load_enable)){
       if (!GameState.is_demoplay) {
         BGM_Stop();
@@ -279,86 +287,86 @@ static void enemy_set(void) {
       Enemies.scl_now += 2;
       break;
 
-    case (SCL_DELENEMY):
+    case SCL_DELENEMY:
       Enemies.InitIndices();
       Enemies.scl_now++;
       break;
 
-    case (SCL_EFC):
+    case SCL_EFC:
       switch (cmd[1]) {
-      case (SEFC_WARN):
+      case SEFC_WARN:
         // effect_set(0,0,EFC_WARNBOSS,GameState.game_stage);
         Snd_SEPlay(8, GX_MID, true);
         Effects.SetWarningEffect();
         // StringEffect3(GameState.game_stage);
         break;
 
-      case (SEFC_WARNSTOP):
+      case SEFC_WARNSTOP:
         Snd_SEStop(8);
         break; // Warning 停止
-      case (SEFC_MUSICFADE):
+      case SEFC_MUSICFADE:
         BGM_FadeOut(120);
         break; // 曲の停止
-      case (SEFC_STG2BOSS):
+      case SEFC_STG2BOSS:
         Scroller.Command(SCMD_STG2BOSS);
         break; // ２面ボスScroll
-      case (SEFC_RASTERON):
+      case SEFC_RASTERON:
         Scroller.Command(SCMD_RASTER_ON);
         break; // ラスターON
-      case (SEFC_RASTEROFF):
+      case SEFC_RASTEROFF:
         Scroller.Command(SCMD_RASTER_OFF);
         break; // ラスターOFF
-      case (SEFC_STG3BOSS):
+      case SEFC_STG3BOSS:
         Scroller.Command(SCMD_STG3BOSS);
         break; // ３面ボス雲
-      case (SEFC_STG3RESET):
+      case SEFC_STG3RESET:
         Scroller.Command(SCMD_STG3RESET);
         break; // ３面リセット
-      case (SEFC_CFADEIN):
+      case SEFC_CFADEIN:
         Effects.SetScreenEffect(SCNEFC_CFADEIN);
         break; // ○フェードIn
-      case (SEFC_CFADEOUT):
+      case SEFC_CFADEOUT:
         Effects.SetScreenEffect(SCNEFC_CFADEOUT);
         break; // ○フェードOut
-      case (SEFC_STG6CUBE):
+      case SEFC_STG6CUBE:
         Scroller.Command(SCMD_STG6CUBE);
         break; // ６面キューブ
-      case (SEFC_STG6RNDECL):
+      case SEFC_STG6RNDECL:
         Scroller.Command(SCMD_STG6RNDECL);
         break; // ６面ＥＣＬ羅列
-      case (SEFC_STG4ROCK):
+      case SEFC_STG4ROCK:
         Scroller.Command(SCMD_STG4ROCK);
         break; // ４面岩
-      case (SEFC_STG4LEAVE):
+      case SEFC_STG4LEAVE:
         Scroller.Command(SCMD_STG4LEAVE);
         break; // ４面岩画面外へ
-      case (SEFC_WHITEIN):
+      case SEFC_WHITEIN:
         Effects.SetScreenEffect(SCNEFC_WHITEIN);
         break; // ホワイトイン
-      case (SEFC_WHITEOUT):
+      case SEFC_WHITEOUT:
         Effects.SetScreenEffect(SCNEFC_WHITEOUT);
         break; // ホワイトアウト
-      case (SEFC_LOADEX01):
+      case SEFC_LOADEX01:
         LoadGraph(GRAPH_ID_EXBOSS1);
         break;
-      case (SEFC_LOADEX02):
+      case SEFC_LOADEX02:
         LoadGraph(GRAPH_ID_EXBOSS2);
         break;
-      case (SEFC_STG6RASTER):
+      case SEFC_STG6RASTER:
         Scroller.Command(SCMD_STG6RASTER);
         break; // ６面ラスター
       }
       Enemies.scl_now += 2;
       break;
 
-    case (SCL_WAITEX): // 特殊待ち <cmd1>,<opt4>
+    case SCL_WAITEX: // 特殊待ち <cmd1>,<opt4>
       switch (cmd[1]) {
-      case (SWAIT_BOSSHP): // 残りＨＰ
+      case SWAIT_BOSSHP: // 残りＨＰ
         if (Bosses.GetHPSum() <= U32LEAt(&cmd[2])) {
           break;
         }
         return;
-      case (SWAIT_BOSSLEFT): // 残りボス数
+      case SWAIT_BOSSLEFT: // 残りボス数
         if (Bosses.count <= U32LEAt(&cmd[2])) {
           break;
         }
@@ -367,7 +375,7 @@ static void enemy_set(void) {
       Enemies.scl_now += (1 + 1 + 4);
       break;
 
-    case (SCL_STAGECLEAR): // ステージクリア
+    case SCL_STAGECLEAR: // ステージクリア
       if (Demos.save_all_enable) {
         Demos.FlushStage();
         GameNextStage();
@@ -383,26 +391,28 @@ static void enemy_set(void) {
       GameNextStage(); // 本当はエラーチェックが必要!!
       return;
 
-    case (SCL_GAMECLEAR):
+    case SCL_GAMECLEAR:
       if (Demos.save_all_enable) {
         Demos.FlushStage();
         Demos.SaveReplayAll(false);
         // Fall through to normal ending logic
       }
-      if (Demos.load_all_enable)
+      if (Demos.load_all_enable) {
         return;
+}
 
-      if (GameState.game_stage == STAGE_MAX)
+      if (GameState.game_stage == STAGE_MAX) {
         GameState.game_stage = 7;
+}
       if (GameState.game_level != GAME_EASY) {
         switch (Players.viv.weapon) {
-        case (0):
+        case 0:
           ConfigDat.ExtraStgFlags.v |= 1;
           break;
-        case (1):
+        case 1:
           ConfigDat.ExtraStgFlags.v |= 2;
           break;
-        case (2):
+        case 2:
           ConfigDat.ExtraStgFlags.v |= 4;
           break;
         }
@@ -411,25 +421,26 @@ static void enemy_set(void) {
       Ending.Init();
       return;
 
-    case (SCL_EXTRACLEAR):
+    case SCL_EXTRACLEAR:
       if (Demos.save_all_enable) {
         Demos.FlushStage();
         Demos.SaveReplayAll(true);
       }
-      if (Demos.load_all_enable)
+      if (Demos.load_all_enable) {
         return;
+}
 
       GameFlow.NameRegistInit(true);
       return;
 
-    case (SCL_MAPPALETTE): // マップパーツ用Surface からパレットを
+    case SCL_MAPPALETTE: // マップパーツ用Surface からパレットを
       // 前後にある４０色をマップパーツのパレットにする
       // BitDeapth 判定は、関数側に任せる
       GrpSurface_PaletteApplyToBackend(SURFACE_ID::MAPCHIP);
       Enemies.scl_now++;
       break;
 
-    case (SCL_ENEMYPALETTE):
+    case SCL_ENEMYPALETTE:
       LoadPaletteFromEnemy(); // BitDeapth 判定は、関数側に任せる
       Enemies.scl_now++;
       break;
@@ -447,25 +458,28 @@ static void enemy_set(void) {
   GameState.game_count++;
 
   if ((GameState.game_count & 0x3f) == 0) {
-    if (GameState.game_stage == GRAPH_ID_EXSTAGE)
+    if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
       Ranking.Add(1);
-    else
-      Ranking.Add(1 + GameState.game_stage / 3);
+    } else {
+      Ranking.Add(1 + (GameState.game_stage / 3));
+}
   }
 }
 
-static void _PutEnemy(const uint8_t *p) {
+static void PutEnemy(const uint8_t *p) {
   /*
    * [メモ]
    *  p[0-1]:EnemyX  p[2-3]:EnemyY  p[4]:EnemyID
    *  Enemies.ecl_head[0-3]:Num  Enemies.ecl_head[n*4-(n*4+3)]
    * (n>1):StartAddr(ABS)
    */
-  EnemyData *e;
-  short x, y;
+  EnemyData *e = nullptr;
+  short x = 0;
+  short y = 0;
 
-  if (Enemies.count + 1 >= ENEMY_MAX)
+  if (Enemies.count + 1 >= ENEMY_MAX) {
     return;
+}
 
   e = &Enemies.entities[Enemies.indices[Enemies.count++]];
 
@@ -586,11 +600,15 @@ infy));
 */
 
 // 背景を描画する //
-void ScrollManager::Draw(void) {
-  PBGMAP *p;
-  int i, j, k, x, y;
+void ScrollManager::Draw() {
+  PBGMAP *p = nullptr;
+  int i = 0;
+  int j = 0;
+  int k = 0;
+  int x = 0;
+  int y = 0;
   int dx = 0;   // 振動用
-  int RasterDx; // ラスター用
+  int RasterDx = 0; // ラスター用
 
   if (scroll.DataHead == nullptr) {
     return;
@@ -605,10 +623,10 @@ void ScrollManager::Draw(void) {
   if (scroll.ExCmd == ScrollCmdStg3Boss) {
     Stg3BossMapDraw();
     return;
-  } else if (scroll.ExCmd == ScrollCmdStg6Cube) {
+  } if (scroll.ExCmd == ScrollCmdStg6Cube) {
     Effects.Draw3DCubes();
     return;
-  } else if (scroll.ExCmd == ScrollCmdStg6RndEcl) {
+  } if (scroll.ExCmd == ScrollCmdStg6RndEcl) {
     Effects.DrawFakeECL();
     return;
   } else if (scroll.ExCmd == ScrollCmdStg6Raster) {
@@ -623,8 +641,9 @@ void ScrollManager::Draw(void) {
   // dx = sinl(scroll.IsQuake*4,2);
   // if(scroll.IsQuake) dx =
   // sinl(scroll.IsQuake*8+i*6,(256-scroll.IsQuake)>>2);	//4
-  if (scroll.IsQuake)
+  if (scroll.IsQuake != 0U) {
     dx = sinl(scroll.IsQuake * 16, (256 - scroll.IsQuake) >> 5); // 4
+}
 
   // 全てのレイヤーの表示 //
   for (k = 0; k < scroll.NumLayer; k++) {
@@ -669,70 +688,71 @@ void ScrollManager::SetSpeed(int speed) {
 // ＳＣＬ用コマンド実行関数(引数:(1)スクロールコマンド) //
 void ScrollManager::Command(uint8_t cmd) {
   switch (cmd) {
-  case (SCMD_QUAKE): // 振動エフェクト
+  case SCMD_QUAKE: // 振動エフェクト
     scroll.IsQuake = 2;
     break;
 
-  case (SCMD_STG2BOSS): // ２面ボス
+  case SCMD_STG2BOSS: // ２面ボス
     scroll.ExCmd = ScrollCmdStg2Boss;
     scroll.ExCount = 0;
     break;
 
-  case (SCMD_STG3BOSS): // ３面ボス
+  case SCMD_STG3BOSS: // ３面ボス
     scroll.ExCmd = ScrollCmdStg3Boss;
     scroll.ExCount = 0;
     // InitStg3Cloud();
     break;
 
-  case (SCMD_STG3RESET):
+  case SCMD_STG3RESET:
     scroll.ExCmd = ScrollCmdDummy;
     scroll.ExCount = 0;
     break;
 
-  case (SCMD_STG6CUBE):
+  case SCMD_STG6CUBE:
     scroll.ExCmd = ScrollCmdStg6Cube;
     scroll.ExCount = 0;
     Effects.Init3DCubes();
     break;
 
-  case (SCMD_STG6RNDECL):
+  case SCMD_STG6RNDECL:
     scroll.ExCmd = ScrollCmdStg6RndEcl;
     scroll.ExCount = 0;
     Effects.InitFakeECL();
     break;
 
-  case (SCMD_STG4ROCK):
+  case SCMD_STG4ROCK:
     scroll.ExCmd = ScrollCmdStg4Rock;
     scroll.ExCount = 0;
     Effects.InitStg4Rocks();
     break;
 
-  case (SCMD_STG4LEAVE):
-    if (scroll.ExCmd != ScrollCmdStg4Rock)
+  case SCMD_STG4LEAVE:
+    if (scroll.ExCmd != ScrollCmdStg4Rock) {
       break;
+}
     Effects.SendCmdStg4Rocks(STG4ROCK_LEAVE, 0);
     break;
 
-  case (SCMD_STG6RASTER):
+  case SCMD_STG6RASTER:
     scroll.ExCmd = ScrollCmdStg6Raster;
     scroll.ExCount = 0;
     Effects.InitStg6Rasters();
     break;
 
-  case (SCMD_STG3STAR):
+  case SCMD_STG3STAR:
     scroll.ExCmd = ScrollCmdStg3Star;
     scroll.ExCount = 0;
     Effects.InitStg3Stars();
     Effects.SetScreenEffect(SCNEFC_WHITEIN);
     break;
 
-  case (SCMD_RASTER_ON): // ラスタースクロール開始
+  case SCMD_RASTER_ON: // ラスタースクロール開始
     scroll.ExCmd = ScrollCmdRasterOpen;
     scroll.RasterDeg = 0;
     scroll.RasterWidth = 0;
     break;
 
-  case (SCMD_RASTER_OFF): // ラスタースクロール終了
+  case SCMD_RASTER_OFF: // ラスタースクロール終了
     scroll.ExCmd = ScrollCmdRasterClose;
     // scroll.RasterDeg   = 0;
     // scroll.RasterWidth = 0;
@@ -741,12 +761,12 @@ void ScrollManager::Command(uint8_t cmd) {
 }
 
 // 特殊スクロール無し //
-static void ScrollCmdDummy(void) {
+static void ScrollCmdDummy() {
   // 何もしないよぉ... //
 }
 
 // ２面ボスのスクロール //
-static void ScrollCmdStg2Boss(void) {
+static void ScrollCmdStg2Boss() {
   /*
           SSP	-810	TR	10			SSP	-630	TR
      10 SSP	-450	TR	10			SSP	-270	TR
@@ -759,80 +779,80 @@ static void ScrollCmdStg2Boss(void) {
   // 特殊タイマーにより分岐を行う //
   switch (Scroller.scroll.ExCount) {
   // 正方向->逆方向 //
-  case (0):
+  case 0:
     Scroller.SetSpeed(1512);
     break;
-  case (20):
+  case 20:
     Scroller.SetSpeed(1200);
     break;
-  case (40):
+  case 40:
     Scroller.SetSpeed(900);
     break;
-  case (60):
+  case 60:
     Scroller.SetSpeed(600);
     break;
-  case (80):
+  case 80:
     Scroller.SetSpeed(300);
     break;
-  case (100):
+  case 100:
     Scroller.SetSpeed(150);
     break;
   // case(120):	Scroller.SetSpeed(0);			break;
-  case (140):
+  case 140:
     Scroller.SetSpeed(-150);
     break;
-  case (160):
+  case 160:
     Scroller.SetSpeed(-300);
     break;
-  case (180):
+  case 180:
     Scroller.SetSpeed(-600);
     break;
-  case (200):
+  case 200:
     Scroller.SetSpeed(-900);
     break;
-  case (220):
+  case 220:
     Scroller.SetSpeed(-1200);
     break;
-  case (240):
+  case 240:
     Scroller.SetSpeed(-1512);
     break;
 
   // 逆方向->正方向 //
-  case (440):
+  case 440:
     Scroller.SetSpeed(-1512);
     break;
-  case (460):
+  case 460:
     Scroller.SetSpeed(-1200);
     break;
-  case (480):
+  case 480:
     Scroller.SetSpeed(-900);
     break;
-  case (500):
+  case 500:
     Scroller.SetSpeed(-600);
     break;
-  case (520):
+  case 520:
     Scroller.SetSpeed(-300);
     break;
-  case (540):
+  case 540:
     Scroller.SetSpeed(-150);
     break;
   // case(560):	Scroller.SetSpeed(0);			break;
-  case (580):
+  case 580:
     Scroller.SetSpeed(150);
     break;
-  case (600):
+  case 600:
     Scroller.SetSpeed(300);
     break;
-  case (620):
+  case 620:
     Scroller.SetSpeed(600);
     break;
-  case (640):
+  case 640:
     Scroller.SetSpeed(900);
     break;
-  case (660):
+  case 660:
     Scroller.SetSpeed(1200);
     break;
-  case (680):
+  case 680:
     Scroller.SetSpeed(1512);
     break;
   }
@@ -841,8 +861,9 @@ static void ScrollCmdStg2Boss(void) {
 }
 
 // ラスタースクロールオープン //
-static void ScrollCmdRasterOpen(void) {
-  int i, j;
+static void ScrollCmdRasterOpen() {
+  int i = 0;
+  int j = 0;
 
   // ちょっと重いかもね... //
   for (i = j = 0; i < 31; i++, j += 16) {
@@ -852,13 +873,15 @@ static void ScrollCmdRasterOpen(void) {
 
   Scroller.scroll.RasterDeg += 2;
 
-  if (Scroller.scroll.RasterWidth < 2)
+  if (Scroller.scroll.RasterWidth < 2) {
     Scroller.scroll.RasterWidth++;
+}
 }
 
 // ラスタースクロールクローズ //
-static void ScrollCmdRasterClose(void) {
-  int i, j;
+static void ScrollCmdRasterClose() {
+  int i = 0;
+  int j = 0;
 
   // ちょっと重いかもね... //
   for (i = j = 0; i < 31; i++, j += 2) {
@@ -876,14 +899,15 @@ static void ScrollCmdRasterClose(void) {
 }
 
 // ゲイツ雲 //
-static void ScrollCmdStg3Boss(void) {
+static void ScrollCmdStg3Boss() {
   Scroller.scroll.ExCount = (Scroller.scroll.ExCount + 200) % 208;
   //	MoveStg3Cloud();
 }
 
 // ゲイツ雲描画 //
-static void Stg3BossMapDraw(void) {
-  int x, y;
+static void Stg3BossMapDraw() {
+  int x = 0;
+  int y = 0;
 
   x = X_MIN;
   y = Y_MIN - Scroller.scroll.ExCount;
@@ -897,19 +921,19 @@ static void Stg3BossMapDraw(void) {
 }
 
 // ６面の３Ｄキューう゛ //
-static void ScrollCmdStg6Cube(void) { Effects.Move3DCubes(); }
+static void ScrollCmdStg6Cube() { Effects.Move3DCubes(); }
 
 // ６面のランダムＥＣＬ列 //
-static void ScrollCmdStg6RndEcl(void) { Effects.MoveFakeECL(); }
+static void ScrollCmdStg6RndEcl() { Effects.MoveFakeECL(); }
 
 // ６面ラスター //
-static void ScrollCmdStg6Raster(void) { Effects.MoveStg6Rasters(); }
+static void ScrollCmdStg6Raster() { Effects.MoveStg6Rasters(); }
 
 // ４面岩 //
-static void ScrollCmdStg4Rock(void) { Effects.MoveStg4Rocks(); }
+static void ScrollCmdStg4Rock() { Effects.MoveStg4Rocks(); }
 
 // ３面高速星 //
-static void ScrollCmdStg3Star(void) {
+static void ScrollCmdStg3Star() {
   Scroller.scroll.ExCount++;
 
   if (Scroller.scroll.ExCount == 32) {
@@ -920,9 +944,9 @@ static void ScrollCmdStg3Star(void) {
 }
 
 // マップデータをロードする(BMP含む) //
-bool ScrollManager::Init(void) {
-  ScrollSaveHeader *LayerInfo;
-  int i;
+bool ScrollManager::Init() {
+  ScrollSaveHeader *LayerInfo = nullptr;
+  int i = 0;
   static bool bInitialized = false;
 
   scene.MsgFlag = false;
@@ -987,14 +1011,16 @@ bool ScrollManager::Init(void) {
 
   // 無限ループ終了時刻 //
   scroll.InfEnd =
-      16 * (LayerInfo[i - 1].Length - 1280 / 16) * LayerInfo[i - 1].ScrollWait;
+      16 * (LayerInfo[i - 1].Length - (1280 / 16)) * LayerInfo[i - 1].ScrollWait;
 
   return true;
 }
 
 // スクロールに関する情報の初期化を行う //
-static void InitMapChipRect(void) {
-  int i, x, y;
+static void InitMapChipRect() {
+  int i = 0;
+  int x = 0;
+  int y = 0;
 
   // マップチップ用矩形の準備 //
   for (i = 0; i < 1200; i++) {

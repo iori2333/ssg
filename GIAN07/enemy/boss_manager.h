@@ -47,7 +47,7 @@ struct BossManager {
   void BitAttack(EnemyData *e, uint32_t AtkID);
   void BitLaser(EnemyData *e, uint8_t cmd);
   void BitCommand(EnemyData *e, uint8_t Cmd, int Param);
-  int GetBitLeft();
+  int GetBitLeft() const;
 
   // 蛇型の敵 (was in EnemyExCtrl.cpp)
   void SnakyInit();
@@ -64,7 +64,7 @@ struct BossManager {
   void BitSelectAttack(uint32_t BitID);
   void BitLaserCommand(uint8_t Command);
   void BitSendCommand(uint8_t Command, int Param);
-  int BitGetNum();
+  int BitGetNum() const;
 
 private:
   void HPG_Open(uint32_t max);
