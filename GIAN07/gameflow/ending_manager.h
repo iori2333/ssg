@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "ENDING.h"
-#include "LOADER.h"
+#include "ending.h"
 #include "game/coords.h"
 #include "game/graphics.h"
+#include "loader.h"
 #include "platform/text_backend.h"
 #include <array>
 #include <cstdint>
@@ -20,7 +20,7 @@ struct EndingManager {
     uint32_t timer = 0;
     uint32_t fadein = 0;
     uint32_t fadeout = 0;
-    ENDING_GRP *target = nullptr;
+    EndingGrp *target = nullptr;
     short alpha = 0;
     int x = 0, y = 0;
     bool bWantDisp = false;
@@ -59,7 +59,7 @@ struct EndingManager {
   GrpInfo grp_info;
   StTask stf_task;
   Text text;
-  uint16_t flash_state = 0; // was GameFlow.flash_state
+  uint16_t flash_state = 0;
 
   static constexpr std::array<PIXEL_LTRB, 7> staff_label = {{
       {0, 0, 160, 24},
@@ -72,17 +72,20 @@ struct EndingManager {
   }};
 
   static constexpr std::array<PIXEL_LTRB, 7> staff_member = {{
-      {0, 168, 72, 192},    {96, 168, 168, 192},
-      {192, 168, 264, 192}, {288, 168, 360, 192},
-      {0, 192, 144, 216},   {168, 192, 320, 216},
+      {0, 168, 72, 192},
+      {96, 168, 168, 192},
+      {192, 168, 264, 192},
+      {288, 168, 360, 192},
+      {0, 192, 144, 216},
+      {168, 192, 320, 216},
       {0, 216, 336, 264},
   }};
 
   // === 公開メソッド ===
 
-  bool Init();              // was EndingInit
-  void Proc(bool &);        // was EndingProc
-  void Draw();              // was EndingDraw
+  bool Init();
+  void Proc(bool &);
+  void Draw();
 
 private:
   // 内部ヘルパー

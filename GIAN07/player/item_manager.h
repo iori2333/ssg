@@ -4,18 +4,18 @@
 
 #pragma once
 
-#include "ITEM.h"
+#include "item.h"
 
 struct ItemManager {
-  std::array<ItemData, ITEM_MAX> entities;  // Items.entities[]
-  std::array<uint16_t, ITEM_MAX> indices;    // Items.indices[]
-  uint16_t count = 0;                         // Items.count
+  std::array<ItemData, ITEM_MAX> entities; // Items.entities[]
+  std::array<uint16_t, ITEM_MAX> indices;  // Items.indices[]
+  uint16_t count = 0;                      // Items.count
 
   // === メソッド ===
-  void Spawn(int x, int y, uint8_t type);   // was ItemSet
-  void Move();                               // was ItemMove
-  void Draw();                               // was ItemDraw
-  void SetIndices();                         // was ItemIndSet
+  void Spawn(int x, int y, uint8_t type);
+  void Move();
+  void Draw();
+  void SetIndices();
 };
 
 extern ItemManager Items;

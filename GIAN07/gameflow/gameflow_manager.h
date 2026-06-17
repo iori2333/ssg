@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "GAMEMAIN.h"
-#include "SCORE.h"
+#include "game_main.h"
 #include "player/player_types.h"
+#include "score.h"
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -27,17 +27,17 @@ enum class GameState {
   SProject,
   ReplayAll,
   MusicRoom,
-  External,   // GameInit() 等での外部指定
+  External, // GameInit() 等での外部指定
 };
 
 struct GameFlowManager {
-  std::function<void(bool&)> game_main;
+  std::function<void(bool &)> game_main;
   GameState current_state = GameState::Title;
   uint16_t demo_timer = 0;
   uint32_t draw_count = 0;
   uint8_t weapon_key_wait = 0;
   int game_over_timer = 0;
-  NR_NAME_DATA current_name = {};
+  NrNameData current_name = {};
   uint8_t current_rank = 0;
   uint8_t current_dif = 0;
   Player viv_temp = {};

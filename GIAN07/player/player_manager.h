@@ -4,23 +4,23 @@
 
 #pragma once
 
+#include "player_shot.h"
 #include "player_types.h"
-#include "MAIDTAMA.h"
 #include <array>
 #include <cstdint>
 
 struct PlayerManager {
-  Player viv;                                               // Viv
-  std::array<TAMA_DATA, MAIDTAMA_MAX> maid_tama;            // MaidTama[]
-  std::array<uint16_t, MAIDTAMA_MAX> maid_tama_ind;         // MaidTamaInd[]
-  uint16_t maid_tama_now = 0;                               // MaidTamaNow
+  Player viv;                                       // Viv
+  std::array<Bullet, MAIDTAMA_MAX> maid_tama;       // MaidTama[]
+  std::array<uint16_t, MAIDTAMA_MAX> maid_tama_ind; // MaidTamaInd[]
+  uint16_t maid_tama_now = 0;                       // MaidTamaNow
 
   // === メソッド ===
-  void SetMaidShot();             // was MaidTamaSet
-  void MoveMaidShot();            // was MaidTamaMove
-  void DrawMaidShot();            // was MaidTamaDraw
-  void SetMaidShotIndices();      // was MaidTamaIndSet
-  void SetMLaser(uint16_t time);  // was MLaserSet
+  void SetMaidShot();
+  void MoveMaidShot();
+  void DrawMaidShot();
+  void SetMaidShotIndices();
+  void SetMLaser(uint16_t time);
 };
 
 extern PlayerManager Players;

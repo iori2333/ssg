@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "DEMOPLAY.h"
+#include "demo_play.h"
 #include <array>
 #include <cstdint>
 #include <string>
@@ -17,7 +17,7 @@ struct DemoManager {
   MULTI_REPLAY_INFO multi_play_info = {};
   uint8_t playback_max_stage = 0;
   std::u8string pending_replay_file;
-  DEMOPLAY_INFO demo_info = {};
+  DemoPlayState demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};
 
   // ファイル静的変数（DEMOPLAY.cpp から移動）
@@ -34,17 +34,17 @@ struct DemoManager {
   std::vector<INPUT_BITS> all_playback_buf;
 
   // === メソッド ===
-  void Init();                                                         // was DemoplayInit
-  bool HasRecordedStages();                                            // was DemoplayHasRecordedStages
-  void FlushStage();                                                   // was DemoplayFlushStage
-  bool LoadSetup();                                                    // was DemoplayLoadSetup
-  bool Record(INPUT_BITS key);                                         // was DemoplayRecord
-  void SaveDemo();                                                     // was DemoplaySaveDemo
-  bool LoadDemo(int stage);                                            // was DemoplayLoadDemo
-  INPUT_BITS Move();                                                   // was DemoplayMove
-  void Cleanup();                                                      // was DemoplayCleanup
-  void SaveReplayAll(bool exstg);                                    // was DemoplaySaveReplayAll
-  bool LoadReplayAll(const char8_t *fn);                              // was DemoplayLoadReplayAll
+  void Init();
+  [[nodiscard]] bool HasRecordedStages();
+  void FlushStage();
+  [[nodiscard]] bool LoadSetup();
+  [[nodiscard]] bool Record(INPUT_BITS key);
+  void SaveDemo();
+  [[nodiscard]] bool LoadDemo(int stage);
+  INPUT_BITS Move();
+  void Cleanup();
+  void SaveReplayAll(bool exstg);
+  [[nodiscard]] bool LoadReplayAll(const char8_t *fn);
 };
 
 extern DemoManager Demos;

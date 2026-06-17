@@ -11,13 +11,13 @@
 
 struct Player {
   // --- 座標 ---
-  int x, y;        // 現在の<表示>座標
-  int vx, vy;      // オプションのズレ具合
-  int opx, opy;    // 現在のオプション基本座標
+  int x, y;     // 現在の<表示>座標
+  int vx, vy;   // オプションのズレ具合
+  int opx, opy; // 現在のオプション基本座標
 
   // --- スコア ---
-  int64_t score;   // 得点カウンタ
-  int64_t dscore;  // 得点増加値
+  int64_t score;  // 得点カウンタ
+  int64_t dscore; // 得点増加値
 
   // --- かすり ---
   uint32_t evade_sum; // かすり合計
@@ -26,16 +26,16 @@ struct Player {
   uint16_t evade_c;   // 連続「かすり」の残り許容時間
 
   // --- ステータス ---
-  char v;             // サボテンの移動速度基本値(後で64~45倍にする)
-  uint8_t weapon;     // "とげ" の種類
-  uint8_t exp;        // サボテンの経験値？
-  uint8_t bomb;       // ボムの数
-  uint8_t left;       // 残りサボテン数
-  uint8_t credit;     // のこりクレジット
+  char v;              // サボテンの移動速度基本値(後で64~45倍にする)
+  uint8_t weapon;      // "とげ" の種類
+  uint8_t exp;         // サボテンの経験値？
+  uint8_t bomb;        // ボムの数
+  uint8_t left;        // 残りサボテン数
+  uint8_t credit;      // のこりクレジット
   uint16_t miss_count; // ミス回数
   uint16_t bomb_used;  // ボム使用回数
 
-  uint8_t GrpID;      // 表示すべきグラフィック
+  uint8_t GrpID; // 表示すべきグラフィック
 
   // --- タイマー/状態 ---
   uint16_t bomb_time;   // ボムウェイト用
@@ -58,19 +58,20 @@ struct Player {
   void PrepareNextStage(); // 次のステージ準備 (MaidNextStage)
   void OnDeath();          // 死亡処理 (MaidDead)
 
-  void AddEvade(uint8_t n);                    // かすりゲージ上昇 (evade_add)
-  void AddEvadeEx(int x, int y, uint8_t n);    // 指定座標からかすりエフェクト (evade_addEx)
-  void AddScore(int sc);                       // スコア加算 (score_add)
-  void DrawWideBomb();                         // ワイドボム描画 (WideBombDraw)
-  void PowerUp(uint8_t damage);                // パワーアップ処理
-  uint8_t GetLaserDeg();                       // レーザー角度取得
+  void AddEvade(uint8_t n); // かすりゲージ上昇 (evade_add)
+  void AddEvadeEx(int x, int y,
+                  uint8_t n);   // 指定座標からかすりエフェクト (evade_addEx)
+  void AddScore(int sc);        // スコア加算 (score_add)
+  void DrawWideBomb();          // ワイドボム描画 (WideBombDraw)
+  void PowerUp(uint8_t damage); // パワーアップ処理
+  uint8_t GetLaserDeg();        // レーザー角度取得
   uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
   uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);
 
 private:
-  void DrawLaserBomb();                        // レーザーボム描画
+  void DrawLaserBomb(); // レーザーボム描画
   static uint8_t GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i);
 };
 
 // 後方互換用エイリアス
-using MAID = Player;
+// (MAID alias removed — use Player directly)

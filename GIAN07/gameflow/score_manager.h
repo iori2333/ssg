@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "SCORE.h"
-#include "LZ_UTY.h"
+#include "lz_uty.h"
+#include "score.h"
 #include <array>
 #include <cstdint>
 #include <memory>
@@ -15,10 +15,10 @@
 
 struct ScoreManager {
   // スコア表示用文字列
-  std::array<NR_SCORE_STRING, NR_RANK_MAX> score_strings = {};
+  std::array<NrScoreString, NR_RANK_MAX> score_strings = {};
 
   // スコアデータキャッシュ（旧 SCORE.cpp ファイル静的変数）
-  std::unique_ptr<NR_SCORE_DATA> score_cache = nullptr;
+  std::unique_ptr<NrScoreData> score_cache = nullptr;
 
   // マスク定数
   static constexpr uint64_t PBG_MASK_VALUE = 0xb97eb2c6542d3a41;
@@ -26,18 +26,18 @@ struct ScoreManager {
   // === 公開メソッド ===
 
   // 現在のスコア列を取得する（Ret: 0=ハイスコアでない それ以外=順位）
-  uint8_t SetScoreString(NR_NAME_DATA *NData, uint8_t Dif);
+  [[nodiscard]] uint8_t SetScoreString(NrNameData *NData, uint8_t Dif);
 
   // ハイスコアかどうか（0: ハイスコアでない, それ以外: 順位）
-  uint8_t IsHighScore(const NR_NAME_DATA *NData, uint8_t Dif);
+  [[nodiscard]] uint8_t IsHighScore(const NrNameData *NData, uint8_t Dif);
 
   // スコアデータを書き出す
-  bool SaveScoreData(NR_NAME_DATA *NData, uint8_t Dif);
+  [[nodiscard]] bool SaveScoreData(NrNameData *NData, uint8_t Dif);
 
 private:
   // 型エイリアス
-  using NR_SCORE_LIST = std::span<NR_NAME_DATA, NR_RANK_MAX>;
-  using NR_CONST_SCORE_LIST = std::span<const NR_NAME_DATA, NR_RANK_MAX>;
+  using NR_SCORE_LIST = std::span<NrNameData, NR_RANK_MAX>;
+  using NR_CONST_SCORE_LIST = std::span<const NrNameData, NR_RANK_MAX>;
 
   // 内部ヘルパー
   bool LoadScoreData();

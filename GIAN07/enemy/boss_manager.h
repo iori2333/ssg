@@ -4,60 +4,60 @@
 
 #pragma once
 
-#include "BOSS.h"
-#include "EnemyExCtrl.h"
+#include "boss.h"
+#include "enemy_ex_ctrl.h"
 #include <array>
 #include <cstdint>
 
 struct BossManager {
-  std::array<BOSS_DATA, BOSS_MAX> bosses;     // Boss[]
-  uint16_t count = 0;                          // BossNow
-  BOSSHPG_INFO hpg;                            // BossHPG
+  std::array<BossData, BOSS_MAX> bosses; // Boss[]
+  uint16_t count = 0;                    // BossNow
+  BossHpgInfo hpg;                       // BossHPG
 
   // Snaky/Bit データ（旧 EnemyExCtrl.cpp ファイル静的変数）
-  SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX];   // SnakeData[]
-  BIT_DATA bit_data;                           // BitData
+  SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX]; // SnakeData[]
+  BitData bit_data;                         // BitData
 
   // === メソッド ===
 
   // 初期化・セット
-  void Init();                                              // was BossDataInit
-  void Set(int x, int y, uint32_t BossID);                 // was BossSet
-  void SetEx(int x, int y, uint32_t BossID);               // was BossSetEx
+  void Init();
+  void Set(int x, int y, uint32_t BossID);
+  void SetEx(int x, int y, uint32_t BossID);
 
   // 移動・描画
-  void Move();                                              // was BossMove
-  void Draw();                                              // was BossDraw
-  void ClearCmd();                                          // was BossClearCmd
-  void DrawHPG();                                           // was BossHPG_Draw
+  void Move();
+  void Draw();
+  void ClearCmd();
+  void DrawHPG();
 
   // 体力
-  void KillAll();                                           // was BossKillAll
-  uint32_t GetHPSum();                                      // was GetBossHPSum
+  void KillAll();
+  uint32_t GetHPSum();
 
   // ダメージ
-  bool ApplyDamage(BOSS_DATA &b, ENEMY_DATA &e, int damage); // was BossDamageApply
-  bool DamageAt(int x, int y, int damage);                   // was BossDamage
-  bool DamageAt2(int x, int y, int damage);                  // was BossDamage2
-  void DamageAt3(int x, int y, uint8_t d);                   // was BossDamage3
-  void DamageAll(int damage);                                // was BossDamage4
+  bool ApplyDamage(BossData &b, EnemyData &e, int damage);
+  bool DamageAt(int x, int y, int damage);
+  bool DamageAt2(int x, int y, int damage);
+  void DamageAt3(int x, int y, uint8_t d);
+  void DamageAll(int damage);
 
   // 割り込み・ビット制御
-  void Interrupt(ENEMY_DATA *e, uint8_t IntID);              // was BossINT
-  void BitAttack(ENEMY_DATA *e, uint32_t AtkID);             // was BossBitAttack
-  void BitLaser(ENEMY_DATA *e, uint8_t cmd);                 // was BossBitLaser
-  void BitCommand(ENEMY_DATA *e, uint8_t Cmd, int Param);    // was BossBitCommand
-  int GetBitLeft();                                          // was BossGetBitLeft
+  void Interrupt(EnemyData *e, uint8_t IntID);
+  void BitAttack(EnemyData *e, uint32_t AtkID);
+  void BitLaser(EnemyData *e, uint8_t cmd);
+  void BitCommand(EnemyData *e, uint8_t Cmd, int Param);
+  int GetBitLeft();
 
   // 蛇型の敵 (was in EnemyExCtrl.cpp)
   void SnakyInit();
-  void SnakySet(BOSS_DATA *b, int len, uint32_t TailID);
+  void SnakySet(BossData *b, int len, uint32_t TailID);
   void SnakyMove();
-  void SnakyDelete(const BOSS_DATA *b);
+  void SnakyDelete(const BossData *b);
 
   // ビット (was in EnemyExCtrl.cpp)
   void BitInit();
-  void BitSet(BOSS_DATA *b, uint8_t NumBits, uint32_t BitID);
+  void BitSet(BossData *b, uint8_t NumBits, uint32_t BitID);
   void BitMove();
   void BitDelete();
   void BitLineDraw();
@@ -72,7 +72,7 @@ private:
   void HPG_Close();
   void HPG_Update(uint32_t next);
   int PutBoss(int x, int y, uint32_t id);
-  static void STDMove(BOSS_DATA *b);
+  static void STDMove(BossData *b);
   void BitSTDRoll();
   void BitSTDRad();
 };
