@@ -5,19 +5,13 @@
 
 #include "window_sys.h"
 
-#include "font_uty.h"
 #include "game/enum_flags.h"
+#include "game/input.h"
 #include "game/snd.h"
-#include "game/ut_math.h"
 #include "loader.h"
-#include "msg_window/msg_window.h"
+#include "menu/menu_renderer.h"
 #include "platform/text_backend.h"
 #include <utility>
-
-///// [非公開関数] /////
-
-static void CWinDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
-                          bool is_title);
 
 ///// [MenuDef / MenuItem メソッド] /////
 
@@ -59,7 +53,7 @@ void MenuController::Open(WINDOW_POINT topleft, int select) {
   SelectDepth = 0;
   State = CWIN_INIT;
 
-  OldKey = Key_Data; // TODO: 引数化は Phase 4 で対応
+  OldKey = Key_Data;
   KeyCount = CWIN_KEYWAIT;
 
   FirstWait = true;
@@ -143,7 +137,7 @@ void MenuController::Draw() {
   const auto trr = TRRs[0];
   const Narrow::string_view str = p->Title->Title;
   TextObj.Render(topleft, trr, str, [=](TEXTRENDER_SESSION &s) {
-    CWinDrawLabel(s, *p->Title, true);
+    MenuDrawLabel(s, *p->Title, true);
   });
   topleft.y += (CWIN_ITEM_H + 1); // ???
 
@@ -153,7 +147,7 @@ void MenuController::Draw() {
     const Narrow::string_view c =
         ((item->Flags == item->FlagsPrev) ? item->Title : "");
     TextObj.Render(topleft, trr, c, [=](TEXTRENDER_SESSION &s) {
-      CWinDrawLabel(s, *item, false);
+      MenuDrawLabel(s, *item, false);
     });
     item->FlagsPrev = item->Flags;
     topleft.y += CWIN_ITEM_H;
@@ -329,11 +323,7 @@ void MenuController::KeyEvent(INPUT_BITS key) {
   }
 }
 
-///// [CWin* 転調ファサード] /////
-
-void CWinMove(MenuController *ws) { ws->Tick(Key_Data); }
-void CWinDraw(MenuController *ws) { ws->Draw(); }
-MenuDef *CWinSearchActive(MenuController *ws) { return ws->SearchActive(); }
+///// [ユーティリティ関数] /////
 
 // コマンド [Exit] のデフォルト処理関数 //
 bool CWinExitFn(MenuController & /*ctrl*/, INPUT_BITS key) {
@@ -349,57 +339,4 @@ PIXEL_SIZE CWinItemExtent(Narrow::string_view str) {
   ret.w += CWIN_ITEM_LEFT;
   ret.h = CWIN_ITEM_H;
   return ret;
-}
-
-///// [メッセージウィンドウ転調] /////
-
-void MWinInit(const WINDOW_LTRB &rc, MsgWindowFlags flags) {
-  MsgWin.Init(rc, flags);
-}
-void MWinOpen() { MsgWin.Open(); }
-void MWinClose() { MsgWin.Close(); }
-void MWinForceClose() { MsgWin.ForceClose(); }
-void MWinMove() { MsgWin.Tick(); }
-void MWinDraw() { MsgWin.Draw(); }
-void MWinMsg(Narrow::string_view str) { MsgWin.Msg(str); }
-void MWinFace(uint8_t faceID) { MsgWin.Face(faceID); }
-void MWinCmd(uint8_t cmd) { MsgWin.Cmd(cmd); }
-void MWinHelp(MenuController *ws) { MsgWin.Help(ws); }
-
-///// [非公開関数実装] /////
-
-static void CWinDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
-                          bool is_title) {
-  struct COLOR_PAIR {
-    RGB shadow;
-    RGB text;
-  };
-
-  static constexpr COLOR_PAIR COL[2][2] = {
-      COLOR_PAIR{.shadow = {.r = 128, .g = 128, .b = 128},
-                 .text = {.r = 255, .g = 255, .b = 255}}, // Active, regular
-      COLOR_PAIR{.shadow = {.r = 128, .g = 128, .b = 128},
-                 .text = {.r = 255, .g = 255, .b = 70}}, // Active, HL
-      COLOR_PAIR{.shadow = {.r = 96, .g = 96, .b = 96},
-                 .text = {.r = 192, .g = 192, .b = 192}}, // Disabled, regular
-      COLOR_PAIR{.shadow = {.r = 96, .g = 96, .b = 96},
-                 .text = {.r = 192, .g = 192, .b = 70}}, // Disabled, HL
-  };
-
-  const auto disabled = !!(label.Flags & MenuFlags::DISABLED);
-  const auto highlight = !!(label.Flags & MenuFlags::HIGHLIGHT);
-  const auto &col = COL[disabled][highlight];
-  s.SetFont(CWIN_FONT);
-
-  // Adding CWIN_ITEM_LEFT to centered text would throw it off-center,
-  // obviously. Also, non-centered titles that don't start with spaces
-  // shouldn't be dedented relative to the menu items.
-  const auto starts_with_space =
-      ((label.Title.ptr != nullptr) && (*label.Title.ptr == ' '));
-  const auto left =
-      (!!(label.Flags & MenuFlags::CENTER)
-           ? TextLayoutXCenter(s, label.Title)
-           : ((is_title && starts_with_space) ? 0 : CWIN_ITEM_LEFT));
-  s.Put({.x = (left + 1), .y = 0}, label.Title, col.shadow);
-  s.Put({.x = (left + 0), .y = 0}, label.Title, col.text);
 }

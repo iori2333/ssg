@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "ui_manager.h"
 #include "window_sys.h"
 
 ///// [更新履歴] /////

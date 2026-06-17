@@ -22,6 +22,7 @@
 #include "music.h"
 #include "platform/input.h"
 #include "platform/midi_backend.h"
+#include "ui_manager.h"
 #include "window_ctrl.h"
 #include "window_sys.h"
 #include <SDL3/SDL_filesystem.h>
@@ -406,6 +407,16 @@ ScrollMenu ReplayFilesScrollMenu(ReplayFiles::TitleItem, &ReplayFiles::ListSize,
                                  20);
 MenuController ReplayFilesWindow(ReplayFilesScrollMenu.Menu());
 
+// UIManager にメニューコントローラを登録 //
+namespace {
+struct UIBindInit {
+  UIBindInit() {
+    UI.Bind(MainWindow, ExitWindow, ContinueWindow, BGMPackWindow,
+            GameOverSaveWindow, ReplayFilesWindow);
+  }
+} ui_bind_init;
+} // namespace
+
 // メインメニューの初期化 //
 void InitMainWindow() {
   using namespace Main;
@@ -780,7 +791,7 @@ static bool Main::FnScore(MenuController &ctrl, INPUT_BITS key) {
 
 static bool Main::FnMusic(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    MWinForceClose();
+    UI.MsgForceClose();
     MusicRoomInit();
   }
   return true;

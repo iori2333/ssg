@@ -18,6 +18,7 @@
 #include "level.h"
 #include "platform/graphics_backend.h"
 #include "scene.h" // ＳＣＬ定義ファイル
+#include "ui_manager.h"
 #include "window_sys.h"
 #include <utility>
 
@@ -227,7 +228,7 @@ static void enemy_set() {
 
     case SCL_MWOPEN: // メッセージウィンドウを開く
       if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
-        MWinOpen();
+        UI.Msg().Open();
       }
       Scroller.scene.MsgFlag = true;
       Enemies.scl_now++;
@@ -235,20 +236,20 @@ static void enemy_set() {
 
     case SCL_MWCLOSE: // メッセージウィンドウを閉じる
       if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
-        MWinClose();
+        UI.Msg().Close();
       }
       Scroller.scene.MsgFlag = false;
       Enemies.scl_now++;
       break;
 
     case SCL_MSG: // メッセージを出力する
-      // MWinCmd(MWCMD_SMALLFONT);
-      MWinMsg(reinterpret_cast<const char *>(cmd + 1));
+      // UI.Msg().Cmd(MWCMD_SMALLFONT);
+      UI.Msg().Msg(reinterpret_cast<const char *>(cmd + 1));
       Enemies.scl_now += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
       break;
 
     case SCL_FACE: // 顔を表示する
-      MWinFace(cmd[1]);
+      UI.Msg().Face(cmd[1]);
       Enemies.scl_now += 2;
       break;
 
@@ -258,16 +259,16 @@ static void enemy_set() {
       break;
 
     case SCL_NPG: // 新しいページに変更する
-      MWinCmd(MWCMD_NEWPAGE);
+      UI.Msg().Cmd(MWCMD_NEWPAGE);
       Enemies.scl_now++;
       break;
 
     case SCL_END: // カウントも変更させずにリターンする
                   /*
-                  MWinOpen();
-                  MWinCmd(MWCMD_NEWPAGE);
-                  MWinCmd(MWCMD_LARGEFONT);
-                  MWinMsg("ＳＣＬ完了ですの");
+                  UI.Msg().Open();
+                  UI.Msg().Cmd(MWCMD_NEWPAGE);
+                  UI.Msg().Cmd(MWCMD_LARGEFONT);
+                  UI.Msg().Msg("ＳＣＬ完了ですの");
                   SCL_DEBUG(u8"--- SCL_END ---");
                   */
       return;
@@ -451,10 +452,10 @@ static void enemy_set() {
       break;
 
     default: // 未実装 or ばぐ
-      MWinOpen();
-      MWinCmd(MWCMD_NEWPAGE);
-      MWinCmd(MWCMD_LARGEFONT);
-      MWinMsg("バグ発生だにょ");
+      UI.Msg().Open();
+      UI.Msg().Cmd(MWCMD_NEWPAGE);
+      UI.Msg().Cmd(MWCMD_LARGEFONT);
+      UI.Msg().Msg("バグ発生だにょ");
       SCL_DEBUG(u8"---- SCL !BUG! ---");
       return;
     }

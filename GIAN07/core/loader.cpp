@@ -427,7 +427,7 @@ MenuDef Menu = {std::span(Info), [](MenuController &, bool) {}, &Title};
 MenuController Window(Menu);
 
 void Proc(bool &quit) {
-  CWinMove(&Window);
+  Window.Tick(Key_Data);
   if (!Window.Active()) {
     if (FoundAll) {
       SProjectInit();
@@ -437,7 +437,7 @@ void Proc(bool &quit) {
   }
   if (GameFlow.IsDraw()) {
     GrpBackend_Clear();
-    CWinDraw(&Window);
+    Window.Draw();
     Grp_Flip();
   }
 }

@@ -9,40 +9,15 @@
 #include "game/cast.h"
 #include "game/ut_math.h"
 #include "loader.h"
+#include "menu/menu_renderer.h"
 #include "platform/text_backend.h"
-#include "window_sys.h" // CWinSearchActive, face_data, FACE_*, SURFACE_ID, etc.
+#include "window_sys.h" // face_data, FACE_*, SURFACE_ID, MenuController, etc.
 
 #include <utility>
 
-///// [非公開関数] /////
-
-// ウィンドウ枠を描画する //
-static void DrawWindowFrame(int x, int y, int w, int h) {
-  PIXEL_LTRB src;
-
-  w = w >> 1;
-  h = h >> 1;
-
-  // 左上 //
-  src = {0, 0, w, h};
-  GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-
-  // 右上 //
-  src = {(384 - w), 0, 384, h};
-  GrpSurface_Blit({(x + w), y}, SURFACE_ID::SYSTEM, src);
-
-  // 左下 //
-  src = {0, (80 - h), w, 80};
-  GrpSurface_Blit({x, (y + h)}, SURFACE_ID::SYSTEM, src);
-
-  // 右下 //
-  src = {(384 - w), (80 - h), 384, 80};
-  GrpSurface_Blit({(x + w), (y + h)}, SURFACE_ID::SYSTEM, src);
-}
-
 ///// [グローバル変数] /////
 
-MsgWindow MsgWin; // メッセージウィンドウ
+MsgWindow MsgWin; // メッセージウィンドウ (後方互換用、UIManager が本体)
 
 void MsgWindow::MsgBlank() {
   line = 0;
@@ -343,7 +318,7 @@ void MsgWindow::Cmd(uint8_t cmd) {
 // ヘルプ文字列を送る //
 void MsgWindow::Help(MenuController *ws) {
   // アクティブなウィンドウを検索し、メッセージ領域をクリアする //
-  const auto *p = CWinSearchActive(ws);
+  const auto *p = ws->SearchActive();
   MsgBlank();
 
   // 一列だけ文字列を割り当てる //

@@ -21,6 +21,7 @@
 #include "platform/text_backend.h"
 #include "platform/time.h"
 #include "score.h"
+#include "ui_manager.h"
 #include "window_ctrl.h" // ウィンドウ定義
 #include "window_sys.h"
 #include <algorithm>
@@ -112,7 +113,7 @@ bool ScoreNameInit() {
     return GameExit();
   }
 
-  MWinForceClose();
+  UI.MsgForceClose();
   GrpBackend_Clear();
   Grp_Flip();
 
@@ -528,7 +529,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
     return GameExit();
   }
 
-  MWinForceClose();
+  UI.MsgForceClose();
   GrpBackend_Clear();
   Grp_Flip();
 
@@ -553,7 +554,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
 // ゲームを立ち上げる際に必ず行う初期化関数群 //
 void GameSTD_Init() {
   Scroller.key_wait_count = 0;
-  MWinForceClose();
+  UI.MsgForceClose();
   // GrpBackend_Clear();
   // Grp_Flip();
 
@@ -624,9 +625,9 @@ bool GameInit(std::function<void(bool &)> next_proc) {
     // to do this.
     const auto flags = MsgWindowFlags::WITH_FACE;
     if ((ConfigDat.GraphFlags.v & GRPF_WINDOW_UPPER) != 0) {
-      MWinInit({128, 16, (640 - 128), 96}, flags);
+      UI.Msg().Init({128, 16, (640 - 128), 96}, flags);
     } else if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
-      MWinInit({128, 400, (640 - 128), 480}, flags);
+      UI.Msg().Init({128, 400, (640 - 128), 480}, flags);
     }
 
     if (GameFlow.current_state == GameState::Game) {
@@ -891,9 +892,9 @@ bool GameExit(bool bNeedChgMusic) {
   Snd_SEStop(8);      // ワーニング音を止めるのだ
 
   const auto flags = MsgWindowFlags::CENTER;
-  MWinForceClose();
-  MWinInit({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480}, flags);
-  MWinOpen();
+  UI.MsgForceClose();
+  UI.Msg().Init({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480}, flags);
+  UI.Msg().Open();
   // MWinFace(0);
 
   GameFlow.demo_timer = 0;
@@ -1041,21 +1042,21 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
 
 // Save Replay dialog for Game Over
 void GameOverSaveProc(bool & /*unused*/) {
-  CWinMove(&GameOverSaveWindow);
+  GameOverSaveWindow.Tick(Key_Data);
   if (GameFlow.current_state != GameState::GameOverSave) {
     return;
   }
 
   if (GameFlow.IsDraw()) {
     GameDraw();
-    CWinDraw(&GameOverSaveWindow);
+    GameOverSaveWindow.Draw();
     Grp_Flip();
   }
 }
 
 // ゲームオーバー
 void GameOverProc(bool & /*unused*/) {
-  CWinMove(&ContinueWindow);
+  ContinueWindow.Tick(Key_Data);
   if (GameFlow.current_state != GameState::GameOver) {
     Effects.InitStringEffects();
     return;
@@ -1063,7 +1064,7 @@ void GameOverProc(bool & /*unused*/) {
 
   if (GameFlow.IsDraw()) {
     GameDraw();
-    CWinDraw(&ContinueWindow);
+    ContinueWindow.Draw();
     /*
     if(DemoplaySaveEnable){
             constexpr PIXEL_LTRB rc = PIXEL_LTWH{ 288, 80, 24, 8 };
@@ -1411,13 +1412,10 @@ void GameFlowManager::TitleProc(bool &quit) {
     return;
   }
 
-  auto *window_active =
-      ((ReplayFilesWindow.Active()) ? &ReplayFilesWindow
-       : (BGMPackWindow.Active())   ? &BGMPackWindow
-                                    : &MainWindow);
-  CWinMove(window_active);
-  MWinHelp(window_active);
-  MWinMove();
+  auto *window_active = UI.ActiveMenu();
+  window_active->Tick(Key_Data);
+  UI.MsgHelp();
+  UI.MsgTick();
 
   // Start pending replay after menu closes
   if (!Demos.pending_replay_file.empty()) {
@@ -1450,8 +1448,8 @@ void GameFlowManager::TitleProc(bool &quit) {
     GrpBackend_Clear();
     GrpSurface_Blit({0, 42}, SURFACE_ID::TITLE, src);
     // GrpSurface_Blit({ (320 - 175), 77 }, SURFACE_ID::TITLE, src);
-    MWinDraw();
-    CWinDraw(window_active);
+    UI.MsgDraw();
+    window_active->Draw();
 
     // Placing this here avoids flickering with the Vulkan backend if any
     // of the above windows had to re-render text?!
@@ -1465,7 +1463,7 @@ void GameFlowManager::TitleProc(bool &quit) {
 }
 
 void PauseProc(bool & /*unused*/) {
-  CWinMove(&ExitWindow);
+  ExitWindow.Tick(Key_Data);
   if (GameFlow.current_state != GameState::Pause) {
     return;
   }
@@ -1474,7 +1472,7 @@ void PauseProc(bool & /*unused*/) {
     GameDraw();
 
     GrpBackend_SetClip(GRP_RES_RECT);
-    CWinDraw(&ExitWindow);
+    ExitWindow.Draw();
     GrpBackend_SetClip(PLAYFIELD_CLIP);
 
     Grp_Flip();
@@ -1489,7 +1487,7 @@ inline XAdd(DWORD old,int id)
 */
 
 void GameMove() {
-  MWinMove();
+  UI.MsgTick();
 
   Scroller.Move();
 
@@ -1563,7 +1561,7 @@ void GameDraw() {
   Bosses.DrawHPG();
   Effects.DrawScreenEffect();
 
-  MWinDraw();
+  UI.MsgDraw();
   // GrpBackend_SetClip(PLAYFIELD_CLIP);
 
   GrpBackend_SetClip(GRP_RES_RECT);

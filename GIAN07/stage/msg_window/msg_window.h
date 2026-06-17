@@ -5,9 +5,18 @@
 
 #pragma once
 
-#include "window_sys.h" // MsgWindowFlags, WINDOW_LTRB, FONT_ID, etc.
-
+#include "game/enum_flags.h"
+#include "game/text.h"
+#include "window_sys.h" // MSG_HEIGHT, WINDOW_LTRB, FONT_ID, MenuController
 #include <optional>
+
+// メッセージウィンドウのフラグ //
+enum class MsgWindowFlags : uint8_t {
+  NONE = 0x0,
+  WITH_FACE = 0x1, // Pads all text to leave room for a face portrait.
+  CENTER = 0x2,    // Horizontally centers all text.
+  HAS_BITFLAG_OPERATORS = 3,
+};
 
 // メッセージウィンドウ管理用クラス //
 // 元は [MSG_WINDOW] 構造体 + ファイル静的グローバル [MsgWindow] だったが、

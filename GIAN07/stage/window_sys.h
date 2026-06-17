@@ -256,12 +256,7 @@ private:
 ///// [ 関数 ] /////
 
 // コマンドウィンドウ処理 //
-void CWinMove(MenuController *ws); // コマンドウィンドウを１フレーム動作させる
-void CWinDraw(MenuController *ws); // コマンドウィンドウの描画
 bool CWinExitFn(MenuController &ctrl, INPUT_BITS key);
-
-// アクティブなウィンドウを探す
-MenuDef *CWinSearchActive(MenuController *ws);
 
 // Calculates the rendered width of the given text in the menu item font,
 // without any padding.
@@ -270,28 +265,3 @@ PIXEL_SIZE CWinTextExtent(Narrow::string_view str);
 // Calculates the rendered width of a whole padded menu item with the given
 // text.
 PIXEL_SIZE CWinItemExtent(Narrow::string_view str);
-
-// メッセージウィンドウ処理 //
-
-enum class MsgWindowFlags : uint8_t {
-  NONE = 0x0,
-  WITH_FACE = 0x1, // Pads all text to leave room for a face portrait.
-  CENTER = 0x2,    // Horizontally centers all text.
-  HAS_BITFLAG_OPERATORS = 3,
-};
-
-// Prepares text rendering for a window with the given dimensions.
-void MWinInit(const WINDOW_LTRB &rc,
-              MsgWindowFlags flags = MsgWindowFlags::NONE);
-
-void MWinOpen();       // メッセージウィンドウをオープンする
-void MWinClose();      // メッセージウィンドウをクローズする
-void MWinForceClose(); // メッセージウィンドウを強制クローズする
-void MWinMove();       // メッセージウィンドウを動作させる(後で上と統合する)
-void MWinDraw();       // メッセージウィンドウを描画する(上に同じ)
-
-void MWinMsg(Narrow::string_view str); // メッセージ文字列を送る
-void MWinFace(uint8_t faceID);         // 顔をセットする
-void MWinCmd(uint8_t cmd);             // コマンドを送る
-
-void MWinHelp(MenuController *ws); // メッセージウィンドウにヘルプ文字列を送る
