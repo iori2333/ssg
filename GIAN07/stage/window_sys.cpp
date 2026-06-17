@@ -40,7 +40,7 @@ void WINDOW_CHOICE::SetActive(bool active) {
 
 void MenuController::Init(PIXEL_COORD w) {
   W = w;
-  Parent.SetItems(true);
+  Parent.SetItems(*this, true);
 
   // Don't forget the header.
   const auto max_items = (1 + Parent.MaxItems());
@@ -256,7 +256,7 @@ void MenuController::KeyEvent(INPUT_BITS key) {
       return;
     }
     SelectDepth--;
-    SearchActive()->SetItems(false);
+    SearchActive()->SetItems(*this, false);
   };
 
   // 一部のキーボード入力を処理する(KEY_UP/KEY_DOWN) //
@@ -273,25 +273,25 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     FastRepeatWait = CWIN_KEYWAIT;
   }
 
-  if ((p2->OptionFn != nullptr) || (p2->CallBackFn != nullptr)) {
+  if (p2->OptionFn || p2->CallBackFn) {
     // コールバック動作時の処理 //
-    const auto ret = ([p, p2, key] {
+    const auto ret = ([this, p, p2, key] {
       if (p2->OptionFn) {
         if (Input_IsCancel(key)) {
           return false;
         }
         if (const auto delta = Input_OptionKeyDelta(key)) {
-          p2->OptionFn(delta);
+          p2->OptionFn(*this, delta);
         }
-        p->SetItems(true);
+        p->SetItems(*this, true);
         return true;
       }
 
       // The item text may need to change while the cursor is on a
       // non-option item...
-      p->SetItems(false);
+      p->SetItems(*this, false);
 
-      return p2->CallBackFn(key);
+      return p2->CallBackFn(*this, key);
     })();
     if (!ret) {
       if (Depth == 0) {
@@ -307,14 +307,14 @@ void MenuController::KeyEvent(INPUT_BITS key) {
   } else {
     // Hotkeys might be pressed while the cursor is on an item with a menu,
     // where we wouldn't fall into the branch above...
-    p->SetItems(false);
+    p->SetItems(*this, false);
 
     // デフォルトのキーボード動作 //
     if (Input_IsOK(key)) {
       // 決定・選択
       if ((p2->Submenu != nullptr) && (p2->Submenu->NumItems != 0)) {
         p2->Submenu->Title = p2;
-        p2->Submenu->SetItems(false);
+        p2->Submenu->SetItems(*this, false);
 
         // Jump to the first active item to avoid potentially drawing
         // the selection cursor on top of a disabled item on the next
@@ -336,7 +336,7 @@ void CWinDraw(WINDOW_SYSTEM *ws) { ws->Draw(); }
 WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws) { return ws->SearchActive(); }
 
 // コマンド [Exit] のデフォルト処理関数 //
-bool CWinExitFn(INPUT_BITS key) {
+bool CWinExitFn(MenuController & /*ctrl*/, INPUT_BITS key) {
   return !(Input_IsOK(key) || Input_IsCancel(key));
 }
 

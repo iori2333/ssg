@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <functional>
 #include <utility>
 
 #include "game/enum_flags.h"
@@ -96,6 +97,7 @@ enum class WINDOW_FLAGS : uint8_t {
 };
 
 struct WINDOW_MENU;
+class MenuController;
 
 // Shared data for menu titles and choices.
 struct WINDOW_LABEL {
@@ -113,40 +115,48 @@ struct WINDOW_LABEL {
 
 // 子ウィンドウの情報 //
 struct WINDOW_CHOICE : public WINDOW_LABEL {
+  // コールバック関数の型 //
+  using ActionFn = std::function<bool(MenuController &, INPUT_BITS)>;
+  using AdjustFn = std::function<void(MenuController &, int_fast8_t)>;
+
+  // Raw pointer aliases for constructor overloading disambiguation.
+  using ActionFnPtr = bool (*)(MenuController &, INPUT_BITS);
+  using AdjustFnPtr = void (*)(MenuController &, int_fast8_t);
+
   Narrow::literal Help; // ヘルプ文字列へのポインタ(これも実体ではない)
 
-  // 特殊処理用コールバック関数(未使用ならNULL)
-  bool (*CallBackFn)(INPUT_BITS) = nullptr;
+  // 特殊処理用コールバック関数(未使用なら空)
+  ActionFn CallBackFn;
 
-  // Callback function for options (falls back on [CallBackFn] if nullptr)
-  void (*OptionFn)(int_fast8_t delta) = nullptr;
+  // Callback function for options (falls back on [CallBackFn] if empty)
+  AdjustFn OptionFn;
 
   WINDOW_MENU *Submenu = nullptr;
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title = "",
-                          const Narrow::literal help = "",
-                          decltype(CallBackFn) callback_fn = nullptr,
-                          WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
+  WINDOW_CHOICE(const Narrow::literal title = "",
+                const Narrow::literal help = "",
+                ActionFnPtr callback_fn = nullptr,
+                WINDOW_FLAGS flags = WINDOW_FLAGS::NONE)
       : WINDOW_LABEL(title, flags), Help(help), CallBackFn(callback_fn) {
-    if (callback_fn == nullptr) {
+    if (!CallBackFn) {
       Flags |= WINDOW_FLAGS::DISABLED;
     }
   }
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title,
-                          const Narrow::literal help,
-                          decltype(OptionFn) option_fn,
-                          WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
+  WINDOW_CHOICE(const Narrow::literal title,
+                const Narrow::literal help,
+                AdjustFnPtr option_fn,
+                WINDOW_FLAGS flags = WINDOW_FLAGS::NONE)
       : WINDOW_LABEL(title, flags), Help(help), OptionFn(option_fn) {}
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title,
-                          const Narrow::literal help,
-                          WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
+  WINDOW_CHOICE(const Narrow::literal title,
+                const Narrow::literal help,
+                WINDOW_FLAGS flags)
       : WINDOW_LABEL(title, flags), Help(help) {}
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title,
-                          const Narrow::literal help,
-                          WINDOW_MENU &submenu) noexcept
+  WINDOW_CHOICE(const Narrow::literal title,
+                const Narrow::literal help,
+                WINDOW_MENU &submenu)
       : WINDOW_LABEL(title), Help(help), Submenu(&submenu) {}
 
   void SetActive(bool active);
@@ -154,27 +164,28 @@ struct WINDOW_CHOICE : public WINDOW_LABEL {
 
 // Dynamic collection of menu items at a single hierarchy level.
 struct WINDOW_MENU {
+  using RefreshFn = std::function<void(MenuController &, bool tick)>;
+
   WINDOW_LABEL *Title;
   WINDOW_CHOICE *ItemPtr[WINITEM_MAX] = {nullptr}; // 次の項目へのポインタ
-  void (*SetItems)(bool tick) = [](bool) {};
+  RefreshFn SetItems = [](MenuController &, bool) {};
   uint8_t NumItems; // 項目数(<ITEM_MAX)
 
   template <size_t N>
-  constexpr WINDOW_MENU(
+  WINDOW_MENU(
       std::span<WINDOW_CHOICE, N> children,
-      void (*set_items)(bool) = [](bool) {},
+      RefreshFn set_items = [](MenuController &, bool) {},
       WINDOW_LABEL *title = nullptr) noexcept
-      : Title(title), SetItems(set_items), NumItems(N) {
+      : Title(title), SetItems(std::move(set_items)), NumItems(N) {
     static_assert(N <= WINITEM_MAX);
-    assert(set_items != nullptr);
     for (size_t i = 0; auto &item : children) {
       ItemPtr[i++] = &item;
     }
   }
 
-  constexpr WINDOW_MENU(void (*set_items)(bool),
-                        std::initializer_list<WINDOW_CHOICE *> children)
-      : Title(nullptr), SetItems(set_items), NumItems(children.size()) {
+  WINDOW_MENU(RefreshFn set_items,
+              std::initializer_list<WINDOW_CHOICE *> children)
+      : Title(nullptr), SetItems(std::move(set_items)), NumItems(children.size()) {
     for (size_t i = 0; const auto &item : children) {
       ItemPtr[i++] = item;
     }
@@ -249,7 +260,7 @@ using WINDOW_SYSTEM = MenuController;
 template <WINDOW_LABEL &Title, size_t (*ListSize)(),
           void (*Generate)(WINDOW_CHOICE &ret, size_t generated,
                            size_t selected),
-          bool (*Handle)(INPUT_BITS key, size_t selected),
+          bool (*Handle)(MenuController &ctrl, INPUT_BITS key, size_t selected),
           size_t MaxVisible = WINITEM_MAX>
 class WINDOW_MENU_SCROLL {
   // Rewritten when scrolling.
@@ -277,7 +288,7 @@ class WINDOW_MENU_SCROLL {
     }
   }
 
-  static bool Fn(INPUT_BITS key) {
+  static bool Fn(MenuController &ctrl, INPUT_BITS key) {
     if (key == KEY_UP) {
       if (Sel == 0) {
         Sel = ListSize();
@@ -301,11 +312,12 @@ class WINDOW_MENU_SCROLL {
       }
       return false;
     }
-    return Handle(key, Sel);
+    return Handle(ctrl, key, Sel);
   }
 
 public:
-  static inline WINDOW_MENU Menu = {std::span(Item), [](bool) {}, &Title};
+  static inline WINDOW_MENU Menu = {std::span(Item), [](MenuController &, bool) {},
+                                    &Title};
 
   static void Init(WINDOW_SYSTEM &sys, size_t sel, WINDOW_SYSTEM *return_to) {
     assert(sel < ListSize());
@@ -321,7 +333,7 @@ public:
 // コマンドウィンドウ処理 //
 void CWinMove(WINDOW_SYSTEM *ws); // コマンドウィンドウを１フレーム動作させる
 void CWinDraw(WINDOW_SYSTEM *ws); // コマンドウィンドウの描画
-bool CWinExitFn(INPUT_BITS key);  // コマンド [Exit] のデフォルト処理関数
+bool CWinExitFn(MenuController &ctrl, INPUT_BITS key);
 
 // アクティブなウィンドウを探す
 WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws);

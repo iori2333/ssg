@@ -27,14 +27,14 @@
 
 using namespace std::chrono_literals;
 
-static bool ExitFnYes(INPUT_BITS key);
-static bool ExitFnNo(INPUT_BITS key);
-static bool ExitFnSaveExit(INPUT_BITS key);
-static bool GameOverSaveFnYes(INPUT_BITS key);
-static bool GameOverSaveFnNo(INPUT_BITS key);
+static bool ExitFnYes(MenuController &ctrl, INPUT_BITS key);
+static bool ExitFnNo(MenuController &ctrl, INPUT_BITS key);
+static bool ExitFnSaveExit(MenuController &ctrl, INPUT_BITS key);
+static bool GameOverSaveFnYes(MenuController &ctrl, INPUT_BITS key);
+static bool GameOverSaveFnNo(MenuController &ctrl, INPUT_BITS key);
 
-static bool ContinueFnYes(INPUT_BITS key);
-static bool ContinueFnNo(INPUT_BITS key);
+static bool ContinueFnYes(MenuController &ctrl, INPUT_BITS key);
+static bool ContinueFnNo(MenuController &ctrl, INPUT_BITS key);
 
 static constexpr void RingStep(uint8_t &var, int_fast8_t delta, uint8_t min,
                                uint8_t max) {
@@ -83,7 +83,7 @@ size_t SelAtOpen = 0;
 
 static size_t ListSize() { return (1 + Packs.size() + 1); }
 static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
-static bool Handle(INPUT_BITS key, size_t selected);
+static bool Handle(MenuController &ctrl, INPUT_BITS key, size_t selected);
 // ----------------
 } // namespace BGMPack
 
@@ -98,33 +98,33 @@ std::vector<std::u8string> Files;
 
 static size_t ListSize() { return (!Files.empty() ? Files.size() + 1 : 2); }
 static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
-static bool Handle(INPUT_BITS key, size_t selected);
+static bool Handle(MenuController &ctrl, INPUT_BITS key, size_t selected);
 } // namespace ReplayFiles
 
 constexpr auto HELP_SUBMENU_EXIT = "一つ前のメニューにもどります";
 constexpr auto HELP_API_DEFAULT = "Let the backend choose a graphics API";
 constexpr auto HELP_API_SPECIFIC = "Select to override default API selection";
 
-constexpr WINDOW_CHOICE HRuleItemForArray = {"-------------------"};
-constexpr WINDOW_CHOICE SubmenuExitItemForArray = {"Exit", HELP_SUBMENU_EXIT,
-                                                   CWinExitFn};
-constinit WINDOW_CHOICE SubmenuExitItem = SubmenuExitItemForArray;
-constinit WINDOW_CHOICE HRuleItem = HRuleItemForArray;
+WINDOW_CHOICE HRuleItemForArray = {"-------------------"};
+WINDOW_CHOICE SubmenuExitItemForArray = {"Exit", HELP_SUBMENU_EXIT,
+                                                    CWinExitFn};
+WINDOW_CHOICE SubmenuExitItem = SubmenuExitItemForArray;
+WINDOW_CHOICE HRuleItem = HRuleItemForArray;
 
 namespace Main {
 namespace Cfg {
 namespace Dif {
-static void FnPlayerStock(int_fast8_t delta);
-static void FnBombStock(int_fast8_t delta);
-static void FnDifficulty(int_fast8_t delta);
-static void FnPracticeMode(int_fast8_t delta);
+static void FnPlayerStock(MenuController &ctrl, int_fast8_t delta);
+static void FnBombStock(MenuController &ctrl, int_fast8_t delta);
+static void FnDifficulty(MenuController &ctrl, int_fast8_t delta);
+static void FnPracticeMode(MenuController &ctrl, int_fast8_t delta);
 #ifdef PBG_DEBUG
-static void FnMsgDisplay(int_fast8_t delta);
-static void FnStgSelect(int_fast8_t delta);
-static void FnHit(int_fast8_t delta);
-static void FnDemo(int_fast8_t delta);
+static void FnMsgDisplay(MenuController &ctrl, int_fast8_t delta);
+static void FnStgSelect(MenuController &ctrl, int_fast8_t delta);
+static void FnHit(MenuController &ctrl, int_fast8_t delta);
+static void FnDemo(MenuController &ctrl, int_fast8_t delta);
 #endif
-static void SetItem(bool tick = true);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 char Title[8][20];
 WINDOW_CHOICE Item[] = {
@@ -146,13 +146,13 @@ WINDOW_MENU Menu = {std::span(Item), SetItem};
 
 namespace Grp {
 namespace Screenshot {
-static void FnFormat(int_fast8_t delta);
-static void SetItem(bool tick = true);
+static void FnFormat(MenuController &ctrl, int_fast8_t delta);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 static char TitleFormat[50];
 static char TitlePerf[GRP_SCREENSHOT_EFFORT_COUNT][50];
 static char HelpPerf[50];
-constinit auto Item = ([] {
+static auto Item = ([] {
   std::array<WINDOW_CHOICE, (2 + GRP_SCREENSHOT_EFFORT_COUNT + 2)> ret{};
   auto item_p = ret.begin();
   *(item_p++) = {TitleFormat, "", FnFormat};
@@ -169,25 +169,25 @@ static auto &ItemFormat = Item[0];
 } // namespace Screenshot
 
 namespace API {
-static void FnDef(int_fast8_t delta);
-static void FnOverride(int_fast8_t delta);
-static void SetItem(bool tick = true);
+static void FnDef(MenuController &ctrl, int_fast8_t delta);
+static void FnOverride(MenuController &ctrl, int_fast8_t delta);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 #ifdef SUPPORT_GRP_API
 char TitleDef[26];
 WINDOW_CHOICE ItemDef = {TitleDef, HELP_API_DEFAULT, FnDef};
-constinit WINDOW_CHOICE Item[8];
+WINDOW_CHOICE Item[8];
 WINDOW_MENU Menu = {std::span<WINDOW_CHOICE, 0>(), SetItem};
 #endif
 } // namespace API
 
-static void FnDisp(int_fast8_t delta);
-static void FnFSMode(int_fast8_t delta);
-static void FnScale(int_fast8_t delta);
-static void FnScMode(int_fast8_t delta);
-static void FnSkip(int_fast8_t delta);
-static void FnWinLocate(int_fast8_t delta);
-static void SetItem(bool tick = true);
+static void FnDisp(MenuController &ctrl, int_fast8_t delta);
+static void FnFSMode(MenuController &ctrl, int_fast8_t delta);
+static void FnScale(MenuController &ctrl, int_fast8_t delta);
+static void FnScMode(MenuController &ctrl, int_fast8_t delta);
+static void FnSkip(MenuController &ctrl, int_fast8_t delta);
+static void FnWinLocate(MenuController &ctrl, int_fast8_t delta);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 static char TitleDevice[50];
 #ifdef SUPPORT_GRP_WINDOWED
@@ -250,9 +250,9 @@ WINDOW_MENU Menu = {SetItem,
 
 namespace Snd {
 namespace Mid {
-static void FnDev(int_fast8_t delta);
-static void FnFixes(int_fast8_t delta);
-static void SetItem(bool tick = true);
+static void FnDev(MenuController &ctrl, int_fast8_t delta);
+static void FnFixes(MenuController &ctrl, int_fast8_t delta);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 static char TitlePort[26];
 static char TitleFixes[26];
@@ -267,13 +267,13 @@ static auto &ItemPort = Item[0];
 #endif
 } // namespace Mid
 
-static void FnSE(int_fast8_t delta);
-static void FnBGM(int_fast8_t delta);
-static void FnSEVol(int_fast8_t delta);
-static void FnBGMVol(int_fast8_t delta);
-static void FnBGMGain(int_fast8_t delta);
-static void FnBGMPack(int_fast8_t delta);
-static void SetItem(bool tick = true);
+static void FnSE(MenuController &ctrl, int_fast8_t delta);
+static void FnBGM(MenuController &ctrl, int_fast8_t delta);
+static void FnSEVol(MenuController &ctrl, int_fast8_t delta);
+static void FnBGMVol(MenuController &ctrl, int_fast8_t delta);
+static void FnBGMGain(MenuController &ctrl, int_fast8_t delta);
+static void FnBGMPack(MenuController &ctrl, int_fast8_t delta);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 static char TitleSE[26];
 static char TitleBGM[26];
@@ -307,8 +307,8 @@ static auto &ItemMIDI = Item[6];
 
 namespace Inp {
 namespace Pad {
-template <INPUT_PAD_BUTTON &ConfigPad> bool Fn(INPUT_BITS key);
-static void SetItem(bool tick = true);
+template <INPUT_PAD_BUTTON &ConfigPad> bool Fn(MenuController &ctrl, INPUT_BITS key);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 char Title[4][20];
 char Help[] = "パッド上のボタンを押すと変更";
@@ -322,9 +322,9 @@ WINDOW_CHOICE InpKey[] = {
 WINDOW_MENU Menu = {std::span(InpKey), SetItem};
 } // namespace Pad
 
-static void FnMsgSkip(int_fast8_t delta);
-static void FnZSpeedDown(int_fast8_t delta);
-static void SetItem(bool tick = true);
+static void FnMsgSkip(MenuController &ctrl, int_fast8_t delta);
+static void FnZSpeedDown(MenuController &ctrl, int_fast8_t delta);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 char Title[2][23];
 WINDOW_CHOICE Item[] = {
@@ -346,18 +346,18 @@ WINDOW_CHOICE Item[] = {
 WINDOW_MENU Menu = {std::span(Item)};
 } // namespace Cfg
 
-static bool ReplayFilesMenuOpen(INPUT_BITS key) {
+static bool ReplayFilesMenuOpen(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     ReplayFiles::Open();
   }
   return true;
 }
 
-static bool FnGameStart(INPUT_BITS key);
-static bool FnExStart(INPUT_BITS key);
-static bool FnMusic(INPUT_BITS key);
-static bool FnScore(INPUT_BITS key);
-static void SetItem(bool tick = true);
+static bool FnGameStart(MenuController &ctrl, INPUT_BITS key);
+static bool FnExStart(MenuController &ctrl, INPUT_BITS key);
+static bool FnMusic(MenuController &ctrl, INPUT_BITS key);
+static bool FnScore(MenuController &ctrl, INPUT_BITS key);
+static void SetItem(MenuController &ctrl, bool tick = true);
 
 WINDOW_LABEL Title = {"     Main Menu"};
 WINDOW_CHOICE Item[] = {
@@ -378,18 +378,18 @@ WINDOW_LABEL ExitTitle = {"    終了するの？"};
 WINDOW_CHOICE ExitItems[] = {{"  Save && Exit  ", "", ExitFnSaveExit},
                              {"   お っ け ～ ", "", ExitFnYes},
                              {"   だ め だ め", "", ExitFnNo}};
-WINDOW_MENU ExitMenu = {std::span(ExitItems), [](bool) {}, &ExitTitle};
+WINDOW_MENU ExitMenu = {std::span(ExitItems), [](MenuController &, bool) {}, &ExitTitle};
 
 WINDOW_LABEL ContinueTitle = {" Ｃｏｎｔｉｎｕｅ？"};
 WINDOW_CHOICE ContinueYesNoItem[] = {{"   お っ け ～", "", ContinueFnYes},
                                      {"   や だ や だ", "", ContinueFnNo}};
-WINDOW_MENU ContinueMenu = {std::span(ContinueYesNoItem), [](bool) {},
+WINDOW_MENU ContinueMenu = {std::span(ContinueYesNoItem), [](MenuController &, bool) {},
                             &ContinueTitle};
 
 WINDOW_LABEL GameOverSaveTitle = {"  Save Replay?"};
 WINDOW_CHOICE GameOverSaveItems[] = {{"   お っ け ～ ", "", GameOverSaveFnYes},
                                      {"   や だ や だ", "", GameOverSaveFnNo}};
-WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](bool) {},
+WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](MenuController &, bool) {},
                                 &GameOverSaveTitle};
 
 ///// [グローバル変数(公開)] /////
@@ -445,76 +445,76 @@ void InitExitWindow() {
 
 void InitContinueWindow() { ContinueWindow.Init(140); }
 
-static void Main::Cfg::Dif::FnPlayerStock(int_fast8_t delta) {
+static void Main::Cfg::Dif::FnPlayerStock(MenuController &ctrl, int_fast8_t delta) {
   RingStep(ConfigDat.PlayerStock.v, delta, 0, STOCK_PLAYER_MAX);
 }
 
-static void Main::Cfg::Dif::FnBombStock(int_fast8_t delta) {
+static void Main::Cfg::Dif::FnBombStock(MenuController &ctrl, int_fast8_t delta) {
   RingStep(ConfigDat.BombStock.v, delta, 0, STOCK_BOMB_MAX);
 }
 
-static void Main::Cfg::Dif::FnDifficulty(int_fast8_t delta) {
+static void Main::Cfg::Dif::FnDifficulty(MenuController &ctrl, int_fast8_t delta) {
   RingStep(ConfigDat.GameLevel.v, delta, GAME_EASY, GAME_LUNATIC);
 }
 
-static void Main::Cfg::Dif::FnPracticeMode(int_fast8_t delta) {
+static void Main::Cfg::Dif::FnPracticeMode(MenuController &ctrl, int_fast8_t delta) {
   RingStep(ConfigDat.PracticeMode.v, delta, PRACTICE_OFF, PRACTICE_INVINCIBLE);
 }
 
 #ifdef PBG_DEBUG
-static void Main::Cfg::Dif::FnMsgDisplay(int_fast8_t) {
+static void Main::Cfg::Dif::FnMsgDisplay(MenuController &ctrl, int_fast8_t) {
   DebugDat.MsgDisplay = !DebugDat.MsgDisplay;
 }
 
-static void Main::Cfg::Dif::FnStgSelect(int_fast8_t delta) {
+static void Main::Cfg::Dif::FnStgSelect(MenuController &ctrl, int_fast8_t delta) {
   RingStep(DebugDat.StgSelect, delta, 1, STAGE_MAX);
 }
 
-static void Main::Cfg::Dif::FnHit(int_fast8_t) { DebugDat.Hit = !DebugDat.Hit; }
+static void Main::Cfg::Dif::FnHit(MenuController &ctrl, int_fast8_t) { DebugDat.Hit = !DebugDat.Hit; }
 
-static void Main::Cfg::Dif::FnDemo(int_fast8_t) {
+static void Main::Cfg::Dif::FnDemo(MenuController &ctrl, int_fast8_t) {
   DebugDat.DemoSave = !DebugDat.DemoSave;
 }
 #endif // PBG_DEBUG
 
-static void Main::Cfg::Grp::Screenshot::FnFormat(int_fast8_t delta) {
+static void Main::Cfg::Grp::Screenshot::FnFormat(MenuController &ctrl, int_fast8_t delta) {
   RingStep(ConfigDat.ScreenshotEffort.v, delta, 0, GRP_SCREENSHOT_EFFORT_MAX);
 }
 
-static void Main::Cfg::Grp::API::FnDef(int_fast8_t /*unused*/) {
+static void Main::Cfg::Grp::API::FnDef(MenuController &ctrl, int_fast8_t /*unused*/) {
   XGrpTry([](auto &params) { params.api = -1; });
 }
 
-static void Main::Cfg::Grp::API::FnOverride(int_fast8_t /*unused*/) {
-  XGrpTry([](auto &params) {
-    params.api = (MainWindow.CurrentSelection() - 1);
+static void Main::Cfg::Grp::API::FnOverride(MenuController &ctrl, int_fast8_t /*unused*/) {
+  XGrpTry([&](auto &params) {
+    params.api = (ctrl.CurrentSelection() - 1);
   });
 }
 
-static void Main::Cfg::Grp::FnDisp(int_fast8_t /*unused*/) {
+static void Main::Cfg::Grp::FnDisp(MenuController &ctrl, int_fast8_t /*unused*/) {
   XGrpTryCycleDisp();
 }
 
-static void Main::Cfg::Grp::FnFSMode(int_fast8_t /*unused*/) {
+static void Main::Cfg::Grp::FnFSMode(MenuController &ctrl, int_fast8_t /*unused*/) {
   XGrpTry([](auto &params) {
     params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
   });
 }
 
-static void Main::Cfg::Grp::FnScale(int_fast8_t delta) {
+static void Main::Cfg::Grp::FnScale(MenuController &ctrl, int_fast8_t delta) {
   XGrpTryCycleScale(delta, true);
 }
 
-static void Main::Cfg::Grp::FnScMode(int_fast8_t /*unused*/) {
+static void Main::Cfg::Grp::FnScMode(MenuController &ctrl, int_fast8_t /*unused*/) {
   XGrpTryCycleScMode();
 }
 
-static void Main::Cfg::Grp::FnSkip(int_fast8_t delta) {
+static void Main::Cfg::Grp::FnSkip(MenuController &ctrl, int_fast8_t delta) {
   RingStep(ConfigDat.FPSDivisor.v, delta, 0, FPS_DIVISOR_MAX);
   Grp_FPSDivisor = ConfigDat.FPSDivisor.v;
 }
 
-static void Main::Cfg::Grp::FnWinLocate(int_fast8_t delta) {
+static void Main::Cfg::Grp::FnWinLocate(MenuController &ctrl, int_fast8_t delta) {
   static constexpr uint8_t flags[3] = {0, GRPF_WINDOW_UPPER, GRPF_MSG_DISABLE};
   const auto *it = std::ranges::find_if(flags, [](auto f) {
     return ((ConfigDat.GraphFlags.v & GRPF_ORIG_MASK) == f);
@@ -529,7 +529,7 @@ static void Main::Cfg::Grp::FnWinLocate(int_fast8_t delta) {
   }
 }
 
-static void Main::Cfg::Snd::FnSE(int_fast8_t /*unused*/) {
+static void Main::Cfg::Snd::FnSE(MenuController &ctrl, int_fast8_t /*unused*/) {
   // extern INPUT_OBJ InputObj;
   // char buf[100];
   // sprintf(buf,"[1] DI:%x  Dev:%x",InputObj.pdi,InputObj.pdev);
@@ -546,7 +546,7 @@ static void Main::Cfg::Snd::FnSE(int_fast8_t /*unused*/) {
   //  DebugOut(buf);
 }
 
-static void Main::Cfg::Snd::FnBGM(int_fast8_t /*unused*/) {
+static void Main::Cfg::Snd::FnBGM(MenuController &ctrl, int_fast8_t /*unused*/) {
   if (BGM_Enabled()) {
     BGM_Cleanup();
   } else {
@@ -557,19 +557,19 @@ static void Main::Cfg::Snd::FnBGM(int_fast8_t /*unused*/) {
   }
 }
 
-static void Main::Cfg::Snd::FnSEVol(int_fast8_t delta) {
+static void Main::Cfg::Snd::FnSEVol(MenuController &ctrl, int_fast8_t delta) {
   ConfigDat.SEVolume.v =
       std::clamp((ConfigDat.SEVolume.v + delta), 0, int{VOLUME_MAX});
   Snd_UpdateVolumes();
 }
 
-static void Main::Cfg::Snd::FnBGMVol(int_fast8_t delta) {
+static void Main::Cfg::Snd::FnBGMVol(MenuController &ctrl, int_fast8_t delta) {
   ConfigDat.BGMVolume.v =
       std::clamp((ConfigDat.BGMVolume.v + delta), 0, int{VOLUME_MAX});
   BGM_UpdateVolume();
 }
 
-static void Main::Cfg::Snd::FnBGMPack(int_fast8_t /*unused*/) {
+static void Main::Cfg::Snd::FnBGMPack(MenuController &ctrl, int_fast8_t /*unused*/) {
   if (!BGM_PacksAvailable()) {
     SDL_OpenURL(BGMPack::SOUNDTRACK_URL);
   } else {
@@ -577,7 +577,7 @@ static void Main::Cfg::Snd::FnBGMPack(int_fast8_t /*unused*/) {
   }
 }
 
-static void Main::Cfg::Snd::FnBGMGain(int_fast8_t /*unused*/) {
+static void Main::Cfg::Snd::FnBGMGain(MenuController &ctrl, int_fast8_t /*unused*/) {
   BGM_SetGainApply(!BGM_GainApply());
 }
 
@@ -639,7 +639,7 @@ static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
   }
 }
 
-static bool Handle(INPUT_BITS key, size_t selected) {
+static bool Handle(MenuController &ctrl, INPUT_BITS key, size_t selected) {
   if (Input_IsOK(key)) {
     if (selected == SelDownload()) {
       SDL_OpenURL(BGMPack::SOUNDTRACK_URL);
@@ -649,7 +649,7 @@ static bool Handle(INPUT_BITS key, size_t selected) {
       } else {
         ConfigDat.BGMPack = Packs[selected - 1];
       }
-      Main::Cfg::Snd::SetItem();
+      Main::Cfg::Snd::SetItem(ctrl);
       BGM_PackSet(ConfigDat.BGMPack);
     }
     return false;
@@ -658,7 +658,7 @@ static bool Handle(INPUT_BITS key, size_t selected) {
 }
 } // namespace BGMPack
 
-static void Main::SetItem(bool /*unused*/) {
+static void Main::SetItem(MenuController &ctrl, bool /*unused*/) {
   ItemMusic.SetActive(BGM_Enabled());
 }
 
@@ -699,7 +699,7 @@ static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected) {
   }
 }
 
-static bool Handle(INPUT_BITS key, size_t selected) {
+static bool Handle(MenuController &ctrl, INPUT_BITS key, size_t selected) {
   if (Input_IsOK(key)) {
     if (selected == (ListSize() - 1)) {
       return false;
@@ -730,18 +730,18 @@ void Open() {
 }
 } // namespace ReplayFiles
 
-static void Main::Cfg::Snd::Mid::FnDev(int_fast8_t delta) {
+static void Main::Cfg::Snd::Mid::FnDev(MenuController &ctrl, int_fast8_t delta) {
   if (BGM_Enabled()) {
     BGM_ChangeMIDIDevice(delta);
   }
 }
 
-static void Main::Cfg::Snd::Mid::FnFixes(int_fast8_t /*unused*/) {
+static void Main::Cfg::Snd::Mid::FnFixes(MenuController &ctrl, int_fast8_t /*unused*/) {
   const auto flags = (ConfigDat.MidFlags.v ^ MID_FLAGS::FIX_SYSEX_BUGS);
   ConfigDat.MidFlags.v = Mid_SetFlags(flags);
 }
 
-static void Main::Cfg::Inp::FnMsgSkip(int_fast8_t /*unused*/) {
+static void Main::Cfg::Inp::FnMsgSkip(MenuController &ctrl, int_fast8_t /*unused*/) {
   if ((ConfigDat.InputFlags.v & INPF_Z_MSKIP_ENABLE) != 0) {
     ConfigDat.InputFlags.v &= (~INPF_Z_MSKIP_ENABLE);
   } else {
@@ -749,7 +749,7 @@ static void Main::Cfg::Inp::FnMsgSkip(int_fast8_t /*unused*/) {
   }
 }
 
-static void Main::Cfg::Inp::FnZSpeedDown(int_fast8_t /*unused*/) {
+static void Main::Cfg::Inp::FnZSpeedDown(MenuController &ctrl, int_fast8_t /*unused*/) {
   if ((ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) != 0) {
     ConfigDat.InputFlags.v &= (~INPF_Z_SPDDOWN_ENABLE);
   } else {
@@ -757,7 +757,7 @@ static void Main::Cfg::Inp::FnZSpeedDown(int_fast8_t /*unused*/) {
   }
 }
 
-static bool Main::FnGameStart(INPUT_BITS key) {
+static bool Main::FnGameStart(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     // EndingInit();
     GameFlow.WeaponSelectInit(false);
@@ -765,7 +765,7 @@ static bool Main::FnGameStart(INPUT_BITS key) {
   return true;
 }
 
-static bool Main::FnExStart(INPUT_BITS key) {
+static bool Main::FnExStart(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     if (ConfigDat.ExtraStgFlags.v != 0U) {
       GameFlow.WeaponSelectInit(true);
@@ -774,14 +774,14 @@ static bool Main::FnExStart(INPUT_BITS key) {
   return true;
 }
 
-static bool Main::FnScore(INPUT_BITS key) {
+static bool Main::FnScore(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     ScoreNameInit();
   }
   return true;
 }
 
-static bool Main::FnMusic(INPUT_BITS key) {
+static bool Main::FnMusic(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     MWinForceClose();
     MusicRoomInit();
@@ -789,7 +789,7 @@ static bool Main::FnMusic(INPUT_BITS key) {
   return true;
 }
 
-static bool ExitFnYes(INPUT_BITS key) {
+static bool ExitFnYes(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     Demos.save_all_enable = false;
     GameExit();
@@ -798,7 +798,7 @@ static bool ExitFnYes(INPUT_BITS key) {
   return true;
 }
 
-static bool ExitFnNo(INPUT_BITS key) {
+static bool ExitFnNo(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     GameRestart();
     return false;
@@ -806,7 +806,7 @@ static bool ExitFnNo(INPUT_BITS key) {
   return true;
 }
 
-static bool ExitFnSaveExit(INPUT_BITS key) {
+static bool ExitFnSaveExit(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     Demos.SaveReplayAll(false);
     GameExit();
@@ -815,7 +815,7 @@ static bool ExitFnSaveExit(INPUT_BITS key) {
   return true;
 }
 
-static bool GameOverSaveFnYes(INPUT_BITS key) {
+static bool GameOverSaveFnYes(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     Demos.SaveReplayAll(false);
     GameExit(true);
@@ -824,7 +824,7 @@ static bool GameOverSaveFnYes(INPUT_BITS key) {
   return true;
 }
 
-static bool GameOverSaveFnNo(INPUT_BITS key) {
+static bool GameOverSaveFnNo(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     Demos.save_all_enable = false;
     GameExit(true);
@@ -833,7 +833,7 @@ static bool GameOverSaveFnNo(INPUT_BITS key) {
   return true;
 }
 
-static bool ContinueFnYes(INPUT_BITS key) {
+static bool ContinueFnYes(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     GameContinue();
     return false;
@@ -841,7 +841,7 @@ static bool ContinueFnYes(INPUT_BITS key) {
   return true;
 }
 
-static bool ContinueFnNo(INPUT_BITS key) {
+static bool ContinueFnNo(MenuController &ctrl, INPUT_BITS key) {
   if (Input_IsOK(key)) {
     GameFlow.NameRegistInit(true);
     // GameExit();
@@ -850,22 +850,23 @@ static bool ContinueFnNo(INPUT_BITS key) {
   return true;
 }
 
-static bool InpFnPad(INPUT_PAD_BUTTON &config_pad, INPUT_BITS key) {
+static bool InpFnPad(MenuController &ctrl, INPUT_PAD_BUTTON &config_pad,
+                     INPUT_BITS key) {
   key &= (~Pad_Data);
   const auto temp = Key_PadSingle();
   if (temp) {
     config_pad = temp.value();
-    Main::Cfg::Inp::SetItem();
+    Main::Cfg::Inp::SetItem(ctrl);
   }
   return !Input_IsOK(key);
 }
 
 template <INPUT_PAD_BUTTON &ConfigPad>
-bool Main::Cfg::Inp::Pad::Fn(INPUT_BITS key) {
-  return InpFnPad(ConfigPad, key);
+bool Main::Cfg::Inp::Pad::Fn(MenuController &ctrl, INPUT_BITS key) {
+  return InpFnPad(ctrl, ConfigPad, key);
 }
 
-static void Main::Cfg::Dif::SetItem(bool /*unused*/) {
+static void Main::Cfg::Dif::SetItem(MenuController &ctrl, bool /*unused*/) {
   static constexpr const char *const dif[4] = {
       " Easy  ",
       " Normal",
@@ -896,7 +897,7 @@ static void Main::Cfg::Dif::SetItem(bool /*unused*/) {
 #endif
 }
 
-static void Main::Cfg::Grp::SetItem(bool /*unused*/) {
+static void Main::Cfg::Grp::SetItem(MenuController &ctrl, bool /*unused*/) {
   const auto params = ConfigDat.GraphicsParams();
 
   static constexpr auto aspect = (GRP_RES / std::gcd(GRP_RES.w, GRP_RES.h));
@@ -1010,7 +1011,7 @@ static void Main::Cfg::Grp::SetItem(bool /*unused*/) {
   // ------------
 }
 
-static void Main::Cfg::Grp::Screenshot::SetItem(bool /*unused*/) {
+static void Main::Cfg::Grp::Screenshot::SetItem(MenuController &ctrl, bool /*unused*/) {
   const auto effort = ConfigDat.ScreenshotEffort.v;
   char format_buf[8];
   enum class ALIGN { LEFT, CENTER };
@@ -1045,7 +1046,7 @@ static void Main::Cfg::Grp::Screenshot::SetItem(bool /*unused*/) {
 
   for (const auto i : std::views::iota(0U, GRP_SCREENSHOT_EFFORT_COUNT)) {
     auto &item = Item[2 + i];
-    const auto hovered = (MainWindow.CurrentSelection() == (2 + i));
+    const auto hovered = (ctrl.CurrentSelection() == (2 + i));
     const auto *const format = format_for(i, ALIGN::LEFT);
     const auto time = Grp_ScreenshotTimes[i];
     EnumFlagSet(
@@ -1086,7 +1087,7 @@ static void Main::Cfg::Grp::Screenshot::SetItem(bool /*unused*/) {
 }
 
 #ifdef SUPPORT_GRP_API
-static void Main::Cfg::Grp::API::SetItem(bool /*unused*/) {
+static void Main::Cfg::Grp::API::SetItem(MenuController &ctrl, bool /*unused*/) {
   const bool is_def_api = ConfigDat.GraphicsAPI.empty();
   const Narrow::string_view api_active =
       GrpBackend_APILabel(GrpBackend_APIString());
@@ -1103,14 +1104,14 @@ static void Main::Cfg::Grp::API::SetItem(bool /*unused*/) {
 }
 #endif
 
-static void Main::Cfg::Snd::SetItem(bool /*unused*/) {
+static void Main::Cfg::Snd::SetItem(MenuController &ctrl, bool /*unused*/) {
   const auto sound_active = (ConfigDat.SoundFlags.v & SNDF_SE_ENABLE);
   const auto bgm_active = BGM_Enabled();
 
   // Additionally purge the cache at the initialization of the main menu,
   // and when moving between options.
-  if ((!MainWindow.Active()) || (MainWindow.LastKey() == KEY_UP) ||
-      (MainWindow.LastKey() == KEY_DOWN)) {
+  if ((!ctrl.Active()) || (ctrl.LastKey() == KEY_UP) ||
+      (ctrl.LastKey() == KEY_DOWN)) {
     BGM_PacksAvailable(true);
   }
 
@@ -1137,7 +1138,7 @@ static void Main::Cfg::Snd::SetItem(bool /*unused*/) {
 }
 
 #ifdef SUPPORT_MIDI_BACKEND
-static void Main::Cfg::Snd::Mid::SetItem(bool tick) {
+static void Main::Cfg::Snd::Mid::SetItem(MenuController &ctrl, bool tick) {
   static int now;
   char buf[1000];
   static uint8_t time;
@@ -1170,7 +1171,7 @@ static void Main::Cfg::Snd::Mid::SetItem(bool tick) {
 }
 #endif
 
-static void Main::Cfg::Inp::SetItem(bool /*unused*/) {
+static void Main::Cfg::Inp::SetItem(MenuController &ctrl, bool /*unused*/) {
   const auto skip = ((ConfigDat.InputFlags.v & INPF_Z_MSKIP_ENABLE) != 0);
   const auto down = ((ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) != 0);
 
@@ -1178,7 +1179,7 @@ static void Main::Cfg::Inp::SetItem(bool /*unused*/) {
   sprintf(Title[1], "Z-SpeedDown  [%s]", (down ? "ＯＫ" : "禁止"));
 }
 
-static void Main::Cfg::Inp::Pad::SetItem(bool /*unused*/) {
+static void Main::Cfg::Inp::Pad::SetItem(MenuController &ctrl, bool /*unused*/) {
   static constexpr const LABELS<4> labels = {
       {"Shot", "Bomb", "SpeedDown", "ESC"}};
   auto set = [](char *buf, Narrow::string_view label, INPUT_PAD_BUTTON v) {

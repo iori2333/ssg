@@ -397,7 +397,7 @@ constexpr Narrow::string_view TITLE = "Missing game data files";
 
 bool FoundAll = false;
 
-bool FnRecheck(INPUT_BITS key) {
+bool FnRecheck(MenuController & /*ctrl*/, INPUT_BITS key) {
   if ((key == KEY_BOMB) || (key == KEY_ESC)) {
     return false;
   }
@@ -423,7 +423,7 @@ std::array<WINDOW_CHOICE, (DAT::BASENAMES.size() + 6)> Info = {{
     {"Recheck", "", FnRecheck, CENTER},
     {"Quit", "", CWinExitFn, CENTER},
 }};
-WINDOW_MENU Menu = {std::span(Info), [](bool) {}, &Title};
+WINDOW_MENU Menu = {std::span(Info), [](MenuController &, bool) {}, &Title};
 WINDOW_SYSTEM Window(Menu);
 
 void Proc(bool &quit) {
