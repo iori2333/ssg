@@ -3,7 +3,7 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include "GEOMETRY.h"
+#include "geometry.h"
 #include "gian.h"
 #include "core/entity.h"
 #include "laser.h"

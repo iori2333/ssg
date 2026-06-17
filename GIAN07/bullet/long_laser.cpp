@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "GEOMETRY.h"
+#include "geometry.h"
 #include "long_laser.h"
 #include "laser_manager.h"
 #include "player.h"

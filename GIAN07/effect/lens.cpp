@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "LENS.h"
+#include "lens.h"
 #include "constants.h"
 #include "game/cast.h"
 #include "game/ut_math.h"

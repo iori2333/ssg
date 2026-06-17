@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "window_sys.h"
-#include "FONTUTY.h"
+#include "font_uty.h"
 #include "loader.h"
 #include "game/enum_flags.h"
 #include "game/snd.h"

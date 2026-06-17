@@ -4,8 +4,8 @@
 /*                                                                           */
 
 #include "effect.h"
-#include "FONTUTY.h"
-#include "GEOMETRY.h"
+#include "font_uty.h"
+#include "geometry.h"
 #include "gian.h"
 #include "game/cast.h"
 #include "game/snd.h"

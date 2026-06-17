@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "ITEM.h"
+#include "item.h"
 
 struct ItemManager {
   std::array<ItemData, ITEM_MAX> entities;  // Items.entities[]

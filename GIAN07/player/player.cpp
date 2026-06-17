@@ -8,8 +8,8 @@
 #include <inttypes.h> // for PRId64
 
 #include "config.h"
-#include "FONTUTY.h"
-#include "GEOMETRY.h"
+#include "font_uty.h"
+#include "geometry.h"
 #include "gian.h"
 #include "player.h"
 #include "game/input.h"

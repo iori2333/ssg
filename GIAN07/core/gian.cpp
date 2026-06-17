@@ -4,7 +4,7 @@
 /*                                                                           */
 
 #include "config.h"
-#include "FONTUTY.h"
+#include "font_uty.h"
 #include "gian.h"
 #include "level.h"
 #include "bullet/bullet_manager.h"

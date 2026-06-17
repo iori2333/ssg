@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "FONTUTY.h"
+#include "font_uty.h"
 #include "loader.h"
 #include "platform/graphics_backend.h"
 #include "platform/text_backend.h"

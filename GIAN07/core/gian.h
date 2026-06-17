@@ -20,7 +20,7 @@
 #include "enemy/enemy_manager.h" // EnemyManager + backward-compat wrappers
 #include "effect/effect.h"    // 主にテキストベースのエフェクト処理
 #include "effect/effect3d.h"  // ３Ｄエフェクト
-#include "effect/FRAGMENT.h"  // 破片系エフェクト処理
+#include "effect/fragment.h"  // 破片系エフェクト処理
 #include "effect/effect_manager.h" // Effects 参照宣言
 #include "gameflow/game_main.h"  // メインのルーチン切り替え処理
 #include "gameflow/gameflow_manager.h" // GameMain, DemoTimer, ... 参照宣言
@@ -43,7 +43,7 @@
 #include "stage/scroll_manager.h"    // ScrollManager + backward-compat wrappers
 
 #include "game/ut_math.h" // for rnd()
-#include "player/ITEM.h" // アイテム処理
+#include "player/item.h" // アイテム処理
 #include "game_manager.h" // GameCount, GameStage, GameLevel, IsDemoplay
 
 ///// [ 定数 ] /////

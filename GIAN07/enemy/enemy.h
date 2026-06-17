@@ -13,7 +13,7 @@
 // 敵の当たり判定チェック用関数 enemy_damage() を追加 2000/02/22 :
 // 敵のクリッピング範囲を変更した。
 
-#include "ECL.h"
+#include "ecl.h"
 #include "bullet/laser.h"
 #include "bullet/bullet.h"
 #include "platform/buffer.h"

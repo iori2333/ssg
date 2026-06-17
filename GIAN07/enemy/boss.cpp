@@ -3,11 +3,11 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "BOMBEFC.h" // 爆発エフェクト処理
+#include "bomb_efc.h" // 爆発エフェクト処理
 #include "boss.h"
 #include "boss_manager.h"
-#include "EnemyExCtrl.h"
-#include "GEOMETRY.h"
+#include "enemy_ex_ctrl.h"
+#include "geometry.h"
 #include "gian.h"
 #include "game/cast.h"
 #include "game/snd.h"

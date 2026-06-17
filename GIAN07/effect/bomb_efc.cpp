@@ -2,7 +2,7 @@
  *   BombEfc.cpp   : 爆発系エフェクト
  *
  */
-#include "BOMBEFC.h"
+#include "bomb_efc.h"
 #include "effect_manager.h"
 #include "loader.h"
 #include "game/ut_math.h"

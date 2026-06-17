@@ -8,11 +8,11 @@
 #include <inttypes.h> // for PRId64
 
 #include "effect.h"
-#include "FONTUTY.h"
+#include "font_uty.h"
 #include "game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "loader.h"
-#include "MUSIC.h"
+#include "music.h"
 #include "game/bgm.h"
 #include "game/debug.h"
 #include "game/input.h"

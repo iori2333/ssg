@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "EnemyExCtrl.h"
+#include "enemy_ex_ctrl.h"
 #include "boss_manager.h"
 #include "enemy_manager.h"
 #include "long_laser.h"

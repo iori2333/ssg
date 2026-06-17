@@ -3,9 +3,9 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include "FRAGMENT.h"
+#include "fragment.h"
 #include "effect_manager.h"
-#include "GEOMETRY.h"
+#include "geometry.h"
 #include "loader.h"
 #include "game/ut_math.h"
 #include "platform/graphics_backend.h"

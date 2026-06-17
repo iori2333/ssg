@@ -14,7 +14,7 @@
 #include "gameflow/gameflow_manager.h"
 #include "level.h"
 #include "loader.h"
-#include "MUSIC.h"
+#include "music.h"
 #include "window_ctrl.h"
 #include "window_sys.h"
 #include "game/bgm.h"

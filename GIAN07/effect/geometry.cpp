@@ -3,7 +3,7 @@
  *
  */
 
-#include "GEOMETRY.h"
+#include "geometry.h"
 #include "game/ut_math.h"
 
 namespace Geometry {

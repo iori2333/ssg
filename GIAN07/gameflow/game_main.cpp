@@ -2,17 +2,17 @@
 /*   GameMain.cpp   ウィンドウシステム切り替えなどの処理                     */
 /*                                                                           */
 /*                                                                           */
-#include "BOMBEFC.h" // 爆発エフェクト処理
+#include "bomb_efc.h" // 爆発エフェクト処理
 #include "config.h"
 #include "demo_play.h"
 #include "demo_manager.h"
-#include "FONTUTY.h"
+#include "font_uty.h"
 #include "game_main.h"
-#include "GEOMETRY.h"
+#include "geometry.h"
 #include "gian.h"
-#include "LENS.h"
+#include "lens.h"
 #include "level.h"
-#include "MUSIC.h"
+#include "music.h"
 #include "score.h"
 #include "window_ctrl.h" // ウィンドウ定義
 #include "window_sys.h"

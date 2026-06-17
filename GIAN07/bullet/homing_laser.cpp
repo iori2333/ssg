@@ -3,7 +3,7 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "GEOMETRY.h"
+#include "geometry.h"
 #include "gian.h"
 #include "homing_laser.h"
 #include "laser_manager.h"

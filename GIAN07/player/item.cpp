@@ -5,7 +5,7 @@
 
 #include "gian.h"
 #include "core/entity.h"
-#include "ITEM.h"
+#include "item.h"
 #include "item_manager.h"
 #include "game/snd.h"
 #include "game/ut_math.h"

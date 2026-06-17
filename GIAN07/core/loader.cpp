@@ -7,7 +7,7 @@
 #include "enemy.h"
 #include "gian.h"
 #include "lz_uty.h"
-#include "MUSIC.h"
+#include "music.h"
 #include "window_sys.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"

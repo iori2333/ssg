@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "BOMBEFC.h"
+#include "bomb_efc.h"
 #include "effect.h"
 #include "effect3d.h"
-#include "FRAGMENT.h"
+#include "fragment.h"
 #include "game/text.h"
 #include <array>
 #include <cstdint>
