@@ -5,12 +5,12 @@
 
 #include "ending.h"
 #include "ending_manager.h"
-#include "gian.h"
-#include "scene.h" // ＳＣＬ定義ファイル
 #include "game/bgm.h"
 #include "game/cast.h"
 #include "game/endian.h"
+#include "gian.h"
 #include "platform/text_backend.h"
+#include "scene.h" // ＳＣＬ定義ファイル
 
 // ファイル静的変数 → ending_manager.h の EndingManager に移動
 
@@ -85,13 +85,15 @@ void EndingManager::Draw() {
 }
 
 // グラフィックのフェードアウト用関数 //
-void EndingManager::FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
+void EndingManager::FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src,
+                                      uint8_t a) {
   Dest = Src.Fade(a, 0, 199);
   EndingManager::SetFixedColors(Dest);
 }
 
 // スタッフ名のフェードアウト用関数 //
-void EndingManager::FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t a) {
+void EndingManager::FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src,
+                                      uint8_t a) {
   Dest = Src.Fade(a, 200, 255);
   EndingManager::SetFixedColors(Dest);
 }
@@ -188,7 +190,8 @@ void EndingManager::Text::Render(WINDOW_POINT topleft) {
   });
 }
 
-void EndingManager::FlashPaletteGrp(PALETTE &dest, const PALETTE &pal, uint16_t a) {
+void EndingManager::FlashPaletteGrp(PALETTE &dest, const PALETTE &pal,
+                                    uint16_t a) {
   const uint16_t a16 = ((a > 256) ? (a - 256) : a);
   for (int i = 0; i < dest.size(); i++) {
     dest[i].r = (std::min)(256, (256 * (256 - a) + (pal[i].r * a16)) / 256);

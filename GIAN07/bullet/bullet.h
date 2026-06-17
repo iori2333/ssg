@@ -27,19 +27,26 @@ inline constexpr auto TAMA_EVADE = 1;       // 弾のかすり値
 inline constexpr auto TAMA1_POINT = 10000; // 弾の得点
 inline constexpr auto TAMA2_POINT = 15000; // 弾の得点
 
-inline constexpr auto TAMA_HITX = (2 * 64);              // 弾の当たり判定
-inline constexpr auto TAMA_HITY = (4 * 64);              // 弾の当たり判定
-inline constexpr auto TAMA_EVX_SMALL = ((8 + 8) * 64);   // たま（小）のかすり判定(x)
-inline constexpr auto TAMA_EVY_SMALL = ((16 + 8) * 64);  // たま（小）のかすり判定(y)
-inline constexpr auto TAMA_EVX_LARGE = ((8 + 16) * 64);  // たま（大）のかすり判定(x)
-inline constexpr auto TAMA_EVY_LARGE = ((16 + 16) * 64); // たま（大）のかすり判定(y)
+inline constexpr auto TAMA_HITX = (2 * 64); // 弾の当たり判定
+inline constexpr auto TAMA_HITY = (4 * 64); // 弾の当たり判定
+inline constexpr auto TAMA_EVX_SMALL =
+    ((8 + 8) * 64); // たま（小）のかすり判定(x)
+inline constexpr auto TAMA_EVY_SMALL =
+    ((16 + 8) * 64); // たま（小）のかすり判定(y)
+inline constexpr auto TAMA_EVX_LARGE =
+    ((8 + 16) * 64); // たま（大）のかすり判定(x)
+inline constexpr auto TAMA_EVY_LARGE =
+    ((16 + 16) * 64); // たま（大）のかすり判定(y)
 
-inline constexpr auto TAMA_SMALL = 0x00;  // 弾が小型弾である場合の上位４ビット
-inline constexpr auto TAMA_LARGE = 0x10;  // 弾が大型弾である場合の上位４ビット
-inline constexpr auto TAMA_ANGLE = 0x20;  // 弾が方向指定系である場合の上位４ビット
-inline constexpr auto TAMA_EXTRA = 0x30;  // 弾がエキストラ用である場合の上位４ビット
-inline constexpr auto TAMA_EXTRA2 = 0x40; // 弾が「おふだ」である場合の上位４ビット
-inline constexpr auto TAMA_REN = 0x04;    // 弾の連射属性
+inline constexpr auto TAMA_SMALL = 0x00; // 弾が小型弾である場合の上位４ビット
+inline constexpr auto TAMA_LARGE = 0x10; // 弾が大型弾である場合の上位４ビット
+inline constexpr auto TAMA_ANGLE =
+    0x20; // 弾が方向指定系である場合の上位４ビット
+inline constexpr auto TAMA_EXTRA =
+    0x30; // 弾がエキストラ用である場合の上位４ビット
+inline constexpr auto TAMA_EXTRA2 =
+    0x40;                              // 弾が「おふだ」である場合の上位４ビット
+inline constexpr auto TAMA_REN = 0x04; // 弾の連射属性
 inline constexpr auto TAMA_ZSET = 0x08;   // 弾のサボテン(自機)セット属性
 inline constexpr auto TAMASP_RND0 = 0x00; // 速度ランダム無し
 inline constexpr auto TAMASP_RND1 = 0x40; // 速度ランダム？？
@@ -47,15 +54,23 @@ inline constexpr auto TAMASP_RND2 = 0x80; // 速度ランダム？？
 inline constexpr auto TAMASP_RND3 = 0xc0; // 速度ランダム？？
 
 ////弾の種類定数(上位４ビットは現在、使用目的がない)////
-inline constexpr auto T_NORM = 0x00;     // 通常弾			:(vx,vy)で移動します
-inline constexpr auto T_NORM_A = 0x01;   // 加速弾			:rep 加速回数?
-inline constexpr auto T_HOMING = 0x02;   // ｎ回ホーミング	:rep ホーミング回数 / a 加速度
-inline constexpr auto T_HOMING_M = 0x03; // ｎ％ホーミング	:a 加速度 / vd ホーミング率
-inline constexpr auto T_ROLL = 0x04;     // 回転弾			:rep 回転時間 / vd 角速度
-inline constexpr auto T_ROLL_A = 0x05;   // 回転弾(加速)		:上の奴 + a 加速度
-inline constexpr auto T_ROLL_R = 0x06;   // 回転弾(反転)		:上の奴と同じ
-inline constexpr auto T_GRAVITY = 0x07; // 落下弾 :(vx,vy)＆vyに(加速度a)がかかる
-inline constexpr auto T_CHANGE = 0x08;   // 角度変更弾		:rep フレームでvdに角度変更
+inline constexpr auto T_NORM =
+    0x00; // 通常弾			:(vx,vy)で移動します
+inline constexpr auto T_NORM_A =
+    0x01; // 加速弾			:rep 加速回数?
+inline constexpr auto T_HOMING =
+    0x02; // ｎ回ホーミング	:rep ホーミング回数 / a 加速度
+inline constexpr auto T_HOMING_M =
+    0x03; // ｎ％ホーミング	:a 加速度 / vd ホーミング率
+inline constexpr auto T_ROLL =
+    0x04; // 回転弾			:rep 回転時間 / vd 角速度
+inline constexpr auto T_ROLL_A =
+    0x05; // 回転弾(加速)		:上の奴 + a 加速度
+inline constexpr auto T_ROLL_R = 0x06; // 回転弾(反転)		:上の奴と同じ
+inline constexpr auto T_GRAVITY =
+    0x07; // 落下弾 :(vx,vy)＆vyに(加速度a)がかかる
+inline constexpr auto T_CHANGE =
+    0x08; // 角度変更弾		:rep フレームでvdに角度変更
 inline constexpr auto T_SBHOMING = 0x09; // サボテン用ホーミング
 inline constexpr auto T_SBHBOMB = 0x0a;  // サボテン用ホーミングボム
 
@@ -150,11 +165,13 @@ struct Bullet {
 // (TAMA_DATA alias removed — use Bullet directly)
 
 ////弾の各種変数たち////
-// Bullets.bullets, Bullets.command, Bullets.indices_small/large, Bullets.count_small/large で直接アクセス
+// Bullets.bullets, Bullets.command, Bullets.indices_small/large,
+// Bullets.count_small/large で直接アクセス
 
 ////弾関数////
 // 実装は BulletManager メソッドに移行
-// TamaSetForm, TamaSTDForm, TamaSetDeg, TamaSetNum, TamaSetSpd, TamaSetXY → bullet_manager.h に移動
+// TamaSetForm, TamaSTDForm, TamaSetDeg, TamaSetNum, TamaSetSpd, TamaSetXY →
+// bullet_manager.h に移動
 
 //// かすり用マクロ ////
 void evade_addEx(int x, int y, uint8_t n); // かすりゲージを上昇させる
@@ -169,4 +186,3 @@ inline void TamaEvadeAdd(Bullet *t) {
 }
 
 // (Indsort<Bullet> wrapper removed — pass predicate directly)
-

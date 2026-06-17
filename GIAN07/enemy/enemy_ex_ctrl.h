@@ -6,8 +6,8 @@
 #pragma once
 
 #include "boss.h"
-#include "enemy.h"
 #include "core/point.h"
+#include "enemy.h"
 
 ///// [更新履歴] /////
 
@@ -24,15 +24,18 @@ inline constexpr auto BITCMD_STDMOVE = 0x00;   // 通常の移動を行う
 inline constexpr auto BITCMD_CHGSPD = 0x01;    // 回転速度を変更する
 inline constexpr auto BITCMD_SELECTATK = 0x02; // 攻撃コマンドを変更する
 inline constexpr auto BITCMD_CHGRADIUS = 0x03; // 半径を変更する
-inline constexpr auto BITCMD_MOVTARGET = 0x04; // 目標(びびっと)に向けてブーメラン移動
-inline constexpr auto BITCMD_DISABLE = 0xff;   // ビットを使用していない
+inline constexpr auto BITCMD_MOVTARGET =
+    0x04; // 目標(びびっと)に向けてブーメラン移動
+inline constexpr auto BITCMD_DISABLE = 0xff; // ビットを使用していない
 
-inline constexpr auto BLASERCMD_OPEN = 0x00;   // レーザーをオープンする
-inline constexpr auto BLASERCMD_CLOSE = 0x01;  // ビットの放っているレーザーをクローズする
+inline constexpr auto BLASERCMD_OPEN = 0x00; // レーザーをオープンする
+inline constexpr auto BLASERCMD_CLOSE =
+    0x01; // ビットの放っているレーザーをクローズする
 inline constexpr auto BLASERCMD_CLOSEL = 0x02; // ライン状態に推移させる
 
-inline constexpr auto BLASERCMD_TYPE_A = 0x03;  // 一方向・角度固定レーザーを放射
-inline constexpr auto BLASERCMD_TYPE_B = 0x04;  // 両方向角度同期変化レーザーを放射
+inline constexpr auto BLASERCMD_TYPE_A = 0x03; // 一方向・角度固定レーザーを放射
+inline constexpr auto BLASERCMD_TYPE_B =
+    0x04; // 両方向角度同期変化レーザーを放射
 inline constexpr auto BLASERCMD_TYPE_C = 0x05;  // 角度同期ｎ芒星レーザー
 inline constexpr auto BLASERCMD_DISABLE = 0xff; // 何も発動していない
 
@@ -45,8 +48,8 @@ template <size_t Len> struct SNAKYMOVE_DATA {
 
   EnemyData *EnemyPtr[Len]; // 尾となるデータ配列
   BossData *Parent;         // 親(頭となるデータ)
-  size_t Head;               // 頭を格納している地点のポインタ
-  bool bIsUse;               // この構造体を使用しているか
+  size_t Head;              // 頭を格納している地点のポインタ
+  bool bIsUse;              // この構造体を使用しているか
 
   constexpr static size_t Length() { return Len; }
 };
@@ -91,4 +94,3 @@ struct BitData {
 ///// [ 関数 ] /////
 // 後方互換 inline wrapper は boss_manager.h 末尾に移動
 // 実装は BossManager メソッドに移行
-

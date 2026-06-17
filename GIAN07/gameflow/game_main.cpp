@@ -2,27 +2,27 @@
 /*   GameMain.cpp   ウィンドウシステム切り替えなどの処理                     */
 /*                                                                           */
 /*                                                                           */
+#include "game_main.h"
 #include "bomb_efc.h" // 爆発エフェクト処理
 #include "config.h"
-#include "demo_play.h"
 #include "demo_manager.h"
+#include "demo_play.h"
 #include "font_uty.h"
-#include "game_main.h"
-#include "geometry.h"
-#include "gian.h"
-#include "lens.h"
-#include "level.h"
-#include "music.h"
-#include "score.h"
-#include "window_ctrl.h" // ウィンドウ定義
-#include "window_sys.h"
 #include "game/bgm.h"
 #include "game/debug.h"
 #include "game/input.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "geometry.h"
+#include "gian.h"
+#include "lens.h"
+#include "level.h"
+#include "music.h"
 #include "platform/text_backend.h"
 #include "platform/time.h"
+#include "score.h"
+#include "window_ctrl.h" // ウィンドウ定義
+#include "window_sys.h"
 #include <chrono>
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
@@ -67,17 +67,18 @@ void Render(PIXEL_COORD top) {
 }
 }; // namespace Version
 
-// GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer, current_name,
-// current_rank, current_dif, viv_temp, GameState.is_demoplay, input_locked
-// → gameflow_manager.cpp の GameFlowManager に移動
+// GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
+// current_name, current_rank, current_dif, viv_temp, GameState.is_demoplay,
+// input_locked → gameflow_manager.cpp の GameFlowManager に移動
 
 // 変換済み関数 → inline wrapper は gameflow_manager.h で提供
-// (TitleProc, WeaponSelectProc, GameOverProc0, NameRegistProc, ScoreNameProc, ScoreDraw)
+// (TitleProc, WeaponSelectProc, GameOverProc0, NameRegistProc, ScoreNameProc,
+// ScoreDraw)
 
 void GameProc(bool &);
-void GameOverProc(bool &);  // ゲームオーバー
+void GameOverProc(bool &); // ゲームオーバー
 void PauseProc(bool &);
-void DemoProc(bool &);       // デモプレイ
+void DemoProc(bool &); // デモプレイ
 
 void ReplayProcAll(bool &);
 void GameOverSaveProc(bool &);
@@ -94,7 +95,8 @@ void GameMove(void);
 // game_main 初期値 → gameflow_manager.cpp で設定
 
 uint8_t CurrentLevel() {
-  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameState.game_level);
+  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA
+                                                     : GameState.game_level);
 }
 
 // input_locked → gameflow_manager.cpp の GameFlowManager に移動
@@ -351,7 +353,8 @@ void GameFlowManager::NameRegistProc(bool &) {
       Snd_SEPlay(SOUND_ID_SELECT);
 
       // 最後の文字まで来ていた場合 //
-      if (strlen(Scores.score_strings[current_rank - 1].Name) == NR_NAME_LEN - 1) {
+      if (strlen(Scores.score_strings[current_rank - 1].Name) ==
+          NR_NAME_LEN - 1) {
         switch (c = GetAddr2Char(x, y)) {
         case (NR_EXCHAR_END):
         case (NR_EXCHAR_ERROR):
@@ -442,7 +445,8 @@ void GameFlowManager::NameRegistProc(bool &) {
 
   if (time % 64 > 32) {
     GrpGeom->SetColor({4, 0, 0});
-    len = min(strlen(Scores.score_strings[current_rank - 1].Name), NR_NAME_LEN - 2);
+    len = min(strlen(Scores.score_strings[current_rank - 1].Name),
+              NR_NAME_LEN - 2);
     gx += (len * 16 + 88);
     gy += (4);
     GrpGeom->DrawBox(gx, gy, (gx + 14), (gy + 16));
@@ -843,7 +847,10 @@ bool SProjectInit(void) {
 }
 
 // ゲームを再開する(ESC 抜けから) //
-void GameRestart() { GameFlow.game_main = GameProc; GameFlow.current_state = GameState::Game; }
+void GameRestart() {
+  GameFlow.game_main = GameProc;
+  GameFlow.current_state = GameState::Game;
+}
 
 // ゲームから抜ける //
 bool GameExit(bool bNeedChgMusic) {
@@ -859,7 +866,7 @@ bool GameExit(bool bNeedChgMusic) {
   GrpBackend_SetClip(GRP_RES_RECT);
 
   Lasers.SetupLong(); // 音を止める
-  Snd_SEStop(8); // ワーニング音を止めるのだ
+  Snd_SEStop(8);      // ワーニング音を止めるのだ
 
   const auto flags = MSG_WINDOW_FLAGS::CENTER;
   MWinForceClose();
@@ -1365,9 +1372,9 @@ void GameFlowManager::TitleProc(bool &quit) {
   }
 
   auto *window_active =
-      ((ReplayFilesWindow.State != CWIN_DEAD)   ? &ReplayFilesWindow
-       : (BGMPackWindow.State != CWIN_DEAD) ? &BGMPackWindow
-                                            : &MainWindow);
+      ((ReplayFilesWindow.State != CWIN_DEAD) ? &ReplayFilesWindow
+       : (BGMPackWindow.State != CWIN_DEAD)   ? &BGMPackWindow
+                                              : &MainWindow);
   CWinMove(window_active);
   MWinHelp(window_active);
   MWinMove();

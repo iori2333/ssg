@@ -3,14 +3,14 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "geometry.h"
-#include "gian.h"
 #include "homing_laser.h"
-#include "laser_manager.h"
-#include "player.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "geometry.h"
+#include "gian.h"
+#include "laser_manager.h"
 #include "platform/graphics_backend.h"
+#include "player.h"
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 

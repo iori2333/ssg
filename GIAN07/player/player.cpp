@@ -9,12 +9,12 @@
 
 #include "config.h"
 #include "font_uty.h"
-#include "geometry.h"
-#include "gian.h"
-#include "player.h"
 #include "game/input.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "geometry.h"
+#include "gian.h"
+#include "player.h"
 
 // Viv → player_manager.cpp の PlayerManager に移動
 
@@ -84,9 +84,15 @@ void Player::DrawLaserBomb() {
           GeomGrdRectA(*gp, p, col_channeled);
         } else if (auto *gf = GrpGeom_FB()) {
           switch (w) {
-          case (1): gf->SetColor({4, 4, 5}); break;
-          case (2): gf->SetColor({2, 2, 5}); break;
-          case (3): gf->SetColor({0, 0, 5}); break;
+          case (1):
+            gf->SetColor({4, 4, 5});
+            break;
+          case (2):
+            gf->SetColor({2, 2, 5});
+            break;
+          case (3):
+            gf->SetColor({0, 0, 5});
+            break;
           }
           gf->DrawTriangleFan(p);
         }
@@ -111,9 +117,15 @@ void Player::DrawLaserBomb() {
           GeomGrdRectA(*gp, p, col_channeled);
         } else if (auto *gf = GrpGeom_FB()) {
           switch (w) {
-          case (1): gf->SetColor({4, 4, 5}); break;
-          case (2): gf->SetColor({2, 2, 5}); break;
-          case (3): gf->SetColor({0, 0, 5}); break;
+          case (1):
+            gf->SetColor({4, 4, 5});
+            break;
+          case (2):
+            gf->SetColor({2, 2, 5});
+            break;
+          case (3):
+            gf->SetColor({0, 0, 5});
+            break;
           }
           gf->DrawTriangleFan(p);
         }
@@ -508,9 +520,7 @@ void Player::OnDeath() {
   Lasers.Clear();
 }
 
-void Player::AddEvade(uint8_t n) {
-  AddEvadeEx(x, y, n);
-}
+void Player::AddEvade(uint8_t n) { AddEvadeEx(x, y, n); }
 
 void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   int i;
@@ -539,9 +549,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
     evade_c = EVADETIME_MAX;
 }
 
-void Player::AddScore(int sc) {
-  dscore += sc;
-}
+void Player::AddScore(int sc) { dscore += sc; }
 
 void Player::PowerUp(uint8_t damage) {
   exp2 += damage;
@@ -584,9 +592,7 @@ void Player::PowerUp(uint8_t damage) {
   }
 }
 
-uint8_t Player::GetLaserDeg() {
-  return ((120 - bomb_time) * 3) / 2;
-}
+uint8_t Player::GetLaserDeg() { return ((120 - bomb_time) * 3) / 2; }
 
 #pragma warning(suppress : 26497) // f.4
 uint8_t Player::GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i) {

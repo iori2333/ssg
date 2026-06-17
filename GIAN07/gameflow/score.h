@@ -37,15 +37,14 @@ struct NrScoreString {
   int x, y;         // 描画用座標
   bool bMoveEnable; // 移動可能か？
 
-  char Name[NR_NAME_LEN];                                        // 名前
+  char Name[NR_NAME_LEN];                                      // 名前
   char Score[STRING_NUM_CAP<decltype(NrNameData::Score)> + 1]; // 得点
   char Evade[STRING_NUM_CAP<decltype(NrNameData::Evade)> + 1]; // かすり
   char Stage[STRING_NUM_CAP<decltype(NrNameData::Stage)> + 1]; // ステージ
-  uint8_t Weapon;                                                // 装備
+  uint8_t Weapon;                                              // 装備
 };
 // (NR_SCORE_STRING alias removed — use NrScoreString directly)
 
 ///// [ 関数 ] /////
 // 後方互換 inline wrapper は score_manager.h 末尾に移動
 // 実装は ScoreManager メソッドに移行
-

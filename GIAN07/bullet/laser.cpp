@@ -3,16 +3,16 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
+#include "laser.h"
+#include "core/entity.h"
+#include "game/ut_math.h"
 #include "geometry.h"
 #include "gian.h"
-#include "core/entity.h"
-#include "laser.h"
 #include "laser_manager.h"
 #include "level.h"
 #include "long_laser.h"
-#include "play_rank.h"
-#include "game/ut_math.h"
 #include "platform/graphics_backend.h"
+#include "play_rank.h"
 
 /*
  * レーザーの座標管理について、今回は次のような構造体をもたせる事にする
@@ -38,39 +38,41 @@
  */
 
 ////レーザー定数////
-static constexpr auto RT_MAX = 10; // 反射物の最大個数
-static constexpr auto LS_ZSET = 0x08; // レーザーのサボテン(自機)セット属性
+static constexpr auto RT_MAX = 10;      // 反射物の最大個数
+static constexpr auto LS_ZSET = 0x08;   // レーザーのサボテン(自機)セット属性
 static constexpr auto SLASER_EVADE = 3; // ショートレーザーのかすりポイント
 static constexpr auto LASER_EVADE_WIDTH = (12 * 64); // レーザーのかすり許容範囲
 
 ////レーザーの種類定数////
 static constexpr auto LS_SHORT = 0x00; // ショートレーザー
-static constexpr auto LS_REF = 0x01; // 反射レーザー
-static constexpr auto LS_LONG = 0x02; // 無限遠レーザー
-static constexpr auto LS_LONGY = 0x03; // 縦無限遠レーザー(角度指定は無効 64固定)
+static constexpr auto LS_REF = 0x01;   // 反射レーザー
+static constexpr auto LS_LONG = 0x02;  // 無限遠レーザー
+static constexpr auto LS_LONGY =
+    0x03; // 縦無限遠レーザー(角度指定は無効 64固定)
 
 ////レーザーコマンド定数////
-#undef LC_ALL        // There's a locale macro with the same name...
-static constexpr auto LC_WAY = 0x00; // 扇状発射
-static constexpr auto LC_ALL = 0x01; // 全方向発射
-static constexpr auto LC_RND = 0x02; // 基本角セット有りランダム
+#undef LC_ALL // There's a locale macro with the same name...
+static constexpr auto LC_WAY = 0x00;  // 扇状発射
+static constexpr auto LC_ALL = 0x01;  // 全方向発射
+static constexpr auto LC_RND = 0x02;  // 基本角セット有りランダム
 static constexpr auto LC_WAYZ = 0x08; // 扇状発射＆サボテンセット
 static constexpr auto LC_ALLZ = 0x09; // 全方向発射＆サボテンセット
 static constexpr auto LC_RNDZ = 0x0a; // 基本角サボテンセットランダム
 
 ////レーザーフラグ定数(一部レーザーの種類に依存します)////
-static constexpr auto LF_NONE = 0x00; // フラグ無し状態
+static constexpr auto LF_NONE = 0x00;  // フラグ無し状態
 static constexpr auto LF_CLEAR = 0x01; // レーザーが消滅中である
 
-static constexpr auto LF_SHOT = 0x02; // レーザー発射中
-static constexpr auto LF_HIT = 0x04; // レーザーヒット中(REF_OBJECTに対して)
+static constexpr auto LF_SHOT = 0x02;  // レーザー発射中
+static constexpr auto LF_HIT = 0x04;   // レーザーヒット中(REF_OBJECTに対して)
 static constexpr auto LF_NMOVE = 0x06; // レーザーの長さ変わらず(LF_SHOT|LF_HIT)
 
 // LASER_DATA, LF_DELETE → LASER.h に移動
 
 ////グローバル変数////
-// LaserCmd, count, lasers[], laser_indices[] → laser_manager.cpp の LaserManager に移動
-// REFLECTOR		Reflector[RT_MAX]; // 反射物_構造体
+// LaserCmd, count, lasers[], laser_indices[] → laser_manager.cpp の
+// LaserManager に移動 REFLECTOR		Reflector[RT_MAX]; //
+// 反射物_構造体
 //  uint16_t	ReflectorNow;		// 反射物の個数
 
 // private methods declared in laser_manager.h
@@ -102,8 +104,7 @@ void LaserManager::Spawn() {
     break;
   }
 
-  cmd.v =
-      (((cmd.v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (cmd.v >> 1);
+  cmd.v = (((cmd.v >> 1) * (Ranking.state.Rank)) >> (5 + 8)) + (cmd.v >> 1);
 
   SpawnEX();
 }
@@ -115,8 +116,8 @@ void LaserManager::SpawnEX() {
 
     auto *lp = &lasers[laser_indices[count++]];
 
-    lp->v = cmd.v;   // レーザーの速度
-    lp->a = cmd.a;   // レーザーの加速度
+    lp->v = cmd.v;      // レーザーの速度
+    lp->a = cmd.a;      // レーザーの加速度
     lp->d = CalcDir(i); // レーザーの角度
 
     if (cmd.l2) {
@@ -229,7 +230,7 @@ void LaserManager::SetEasy() {
   switch (cmd.cmd & 0x03) {
   case (LC_WAY):
     if (cmd.n >= 3)
-      cmd.n -= 2;                 // 奇数・偶数は変化させない
+      cmd.n -= 2;            // 奇数・偶数は変化させない
     cmd.dw += (cmd.dw >> 2); // 幅を広げる
     break;
 
@@ -245,7 +246,7 @@ void LaserManager::SetEasy() {
 void LaserManager::SetHard() {
   switch (cmd.cmd & 0x03) {
   case (LC_WAY):
-    cmd.n += 2;                   // 奇数・偶数は変化させない
+    cmd.n += 2;              // 奇数・偶数は変化させない
     cmd.dw -= (cmd.dw >> 3); // 幅を狭める
     break;
 
@@ -264,7 +265,7 @@ void LaserManager::SetHard() {
 void LaserManager::SetLunatic() {
   switch (cmd.cmd & 0x03) {
   case (LC_WAY):
-    cmd.n += 4;                  // 奇数・偶数は変化させない
+    cmd.n += 4;             // 奇数・偶数は変化させない
     cmd.dw -= (cmd.dw / 3); // 幅を狭める
     break;
 
@@ -294,8 +295,7 @@ uint8_t LaserManager::CalcDir(uint16_t i) {
     if (cmd.n & 1)
       return deg + (i >> 1) * cmd.dw * (1 - ((i & 1) << 1));
     else
-      return deg - (cmd.dw >> 1) +
-             (i >> 1) * cmd.dw * (1 - ((i & 1) << 1));
+      return deg - (cmd.dw >> 1) + (i >> 1) * cmd.dw * (1 - ((i & 1) << 1));
 
   case (LC_ALL):
     return deg + (i << 8) / cmd.n;
@@ -420,7 +420,7 @@ void LaserManager::MoveLaser(LASER_DATA *lp) {
     }
     return;
 
-  case (LS_REF):   // 反射レーザー
+  case (LS_REF):     // 反射レーザー
     MoveReflect(lp); // 長いので関数にしよう！
     return;
 
@@ -446,9 +446,9 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     ty = Players.viv.y - lp->y;
     length = cosl(lp->d, tx) + sinl(lp->d, ty);
     w1 = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
-    /*			tx = ((lp->x)-(Players.viv.x));	ty = ((lp->y)-(Players.viv.y));
-                            length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
-                            tx <<= 8;	ty <<= 8;
+    /*			tx = ((lp->x)-(Players.viv.x));	ty =
+       ((lp->y)-(Players.viv.y)); length =
+       -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8); tx <<= 8;	ty <<= 8;
 
                             if(cosm(lp->d)==0)
                                     w1 =
@@ -578,8 +578,8 @@ int LaserManager::HitReflect(const LASER_DATA *lp) {
       cmd.cmd = LC_WAY;  //
       cmd.type = LS_REF; // ２回以上の反射を許可
       cmd.notr = i;      // 自分には反射しない
-      SpawnEX();          // 難易度変更無し
-      return 1;               // 当たった
+      SpawnEX();         // 難易度変更無し
+      return 1;          // 当たった
     }
   }
 

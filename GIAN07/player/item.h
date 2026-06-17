@@ -15,13 +15,13 @@ inline constexpr auto ITEM_MAX = 100;
 
 // 種類もしくは状態 //
 inline constexpr auto ITEM_DELETE = 0x00; // 消去要請
-inline constexpr auto ITEM_SCORE = 0x01; // 得点アイテム
+inline constexpr auto ITEM_SCORE = 0x01;  // 得点アイテム
 inline constexpr auto ITEM_EXTEND = 0x02; // 残りメイド数ＵＰ
-inline constexpr auto ITEM_BOMB = 0x03; // ボム
+inline constexpr auto ITEM_BOMB = 0x03;   // ボム
 
 // その他 //
-inline constexpr auto ITEM_GRAVITY = 3; // アイテムに対するｙ加速度
-inline constexpr auto ITEM_HITX = (8 + 8) * 64; // アイテムのＸ当たり判定
+inline constexpr auto ITEM_GRAVITY = 3;          // アイテムに対するｙ加速度
+inline constexpr auto ITEM_HITX = (8 + 8) * 64;  // アイテムのＸ当たり判定
 inline constexpr auto ITEM_HITY = (16 + 8) * 64; // アイテムのＹ当たり判定
 
 ///// [構造体] /////

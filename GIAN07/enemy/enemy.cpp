@@ -3,19 +3,18 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include "ecl_len.h"
 #include "enemy.h"
-#include "enemy_manager.h"
-#include "gian.h"
 #include "core/entity.h"
-#include "level.h"
+#include "ecl_len.h"
+#include "enemy_manager.h"
 #include "game/cast.h"
 #include "game/debug.h"
 #include "game/endian.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "gian.h"
+#include "level.h"
 #include "platform/graphics_backend.h"
-
 
 // ＥＣＬデバッグ用マクロ //
 static void ECL_DEBUG(const char *s, auto param) {
@@ -34,7 +33,8 @@ static void ECL_DEBUG(const char *s, auto param) {
 // Enemy, indices, count, ecl_head, scl_head, scl_now, Anime,
 // homing_x, homing_y, homing_flag — enemy_manager.cpp で参照として定義
 
-// Enemies.enemy_exdeg, Enemies.enemy_exdeg_d → enemy_manager.cpp の EnemyManager に移動
+// Enemies.enemy_exdeg, Enemies.enemy_exdeg_d → enemy_manager.cpp の
+// EnemyManager に移動
 
 // 関数 //
 static void _EnemyDrawBomb(int x, int y, uint32_t count);
@@ -57,7 +57,8 @@ void EnemyManager::UpdateHoming(const EnemyData *e) {
   }
 }
 
-bool EnemyManager::EnemyManager::LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d) {
+bool EnemyManager::EnemyManager::LaserHITCHK(const EnemyData *e, int ox, int oy,
+                                             uint8_t d) {
   const int chkw = (min(e->g_height, e->g_width) + (3 * 64));
 
   const int tx = (e->x - ox);
@@ -90,9 +91,7 @@ void EnemyData::Draw() const {
   }
 }
 
-void EnemyData::UpdateAnimation() {
-  Enemies.UpdateAnimation(this);
-}
+void EnemyData::UpdateAnimation() { Enemies.UpdateAnimation(this); }
 
 void EnemyManager::Move(void) {
   int i; //,chkx,chky;
@@ -112,7 +111,7 @@ void EnemyManager::Move(void) {
       if (e->t_rep && e->hp) {
         e->tama_c = (e->tama_c + 1) % (e->t_rep);
         if (e->tama_c == 0) {
-          Bullets.command =e->t_cmd;
+          Bullets.command = e->t_cmd;
           Bullets.command.x += e->x;
           Bullets.command.y += e->y;
           Bullets.Spawn();
@@ -120,8 +119,8 @@ void EnemyManager::Move(void) {
       }
 
       // サボテンヒットチェック //
-      if (HITCHK(e->x, Players.viv.x, e->g_width) && HITCHK(e->y, Players.viv.y, e->g_height) &&
-          Players.viv.muteki == 0) {
+      if (HITCHK(e->x, Players.viv.x, e->g_width) &&
+          HITCHK(e->y, Players.viv.y, e->g_height) && Players.viv.muteki == 0) {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
         if (e->flag & EF_HITSB)
           MaidDead();
@@ -199,7 +198,7 @@ void EnemyManager::Clear(void) {
       e->count = 0;
       if (e->LLaserRef)
         Lasers.ForceCloseLong(e); // レーザーの強制クローズ
-                             // 爆発音の再生は行わない //
+                                  // 爆発音の再生は行わない //
     }
   }
 
@@ -455,9 +454,13 @@ static void _EnemyDrawBomb(int x, int y, uint32_t count) {
 
 void EnemyManager::Execute(EnemyData *e) {
   // 左右反転用ラムダ（旧マクロ ABS_DEGRL/ABS_VXRL/REL_DEGRL）
-  auto AbsDegRL = [e](uint8_t d) -> uint8_t { return (e->flag & EF_RLCHG) ? (128 - d) : d; };
-  auto AbsVxRL  = [e](int vx)            { return (e->flag & EF_RLCHG) ? (-vx) : vx; };
-  auto RelDegRL = [e](int8_t d) -> int8_t { return (e->flag & EF_RLCHG) ? static_cast<int8_t>(-d) : d; };
+  auto AbsDegRL = [e](uint8_t d) -> uint8_t {
+    return (e->flag & EF_RLCHG) ? (128 - d) : d;
+  };
+  auto AbsVxRL = [e](int vx) { return (e->flag & EF_RLCHG) ? (-vx) : vx; };
+  auto RelDegRL = [e](int8_t d) -> int8_t {
+    return (e->flag & EF_RLCHG) ? static_cast<int8_t>(-d) : d;
+  };
 
   bool bRetFlag; // 実行クロック０命令の場合はfalseにすること
   int RegCmp;
@@ -604,8 +607,8 @@ ECL_HEAD:
     ECL_DEBUG("ECL_END", 0);
     if (e->LLaserRef)
       Lasers.ForceCloseLong(e); // レーザーの強制クローズ
-    e->flag = EF_DELETE;   // 後で変更するように
-    return;                // バグ防止(かも)
+    e->flag = EF_DELETE;        // 後で変更するように
+    return;                     // バグ防止(かも)
 
   case (ECL_JMP): // ◎ＥＣＬ無条件ジャンプ(少々特殊な動作をします)
     ECL_DEBUG("ECL_JMP", 0);
@@ -676,7 +679,8 @@ ECL_HEAD:
 
   case (ECL_JDSB): { // 自機と進行角が一致したらジャンプ
     ECL_DEBUG("ECL_JDSB", 0);
-    const uint8_t temp = abs(atan8((Players.viv.x - e->x), (Players.viv.y - e->y)) - (e->d));
+    const uint8_t temp =
+        abs(atan8((Players.viv.x - e->x), (Players.viv.y - e->y)) - (e->d));
     if (temp < 4) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
@@ -1130,7 +1134,7 @@ ECL_HEAD:
     break;
 
   case (ECL_TAMA): // ＠弾発射
-    Bullets.command =e->t_cmd;
+    Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
     Bullets.Spawn();
@@ -1138,7 +1142,7 @@ ECL_HEAD:
     break;
 
   case (ECL_TAMA2): // ＠弾発射(難易度変化なし)
-    Bullets.command =e->t_cmd;
+    Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
     Bullets.SpawnEX();
@@ -1146,7 +1150,7 @@ ECL_HEAD:
     break;
 
   case (ECL_TAMAL): // ライン状に弾を発射する
-    Bullets.command =e->t_cmd;
+    Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
     Bullets.SpawnLine();
@@ -1154,7 +1158,7 @@ ECL_HEAD:
     break;
 
   case (ECL_TAMAEX):
-    Bullets.command =e->t_cmd;
+    Bullets.command = e->t_cmd;
     Bullets.command.x += e->x;
     Bullets.command.y += e->y;
     Bullets.SpawnExtra01();
@@ -1254,7 +1258,7 @@ ECL_HEAD:
     bRetFlag = false;
     break;
 
-  case (ECL_TCLR):  // 敵弾を全消去(レーザー含む)
+  case (ECL_TCLR):     // 敵弾を全消去(レーザー含む)
     Bosses.ClearCmd(); // この処理を何よりも優先させる(ビット消去等を含む)
     Bullets.Clear();
     Lasers.Clear();

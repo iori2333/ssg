@@ -3,24 +3,25 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "config.h"
-#include "font_uty.h"
 #include "gian.h"
-#include "level.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser_manager.h"
+#include "config.h"
 #include "enemy/enemy_manager.h"
+#include "font_uty.h"
 #include "gameflow/rank_manager.h"
+#include "level.h"
+#include "platform/time.h"
 #include "player/item_manager.h"
 #include "player/player_manager.h"
 #include "stage/scroll_manager.h"
-#include "platform/time.h"
 
 ///// [グローバル変数] /////
 // HIGH_SCORE		*HighScore;
 // char			ScoreTable[8][80];
-// GameState.game_count, GameState.game_stage, GameState.game_level → game_manager.cpp の GameManager に移動
-// Viv → player_manager.cpp の PlayerManager に移動（MAID.h で Player& として宣言）
+// GameState.game_count, GameState.game_stage, GameState.game_level →
+// game_manager.cpp の GameManager に移動 Viv → player_manager.cpp の
+// PlayerManager に移動（MAID.h で Player& として宣言）
 
 ///// [ 関数(非公開) ] /////
 void StdStatusOutput() {
@@ -53,7 +54,9 @@ void StdStatusOutput() {
   {
     const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
                                      "Extra"};
-    const auto lv = (GameState.game_stage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA : GameState.game_level;
+    const auto lv = (GameState.game_stage == GRAPH_ID_EXSTAGE)
+                        ? GAME_EXTRA
+                        : GameState.game_level;
 
     sprintf(buf, "RK  %5d", Ranking.state.Rank);
     GrpPut16(0, 34, buf);

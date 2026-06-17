@@ -10,13 +10,13 @@
 #include <cstdint>
 
 struct BossManager {
-  std::array<BossData, BOSS_MAX> bosses;     // Boss[]
-  uint16_t count = 0;                          // BossNow
-  BossHpgInfo hpg;                            // BossHPG
+  std::array<BossData, BOSS_MAX> bosses; // Boss[]
+  uint16_t count = 0;                    // BossNow
+  BossHpgInfo hpg;                       // BossHPG
 
   // Snaky/Bit データ（旧 EnemyExCtrl.cpp ファイル静的変数）
-  SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX];   // SnakeData[]
-  BitData bit_data;                           // BitData
+  SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX]; // SnakeData[]
+  BitData bit_data;                         // BitData
 
   // === メソッド ===
 

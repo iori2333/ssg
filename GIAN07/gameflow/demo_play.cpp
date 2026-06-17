@@ -3,13 +3,13 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "config.h"
 #include "demo_play.h"
+#include "config.h"
 #include "demo_manager.h"
-#include "gian.h"
-#include "lz_uty.h"
 #include "game/input.h"
 #include "game/ut_math.h"
+#include "gian.h"
+#include "lz_uty.h"
 #include "platform/file.h"
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
@@ -25,13 +25,11 @@ std::u8string ReplayAllFN(bool exstg) {
   localtime_s(&tm, &time);
   char buf[64];
   if (exstg) {
-    sprintf_s(buf, "replay_ex_%04d%02d%02d_%02d%02d%02d.DAT",
-              tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-              tm.tm_hour, tm.tm_min, tm.tm_sec);
+    sprintf_s(buf, "replay_ex_%04d%02d%02d_%02d%02d%02d.DAT", tm.tm_year + 1900,
+              tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   } else {
-    sprintf_s(buf, "replay_%04d%02d%02d_%02d%02d%02d.DAT",
-              tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-              tm.tm_hour, tm.tm_min, tm.tm_sec);
+    sprintf_s(buf, "replay_%04d%02d%02d_%02d%02d%02d.DAT", tm.tm_year + 1900,
+              tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   }
   return std::u8string(reinterpret_cast<const char8_t *>(buf));
 }
@@ -69,7 +67,8 @@ void DemoManager::FlushStage(void) {
     multi_stage_nums[multi_stage_count] = GameState.game_stage;
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
 
-    std::vector<INPUT_BITS> stage_data(demo_buffer.data(), demo_buffer.data() + demo_frame_cur);
+    std::vector<INPUT_BITS> stage_data(demo_buffer.data(),
+                                       demo_buffer.data() + demo_frame_cur);
     stage_record_bufs.push_back(std::move(stage_data));
 
     multi_stage_count++;
@@ -135,7 +134,8 @@ void DemoManager::SaveDemo(void) {
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f) {
     SDL_WriteIO(f, &demo_info, sizeof(demo_info));
-    SDL_WriteIO(f, demo_buffer.data(), (sizeof(demo_buffer[0]) * demo_info.FrameCount));
+    SDL_WriteIO(f, demo_buffer.data(),
+                (sizeof(demo_buffer[0]) * demo_info.FrameCount));
     SDL_CloseIO(f);
   }
 }
@@ -193,7 +193,8 @@ void DemoManager::SaveReplayAll(bool exstg) {
   if (demo_frame_cur > 0 && multi_stage_count < REPLAY_STAGE_MAX) {
     multi_stage_nums[multi_stage_count] = GameState.game_stage;
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
-    stage_record_bufs.emplace_back(demo_buffer.data(), demo_buffer.data() + demo_frame_cur);
+    stage_record_bufs.emplace_back(demo_buffer.data(),
+                                   demo_buffer.data() + demo_frame_cur);
     multi_stage_count++;
     demo_frame_cur = 0;
   }
@@ -212,12 +213,10 @@ void DemoManager::SaveReplayAll(bool exstg) {
   }
 
   PACKFILE_WRITE out;
-  out.files.push_back(
-      {reinterpret_cast<const uint8_t *>(&info), sizeof(info)});
+  out.files.push_back({reinterpret_cast<const uint8_t *>(&info), sizeof(info)});
   for (auto &buf : stage_record_bufs) {
-    out.files.push_back(
-        {reinterpret_cast<const uint8_t *>(buf.data()),
-         buf.size() * sizeof(INPUT_BITS)});
+    out.files.push_back({reinterpret_cast<const uint8_t *>(buf.data()),
+                         buf.size() * sizeof(INPUT_BITS)});
   }
 
   const auto fn = ReplayAllFN(exstg);

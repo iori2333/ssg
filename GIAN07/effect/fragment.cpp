@@ -5,9 +5,9 @@
 
 #include "fragment.h"
 #include "effect_manager.h"
+#include "game/ut_math.h"
 #include "geometry.h"
 #include "loader.h"
-#include "game/ut_math.h"
 #include "platform/graphics_backend.h"
 
 // fragments[], fragment_ptr → effect_manager.cpp の EffectManager に移動

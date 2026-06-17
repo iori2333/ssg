@@ -19,19 +19,19 @@ struct ExHitCheck {
 
 // ボスデータ //
 struct BossData {
-  EnemyData Edat; // 標準の敵データ(実体であることに注意)
-  ExHitCheck *Hit;   // 特殊当たり判定(NULL なら使用しない)
+  EnemyData Edat;  // 標準の敵データ(実体であることに注意)
+  ExHitCheck *Hit; // 特殊当たり判定(NULL なら使用しない)
 
   void (*ExMove)(BossData *); // 特殊移動用関数
 
-  uint32_t ExCount; // ある状態におけるカウンタ(推移時にゼロ初期化)
-  uint8_t ExState;  // 特殊状態
-  bool IsUsed = false;   // このデータは使用されているか
+  uint32_t ExCount;    // ある状態におけるカウンタ(推移時にゼロ初期化)
+  uint8_t ExState;     // 特殊状態
+  bool IsUsed = false; // このデータは使用されているか
 };
 // (BOSS_DATA alias removed — use BossData directly)
 
 ///// [ 定数 ] /////
-inline constexpr auto BOSS_MAX = 4; // ボスの最大出現数
+inline constexpr auto BOSS_MAX = 4;        // ボスの最大出現数
 inline constexpr auto BOSSHPG_HEIGHT = 24; // 体力ゲージの高さ
 
 // ボスの体力ゲージ //

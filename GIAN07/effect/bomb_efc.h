@@ -32,5 +32,3 @@ using BombEfcCtrl = BombEffectCtrl;
 
 /***** [関数プロトタイプ] *****/
 // 後方互換 inline wrapper は effect_manager.h の末尾に移動
-
-

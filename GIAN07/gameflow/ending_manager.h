@@ -5,9 +5,9 @@
 #pragma once
 
 #include "ending.h"
-#include "loader.h"
 #include "game/coords.h"
 #include "game/graphics.h"
+#include "loader.h"
 #include "platform/text_backend.h"
 #include <array>
 #include <cstdint>
@@ -72,9 +72,12 @@ struct EndingManager {
   }};
 
   static constexpr std::array<PIXEL_LTRB, 7> staff_member = {{
-      {0, 168, 72, 192},    {96, 168, 168, 192},
-      {192, 168, 264, 192}, {288, 168, 360, 192},
-      {0, 192, 144, 216},   {168, 192, 320, 216},
+      {0, 168, 72, 192},
+      {96, 168, 168, 192},
+      {192, 168, 264, 192},
+      {288, 168, 360, 192},
+      {0, 192, 144, 216},
+      {168, 192, 320, 216},
       {0, 216, 336, 264},
   }};
 

@@ -5,15 +5,15 @@
 
 #include "effect.h"
 #include "font_uty.h"
-#include "geometry.h"
-#include "gian.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "geometry.h"
+#include "gian.h"
 #include "platform/text_backend.h"
 
-// string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect, mtitle_strs[]
-// → effect_manager.cpp の EffectManager に移動
+// string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect,
+// mtitle_strs[] → effect_manager.cpp の EffectManager に移動
 
 // 円エフェクトの初期化 //
 void EffectManager::InitCircleEffects() {
@@ -240,7 +240,8 @@ void EffectManager::SetMusicTitle(int y, Narrow::string_view s) {
   e->vy = extent.h;
 }
 
-void EffectManager::RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH &subrect) {
+void EffectManager::RenderMusicTitle(WINDOW_POINT topleft,
+                                     const PIXEL_LTWH &subrect) {
   const auto mtitle = mtitle_strs[1];
   TextObj.Render(
       topleft, mtitle_rect, mtitle,
@@ -248,7 +249,8 @@ void EffectManager::RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH &sub
         const auto gradient_func = [](PIXEL_COORD y) -> uint8_t {
           return (255 + 8 - (y * 8));
         };
-        DrawGrdFont(s, Effects.mtitle_strs, FONT_ID::NORMAL, true, gradient_func);
+        DrawGrdFont(s, Effects.mtitle_strs, FONT_ID::NORMAL, true,
+                    gradient_func);
       },
       subrect);
 }
@@ -451,7 +453,7 @@ void EffectManager::SetScreenEffect(uint8_t cmd) {
   case (SCNEFC_WHITEOUT): // ホワイトアウト
     break;
 
-  default:                        // ばぐばぐ
+  default:                         // ばぐばぐ
     screen_info.cmd = SCNEFC_NONE; // 一応エフェクトを切っておく
     break;
   }

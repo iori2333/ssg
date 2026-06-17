@@ -8,21 +8,21 @@
 
 #include "config.h"
 #include "demo_play.h"
-#include "gameflow/demo_manager.h"
 #include "entry.h"
-#include "game_main.h"
-#include "gameflow/gameflow_manager.h"
-#include "level.h"
-#include "loader.h"
-#include "music.h"
-#include "window_ctrl.h"
-#include "window_sys.h"
 #include "game/bgm.h"
 #include "game/midi.h"
 #include "game/snd.h"
 #include "game/string_format.h"
+#include "game_main.h"
+#include "gameflow/demo_manager.h"
+#include "gameflow/gameflow_manager.h"
+#include "level.h"
+#include "loader.h"
+#include "music.h"
 #include "platform/input.h"
 #include "platform/midi_backend.h"
+#include "window_ctrl.h"
+#include "window_sys.h"
 #include <SDL3/SDL_filesystem.h>
 
 using namespace std::chrono_literals;
@@ -96,7 +96,9 @@ WINDOW_LABEL TitleItem = {TitleBuf};
 
 std::vector<std::u8string> Files;
 
-static size_t ListSize(void) { return (Files.size() > 0 ? Files.size() + 1 : 2); }
+static size_t ListSize(void) {
+  return (Files.size() > 0 ? Files.size() + 1 : 2);
+}
 static void Generate(WINDOW_CHOICE &ret, size_t generated, size_t selected);
 static bool Handle(INPUT_BITS key, size_t selected);
 } // namespace ReplayFiles
@@ -390,22 +392,21 @@ static auto &ItemMusic = Item[5];
 
 WINDOW_LABEL ExitTitle = {"    終了するの？"};
 WINDOW_CHOICE ExitItems[] = {{"  Save && Exit  ", "", ExitFnSaveExit},
-                              {"   お っ け ～ ", "", ExitFnYes},
-                              {"   だ め だ め", "", ExitFnNo}};
+                             {"   お っ け ～ ", "", ExitFnYes},
+                             {"   だ め だ め", "", ExitFnNo}};
 WINDOW_MENU ExitMenu = {std::span(ExitItems), [](bool) {}, &ExitTitle};
 
 WINDOW_LABEL ContinueTitle = {" Ｃｏｎｔｉｎｕｅ？"};
 WINDOW_CHOICE ContinueYesNoItem[] = {{"   お っ け ～", "", ContinueFnYes},
-                                      {"   や だ や だ", "", ContinueFnNo}};
+                                     {"   や だ や だ", "", ContinueFnNo}};
 WINDOW_MENU ContinueMenu = {std::span(ContinueYesNoItem), [](bool) {},
                             &ContinueTitle};
 
 WINDOW_LABEL GameOverSaveTitle = {"  Save Replay?"};
-WINDOW_CHOICE GameOverSaveItems[] = {
-    {"   お っ け ～ ", "", GameOverSaveFnYes},
-    {"   や だ や だ", "", GameOverSaveFnNo}};
+WINDOW_CHOICE GameOverSaveItems[] = {{"   お っ け ～ ", "", GameOverSaveFnYes},
+                                     {"   や だ や だ", "", GameOverSaveFnNo}};
 WINDOW_MENU GameOverSaveMenu = {std::span(GameOverSaveItems), [](bool) {},
-                                 &GameOverSaveTitle};
+                                &GameOverSaveTitle};
 
 WINDOW_MENU_SCROLL<BGMPack::TitleItem, BGMPack::ListSize, BGMPack::Generate,
                    BGMPack::Handle>
@@ -700,7 +701,8 @@ static void ScanFiles(void) {
       [](void *ctx, const char * /*dir*/, const char *name) {
         if (strstr(name, "replay_") == name && strstr(name, ".DAT")) {
           auto &files = *static_cast<decltype(Files) *>(ctx);
-          files.push_back(std::u8string(reinterpret_cast<const char8_t *>(name)));
+          files.push_back(
+              std::u8string(reinterpret_cast<const char8_t *>(name)));
         }
         return SDL_ENUM_CONTINUE;
       },
@@ -901,7 +903,9 @@ static void Main::Cfg::Dif::SetItem(bool) {
       "Lunatic",
   };
   static constexpr const char *const practice[3] = {
-      " Off ", "AutoB", "Invin",
+      " Off ",
+      "AutoB",
+      "Invin",
   };
   /*
           {Title[3], "[DebugMode] 画面に情報を表示するか", FnMsgDisplay,0,0},

@@ -9,15 +9,15 @@
 
 ///// [ 定数 ] /////
 inline constexpr auto HLASER_MAX = 162;
-inline constexpr auto HLASER_LEN = 7; // 描画枚数..
+inline constexpr auto HLASER_LEN = 7;     // 描画枚数..
 inline constexpr auto HLASER_SECTION = 4; // 読み込み幅
 
-inline constexpr auto HL_NONE = 0; // ただ進むだけ
+inline constexpr auto HL_NONE = 0;  // ただ進むだけ
 inline constexpr auto HL_TYPE1 = 1; // その１
 
-inline constexpr auto HLS_NORM = 0x00; // ホーミングレーザー通常
+inline constexpr auto HLS_NORM = 0x00;  // ホーミングレーザー通常
 inline constexpr auto HLS_CLEAR = 0x01; // ホーミングレーザー消去中
-inline constexpr auto HLS_DEAD = 0xff; // ホーミングレーザー削除要請
+inline constexpr auto HLS_DEAD = 0xff;  // ホーミングレーザー削除要請
 
 ///// [構造体] /////
 
@@ -58,4 +58,3 @@ struct HomingLaserInfo {
 ///// [関数プロトタイプ] /////
 // 後方互換 inline wrapper は laser_manager.h 末尾に移動
 // 実装は LaserManager メソッドに移行
-

@@ -3,14 +3,14 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "gian.h"
 #include "player_shot.h"
-#include "player_manager.h"
 #include "game/cast.h"
 #include "game/input.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "gian.h"
 #include "platform/graphics_backend.h"
+#include "player_manager.h"
 
 ///// [ひみつの関数] /////
 static void MTamaSet(void);
@@ -60,7 +60,8 @@ static void SetHomingBomb(void);
 static void SetLaserBomb(void);
 static void SetCactusBomb(void);
 
-// maid_tama[], maid_tama_ind[], maid_tama_now → player_manager.cpp の PlayerManager に移動
+// maid_tama[], maid_tama_ind[], maid_tama_now → player_manager.cpp の
+// PlayerManager に移動
 
 constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     // MainWeapon		// SubWeapon
@@ -96,8 +97,8 @@ static constexpr uint8_t MaidBombTime[4] = {WIDE_BOMB_TIME, HOMING_BOMB_TIME,
                                             LASER_BOMB_TIME, CACTUS_BOMB_TIME};
 
 static constexpr auto MAID_TAMA_START = 18; // 12
-static constexpr auto MAID_MAIN_SHOT = 6; // 4
-static constexpr auto MAID_SUB_SHOT = 9; // 6
+static constexpr auto MAID_MAIN_SHOT = 6;   // 4
+static constexpr auto MAID_SUB_SHOT = 9;    // 6
 
 // たま発射！！ //
 void PlayerManager::SetMaidShot(void) {
@@ -301,16 +302,18 @@ static void MTamaSet(void) {
     if (Players.maid_tama_now + 1 >= MAIDTAMA_MAX)
       return; // セットできない場合
 
-    auto *t = &Players.maid_tama[Players.maid_tama_ind[Players.maid_tama_now++]]; // 弾ポインタをセット
+    auto *t =
+        &Players.maid_tama[Players.maid_tama_ind
+                               [Players.maid_tama_now++]]; // 弾ポインタをセット
 
     t->x = t->tx = Bullets.command.x; // X座標のセット
     t->y = t->ty = Bullets.command.y; // Y座標のセット
 
     t->v = t->v0 = Bullets.Speed(i); // 初速度のセット
-    t->a = Bullets.command.a;             // 注意：サイズは char
+    t->a = Bullets.command.a;        // 注意：サイズは char
 
-    t->d = Bullets.Dir(i);   // 弾の発射角度
-    t->d16 = (t->d << 8); // 角速度のある運動で使用
+    t->d = Bullets.Dir(i); // 弾の発射角度
+    t->d16 = (t->d << 8);  // 角速度のある運動で使用
 
     t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
     t->vy = sinl(t->d, t->v); // 速度のＹ成分セット
@@ -320,15 +323,16 @@ static void MTamaSet(void) {
     t->rep = Bullets.command.rep;       // 繰り返し回数
     t->type = Bullets.command.type;     // 弾の種類
     t->option = Bullets.command.option; // 弾の属性(バイブ、反射等)
-    t->effect = 0;              // Bullets.command.cmd & 0xf0;			//
-                                // 弾のエフェクト
-    t->count = 0;               // カウンタの初期化
-    t->flag = Bullets.Flag();      // フラグの初期化
+    t->effect = 0;                      // Bullets.command.cmd & 0xf0;			//
+                                        // 弾のエフェクト
+    t->count = 0;                       // カウンタの初期化
+    t->flag = Bullets.Flag();           // フラグの初期化
   }
 }
 
 inline bool IsMainShot(uint16_t t) {
-  return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 || t == MAID_MAIN_SHOT * 3);
+  return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
+          t == MAID_MAIN_SHOT * 3);
 }
 inline bool IsSubShot(uint16_t t) {
   return (t == 0 || t == MAID_SUB_SHOT) && Players.viv.bomb_time == 0;

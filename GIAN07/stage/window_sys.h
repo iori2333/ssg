@@ -323,4 +323,3 @@ void MWinFace(uint8_t faceID);         // 顔をセットする
 void MWinCmd(uint8_t cmd);             // コマンドを送る
 
 void MWinHelp(WINDOW_SYSTEM *ws); // メッセージウィンドウにヘルプ文字列を送る
-

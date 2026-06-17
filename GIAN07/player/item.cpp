@@ -3,12 +3,12 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "gian.h"
-#include "core/entity.h"
 #include "item.h"
-#include "item_manager.h"
+#include "core/entity.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "gian.h"
+#include "item_manager.h"
 #include "platform/graphics_backend.h"
 
 // entities[], indices[], count → item_manager.cpp に移動
@@ -53,7 +53,8 @@ void ItemManager::Move(void) {
   constexpr int AUTO_COLLECT_Y = (120 * 64);
 
   // point = 100+(Players.viv.evade)*100;
-  const uint32_t point = ((((SY_MAX - Players.viv.y) >> 6) + (Players.viv.evade * 4)) * 160);
+  const uint32_t point =
+      ((((SY_MAX - Players.viv.y) >> 6) + (Players.viv.evade * 4)) * 160);
 
   for (i = 0; i < count; i++) {
     auto *ip = &entities[indices[i]];
@@ -81,7 +82,8 @@ void ItemManager::Move(void) {
     if (ip->vy < 64 * 6)
       ip->vy += ITEM_GRAVITY;
     ip->count++;
-    if (HITCHK(ip->x, Players.viv.x, ITEM_HITX) && HITCHK(ip->y, Players.viv.y, ITEM_HITY)) {
+    if (HITCHK(ip->x, Players.viv.x, ITEM_HITX) &&
+        HITCHK(ip->y, Players.viv.y, ITEM_HITY)) {
       switch (ip->type) {
       case (ITEM_SCORE):
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);

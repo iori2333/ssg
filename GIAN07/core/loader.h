@@ -89,11 +89,13 @@ struct EndingGrp {
 ///// [ 関数 ] /////
 void LoaderInit();
 void LoaderCleanup();
-[[nodiscard]] bool LoadStageData(
-    uint8_t stage);        // ＥＣＬ&ＳＣＬデータ列をメモリ上にロードする
-[[nodiscard]] bool LoadGraph(int stage); // あるステージのグラフィックをロードする
-[[nodiscard]] bool LoadFace(uint8_t FaceID, uint8_t FileNo); // 顔グラフィックをロードする
-[[nodiscard]] bool LoadMusic(unsigned int id);               // ｎ番目の曲をロードする
+[[nodiscard]] bool
+LoadStageData(uint8_t stage); // ＥＣＬ&ＳＣＬデータ列をメモリ上にロードする
+[[nodiscard]] bool
+LoadGraph(int stage); // あるステージのグラフィックをロードする
+[[nodiscard]] bool LoadFace(uint8_t FaceID,
+                            uint8_t FileNo);   // 顔グラフィックをロードする
+[[nodiscard]] bool LoadMusic(unsigned int id); // ｎ番目の曲をロードする
 [[nodiscard]] bool LoadMusicByHash(const HASH &hash);
 [[nodiscard]] bool LoadMIDIBuffer(BYTE_BUFFER_OWNED);
 bool LoadSound(void); // 全ての Sound データをロードする

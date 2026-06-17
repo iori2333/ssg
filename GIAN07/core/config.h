@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "level.h"
 #include "game/input.h"
 #include "game/midi.h"
 #include "game/volume.h"
+#include "level.h"
 #include "platform/graphics_backend.h"
 
 // フラグ //

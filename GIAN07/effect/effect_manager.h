@@ -24,8 +24,17 @@ inline constexpr auto S6STAR_MAX = 60;
 inline constexpr auto S3STAR_MAX = 180;
 
 // Stg6 types (moved from EFFECT3D.cpp)
-struct Stg6Raster { int x, y; char vy; uint8_t type; uint8_t deg; uint8_t amp; };
-struct Stg6Star { int x, y; int vy; };
+struct Stg6Raster {
+  int x, y;
+  char vy;
+  uint8_t type;
+  uint8_t deg;
+  uint8_t amp;
+};
+struct Stg6Star {
+  int x, y;
+  int vy;
+};
 
 struct EffectManager {
   // ========================================================================
@@ -74,7 +83,7 @@ struct EffectManager {
 
   void InitMusicTitle();
   void InitStringEffects();
-  void SpawnStringEffect(int x, int y, const char* s);
+  void SpawnStringEffect(int x, int y, const char *s);
   void SpawnPointEffect(int x, int y, uint32_t point);
   void SpawnGameOverEffect();
   void SetMusicTitle(int y, Narrow::string_view s);
@@ -92,7 +101,7 @@ struct EffectManager {
   void DrawScreenEffect();
 
   void InitLockOn();
-  void LockOn(int* x, int* y, int wx64, int hx64);
+  void LockOn(int *x, int *y, int wx64, int hx64);
   void MoveLockOn();
   void DrawLockOn();
 
@@ -103,7 +112,7 @@ struct EffectManager {
 
   void CircleFadeOut(int x, int y, int r);
 
-  void RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH& subrect);
+  void RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH &subrect);
 
   // ========================================================================
   // FRAGMENT.cpp methods
@@ -151,10 +160,9 @@ struct EffectManager {
 
 private:
   // Internal helpers (BOMBEFC.cpp)
-  void InitBombEffectSTD(BombEfcCtrl* p);
-  void DrawBombEffectSTD(BombEfcCtrl* p);
-  void MoveBombEffectSTD(BombEfcCtrl* p);
+  void InitBombEffectSTD(BombEfcCtrl *p);
+  void DrawBombEffectSTD(BombEfcCtrl *p);
+  void MoveBombEffectSTD(BombEfcCtrl *p);
 };
 
 extern EffectManager Effects;
-

@@ -9,10 +9,6 @@
 
 #include "effect.h"
 #include "font_uty.h"
-#include "game_main.h"
-#include "gameflow/gameflow_manager.h"
-#include "loader.h"
-#include "music.h"
 #include "game/bgm.h"
 #include "game/debug.h"
 #include "game/input.h"
@@ -20,6 +16,10 @@
 #include "game/string_format.h"
 #include "game/text.h"
 #include "game/ut_math.h"
+#include "game_main.h"
+#include "gameflow/gameflow_manager.h"
+#include "loader.h"
+#include "music.h"
 #include "platform/midi_backend.h"
 #include "platform/text_backend.h"
 

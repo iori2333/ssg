@@ -32,8 +32,8 @@ struct FragmentData {
 // (FRAGMENT_DATA alias removed — use FragmentData directly)
 
 //// 破片用変数 ////
-// Fragment[], FragmentPtr → Effects.fragments, Effects.fragment_ptr で直接アクセス
+// Fragment[], FragmentPtr → Effects.fragments, Effects.fragment_ptr
+// で直接アクセス
 
 //// 破片関数 ////
 // 後方互換 inline wrapper は effect_manager.h の末尾に移動
-

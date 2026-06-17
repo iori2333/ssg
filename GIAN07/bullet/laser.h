@@ -86,4 +86,3 @@ struct LASER_DATA {
 // Lasers.cmd, Lasers.count, Lasers.lasers, Lasers.laser_indices で直接アクセス
 // extern REFLECTOR	Reflector[RT_MAX];		// 反射物構造体
 // extern uint16_t	ReflectorNow;	// 反射物の個数
-

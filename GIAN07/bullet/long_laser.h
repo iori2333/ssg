@@ -25,11 +25,11 @@ inline constexpr auto LLS_LONGZ = 0x03; // 自機セット
 
 //// レーザーフラグ２ ////
 inline constexpr auto LLF_DISABLE = 0x00; // レーザーが使用されていない
-inline constexpr auto LLF_NORM = 0x01; // レーザーが完全に開ききった
-inline constexpr auto LLF_OPEN = 0x02; // レーザを開いている
-inline constexpr auto LLF_CLOSE = 0x04; // レーザーを閉じている
-inline constexpr auto LLF_CLOSEL = 0x08; // レーザーをライン状態にする
-inline constexpr auto LLF_LINE = 0x10; // レーザーはライン状態
+inline constexpr auto LLF_NORM = 0x01;    // レーザーが完全に開ききった
+inline constexpr auto LLF_OPEN = 0x02;    // レーザを開いている
+inline constexpr auto LLF_CLOSE = 0x04;   // レーザーを閉じている
+inline constexpr auto LLF_CLOSEL = 0x08;  // レーザーをライン状態にする
+inline constexpr auto LLF_LINE = 0x10;    // レーザーはライン状態
 
 //// レーザー発動コマンド構造体２ ////
 struct LongLaserCommand {
@@ -50,7 +50,7 @@ struct LongLaserCommand {
 //// レーザー用構造体２ ////
 struct LongLaserData {
   EnemyData
-  *e; // 敵データへのポインタ(ここら辺でボスでも雑魚でも発射できるように)
+      *e; // 敵データへのポインタ(ここら辺でボスでも雑魚でも発射できるように)
 
   int x, y;       // 現在の表示座標
   int dx, dy;     // 敵データからのずらし値(x64)
@@ -80,4 +80,3 @@ struct LongLaserData {
 
 //// レーザー変数２ ////
 // Lasers.long_lasers, Lasers.long_cmd で直接アクセス
-

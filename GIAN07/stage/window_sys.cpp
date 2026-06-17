@@ -5,10 +5,10 @@
 
 #include "window_sys.h"
 #include "font_uty.h"
-#include "loader.h"
 #include "game/enum_flags.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "loader.h"
 #include "platform/text_backend.h"
 
 ///// [構造体] /////
@@ -45,7 +45,6 @@ struct MSG_WINDOW {
     }
     Text.clear();
   }
-
 };
 
 ///// [非公開関数] /////

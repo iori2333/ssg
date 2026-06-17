@@ -34,12 +34,14 @@ inline constexpr auto SCMD_QUAKE = 0x01;      // 画面を振動させる
 inline constexpr auto SCMD_STG2BOSS = 0x02;   // ２面ボスの反転スクロール
 inline constexpr auto SCMD_RASTER_ON = 0x03;  // ラスタースクロール開始
 inline constexpr auto SCMD_RASTER_OFF = 0x04; // ラスタースクロー終了
-inline constexpr auto SCMD_STG3BOSS = 0x05;   // 背景雲をゲイツモード(謎)に変更する
-inline constexpr auto SCMD_STG3RESET = 0x06;  // ３面の背景をノーマルモードに戻す
-inline constexpr auto SCMD_STG6CUBE = 0x07;   // ６面ボスの３Ｄキューブモード
-inline constexpr auto SCMD_STG6RNDECL = 0x08; // ６面ボスのランダム偽ＥＣＬ列配置
-inline constexpr auto SCMD_STG4ROCK = 0x09;   // ４面岩
-inline constexpr auto SCMD_STG4LEAVE = 0x0a;  // ４面岩を画面外に吐き出す
+inline constexpr auto SCMD_STG3BOSS =
+    0x05; // 背景雲をゲイツモード(謎)に変更する
+inline constexpr auto SCMD_STG3RESET = 0x06; // ３面の背景をノーマルモードに戻す
+inline constexpr auto SCMD_STG6CUBE = 0x07;  // ６面ボスの３Ｄキューブモード
+inline constexpr auto SCMD_STG6RNDECL =
+    0x08;                                    // ６面ボスのランダム偽ＥＣＬ列配置
+inline constexpr auto SCMD_STG4ROCK = 0x09;  // ４面岩
+inline constexpr auto SCMD_STG4LEAVE = 0x0a; // ４面岩を画面外に吐き出す
 inline constexpr auto SCMD_STG6RASTER = 0x0b; // ６面ラスター
 inline constexpr auto SCMD_STG3STAR = 0x0c;   // ３面高速星
 
@@ -95,5 +97,5 @@ struct SceneState {
 // 実装は ScrollManager メソッドに移行
 
 ///// [ 変数 ] /////
-// Scroller.scroll, Scroller.scene, Scroller.key_wait_count, Scroller.map_chip_rects で直接アクセス
-
+// Scroller.scroll, Scroller.scene, Scroller.key_wait_count,
+// Scroller.map_chip_rects で直接アクセス

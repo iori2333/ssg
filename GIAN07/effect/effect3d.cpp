@@ -4,13 +4,14 @@
 /*                                                                           */
 
 #include "effect3d.h"
-#include "gian.h"
 #include "game/cast.h"
 #include "game/ut_math.h"
+#include "gian.h"
 #include "platform/graphics_backend.h"
 
-// CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h に移動
-// circles[], cubes[], stars[], rocks[], wf_line, fake_ecl_strs[] → effect_manager.cpp に移動
+// CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h
+// に移動 circles[], cubes[], stars[], rocks[], wf_line, fake_ecl_strs[] →
+// effect_manager.cpp に移動
 
 #define _ PIXEL_POINT
 
@@ -83,7 +84,8 @@ LineList3D	LList_A1 = {96,39,PList_A1,8,PWork_A1};
 LineList3D	LList_W = {32,39,PList_W,11,PWork_W};
 */
 
-// Warning[8] は EffectManager::warning_lines に移動 — InitWarningText() で初期化
+// Warning[8] は EffectManager::warning_lines に移動 — InitWarningText()
+// で初期化
 
 static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz);
 static void __Draw3DCube(const Cube3D *c); // 汎用３Ｄキューブ描画
@@ -531,10 +533,9 @@ void MoveStg3Cloud(void)
 // ３面の雲を描画する //
 void DrawStg3Cloud(void)
 {
-constexpr auto RsetMacro(int x, int y, int w, int h) -> PIXEL_LTRB { return {x, y, x + w, y + h}; }
-        static PIXEL_LTRB Data[6] = {
-                RsetMacro(  0, 288, 144, 160),			// Large_1
-                RsetMacro(144, 288, 144, 112),			// Large_2
+constexpr auto RsetMacro(int x, int y, int w, int h) -> PIXEL_LTRB { return {x,
+y, x + w, y + h}; } static PIXEL_LTRB Data[6] = { RsetMacro(  0, 288, 144, 160),
+// Large_1 RsetMacro(144, 288, 144, 112),			// Large_2
                 RsetMacro(288, 288, 144, 176),			// Large_3
 
                 //RsetMacro(480, 288,  32,  48),			//
@@ -777,8 +778,8 @@ void EffectManager::SendCmdStg4Rocks(uint8_t Cmd, uint8_t Param) {
   }
 }
 
-// S6RASTER_MAX, S6STAR_MAX, S3STAR_MAX, Stg6Raster, Stg6Star → effect_manager.h に移動
-// s6_ras[], s6_stars[] → effect_manager.cpp に移動
+// S6RASTER_MAX, S6STAR_MAX, S3STAR_MAX, Stg6Raster, Stg6Star → effect_manager.h
+// に移動 s6_ras[], s6_stars[] → effect_manager.cpp に移動
 
 // ６面ラスター初期化 //
 void EffectManager::InitStg6Rasters() {

@@ -10,15 +10,15 @@
 
 struct BulletManager {
   // --- 弾データ ---
-  std::array<Bullet, TAMA_MAX> bullets;           // Tama[]
-  BulletCommand command;                           // TamaCmd
-  std::array<uint16_t, TAMA_MAX> indices_small;    // Tama1Ind[]
-  std::array<uint16_t, TAMA_MAX> indices_large;    // Tama2Ind[]
-  uint16_t count_small = 0;                        // Tama1Now
-  uint16_t count_large = 0;                        // Tama2Now
-  uint16_t max_small = 0;                          // Tama1Max
-  uint16_t max_large = 0;                          // Tama2Max
-  int speed = 0;                                    // TamaSpeed
+  std::array<Bullet, TAMA_MAX> bullets;         // Tama[]
+  BulletCommand command;                        // TamaCmd
+  std::array<uint16_t, TAMA_MAX> indices_small; // Tama1Ind[]
+  std::array<uint16_t, TAMA_MAX> indices_large; // Tama2Ind[]
+  uint16_t count_small = 0;                     // Tama1Now
+  uint16_t count_large = 0;                     // Tama2Now
+  uint16_t max_small = 0;                       // Tama1Max
+  uint16_t max_large = 0;                       // Tama2Max
+  int speed = 0;                                // TamaSpeed
 
   // --- Public methods ---
   void Spawn();
@@ -37,9 +37,9 @@ struct BulletManager {
   int LineCmdNewSpeed(uint16_t i);
   int Speed(uint16_t i);
   uint8_t Flag();
-  void MoveByType(Bullet* t);
-  void MoveByOption(Bullet* t);
-  void MoveByEffect(Bullet* t);
+  void MoveByType(Bullet *t);
+  void MoveByOption(Bullet *t);
+  void MoveByEffect(Bullet *t);
 
 private:
   void TamaSetMain();
@@ -80,4 +80,3 @@ inline void TamaSetXY(int x, int y) {
   Bullets.command.x = x;
   Bullets.command.y = y;
 }
-

@@ -5,19 +5,19 @@
 
 #include "config.h"
 #include "enemy.h"
-#include "gian.h"
-#include "lz_uty.h"
-#include "music.h"
-#include "window_sys.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
 #include "game/graphics.h"
 #include "game/hash.h"
 #include "game/midi.h"
 #include "game/snd.h"
+#include "gian.h"
+#include "lz_uty.h"
+#include "music.h"
 #include "platform/graphics_backend.h"
 #include "platform/path.h"
 #include "platform/thread.h"
+#include "window_sys.h"
 #include <assert.h>
 
 // Hardcoded loop points for ZUN's original MIDI files
@@ -689,7 +689,8 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // MapData Load
-    if ((Scroller.scroll.DataHead = enemy.MemExpand(stage + 12 - 1)) == nullptr) {
+    if ((Scroller.scroll.DataHead = enemy.MemExpand(stage + 12 - 1)) ==
+        nullptr) {
       return false;
     }
   }
@@ -943,14 +944,14 @@ bool LoadStageData(uint8_t stage) {
                             Enemies.anime[13].mode   = ANM_NORM;
                             Enemies.anime[13].ptn[0] = { 288, 280, 376, 360 };
     */
-    SetAnimeRect2(Enemies.anime +14, 0, 288, 159, 479);   // 雲
-    SetAnimeRect2(Enemies.anime +15, 160, 384, 271, 479); //
-    SetAnimeRect2(Enemies.anime +16, 272, 368, 390, 478); //
-    SetAnimeRect2(Enemies.anime +17, 400, 368, 496, 431); //
-    SetAnimeRect2(Enemies.anime +18, 400, 160, 558, 359); //
-    SetAnimeRect2(Enemies.anime +19, 528, 48, 639, 160);  //
-    SetAnimeRect2(Enemies.anime +20, 560, 160, 639, 270); //
-    SetAnimeRect2(Enemies.anime +21, 576, 320, 639, 399); //
+    SetAnimeRect2(Enemies.anime + 14, 0, 288, 159, 479);   // 雲
+    SetAnimeRect2(Enemies.anime + 15, 160, 384, 271, 479); //
+    SetAnimeRect2(Enemies.anime + 16, 272, 368, 390, 478); //
+    SetAnimeRect2(Enemies.anime + 17, 400, 368, 496, 431); //
+    SetAnimeRect2(Enemies.anime + 18, 400, 160, 558, 359); //
+    SetAnimeRect2(Enemies.anime + 19, 528, 48, 639, 160);  //
+    SetAnimeRect2(Enemies.anime + 20, 560, 160, 639, 270); //
+    SetAnimeRect2(Enemies.anime + 21, 576, 320, 639, 399); //
     break;
 
   case (3): // ゲイツ殿のステージ
@@ -1001,7 +1002,8 @@ bool LoadStageData(uint8_t stage) {
     /*	Enemies.anime[9].size = { (11 * 16), ((5 *16) + 8) };
             Enemies.anime[9].n      = 1;
             Enemies.anime[9].mode   = ANM_NORM;
-            Enemies.anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 * 16), ((5 * 16)
+            Enemies.anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 * 16),
+       ((5 * 16)
        + 8) };
     */
     break;
@@ -1027,14 +1029,15 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[7].ptn[0] = {0, 296, 304, 480};
     break;
 
-  case (5):                                        // ご主人様のステージ
-    Enemies.anime[0].SetSheetDeg<32>({0, 0});              // 赤いヤツ
-    Enemies.anime[1].SetSheetDeg<32>({0, 32});             // 赤いヤツの出現用演出
-    Enemies.anime[2].SetSheetDeg<32>({0, 64});             // 蒼いヤツ
-    Enemies.anime[3].SetSheetDeg<32>({0, 96});             // 緑のヤツ
-    Enemies.anime[4].SetSheetDeg<32>({0, 128});            // オレンジなやつ
-    Enemies.anime[5].SetSheet<4, 32>({512, 0}, ANM_NORM);  // 原子炉搭載ビット
-    Enemies.anime[6].SetSheet<4, 32>({512, 64}, ANM_NORM); // オレンジなヤツの出現用演出
+  case (5):                                     // ご主人様のステージ
+    Enemies.anime[0].SetSheetDeg<32>({0, 0});   // 赤いヤツ
+    Enemies.anime[1].SetSheetDeg<32>({0, 32});  // 赤いヤツの出現用演出
+    Enemies.anime[2].SetSheetDeg<32>({0, 64});  // 蒼いヤツ
+    Enemies.anime[3].SetSheetDeg<32>({0, 96});  // 緑のヤツ
+    Enemies.anime[4].SetSheetDeg<32>({0, 128}); // オレンジなやつ
+    Enemies.anime[5].SetSheet<4, 32>({512, 0}, ANM_NORM); // 原子炉搭載ビット
+    Enemies.anime[6].SetSheet<4, 32>({512, 64},
+                                     ANM_NORM); // オレンジなヤツの出現用演出
 
     // 中ボス用のオプション //
     Enemies.anime[7].size = {24, 24};
@@ -1045,7 +1048,8 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[7].ptn[2] = PIXEL_LTWH{592, (96 + 0), 24, 24};
     Enemies.anime[7].ptn[3] = PIXEL_LTWH{592, (96 + 48), 24, 24};
 
-    Enemies.anime[8].SetSheet<1>({512, 96}, {80, 72}, ANM_NORM); // 屈強なる中ボス
+    Enemies.anime[8].SetSheet<1>({512, 96}, {80, 72},
+                                 ANM_NORM); // 屈強なる中ボス
 
     // メタリックご主人 //
     Enemies.anime[9].SetSheet<1>({304, 256}, {336, 224}, ANM_NORM);
@@ -1099,7 +1103,7 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[3].ptn[9] = PIXEL_LTWH{(56 * 5), 72, 56, 72}; // ちょっと追加
 
     // 幼虫期(//
-    SetAnimeRect2(Enemies.anime +4, 432, 272, 632, 464);
+    SetAnimeRect2(Enemies.anime + 4, 432, 272, 632, 464);
 
     // ラスボス(ジャンプに見えるといいなぁ) //
     Enemies.anime[5].size = {56, 72};
@@ -1147,7 +1151,8 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[7].ptn[8] = PIXEL_LTWH{(32 * 1), 416, 32, 32};
     Enemies.anime[7].ptn[9] = PIXEL_LTWH{(32 * 0), 416, 32, 32};
 
-    Enemies.anime[8].SetSheet<1>({0, 368}, {48, 48}, ANM_NORM); // 屈強なる中ボス
+    Enemies.anime[8].SetSheet<1>({0, 368}, {48, 48},
+                                 ANM_NORM); // 屈強なる中ボス
     break;
   }
 

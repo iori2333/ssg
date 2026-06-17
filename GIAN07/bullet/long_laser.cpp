@@ -3,14 +3,14 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "geometry.h"
 #include "long_laser.h"
-#include "laser_manager.h"
-#include "player.h"
-#include "player_manager.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "geometry.h"
+#include "laser_manager.h"
 #include "platform/graphics_backend.h"
+#include "player.h"
+#include "player_manager.h"
 
 //// レーザー変数２ → laser_manager.cpp に移動
 // long_lasers[], LLaserCmd は laser_manager.cpp で定義
@@ -235,7 +235,7 @@ void LaserManager::MoveLong() {
       lp->wy = lp->lx;
 
       SetLongPoint(lp); // p[4] をセット
-                           //HitCheckLong(lp);
+                        // HitCheckLong(lp);
       break;
 
     // 直線状態 //

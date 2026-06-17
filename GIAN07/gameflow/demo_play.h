@@ -41,8 +41,8 @@ struct DemoPlayState {
 // Multi-stage replay header
 struct MULTI_REPLAY_INFO {
   uint32_t RndSeed;
-  uint8_t StageCount;            // Number of stages recorded (1-6)
-  DEMOPLAY_CONFIG_DATA CfgDat;   // 24 bytes
+  uint8_t StageCount;          // Number of stages recorded (1-6)
+  DEMOPLAY_CONFIG_DATA CfgDat; // 24 bytes
   uint8_t Exp;
   uint8_t Weapon;
   uint8_t Stages[REPLAY_STAGE_MAX];       // Stage numbers
@@ -56,4 +56,3 @@ struct MULTI_REPLAY_INFO {
 ///// [ 変数 ] /////
 // Demos.load_enable, Demos.save_all_enable, Demos.load_all_enable,
 // Demos.playback_max_stage, Demos.pending_replay_file で直接アクセス
-

@@ -3,15 +3,15 @@
 /*                                                                           */
 /*                                                                           */
 
-#include "bomb_efc.h" // 爆発エフェクト処理
 #include "boss.h"
+#include "bomb_efc.h" // 爆発エフェクト処理
 #include "boss_manager.h"
 #include "enemy_ex_ctrl.h"
-#include "geometry.h"
-#include "gian.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "geometry.h"
+#include "gian.h"
 #include "platform/graphics_backend.h"
 
 ///// [ 定数 ] /////
@@ -20,7 +20,8 @@
 
 // ボスの状態 //
 static constexpr auto BEXST_NORM = 0x00; // 通常のＥＣＬで動作中
-static constexpr auto BEXST_DEAD = 0x01; // 死亡中<-こいつは多分使っていないぞ(2000/10/31)
+static constexpr auto BEXST_DEAD =
+    0x01; // 死亡中<-こいつは多分使っていないぞ(2000/10/31)
 static constexpr auto BEXST_WING01 = 0x02; // 蝶の羽
 static constexpr auto BEXST_WING02 = 0x03; // 天使の羽
 static constexpr auto BEXST_SHILD1 = 0x04; // シールド１
@@ -30,12 +31,12 @@ static constexpr auto BEXST_SHILD2 = 0x05; // シールド２
 static constexpr auto BOSSHPG_WIDTH = 256; // 体力ゲージの幅
 // BOSSHPG_HEIGHT → BOSS.h に移動
 static constexpr auto BOSSHPG_START_X = X_MAX; // 体力ゲージの初期Ｘ
-static constexpr auto BOSSHPG_END_X = 260; // 体力ゲージの最終Ｘ
+static constexpr auto BOSSHPG_END_X = 260;     // 体力ゲージの最終Ｘ
 
-static constexpr auto BHPG_DEAD = 0x00; // 体力ゲージは使用されていない
+static constexpr auto BHPG_DEAD = 0x00;  // 体力ゲージは使用されていない
 static constexpr auto BHPG_OPEN1 = 0x01; // 体力ゲージを開く(第一エフェクト中)
 static constexpr auto BHPG_OPEN2 = 0x02; // 体力ゲージを開く(体力上昇中)
-static constexpr auto BHPG_NORM = 0x03; // 体力ゲージの準備ができている
+static constexpr auto BHPG_NORM = 0x03;  // 体力ゲージの準備ができている
 static constexpr auto BHPG_CLOSE = 0x04; // 体力ゲージを閉じる
 static constexpr auto BHPG_OPEN3 = 0x05; // 体力ゲージを更新する
 
@@ -54,7 +55,7 @@ static void HPG_Close(void);           // ボスの体力ゲージをクロー�
 static void HPG_Update(uint32_t next); // ボスの体力ゲージを上昇させる
 
 static int PutBoss(int x, int y, uint32_t id); // ボスをセットする
-static void STDMove(BossData *b);         // ノーマルECL互換の移動
+static void STDMove(BossData *b);              // ノーマルECL互換の移動
 
 // ボスデータ配列を初期化する(中断、ステージクリア時に使用) //
 void BossManager::Init(void) {
@@ -154,8 +155,8 @@ void BossManager::Move(void) {
       b->ExMove(b);
 
       // サボテンヒットチェック //
-      if (HITCHK(e->x, Players.viv.x, e->g_width) && HITCHK(e->y, Players.viv.y, e->g_height) &&
-          Players.viv.muteki == 0) {
+      if (HITCHK(e->x, Players.viv.x, e->g_width) &&
+          HITCHK(e->y, Players.viv.y, e->g_height) && Players.viv.muteki == 0) {
         // ここら辺で敵にダメージを与えるとおもしろいかも？ //
         if (e->flag & EF_HITSB)
           MaidDead();
@@ -199,7 +200,8 @@ void BossManager::Draw(void) {
       y = (e->y >> 6);
 
       // 霊魂状態 //
-      if (b->ExState == BEXST_SHILD2 && Players.viv.bomb_time && (e->flag & EF_DRAW)) {
+      if (b->ExState == BEXST_SHILD2 && Players.viv.bomb_time &&
+          (e->flag & EF_DRAW)) {
         wing = PIXEL_LTWH{(160 + (Cast::sign<int32_t>(e->count / 2) % 4) * 40),
                           80, 40, 40};
 
@@ -215,7 +217,8 @@ void BossManager::Draw(void) {
       }
 
       // バリア状態 //
-      if (b->ExState == BEXST_SHILD1 && Players.viv.bomb_time && (e->flag & EF_DRAW)) {
+      if (b->ExState == BEXST_SHILD1 && Players.viv.bomb_time &&
+          (e->flag & EF_DRAW)) {
         GrpGeom->Lock();
         for (uint8_t j = 0; j <= 5; j++) {
           GrpGeom->SetColor({(5u - j), (5u - j), 5u});
@@ -489,7 +492,8 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     if (count == 1) {
       char buf[100];
       const auto temp = Bullets.ScoreToItems(); // 弾→スコアエフェクト
-      // sprintf(buf, "%3d Evade  %5dPts", Players.viv.evade, Players.viv.evadesc);
+      // sprintf(buf, "%3d Evade  %5dPts", Players.viv.evade,
+      // Players.viv.evadesc);
       sprintf(buf, "  Bonus    %7uPts", temp);
       Effects.SpawnStringEffect(180, 60, buf);
       score_add(temp);
@@ -738,7 +742,7 @@ void BossManager::STDMove(BossData *b) {
   if (e->t_rep) {
     e->tama_c = (e->tama_c + 1) % (e->t_rep);
     if (e->tama_c == 0) {
-      Bullets.command =e->t_cmd;
+      Bullets.command = e->t_cmd;
       Bullets.command.x += e->x;
       Bullets.command.y += e->y;
       Bullets.Spawn();
@@ -794,11 +798,11 @@ void BossManager::Interrupt(EnemyData *e, uint8_t IntID) {
     break;
 
   case (ECLINT_BITON5):
-    BitSet(&*b,5, 3);
+    BitSet(&*b, 5, 3);
     break;
 
   case (ECLINT_BITON6):
-    BitSet(&*b,6, 3);
+    BitSet(&*b, 6, 3);
     break;
 
   case (ECLINT_SHILD1):

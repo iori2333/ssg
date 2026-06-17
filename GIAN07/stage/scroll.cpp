@@ -3,13 +3,9 @@
 /*                                                                           */
 /*                                                                           */
 
+#include "scroll.h"
 #include "config.h"
 #include "demo_play.h"
-#include "gian.h"
-#include "level.h"
-#include "scene.h" // ＳＣＬ定義ファイル
-#include "scroll.h"
-#include "window_sys.h"
 #include "game/bgm.h"
 #include "game/cast.h"
 #include "game/debug.h"
@@ -17,7 +13,11 @@
 #include "game/input.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "gian.h"
+#include "level.h"
 #include "platform/graphics_backend.h"
+#include "scene.h" // ＳＣＬ定義ファイル
+#include "window_sys.h"
 
 // マップデータ保存用ヘッダ //
 struct ScrollSaveHeader {
@@ -26,7 +26,8 @@ struct ScrollSaveHeader {
   U32LE Length;     // このレイヤーの長さ
 };
 
-// ScrollInfo, SclInfo, Scroller.map_chip_rects[] → scroll_manager.cpp の ScrollManager に移動
+// ScrollInfo, SclInfo, Scroller.map_chip_rects[] → scroll_manager.cpp の
+// ScrollManager に移動
 
 static void enemy_set(void);             // 敵をセットする
 static void _PutEnemy(const uint8_t *p); // p:SCL_ENEMY以降の敵配置データ
@@ -62,7 +63,7 @@ static void SCL_DEBUG(std::u8string_view s) {
 void ScrollManager::Move(void) {
   int i;
 
-  enemy_set();        // 敵をセット
+  enemy_set();    // 敵をセット
   scroll.ExCmd(); // 特殊スクロール発動!!
 
   // 振動エフェクトを動作させる(これは、特殊スクロールとは別物) //
@@ -174,9 +175,10 @@ static void enemy_set(void) {
       }
       /*
                                       if((Key_Data & KEY_SKIP) &&
-         Scroller.scene.MsgFlag) GameState.game_count+=(temp-GameState.game_count)/3; else if((Key_Data &
-         KEY_RETURN) && !Scroller.scene.ReturnFlag){ GameState.game_count  = temp;
-                                              Scroller.scene.ReturnFlag = true;
+         Scroller.scene.MsgFlag)
+         GameState.game_count+=(temp-GameState.game_count)/3; else if((Key_Data
+         & KEY_RETURN) && !Scroller.scene.ReturnFlag){ GameState.game_count  =
+         temp; Scroller.scene.ReturnFlag = true;
                                       }
                                       if(!(Key_Data & KEY_RETURN) &&
          Scroller.scene.ReturnFlag) { Scroller.scene.ReturnFlag = false;
@@ -193,7 +195,7 @@ static void enemy_set(void) {
     case (SCL_ENEMY):
       if (Bosses.count == 0)
         _PutEnemy(cmd + 1); // ボス出現中は出て来ちゃダメ
-      Enemies.scl_now += 6;         // cmd(1)+x(2)+y(2)+id(1)
+      Enemies.scl_now += 6; // cmd(1)+x(2)+y(2)+id(1)
       SCL_DEBUG(u8"--- SCL_ENEMY ---");
       break;
 
@@ -456,7 +458,8 @@ static void _PutEnemy(const uint8_t *p) {
   /*
    * [メモ]
    *  p[0-1]:EnemyX  p[2-3]:EnemyY  p[4]:EnemyID
-   *  Enemies.ecl_head[0-3]:Num  Enemies.ecl_head[n*4-(n*4+3)] (n>1):StartAddr(ABS)
+   *  Enemies.ecl_head[0-3]:Num  Enemies.ecl_head[n*4-(n*4+3)]
+   * (n>1):StartAddr(ABS)
    */
   EnemyData *e;
   short x, y;

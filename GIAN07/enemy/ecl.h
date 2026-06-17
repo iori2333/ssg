@@ -22,17 +22,21 @@ inline constexpr auto ECL_CMD0 = 14;    //
 inline constexpr auto ECL_SETUP = 0x00; // 敵データ初期化
 inline constexpr auto ECL_END = 0x01;   // 敵強制消滅
 inline constexpr auto ECL_JMP = 0x02;   // 強制ジャンプ
-inline constexpr auto ECL_LOOP = 0x03;  // ループ(２重は不可、CX は使わないの....)
-inline constexpr auto ECL_CALL = 0x04;  // サブルーチンを呼ぶ
-inline constexpr auto ECL_RET = 0x05;   // サブルーチンから復帰する
-inline constexpr auto ECL_JHPL = 0x06;  // ＨＰが指定値より大きければジャンプ
-inline constexpr auto ECL_JHPS = 0x07;  // ＨＰが指定値より小さければジャンプ
-inline constexpr auto ECL_JDIF = 0x08;  // 難易度によるswitch
-inline constexpr auto ECL_JDSB = 0x09; // 進行角度がサボテンと一致したらジャンプ(誤差±４まで有効)
+inline constexpr auto ECL_LOOP =
+    0x03; // ループ(２重は不可、CX は使わないの....)
+inline constexpr auto ECL_CALL = 0x04; // サブルーチンを呼ぶ
+inline constexpr auto ECL_RET = 0x05;  // サブルーチンから復帰する
+inline constexpr auto ECL_JHPL = 0x06; // ＨＰが指定値より大きければジャンプ
+inline constexpr auto ECL_JHPS = 0x07; // ＨＰが指定値より小さければジャンプ
+inline constexpr auto ECL_JDIF = 0x08; // 難易度によるswitch
+inline constexpr auto ECL_JDSB =
+    0x09; // 進行角度がサボテンと一致したらジャンプ(誤差±４まで有効)
 inline constexpr auto ECL_JFCL = 0x0A; // フレームカウンタが大きければジャンプ
 inline constexpr auto ECL_JFCS = 0x0B; // フレームカウンタが小さければジャンプ
-inline constexpr auto ECL_STI = 0x0C;  // 割り込みベクタをセットする(SeTInterrupt flag)
-inline constexpr auto ECL_CLI = 0x0D;  // 割り込みを無効にする(CLearInterrupt flag)
+inline constexpr auto ECL_STI =
+    0x0C; // 割り込みベクタをセットする(SeTInterrupt flag)
+inline constexpr auto ECL_CLI =
+    0x0D; // 割り込みを無効にする(CLearInterrupt flag)
 
 // 0x1? : 移動用コマンド //
 inline constexpr auto ECL_CMD1 = 16;     //
@@ -51,7 +55,8 @@ inline constexpr auto ECL_MYS = 0x1B;    // Ｙサボテンセット移動
 inline constexpr auto ECL_MXYS = 0x1C;   // ＸＹサボテンセット移動
 inline constexpr auto ECL_ACC = 0x1D;    // 加速or減速つき移動
 inline constexpr auto ECL_ACCXYA = 0x1E; // 減速付きＸＹ絶対セット
-inline constexpr auto ECL_GRAX = 0x1F;   // 重力付きＸ反射移動(Ｙ>=GY_MAX ならば自動消滅)
+inline constexpr auto ECL_GRAX =
+    0x1F; // 重力付きＸ反射移動(Ｙ>=GY_MAX ならば自動消滅)
 
 // 0x2? : 数値セット用コマンド //
 inline constexpr auto ECL_CMD2 = 15;    //
@@ -72,9 +77,10 @@ inline constexpr auto ECL_XYRND = 0x2D; // 制限付き座標ランダム
 inline constexpr auto ECL_XYL = 0x2E;   // 長さ指定座標相対(極座標的に指定)
 
 // 0x4? : 弾発射用コマンド //
-inline constexpr auto ECL_CMD45 = 22;    //
-inline constexpr auto ECL_TAMA = 0x40;   // 弾発射
-inline constexpr auto ECL_TAUTO = 0x41;  // 弾発射間隔をセットする(０：自動発射しない)
+inline constexpr auto ECL_CMD45 = 22;  //
+inline constexpr auto ECL_TAMA = 0x40; // 弾発射
+inline constexpr auto ECL_TAUTO =
+    0x41; // 弾発射間隔をセットする(０：自動発射しない)
 inline constexpr auto ECL_TXYR = 0x42;   // 弾発射位置の相対ずらし
 inline constexpr auto ECL_TCMD = 0x43;   // 弾コマンド
 inline constexpr auto ECL_TDEGA = 0x44;  // 弾発射角絶対指定
@@ -97,32 +103,34 @@ inline constexpr auto ECL_T2ITEM = 0x54; // 弾の何割かをアイテム化す
 inline constexpr auto ECL_TAMAEX = 0x55; //	エキストラボス用弾幕発射コマンド
 
 // 0x6? : レーザー発射用コマンド //
-inline constexpr auto ECL_CMD67 = 18;    //
-inline constexpr auto ECL_LASER = 0x60;  // レーザー発射
-inline constexpr auto ECL_LCMD = 0x61;   // レーザーコマンド
-inline constexpr auto ECL_LLA = 0x62;    // レーザー長・絶対指定
-inline constexpr auto ECL_LLR = 0x63;    // レーザー長・相対指定
-inline constexpr auto ECL_LL2 = 0x64;    // レーザー発射位置
-inline constexpr auto ECL_LDEGA = 0x65;  // レーザー発射角絶対指定
-inline constexpr auto ECL_LDEGR = 0x66;  // レーザー発射角相対指定
-inline constexpr auto ECL_LNUMA = 0x67;  // レーザーの本数絶対指定
-inline constexpr auto ECL_LNUMR = 0x68;  // レーザーの本数相対指定
-inline constexpr auto ECL_LSPDA = 0x69;  // レーザーの速さ絶対指定
-inline constexpr auto ECL_LSPDR = 0x6a;  // レーザーの速さ相対指定
-inline constexpr auto ECL_LCOL = 0x6b;   // レーザーの色
-inline constexpr auto ECL_LTYPE = 0x6c;  // レーザーの種類
-inline constexpr auto ECL_LWA = 0x6d;    // レーザーの太さ絶対指定
-inline constexpr auto ECL_LDEGS = 0x6e;  // レーザー発射角サボテンセット
-inline constexpr auto ECL_LDEGE = 0x6f;  // レーザー発射角を自分の向きにセット
-inline constexpr auto ECL_LXY = 0x70;    // レーザーの発射座標セット(太レーザー用？)
+inline constexpr auto ECL_CMD67 = 18;   //
+inline constexpr auto ECL_LASER = 0x60; // レーザー発射
+inline constexpr auto ECL_LCMD = 0x61;  // レーザーコマンド
+inline constexpr auto ECL_LLA = 0x62;   // レーザー長・絶対指定
+inline constexpr auto ECL_LLR = 0x63;   // レーザー長・相対指定
+inline constexpr auto ECL_LL2 = 0x64;   // レーザー発射位置
+inline constexpr auto ECL_LDEGA = 0x65; // レーザー発射角絶対指定
+inline constexpr auto ECL_LDEGR = 0x66; // レーザー発射角相対指定
+inline constexpr auto ECL_LNUMA = 0x67; // レーザーの本数絶対指定
+inline constexpr auto ECL_LNUMR = 0x68; // レーザーの本数相対指定
+inline constexpr auto ECL_LSPDA = 0x69; // レーザーの速さ絶対指定
+inline constexpr auto ECL_LSPDR = 0x6a; // レーザーの速さ相対指定
+inline constexpr auto ECL_LCOL = 0x6b;  // レーザーの色
+inline constexpr auto ECL_LTYPE = 0x6c; // レーザーの種類
+inline constexpr auto ECL_LWA = 0x6d;   // レーザーの太さ絶対指定
+inline constexpr auto ECL_LDEGS = 0x6e; // レーザー発射角サボテンセット
+inline constexpr auto ECL_LDEGE = 0x6f; // レーザー発射角を自分の向きにセット
+inline constexpr auto ECL_LXY =
+    0x70; // レーザーの発射座標セット(太レーザー用？)
 inline constexpr auto ECL_LASER2 = 0x71; // レーザー発射
 
 // 0x8? : 太レーザー&ホーミング発射用コマンド(構造体セットは上の命令を使用する)
 // //
-inline constexpr auto ECL_CMD8 = 6;        //
-inline constexpr auto ECL_LLSET = 0x80;    // 太レーザーセット
-inline constexpr auto ECL_LLOPEN = 0x81;   // 太レーザーオープン
-inline constexpr auto ECL_LLCLOSE = 0x82;  // 太レーザークローズ(消去＆参照カウント減少)
+inline constexpr auto ECL_CMD8 = 6;      //
+inline constexpr auto ECL_LLSET = 0x80;  // 太レーザーセット
+inline constexpr auto ECL_LLOPEN = 0x81; // 太レーザーオープン
+inline constexpr auto ECL_LLCLOSE =
+    0x82; // 太レーザークローズ(消去＆参照カウント減少)
 inline constexpr auto ECL_LLCLOSEL = 0x83; // 太レーザーライン状態へ
 inline constexpr auto ECL_LLDEGR = 0x84;   // 太レーザー角度相対変更
 inline constexpr auto ECL_HLASER = 0x85;   // ホーミングレーザー発動！！
@@ -182,9 +190,9 @@ inline constexpr auto ECL_JEQ = 0xBE;  // 比較結果が = ならばジャン�
 // 割り込み命令は、数字が小さいほど優先順位が高い //
 inline constexpr auto ECLVECT_MAX = 4;         // 割り込みベクタ最大数
 inline constexpr auto ECLVECT_BOSSLEFT = 0x00; // ボス残り数割り込み
-inline constexpr auto ECLVECT_HP = 0x01;       // 体力が指定値より小さいときに割り込み
-inline constexpr auto ECLVECT_TIMER = 0x02;    // タイマー割り込み
-inline constexpr auto ECLVECT_BITLEFT = 0x03;  // 残りビット数割り込み
+inline constexpr auto ECLVECT_HP = 0x01; // 体力が指定値より小さいときに割り込み
+inline constexpr auto ECLVECT_TIMER = 0x02;   // タイマー割り込み
+inline constexpr auto ECLVECT_BITLEFT = 0x03; // 残りビット数割り込み
 
 inline constexpr auto ECLREG_MAX = 8; // レジスタの本数
 inline constexpr auto ECLCST_GR0 = 0; // ０番レジスタ
@@ -217,7 +225,8 @@ inline constexpr auto ECLCST_ENEMY_X = (128 + 15); // 敵のＸ座標
 inline constexpr auto ECLCST_ENEMY_Y = (128 + 16); // 敵のＹ座標
 inline constexpr auto ECLCST_ENEMY_D = (128 + 17); // 敵の角度
 
-inline constexpr auto ECLCST_LLASERALL = 0xff; // 全てのレーザーに適用する場合に指定する数
+inline constexpr auto ECLCST_LLASERALL =
+    0xff; // 全てのレーザーに適用する場合に指定する数
 
 inline constexpr auto ECLINT_SNAKEON = 0x00;  // 蛇型セット
 inline constexpr auto ECLINT_LBWING01 = 0x01; // ラスボスの蝶の羽モード
@@ -228,5 +237,6 @@ inline constexpr auto ECLINT_SHILD1 = 0x05;   // ボム回避１
 inline constexpr auto ECLINT_SHILD2 = 0x06;   // ボム回避１
 
 // ＥＣＬコマンド最大数 (must be after all ECL_CMD* group sizes)
-inline constexpr auto ECL_CMDMAX = (ECL_CMD0 + ECL_CMD1 + ECL_CMD2 + ECL_CMD45 + ECL_CMD67 + ECL_CMD8 + ECL_CMD9 + ECL_CMDA + ECL_CMDB);
-
+inline constexpr auto ECL_CMDMAX =
+    (ECL_CMD0 + ECL_CMD1 + ECL_CMD2 + ECL_CMD45 + ECL_CMD67 + ECL_CMD8 +
+     ECL_CMD9 + ECL_CMDA + ECL_CMDB);

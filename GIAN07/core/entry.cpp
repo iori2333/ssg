@@ -3,16 +3,16 @@
  *
  */
 
-#include "config.h"
 #include "entry.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
-#include "loader.h"
+#include "config.h"
 #include "game/bgm.h"
 #include "game/debug.h"
 #include "game/frame.h"
 #include "game/input.h"
 #include "game/snd.h"
+#include "gameflow/game_main.h"
+#include "gameflow/gameflow_manager.h"
+#include "loader.h"
 #include "obj/platform_constants.h"
 #include "platform/graphics_backend.h"
 #include "platform/input.h"

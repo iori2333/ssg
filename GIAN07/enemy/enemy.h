@@ -13,34 +13,35 @@
 // 敵の当たり判定チェック用関数 enemy_damage() を追加 2000/02/22 :
 // 敵のクリッピング範囲を変更した。
 
-#include "ecl.h"
-#include "bullet/laser.h"
 #include "bullet/bullet.h"
+#include "bullet/laser.h"
+#include "ecl.h"
 #include "platform/buffer.h"
 
 //// 敵定数 ////
 inline constexpr uint16_t ENEMY_MAX = 50; // 敵の最大発生数
 
 // 敵状態フラグ
-inline constexpr uint8_t EF_DRAW   = 0x01; // 敵を描画するか
-inline constexpr uint8_t EF_CLIP   = 0x02; // 敵が画面外に出たとき消去するか
+inline constexpr uint8_t EF_DRAW = 0x01;   // 敵を描画するか
+inline constexpr uint8_t EF_CLIP = 0x02;   // 敵が画面外に出たとき消去するか
 inline constexpr uint8_t EF_DAMAGE = 0x04; // 敵にダメージを与えられるか
-inline constexpr uint8_t EF_HITSB  = 0x08; // 敵と自機は接触するか
-inline constexpr uint8_t EF_RLCHG  = 0x10; // ＥＣＬ左右反転を有効にするか
-inline constexpr uint8_t EF_BOMB   = 0x20; // 敵が爆発中である
+inline constexpr uint8_t EF_HITSB = 0x08;  // 敵と自機は接触するか
+inline constexpr uint8_t EF_RLCHG = 0x10;  // ＥＣＬ左右反転を有効にするか
+inline constexpr uint8_t EF_BOMB = 0x20;   // 敵が爆発中である
 inline constexpr uint8_t EF_DELETE = 0x40; // 敵をこのターン中に消去する
 
 inline constexpr int ENEMY_BOMB_SPD = 4;
 
 //// ホーミング定数 ////
-inline constexpr int HOMING_DUMMY = (500 * 64); // 敵をホーミングしない場合のダミー値
+inline constexpr int HOMING_DUMMY =
+    (500 * 64); // 敵をホーミングしない場合のダミー値
 
 ////アニメーション定数////
-inline constexpr uint8_t ANIME_MAX    = 50; // アニメーションの種類
+inline constexpr uint8_t ANIME_MAX = 50;    // アニメーションの種類
 inline constexpr uint8_t ANIMEPTN_MAX = 16; // アニメーションパターンの最大値
-inline constexpr uint8_t ANM_NORM     = 0x00; // 普通のアニメーション
-inline constexpr uint8_t ANM_DEG      = 0x01; // 角度でアニメーションする
-inline constexpr uint8_t ANM_STOP     = 0x02; // 最終パターンで静止する
+inline constexpr uint8_t ANM_NORM = 0x00;   // 普通のアニメーション
+inline constexpr uint8_t ANM_DEG = 0x01;    // 角度でアニメーションする
+inline constexpr uint8_t ANM_STOP = 0x02;   // 最終パターンで静止する
 
 //// 割り込みベクタ構造体 ////
 struct InterruptVector {
@@ -66,8 +67,8 @@ struct EnemyData {
 
   uint32_t IntTimer; // 割り込みようタイマー
 
-  uint32_t GR[ECLREG_MAX];              // 変数用レジスタ
-  InterruptVector Vect[ECLVECT_MAX];    // 割り込みベクタ
+  uint32_t GR[ECLREG_MAX];           // 変数用レジスタ
+  InterruptVector Vect[ECLVECT_MAX]; // 割り込みベクタ
 
   uint16_t g_width;  // グラフィックの幅  /2*64(当たり判定にも使用)
   uint16_t g_height; // グラフィックの高さ/2*64(上に同じ)
@@ -89,12 +90,12 @@ struct EnemyData {
 
   uint8_t LLaserRef; // 太レーザーの参照カウント
 
-  BulletCommand t_cmd;  // 弾発射用コマンド
-  LaserCommand l_cmd; // レーザー発射用コマンド
+  BulletCommand t_cmd; // 弾発射用コマンド
+  LaserCommand l_cmd;  // レーザー発射用コマンド
 
   // --- メソッド ---
   void Draw() const;
-  void UpdateAnimation();  // EnemyAnimeMove()
+  void UpdateAnimation(); // EnemyAnimeMove()
 };
 
 // 後方互換用エイリアス
@@ -132,7 +133,8 @@ struct ANIME_DATA {
 };
 
 //// 敵変数 ////
-// Enemies.entities, Enemies.indices, Enemies.count, Enemies.anime で直接アクセス
+// Enemies.entities, Enemies.indices, Enemies.count, Enemies.anime
+// で直接アクセス
 
 //// 敵制御関数 ////
 // 後方互換 inline wrapper は enemy_manager.h 末尾に移動

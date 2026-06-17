@@ -5,11 +5,11 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
+#include "score.h"
+#include "game/defer.h"
 #include "level.h"
 #include "lz_uty.h"
-#include "score.h"
 #include "score_manager.h"
-#include "game/defer.h"
 #include <array>
 #include <inttypes.h> // for PRId64
 #include <ranges>
@@ -234,8 +234,7 @@ bool ScoreManager::SetDefaultScoreData() {
     auto temp = maybe_temp.value();
     for (size_t j = 0; j < temp.size(); j++) {
       strcpy(temp[j].Name, "????????");
-      temp[j].Score = ((temp.size() - j) * uint64_t{1200000}
-      );
+      temp[j].Score = ((temp.size() - j) * uint64_t{1200000});
       temp[j].Evade = ((temp.size() - j) * 50);
       temp[j].Stage = ((i < 4) ? (temp.size() - j) : 1);
       temp[j].Weapon = j % 3;

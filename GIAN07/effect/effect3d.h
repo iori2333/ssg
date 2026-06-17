@@ -14,12 +14,12 @@
 #include <span>
 
 ///// [ 定数 ] /////
-inline constexpr auto STG4ROCK_STDMOVE = 0; // 普通のスクロールね
+inline constexpr auto STG4ROCK_STDMOVE = 0;  // 普通のスクロールね
 inline constexpr auto STG4ROCK_ACCMOVE1 = 1; // 加速有りスクロール(1)
 inline constexpr auto STG4ROCK_ACCMOVE2 = 2; // 加速有りスクロール(2)
-inline constexpr auto STG4ROCK_3DMOVE = 3; // ３Ｄ回転
-inline constexpr auto STG4ROCK_LEAVE = 4; // 一時的に岩を消去する
-inline constexpr auto STG4ROCK_END = 5; // エフェクト終了
+inline constexpr auto STG4ROCK_3DMOVE = 3;   // ３Ｄ回転
+inline constexpr auto STG4ROCK_LEAVE = 4;    // 一時的に岩を消去する
+inline constexpr auto STG4ROCK_END = 5;      // エフェクト終了
 
 ///// [ 構造体 ] /////
 struct Point3D {
@@ -100,4 +100,3 @@ void MoveWarningR(char count);
 
 // 後方互換 inline wrapper は effect_manager.h の末尾に移動
 // 実装は EffectManager メソッドに移行
-

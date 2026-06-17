@@ -3,18 +3,18 @@
 /*                                                                                               */
 /*************************************************************************************************/
 
-#include "gian.h"
-#include "level.h"
 #include "bullet.h"
 #include "bullet_manager.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
+#include "gian.h"
+#include "level.h"
 #include "platform/graphics_backend.h"
 
 ////グローバル変数 → bullet_manager.cpp の BulletManager に移動
-// command, bullets, count_small, count_large → bullet_manager.cpp の参照 (クロスモジュール)
-// indices_small, indices_large, max_small, max_large, speed
+// command, bullets, count_small, count_large → bullet_manager.cpp の参照
+// (クロスモジュール) indices_small, indices_large, max_small, max_large, speed
 // → bullet_manager.h 経由で直接アクセス
 
 ////ローカルな関数////
@@ -65,9 +65,11 @@ void BulletManager::SpawnLine() {
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
   if ((command.c & 0xf0) == TAMA_SMALL)
-    indnow = &count_small, indmax = &max_small, indp = &indices_small[count_small];
+    indnow = &count_small, indmax = &max_small,
+    indp = &indices_small[count_small];
   else
-    indnow = &count_large, indmax = &max_large, indp = &indices_large[count_large];
+    indnow = &count_large, indmax = &max_large,
+    indp = &indices_large[count_large];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -80,7 +82,7 @@ void BulletManager::SpawnLine() {
     if ((*indnow) + 1 >= (*indmax))
       return; // セットできない場合
 
-    *indnow = *indnow + 1;    // 弾数をインクリメント
+    *indnow = *indnow + 1;       // 弾数をインクリメント
     auto *t = &bullets[indp[i]]; // 弾ポインタをセット
 
     t->x = t->tx = command.x; // X座標のセット
@@ -108,7 +110,7 @@ void BulletManager::SpawnLine() {
     t->option = command.option;     // 弾の属性(バイブ、反射等)
     t->effect = command.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
-    t->flag = Flag();          // フラグの初期化
+    t->flag = Flag();               // フラグの初期化
   }
 }
 
@@ -121,9 +123,11 @@ void BulletManager::SpawnExtra01() {
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
   if ((command.c & 0xf0) == TAMA_SMALL)
-    indnow = &count_small, indmax = &max_small, indp = &indices_small[count_small];
+    indnow = &count_small, indmax = &max_small,
+    indp = &indices_small[count_small];
   else
-    indnow = &count_large, indmax = &max_large, indp = &indices_large[count_large];
+    indnow = &count_large, indmax = &max_large,
+    indp = &indices_large[count_large];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -136,7 +140,7 @@ void BulletManager::SpawnExtra01() {
     if ((*indnow) + 1 >= (*indmax))
       return; // セットできない場合
 
-    *indnow = *indnow + 1;    // 弾数をインクリメント
+    *indnow = *indnow + 1;       // 弾数をインクリメント
     auto *t = &bullets[indp[i]]; // 弾ポインタをセット
 
     t->x = t->tx = command.x; // X座標のセット
@@ -144,7 +148,7 @@ void BulletManager::SpawnExtra01() {
 
     t->a = command.a; // 注意：サイズは char
 
-    t->d = Dir(i);   // 弾の発射角度
+    t->d = Dir(i);        // 弾の発射角度
     t->d16 = (t->d << 8); // 角速度のある運動で使用
 
     t->v = t->v0 = SpeedEx(t->d); // 初速度のセット
@@ -159,7 +163,7 @@ void BulletManager::SpawnExtra01() {
     t->option = command.option;     // 弾の属性(バイブ、反射等)
     t->effect = command.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
-    t->flag = Flag();          // フラグの初期化
+    t->flag = Flag();               // フラグの初期化
   }
 }
 
@@ -195,9 +199,11 @@ void BulletManager::TamaSetMain() {
 
   // "アクセスする領域" をセットする(小型弾 or 特殊弾)        //
   if ((command.c & 0xf0) == TAMA_SMALL)
-    indnow = &count_small, indmax = &max_small, indp = &indices_small[count_small];
+    indnow = &count_small, indmax = &max_small,
+    indp = &indices_small[count_small];
   else
-    indnow = &count_large, indmax = &max_large, indp = &indices_large[count_large];
+    indnow = &count_large, indmax = &max_large,
+    indp = &indices_large[count_large];
 
   // セットする弾数(連射を考慮に入れる)
   const uint16_t setmax =
@@ -235,7 +241,7 @@ void BulletManager::TamaSetMain() {
     t->option = command.option;     // 弾の属性(バイブ、反射等)
     t->effect = command.cmd & 0xf0; // 弾のエフェクト
     t->count = 0;                   // カウンタの初期化
-    t->flag = Flag();          // フラグの初期化
+    t->flag = Flag();               // フラグの初期化
   }
 }
 
@@ -260,7 +266,8 @@ void BulletManager::Move() {
           HITCHK(t->y, Players.viv.y, TAMA_EVY_SMALL)) {
         TamaEvadeAdd(t);
       }
-      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) && HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
+      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) &&
+          HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
         t->flag = TF_DELETE;
         MaidDead();
       }
@@ -289,7 +296,8 @@ void BulletManager::Move() {
           HITCHK(t->y, Players.viv.y, TAMA_EVY_LARGE)) {
         TamaEvadeAdd(t);
       }
-      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) && HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
+      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) &&
+          HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
         t->flag = TF_DELETE;
         MaidDead();
       }
@@ -455,7 +463,11 @@ void BulletManager::Draw() {
 }
 
 // 弾をエフェクトとして描画？ //
-namespace { constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB { return {x, y, x + w, y + w}; } }
+namespace {
+constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB {
+  return {x, y, x + w, y + w};
+}
+} // namespace
 void _TamaEffectDraw(const Bullet *t) {
 
   static constexpr PIXEL_LTRB Data[6][5] = {
@@ -733,9 +745,9 @@ void BulletManager::SetLunatic() {
 }
 
 uint8_t BulletManager::Dir(uint16_t i) {
-  uint8_t deg = ((command.cmd & TAMA_ZSET)
-                     ? atan8((Players.viv.x - command.x), (Players.viv.y - command.y))
-                     : 0);
+  uint8_t deg = ((command.cmd & TAMA_ZSET) ? atan8((Players.viv.x - command.x),
+                                                   (Players.viv.y - command.y))
+                                           : 0);
 
   deg += command.d;  // 基本角のセット完了
   i = i % command.n; // 連射弾対策
@@ -886,7 +898,8 @@ void BulletManager::MoveByType(Bullet *t) {
   case (T_HOMING_M): // ｎ％ホーミング(ミサイル系？)
     // 最適化はしておりませんな... //
     if ((t->count > 19) && (t->count % 2 == 0)) {
-      deg_t = atan8((Players.viv.x) - (t->x), (Players.viv.y) - (t->y)) - (t->d);
+      deg_t =
+          atan8((Players.viv.x) - (t->x), (Players.viv.y) - (t->y)) - (t->d);
       if (deg_t < -128)
         deg_t += 256;
       if (deg_t > 128)
@@ -981,7 +994,8 @@ void BulletManager::MoveByType(Bullet *t) {
     t->tx += t->vx;
     t->ty += t->vy;
     if ((t->count < 130 - 60) && Enemies.homing_flag != HOMING_DUMMY) {
-      deg_t = atan8(Enemies.homing_x - (t->x), Enemies.homing_y - (t->y)) - (t->d);
+      deg_t =
+          atan8(Enemies.homing_x - (t->x), Enemies.homing_y - (t->y)) - (t->d);
     } else if (t->count < 130 - 60) {
       deg_t = atan8(0, (-20 * 64) - (t->y)) - (t->d);
     } else {

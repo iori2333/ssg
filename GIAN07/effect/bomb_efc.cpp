@@ -4,8 +4,8 @@
  */
 #include "bomb_efc.h"
 #include "effect_manager.h"
-#include "loader.h"
 #include "game/ut_math.h"
+#include "loader.h"
 #include "platform/graphics_backend.h"
 #include <algorithm>
 #include <array>
@@ -24,8 +24,8 @@ void EffectManager::InitBombEffects() {
 
 // 爆発系エフェクトをセットする //
 void EffectManager::SpawnBombEffect(int x, int y, uint8_t type) {
-  auto p =
-      std::ranges::find_if(bomb_effects, [](const auto &p) { return !p.bIsUsed; });
+  auto p = std::ranges::find_if(bomb_effects,
+                                [](const auto &p) { return !p.bIsUsed; });
 
   // 空いているオブジェクトが存在しない //
   if (p == std::end(bomb_effects)) {
