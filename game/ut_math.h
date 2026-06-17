@@ -1,29 +1,66 @@
 /*                                                                           */
 /*   UT_MATH.h   整数限定の数学関数群                                        */
 /*                                                                           */
+/*   Modernized: floating-point based implementations of legacy fixed-point  */
+/*   helpers. The public API signatures are preserved; callers need not be   */
+/*   changed.                                                                */
 /*                                                                           */
 
-#ifndef PBGWIN_UT_MATH_H
-#define PBGWIN_UT_MATH_H "UT_MATH : Version 0.01 : Update 1999/12/04"
+#pragma once
 
-// 更新履歴 //
-
-// 1999/12/05 : PBG_MATH.c より移植開始
-
-// 使用禁止かな //
-#ifndef DISABLE_UT_MATH
-
-// ヘッダファイル //
+#include <cmath>
 #include <cstdint>
+#include <numbers>
+#include <random>
 
-// マクロ //
+namespace ut_math_detail {
 
-#define sinm(deg) (SIN256[(unsigned char)deg]) // SINﾃｰﾌﾞﾙ参照用ﾏｸﾛ
-#define cosm(deg) (COS256[(unsigned char)deg]) // COSﾃｰﾌﾞﾙ参照用ﾏｸﾛ
+constexpr double PI = std::numbers::pi;
+constexpr double DEG256_TO_RAD = (2.0 * PI) / 256.0;
+constexpr double RAD_TO_DEG256 = 256.0 / (2.0 * PI);
+constexpr double deg256_to_rad(uint8_t deg) {
+  return static_cast<double>(deg) * DEG256_TO_RAD;
+}
 
-// 定数 //
-extern const signed int SIN256[256 + 64];
-extern const signed int *COS256;
+// Modern random number generator.
+// Produces 15-bit unsigned integers for compatibility with the legacy API.
+class Rng {
+public:
+  explicit Rng(uint32_t seed = 0) noexcept : engine_(seed) {}
+
+  void seed(uint32_t s) { engine_.seed(s); }
+
+  uint16_t next() {
+    // Use the high 15 bits of the 32-bit Mersenne Twister output.
+    return static_cast<uint16_t>((engine_() >> 16) & 0x7FFF);
+  }
+
+  // Uniform integer in [0, max].
+  uint16_t next(uint16_t max) {
+    if (max == 0) {
+      return 0;
+    }
+    std::uniform_int_distribution<uint16_t> dist(0, max);
+    return dist(engine_);
+  }
+
+private:
+  std::mt19937 engine_;
+};
+
+} // namespace ut_math_detail
+
+// Table lookup macros replaced with inline functions.
+// These still return values scaled by 256 to keep existing callers working.
+inline int sinm(uint8_t deg) {
+  return static_cast<int>(
+      std::round(std::sin(ut_math_detail::deg256_to_rad(deg)) * 256.0));
+}
+
+inline int cosm(uint8_t deg) {
+  return static_cast<int>(
+      std::round(std::cos(ut_math_detail::deg256_to_rad(deg)) * 256.0));
+}
 
 // 三角関数2 //
 int sinl(uint8_t deg, int length); // (SIN(deg) * length) / 256)
@@ -43,12 +80,4 @@ int32_t isqrt(int32_t s);
 
 // 乱数 //
 void rnd_seed_set(uint32_t val);
-uint16_t rnd(void);
-
-// デバッグ用(後で消すこと) //
-// extern uint32_t random_ref;
-
-// 使用禁止かな //
-#endif
-
-#endif
+uint16_t rnd();
