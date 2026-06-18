@@ -31,15 +31,6 @@
 #include <chrono>
 #include <numeric>
 
-// BGMPack / ReplayFiles は window_ctrl.cpp で定義される
-namespace BGMPack {
-extern const char *SOUNDTRACK_URL;
-void Open();
-} // namespace BGMPack
-namespace ReplayFiles {
-void Open();
-} // namespace ReplayFiles
-
 using namespace std::chrono_literals;
 
 // ---------------------------------------------------------------------------
@@ -594,9 +585,9 @@ void SoundPanel::FnBGMVol(MenuController &, int_fast8_t delta) {
 
 void SoundPanel::FnBGMPack(MenuController &, int_fast8_t) {
   if (!BGM_PacksAvailable()) {
-    SDL_OpenURL(BGMPack::SOUNDTRACK_URL);
+    SDL_OpenURL(UI.BGMPackSoundtrackURL);
   } else {
-    BGMPack::Open();
+    UI.OpenBGMPack();
   }
 }
 
@@ -798,7 +789,7 @@ bool MainMenuPanel::FnMusic(MenuController &, INPUT_BITS key) {
 
 bool MainMenuPanel::ReplayFilesMenuOpen(MenuController &, INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    ReplayFiles::Open();
+    UI.OpenReplayFiles();
   }
   return true;
 }

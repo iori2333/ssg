@@ -10,6 +10,7 @@
 #include "platform/buffer.h"
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <string_view>
 
 // Loads the BGM with the given 0-based [id] from the game's original BGM data
@@ -95,7 +96,7 @@ void BGM_SetTempo(int8_t tempo); // テンポを変更する
 bool BGM_PacksAvailable(bool invalidate_cache = false);
 
 size_t BGM_PackCount(void);
-void BGM_PackForeach(void func(const std::u8string_view pack));
+void BGM_PackForeach(std::function<void(std::u8string_view pack)> func);
 
 // Restarts any currently playing BGM when switching to a different [pack].
 // Returns `false` if the given [pack] doesn't exist, and switches to the empty

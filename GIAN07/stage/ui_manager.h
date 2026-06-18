@@ -1,57 +1,106 @@
 /*                                                                           */
 /*   ui_manager.h   UI マネージャ                                             */
 /*                                                                           */
-/*   メッセージウィンドウを集約し、[game_main.cpp] のアドホックな              */
-/*   ウィンドウ選択ロジックを置き換える。                                      */
-/*   MenuController インスタンスは [window_ctrl.cpp] が所有し、                */
-/*   UIManager はポインタで参照する。                                          */
+/*   すべてのメニューコントローラ、スクロールメニュー、パネル、               */
+/*   メッセージウィンドウを集約所有する。                                       */
+/*   グローバル変数は [UI] のみ。                                               */
 /*                                                                           */
 
 #pragma once
 
+#include "menu/panels.h"
+#include "menu/scroll_menu.h"
 #include "msg_window/msg_window.h"
 #include "window_sys.h"
 
-class MenuController;
+#include <string>
+#include <vector>
 
 class UIManager {
 public:
   UIManager();
 
-  // MenuController を登録する（window_ctrl.cpp の初期化時に呼ぶ）。
-  void Bind(MenuController &main, MenuController &exit_w,
-            MenuController &continue_w, MenuController &bgm_pack,
-            MenuController &game_over_save, MenuController &replay_files);
-
   // --- メッセージウィンドウ ---
   MsgWindow &Msg() { return msg_window_; }
-
-  // メッセージウィンドウを 1 フレーム動作させる。
   void MsgTick() { msg_window_.Tick(); }
-
-  // メッセージウィンドウを描画する。
   void MsgDraw() { msg_window_.Draw(); }
-
-  // メッセージウィンドウを強制クローズする。
   void MsgForceClose() { msg_window_.ForceClose(); }
 
-  // --- アクティブメニュー ---
-  // タイトル画面でアクティブなメニューコントローラを返す。
-  MenuController *ActiveMenu();
+  // --- メニューウィンドウアクセス ---
+  MenuController &Main() { return main_window_; }
+  MenuController &Exit() { return exit_window_; }
+  MenuController &Continue() { return continue_window_; }
+  MenuController &GameOverSave() { return game_over_save_window_; }
 
-  // タイトル画面のアクティブメニューにヘルプ文字列を送る。
+  // --- 初期化 ---
+  void InitMain();
+  void InitExit();
+  void InitContinue();
+
+  // --- スクロールメニューを開く ---
+  void OpenBGMPack();
+  void OpenReplayFiles();
+
+  // BGM Pack サウンドトラックのダウンロード URL
+  static constexpr const char *BGMPackSoundtrackURL =
+      "https://github.com/nmlgc/BGMPacks/releases/tag/2024-10-05";
+
+  // --- タイトル画面のアクティブメニュー ---
+  MenuController *ActiveMenu();
   void MsgHelp();
 
 private:
+  // BGM Pack スクロールメニュー callback
+  size_t BGMPackListSize();
+  void BGMPackGenerate(MenuItem &ret, size_t generated, size_t selected);
+  bool BGMPackHandle(MenuController &ctrl, INPUT_BITS key, size_t selected);
+
+  // Replay Files スクロールメニュー callback
+  size_t ReplayFilesListSize();
+  void ReplayFilesGenerate(MenuItem &ret, size_t generated, size_t selected);
+  bool ReplayFilesHandle(MenuController &ctrl, INPUT_BITS key,
+                         size_t selected);
+
+  // --- メッセージウィンドウ ---
   MsgWindow msg_window_;
 
-  MenuController *main_ = nullptr;
-  MenuController *exit_ = nullptr;
-  MenuController *continue_ = nullptr;
-  MenuController *bgm_pack_ = nullptr;
-  MenuController *game_over_save_ = nullptr;
-  MenuController *replay_files_ = nullptr;
+  // --- メインメニュー ---
+  MainMenuPanel main_panel_;
+  MenuController main_window_;
+
+  // --- Exit ダイアログ ---
+  MenuLabel exit_title_;
+  MenuItem exit_items_[3];
+  MenuDef exit_menu_;
+  MenuController exit_window_;
+
+  // --- Continue ダイアログ ---
+  MenuLabel continue_title_;
+  MenuItem continue_items_[2];
+  MenuDef continue_menu_;
+  MenuController continue_window_;
+
+  // --- GameOverSave ダイアログ ---
+  MenuLabel game_over_save_title_;
+  MenuItem game_over_save_items_[2];
+  MenuDef game_over_save_menu_;
+  MenuController game_over_save_window_;
+
+  // --- BGM Pack スクロールメニュー状態 ---
+  MenuText bgm_title_text_;
+  MenuLabel bgm_title_item_;
+  std::vector<std::u8string> bgm_packs_;
+  size_t bgm_sel_at_open_ = 0;
+  ScrollMenu bgm_pack_scroll_menu_;
+  MenuController bgm_pack_window_;
+
+  // --- Replay Files スクロールメニュー状態 ---
+  MenuText replay_title_text_;
+  MenuLabel replay_title_item_;
+  std::vector<std::u8string> replay_files_;
+  ScrollMenu replay_files_scroll_menu_;
+  MenuController replay_files_window_;
 };
 
-// グローバルインスタンス
+// 唯一のグローバルインスタンス
 extern UIManager UI;

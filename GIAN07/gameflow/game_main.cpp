@@ -22,7 +22,6 @@
 #include "platform/time.h"
 #include "score.h"
 #include "ui_manager.h"
-#include "window_ctrl.h" // ウィンドウ定義
 #include "window_sys.h"
 #include <algorithm>
 #include <chrono>
@@ -631,8 +630,8 @@ bool GameInit(std::function<void(bool &)> next_proc) {
     }
 
     if (GameFlow.current_state == GameState::Game) {
-      InitExitWindow();
-      InitContinueWindow();
+      UI.InitExit();
+      UI.InitContinue();
     }
   }
   GrpBackend_SetClip(PLAYFIELD_CLIP);
@@ -909,8 +908,8 @@ bool GameExit(bool bNeedChgMusic) {
 
   // Must come after the BGM switch to correctly initialize the sound
   // configuration menu.
-  InitMainWindow();
-  MainWindow.Open(MAIN_WINDOW_TOPLEFT, 0);
+  UI.InitMain();
+  UI.Main().Open(MAIN_WINDOW_TOPLEFT, 0);
   // MainWindow.Open({ 150, 200 }, 0);
   // MainWindow.Open({ 250, 150 }, 0);
 
@@ -960,7 +959,7 @@ void GameProc(bool & /*unused*/) {
 
   if ((Key_Data & KEY_ESC) != 0) {
     // Show exit dialog
-    ExitWindow.Open({250, 150}, 1);
+    UI.Exit().Open({250, 150}, 1);
     GameFlow.game_main = PauseProc;
     GameFlow.current_state = GameState::Pause;
     return;
@@ -1016,7 +1015,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
 
     // Multi-stage recording: show Save Replay dialog
     if (Demos.HasRecordedStages()) {
-      GameOverSaveWindow.Open({250, 200}, 0);
+      UI.GameOverSave().Open({250, 200}, 0);
       game_main = GameOverSaveProc;
       current_state = GameState::GameOverSave;
       return;
@@ -1028,7 +1027,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
       return; // 仮
     }
 
-    ContinueWindow.Open({250, 200}, 0);
+    UI.Continue().Open({250, 200}, 0);
     game_main = GameOverProc;
     current_state = GameState::GameOver;
     return;
@@ -1042,21 +1041,21 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
 
 // Save Replay dialog for Game Over
 void GameOverSaveProc(bool & /*unused*/) {
-  GameOverSaveWindow.Tick(Key_Data);
+  UI.GameOverSave().Tick(Key_Data);
   if (GameFlow.current_state != GameState::GameOverSave) {
     return;
   }
 
   if (GameFlow.IsDraw()) {
     GameDraw();
-    GameOverSaveWindow.Draw();
+    UI.GameOverSave().Draw();
     Grp_Flip();
   }
 }
 
 // ゲームオーバー
 void GameOverProc(bool & /*unused*/) {
-  ContinueWindow.Tick(Key_Data);
+  UI.Continue().Tick(Key_Data);
   if (GameFlow.current_state != GameState::GameOver) {
     Effects.InitStringEffects();
     return;
@@ -1064,7 +1063,7 @@ void GameOverProc(bool & /*unused*/) {
 
   if (GameFlow.IsDraw()) {
     GameDraw();
-    ContinueWindow.Draw();
+    UI.Continue().Draw();
     /*
     if(DemoplaySaveEnable){
             constexpr PIXEL_LTRB rc = PIXEL_LTWH{ 288, 80, 24, 8 };
@@ -1403,7 +1402,7 @@ void GameFlowManager::TitleProc(bool &quit) {
   } else {
     demo_timer = 0;
   }
-  if (MainWindow.Depth() != 0) {
+  if (UI.Main().Depth() != 0) {
     demo_timer = 0;
   }
 
@@ -1429,8 +1428,8 @@ void GameFlowManager::TitleProc(bool &quit) {
     return;
   }
 
-  if (!MainWindow.Active()) {
-    switch (MainWindow.SelectionAt(0)) {
+  if (!UI.Main().Active()) {
+    switch (UI.Main().SelectionAt(0)) {
     case 0:
       WeaponSelectInit(false);
       return;
@@ -1442,7 +1441,7 @@ void GameFlowManager::TitleProc(bool &quit) {
   }
 
   // Silly hack for excessively tall submenus...
-  MainWindow.AdjustYForTallMenu(MAIN_WINDOW_TOPLEFT.y, 9);
+  UI.Main().AdjustYForTallMenu(MAIN_WINDOW_TOPLEFT.y, 9);
 
   if (IsDraw()) {
     GrpBackend_Clear();
@@ -1463,7 +1462,7 @@ void GameFlowManager::TitleProc(bool &quit) {
 }
 
 void PauseProc(bool & /*unused*/) {
-  ExitWindow.Tick(Key_Data);
+  UI.Exit().Tick(Key_Data);
   if (GameFlow.current_state != GameState::Pause) {
     return;
   }
@@ -1472,7 +1471,7 @@ void PauseProc(bool & /*unused*/) {
     GameDraw();
 
     GrpBackend_SetClip(GRP_RES_RECT);
-    ExitWindow.Draw();
+    UI.Exit().Draw();
     GrpBackend_SetClip(PLAYFIELD_CLIP);
 
     Grp_Flip();
