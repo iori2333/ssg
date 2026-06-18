@@ -1,9 +1,6 @@
-/*
- *   Rectangle management for text rendering by packing each rectangle into a
- *   larger surface
- *
- */
-
+///
+/// Rectangle-packing text renderer
+///
 #pragma once
 
 #include "game/text.h"

@@ -1,7 +1,6 @@
-/*
- *   Packfiles and compression
- *
- */
+///
+/// LzUty - Packfiles and compression
+///
 
 #pragma once
 

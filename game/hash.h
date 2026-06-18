@@ -1,8 +1,6 @@
-/*
- *   Hash functions and helpers
- *
- */
-
+///
+/// Hash functions and helpers
+///
 #pragma once
 
 #include <string_view>

@@ -1,82 +1,81 @@
-/*                                                                           */
-/*   LLaser.h   長いレーザーの処理                                           */
-/*                                                                           */
-/*                                                                           */
+///
+/// LongLaser - Long laser processing
+///
 
 #pragma once
 
-// 更新履歴 //
-// 2000/05/29 : ８ビットモード描画関連のＢｕｇＦｉｘ
-// 2000/03/22 : レーザー関数のＩＤの意味がレーザー配列のＩＤからその敵が
-//            : 発射しているレーザーの何番目か、に変更された
+// Revision history
+// 2000/05/29 : Bug fix for 8-bit mode rendering
+// 2000/03/22 : Laser function ID changed from laser array ID to the index of
+//            : the laser being fired by that enemy
 
 #include "enemy/enemy.h"
 #include "platform/graphics_backend.h"
 
-//// レーザー用定数２ ////
+// Laser constants 2
 inline constexpr auto LLASER_MAX = 20;
-inline constexpr auto LLASER_EVADE = 1; // レーザーのかすり値
+inline constexpr auto LLASER_EVADE = 1; // Laser graze threshold
 
-//// レーザーの種類定数２
+// Laser type constants 2
 inline constexpr auto LLS_LONG = 0x00;
 inline constexpr auto LLS_LONGY = 0x01;
 inline constexpr auto LLS_SETDEG = 0x02;
-inline constexpr auto LLS_LONGZ = 0x03; // 自機セット
+inline constexpr auto LLS_LONGZ = 0x03; // Player set
 
-//// レーザーフラグ２ ////
-inline constexpr auto LLF_DISABLE = 0x00; // レーザーが使用されていない
-inline constexpr auto LLF_NORM = 0x01;    // レーザーが完全に開ききった
-inline constexpr auto LLF_OPEN = 0x02;    // レーザを開いている
-inline constexpr auto LLF_CLOSE = 0x04;   // レーザーを閉じている
-inline constexpr auto LLF_CLOSEL = 0x08;  // レーザーをライン状態にする
-inline constexpr auto LLF_LINE = 0x10;    // レーザーはライン状態
+// Laser flags 2
+inline constexpr auto LLF_DISABLE = 0x00; // Laser not in use
+inline constexpr auto LLF_NORM = 0x01;    // Laser fully opened
+inline constexpr auto LLF_OPEN = 0x02;    // Laser opening
+inline constexpr auto LLF_CLOSE = 0x04;   // Laser closing
+inline constexpr auto LLF_CLOSEL = 0x08;  // Laser to line state
+inline constexpr auto LLF_LINE = 0x10;    // Laser is in line state
 
-//// レーザー発動コマンド構造体２ ////
+// Laser command struct 2
 struct LongLaserCommand {
-  EnemyData *e; // 敵データへのポインタ
+  EnemyData *e; // Pointer to enemy data
 
-  int dx, dy; // レーザーの発射座標ずらし値
-  int v;      // レーザーの速度
+  int dx, dy; // Laser launch coordinate offset
+  int v;      // Laser speed
 
-  int w; // レーザーの太さ最終値
+  int w; // Laser final thickness
 
-  uint8_t d; // レーザー発射角
+  uint8_t d; // Laser launch angle
 
-  uint8_t c;    // レーザーの色
-  uint8_t type; // レーザーの種類
+  uint8_t c;    // Laser color
+  uint8_t type; // Laser type
 };
 // (LLASER_CMD alias removed — use LongLaserCommand directly)
 
-//// レーザー用構造体２ ////
+// Laser struct 2
 struct LongLaserData {
   EnemyData
-      *e; // 敵データへのポインタ(ここら辺でボスでも雑魚でも発射できるように)
+      *e; // Pointer to enemy data (boss or minion can fire)
 
-  int x, y;       // 現在の表示座標
-  int dx, dy;     // 敵データからのずらし値(x64)
-  int lx, ly;     // レーザー円の中心座標までのベクトル(Grp)
-  int infx, infy; // 仮の無限遠へのベクトル(Grp)
-  int wx, wy;     // レーザー幅(Grp)
+  int x, y;       // Current display coordinates
+  int dx, dy;     // Offset from enemy data (x64)
+  int lx, ly;     // Vector to laser circle center (Grp)
+  int infx, infy; // Temporary vector to infinity (Grp)
+  int wx, wy;     // Laser width (Grp)
 
-  int w, wmax; // 幅、最大幅(x64)
+  int w, wmax; // Width, max width (x64)
   int v;
 
-  uint32_t count; // フレームカウンタ
+  uint32_t count; // Frame counter
 
-  VERTEX_XY p[4]; // 座標保持用のポインタ(Grp)
+  VERTEX_XY p[4]; // Coordinate storage pointer (Grp)
 
-  uint8_t d; // レーザーの発射角
-  uint8_t c; // レーザーの色
+  uint8_t d; // Laser launch angle
+  uint8_t c; // Laser color
 
-  uint8_t flag;    // レーザーの状態
-  uint8_t type;    // レーザーの種類
-  uint8_t EnemyID; // 敵から見た番号
+  uint8_t flag;    // Laser state
+  uint8_t type;    // Laser type
+  uint8_t EnemyID; // Enemy-relative index
 };
 // (LLASER_DATA alias removed — use LongLaserData directly)
 
-//// レーザー関数２ ////
-// 後方互換 inline wrapper は laser_manager.h 末尾に移動
-// 実装は LaserManager メソッドに移行
+// Laser functions 2
+// Backward compat inline wrapper moved to end of laser_manager.h
+// Implementation moved to LaserManager methods
 
-//// レーザー変数２ ////
-// Lasers.long_lasers, Lasers.long_cmd で直接アクセス
+// Laser variables 2
+// Access directly via Lasers.long_lasers, Lasers.long_cmd

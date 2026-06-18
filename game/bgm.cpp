@@ -1,7 +1,6 @@
-/*
- *   Format-independent background music interface
- *
- */
+///
+/// Format-independent background music interface
+///
 
 #include <SDL3/SDL_filesystem.h>
 
@@ -138,7 +137,7 @@ std::string_view BGM_Title(void) {
 }
 
 bool BGM_ChangeMIDIDevice(int8_t direction) {
-  // 各関数に合わせて停止処理を行う //
+  // Stop according to each function's requirements
   Mid_Stop();
 
   const auto ret = MidBackend_DeviceChange(direction);

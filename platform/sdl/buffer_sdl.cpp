@@ -1,7 +1,6 @@
-/*
- *   Memory ownership semantics for SDL buffers
- *
- */
+///
+/// Memory ownership semantics for SDL buffers
+///
 
 #include <SDL3/SDL_stdinc.h>
 

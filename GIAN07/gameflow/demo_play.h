@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   DemoPlay.h   デモプレイ処理                                             */
-/*                                                                           */
-/*                                                                           */
+///
+/// DemoPlay - Demo playback
+///
 
 #pragma once
 
@@ -11,11 +10,11 @@
 
 struct CONFIG_DATA;
 
-///// [ 定数 ] /////
-inline constexpr auto DEMOBUF_MAX = (60 * 60 * 30); // ３０分のデータ格納ＯＫ
+// [Constants]
+inline constexpr auto DEMOBUF_MAX = (60 * 60 * 30); // Can store 30 minutes of data
 static constexpr auto REPLAY_STAGE_MAX = 6;
 
-///// Replay-specific config option subset /////
+// Replay-specific config option subset
 // The original code simply reused CONFIG_DATA, which we can't do in this fork
 // due to the additional fields we add to the structure.
 struct DEMOPLAY_CONFIG_DATA {
@@ -28,13 +27,13 @@ struct DEMOPLAY_CONFIG_DATA {
 };
 static_assert(sizeof(DEMOPLAY_CONFIG_DATA) == 24);
 
-///// [構造体] /////
+// [Structs]
 struct DemoPlayState {
-  uint32_t RndSeed;            // 乱数のたね
+  uint32_t RndSeed;            // Random seed
   uint32_t FrameCount;         // Not data size! Including the terminating ESC.
-  DEMOPLAY_CONFIG_DATA CfgDat; // コンフィグの情報(Load時に一部を参照する)
-  uint8_t Exp;                 // 初期パワーアップ
-  uint8_t Weapon;              // 初期装備
+  DEMOPLAY_CONFIG_DATA CfgDat; // Config data (partially referenced on Load)
+  uint8_t Exp;                 // Initial power-up
+  uint8_t Weapon;              // Initial weapon
 };
 // (DEMOPLAY_INFO alias removed — use DemoPlayState directly)
 
@@ -49,10 +48,11 @@ struct MULTI_REPLAY_INFO {
   uint32_t FrameCounts[REPLAY_STAGE_MAX]; // Per-stage input frame count
 };
 
-///// [ 関数 ] /////
-// 後方互換 inline wrapper は demo_manager.h 末尾に移動
-// 実装は DemoManager メソッドに移行
+// [Functions]
+// Backward-compat inline wrappers moved to end of demo_manager.h
+// Implementation migrated to DemoManager methods
 
-///// [ 変数 ] /////
-// Demos.load_enable, Demos.save_all_enable, Demos.load_all_enable,
-// Demos.playback_max_stage, Demos.pending_replay_file で直接アクセス
+// [Variables]
+// File-static variables moved to DemoManager struct in demo_manager.h.
+// Access via Demos.load_enable, Demos.save_all_enable, Demos.load_all_enable,
+// Demos.playback_max_stage, Demos.pending_replay_file

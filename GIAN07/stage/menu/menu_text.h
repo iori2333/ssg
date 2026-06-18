@@ -1,9 +1,6 @@
-/*                                                                           */
-/*   menu_text.h   動的メニューテキスト                                       */
-/*                                                                           */
-/*   std::string を所有し、std::format でフォーマットする。             */
-/*   const char* ビューを提供し、MenuItem::Title への設定を可能にする。   */
-/*                                                                           */
+///
+/// MenuText - Dynamic menu text
+///
 
 #pragma once
 
@@ -16,20 +13,20 @@ public:
   MenuText() = default;
   explicit MenuText(std::string_view s) : storage_(s) {}
 
-  // std::format でテキストをフォーマットする。
+  // Format text with std::format
   template <typename... Args>
   void Format(std::format_string<Args...> fmt, Args &&...args) {
     storage_ = std::format(fmt, std::forward<Args>(args)...);
   }
 
-  // 文字列を直接設定する。
+  // Set string directly
   void Set(std::string_view s) { storage_ = s; }
 
-  // テキストをクリアする。
+  // Clear text
   void Clear() { storage_.clear(); }
 
-  // 現在の内容への const char* ビューを返す。
-  // 有効期限: 次の Format/Set/Clear 呼び出しまで。
+  // Return const char* view of current contents.
+  // Validity: until next Format/Set/Clear call.
   const char *Lit() const { return storage_.c_str(); }
 
   const char *c_str() const { return storage_.c_str(); }

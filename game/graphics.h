@@ -1,8 +1,6 @@
-/*
- *   Common graphics interface, independent of a specific rendering API
- *
- */
-
+///
+/// Common graphics interface, independent of a specific rendering API
+///
 #pragma once
 
 #include "game/cast.h"

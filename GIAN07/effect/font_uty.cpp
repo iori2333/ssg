@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   FontUty.cpp   フォントの処理いろいろ                                    */
-/*                                                                           */
-/*                                                                           */
+///
+/// FontUty - Font utility functions
+///
 
 #include "font_uty.h"
 #include "loader.h"
@@ -27,25 +26,25 @@ extern constinit const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs = [] {
                       .lfPitchAndFamily = FIXED_PITCH,
                       .lfFaceName = L"MS Gothic"};
 
-  // ちっこいフォント //
+  // Tiny font
   logfont.lfHeight = 14;
   logfont.lfWidth = 7;
   logfont.lfWeight = FW_NORMAL;
   ret[FONT_ID::SMALL] = logfont;
 
-  // 並なフォント //
+  // Normal font
   logfont.lfHeight = 16;
   logfont.lfWidth = 8;
   logfont.lfWeight = FW_NORMAL;
   ret[FONT_ID::NORMAL] = logfont;
 
-  // でかいフォント //
+  // Large font
   logfont.lfHeight = 24;
   logfont.lfWidth = 12;
   logfont.lfWeight = FW_MEDIUM;
   ret[FONT_ID::LARGE] = logfont;
 
-  // Tiny //
+  // Tiny
   logfont.lfHeight = 10;
   logfont.lfWidth = 0;
   logfont.lfWeight = FW_NORMAL;
@@ -76,16 +75,16 @@ extern constinit const ENUMARRAY<const char *, FONT_ID> FontSpecs = {
 #undef GOTHIC
 #endif
 
-// Glyph selection inside the 16×16 font //
+// Glyph selection inside the 16x16 font
 std::optional<PIXEL_LTRB> Glyph16x16(char c) {
   PIXEL_LTWH src;
   src.w = 16;
   src.h = 16;
 
-  // SURFACE_ID::SYSTEM における文字の並びは次のようになっている。 //
-  // (変更する可能性もあるので十分に注意すること)      //
-  // ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789              //
-  // abcdefghijklmnopqrstuvwxyz!?#\<>=,+-              //
+  // Character layout in SURFACE_ID::SYSTEM is as follows:
+  // (subject to change, so be careful)
+  // ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+  // abcdefghijklmnopqrstuvwxyz!?#\<>=,+-
 
   if ((c >= 'A') && (c <= 'Z')) {
     src.left = ((c - 'A') << 4);
@@ -145,7 +144,7 @@ std::optional<PIXEL_LTRB> Glyph16x16(char c) {
   return src;
 }
 
-// 16x16 透過フォントで文字列出力(高速) //
+// 16x16 transparent font string output (fast)
 void GrpPut16(int x, int y, const char *s) {
   int sx = 0;
   int tx = 0;
@@ -158,14 +157,14 @@ void GrpPut16(int x, int y, const char *s) {
     if (maybe_src) {
       tx = x;
       ty = y;
-      if (tx >= 0 && tx < 630) { // 安全対策???
+      if (tx >= 0 && tx < 630) { // Safety measure???
         GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, maybe_src.value());
       }
     }
   }
 }
 
-// 上と同じだが、ｘ移動幅が１６ //
+// Same as above, but x advance is 16
 void GrpPut16c2(int x, int y, const char *s) {
   int sx = 0;
   int tx = 0;
@@ -178,13 +177,13 @@ void GrpPut16c2(int x, int y, const char *s) {
     if (maybe_src) {
       tx = x;
       ty = y;
-      // if(tx>=0 && tx<630)	// 安全対策???
+      // Safety measure???
       GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, maybe_src.value());
     }
   }
 }
 
-// 16x16 透過フォントで文字出力(クリッピング有) //
+// 16x16 transparent font single character output (with clipping)
 void GrpPutc(int x, int y, char c) {
   auto maybe_src = Glyph16x16(c);
   if (maybe_src) {
@@ -192,7 +191,7 @@ void GrpPutc(int x, int y, char c) {
   }
 }
 
-// 05x07 べた貼りフォント //
+// 05x07 solid blit font
 void GrpPut57(int x, int y, const char *s) {
   PIXEL_LTRB src;
   int sx = 0;
@@ -210,13 +209,13 @@ void GrpPut57(int x, int y, const char *s) {
 
     tx = x;
     ty = y;
-    if (tx >= 0 && tx < 630) { // 安全対策???
+    if (tx >= 0 && tx < 630) { // Safety measure???
       GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, src);
     }
   }
 }
 
-// 07x11 音楽室用フォント
+// 07x11 music room font
 void GrpPut7B(int x, int y, const char *s) {
   PIXEL_LTRB src;
   for (; (*s) != '\0'; s++, x += 8) {
@@ -230,13 +229,13 @@ void GrpPut7B(int x, int y, const char *s) {
       continue;
     }
 
-    if ((x >= 0) && (x < 630)) { // 安全対策???
+    if ((x >= 0) && (x < 630)) { // Safety measure???
       GrpSurface_Blit({x, y}, SURFACE_ID::MUSIC, src);
     }
   }
 }
 
-// 得点アイテムのスコアを描画 //
+// Draw score item scores
 void GrpPutScore(int x, int y, const char *s) {
   PIXEL_LTRB src;
   int sx = 0;
@@ -254,7 +253,7 @@ void GrpPutScore(int x, int y, const char *s) {
 
     tx = x;
     ty = y;
-    if (tx >= 0 && tx < 630) { // 安全対策???
+    if (tx >= 0 && tx < 630) { // Safety measure???
       GrpSurface_Blit({tx, ty}, SURFACE_ID::SYSTEM, src);
     }
   }
@@ -272,13 +271,13 @@ void GrpPut55(WINDOW_POINT topleft, std::string_view s) {
   }
 }
 
-// MIDI 用フォントを描画する //
+// Draw MIDI font
 void GrpPutMidNum(int x, int y, int n) {
   auto buf = std::format("{:3}", n);
   int i = 0;
   PIXEL_LTRB src;
 
-  // n = 1Byte ならば３桁以内に収まるハズ //
+  // n = 1Byte should fit within 3 digits
   for (i = 0; i < 3; i++, x += 5) {
     if (buf[i] >= '0' && buf[i] <= '9') {
       src = PIXEL_LTWH{(80 + ((buf[i] - '0') * 4)), 432, 4, 5};
@@ -296,7 +295,7 @@ PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s, std::span<std::string_view> strs,
                        uint8_t (*gradient_func)(PIXEL_COORD y)) {
   PIXEL_SIZE extent = {.w = 0, .h = 0};
 
-  // ここら辺は、一種の常套手段か？ //
+  // A kind of common trick?
   const auto temp = s.PixelAccess([](TEXTRENDER_SESSION::PIXELACCESS &p) {
     const PIXEL_POINT coord = {.x = 0, .y = 0};
     const auto old = p.GetRaw(coord);

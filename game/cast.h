@@ -1,11 +1,6 @@
-/*
- *   Directional casts for integers
- *
- *   Inspired by the Guidelines Support Library:
- *
- *   	https://github.com/microsoft/GSL
- */
-
+///
+/// Directional casts for integers
+///
 #pragma once
 
 #include <type_traits>

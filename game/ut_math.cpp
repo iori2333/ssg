@@ -1,16 +1,13 @@
-/*                                                                           */
-/*   UT_MATH.c   整数限定の数学関数群                                        */
-/*                                                                           */
-/*   Modernized implementation. Values are computed with floating-point      */
-/*   trigonometry instead of legacy lookup tables.                           */
-/*                                                                           */
+///
+/// Integer-only math functions (modernized floating-point implementation)
+///
 
 #include "ut_math.h"
 
 #include <cmath>
 #include <type_traits>
 
-static ut_math_detail::Rng g_rng; // 乱数のグローバルインスタンス //
+static ut_math_detail::Rng g_rng; // Global random number instance
 
 int sinl(uint8_t deg, int length) {
   double rad = ut_math_detail::deg256_to_rad(deg);

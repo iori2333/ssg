@@ -1,8 +1,8 @@
-/*
- *   EnemyManager — centralized enemy system state
- */
+///
+/// EnemyManager - centralized enemy system state
+///
 
 #include "enemy_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 EnemyManager Enemies;

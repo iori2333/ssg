@@ -1,11 +1,10 @@
-/*
- *   Cross-platform input declarations
- *
- */
+///
+/// Cross-platform input declarations
+///
 
 #include "game/input.h"
 
-// グローバル変数(Public)の実体
+// Global variable (Public) definitions
 INPUT_BITS Key_Data = 0;
 INPUT_BITS Pad_Data = 0;
 INPUT_SYSTEM_BITS SystemKey_Data = 0;

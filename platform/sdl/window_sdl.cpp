@@ -1,7 +1,6 @@
-/*
- *   SDL window creation
- *
- */
+///
+/// SDL window creation
+///
 
 // SDL headers must come first to avoid import→#include bugs on Clang 19.
 #include <SDL3/SDL_events.h>

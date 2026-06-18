@@ -1,8 +1,6 @@
-/*
- *   BGM tracks that are rendered as PCM and output via the Snd subsystem
- *
- *   Adapted from thcrap's bgmmod module.
- */
+///
+/// BGM tracks rendered as PCM and output via the Snd subsystem (adapted from thcrap's bgmmod module)
+///
 
 #include <SDL3/SDL_iostream.h>
 

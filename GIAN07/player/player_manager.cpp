@@ -1,8 +1,8 @@
-/*
- *   PlayerManager — centralized player system state
- */
+///
+/// PlayerManager - Centralized player system state
+///
 
 #include "player_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 PlayerManager Players;

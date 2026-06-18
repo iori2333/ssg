@@ -1,6 +1,6 @@
-/*
- *   EndingManager — global instance
- */
+///
+/// EndingManager - Global instance
+///
 
 #include "ending_manager.h"
 

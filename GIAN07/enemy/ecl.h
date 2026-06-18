@@ -1,242 +1,240 @@
-/*                                                                           */
-/*   ECL.h   敵コントロール言語用の定数                                      */
-/*                                                                           */
-/*                                                                           */
+///
+/// ECL.h - Constants for the enemy control language
+///
 
 #pragma once
 
-///// [更新履歴] /////
+// [Revision history]
 
-// 2000/11/27 : STG4EFC を追加・それに関する定数を追加
-// 2000/10/16 : JEQ を追加
-// 2000/09/05 : HLASER を追加
-// 2000/04/26 : LASER2 を追加
-// 2000/03/22 : LLaser 命令を追加
-// 2000/03/15 : 命令を大幅に追加 (割り込み系、弾消去、レジスタ比較)
-// 2000/02/18 : システムのアップデート開始
+// 2000/11/27 : Added STG4EFC and related constants
+// 2000/10/16 : Added JEQ
+// 2000/09/05 : Added HLASER
+// 2000/04/26 : Added LASER2
+// 2000/03/22 : Added LLaser instruction
+// 2000/03/15 : Added many instructions (interrupts, bullet clearing, register comparison)
+// 2000/02/18 : Started system update
 
-///// [ 定数 ] /////
+// [Constants]
 
-// 0x0? : 制御用コマンド //
-inline constexpr auto ECL_CMD0 = 14;    //
-inline constexpr auto ECL_SETUP = 0x00; // 敵データ初期化
-inline constexpr auto ECL_END = 0x01;   // 敵強制消滅
-inline constexpr auto ECL_JMP = 0x02;   // 強制ジャンプ
+// 0x0? : Control commands
+inline constexpr auto ECL_CMD0 = 14;
+inline constexpr auto ECL_SETUP = 0x00; // Initialize enemy data
+inline constexpr auto ECL_END = 0x01;   // Force enemy elimination
+inline constexpr auto ECL_JMP = 0x02;   // Force jump
 inline constexpr auto ECL_LOOP =
-    0x03; // ループ(２重は不可、CX は使わないの....)
-inline constexpr auto ECL_CALL = 0x04; // サブルーチンを呼ぶ
-inline constexpr auto ECL_RET = 0x05;  // サブルーチンから復帰する
-inline constexpr auto ECL_JHPL = 0x06; // ＨＰが指定値より大きければジャンプ
-inline constexpr auto ECL_JHPS = 0x07; // ＨＰが指定値より小さければジャンプ
-inline constexpr auto ECL_JDIF = 0x08; // 難易度によるswitch
+    0x03; // Loop (cannot nest, CX is not used...)
+inline constexpr auto ECL_CALL = 0x04; // Call subroutine
+inline constexpr auto ECL_RET = 0x05;  // Return from subroutine
+inline constexpr auto ECL_JHPL = 0x06; // Jump if HP is greater than specified value
+inline constexpr auto ECL_JHPS = 0x07; // Jump if HP is less than specified value
+inline constexpr auto ECL_JDIF = 0x08; // Switch by difficulty
 inline constexpr auto ECL_JDSB =
-    0x09; // 進行角度がサボテンと一致したらジャンプ(誤差±４まで有効)
-inline constexpr auto ECL_JFCL = 0x0A; // フレームカウンタが大きければジャンプ
-inline constexpr auto ECL_JFCS = 0x0B; // フレームカウンタが小さければジャンプ
+    0x09; // Jump if direction matches player (within ±4 error)
+inline constexpr auto ECL_JFCL = 0x0A; // Jump if frame counter is greater
+inline constexpr auto ECL_JFCS = 0x0B; // Jump if frame counter is smaller
 inline constexpr auto ECL_STI =
-    0x0C; // 割り込みベクタをセットする(SeTInterrupt flag)
+    0x0C; // Set interrupt vector
 inline constexpr auto ECL_CLI =
-    0x0D; // 割り込みを無効にする(CLearInterrupt flag)
+    0x0D; // Clear interrupt vector
 
-// 0x1? : 移動用コマンド //
-inline constexpr auto ECL_CMD1 = 16;     //
-inline constexpr auto ECL_NOP = 0x10;    // 何もしない
-inline constexpr auto ECL_NOPSC = 0x11;  // スクロールに流される
-inline constexpr auto ECL_MOV = 0x12;    // 移動する
-inline constexpr auto ECL_ROL = 0x13;    // 回転移動
-inline constexpr auto ECL_LROL = 0x14;   // 直進＆回転移動
-inline constexpr auto ECL_WAVX = 0x15;   // 波移動Ｘ
-inline constexpr auto ECL_WAVY = 0x16;   // 波移動Ｙ
-inline constexpr auto ECL_MXA = 0x17;    // Ｘ絶対移動
-inline constexpr auto ECL_MYA = 0x18;    // Ｙ絶対移動
-inline constexpr auto ECL_MXYA = 0x19;   // ＸＹ絶対移動
-inline constexpr auto ECL_MXS = 0x1A;    // Ｘサボテンセット移動
-inline constexpr auto ECL_MYS = 0x1B;    // Ｙサボテンセット移動
-inline constexpr auto ECL_MXYS = 0x1C;   // ＸＹサボテンセット移動
-inline constexpr auto ECL_ACC = 0x1D;    // 加速or減速つき移動
-inline constexpr auto ECL_ACCXYA = 0x1E; // 減速付きＸＹ絶対セット
+// 0x1? : Movement commands
+inline constexpr auto ECL_CMD1 = 16;
+inline constexpr auto ECL_NOP = 0x10;    // No operation
+inline constexpr auto ECL_NOPSC = 0x11;  // Carried by scroll
+inline constexpr auto ECL_MOV = 0x12;    // Move
+inline constexpr auto ECL_ROL = 0x13;    // Rotate while moving
+inline constexpr auto ECL_LROL = 0x14;   // Linear + rotate movement
+inline constexpr auto ECL_WAVX = 0x15;   // Wave movement X
+inline constexpr auto ECL_WAVY = 0x16;   // Wave movement Y
+inline constexpr auto ECL_MXA = 0x17;    // X absolute movement
+inline constexpr auto ECL_MYA = 0x18;    // Y absolute movement
+inline constexpr auto ECL_MXYA = 0x19;   // XY absolute movement
+inline constexpr auto ECL_MXS = 0x1A;    // X player-set movement
+inline constexpr auto ECL_MYS = 0x1B;    // Y player-set movement
+inline constexpr auto ECL_MXYS = 0x1C;   // XY player-set movement
+inline constexpr auto ECL_ACC = 0x1D;    // Acceleration/deceleration movement
+inline constexpr auto ECL_ACCXYA = 0x1E; // Deceleration XY absolute set
 inline constexpr auto ECL_GRAX =
-    0x1F; // 重力付きＸ反射移動(Ｙ>=GY_MAX ならば自動消滅)
+    0x1F; // Gravity X reflection movement (auto-delete if Y >= GY_MAX)
 
-// 0x2? : 数値セット用コマンド //
-inline constexpr auto ECL_CMD2 = 15;    //
-inline constexpr auto ECL_DEGA = 0x20;  // 角度絶対セット
-inline constexpr auto ECL_DEGR = 0x21;  // 角度相対セット
-inline constexpr auto ECL_DEGX = 0x22;  // 角度ランダムセット
-inline constexpr auto ECL_DEGS = 0x23;  // 角度サボテンセット
-inline constexpr auto ECL_SPDA = 0x24;  // 速度絶対セット
-inline constexpr auto ECL_SPDR = 0x25;  // 速度相対セット
-inline constexpr auto ECL_XYA = 0x26;   // 座標絶対セット
-inline constexpr auto ECL_XYR = 0x27;   // 座標相対セット
-inline constexpr auto ECL_DEGXU = 0x28; // 角度ランダムセット(上１２８度)
-inline constexpr auto ECL_DEGXD = 0x29; // 角度ランダムセット(下１２８度)
-inline constexpr auto ECL_DEGEX = 0x2A; // 角度特殊セット(EXDEGDと併用する)
-inline constexpr auto ECL_XYS = 0x2B;   // 座標サボテンセット
-inline constexpr auto ECL_DEGX2 = 0x2C; // 制限付き角度ランダム
-inline constexpr auto ECL_XYRND = 0x2D; // 制限付き座標ランダム
-inline constexpr auto ECL_XYL = 0x2E;   // 長さ指定座標相対(極座標的に指定)
+// 0x2? : Value set commands
+inline constexpr auto ECL_CMD2 = 15;
+inline constexpr auto ECL_DEGA = 0x20;  // Absolute angle set
+inline constexpr auto ECL_DEGR = 0x21;  // Relative angle set
+inline constexpr auto ECL_DEGX = 0x22;  // Random angle set
+inline constexpr auto ECL_DEGS = 0x23;  // Angle player-set
+inline constexpr auto ECL_SPDA = 0x24;  // Absolute speed set
+inline constexpr auto ECL_SPDR = 0x25;  // Relative speed set
+inline constexpr auto ECL_XYA = 0x26;   // Absolute coordinate set
+inline constexpr auto ECL_XYR = 0x27;   // Relative coordinate set
+inline constexpr auto ECL_DEGXU = 0x28; // Random angle set (upper 128 degrees)
+inline constexpr auto ECL_DEGXD = 0x29; // Random angle set (lower 128 degrees)
+inline constexpr auto ECL_DEGEX = 0x2A; // Special angle set (use with EXDEGD)
+inline constexpr auto ECL_XYS = 0x2B;   // Player coordinate set
+inline constexpr auto ECL_DEGX2 = 0x2C; // Bounded random angle
+inline constexpr auto ECL_XYRND = 0x2D; // Bounded random coordinates
+inline constexpr auto ECL_XYL = 0x2E;   // Length-based relative coordinate (polar coordinates)
 
-// 0x4? : 弾発射用コマンド //
-inline constexpr auto ECL_CMD45 = 22;  //
-inline constexpr auto ECL_TAMA = 0x40; // 弾発射
+// 0x4? : Bullet fire commands
+inline constexpr auto ECL_CMD45 = 22;
+inline constexpr auto ECL_TAMA = 0x40; // Fire bullet
 inline constexpr auto ECL_TAUTO =
-    0x41; // 弾発射間隔をセットする(０：自動発射しない)
-inline constexpr auto ECL_TXYR = 0x42;   // 弾発射位置の相対ずらし
-inline constexpr auto ECL_TCMD = 0x43;   // 弾コマンド
-inline constexpr auto ECL_TDEGA = 0x44;  // 弾発射角絶対指定
-inline constexpr auto ECL_TDEGR = 0x45;  // 弾発射角相対指定
-inline constexpr auto ECL_TNUMA = 0x46;  // 弾数絶対指定
-inline constexpr auto ECL_TNUMR = 0x47;  // 弾数相対指定
-inline constexpr auto ECL_TSPDA = 0x48;  // 弾初速度絶対指定
-inline constexpr auto ECL_TSPDR = 0x49;  // 弾初速度相対指定
-inline constexpr auto ECL_TOPT = 0x4a;   // 弾オプション指定
-inline constexpr auto ECL_TTYPE = 0x4b;  // 弾の種類指定
-inline constexpr auto ECL_TCOL = 0x4c;   // 弾の色または形状指定
-inline constexpr auto ECL_TVDEG = 0x4d;  // 弾の角速度指定
-inline constexpr auto ECL_TREP = 0x4e;   // 弾の繰り返し用
-inline constexpr auto ECL_TDEGS = 0x4f;  // 弾発射角サボテンセット
-inline constexpr auto ECL_TDEGE = 0x50;  // 弾発射角を自分の向きにセット
-inline constexpr auto ECL_TAMA2 = 0x51;  // 難易度変化なし弾発射
-inline constexpr auto ECL_TCLR = 0x52;   // 全ての弾を消去する
-inline constexpr auto ECL_TAMAL = 0x53;  // 弾をライン状に発射する
-inline constexpr auto ECL_T2ITEM = 0x54; // 弾の何割かをアイテム化する
-inline constexpr auto ECL_TAMAEX = 0x55; //	エキストラボス用弾幕発射コマンド
+    0x41; // Set bullet fire interval (0: no auto-fire)
+inline constexpr auto ECL_TXYR = 0x42;   // Bullet fire position relative offset
+inline constexpr auto ECL_TCMD = 0x43;   // Bullet command
+inline constexpr auto ECL_TDEGA = 0x44;  // Bullet fire angle absolute set
+inline constexpr auto ECL_TDEGR = 0x45;  // Bullet fire angle relative set
+inline constexpr auto ECL_TNUMA = 0x46;  // Bullet count absolute set
+inline constexpr auto ECL_TNUMR = 0x47;  // Bullet count relative set
+inline constexpr auto ECL_TSPDA = 0x48;  // Bullet initial speed absolute set
+inline constexpr auto ECL_TSPDR = 0x49;  // Bullet initial speed relative set
+inline constexpr auto ECL_TOPT = 0x4a;   // Bullet option set
+inline constexpr auto ECL_TTYPE = 0x4b;  // Bullet type set
+inline constexpr auto ECL_TCOL = 0x4c;   // Bullet color/shape set
+inline constexpr auto ECL_TVDEG = 0x4d;  // Bullet angular velocity set
+inline constexpr auto ECL_TREP = 0x4e;   // Bullet repeat set
+inline constexpr auto ECL_TDEGS = 0x4f;  // Bullet fire angle player-set
+inline constexpr auto ECL_TDEGE = 0x50;  // Set bullet fire angle to own direction
+inline constexpr auto ECL_TAMA2 = 0x51;  // Fire bullet (no difficulty scaling)
+inline constexpr auto ECL_TCLR = 0x52;   // Clear all bullets
+inline constexpr auto ECL_TAMAL = 0x53;  // Fire bullets in a line
+inline constexpr auto ECL_T2ITEM = 0x54; // Convert percentage of bullets to items
+inline constexpr auto ECL_TAMAEX = 0x55; // Extra boss bullet hell command
 
-// 0x6? : レーザー発射用コマンド //
-inline constexpr auto ECL_CMD67 = 18;   //
-inline constexpr auto ECL_LASER = 0x60; // レーザー発射
-inline constexpr auto ECL_LCMD = 0x61;  // レーザーコマンド
-inline constexpr auto ECL_LLA = 0x62;   // レーザー長・絶対指定
-inline constexpr auto ECL_LLR = 0x63;   // レーザー長・相対指定
-inline constexpr auto ECL_LL2 = 0x64;   // レーザー発射位置
-inline constexpr auto ECL_LDEGA = 0x65; // レーザー発射角絶対指定
-inline constexpr auto ECL_LDEGR = 0x66; // レーザー発射角相対指定
-inline constexpr auto ECL_LNUMA = 0x67; // レーザーの本数絶対指定
-inline constexpr auto ECL_LNUMR = 0x68; // レーザーの本数相対指定
-inline constexpr auto ECL_LSPDA = 0x69; // レーザーの速さ絶対指定
-inline constexpr auto ECL_LSPDR = 0x6a; // レーザーの速さ相対指定
-inline constexpr auto ECL_LCOL = 0x6b;  // レーザーの色
-inline constexpr auto ECL_LTYPE = 0x6c; // レーザーの種類
-inline constexpr auto ECL_LWA = 0x6d;   // レーザーの太さ絶対指定
-inline constexpr auto ECL_LDEGS = 0x6e; // レーザー発射角サボテンセット
-inline constexpr auto ECL_LDEGE = 0x6f; // レーザー発射角を自分の向きにセット
+// 0x6? : Laser fire commands
+inline constexpr auto ECL_CMD67 = 18;
+inline constexpr auto ECL_LASER = 0x60; // Fire laser
+inline constexpr auto ECL_LCMD = 0x61;  // Laser command
+inline constexpr auto ECL_LLA = 0x62;   // Laser length absolute set
+inline constexpr auto ECL_LLR = 0x63;   // Laser length relative set
+inline constexpr auto ECL_LL2 = 0x64;   // Laser fire position
+inline constexpr auto ECL_LDEGA = 0x65; // Laser fire angle absolute set
+inline constexpr auto ECL_LDEGR = 0x66; // Laser fire angle relative set
+inline constexpr auto ECL_LNUMA = 0x67; // Laser count absolute set
+inline constexpr auto ECL_LNUMR = 0x68; // Laser count relative set
+inline constexpr auto ECL_LSPDA = 0x69; // Laser speed absolute set
+inline constexpr auto ECL_LSPDR = 0x6a; // Laser speed relative set
+inline constexpr auto ECL_LCOL = 0x6b;  // Laser color
+inline constexpr auto ECL_LTYPE = 0x6c; // Laser type
+inline constexpr auto ECL_LWA = 0x6d;   // Laser thickness absolute set
+inline constexpr auto ECL_LDEGS = 0x6e; // Laser fire angle player-set
+inline constexpr auto ECL_LDEGE = 0x6f; // Set laser fire angle to own direction
 inline constexpr auto ECL_LXY =
-    0x70; // レーザーの発射座標セット(太レーザー用？)
-inline constexpr auto ECL_LASER2 = 0x71; // レーザー発射
+    0x70; // Laser fire coordinate set (for thick laser?)
+inline constexpr auto ECL_LASER2 = 0x71; // Fire laser
 
-// 0x8? : 太レーザー&ホーミング発射用コマンド(構造体セットは上の命令を使用する)
-// //
-inline constexpr auto ECL_CMD8 = 6;      //
-inline constexpr auto ECL_LLSET = 0x80;  // 太レーザーセット
-inline constexpr auto ECL_LLOPEN = 0x81; // 太レーザーオープン
+// 0x8? : Thick laser & homing laser commands (use above commands for struct set)
+inline constexpr auto ECL_CMD8 = 6;
+inline constexpr auto ECL_LLSET = 0x80;  // Thick laser set
+inline constexpr auto ECL_LLOPEN = 0x81; // Thick laser open
 inline constexpr auto ECL_LLCLOSE =
-    0x82; // 太レーザークローズ(消去＆参照カウント減少)
-inline constexpr auto ECL_LLCLOSEL = 0x83; // 太レーザーライン状態へ
-inline constexpr auto ECL_LLDEGR = 0x84;   // 太レーザー角度相対変更
-inline constexpr auto ECL_HLASER = 0x85;   // ホーミングレーザー発動！！
+    0x82; // Thick laser close (delete & decrease reference count)
+inline constexpr auto ECL_LLCLOSEL = 0x83; // Thick laser line state
+inline constexpr auto ECL_LLDEGR = 0x84;   // Thick laser relative angle change
+inline constexpr auto ECL_HLASER = 0x85;   // Homing laser activate!!
 
-// 0x9? : フラグセット用コマンド //
-inline constexpr auto ECL_CMD9 = 10;         //
-inline constexpr auto ECL_DRAW_ON = 0x90;    // 描画する
-inline constexpr auto ECL_DRAW_OFF = 0x91;   // 描画しない
-inline constexpr auto ECL_CLIP_ON = 0x92;    // 画面外に出ても消さない
-inline constexpr auto ECL_CLIP_OFF = 0x93;   // 画面外に出たら消す
-inline constexpr auto ECL_DAMAGE_ON = 0x94;  // 無敵にする
-inline constexpr auto ECL_DAMAGE_OFF = 0x95; // 無敵にしない
-inline constexpr auto ECL_HITSB_ON = 0x96;   // 自機に当たる
-inline constexpr auto ECL_HITSB_OFF = 0x97;  // 自機に当たらない
-inline constexpr auto ECL_RLCHG_ON = 0x98;   // 左右反転を有効にする
-inline constexpr auto ECL_RLCHG_OFF = 0x99;  // 左右反転を無効にする
+// 0x9? : Flag set commands
+inline constexpr auto ECL_CMD9 = 10;
+inline constexpr auto ECL_DRAW_ON = 0x90;    // Enable drawing
+inline constexpr auto ECL_DRAW_OFF = 0x91;   // Disable drawing
+inline constexpr auto ECL_CLIP_ON = 0x92;    // Do not delete when off-screen
+inline constexpr auto ECL_CLIP_OFF = 0x93;   // Delete when off-screen
+inline constexpr auto ECL_DAMAGE_ON = 0x94;  // Make invincible
+inline constexpr auto ECL_DAMAGE_OFF = 0x95; // Make vulnerable
+inline constexpr auto ECL_HITSB_ON = 0x96;   // Hit player
+inline constexpr auto ECL_HITSB_OFF = 0x97;  // Do not hit player
+inline constexpr auto ECL_RLCHG_ON = 0x98;   // Enable horizontal flip
+inline constexpr auto ECL_RLCHG_OFF = 0x99;  // Disable horizontal flip
 
-// 0xA? : 特殊コマンド //
-inline constexpr auto ECL_CMDA = 16;        //
-inline constexpr auto ECL_ANM = 0xA0;       // アニメーションを変更する
-inline constexpr auto ECL_PSE = 0xA1;       // 効果音を鳴らす
-inline constexpr auto ECL_INT = 0xA2;       // ボス用割り込みを発生させる...
-inline constexpr auto ECL_EXDEGD = 0xA3;    // 特殊角セット初期化
-inline constexpr auto ECL_ENEMYSET = 0xA4;  // 敵を雑魚指定でセットする
-inline constexpr auto ECL_ENEMYSETD = 0xA5; // 敵セット(角度指定有り)
-inline constexpr auto ECL_HITXY = 0xA6;     // 敵の当たり判定を変更する
-inline constexpr auto ECL_ITEM = 0xA7;      // アイテムの種類をセットする
-inline constexpr auto ECL_STG4EFC = 0xA8;   // ４面ボス用同期エフェクト管理
-inline constexpr auto ECL_ANMEX = 0xA9;     // ダメージ中のアニメーションを設定
-inline constexpr auto ECL_BITLASER = 0xAA;  // ビットによるレーザーコマンド指定
-inline constexpr auto ECL_BITATTACK = 0xAB; // ビットによる攻撃指定
-inline constexpr auto ECL_BITCMD = 0xAC;    // ビットコマンド送信
-inline constexpr auto ECL_BOSSSET = 0xAD;   // ボスを発生させる
-inline constexpr auto ECL_CEFC = 0xAE;      // 円エフェクトを発生させる
-inline constexpr auto ECL_STG3EFC = 0xAF;   // ３面星エフェクト発動
+// 0xA? : Special commands
+inline constexpr auto ECL_CMDA = 16;
+inline constexpr auto ECL_ANM = 0xA0;       // Change animation
+inline constexpr auto ECL_PSE = 0xA1;       // Play sound effect
+inline constexpr auto ECL_INT = 0xA2;       // Generate boss interrupt...
+inline constexpr auto ECL_EXDEGD = 0xA3;    // Special angle set initialization
+inline constexpr auto ECL_ENEMYSET = 0xA4;  // Set enemy as minion
+inline constexpr auto ECL_ENEMYSETD = 0xA5; // Set enemy (with angle specification)
+inline constexpr auto ECL_HITXY = 0xA6;     // Change enemy hitbox
+inline constexpr auto ECL_ITEM = 0xA7;      // Set item type
+inline constexpr auto ECL_STG4EFC = 0xA8;   // Stage 4 boss sync effect management
+inline constexpr auto ECL_ANMEX = 0xA9;     // Set animation during damage
+inline constexpr auto ECL_BITLASER = 0xAA;  // Bit laser command set
+inline constexpr auto ECL_BITATTACK = 0xAB; // Bit attack set
+inline constexpr auto ECL_BITCMD = 0xAC;    // Bit command send
+inline constexpr auto ECL_BOSSSET = 0xAD;   // Spawn boss
+inline constexpr auto ECL_CEFC = 0xAE;      // Spawn circle effect
+inline constexpr auto ECL_STG3EFC = 0xAF;   // Stage 3 star effect activation
 
-// 0xB? : レジスタ使用コマンド([80x86命令ちっく]に) //
-inline constexpr auto ECL_CMDB = 15;   //
-inline constexpr auto ECL_MOVR = 0xB0; // レジスタ<->構造体変数の代入
-inline constexpr auto ECL_MOVC = 0xB1; // レジスタ<- 定数(即値)の代入
-inline constexpr auto ECL_ADD = 0xB2;  // 加算命令
-inline constexpr auto ECL_SUB = 0xB3;  // 減算命令
+// 0xB? : Register commands (x86 instruction-like)
+inline constexpr auto ECL_CMDB = 15;
+inline constexpr auto ECL_MOVR = 0xB0; // Register <-> struct variable assignment
+inline constexpr auto ECL_MOVC = 0xB1; // Register <- constant (immediate) assignment
+inline constexpr auto ECL_ADD = 0xB2;  // Add instruction
+inline constexpr auto ECL_SUB = 0xB3;  // Subtract instruction
 inline constexpr auto ECL_SINL = 0xB4; // sinl(Gr0,Gr1)
 inline constexpr auto ECL_COSL = 0xB5; // cosl(Gr0,Gr1)
 inline constexpr auto ECL_MOD = 0xB6;  // Gr0 = Gr0 % Const
 inline constexpr auto ECL_RND = 0xB7;  // Gr0 = rnd()
-inline constexpr auto ECL_CMPR = 0xB8; // Gr0,Gr1 の比較
-inline constexpr auto ECL_CMPC = 0xB9; // Gr0,Const の比較
-inline constexpr auto ECL_JL = 0xBA;   // 比較結果が > ならばジャンプ
-inline constexpr auto ECL_JS = 0xBB;   // 比較結果が < ならばジャンプ
-inline constexpr auto ECL_INC = 0xBC;  // レジスタ＋１
-inline constexpr auto ECL_DEC = 0xBD;  // レジスタ－１
-inline constexpr auto ECL_JEQ = 0xBE;  // 比較結果が = ならばジャンプ
+inline constexpr auto ECL_CMPR = 0xB8; // Compare Gr0,Gr1
+inline constexpr auto ECL_CMPC = 0xB9; // Compare Gr0,Const
+inline constexpr auto ECL_JL = 0xBA;   // Jump if comparison result is >
+inline constexpr auto ECL_JS = 0xBB;   // Jump if comparison result is <
+inline constexpr auto ECL_INC = 0xBC;  // Register +1
+inline constexpr auto ECL_DEC = 0xBD;  // Register -1
+inline constexpr auto ECL_JEQ = 0xBE;  // Jump if comparison result is =
 
-// ECL 定数 //
+// ECL constants
 
-// 割り込み命令は、数字が小さいほど優先順位が高い //
-inline constexpr auto ECLVECT_MAX = 4;         // 割り込みベクタ最大数
-inline constexpr auto ECLVECT_BOSSLEFT = 0x00; // ボス残り数割り込み
-inline constexpr auto ECLVECT_HP = 0x01; // 体力が指定値より小さいときに割り込み
-inline constexpr auto ECLVECT_TIMER = 0x02;   // タイマー割り込み
-inline constexpr auto ECLVECT_BITLEFT = 0x03; // 残りビット数割り込み
+// Lower interrupt vector numbers have higher priority
+inline constexpr auto ECLVECT_MAX = 4;         // Maximum interrupt vectors
+inline constexpr auto ECLVECT_BOSSLEFT = 0x00; // Boss remaining count interrupt
+inline constexpr auto ECLVECT_HP = 0x01; // Interrupt when HP is less than specified value
+inline constexpr auto ECLVECT_TIMER = 0x02;   // Timer interrupt
+inline constexpr auto ECLVECT_BITLEFT = 0x03; // Remaining bit count interrupt
 
-inline constexpr auto ECLREG_MAX = 8; // レジスタの本数
-inline constexpr auto ECLCST_GR0 = 0; // ０番レジスタ
-inline constexpr auto ECLCST_GR1 = 1; // １番レジスタ
-inline constexpr auto ECLCST_GR2 = 2; // ２番レジスタ
-inline constexpr auto ECLCST_GR3 = 3; // ３番レジスタ
-inline constexpr auto ECLCST_GR4 = 4; // ４番レジスタ
-inline constexpr auto ECLCST_GR5 = 5; // ５番レジスタ
-inline constexpr auto ECLCST_GR6 = 6; // ６番レジスタ
-inline constexpr auto ECLCST_GR7 = 7; // ７番レジスタ
+inline constexpr auto ECLREG_MAX = 8; // Number of registers
+inline constexpr auto ECLCST_GR0 = 0; // Register 0
+inline constexpr auto ECLCST_GR1 = 1; // Register 1
+inline constexpr auto ECLCST_GR2 = 2; // Register 2
+inline constexpr auto ECLCST_GR3 = 3; // Register 3
+inline constexpr auto ECLCST_GR4 = 4; // Register 4
+inline constexpr auto ECLCST_GR5 = 5; // Register 5
+inline constexpr auto ECLCST_GR6 = 6; // Register 6
+inline constexpr auto ECLCST_GR7 = 7; // Register 7
 
-inline constexpr auto ECLCST_LCMD_D = (128 + 0);  // レーザーコマンド(角度)
-inline constexpr auto ECLCST_LCMD_DW = (128 + 1); // レーザーコマンド(角度差)
-inline constexpr auto ECLCST_LCMD_N = (128 + 2);  // レーザーコマンド(本数)
-inline constexpr auto ECLCST_LCMD_C = (128 + 3);  // レーザーコマンド(色)
-inline constexpr auto ECLCST_LCMD_L = (128 + 4);  // レーザーコマンド(長さ)
-inline constexpr auto ECLCST_LCMD_V = (128 + 5);  // レーザーコマンド(速度)
+inline constexpr auto ECLCST_LCMD_D = (128 + 0);  // Laser command (angle)
+inline constexpr auto ECLCST_LCMD_DW = (128 + 1); // Laser command (angle difference)
+inline constexpr auto ECLCST_LCMD_N = (128 + 2);  // Laser command (count)
+inline constexpr auto ECLCST_LCMD_C = (128 + 3);  // Laser command (color)
+inline constexpr auto ECLCST_LCMD_L = (128 + 4);  // Laser command (length)
+inline constexpr auto ECLCST_LCMD_V = (128 + 5);  // Laser command (speed)
 
-inline constexpr auto ECLCST_TCMD_D = (128 + 6);    // 弾コマンド(角度)
-inline constexpr auto ECLCST_TCMD_DW = (128 + 7);   // 弾コマンド(角度差)
-inline constexpr auto ECLCST_TCMD_N = (128 + 8);    // 弾コマンド(個数)
-inline constexpr auto ECLCST_TCMD_NS = (128 + 9);   // 弾コマンド(連射数)
-inline constexpr auto ECLCST_TCMD_V = (128 + 10);   // 弾コマンド(速度)
-inline constexpr auto ECLCST_TCMD_C = (128 + 11);   // 弾コマンド(色)
-inline constexpr auto ECLCST_TCMD_A = (128 + 12);   // 弾コマンド(加速度)
-inline constexpr auto ECLCST_TCMD_REP = (128 + 13); // 弾コマンド(繰り返し)
-inline constexpr auto ECLCST_TCMD_VD = (128 + 14);  // 弾コマンド(角速度)
+inline constexpr auto ECLCST_TCMD_D = (128 + 6);    // Bullet command (angle)
+inline constexpr auto ECLCST_TCMD_DW = (128 + 7);   // Bullet command (angle difference)
+inline constexpr auto ECLCST_TCMD_N = (128 + 8);    // Bullet command (count)
+inline constexpr auto ECLCST_TCMD_NS = (128 + 9);   // Bullet command (rapid fire count)
+inline constexpr auto ECLCST_TCMD_V = (128 + 10);   // Bullet command (speed)
+inline constexpr auto ECLCST_TCMD_C = (128 + 11);   // Bullet command (color)
+inline constexpr auto ECLCST_TCMD_A = (128 + 12);   // Bullet command (acceleration)
+inline constexpr auto ECLCST_TCMD_REP = (128 + 13); // Bullet command (repeat)
+inline constexpr auto ECLCST_TCMD_VD = (128 + 14);  // Bullet command (angular velocity)
 
-inline constexpr auto ECLCST_ENEMY_X = (128 + 15); // 敵のＸ座標
-inline constexpr auto ECLCST_ENEMY_Y = (128 + 16); // 敵のＹ座標
-inline constexpr auto ECLCST_ENEMY_D = (128 + 17); // 敵の角度
+inline constexpr auto ECLCST_ENEMY_X = (128 + 15); // Enemy X coordinate
+inline constexpr auto ECLCST_ENEMY_Y = (128 + 16); // Enemy Y coordinate
+inline constexpr auto ECLCST_ENEMY_D = (128 + 17); // Enemy angle
 
 inline constexpr auto ECLCST_LLASERALL =
-    0xff; // 全てのレーザーに適用する場合に指定する数
+    0xff; // Value to apply to all lasers
 
-inline constexpr auto ECLINT_SNAKEON = 0x00;  // 蛇型セット
-inline constexpr auto ECLINT_LBWING01 = 0x01; // ラスボスの蝶の羽モード
-inline constexpr auto ECLINT_LBWING02 = 0x02; // ラスボスの鳥の羽モード
-inline constexpr auto ECLINT_BITON5 = 0x03;   // ビット装着(５つ)
-inline constexpr auto ECLINT_BITON6 = 0x04;   // ビット装着(６つ)
-inline constexpr auto ECLINT_SHILD1 = 0x05;   // ボム回避１
-inline constexpr auto ECLINT_SHILD2 = 0x06;   // ボム回避１
+inline constexpr auto ECLINT_SNAKEON = 0x00;  // Snake type set
+inline constexpr auto ECLINT_LBWING01 = 0x01; // Final boss butterfly wing mode
+inline constexpr auto ECLINT_LBWING02 = 0x02; // Final boss bird wing mode
+inline constexpr auto ECLINT_BITON5 = 0x03;   // Bit equip (5)
+inline constexpr auto ECLINT_BITON6 = 0x04;   // Bit equip (6)
+inline constexpr auto ECLINT_SHILD1 = 0x05;   // Bomb evade 1
+inline constexpr auto ECLINT_SHILD2 = 0x06;   // Bomb evade 1
 
-// ＥＣＬコマンド最大数 (must be after all ECL_CMD* group sizes)
+// ECL command maximum count (must be after all ECL_CMD* group sizes)
 inline constexpr auto ECL_CMDMAX =
     (ECL_CMD0 + ECL_CMD1 + ECL_CMD2 + ECL_CMD45 + ECL_CMD67 + ECL_CMD8 +
      ECL_CMD9 + ECL_CMDA + ECL_CMDB);

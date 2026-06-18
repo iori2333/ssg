@@ -1,7 +1,6 @@
-/*
- *   Threads via std::jthread
- *
- */
+///
+/// Threads via std::jthread
+///
 
 #pragma once
 

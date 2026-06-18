@@ -1,7 +1,6 @@
-/*
- *   .BMP file format
- *
- */
+///
+/// .BMP file format
+///
 
 #include <SDL3/SDL_pixels.h>
 

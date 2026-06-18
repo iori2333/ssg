@@ -1,7 +1,6 @@
-/*
- *   Text rendering via Pango/Cairo
- *
- */
+///
+/// Text rendering via Pango/Cairo
+///
 
 // GCC 15 throws `error: redefinition of 'struct timespec'` if this appears
 // after a module import.

@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   DemoPlay.cpp   デモプレイ処理                                           */
-/*                                                                           */
-/*                                                                           */
+///
+/// DemoPlay - Demo playback processing
+///
 
 #include "demo_play.h"
 #include "config.h"
@@ -20,7 +19,7 @@
 #include <format>
 #include <utility>
 
-// ファイル静的変数 → demo_manager.h の DemoManager struct に移動
+// File-static variables moved to DemoManager struct in demo_manager.h
 
 std::string ReplayAllFN(bool exstg) {
   const auto now = std::chrono::system_clock::now();
@@ -34,7 +33,7 @@ std::string ReplayAllFN(bool exstg) {
 }
 
 void DemoManager::Init() {
-  // 乱数の準備 //
+  // Prepare random seed
   demo_info.RndSeed =
       ((Cast::up<uint32_t>(rnd()) + 1U) * (Cast::up<uint32_t>(rnd()) + 1U));
   rnd_seed_set(demo_info.RndSeed);
@@ -82,26 +81,26 @@ bool DemoManager::LoadSetup() {
   demo_frame_cur = 0;
   load_enable = true;
 
-  // コンフィグの初期化 //
-  // 現在のコンフィグを保持する //
+  // Initialize config
+  // Preserve current config
   config_temp.PlayerStock = ConfigDat.PlayerStock.v;
   config_temp.BombStock = ConfigDat.BombStock.v;
   config_temp.InputFlags = ConfigDat.InputFlags.v;
 
-  // そのときのコンフィグを転送 //
+  // Transfer recorded config
   ConfigDat.BombStock.v = demo_info.CfgDat.BombStock;
   ConfigDat.PlayerStock.v = demo_info.CfgDat.PlayerStock;
   ConfigDat.InputFlags.v = demo_info.CfgDat.InputFlags;
   GameState.game_level = demo_info.CfgDat.GameLevel;
 
-  // 本体の性能記述 //
+  // Restore player stats
   Players.viv.exp = demo_info.Exp;
   Players.viv.weapon = demo_info.Weapon;
   Players.viv.left = ConfigDat.PlayerStock.v;
   Players.viv.bomb = ConfigDat.BombStock.v;
 
-  // 乱数の初期化 //
-  // 最後に乱数もそろえる //
+  // Initialize random number
+  // Sync random seed last
   rnd_seed_set(demo_info.RndSeed);
 
   return true;
@@ -114,7 +113,7 @@ bool DemoManager::Record(INPUT_BITS key) {
 
   demo_buffer[demo_frame_cur++] = key;
 
-  // バッファが最後に来たか、ＥＳＣが押された場合 //
+  // Buffer full or ESC pressed
   if ((demo_frame_cur == DEMOBUF_MAX) || ((key & KEY_ESC) != 0)) {
     demo_frame_cur--;
     return true;
@@ -143,7 +142,7 @@ void DemoManager::SaveDemo() {
 }
 
 bool DemoManager::LoadDemo(int stage) {
-  // 展開 //
+  // Unpack
   const auto temp = ::LoadDemo(stage);
   auto temp_cursor = temp.cursor();
   {

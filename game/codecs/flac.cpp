@@ -1,8 +1,6 @@
-/*
- *   FLAC streaming support
- *
- *   Adapted from thcrap's bgmmod module.
- */
+///
+/// FLAC streaming support (adapted from thcrap's bgmmod module)
+///
 
 #define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_STDIO

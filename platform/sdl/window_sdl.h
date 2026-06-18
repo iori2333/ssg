@@ -1,7 +1,6 @@
-/*
- *   SDL window creation
- *
- */
+///
+/// SDL window creation
+///
 
 #pragma once
 

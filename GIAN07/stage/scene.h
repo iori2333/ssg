@@ -1,83 +1,82 @@
-/*                                                                           */
-/*   SCL.h   ＳＣＬ用定義ファイル                                            */
-/*                                                                           */
-/*                                                                           */
+///
+/// Scene - SCL definition file
+///
 
 #pragma once
 
-///// [更新履歴] /////
+// [Change history]
 
-// 2000/03/14 : WAITEX,STAGECLEAR 命令を追加
-// 2000/02/28 : ＢＯＳＳ命令を変更
-// 2000/02/24 : ミディ関連の関数を追加
-// 2000/02/18 : システムのアップデート開始
+// 2000/03/14 : Added WAITEX, STAGECLEAR instructions
+// 2000/02/28 : Changed BOSS instruction
+// 2000/02/24 : Added midi-related functions
+// 2000/02/18 : Started system update
 
-///// 特殊な命令の仕様について /////
+// About special instruction specifications
 
-// WAITEX <待ち条件(BYTE)>,<オプション(DWORD)>
-// 待ち条件の BOSSHP
-// は、主に背景エフェクトチェンジ等に用いること(状態推移には使用しない)
+// WAITEX <wait condition (BYTE)>,<option (DWORD)>
+// The BOSSHP wait condition
+// is mainly used for background effect changes, etc. (not used for state transitions)
 
-///// [ 定数 ] /////
+// [Constants]
 
-// SCL 命令 //
-inline constexpr uint8_t SCL_TIME = 0x00;  // 次のイベントの発動時間
-inline constexpr uint8_t SCL_ENEMY = 0x01; // 敵イベント
-inline constexpr uint8_t SCL_SSP = 0x02;   // スクロールスピードチェンジ
-inline constexpr uint8_t SCL_EFC = 0x03;   // エフェクトセット
-inline constexpr uint8_t SCL_END = 0x04;   // ＳＣＬ終了
+// SCL instructions
+inline constexpr uint8_t SCL_TIME = 0x00;  // Next event trigger time
+inline constexpr uint8_t SCL_ENEMY = 0x01; // Enemy event
+inline constexpr uint8_t SCL_SSP = 0x02;   // Scroll speed change
+inline constexpr uint8_t SCL_EFC = 0x03;   // Effect set
+inline constexpr uint8_t SCL_END = 0x04;   // SCL end
 inline constexpr uint8_t SCL_BOSS =
-    0x05; // ボス発生(引数は X(16),Y(16),BossID(8))
+    0x05; // Boss spawn (args: X(16),Y(16),BossID(8))
 
-// SCL レベル２命令 //
-inline constexpr uint8_t SCL_MWOPEN = 0x06;   // メッセージウィンドウを開く
-inline constexpr uint8_t SCL_MWCLOSE = 0x07;  // メッセージウィンドウを閉じる
-inline constexpr uint8_t SCL_MSG = 0x08;      // メッセージを出力する
-inline constexpr uint8_t SCL_KEY = 0x09;      // キー入力待ち
-inline constexpr uint8_t SCL_NPG = 0x0a;      // 新しいページに変更する
-inline constexpr uint8_t SCL_FACE = 0x0b;     // 顔を表示する
-inline constexpr uint8_t SCL_MUSIC = 0x0c;    // 曲データをロードする
-inline constexpr uint8_t SCL_BOSSDEAD = 0x0d; // ボス強制破壊(すなわち時間切れ)
+// SCL level 2 instructions
+inline constexpr uint8_t SCL_MWOPEN = 0x06;   // Open message window
+inline constexpr uint8_t SCL_MWCLOSE = 0x07;  // Close message window
+inline constexpr uint8_t SCL_MSG = 0x08;      // Output message
+inline constexpr uint8_t SCL_KEY = 0x09;      // Wait for key input
+inline constexpr uint8_t SCL_NPG = 0x0a;      // Change to new page
+inline constexpr uint8_t SCL_FACE = 0x0b;     // Display face
+inline constexpr uint8_t SCL_MUSIC = 0x0c;    // Load music data
+inline constexpr uint8_t SCL_BOSSDEAD = 0x0d; // Force boss destruction (timeout)
 inline constexpr uint8_t SCL_LOADFACE =
-    0x0e; // 顔グラをロードする(引数は、SurfaceID(BYTE),FileNo(BYTE))
+    0x0e; // Load face graphic (args: SurfaceID(BYTE), FileNo(BYTE))
 inline constexpr uint8_t SCL_WAITEX =
-    0x0f; // ある条件が起こるまでＳＣＬをストップする
+    0x0f; // Stop SCL until a condition is met
 inline constexpr uint8_t SCL_STAGECLEAR =
-    0x10; // そのステージが終了することを意味する。次のステージへGO!
+    0x10; // Stage is complete. Go to next stage!
 inline constexpr uint8_t SCL_MAPPALETTE =
-    0x11; // パレットをマップパーツ用のもので初期化する(For 8BitMode)
+    0x11; // Initialize palette for map parts (For 8BitMode)
 inline constexpr uint8_t SCL_GAMECLEAR =
-    0x12; // タイトルに戻る(ネームレジスト有)
+    0x12; // Return to title (with name register)
 inline constexpr uint8_t SCL_DELENEMY =
-    0x13; // 敵を強制消去(インデックス配列そのものを)する
-inline constexpr uint8_t SCL_ENEMYPALETTE = 0x14; // 敵のパレットにする
-inline constexpr uint8_t SCL_STAFF = 0x15;        // スタッフＩＤセット
-inline constexpr uint8_t SCL_EXTRACLEAR = 0x16;   // エキストラステージクリア
+    0x13; // Force delete enemy (index array itself)
+inline constexpr uint8_t SCL_ENEMYPALETTE = 0x14; // Switch to enemy palette
+inline constexpr uint8_t SCL_STAFF = 0x15;        // Staff ID set
+inline constexpr uint8_t SCL_EXTRACLEAR = 0x16;   // Extra stage clear
 
-// EFC 命令の引数 //
-inline constexpr uint8_t SEFC_WARN = 0x00;      // ワーニング音・開始
-inline constexpr uint8_t SEFC_WARNSTOP = 0x01;  // ワーニング音・停止
-inline constexpr uint8_t SEFC_MUSICFADE = 0x02; // 曲フェードアウト実行(Level2)
+// EFC instruction arguments
+inline constexpr uint8_t SEFC_WARN = 0x00;      // Warning sound start
+inline constexpr uint8_t SEFC_WARNSTOP = 0x01;  // Warning sound stop
+inline constexpr uint8_t SEFC_MUSICFADE = 0x02; // Music fade out (Level 2)
 inline constexpr uint8_t SEFC_STG2BOSS =
-    0x03; // ステージ２ボスのスクロール発動！！
+    0x03; // Stage 2 boss scroll activation!
 inline constexpr uint8_t SEFC_RASTERON =
-    0x04; // ラスタースクロール開始(砂漠とか海底都市とかに使えるかも)
-inline constexpr uint8_t SEFC_RASTEROFF = 0x05;  // ラスタースクロール終了
-inline constexpr uint8_t SEFC_CFADEIN = 0x06;    // 円形フェードイン
-inline constexpr uint8_t SEFC_CFADEOUT = 0x07;   // 円形フェードアウト
-inline constexpr uint8_t SEFC_STG3BOSS = 0x08;   // ３面ボス雲
-inline constexpr uint8_t SEFC_STG3RESET = 0x09;  // ３面ボス雲リセット
-inline constexpr uint8_t SEFC_STG6CUBE = 0x0a;   // ６面ボス３Ｄキューヴ
-inline constexpr uint8_t SEFC_STG6RNDECL = 0x0b; // ６面ボス偽ＥＣＬ羅列
-inline constexpr uint8_t SEFC_STG4ROCK = 0x0c;   // ４面岩
-inline constexpr uint8_t SEFC_STG4LEAVE = 0x0d;  // ４面岩を画面外に吐き出す
-inline constexpr uint8_t SEFC_WHITEIN = 0x0e;    // ホワイトイン
-inline constexpr uint8_t SEFC_WHITEOUT = 0x0f;   // ホワイトアウト
-inline constexpr uint8_t SEFC_LOADEX01 = 0x10; // エキストラボス１用画像をロード
-inline constexpr uint8_t SEFC_LOADEX02 = 0x11; // エキストラボス２用画像をロード
-inline constexpr uint8_t SEFC_STG6RASTER = 0x12; // ６面ラスター
+    0x04; // Raster scroll start (usable for desert, undersea city, etc.)
+inline constexpr uint8_t SEFC_RASTEROFF = 0x05;  // Raster scroll end
+inline constexpr uint8_t SEFC_CFADEIN = 0x06;    // Circular fade in
+inline constexpr uint8_t SEFC_CFADEOUT = 0x07;   // Circular fade out
+inline constexpr uint8_t SEFC_STG3BOSS = 0x08;   // Stage 3 boss clouds
+inline constexpr uint8_t SEFC_STG3RESET = 0x09;  // Stage 3 boss cloud reset
+inline constexpr uint8_t SEFC_STG6CUBE = 0x0a;   // Stage 6 boss 3D cube
+inline constexpr uint8_t SEFC_STG6RNDECL = 0x0b; // Stage 6 boss fake ECL arrangement
+inline constexpr uint8_t SEFC_STG4ROCK = 0x0c;   // Stage 4 rock
+inline constexpr uint8_t SEFC_STG4LEAVE = 0x0d;  // Eject stage 4 rocks off screen
+inline constexpr uint8_t SEFC_WHITEIN = 0x0e;    // White in
+inline constexpr uint8_t SEFC_WHITEOUT = 0x0f;   // White out
+inline constexpr uint8_t SEFC_LOADEX01 = 0x10; // Load extra boss 1 image
+inline constexpr uint8_t SEFC_LOADEX02 = 0x11; // Load extra boss 2 image
+inline constexpr uint8_t SEFC_STG6RASTER = 0x12; // Stage 6 raster
 
-// WAITEX 命令の引数(Level2) //
-inline constexpr uint8_t SWAIT_BOSSLEFT = 0x00; // ボスの残り数(OPT:ボスの数)
+// WAITEX instruction arguments (Level 2)
+inline constexpr uint8_t SWAIT_BOSSLEFT = 0x00; // Boss remaining count (OPT: boss count)
 inline constexpr uint8_t SWAIT_BOSSHP =
-    0x01; // ボスのＨＰ総和が指定値より小さい(OPT:残りＨＰ)
+    0x01; // Boss total HP below specified value (OPT: remaining HP)

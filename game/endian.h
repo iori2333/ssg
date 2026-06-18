@@ -1,11 +1,6 @@
-/*
- *   Little- and big-endian integer types
- *
- *   Why did the C++ committee standardize std::endian, but not anything like
- *   this?!
- *   (See https://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html.)
- */
-
+///
+/// Little- and big-endian integer types
+///
 #pragma once
 
 #include <bit>

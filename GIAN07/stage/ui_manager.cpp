@@ -1,8 +1,6 @@
-/*                                                                           */
-/*   ui_manager.cpp   UI マネージャ                                           */
-/*                                                                           */
-/*   すべてのメニュー状態を所有し、外部へはアクセサで公開する。 */
-/*                                                                           */
+///
+/// UIManager - UI manager
+///
 
 #include "ui_manager.h"
 
@@ -18,11 +16,11 @@
 
 #include <algorithm>
 
-// 唯一のグローバルインスタンス
+// Only global instance
 UIManager UI;
 
 // ---------------------------------------------------------------------------
-// BGM Pack / Replay Files 定数
+// BGM Pack / Replay Files constants
 // ---------------------------------------------------------------------------
 
 namespace {
@@ -37,7 +35,7 @@ constexpr std::string_view ReplayFilesTitle = "    Replay Files";
 } // namespace
 
 // ---------------------------------------------------------------------------
-// コンストラクタ
+// Constructor
 // ---------------------------------------------------------------------------
 
 UIManager::UIManager()
@@ -151,7 +149,7 @@ UIManager::UIManager()
       replay_files_window_(replay_files_scroll_menu_.Menu()) {}
 
 // ---------------------------------------------------------------------------
-// 初期化
+// Init
 // ---------------------------------------------------------------------------
 
 void UIManager::InitMain() {
@@ -167,7 +165,7 @@ void UIManager::InitExit() {
 void UIManager::InitContinue() { continue_window_.Init(140); }
 
 // ---------------------------------------------------------------------------
-// タイトル画面のアクティブメニュー
+// Title screen active menu
 // ---------------------------------------------------------------------------
 
 MenuController *UIManager::ActiveMenu() {
@@ -187,7 +185,7 @@ void UIManager::MsgHelp() {
 }
 
 // ---------------------------------------------------------------------------
-// BGM Pack スクロールメニュー
+// BGM Pack scroll menu
 // ---------------------------------------------------------------------------
 
 size_t UIManager::BGMPackListSize() { return (1 + bgm_packs_.size() + 1); }
@@ -270,7 +268,7 @@ void UIManager::OpenBGMPack() {
 }
 
 // ---------------------------------------------------------------------------
-// Replay Files スクロールメニュー
+// Replay Files scroll menu
 // ---------------------------------------------------------------------------
 
 size_t UIManager::ReplayFilesListSize() {

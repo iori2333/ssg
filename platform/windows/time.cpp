@@ -1,7 +1,6 @@
-/*
- *   Time interface (Win32 implementation)
- *
- */
+///
+/// Time interface (Win32 implementation)
+///
 
 #include "platform/time.h"
 #include "game/cast.h"

@@ -1,8 +1,6 @@
-/*
- *   Vorbis streaming support
- *
- *   Adapted from thcrap's bgmmod module.
- */
+///
+/// Vorbis streaming support (adapted from thcrap's bgmmod module)
+///
 
 // GCC 15 throws an internal compiler error if this appears after a module
 // import.

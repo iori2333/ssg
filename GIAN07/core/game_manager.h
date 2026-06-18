@@ -1,13 +1,13 @@
-/*
- *   GameManager — centralized game flow state
- */
+///
+/// GameManager - Centralized game flow state
+///
 
 #pragma once
 
 #include <cstdint>
 
 struct GameManager {
-  // --- ゲームフロー状態 ---
+  // --- Game flow state ---
   uint32_t game_count = 0;
   uint8_t game_stage = 0;
   uint8_t game_level = 0;

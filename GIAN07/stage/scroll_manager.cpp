@@ -1,8 +1,8 @@
-/*
- *   ScrollManager — centralized scroll/scene system state
- */
+///
+/// ScrollManager - Centralized scroll/scene system state
+///
 
 #include "scroll_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 ScrollManager Scroller;

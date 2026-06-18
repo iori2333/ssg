@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   PBGMIDI.c   ＭＩＤＩ管理用関数                                          */
-/*                                                                           */
-/*                                                                           */
+///
+/// MIDI management functions
+///
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
@@ -66,18 +65,18 @@ typedef struct {
 #pragma pack(pop)
 // -------------------------
 
-//// みでぃ用構造体 ////
+// MIDI device structure
 struct MID_DEVICE {
-  // 以下は外部から変更＆参照しないこと //
+  // The following must not be modified or referenced externally
   MID_REALTIME FadeProgress;
   MID_REALTIME FadeDuration;
   VOLUME FadeStartVolume;
   VOLUME FadeEndVolume;
 
-  // 現在のボリューム(0-127). *Always* between 0 and 127.
+  // *Always* between 0 and 127.
   VOLUME FadeNowVolume;
 
-  MID_BACKEND_STATE state; // 現在の状態
+  MID_BACKEND_STATE state; // Current state
 
   VOLUME VolumeFor(decltype(MIDI_CHANNELS) ch) const;
   void ApplyVolume(void) const;
@@ -189,17 +188,17 @@ struct MID_SEQUENCE {
   void Rewind(void);
 };
 
-// グローバル＆名前空間でローカルな変数 //
+// Global and namespace-local variables
 MID_DEVICE Mid_Dev;
 MID_FLAGS Mid_Flags = MID_FLAGS::NONE;
 static MID_SEQUENCE Mid_Seq;
-uint8_t Mid_PlayTable[16][128];  // スペアナ用
-uint8_t Mid_PlayTable2[16][128]; // レベルメーター用
-uint8_t Mid_NoteTable[16][128];  // ノート表示用
-uint8_t Mid_NoteWTable[16][128]; // ノート表示用(2)
-uint8_t Mid_PanpodTable[16];     // パンポット
-uint8_t Mid_ExpressionTable[16]; // エクスプレッション
-uint8_t Mid_VolumeTable[16];     // ボリューム
+uint8_t Mid_PlayTable[16][128];  // For spectrum analyzer
+uint8_t Mid_PlayTable2[16][128]; // For level meter
+uint8_t Mid_NoteTable[16][128];  // For note display
+uint8_t Mid_NoteWTable[16][128]; // For note display (2)
+uint8_t Mid_PanpodTable[16];     // Panpot
+uint8_t Mid_ExpressionTable[16]; // Expression
+uint8_t Mid_VolumeTable[16];     // Volume
 
 MID_PLAYTIME Mid_PlayTime;
 
@@ -227,8 +226,8 @@ void Mid_Play(void) {
   Mid_Dev.FadeDuration = 0s;
   Mid_Dev.FadeNowVolume = VOLUME_MAX;
 
-  // マスター・ボリューム : F0 7F 7F 04 01 VolumeLowByte VolumeHighByte F7 //
-  // 下位バイトは SC-88ST Pro では 00 として扱われるらしい(取扱説明書より) //
+  // Master Volume: F0 7F 7F 04 01 VolumeLowByte VolumeHighByte F7
+  // Lower byte is apparently treated as 00 on the Roland SC-88ST Pro (per the manual)
   //
   // On both the Microsoft GS Wavetable Synth and all Yamaha XG synths I
   // tested on, sending a MIDI Universal Realtime Master Volume message right
@@ -249,7 +248,7 @@ void Mid_Play(void) {
   // 	https://github.com/nmlgc/ssg/issues/10#issuecomment-1938245315
   uint8_t msg_gm_system_on[6] = {0xf0, 0x7e, 0x7f, 0x09, 0x01, 0xf7};
   MidBackend_Out(msg_gm_system_on);
-  std::this_thread::sleep_for(50ms); // ここで50ms以上待つこと!
+  std::this_thread::sleep_for(50ms); // Make sure to wait at least 50ms here!
 
   MidBackend_StartTimer();
   Mid_Dev.state = MID_BACKEND_STATE::PLAY;
@@ -267,8 +266,8 @@ void Mid_Stop(void) {
 
   Mid_TableInit();
   for (auto i = 0; i < MIDI_CHANNELS; i++) {
-    MidBackend_Out((0xb0 + i), 0x7b, 0x00); // オール・ノート・オフ
-    MidBackend_Out((0xb0 + i), 0x78, 0x00); // オール・サウンド・オフ
+    MidBackend_Out((0xb0 + i), 0x7b, 0x00); // All Notes Off
+    MidBackend_Out((0xb0 + i), 0x78, 0x00); // All Sound Off
   }
 
   Mid_Dev.state = MID_BACKEND_STATE::STOP;
@@ -300,7 +299,7 @@ void Mid_Resume(void) {
 }
 #endif
 
-// 各種テーブルの初期化 //
+// Initialize various tables
 void Mid_TableInit(void) {
   for (auto i = 0; i < MIDI_CHANNELS; i++) {
     for (auto j = 0; j < 128; j++) {
@@ -615,7 +614,7 @@ void Mid_Proc(MID_REALTIME delta) {
 void MID_EVENT::Send(void) const {
 #ifdef SUPPORT_MIDI_BACKEND
   switch (kind) {
-  case MID_EVENT_KIND::SYSEX: { // エクスクルーシブ
+  case MID_EVENT_KIND::SYSEX: { // SysEx
     auto *msg = static_cast<uint8_t *>(_malloca(extra_data.size() + 1));
     if (!msg) {
       break;
@@ -663,7 +662,7 @@ void MID_EVENT::Send(void) const {
     break;
   }
 
-  // ３バイト： コントロールチェンジ or 発音 or 変更 or ノートオフ
+  // 3 bytes: Control Change or Note On or Aftertouch or Note Off
   case MID_EVENT_KIND::CONTROLLER:
     if (extra_data[0] == 0x07) {
       MidBackend_Out(status, 0x07, Mid_Dev.VolumeFor(Channel()));
@@ -679,7 +678,7 @@ void MID_EVENT::Send(void) const {
     MidBackend_Out(status, extra_data[0], extra_data[1]);
     break;
 
-  // ２バイト
+  // 2 bytes
   case MID_EVENT_KIND::PROGRAM_CHANGE:
   case MID_EVENT_KIND::CHANNEL_AFTERTOUCH:
     MidBackend_Out(status, extra_data[0]);
@@ -690,9 +689,9 @@ void MID_EVENT::Send(void) const {
 
 void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
   switch (event.kind) {
-  case MID_EVENT_KIND::META: // 制御用データ(出力のないものだけ出力)
+  case MID_EVENT_KIND::META: // Meta events (only those without output are processed)
     switch (event.meta) {
-    case 0x2f: // トラック終了
+    case 0x2f: // End of Track
       if (track.loop_it) {
         // Rewind to the first note after the loop
         TrackLoop(track, tempo, loop, track.next_pulse);
@@ -701,7 +700,7 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
       }
       return;
 
-    case 0x51: { // テンポ
+    case 0x51: { // Tempo
       uint32_t tempo_new = 0;
       for (const auto byte : event.extra_data) {
         tempo_new = ((tempo_new << 8) + byte);
@@ -734,18 +733,18 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
       break;
     }
 
-    // ここに謎の一行があります //
+    // There is a mysterious line here
     break;
 
-  case MID_EVENT_KIND::CONTROLLER: // コントロールチェンジ
+  case MID_EVENT_KIND::CONTROLLER: // Control Change
     switch (event.extra_data[0]) {
-    case 0x07: // ボリューム
+    case 0x07: // Volume
       Mid_VolumeTable[event.Channel()] = event.extra_data[1];
       break;
-    case 0x0a: // パンポット
+    case 0x0a: // Panpot
       Mid_PanpodTable[event.Channel()] = event.extra_data[1];
       break;
-    case 0x0b: // エクスプレッション
+    case 0x0b: // Expression
       Mid_ExpressionTable[event.Channel()] = event.extra_data[1];
       break;
     default:
@@ -753,12 +752,12 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
     }
     break;
 
-  case MID_EVENT_KIND::NOTE_OFF: // ノートオフ
+  case MID_EVENT_KIND::NOTE_OFF: // Note Off
     Mid_NoteTable[event.Channel()][event.extra_data[0]] = 0;
     break;
 
   case MID_EVENT_KIND::NOTE_ON:
-  case MID_EVENT_KIND::NOTE_AFTERTOUCH: { // ３バイト：発音 or 変更
+  case MID_EVENT_KIND::NOTE_AFTERTOUCH: { // 3 bytes: Note On or Aftertouch
     const auto channel = event.Channel();
     const auto note = event.extra_data[0];
     const auto vel = event.extra_data[1];
@@ -791,7 +790,7 @@ std::string_view Mid_GetTitle(void) {
     return std::string_view{str, ev.extra_data.size()};
   };
 
-  // 通常のファイル用 たまに変なファイルだと間違ったものを表示するが... //
+  // For normal files; may display wrong data for malformed files
   for (const auto &track : Mid_Seq.tracks) {
     MID_TRACK_ITERATOR it = {track.data};
     while ((it.ConsumeVLQ() != -1) && (maybe_ev = it.ConsumeEvent())) {
@@ -803,7 +802,7 @@ std::string_view Mid_GetTitle(void) {
     }
   }
 
-  // タイトルのはずなのに別のところに記述しているファイル用 //
+  // For files where the title is stored in a different location
   for (const auto &track : Mid_Seq.tracks) {
     MID_TRACK_ITERATOR it = {track.data};
     while ((it.ConsumeVLQ() != -1) && (maybe_ev = it.ConsumeEvent())) {

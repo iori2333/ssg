@@ -1,7 +1,6 @@
-/*
- *   Text rendering via Pango/Cairo
- *
- */
+///
+/// Text rendering via Pango/Cairo
+///
 
 #pragma once
 

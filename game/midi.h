@@ -1,18 +1,15 @@
-/*                                                                           */
-/*   PBGMIDI.h   ＭＩＤＩ管理用関数                                          */
-/*                                                                           */
-/*                                                                           */
-
+///
+/// MIDI management functions
+///
 #ifndef PBGWIN_PBGMIDI_H
 #define PBGWIN_PBGMIDI_H "PBGMIDI : Version 0.31 : Update 2000/08/04"
 
-// 更新履歴 //
-// 2000/08/04 : Mid_Free() をグローバルにした。
+// Revision history
+// 2000/08/04 : Made Mid_Free() global.
 
-// 2000/03/22 : MIDI
-// フェードアウト関数をマスターボリュームからＣＣのボリュームに変更
-//            : 処理の追いつかない MIDI
-//            があった場合は、メッセージ送出に工夫が必要かも
+// 2000/03/22 : Changed fade-out function from master volume to CC volume
+//            : If there are MIDI backends that cannot keep up,
+//            : the message sending may need to be improved.
 
 #include "game/volume.h"
 #include <string_view>
@@ -28,9 +25,9 @@ enum class MID_FLAGS : uint8_t {
 };
 
 enum class MID_BACKEND_STATE : uint8_t {
-  STOP,  // 停止している
-  PLAY,  // 再生中
-  PAUSE, // 一時停止
+  STOP,  // Stopped
+  PLAY,  // Playing
+  PAUSE, // Paused
 };
 
 // A position within a MIDI sequence. We need negative numbers for proper
@@ -66,16 +63,16 @@ extern const VOLUME &Mid_Volume;
 extern const uint8_t &Mid_TempoNum;
 extern const uint8_t &Mid_TempoDenom;
 
-//// 関数 ////
+// Functions
 
 // Returns the new current MIDI flags.
 [[nodiscard]] MID_FLAGS Mid_SetFlags(MID_FLAGS flags_new);
 
 // Starts outputting the loaded MIDI to the backend.
-void Mid_Play(void); // 再生する
+void Mid_Play(void); // Starts playback
 
 // Stops backend output and resets the tables.
-void Mid_Stop(void); // 停止する
+void Mid_Stop(void); // Stops playback
 
 void Mid_Pause(void);
 void Mid_Resume(void);
@@ -93,22 +90,22 @@ void Mid_SetLoop(const MID_LOOP &loop);
 
 bool Mid_Loaded(void);
 
-std::string_view Mid_GetTitle(void); // この曲のお名前は？
+std::string_view Mid_GetTitle(void); // Returns the title of the current song
 
 // Processes and outputs the next time [delta] of the currently loaded MIDI
 // sequence.
 void Mid_Proc(MID_REALTIME delta);
 
-void Mid_TableInit(void); // 各種テーブルの初期化
+void Mid_TableInit(void); // Initializes various tables
 
-//// グローバル変数 ////
+// Global variables
 extern uint8_t Mid_PlayTable[16][128];
-extern uint8_t Mid_PlayTable2[16][128]; // レベルメーター用
-extern uint8_t Mid_NoteTable[16][128];  // ノート表示用
-extern uint8_t Mid_NoteWTable[16][128]; // ノート表示用(2)
-extern uint8_t Mid_PanpodTable[16];     // パンポット
-extern uint8_t Mid_ExpressionTable[16]; // エクスプレッション
-extern uint8_t Mid_VolumeTable[16];     // ボリューム
+extern uint8_t Mid_PlayTable2[16][128]; // For level meter
+extern uint8_t Mid_NoteTable[16][128];  // For note display
+extern uint8_t Mid_NoteWTable[16][128]; // For note display (2)
+extern uint8_t Mid_PanpodTable[16];     // Panpot
+extern uint8_t Mid_ExpressionTable[16]; // Expression
+extern uint8_t Mid_VolumeTable[16];     // Volume
 extern MID_PLAYTIME Mid_PlayTime;
 
 #endif

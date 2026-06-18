@@ -1,7 +1,6 @@
-/*
- *   Config data
- *
- */
+///
+/// Config - Config data
+///
 
 #include <SDL3/SDL_iostream.h>
 
@@ -141,7 +140,7 @@ void CONFIG_DATA::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
   BitDepth.v = params.bitdepth;
 }
 
-///// [グローバル変数] /////
+///// [Global variables] /////
 CONFIG_DATA ConfigDat;
 #ifdef PBG_DEBUG
 DEBUG_DATA DebugDat;
@@ -163,7 +162,7 @@ static void DebugInit(void) {
 }
 #endif
 
-// コンフィグの内容を初期化する //
+// Initialize config contents
 void ConfigLoad() {
 #ifdef PBG_DEBUG
   DebugInit();
@@ -172,7 +171,7 @@ void ConfigLoad() {
   ConfigFileLoad();
 }
 
-// コンフィグの内容を保存する //
+// Save config contents
 void ConfigSave() {
   // Sync runtime audio state into config
   ConfigDat.SoundFlags.v &= SNDF_SE_ENABLE;

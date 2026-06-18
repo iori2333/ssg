@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   scroll_menu.cpp   垂直スクロールメニュー                                 */
-/*                                                                           */
-/*                                                                           */
+///
+/// ScrollMenu - Vertical scroll menu
+///
 
 #include "scroll_menu.h"
 
@@ -15,7 +14,7 @@ ScrollMenu::ScrollMenu(MenuLabel &title, ListSizeFn list_size,
       generate_(std::move(generate)), handle_(std::move(handle)) {
   assert(max_visible_ <= items_.size());
 
-  // [menu_] の項目ポインタを [items_] にバインドする。
+  // Bind [menu_]'s item pointers to [items_].
   menu_.Title = &title;
   menu_.SetItems = [](MenuController &, bool) {};
   menu_.NumItems = 0;
@@ -43,7 +42,7 @@ void ScrollMenu::Scroll() {
        : (sel_ >= (total - visible_half))  ? (total - visible)
                                            : (sel_ - visible_half));
   for (auto item_i = decltype(visible){0}; item_i < visible; item_i++) {
-    // 各項目のコールバックをこのインスタンスの [Fn] にバインドする。
+    // Bind each item's callback to this instance's [Fn].
     items_[item_i].CallBackFn = [this](MenuController &c, INPUT_BITS k) {
       return Fn(c, k);
     };

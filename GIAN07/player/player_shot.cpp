@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   MaidTama.cpp   メイドさんなショットの処理                               */
-/*                                                                           */
-/*                                                                           */
+///
+/// PlayerShot - Maid shot processing
+///
 
 #include "player_shot.h"
 
@@ -14,10 +13,10 @@
 #include "player_manager.h"
 #include <utility>
 
-///// [ひみつの関数] /////
+// [Secret functions]
 static void MTamaSet();
 
-static void SetT_A0(); // めいどたまＴＹＰＥ－Ａ
+static void SetT_A0(); // Maid shot TYPE-A
 static void SetT_A1();
 static void SetT_A2();
 static void SetT_A3();
@@ -27,7 +26,7 @@ static void SetT_A6();
 static void SetT_A7();
 static void SetT_A8();
 
-static void SetT_B0(); // めいどたまＴＹＰＥ－Ｂ
+static void SetT_B0(); // Maid shot TYPE-B
 static void SetT_B1();
 static void SetT_B2();
 static void SetT_B3();
@@ -37,7 +36,7 @@ static void SetT_B6();
 static void SetT_B7();
 static void SetT_B8();
 
-static void SetT_C0(); // めいどたまＴＹＰＥ－Ｃ
+static void SetT_C0(); // Maid shot TYPE-C
 static void SetT_C1();
 static void SetT_C2();
 static void SetT_C3();
@@ -47,7 +46,7 @@ static void SetT_C6();
 static void SetT_C7();
 static void SetT_C8();
 
-static void SetT_D0(); // めいどたまＴＹＰＥ－Ｄ
+static void SetT_D0(); // Maid shot TYPE-D
 static void SetT_D1();
 static void SetT_D2();
 static void SetT_D3();
@@ -62,8 +61,7 @@ static void SetHomingBomb();
 static void SetLaserBomb();
 static void SetCactusBomb();
 
-// maid_tama[], maid_tama_ind[], maid_tama_now → player_manager.cpp の
-// PlayerManager に移動
+// maid_tama[], maid_tama_ind[], maid_tama_now moved to PlayerManager in player_manager.cpp
 
 constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     // MainWeapon		// SubWeapon
@@ -74,7 +72,7 @@ constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     TDM_LASER_MAIN,
     TDM_LASER_SUB, // TYPE_C
     1,
-    1 // ホーミングボム用
+    1 // For homing bomb
 };
 
 static void (*MaidTamaFunc[4][9])(void) = {
@@ -102,28 +100,28 @@ static constexpr auto MAID_TAMA_START = 18; // 12
 static constexpr auto MAID_MAIN_SHOT = 6;   // 4
 static constexpr auto MAID_SUB_SHOT = 9;    // 6
 
-// たま発射！！ //
+// Fire shot!
 void PlayerManager::SetMaidShot() {
-  // この関数では、前回の発射状態 (Viv_St) を参照して、発射可能であるならば //
-  // 発射し、そうでなければ、単にリターンする。                             //
-  // なお、弾のセットには TAMA.cpp 内の関数と互換のものを使用する           //
+  // This function checks the previous fire state (Viv_St).
+  // If fire is possible, it fires; otherwise, it simply returns.
+  // Uses functions compatible with TAMA.cpp for setting bullets.
 
   if (((Key_Data & KEY_TAMA) != 0) && viv.toge_time == 0 &&
       viv.muteki < MAID_MOVE_DISABLE_TIME) {
     viv.toge_time = MAID_TAMA_START;
   }
 
-  // ボムの発動条件を満たしていれば、発動! //
+  // Activate bomb if conditions are met
   if (((Key_Data & KEY_BOMB) != 0) && (viv.bomb_time == 0) &&
-      (viv.muteki < VIVDEAD_VAL) && // 死亡中は Bomb を発動しない
+      (viv.muteki < VIVDEAD_VAL) && // Do not activate bomb while dead
       (viv.bomb != 0U) && (!Scroller.scene.MsgFlag)) {
     // if(viv.weapon == 0) EnterBombPalette();
 
-    viv.bomb_time = MaidBombTime[viv.weapon & 3]; // 装備ごとに変更せよ
+    viv.bomb_time = MaidBombTime[viv.weapon & 3]; // Change per equipment
     viv.muteki = BOMBMUTEKI_VAL;
     viv.bomb--;
     viv.bomb_used++;
-    Ranking.Add(-25); // 難易度ダウン
+    Ranking.Add(-25); // Difficulty down
   }
 
   if (viv.bomb_time != 0U) {
@@ -139,7 +137,7 @@ void PlayerManager::SetMaidShot() {
     viv.toge_time--;
   }
 
-  // レーザーを装備している場合 //
+  // When laser is equipped
   if (viv.weapon == 2 && (viv.lay_time != 0U)) {
     viv.lay_time--;
     if (viv.lay_time < 64) {
@@ -157,12 +155,11 @@ void PlayerManager::SetMaidShot() {
   }
 }
 
-// 弾移動＆ヒットチェック //
+// Bullet movement & hit check
 void PlayerManager::MoveMaidShot() {
-  // この関数では、TAMA.cpp の敵弾の移動処理を使用する。もちろん、         //
-  // 当たり判定については、敵に対してのものとする事！！                    //
-  // 当たり判定は、この弾の座標を与えることで ENEMY.cpp 内の関数が判別して //
-  // 敵に当たっているかをチェックするものとする。                          //
+  // Uses enemy bullet movement from TAMA.cpp.
+  // Collision detection is against enemies!
+  // Collision is checked by passing coordinates to functions in ENEMY.cpp.
 
   int i = 0;
 
@@ -207,7 +204,7 @@ void PlayerManager::MoveMaidShot() {
   Indsort(maid_tama_ind, maid_tama_now, maid_tama,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
-  // レーザーの当たり判定 //
+  // Laser collision check
   if (viv.weapon == 2 && (viv.lay_grp != 0U)) {
     // x = (viv.opx>>6)+4 -8 + SBOPT_DX;
     // y = (viv.opy>>6)-20;
@@ -218,10 +215,9 @@ void PlayerManager::MoveMaidShot() {
   }
 }
 
-// ナニな弾描画 //
+// Bullet drawing
 void PlayerManager::DrawMaidShot() {
-  // ここでは、さすがにTAMA.cpp 内の関数を使用するわけにはいかないので、 //
-  // 独自に描画ルーチンを展開する。                                      //
+  // Cannot use TAMA.cpp functions here, so implement custom drawing.
 
   int i = 0;
   int x = 0;
@@ -237,10 +233,10 @@ void PlayerManager::DrawMaidShot() {
   for (i = 0; std::cmp_less(i, maid_tama_now); i++) {
     auto *t = &maid_tama[maid_tama_ind[i]];
 
-    x = (t->x >> 6) - 8; // -8 は座標の補正用です
-    y = (t->y >> 6) - 8; // 上に同じ
+    x = (t->x >> 6) - 8; // -8 is for coordinate correction
+    y = (t->y >> 6) - 8; // Same as above
 
-    // 弾の種類により、描画指定用矩形をセットする //
+    // Set drawing rectangle based on bullet type
     switch (t->c) {
     case TID_WIDE_MAIN:
       src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 176, 16, 16};
@@ -266,11 +262,11 @@ void PlayerManager::DrawMaidShot() {
       break;
     }
 
-    // 完全判定付きクリッピング //
+    // Full clipping with bounds check
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
   }
 
-  // レーザーの描画 //
+  // Laser drawing
   if (viv.weapon == 2 && (viv.lay_grp != 0U)) {
     ltemp = PIXEL_LTWH{(384 + ((viv.lay_grp - 1) << 4)), 240, 8, 16};
 
@@ -296,51 +292,51 @@ void PlayerManager::DrawMaidShot() {
   }
 }
 
-// 弾ハッシュテーブル初期化 //
+// Bullet hash table initialization
 void PlayerManager::SetMaidShotIndices() {
   int i = 0;
 
-  // この配列を初期化することで全ての弾を初期化する事になる //
+  // Initializing this array initializes all bullets
   for (i = 0; i < MAIDTAMA_MAX; i++) {
     maid_tama_ind[i] = i;
     // memset(Players.maid_tama+i,0,sizeof(TAMA_DATA));
   }
 
-  // 現在の個数を０初期化するのを忘れずに //
+  // Don't forget to zero-initialize the current count
   maid_tama_now = 0;
 }
 
 static void MTamaSet() {
   for (decltype(Bullets.command.n) i = 0; i < Bullets.command.n; i++) {
     if (Players.maid_tama_now + 1 >= MAIDTAMA_MAX) {
-      return; // セットできない場合
+      return; // Cannot set
     }
 
     auto *t =
         &Players.maid_tama[Players.maid_tama_ind
-                               [Players.maid_tama_now++]]; // 弾ポインタをセット
+                               [Players.maid_tama_now++]]; // Set bullet pointer
 
-    t->x = t->tx = Bullets.command.x; // X座標のセット
-    t->y = t->ty = Bullets.command.y; // Y座標のセット
+    t->x = t->tx = Bullets.command.x; // Set X coordinate
+    t->y = t->ty = Bullets.command.y; // Set Y coordinate
 
-    t->v = t->v0 = Bullets.Speed(i); // 初速度のセット
-    t->a = Bullets.command.a;        // 注意：サイズは char
+    t->v = t->v0 = Bullets.Speed(i); // Set initial speed
+    t->a = Bullets.command.a;        // Note: size is char
 
-    t->d = Bullets.Dir(i); // 弾の発射角度
-    t->d16 = (t->d << 8);  // 角速度のある運動で使用
+    t->d = Bullets.Dir(i); // Bullet launch angle
+    t->d16 = (t->d << 8);  // Used for angular velocity movement
 
-    t->vx = cosl(t->d, t->v); // 速度のＸ成分セット
-    t->vy = sinl(t->d, t->v); // 速度のＹ成分セット
+    t->vx = cosl(t->d, t->v); // Set velocity X component
+    t->vy = sinl(t->d, t->v); // Set velocity Y component
 
-    t->vd = Bullets.command.vd;         // 角速度もしくはホーミング率
-    t->c = Bullets.command.c;           // 弾のＩＤ
-    t->rep = Bullets.command.rep;       // 繰り返し回数
-    t->type = Bullets.command.type;     // 弾の種類
-    t->option = Bullets.command.option; // 弾の属性(バイブ、反射等)
+    t->vd = Bullets.command.vd;         // Angular velocity or homing rate
+    t->c = Bullets.command.c;           // Bullet ID
+    t->rep = Bullets.command.rep;       // Repeat count
+    t->type = Bullets.command.type;     // Bullet type
+    t->option = Bullets.command.option; // Bullet attributes (vibe, reflect, etc.)
     t->effect = 0;                      // Bullets.command.cmd & 0xf0;			//
-                                        // 弾のエフェクト
-    t->count = 0;                       // カウンタの初期化
-    t->flag = Bullets.Flag();           // フラグの初期化
+                                        // Bullet effect
+    t->count = 0;                       // Initialize counter
+    t->flag = Bullets.Flag();           // Initialize flag
   }
 }
 
@@ -366,10 +362,10 @@ void PlayerManager::SetMLaser(uint16_t time) {
   }
 }
 
-// ショットＴＹＰＥ－Ａ //
+// Shot TYPE-A
 static void SetT_A0() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット単発のみ //
+    // Single center shot only
     TamaSTDForm(TID_WIDE_MAIN);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 0);
@@ -383,7 +379,7 @@ static void SetT_A1() {
   char dd = 0;
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // オプションのショット(右) //
+    // Option shot (right)
     TamaSTDForm(TID_WIDE_SUB);
     TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 + 5, 0);
@@ -391,14 +387,14 @@ static void SetT_A1() {
     TamaSetNum(1, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 - 5, 0);
     MTamaSet();
   }
 
   if (IsMainShot(Players.viv.toge_time)) {
-    // 軽く振り分けるメインショット //
+    // Lightly spread main shot
     Players.viv.toge_ex += 32;
     dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
@@ -414,7 +410,7 @@ static void SetT_A2() {
   char dd = 0;
 
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット２連 //
+    // Center 2-shot
     Players.viv.toge_ex += 32;
     dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
 
@@ -429,7 +425,7 @@ static void SetT_A2() {
   }
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // オプションのショット(右) //
+    // Option shot (right)
     TamaSTDForm(TID_WIDE_SUB);
     TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
     TamaSetSpd(54, 0);
@@ -437,7 +433,7 @@ static void SetT_A2() {
     TamaSetDeg(-64 + 5, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 - 5, 0);
     MTamaSet();
@@ -448,7 +444,7 @@ static void SetT_A3() {
   char dd = 0;
 
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット３ＷＡＹ //
+    // Center 3-way shot
     Players.viv.toge_ex += 32;
     dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
@@ -460,7 +456,7 @@ static void SetT_A3() {
   }
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // オプションのショット(右) //
+    // Option shot (right)
     TamaSTDForm(TID_WIDE_SUB);
     TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 + 5, 0);
@@ -468,7 +464,7 @@ static void SetT_A3() {
     TamaSetNum(1, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 - 5, 0);
     MTamaSet();
@@ -479,7 +475,7 @@ static void SetT_A4() {
   char dd = 0;
 
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット３ＷＡＹ //
+    // Center 3-way shot
     Players.viv.toge_ex += 32;
     dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
@@ -491,7 +487,7 @@ static void SetT_A4() {
   }
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // オプションのショット(右) //
+    // Option shot (right)
     TamaSTDForm(TID_WIDE_SUB);
     TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 + 8, 7); //(-64+5,7);
@@ -499,7 +495,7 @@ static void SetT_A4() {
     TamaSetNum(2, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 - 8, 7); //(-64-5,7);
     MTamaSet();
@@ -512,7 +508,7 @@ static void SetT_A6() {
   char dd = 0;
 
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット４ＷＡＹ //
+    // Center 4-way shot
     Players.viv.toge_ex += 32;
     dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
@@ -524,7 +520,7 @@ static void SetT_A6() {
   }
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // オプションのショット(右) //
+    // Option shot (right)
     TamaSTDForm(TID_WIDE_SUB);
     TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 + 10, 8); //-64+6,4);
@@ -532,7 +528,7 @@ static void SetT_A6() {
     TamaSetNum(3, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 - 10, 8); //(-64-6,4);
     MTamaSet();
@@ -545,7 +541,7 @@ static void SetT_A8() {
   char dd = 0;
 
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット４ＷＡＹ //
+    // Center 4-way shot
     Players.viv.toge_ex += 32;
     dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
     TamaSTDForm(TID_WIDE_MAIN);
@@ -557,7 +553,7 @@ static void SetT_A8() {
   }
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // オプションのショット(右) //
+    // Option shot (right)
     TamaSTDForm(TID_WIDE_SUB);
     TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 + 12, 8); //(-64+7,4);
@@ -565,19 +561,19 @@ static void SetT_A8() {
     TamaSetNum(4, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(-64 - 12, 8); //(-64-7,4);
     MTamaSet();
   }
 }
 
-// ショットＴＹＰＥ－Ｂ //
+// Shot TYPE-B
 static void SetT_B0() {
   char dd = 0;
 
   if (IsMainShot(Players.viv.toge_time)) {
-    // 軽く振り分けるメインショット //
+    // Lightly spread main shot
     Players.viv.toge_ex += 32;
     dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 4));
     TamaSTDForm(TID_HOMING_MAIN);
@@ -592,7 +588,7 @@ static void SetT_B0() {
 
 static void SetT_B1() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット２連 //
+    // Center 2-shot
     TamaSTDForm(TID_HOMING_MAIN);
     TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
     TamaSetDeg(-64, 0);
@@ -606,8 +602,8 @@ static void SetT_B1() {
   // if((++Players.viv.toge_ex)&7) return;
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // ホーミング弾 //
-    // オプションのショット(右) //
+    // Homing bullet
+    // Option shot (right)
     TamaSTDForm(TID_HOMING_SUB);
     Bullets.command.type = T_SBHOMING;
     Bullets.command.rep = 64;
@@ -618,7 +614,7 @@ static void SetT_B1() {
     TamaSetNum(1, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
@@ -627,7 +623,7 @@ static void SetT_B1() {
 
 static void SetT_B2() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット３ＷＡＹ //
+    // Center 3-way shot
     TamaSTDForm(TID_HOMING_MAIN);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
@@ -640,8 +636,8 @@ static void SetT_B2() {
   // if((++Players.viv.toge_ex)&7) return;
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // ホーミング弾 //
-    // オプションのショット(右) //
+    // Homing bullet
+    // Option shot (right)
     TamaSTDForm(TID_HOMING_SUB);
     Bullets.command.type = T_SBHOMING;
     Bullets.command.rep = 64;
@@ -652,7 +648,7 @@ static void SetT_B2() {
     TamaSetNum(1, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
@@ -663,7 +659,7 @@ static void SetT_B3() { SetT_B2(); }
 
 static void SetT_B4() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット５ＷＡＹ //
+    // Center 5-way shot
     TamaSTDForm(TID_HOMING_MAIN);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
@@ -676,8 +672,8 @@ static void SetT_B4() {
   // if((++Players.viv.toge_ex)&7) return;
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // ホーミング弾 //
-    // オプションのショット(右) //
+    // Homing bullet
+    // Option shot (right)
     TamaSTDForm(TID_HOMING_SUB);
     Bullets.command.type = T_SBHOMING;
     Bullets.command.rep = 64;
@@ -688,7 +684,7 @@ static void SetT_B4() {
     TamaSetNum(1, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
@@ -699,7 +695,7 @@ static void SetT_B5() { SetT_B4(); }
 
 static void SetT_B6() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット５ＷＡＹ //
+    // Center 5-way shot
     TamaSTDForm(TID_HOMING_MAIN);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
@@ -712,8 +708,8 @@ static void SetT_B6() {
   // if((++Players.viv.toge_ex)&3) return;
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // ホーミング弾 //
-    // オプションのショット(右) //
+    // Homing bullet
+    // Option shot (right)
     TamaSTDForm(TID_HOMING_SUB);
     Bullets.command.type = T_SBHOMING;
     Bullets.command.rep = 64;
@@ -724,7 +720,7 @@ static void SetT_B6() {
     TamaSetNum(1, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(64 + 5, 0);
     MTamaSet();
@@ -735,7 +731,7 @@ static void SetT_B7() { SetT_B6(); }
 
 static void SetT_B8() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット５ＷＡＹ //
+    // Center 5-way shot
     TamaSTDForm(TID_HOMING_MAIN);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 7);
@@ -748,8 +744,8 @@ static void SetT_B8() {
   // if((++Players.viv.toge_ex)&3) return;
 
   if (IsSubShot(Players.viv.toge_time)) {
-    // ホーミング弾 //
-    // オプションのショット(右) //
+    // Homing bullet
+    // Option shot (right)
     TamaSTDForm(TID_HOMING_SUB);
     Bullets.command.type = T_SBHOMING;
     Bullets.command.rep = 64;
@@ -760,17 +756,17 @@ static void SetT_B8() {
     TamaSetNum(2, 0);
     MTamaSet();
 
-    // オプションのショット(左) //
+    // Option shot (left)
     TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
     TamaSetDeg(64 + 22, 30);
     MTamaSet();
   }
 }
 
-// ショットＴＹＰＥ－Ｃ //
+// Shot TYPE-C
 static void SetT_C0() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット単発のみ //
+    // Single center shot only
     TamaSTDForm(TID_LASER_SUB);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 0);
@@ -782,7 +778,7 @@ static void SetT_C0() {
 
 static void SetT_C1() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央に２列ショット //
+    // Center 2-column shot
     TamaSTDForm(TID_LASER_SUB);
     TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
     TamaSetDeg(-64, 0);
@@ -800,7 +796,7 @@ static void SetT_C2() { SetT_C1(); }
 
 static void SetT_C3() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット３ＷＡＹ //
+    // Center 3-way shot
     TamaSTDForm(TID_LASER_SUB);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 6);
@@ -816,7 +812,7 @@ static void SetT_C4() { SetT_C3(); }
 
 static void SetT_C5() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット４ＷＡＹ(中央は２列で) //
+    // Center 4-way shot (center in 2 columns)
     TamaSTDForm(TID_LASER_SUB);
     TamaSetSpd(54, 0);
 
@@ -839,7 +835,7 @@ static void SetT_C7() { SetT_C5(); }
 
 static void SetT_C8() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // 中央にショット５ＷＡＹ //
+    // Center 5-way shot
     TamaSTDForm(TID_LASER_SUB);
     TamaSetXY(Players.viv.x, Players.viv.y);
     TamaSetDeg(-64, 6);
@@ -851,7 +847,7 @@ static void SetT_C8() {
   PlayerManager::SetMLaser(64 + 200);
 }
 
-// ショットＴＹＰＥ－Ｄ //
+// Shot TYPE-D
 static void SetT_D0() {}
 
 static void SetT_D1() {}
@@ -903,12 +899,12 @@ static void SetHomingBomb() {
     TamaSetNum(8, 1);
     MTamaSet();
 
-    // 欠陥があるので、廃止 //
+    // Defective, discontinued
     // ObjectLockOn(&HomingX, &HomingY, 32*64, 32*64);
   }
 }
 
-// こいつは、Set というよりも、 HitCheck 的な役割を果たす //
+// This acts more like a HitCheck than a Set
 static void SetLaserBomb() {
   int ox = 0;
   int oy = 0;

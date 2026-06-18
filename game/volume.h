@@ -1,8 +1,6 @@
-/*
- *   Volume handling
- *
- */
-
+///
+/// Volume handling
+///
 #pragma once
 
 #include "game/cast.h"

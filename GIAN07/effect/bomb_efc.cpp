@@ -1,7 +1,6 @@
-/*
- *   BombEfc.cpp   : 爆発系エフェクト
- *
- */
+///
+/// BombEfc - Explosion effects
+///
 #include "bomb_efc.h"
 #include "effect_manager.h"
 #include "game/ut_math.h"
@@ -11,28 +10,28 @@
 #include <array>
 #include <ranges>
 
-// BombEfc[] → effect_manager.cpp の EffectManager に移動
+// BombEfc[] moved to EffectManager in effect_manager.cpp
 
-// 秘密の関数（EffectManager の private メソッドとして宣言済み）
+// Private function (declared as EffectManager private method)
 
-// 爆発系エフェクトの初期化 //
+// Initialize explosion effects
 void EffectManager::InitBombEffects() {
   for (auto &it : bomb_effects) {
     it.bIsUsed = false;
   }
 }
 
-// 爆発系エフェクトをセットする //
+// Set explosion effect
 void EffectManager::SpawnBombEffect(int x, int y, uint8_t type) {
   auto p = std::ranges::find_if(bomb_effects,
                                 [](const auto &p) { return !p.bIsUsed; });
 
-  // 空いているオブジェクトが存在しない //
+  // No free object available
   if (p == std::end(bomb_effects)) {
     return;
   }
 
-  // ターゲット捕捉 //
+  // Capture target
   p->x = x;
   p->y = y;
   p->type = type;
@@ -47,11 +46,11 @@ void EffectManager::SpawnBombEffect(int x, int y, uint8_t type) {
     return;
   }
 
-  // ここまできたら、無事にエフェクトがセットされた事になる //
+  // Effect successfully set
   p->bIsUsed = true;
 }
 
-// 爆発系エフェクトを描画する
+// Draw explosion effects
 void EffectManager::DrawBombEffects() {
   for (auto &it : bomb_effects) {
     if (!it.bIsUsed) {
@@ -68,7 +67,7 @@ void EffectManager::DrawBombEffects() {
   }
 }
 
-// 爆発系エフェクトを動作させる
+// Move explosion effects
 void EffectManager::MoveBombEffects() {
   for (auto &it : bomb_effects) {
     if (!it.bIsUsed) {

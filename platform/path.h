@@ -1,7 +1,6 @@
-/*
- *   Common paths and path manipulation
- *
- */
+///
+/// Common paths and path manipulation
+///
 
 #pragma once
 

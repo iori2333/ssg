@@ -1,46 +1,45 @@
-/*                                                                           */
-/*   GameMain.h   ウィンドウシステム切り替えなどの処理                       */
-/*                                                                           */
-/*                                                                           */
+///
+/// GameMain - Window system switching, etc.
+///
 
 #pragma once
 
-///// [更新履歴] /////
+// [Changelog]
 
-// 2000/02/03 : 製作開始
+// 2000/02/03 : Development started
 
-///// [Include Files] /////
+// [Include Files]
 #include "ending.h"
 #include <functional>
 
-///// [ 定数 ] /////
-///// [マクロ] /////
-///// [構造体] /////
+// [Constants]
+// [Macros]
+// [Structs]
 
-///// [グローバル変数] /////
-// IsDemoplay → game_manager.h で extern bool& として再宣言
+// [Global Variables]
+// IsDemoplay → redeclared as extern bool& in game_manager.h
 // GameMain, DemoTimer, DrawCount, WeaponKeyWait, GameOverTimer,
 // CurrentName, CurrentRank, CurrentDif, VivTemp, InputLocked, FlashState
-// → gameflow_manager.h で参照として宣言
+// → declared as references in gameflow_manager.h
 
-///// [関数] /////
+// [Functions]
 
 // WeaponSelectInit → inline wrapper in gameflow_manager.h
 [[nodiscard]] bool
-GameInit(std::function<void(bool &)> next_proc); // ゲームの初期化をする
-void GameRestart(); // ゲームを再開する(ESC 抜けから)
-[[nodiscard]] bool GameExit(bool bNeedChgMusic = true); // ゲームから抜ける
-void GameOverInit(); // ゲームオーバーの前処理
-void GameContinue(); // コンティニューを行う場合
+GameInit(std::function<void(bool &)> next_proc); // Initialize the game
+void GameRestart(); // Restart the game (from ESC exit)
+[[nodiscard]] bool GameExit(bool bNeedChgMusic = true); // Exit the game
+void GameOverInit(); // Game over pre-processing
+void GameContinue(); // Perform continue
 
 [[nodiscard]] bool
-GameReplayInitAll(const char *fn); // マルチステージリプレイ用の初期化
+GameReplayInitAll(const char *fn); // Initialize for multi-stage replay
 
-[[nodiscard]] bool SProjectInit(); // 西方Ｐｒｏｊｅｃｔ表示の初期化
+[[nodiscard]] bool SProjectInit(); // Initialize West Project display
 
-[[nodiscard]] bool GameExstgInit(); // エキストラステージを始める
+[[nodiscard]] bool GameExstgInit(); // Start extra stage
 
 // NameRegistInit → inline wrapper in gameflow_manager.h
-[[nodiscard]] bool ScoreNameInit(); // お名前表示画面
+[[nodiscard]] bool ScoreNameInit(); // Name registration screen
 
-[[nodiscard]] bool GameNextStage(); // 次のステージに移行する
+[[nodiscard]] bool GameNextStage(); // Move to next stage

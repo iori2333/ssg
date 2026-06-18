@@ -1,7 +1,6 @@
-/*
- *   Ending.cpp   : エンディングの処理
- *
- */
+///
+/// Ending - Ending processing
+///
 
 #include "ending.h"
 
@@ -11,10 +10,10 @@
 #include "game/endian.h"
 #include "gian.h"
 #include "platform/text_backend.h"
-#include "scene.h" // ＳＣＬ定義ファイル
+#include "scene.h" // SCL definition file
 #include <utility>
 
-// ファイル静的変数 → ending_manager.h の EndingManager に移動
+// File-static variables moved to EndingManager in ending_manager.h
 
 void EndingManager::SetFixedColors(PALETTE &pal) {
   pal[255] = {.r = 0x00, .g = 0x00, .b = 0x00};
@@ -22,7 +21,7 @@ void EndingManager::SetFixedColors(PALETTE &pal) {
   pal[198] = {.r = 0x80, .g = 0x80, .b = 0x80};
 }
 
-// エンディングまわりの初期化 //
+// Ending initialization
 bool EndingManager::Init() {
   PALETTE pal;
 
@@ -72,37 +71,37 @@ void EndingManager::Proc(bool & /*unused*/) {
   }
 }
 
-// エンディング時の描画処理 //
+// Ending draw processing
 void EndingManager::Draw() {
-  // 画面消去 //
+  // Clear screen
   GrpBackend_Clear(255, RGB{.r = 0, .g = 0, .b = 0});
 
-  // それぞれのグラフィックを描画するで //
+  // Draw each graphic
   DrawGrpInfo();
   DrawStfInfo();
   text.Render({0, 349});
 
-  // フェード情報の反映ぢゃ //
+  // Apply fade info
   DrawFadeInfo();
 
   Grp_Flip();
 }
 
-// グラフィックのフェードアウト用関数 //
+// Graphic fadeout function
 void EndingManager::FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src,
                                       uint8_t a) {
   Dest = Src.Fade(a, 0, 199);
   EndingManager::SetFixedColors(Dest);
 }
 
-// スタッフ名のフェードアウト用関数 //
+// Staff name fadeout function
 void EndingManager::FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src,
                                       uint8_t a) {
   Dest = Src.Fade(a, 200, 255);
   EndingManager::SetFixedColors(Dest);
 }
 
-// グラフィックの更新(内部データ) //
+// Graphic update (internal data)
 void EndingManager::UpdateGrpInfo() {
   grp_info.timer++;
   if (grp_info.timer > grp_info.fadeout) {
@@ -124,7 +123,7 @@ void EndingManager::UpdateGrpInfo() {
   }
 }
 
-// スタッフの更新(内部データ)
+// Staff update (internal data)
 void EndingManager::UpdateStfInfo() {
   stf_task.timer++;
   if (stf_task.timer > stf_task.fadeout) {
@@ -146,18 +145,18 @@ void EndingManager::UpdateStfInfo() {
   }
 }
 
-// グラフィックの描画 //
+// Graphic drawing
 void EndingManager::DrawGrpInfo() {
   if (!grp_info.bWantDisp) {
     return;
   }
 
-  // 驚異の画像表示 //
+  // Display image
   const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - ending_pic));
   GrpSurface_BlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
 }
 
-// スタッフの描画 //
+// Staff drawing
 void EndingManager::DrawStfInfo() {
   if (!stf_task.bWantDisp) {
     return;
@@ -175,7 +174,7 @@ void EndingManager::DrawStfInfo() {
   }
 }
 
-// テキストの描画 //
+// Text drawing
 void EndingManager::Text::Render(WINDOW_POINT topleft) {
   TextObj.Render(topleft, Rect, TextStr, [this](TEXTRENDER_SESSION &s) {
     int max = 0;
@@ -212,11 +211,11 @@ void EndingManager::FlashPaletteGrp(PALETTE &dest, const PALETTE &pal,
   }
 }
 
-// フェードＩＯ情報の反映 //
+// Apply fade I/O info
 void EndingManager::DrawFadeInfo() {
   PALETTE temp_pal;
 
-  // フェードアウト関連
+  // Fadeout related
   if (GrpGeom_FB() != nullptr) {
     if (flash_state != 0U) {
       FlashPaletteGrp(temp_pal, grp_info.target->pal, flash_state);
@@ -262,7 +261,7 @@ void EndingManager::DrawFadeInfo() {
   }
 }
 
-// エンディング用 SCL のデコード //
+// Ending SCL decode
 void EndingManager::SCLDecode() {
   bool bFlag = true;
 
@@ -279,7 +278,7 @@ void EndingManager::SCLDecode() {
       break;
     }
 
-    case SCL_MSG: { // メッセージを出力する
+    case SCL_MSG: { // Output message
       const auto *line_p = std::bit_cast<const char *>(cmd + 1);
       std::string_view line = line_p;
       text.Text[text.NumText++] = line;
@@ -289,7 +288,7 @@ void EndingManager::SCLDecode() {
       break;
     }
 
-    case SCL_FACE: // 顔を表示する
+    case SCL_FACE: // Display face
       switch (cmd[1]) {
       case 0:
         grp_info.fadein = 0;
@@ -328,7 +327,7 @@ void EndingManager::SCLDecode() {
       Enemies.scl_now += 2;
       break;
 
-    case SCL_STAFF: // わかりにくいが、１２８を加えると、役割名指定ね
+    case SCL_STAFF: // Adding 128 specifies a role name
       if (cmd[1] >= 128) {
         switch (cmd[1] - 128) {
         case 0:
@@ -371,12 +370,12 @@ void EndingManager::SCLDecode() {
       Enemies.scl_now += 2;
       break;
 
-    case SCL_NPG: // 新しいページに変更する
+    case SCL_NPG: // Switch to new page
       text.Blank();
       Enemies.scl_now++;
       break;
 
-    case SCL_END: // カウントも変更させずにリターンするのだ
+    case SCL_END: // Return without changing count
       grp_info.bWantDisp = false;
       stf_task.bWantDisp = false;
       GameFlow.NameRegistInit(false);
@@ -397,13 +396,13 @@ void EndingManager::SCLDecode() {
       Enemies.scl_now += 2;
       break;
 
-    case SCL_STAGECLEAR: // ステージクリア
+    case SCL_STAGECLEAR: // Stage clear
       return;
 
     case SCL_GAMECLEAR:
       return;
 
-    default: // 未実装 or ばぐ
+    default: // Unimplemented or bug
       return;
     }
   }

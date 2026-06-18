@@ -1,7 +1,6 @@
-/*
- *   Music Room
- *
- */
+///
+/// Music - Music room
+///
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
@@ -164,13 +163,11 @@ bool MusicRoomInit() {
       .comment_buf = std::move(comment_buf),
   };
 
-  /*
-          if(!LoadMusic(0)) {
-                  DebugOut("MUSIC.DAT が破壊されています");
-                  GameExit();
-                  return false;
-          }
-  */
+  // if(!LoadMusic(0)) {
+  //         DebugOut("MUSIC.DAT has been corrupted");
+  //         GameExit();
+  //         return false;
+  // }
   // BGM_Play();
 
   GameFlow.game_main = MusicRoomProc;
@@ -179,7 +176,7 @@ bool MusicRoomInit() {
   return true;
 }
 
-// スペアナ描画 //
+// Spectrum analyzer drawing
 void GrpDrawSpect(int x, int y) {
   uint16_t ftable[128 + 8 + 8];
   uint16_t ftable2[128];
@@ -281,70 +278,70 @@ void GrpDrawSpect(int x, int y) {
   GrpGeom->Unlock();
 }
 
-// 押されているところを表示 //
+// Display pressed notes
 void GrpDrawNote() {
   // 0123456789ab (Mod c)
   // o#o#oo#o#o#o
   // o o oo o o o
 
   constexpr const PIXEL_LTRB src[12] = {
-      {0, 464, 3, 474}, // しろ
-      {0, 456, 3, 461}, // 黒
+      {0, 464, 3, 474}, // white
+      {0, 456, 3, 461}, // black
 
-      {4, 464, 7, 474}, // しろ
-      {0, 456, 3, 461}, // 黒
+      {4, 464, 7, 474}, // white
+      {0, 456, 3, 461}, // black
 
-      {8, 464, 11, 474},  // しろ
-      {12, 464, 15, 474}, // しろ
+      {8, 464, 11, 474},  // white
+      {12, 464, 15, 474}, // white
 
-      {0, 456, 3, 461},   // 黒
-      {16, 464, 19, 474}, // しろ
+      {0, 456, 3, 461},   // black
+      {16, 464, 19, 474}, // white
 
-      {0, 456, 3, 461},   // 黒
-      {20, 464, 23, 474}, // しろ
+      {0, 456, 3, 461},   // black
+      {20, 464, 23, 474}, // white
 
-      {0, 456, 3, 461},   // 黒
-      {24, 464, 27, 474}, // しろ
+      {0, 456, 3, 461},   // black
+      {24, 464, 27, 474}, // white
   };
 
   constexpr const PIXEL_LTRB src2[12] = {
-      {0, (464 - 24), 3, (474 - 24)}, // しろ
-      {0, (456 - 24), 3, (461 - 24)}, // 黒
+      {0, (464 - 24), 3, (474 - 24)}, // white
+      {0, (456 - 24), 3, (461 - 24)}, // black
 
-      {4, (464 - 24), 7, (474 - 24)}, // しろ
-      {0, (456 - 24), 3, (461 - 24)}, // 黒
+      {4, (464 - 24), 7, (474 - 24)}, // white
+      {0, (456 - 24), 3, (461 - 24)}, // black
 
-      {8, (464 - 24), 11, (474 - 24)},  // しろ
-      {12, (464 - 24), 15, (474 - 24)}, // しろ
+      {8, (464 - 24), 11, (474 - 24)},  // white
+      {12, (464 - 24), 15, (474 - 24)}, // white
 
-      {0, (456 - 24), 3, (461 - 24)},   // 黒
-      {16, (464 - 24), 19, (474 - 24)}, // しろ
+      {0, (456 - 24), 3, (461 - 24)},   // black
+      {16, (464 - 24), 19, (474 - 24)}, // white
 
-      {0, (456 - 24), 3, (461 - 24)},   // 黒
-      {20, (464 - 24), 23, (474 - 24)}, // しろ
+      {0, (456 - 24), 3, (461 - 24)},   // black
+      {20, (464 - 24), 23, (474 - 24)}, // white
 
-      {0, (456 - 24), 3, (461 - 24)},   // 黒
-      {24, (464 - 24), 27, (474 - 24)}, // しろ
+      {0, (456 - 24), 3, (461 - 24)},   // black
+      {24, (464 - 24), 27, (474 - 24)}, // white
   };
 
   constexpr const PIXEL_COORD destX[12] = {
-      0, // しろ
-      2, // 黒
+      0, // white
+      2, // black
 
-      4, // しろ
-      6, // 黒
+      4, // white
+      6, // black
 
-      8,  // しろ
-      12, // しろ
+      8,  // white
+      12, // white
 
-      14, // 黒
-      16, // しろ
+      14, // black
+      16, // white
 
-      18, // 黒
-      20, // しろ
+      18, // black
+      20, // white
 
-      22, // 黒
-      24, // しろ
+      22, // black
+      24, // white
   };
 
   PIXEL_LTRB rc;
@@ -444,7 +441,7 @@ void MusicRoomProc(bool & /*unused*/) {
       DevChgWait = true;
     }
   } else {
-    // 押されていなければ再び有効化する //
+    // Re-enable if not pressed
     DevChgWait = false;
   }
 

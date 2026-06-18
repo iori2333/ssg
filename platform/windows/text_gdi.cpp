@@ -1,7 +1,6 @@
-/*
- *   Text rendering via GDI
- *
- */
+///
+/// Text rendering via GDI
+///
 
 #include "platform/text_backend.h"
 #include "platform/windows/surface_gdi.h"

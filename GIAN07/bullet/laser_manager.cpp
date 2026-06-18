@@ -1,8 +1,8 @@
-/*
- *   LaserManager — centralized laser system state
- */
+///
+/// LaserManager - Centralized laser system state
+///
 
 #include "laser_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 LaserManager Lasers;

@@ -1,7 +1,6 @@
-/*
- *   SDL wrappers for file I/O
- *
- */
+///
+/// SDL wrappers for file I/O
+///
 
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>

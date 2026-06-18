@@ -1,6 +1,6 @@
-/*
- *   DemoManager — centralized demo/replay system state and operations
- */
+///
+/// DemoManager - Centralized demo/replay system state and operations
+///
 
 #pragma once
 
@@ -20,7 +20,7 @@ struct DemoManager {
   DemoPlayState demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};
 
-  // ファイル静的変数（DEMOPLAY.cpp から移動）
+  // File-static variables (moved from DEMOPLAY.cpp)
   uint32_t demo_frame_cur = 0;
   struct ConfigTempData {
     uint8_t PlayerStock;
@@ -33,7 +33,7 @@ struct DemoManager {
   uint32_t multi_stage_frames[REPLAY_STAGE_MAX] = {};
   std::vector<INPUT_BITS> all_playback_buf;
 
-  // === メソッド ===
+  // === Methods ===
   void Init();
   [[nodiscard]] bool HasRecordedStages() const;
   void FlushStage();

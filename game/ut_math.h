@@ -1,11 +1,6 @@
-/*                                                                           */
-/*   UT_MATH.h   整数限定の数学関数群                                        */
-/*                                                                           */
-/*   Modernized: floating-point based implementations of legacy fixed-point  */
-/*   helpers. The public API signatures are preserved; callers need not be   */
-/*   changed.                                                                */
-/*                                                                           */
-
+///
+/// Integer math utilities
+///
 #pragma once
 
 #include <cmath>
@@ -62,7 +57,7 @@ inline int cosm(uint8_t deg) {
       std::round(std::cos(ut_math_detail::deg256_to_rad(deg)) * 256.0));
 }
 
-// 三角関数2 //
+// Trig functions 2
 int sinl(uint8_t deg, int length); // (SIN(deg) * length) / 256)
 int cosl(uint8_t deg, int length); // (COS(deg) * length) / 256)
 
@@ -72,12 +67,12 @@ int sinDiv(uint8_t deg, int length);
 // ((length * 256) / ((COS(deg) > 0) ? COS(deg) : 256))
 int cosDiv(uint8_t deg, int length);
 
-uint8_t atan8(int x, int y); // ３２ビット版です
+uint8_t atan8(int x, int y); // 32-bit version
 
-// 平方根(整数版) //
+// Square root (integer version)
 // Calculates √[s], rounded to the nearest integer.
 int32_t isqrt(int32_t s);
 
-// 乱数 //
+// Random numbers
 void rnd_seed_set(uint32_t val);
 uint16_t rnd();

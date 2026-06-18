@@ -1,9 +1,6 @@
-/*                                                                           */
-/*   scroll_menu.h   垂直スクロールメニュー                                   */
-/*                                                                           */
-/*   元は [MenuDef_SCROLL] テンプレートだったが、テンプレート毎の         */
-/*   static 状態を廃止し通常クラス化した。                                    */
-/*                                                                           */
+///
+/// ScrollMenu - Vertical scroll menu
+///
 
 #pragma once
 
@@ -24,10 +21,10 @@ public:
   ScrollMenu(MenuLabel &title, ListSizeFn list_size, GenerateFn generate,
              HandleFn handle, size_t max_visible = WINITEM_MAX);
 
-  // [MenuController] の [Parent] にバインドする用。
+  // For binding to [MenuController]'s [Parent].
   MenuDef &Menu() { return menu_; }
 
-  // スクロールメニューを初期化し、最初の表示内容を生成する。
+  // Initializes the scroll menu and generates the initial display content.
   void Init(MenuController &ctrl, size_t sel, MenuController *return_to);
 
 private:

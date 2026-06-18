@@ -1,30 +1,29 @@
-/*                                                                           */
-/*   FontUty.h   フォントの処理いろいろ                                      */
-/*                                                                           */
-/*                                                                           */
+///
+/// FontUty - Font utility functions
+///
 
 #pragma once
 
-///// [更新履歴] /////
+// [Revision history]
 
-// 2000/07/22 : フォント追加に伴い、プログラムの一部を変更
-// 2000/02/19 : フォントに関する処理の開発を始める
+// 2000/07/22 : Partial rewrite for font additions
+// 2000/02/19 : Began development of font handling
 
 #include "game/text.h"
 
-///// [ 関数 ] /////
+// [Functions]
 void GrpPut16(int x, int y,
-              const char *s); // 16x16 透過フォントで文字列出力(高速)
+              const char *s); // Draw string in 16x16 transparent font (fast)
 void GrpPut16c2(int x, int y,
-                const char *s); // 上と同じだが、ｘ移動幅が１６
+                const char *s); // Same as above but x-advance is 16
 void GrpPutc(int x, int y,
-             char c); // 16x16 透過フォントで文字出力(ｸﾘｯﾋﾟﾝｸﾞ有)
-void GrpPut57(int x, int y, const char *s); // 05x07 べた貼りフォント
-void GrpPut7B(int x, int y, const char *s); // 07x11 音楽室用フォント
+             char c); // Draw char in 16x16 transparent font (w/ clipping)
+void GrpPut57(int x, int y, const char *s); // 05x07 opaque font
+void GrpPut7B(int x, int y, const char *s); // 07x11 music-room font
 void GrpPutScore(int x, int y,
-                 const char *s); // 得点アイテムのスコアを描画
+                 const char *s); // Draw score item score
 
-void GrpPutMidNum(int x, int y, int n); // MIDI 用フォントを描画する
+void GrpPutMidNum(int x, int y, int n); // Draw MIDI font
 
 // 5-pixel variable-width font in [SURFACE_ID::SYSTEM]. Supports A-Z.
 // ------------------------------------------------------------------
@@ -63,7 +62,7 @@ constexpr PIXEL_SIZE GrpExtent5(std::string_view s) {
 void GrpPut55(WINDOW_POINT topleft, std::string_view s);
 // ------------------------------------------------------------------
 
-// グラデーション付きフォントを描画する
+// Draw gradient font
 PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s, std::span<std::string_view> strs,
                        FONT_ID font, bool shadow,
                        uint8_t (*gradient_func)(PIXEL_COORD y));

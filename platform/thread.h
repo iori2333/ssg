@@ -1,7 +1,6 @@
-/*
- *   Platform-specific thread interface
- *
- */
+///
+/// Platform-specific thread interface
+///
 
 #pragma once
 

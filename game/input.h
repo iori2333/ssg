@@ -1,8 +1,6 @@
-/*
- *   Cross-platform input declarations
- *
- */
-
+///
+/// Cross-platform input declarations
+///
 #pragma once
 
 #include <cstdint>
@@ -15,7 +13,7 @@ using INPUT_BITS = uint16_t;
 // 0 = unmapped.
 using INPUT_PAD_BUTTON = uint8_t;
 
-// キーボード定数 //
+// Keyboard constants
 // Braced initializers cause a compile error if the constants don't fit within
 // the INPUT_BITS type.
 constexpr INPUT_BITS KEY_UP = {0x0001};
@@ -66,7 +64,7 @@ constexpr INPUT_SYSTEM_BITS SYSKEY_GRP_API = {0x0200};
 
 using INPUT_PAD_BINDING = std::pair<const INPUT_PAD_BUTTON &, INPUT_BITS>;
 
-// グローバル変数(Public) //
+// Global variables (Public)
 extern INPUT_BITS Key_Data;
 extern INPUT_BITS Pad_Data;
 extern INPUT_SYSTEM_BITS SystemKey_Data;

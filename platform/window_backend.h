@@ -1,7 +1,6 @@
-/*
- *   Platform-specific window backend interface
- *
- */
+///
+/// Platform-specific window backend interface
+///
 
 #pragma once
 

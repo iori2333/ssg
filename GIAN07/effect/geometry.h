@@ -1,9 +1,6 @@
-/*
- *   Backend-independent geometry rendering functions
- *
- *   These translate complex geometric shapes to primitives that are better
- *   supported by graphics backends.
- */
+///
+/// Geometry - Backend-independent geometry rendering functions
+///
 
 #pragma once
 
@@ -105,7 +102,7 @@ void CircleF_Exact(GRAPHICS_GEOMETRY_FB auto &gf, WINDOW_POINT center,
 void FatCircleA_Approximated(GRAPHICS_GEOMETRY_POLY auto &gp,
                              WINDOW_POINT center, PIXEL_COORD r,
                              PIXEL_COORD w) {
-  // 普通の円になってしまう場合 //
+  // When it becomes a regular circle
   if (w >= r) {
     Geometry::CircleF_Approximated(gp, center, (r + w), true);
   }
@@ -157,13 +154,13 @@ void GeomFatCircleA(GRAPHICS_GEOMETRY_POLY auto &gp, WINDOW_POINT center,
   Geometry::FatCircleA_Approximated(gp, center, r, w);
 }
 
-// グラデーション付き長方形(ナナメ可)
+// Gradient rectangle (can be diagonal)
 void GeomGrdRect(GRAPHICS_GEOMETRY_POLY auto &gp,
                  std::span<const VERTEX_XY, 4> points, RGB col_edge) {
   Geometry::GrdRect(gp, points, col_edge.WithAlpha(0xFF), false);
 }
 
-// グラデーション付き長方形(ナナメ可+α)
+// Gradient rectangle (can be diagonal + alpha)
 void GeomGrdRectA(GRAPHICS_GEOMETRY_POLY auto &gp,
                   std::span<const VERTEX_XY, 4> points, RGBA col_edge) {
   Geometry::GrdRect(gp, points, col_edge, true);

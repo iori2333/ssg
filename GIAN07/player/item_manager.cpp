@@ -1,6 +1,6 @@
-/*
- *   ItemManager — centralized item system state
- */
+///
+/// ItemManager - Centralized item system state
+///
 
 #include "item_manager.h"
 

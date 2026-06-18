@@ -1,7 +1,6 @@
-/*
- *   Platform-specific MIDI backend interface
- *
- */
+///
+/// Platform-specific MIDI backend interface
+///
 
 #pragma once
 
@@ -17,10 +16,10 @@
 #include <span>
 
 // Initializes the backend with a default output device.
-bool MidBackend_Init(void); // ＭＩＤＩ関連初期化
+bool MidBackend_Init(void); // MIDI-related initialization
 
 // Shuts down the backend.
-void MidBackend_Cleanup(void); // ＭＩＤＩ関連おしまい
+void MidBackend_Cleanup(void); // MIDI-related cleanup
 
 // Returns the name of the current MIDI device, or std::nullopt if the backend
 // is not initialized. Can also be used for general initialization checks.
@@ -28,7 +27,7 @@ std::optional<std::string_view> MidBackend_DeviceName(void);
 
 // Switches to the next working output device in the given positive or negative
 // [direction].
-bool MidBackend_DeviceChange(int8_t direction); // 出力デバイスを変更する
+bool MidBackend_DeviceChange(int8_t direction); // Change output device
 
 // Starts a timer that periodically calls Mid_Proc().
 void MidBackend_StartTimer(void);

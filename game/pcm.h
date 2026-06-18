@@ -1,8 +1,6 @@
-/*
- *   Sampling rate / bit depth / channel structure
- *
- */
-
+///
+/// PCM sample format and utilities
+///
 #pragma once
 
 #include <compare>

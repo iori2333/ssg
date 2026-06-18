@@ -1,6 +1,6 @@
-/*
- *   RankManager — centralized play rank state and operations
- */
+///
+/// RankManager - Centralized play rank state and operations
+///
 
 #pragma once
 
@@ -9,7 +9,7 @@
 struct RankManager {
   PlayRankState state; // PlayRank
 
-  // === メソッド ===
+  // === Methods ===
   void Add(int n);
   void Reset();
 };

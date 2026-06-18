@@ -1,10 +1,6 @@
-/*                                                                           */
-/*   ui_manager.h   UI マネージャ                                             */
-/*                                                                           */
-/*   すべてのメニューコントローラ、スクロールメニュー、パネル、               */
-/*   メッセージウィンドウを集約所有する。                                       */
-/*   グローバル変数は [UI] のみ。                                               */
-/*                                                                           */
+///
+/// UIManager - UI Manager
+///
 
 #pragma once
 
@@ -20,73 +16,73 @@ class UIManager {
 public:
   UIManager();
 
-  // --- メッセージウィンドウ ---
+  // --- Message window ---
   MsgWindow &Msg() { return msg_window_; }
   void MsgTick() { msg_window_.Tick(); }
   void MsgDraw() { msg_window_.Draw(); }
   void MsgForceClose() { msg_window_.ForceClose(); }
 
-  // --- メニューウィンドウアクセス ---
+  // --- Menu window access ---
   MenuController &Main() { return main_window_; }
   MenuController &Exit() { return exit_window_; }
   MenuController &Continue() { return continue_window_; }
   MenuController &GameOverSave() { return game_over_save_window_; }
 
-  // --- 初期化 ---
+  // --- Initialization ---
   void InitMain();
   void InitExit();
   void InitContinue();
 
-  // --- スクロールメニューを開く ---
+  // --- Open scroll menu ---
   void OpenBGMPack();
   void OpenReplayFiles();
 
-  // BGM Pack サウンドトラックのダウンロード URL
+  // BGM Pack soundtrack download URL
   static constexpr const char *BGMPackSoundtrackURL =
       "https://github.com/nmlgc/BGMPacks/releases/tag/2024-10-05";
 
-  // --- タイトル画面のアクティブメニュー ---
+  // --- Title screen active menu ---
   MenuController *ActiveMenu();
   void MsgHelp();
 
 private:
-  // BGM Pack スクロールメニュー callback
+  // BGM Pack scroll menu callback
   size_t BGMPackListSize();
   void BGMPackGenerate(MenuItem &ret, size_t generated, size_t selected);
   bool BGMPackHandle(MenuController &ctrl, INPUT_BITS key, size_t selected);
 
-  // Replay Files スクロールメニュー callback
+  // Replay Files scroll menu callback
   size_t ReplayFilesListSize();
   void ReplayFilesGenerate(MenuItem &ret, size_t generated, size_t selected);
   bool ReplayFilesHandle(MenuController &ctrl, INPUT_BITS key,
                          size_t selected);
 
-  // --- メッセージウィンドウ ---
+  // --- Message window ---
   MsgWindow msg_window_;
 
-  // --- メインメニュー ---
+  // --- Main menu ---
   MainMenuPanel main_panel_;
   MenuController main_window_;
 
-  // --- Exit ダイアログ ---
+  // --- Exit dialog ---
   MenuLabel exit_title_;
   MenuItem exit_items_[3];
   MenuDef exit_menu_;
   MenuController exit_window_;
 
-  // --- Continue ダイアログ ---
+  // --- Continue dialog ---
   MenuLabel continue_title_;
   MenuItem continue_items_[2];
   MenuDef continue_menu_;
   MenuController continue_window_;
 
-  // --- GameOverSave ダイアログ ---
+  // --- GameOverSave dialog ---
   MenuLabel game_over_save_title_;
   MenuItem game_over_save_items_[2];
   MenuDef game_over_save_menu_;
   MenuController game_over_save_window_;
 
-  // --- BGM Pack スクロールメニュー状態 ---
+  // --- BGM Pack scroll menu state ---
   MenuText bgm_title_text_;
   MenuLabel bgm_title_item_;
   std::vector<std::string> bgm_packs_;
@@ -94,7 +90,7 @@ private:
   ScrollMenu bgm_pack_scroll_menu_;
   MenuController bgm_pack_window_;
 
-  // --- Replay Files スクロールメニュー状態 ---
+  // --- Replay Files scroll menu state ---
   MenuText replay_title_text_;
   MenuLabel replay_title_item_;
   std::vector<std::string> replay_files_;
@@ -102,5 +98,5 @@ private:
   MenuController replay_files_window_;
 };
 
-// 唯一のグローバルインスタンス
+// Single global instance
 extern UIManager UI;

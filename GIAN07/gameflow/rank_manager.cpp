@@ -1,6 +1,6 @@
-/*
- *   RankManager — centralized play rank state
- */
+///
+/// RankManager - Centralized play rank state
+///
 
 #include "rank_manager.h"
 

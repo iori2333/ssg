@@ -1,6 +1,6 @@
-/*
- *   EndingManager — centralized ending cinematic state and operations
- */
+///
+/// EndingManager - Centralized ending cinematic state and operations
+///
 
 #pragma once
 
@@ -15,7 +15,7 @@
 #include <string_view>
 
 struct EndingManager {
-  // === ネスト型（旧 ENDING.cpp ファイル静的型） ===
+  // === Nested types (formerly static types in ENDING.cpp) ===
 
   struct GrpInfo {
     uint32_t timer = 0;
@@ -55,7 +55,7 @@ struct EndingManager {
     void Render(WINDOW_POINT topleft);
   };
 
-  // === データメンバー ===
+  // === Data members ===
 
   GrpInfo grp_info;
   StTask stf_task;
@@ -82,14 +82,14 @@ struct EndingManager {
       {0, 216, 336, 264},
   }};
 
-  // === 公開メソッド ===
+  // === Public methods ===
 
   bool Init();
   void Proc(bool &);
   void Draw();
 
 private:
-  // 内部ヘルパー
+  // Internal helpers
   static void SetFixedColors(PALETTE &pal);
   static void FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src, uint8_t a);
   static void FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t a);
@@ -105,7 +105,7 @@ private:
 
 extern EndingManager Ending;
 
-// === 後方互換 inline wrapper (GameMain 状态机入口点，必须保留) ===
+// === Backward-compatible inline wrapper (GameMain state machine entry point, must be kept) ===
 inline bool EndingInit() { return Ending.Init(); }
 inline void EndingProc(bool &q) { Ending.Proc(q); }
 inline void EndingDraw() { Ending.Draw(); }

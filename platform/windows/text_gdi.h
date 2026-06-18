@@ -1,7 +1,6 @@
-/*
- *   Text rendering via GDI
- *
- */
+///
+/// Text rendering via GDI
+///
 
 #pragma once
 

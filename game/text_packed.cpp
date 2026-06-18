@@ -1,13 +1,6 @@
-/*
- *   Rectangle management for text rendering by packing each rectangle into a
- *   larger surface
- *
- *   The rectangle packing algorithm was adapted and simplified from
- *
- *   	https://github.com/TeamHypersomnia/rectpack2D
- *
- *   and enhanced with expansion into either direction.
- */
+///
+/// Rectangle packing for text rendering (adapted from rectpack2D)
+///
 
 #include "game/text_packed.h"
 #include "platform/graphics_backend.h"

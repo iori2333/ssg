@@ -1,7 +1,6 @@
-/*
- *   Platform-specific graphics backend interface
- *
- */
+///
+/// Platform-specific graphics backend interface
+///
 
 #pragma once
 
@@ -49,7 +48,7 @@ std::optional<GRAPHICS_INIT_RESULT>
 GrpBackend_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
                 GRAPHICS_PARAMS params);
 
-// いつも通りに(ただし失敗したら異常終了)
+// Normal cleanup (abnormal termination on failure)
 void GrpBackend_Cleanup(void);
 /// --------------------------
 
@@ -186,10 +185,10 @@ public:
   // • Selectively activate alpha blending only during *A() calls and
   //   immediately disable it before returning.
 
-  virtual void Lock(void) = 0;   // 図形描画の準備をする
-  virtual void Unlock(void) = 0; // 図形描画を完了する
+  virtual void Lock(void) = 0;   // Prepare geometry drawing
+  virtual void Unlock(void) = 0; // Complete geometry drawing
 
-  virtual void SetColor(RGB216 col) = 0; // 色セット
+  virtual void SetColor(RGB216 col) = 0; // Set color
 
   // Enables regular alpha blending.
   // dstRGB = (srcRGB * [a]) + (dstRGB * (1 - [a]))
@@ -203,13 +202,13 @@ public:
   // Draw calls
   // ----------
 
-  // 直線
+  // Line
   virtual void DrawLine(int x1, int y1, int x2, int y2) = 0;
 
-  // 長方形
+  // Rectangle
   virtual void DrawBox(int x1, int y1, int x2, int y2) = 0;
 
-  // α長方形
+  // Alpha rectangle
   virtual void DrawBoxA(int x1, int y1, int x2, int y2) = 0;
 
   virtual void DrawTriangleFan(VERTEX_XY_SPAN<>) = 0;
@@ -231,7 +230,7 @@ concept GRAPHICS_GEOMETRY_POLY =
       t.DrawTriangles(tp, points, colors);
       t.DrawTrianglesA(tp, points, colors);
 
-      // スペアな用グラデーションライン
+      // Spare gradient line
       t.DrawGrdLineEx(coord, coord, rgb, coord, rgb);
     };
 

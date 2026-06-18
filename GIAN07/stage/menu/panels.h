@@ -1,10 +1,6 @@
-/*                                                                           */
-/*   panels.h   メニューパネルクラス宣言                                      */
-/*                                                                           */
-/*   旧来の namespace + 静的グローバル変数をデータクラスで置き換える。        */
-/*   各パネルは自身のテキストバッファ(MenuItem タイトル)、項目配列、          */
-/*   MenuDef を所有し、コールバックで状態を更新する。 */
-/*                                                                           */
+///
+/// Panels - Menu panel class declarations
+///
 
 #pragma once
 
@@ -16,7 +12,7 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// 難易度設定パネル
+// Difficulty settings panel
 // ---------------------------------------------------------------------------
 class DifficultyPanel {
 public:
@@ -42,7 +38,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// スクリーンショット設定パネル
+// Screenshot settings panel
 // ---------------------------------------------------------------------------
 class ScreenshotPanel {
 public:
@@ -62,14 +58,14 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// グラフィック API 設定パネル
+// Graphics API settings panel
 // ---------------------------------------------------------------------------
 class ApiPanel {
 public:
   ApiPanel();
   MenuDef &Menu() { return menu_; }
 
-  // 利用可能なグラフィック API に応じてメニュー項目を構築する。
+  // Build menu items based on available graphics APIs.
   void Init();
 
   static void FnDef(MenuController &, int_fast8_t);
@@ -85,7 +81,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// グラフィック設定パネル
+// Graphics settings panel
 // ---------------------------------------------------------------------------
 class GraphicsPanel {
 public:
@@ -94,7 +90,7 @@ public:
 
   ScreenshotPanel &Screenshot() { return screenshot_; }
 
-  // API 項目を含むサブメニューを初期化する。
+  // Initialize submenu including API items.
   void Init();
 
 private:
@@ -133,7 +129,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// MIDI 設定パネル
+// MIDI settings panel
 // ---------------------------------------------------------------------------
 class MidiPanel {
 public:
@@ -154,7 +150,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// サウンド設定パネル
+// Sound settings panel
 // ---------------------------------------------------------------------------
 class SoundPanel {
 public:
@@ -183,7 +179,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// パッド入力設定パネル
+// Pad input settings panel
 // ---------------------------------------------------------------------------
 class PadPanel {
 public:
@@ -201,7 +197,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// 入力設定パネル
+// Input settings panel
 // ---------------------------------------------------------------------------
 class InputPanel {
 public:
@@ -220,7 +216,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// 設定パネル (設定カテゴリ選択)
+// Settings panel (category selection)
 // ---------------------------------------------------------------------------
 class ConfigPanel {
 public:
@@ -232,7 +228,7 @@ public:
   SoundPanel &Sound() { return sound_; }
   InputPanel &Input() { return input_; }
 
-  // サブパネルを初期化する。
+  // Initialize subpanels.
   void Init();
 
 private:
@@ -245,7 +241,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// メインメニューパネル
+// Main menu panel
 // ---------------------------------------------------------------------------
 class MainMenuPanel {
 public:
@@ -255,7 +251,7 @@ public:
   ConfigPanel &Config() { return config_; }
   SoundPanel &Sound() { return config_.Sound(); }
 
-  // サブパネルを初期化する。
+  // Initialize subpanels.
   void Init();
 
   void Refresh(MenuController &ctrl, bool tick);

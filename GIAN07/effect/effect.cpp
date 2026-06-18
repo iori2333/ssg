@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   EFFECT.cpp   エフェクト管理                                             */
-/*                                                                           */
-/*                                                                           */
+///
+/// Effect - Effect management
+///
 
 #include "effect.h"
 
@@ -15,16 +14,16 @@
 #include <algorithm>
 
 // string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect,
-// mtitle_strs[] → effect_manager.cpp の EffectManager に移動
+// mtitle_strs[] moved to EffectManager in effect_manager.cpp
 
-// 円エフェクトの初期化 //
+// Circular effect initialization
 void EffectManager::InitCircleEffects() {
   for (auto &it : circle_effects) {
     it.type = CEFC_NONE;
   }
 }
 
-// 円エフェクトを動かす //
+// Move circular effects
 void EffectManager::MoveCircleEffects() {
   for (auto &it : circle_effects) {
     auto *ce = &it;
@@ -39,14 +38,14 @@ void EffectManager::MoveCircleEffects() {
       }
       break;
 
-    case CEFC_CIRCLE1: // 集
+    case CEFC_CIRCLE1: // Converge
       ce->r -= (10 + 5);
       if (ce->r <= 0) {
         ce->type = CEFC_NONE;
       }
       break;
 
-    case CEFC_CIRCLE2: // 離
+    case CEFC_CIRCLE2: // Diverge
       ce->r += (8 + 5);
       if (ce->r >= ce->rmax) {
         ce->type = CEFC_NONE;
@@ -56,7 +55,7 @@ void EffectManager::MoveCircleEffects() {
   }
 }
 
-// 円エフェクトを描画する //
+// Draw circular effects
 void EffectManager::DrawCircleEffects() {
   int j = 0;
   int r = 0;
@@ -94,7 +93,7 @@ void EffectManager::DrawCircleEffects() {
       }
       break;
 
-    case CEFC_CIRCLE1: // 集
+    case CEFC_CIRCLE1: // Converge
       for (uint8_t k = 0; k < 4; k++) {
         r = ce->r - std::max(2, (k * ce->r) / 8);
         if (r < 0) {
@@ -105,7 +104,7 @@ void EffectManager::DrawCircleEffects() {
       }
       break;
 
-    case CEFC_CIRCLE2: // 離
+    case CEFC_CIRCLE2: // Diverge
       for (uint8_t k = 0; k < 4; k++) {
         r = ce->r - std::max(2, (k * ce->r) / 12);
         // r = ce->r - max(2, (k * (600-ce->r))/16);
@@ -122,7 +121,7 @@ void EffectManager::DrawCircleEffects() {
   GrpGeom->Unlock();
 }
 
-// 円エフェクトをセットする //
+// Spawn circular effect
 void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
   auto ce = std::ranges::find_if(
       circle_effects, [](const auto &ce) { return (ce.type == CEFC_NONE); });
@@ -141,11 +140,11 @@ void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
     ce->rmax = ce->r = 400;
     break;
 
-  case CEFC_CIRCLE1: // 集
+  case CEFC_CIRCLE1: // Converge
     ce->rmax = ce->r = 600 + 50;
     break;
 
-  case CEFC_CIRCLE2: // 離
+  case CEFC_CIRCLE2: // Diverge
     ce->rmax = 900 - 100;
     ce->r = 0;
     break;
@@ -159,7 +158,7 @@ void EffectManager::InitMusicTitle() {
   mtitle_rect = TextObj.Register({.w = ((X_MAX + 1) - X_MIN), .h = 20});
 }
 
-// エフェクトの初期化を行う //
+// Effect data initialization
 void EffectManager::InitStringEffects() {
   for (auto &it : string_effects) {
     // memset(string_effects+i,0,sizeof(SEFFECT_DATA));
@@ -167,7 +166,7 @@ void EffectManager::InitStringEffects() {
   }
 }
 
-// 文字列系エフェクト //
+// String effects
 void EffectManager::SpawnStringEffect(int x, int y, const char *s) {
   int i = 0;
   int j = 0;
@@ -191,7 +190,7 @@ void EffectManager::SpawnStringEffect(int x, int y, const char *s) {
   }
 }
 
-// 得点表示エフェクト //
+// Point display effect
 void EffectManager::SpawnPointEffect(int x, int y, uint32_t point) {
   for (auto &it : string_effects) {
     if (it.cmd != SEFC_NONE) {
@@ -209,7 +208,7 @@ void EffectManager::SpawnPointEffect(int x, int y, uint32_t point) {
   }
 }
 
-// ゲームオーバーの表示 //
+// Game over display
 void EffectManager::SpawnGameOverEffect() {
   for (auto &it : string_effects) {
     if (it.cmd != SEFC_NONE) {
@@ -226,9 +225,9 @@ void EffectManager::SpawnGameOverEffect() {
   }
 }
 
-// 曲名の表示 //
+// Music title display
 void EffectManager::SetMusicTitle(int y, std::string_view s) {
-  // 空きバッファ検索 //
+  // Find free buffer
   auto e = std::ranges::find_if(
       string_effects, [](const auto &e) { return (e.cmd == SEFC_NONE); });
   if (e == std::end(string_effects)) {
@@ -243,7 +242,7 @@ void EffectManager::SetMusicTitle(int y, std::string_view s) {
     extent.h = s_extent.h;
   };
 
-  // 曲のタイトルが長すぎる場合、どうしましょう？ //
+  // If title is too long, what should we do?
   auto x = (std::max)((640 - 128 - 32 - extent.w), 128);
 
   e->cmd = SEFC_MTITLE1;
@@ -269,7 +268,7 @@ void EffectManager::RenderMusicTitle(WINDOW_POINT topleft,
       subrect);
 }
 
-// エフェクトを動かす(仕様変更の可能性があります) //
+// Move effects (spec may change)
 void EffectManager::MoveStringEffects() {
   for (auto &it : string_effects) {
     auto *e = &it;
@@ -316,7 +315,7 @@ void EffectManager::MoveStringEffects() {
       }
       break;
 
-    case SEFC_MTITLE1: // 曲名出現
+    case SEFC_MTITLE1: // Music title appear
       // e->x -= 16;
       if (e->time == 0) {
         e->cmd = SEFC_MTITLE2;
@@ -324,14 +323,14 @@ void EffectManager::MoveStringEffects() {
       }
       break;
 
-    case SEFC_MTITLE2: // 曲名停止
+    case SEFC_MTITLE2: // Music title stop
       if (e->time == 0) {
         e->cmd = SEFC_MTITLE3;
         e->time = 64 * 2;
       }
       break;
 
-    case SEFC_MTITLE3: // 曲名消去
+    case SEFC_MTITLE3: // Music title fade
       e->x += 64;
       if (e->time == 0) {
         e->cmd = SEFC_NONE;
@@ -346,7 +345,7 @@ void EffectManager::MoveStringEffects() {
   }
 }
 
-// エフェクトを描画する(仕様変更の可能性があります) //
+// Draw effects (spec may change)
 void EffectManager::DrawStringEffects() {
   int j = 0;
   int k = 0;
@@ -373,7 +372,7 @@ void EffectManager::DrawStringEffects() {
 
     case SEFC_GAMEOVER:
       for (j = 0; j < 9; j++) {
-        // *37 //
+        // *37
         const auto angle = Cast::down<uint8_t>((e->time * 3) + (j * 26));
         x = (e->x >> 6) + cosl(angle, e->time * 4);
         y = (e->y >> 6) + sinl(angle, e->time * 4);
@@ -392,7 +391,7 @@ void EffectManager::DrawStringEffects() {
       GrpGeom->Unlock();
 
       for (j = 0; j < 9; j++) {
-        // *37 //
+        // *37
         x = (e->x >> 6) + ((j - 4) * (35 - e->time));
         y = (e->y >> 6);
         GrpPutc(x, y, GAME_OVER[j]);
@@ -446,7 +445,7 @@ void EffectManager::DrawStringEffects() {
   }
 }
 
-// 画面全体に対するエフェクトの初期化 //
+// Initialize full-screen effects
 void EffectManager::InitScreenEffect() {
   screen_info.cmd = SCNEFC_NONE;
   screen_info.count = 0;
@@ -454,7 +453,7 @@ void EffectManager::InitScreenEffect() {
   GrpBackend_SetClip(PLAYFIELD_CLIP);
 }
 
-// 画面全体に対するエフェクトをセットする //
+// Set full-screen effect
 void EffectManager::SetScreenEffect(uint8_t cmd) {
   // if(screen_info.cmd != SCNEFC_NONE) return;
 
@@ -462,38 +461,38 @@ void EffectManager::SetScreenEffect(uint8_t cmd) {
   screen_info.count = 0;
 
   switch (cmd) {
-  case SCNEFC_CFADEIN:  // 円形フェードイン
-  case SCNEFC_CFADEOUT: // 円形フェードアウト
+  case SCNEFC_CFADEIN:  // Circle fade in
+  case SCNEFC_CFADEOUT: // Circle fade out
     break;
 
-  case SCNEFC_WHITEIN:  // ホワイトイン
-  case SCNEFC_WHITEOUT: // ホワイトアウト
+  case SCNEFC_WHITEIN:  // White in
+  case SCNEFC_WHITEOUT: // White out
     break;
 
-  default:                         // ばぐばぐ
-    screen_info.cmd = SCNEFC_NONE; // 一応エフェクトを切っておく
+  default:                         // Buggy
+    screen_info.cmd = SCNEFC_NONE; // Just disable the effect
     break;
   }
 }
 
-// 画面全体に対するエフェクトを動かす //
+// Animate full-screen effects
 void EffectManager::MoveScreenEffect() {
   switch (screen_info.cmd) {
-  case SCNEFC_CFADEIN: // 円形フェードイン
+  case SCNEFC_CFADEIN: // Circle fade in
     screen_info.count += 10;
     if (screen_info.count > 600) {
       screen_info.cmd = SCNEFC_NONE;
     }
     break;
 
-  case SCNEFC_CFADEOUT: // 円形フェードアウト
+  case SCNEFC_CFADEOUT: // Circle fade out
     screen_info.count += 10;
     screen_info.count = std::min<uint32_t>(
         screen_info.count, 600); // screen_info.cmd = SCNEFC_NONE;
 
     break;
 
-  case SCNEFC_WHITEIN: // ホワイトイン
+  case SCNEFC_WHITEIN: // White in
     screen_info.count += 10;
     if (screen_info.count >= 160) {
       // screen_info.cmd   = SCNEFC_WHITEOUT;
@@ -502,34 +501,34 @@ void EffectManager::MoveScreenEffect() {
     }
     break;
 
-  case SCNEFC_WHITEOUT: // ホワイトアウト
+  case SCNEFC_WHITEOUT: // White out
     screen_info.count += 10;
     if (screen_info.count >= 160) {
       screen_info.cmd = SCNEFC_NONE;
     }
     break;
 
-  default: // ばぐばぐ
+  default: // Buggy
     break;
   }
 }
 
-// 画面全体に対するエフェクトを描画する //
+// Draw full-screen effects
 void EffectManager::DrawScreenEffect() {
   int i = 0;
   int j = 0;
   PIXEL_LTRB src;
 
   switch (screen_info.cmd) {
-  case SCNEFC_CFADEIN: // 円形フェードイン
+  case SCNEFC_CFADEIN: // Circle fade in
     CircleFadeOut(X_MID, Y_MID, screen_info.count);
     break;
 
-  case SCNEFC_CFADEOUT: // 円形フェードアウト
+  case SCNEFC_CFADEOUT: // Circle fade out
     CircleFadeOut(X_MID, Y_MID, 400 - screen_info.count);
     break;
 
-  case SCNEFC_WHITEIN: // ホワイトイン
+  case SCNEFC_WHITEIN: // White in
     src = PIXEL_LTWH{((15 - (Cast::sign<int>(screen_info.count) / 10)) * 16),
                      (128 + 16), 16, 16};
     for (i = 128; i < 640 - 128; i += 16) {
@@ -539,7 +538,7 @@ void EffectManager::DrawScreenEffect() {
     }
     break;
 
-  case SCNEFC_WHITEOUT: // ホワイトアウト
+  case SCNEFC_WHITEOUT: // White out
     src = PIXEL_LTWH{((Cast::sign<int>(screen_info.count) / 10) * 16),
                      (128 + 16), 16, 16};
     for (i = 128; i < 640 - 128; i += 16) {
@@ -549,12 +548,12 @@ void EffectManager::DrawScreenEffect() {
     }
     break;
 
-  default: // ばぐばぐ
+  default: // Buggy
     break;
   }
 }
 
-// 円形フェードサポート関数 //
+// Circle fade support function
 void EffectManager::CircleFadeOut(int x, int y, int r) {
   PIXEL_LTRB src;
   int temp = 0;
@@ -589,7 +588,7 @@ void EffectManager::CircleFadeOut(int x, int y, int r) {
   }
 }
 
-// ロックオン配列を初期化 //
+// Initialize lock-on array
 void EffectManager::InitLockOn() {
   for (auto &it : lock_info) {
     // memset(lock_info+i,0,sizeof(LOCKON_INFO));
@@ -597,7 +596,7 @@ void EffectManager::InitLockOn() {
   }
 }
 
-// 何かをロックオンする //
+// Lock on to something
 void EffectManager::LockOn(int *x, int *y, int wx64, int hx64) {
   auto l = std::ranges::find_if(
       lock_info, [](const auto &l) { return (l.state == LOCKON_NONE); });
@@ -619,7 +618,7 @@ void EffectManager::LockOn(int *x, int *y, int wx64, int hx64) {
   // Snd_SEPlay(SOUND_ID_SELECT);
 }
 
-// ロックオンアニメーション動作 //
+// Lock-on animation update
 void EffectManager::MoveLockOn() {
   for (auto &it : lock_info) {
     auto *l = &it;
@@ -652,7 +651,7 @@ void EffectManager::MoveLockOn() {
   }
 }
 
-// ロックオン枠描画 //
+// Draw lock-on frame
 void EffectManager::DrawLockOn() {
   for (const auto &it : lock_info) {
     const auto *l = &it;
@@ -689,19 +688,19 @@ void EffectManager::DrawLockOn() {
   }
 }
 
-// enable_warn_efc, warn_efc_time → effect_manager.cpp の EffectManager に移動
+// enable_warn_efc, warn_efc_time moved to EffectManager in effect_manager.cpp
 
-// ワーニングの初期化 //
+// Warning initialization
 void EffectManager::InitWarningEffect() { enable_warn_efc = false; }
 
-// ワーニングの発動！！ //
+// Warning activation!!
 void EffectManager::SetWarningEffect() {
   enable_warn_efc = true;
   warn_efc_time = 0;
   InitWarningText();
 }
 
-// ワーニングの動作 //
+// Warning update
 void EffectManager::MoveWarningEffect() {
   if (!enable_warn_efc) {
     return;
@@ -718,7 +717,7 @@ void EffectManager::MoveWarningEffect() {
   }
 }
 
-// ワーニングの描画 //
+// Warning rendering
 void EffectManager::DrawWarningEffect() {
   int r = 0;
 

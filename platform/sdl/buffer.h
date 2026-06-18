@@ -1,7 +1,6 @@
-/*
- *   Memory ownership semantics
- *
- */
+///
+/// Memory ownership semantics
+///
 
 #pragma once
 

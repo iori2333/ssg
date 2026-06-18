@@ -1,6 +1,6 @@
-/*
- *   EffectManager — centralized visual effects system state
- */
+///
+/// EffectManager - Centralized visual effects system state
+///
 
 #pragma once
 

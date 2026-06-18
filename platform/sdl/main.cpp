@@ -1,7 +1,6 @@
-/*
- *   SDL entry point
- *
- */
+///
+/// SDL entry point
+///
 
 #ifdef WIN32
 // Enable visual styles for nice-looking SDL message boxes. Taken from the

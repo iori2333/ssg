@@ -1,7 +1,6 @@
-/*
- *   2D surfaces via GDI bitmaps
- *
- */
+///
+/// 2D surfaces via GDI bitmaps
+///
 
 #include "platform/windows/surface_gdi.h"
 #include "game/format_bmp.h"
