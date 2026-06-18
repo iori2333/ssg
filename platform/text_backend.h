@@ -1,7 +1,6 @@
-/*
- *   Platform-specific text rendering backend
- *
- */
+///
+/// Platform-specific text rendering backend
+///
 
 #pragma once
 

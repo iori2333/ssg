@@ -1,7 +1,6 @@
-/*
- *   Generic entity management
- *
- */
+///
+/// Entity - Generic entity management
+///
 
 #pragma once
 

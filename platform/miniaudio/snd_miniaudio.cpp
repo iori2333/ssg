@@ -1,7 +1,6 @@
-/*
- *   Sound via miniaudio
- *
- */
+///
+/// Sound via miniaudio
+///
 
 #include <SDL3/SDL_audio.h>
 #include <ranges>

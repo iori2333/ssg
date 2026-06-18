@@ -1,7 +1,6 @@
-/*
- *   MIDI backend implementation via WinMM / MME / midiOut*()
- *
- */
+///
+/// MIDI backend implementation via WinMM / MME / midiOut*()
+///
 
 #include "game/midi.h"
 #include "platform/midi_backend.h"
@@ -21,29 +20,29 @@ using namespace std::chrono_literals;
 using DEVICE_NAME = std::array<char, MAXPNAMELEN>;
 
 typedef struct {
-  //// みでぃ用構造体 ////
-  HMIDIOUT mp;          // 出力デバイスのハンドル
-  unsigned int nDevice; // デバイス数
-  int NowID;            // 現在のデバイスのＩＤ
-  DEVICE_NAME *name;    // デバイス名
+  // MIDI structure
+  HMIDIOUT mp;          // Output device handle
+  unsigned int nDevice; // Number of devices
+  int NowID;            // Current device ID
+  DEVICE_NAME *name;    // Device names
 
-  //// たいまー用構造体 ////
+  // Timer structure
   UINT htimer;
   TIMECAPS caps;
   std::chrono::duration<uint32_t, std::milli> delay;
 } MID_WINMM;
 
-// グローバル＆名前空間でローカルな変数 //
+// Global, namespace-local variable
 static MID_WINMM Mid_WinMM;
 
 bool MidBackend_Init(void) {
-  // 各変数の初期化 //
+  // Initialize variables
   Mid_WinMM.mp = nullptr;
-  Mid_WinMM.nDevice = (midiOutGetNumDevs() + 1); // 一つだけ多く準備する
+  Mid_WinMM.nDevice = (midiOutGetNumDevs() + 1); // Allocate one extra
   Mid_WinMM.NowID = (-1 + 1);                    // -1: MIDI_MAPPER
   Mid_WinMM.name = nullptr;
 
-  // デバイスが存在しないならリターン //
+  // Return if no devices exist
   constexpr auto device_cap =
       ((std::numeric_limits<size_t>::max)() / sizeof(DEVICE_NAME));
   if ((Mid_WinMM.nDevice > 0) && (Mid_WinMM.nDevice < device_cap)) {
@@ -54,14 +53,14 @@ bool MidBackend_Init(void) {
     return false;
   }
 
-  // デバイス名格納用のメモリ確保＆セット //
+  // Allocate and populate device name buffer
   for (decltype(Mid_WinMM.nDevice) i = 0; i < Mid_WinMM.nDevice; i++) {
     MIDIOUTCAPS caps;
     midiOutGetDevCaps((i - 1), &caps, sizeof(MIDIOUTCAPS));
     std::ranges::copy(caps.szPname, Mid_WinMM.name[i].begin());
   }
 
-  // 使用できるデバイスを探す(最初がMIDI_MAPPERなのがポイントだ!) //
+  // Find a usable device (MIDI_MAPPER is first — that's the trick)
   for (decltype(Mid_WinMM.nDevice) i = 0; i < Mid_WinMM.nDevice; i++) {
     Mid_WinMM.NowID = i;
     const auto mret =
@@ -71,7 +70,7 @@ bool MidBackend_Init(void) {
     }
   }
 
-  // 使用できるデバイスが存在しないとき //
+  // No usable devices found
   MidBackend_Cleanup();
   return FALSE;
 }
@@ -112,7 +111,7 @@ bool MidBackend_DeviceChange(int8_t direction) {
     }
   }
 
-  // あり得ないはずだが... //
+  // This shouldn't happen, but...
   return false;
 }
 

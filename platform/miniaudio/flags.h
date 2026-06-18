@@ -1,7 +1,6 @@
-/*
- *   miniaudio configuration
- *
- */
+///
+/// miniaudio configuration
+///
 
 #pragma once
 

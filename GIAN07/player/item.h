@@ -1,41 +1,40 @@
-/*                                                                           */
-/*   Item.h   アイテムの処理                                                 */
-/*                                                                           */
-/*                                                                           */
+///
+/// Item - Item processing
+///
 
 #pragma once
 
 #include <array>
 #include <cstdint>
 
-///// [ 定数 ] /////
+// [ Constants ]
 
-// 最大数 //
+// Maximum count
 inline constexpr auto ITEM_MAX = 100;
 
-// 種類もしくは状態 //
-inline constexpr auto ITEM_DELETE = 0x00; // 消去要請
-inline constexpr auto ITEM_SCORE = 0x01;  // 得点アイテム
-inline constexpr auto ITEM_EXTEND = 0x02; // 残りメイド数ＵＰ
-inline constexpr auto ITEM_BOMB = 0x03;   // ボム
+// Type or state
+inline constexpr auto ITEM_DELETE = 0x00; // delete request
+inline constexpr auto ITEM_SCORE = 0x01;  // score item
+inline constexpr auto ITEM_EXTEND = 0x02; // remaining maid count up
+inline constexpr auto ITEM_BOMB = 0x03;   // bomb
 
-// その他 //
-inline constexpr auto ITEM_GRAVITY = 3;          // アイテムに対するｙ加速度
-inline constexpr auto ITEM_HITX = (8 + 8) * 64;  // アイテムのＸ当たり判定
-inline constexpr auto ITEM_HITY = (16 + 8) * 64; // アイテムのＹ当たり判定
+// Other
+inline constexpr auto ITEM_GRAVITY = 3;          // Y acceleration for items
+inline constexpr auto ITEM_HITX = (8 + 8) * 64;  // item X collision
+inline constexpr auto ITEM_HITY = (16 + 8) * 64; // item Y collision
 
-///// [構造体] /////
+// [ Struct ]
 struct ItemData {
   int x, y;
   int vx, vy;
   uint32_t count;
   uint8_t type;
-  bool auto_collect; // 自動回収が発動済みか
+  bool auto_collect; // whether auto-collect is active
 };
 // (ITEM_DATA alias removed — use ItemData directly)
 
-///// [ 関数 ] /////
-// ItemManager に移行済み
+// [ Functions ]
+// Migrated to ItemManager
 
-///// [ 変数 ] /////
-// Items.entities, Items.indices, Items.count で直接アクセス
+// [ Variables ]
+// Access directly via Items.entities, Items.indices, Items.count

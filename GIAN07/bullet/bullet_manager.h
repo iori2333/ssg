@@ -1,6 +1,6 @@
-/*
- *   BulletManager — centralized bullet system state
- */
+///
+/// BulletManager - Centralized bullet system state
+///
 
 #pragma once
 
@@ -9,7 +9,7 @@
 #include <cstdint>
 
 struct BulletManager {
-  // --- 弾データ ---
+  // --- Bullet data ---
   std::array<Bullet, TAMA_MAX> bullets;         // Tama[]
   BulletCommand command;                        // TamaCmd
   std::array<uint16_t, TAMA_MAX> indices_small; // Tama1Ind[]
@@ -50,7 +50,7 @@ private:
 
 extern BulletManager Bullets;
 
-//// 弾コマンド用マクロ (TAMA.h から移動 — Bullets.command を直接参照) ////
+//// Bullet command macros (moved from TAMA.h -- reference Bullets.command directly) ////
 
 inline void TamaSetForm(uint8_t cmd, uint8_t option, uint8_t type, uint8_t c) {
   Bullets.command.cmd = cmd;

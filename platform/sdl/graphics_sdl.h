@@ -1,7 +1,6 @@
-/*
- *   Graphics via SDL_Renderer
- *
- */
+///
+/// Graphics via SDL_Renderer
+///
 
 #pragma once
 

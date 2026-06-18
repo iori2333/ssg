@@ -1,7 +1,6 @@
-/*************************************************************************************************/
-/*   LASER.H   レーザーに関する処理(反射,ショート) */
-/*                                                                                               */
-/*************************************************************************************************/
+///
+/// Laser - Laser processing (reflect, short)
+///
 
 #pragma once
 
@@ -9,80 +8,79 @@
 #include "platform/graphics_backend.h"
 #include <cstdint>
 
-///// [更新履歴] /////
+// [Change history]
 
-// 2000/02/17 : 新しいシステムに移行開始。無限遠レーザーと完全に分離
+// 2000/02/17 : Started migration to new system. Completely separated from infinite laser
 
-/*-> ここからはちょっと古いよ(1999..)
- * (4/3)  10:36 開発開始
- * (4/6)  12:00 ついにポリゴン＆クリッピング関数が完成。描画はいつ出来るのか？
- * (4/7)  12:02 全てのレーザーを同じ構造体で扱う事にした
- * (4/8)   7:23 無限遠レーザーの制作
- * (4/9)   2:01 反射レーザーを一応打ち込み終わる
- * (4/9)   2:59 反射レーザー完成
- * (4/11) 14:05 ショート＆反射レーザーの当たり判定完成
- * (4/11) 15:17 リフレクターのヒットチェックを強化(バグは消えたが遅くなった)
- *
- * (9/23) 16:18 ライン描画、ＥＣＬ対応などが完了
- */
+//-> A bit old from here (1999..)
+// (4/3)  10:36 Development started
+// (4/6)  12:00 Polygon & clipping function finally completed. When will rendering be done?
+// (4/7)  12:02 Decided to handle all lasers with the same structure
+// (4/8)   7:23 Infinite laser creation
+// (4/9)   2:01 Finished implementing reflect laser
+// (4/9)   2:59 Reflect laser complete
+// (4/11) 14:05 Short & reflect laser collision detection complete
+// (4/11) 15:17 Enhanced reflector hit check (bug fixed but slower)
+//
+// (9/23) 16:18 Line drawing, ECL support, etc. completed
 
-////レーザー定数////
-inline constexpr auto LASER_MAX = 1000; // レーザーの最大発生本数
+// Laser constants
+inline constexpr auto LASER_MAX = 1000; // Maximum number of lasers
 
-////レーザー発動コマンド構造体////
+// Laser command structure
 struct LaserCommand {
-  int x, y; // 始点の座標
-  int v;    // レーザーの初速度
+  int x, y; // Starting point coordinates
+  int v;    // Laser initial velocity
 
-  int w;  // レーザーの太さ        (x64座標を使用する)
-  int l;  // レーザーの長さ最終値  (x64座標を使用する)
-  int l2; // レーザーの発射位置補正(x64...)
+  int w;  // Laser thickness (uses x64 coordinates)
+  int l;  // Laser final length (uses x64 coordinates)
+  int l2; // Laser firing position offset (x64...)
 
-  uint8_t d;  // 発射角
-  uint8_t dw; // 発射幅
+  uint8_t d;  // Firing angle
+  uint8_t dw; // Firing width
 
-  uint8_t n; // レーザーの本数
-  uint8_t c; // レーザーの色
+  uint8_t n; // Number of lasers
+  uint8_t c; // Laser color
 
-  char a;       // 加速度(つかうのかな???)
-  uint8_t cmd;  // レーザー発動コマンド(ほとんど弾と同じかも)
-  uint8_t type; // ショート、無限遠など
-  uint8_t notr; // 反射しないリフレクターの番号
+  char a;       // Acceleration (will this be used?)
+  uint8_t cmd;  // Laser activation command (mostly same as bullets)
+  uint8_t type; // Short, infinite, etc.
+  uint8_t notr; // Reflector number that does not reflect
 };
 // (LASER_CMD alias removed — use LaserCommand directly)
 
-////レーザー用構造体////
-inline constexpr auto LF_DELETE = 0x80; // レーザーを消去する(処理対象から外す)
+// Laser structure
+inline constexpr auto LF_DELETE = 0x80; // Delete laser (remove from processing)
 
 struct LASER_DATA {
-  int x, y;   // 現在の始点
-  int vx, vy; // 速度の(X,Y)成分
-  int lx, ly; // 表示座標の加算値(長さ)
-  int wx, wy; // 表示座標の加算値(太さ)
-  int v;      // 速度
+  int x, y;   // Current starting point
+  int vx, vy; // Velocity (X, Y) components
+  int lx, ly; // Display coordinate offset (length)
+  int wx, wy; // Display coordinate offset (thickness)
+  int v;      // Velocity
 
-  VERTEX_XY p[4]; // 表示する座標
+  VERTEX_XY p[4]; // Display coordinates
 
-  char a;    // 加速度(つかうのか??)
-  uint8_t d; // 進行方向
+  char a;    // Acceleration (will this be used?)
+  uint8_t d; // Direction of travel
 
-  int w, wmax; // 太さ
-  int l, lmax; // 現在の長さ、長さの最終値
-  int ltemp;   // 反射レーザー専用変数(発射＆ヒットの場合にのみ使用)
+  int w, wmax; // Thickness
+  int l, lmax; // Current length, target length
+  int ltemp;   // Reflect laser variable (used only on fire & hit)
 
-  uint16_t count; // フレームカウンタ
-  uint8_t c;      // 色
-  uint8_t type;   // 種類
-  uint8_t flag;   // 消去要請フラグ等(エフェクト含む)
-  uint8_t notr;   // 反射しないリフレクターの番号
-  uint8_t evade;  // かすり用フラグ
+  uint16_t count; // Frame counter
+  uint8_t c;      // Color
+  uint8_t type;   // Type
+  uint8_t flag;   // Deletion request flag etc. (including effects)
+  uint8_t notr;   // Reflector number that does not reflect
+  uint8_t evade;  // Graze flag
 };
 
-////レーザー関数////
-// 後方互換 inline wrapper は laser_manager.h 末尾に移動
-// 実装は LaserManager メソッドに移行
+// Laser functions
+// Backward-compat inline wrapper moved to end of laser_manager.h
+// Implementation migrated to LaserManager methods
 
-////レーザーの各種変数たち////
-// Lasers.cmd, Lasers.count, Lasers.lasers, Lasers.laser_indices で直接アクセス
-// extern REFLECTOR	Reflector[RT_MAX];		// 反射物構造体
-// extern uint16_t	ReflectorNow;	// 反射物の個数
+// Laser various variables
+// Access directly via Lasers.cmd, Lasers.count, Lasers.lasers, Lasers.laser_indices
+// extern REFLECTOR	Reflector[RT_MAX];		// Reflector structure
+// extern uint16_t	ReflectorNow;	// Reflector count

@@ -1,7 +1,6 @@
-/*
- *   Hash function
- *
- */
+///
+/// Hash function
+///
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.

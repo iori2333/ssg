@@ -1,18 +1,17 @@
-/*
- *   BombEfc.h   : 爆発系エフェクト
- *
- */
+///
+/// BombEfc - Explosion effects
+///
 
 #pragma once
 
 #include <cstdint>
 
-/***** [ 定数 ] *****/
-inline constexpr auto EXBOMB_MAX = 3;      // エフェクトの同時発生数
-inline constexpr auto EXBOMB_STD = 0;      // よくあるタイプの爆発(??)
-inline constexpr auto EXBOMB_OBJMAX = 200; // エフェクト補助用オブジェクトの個数
+// [Constants]
+inline constexpr auto EXBOMB_MAX = 3;      // Max concurrent effects
+inline constexpr auto EXBOMB_STD = 0;      // Common explosion type
+inline constexpr auto EXBOMB_OBJMAX = 200; // Number of helper effect objects
 
-/***** [構造体] *****/
+// [Structs]
 struct SpObj {
   int x, y;
   int vx, vy;
@@ -20,15 +19,15 @@ struct SpObj {
 };
 
 struct BombEffectCtrl {
-  int x, y;       // エフェクトの中心座標
-  bool bIsUsed;   // この構造体は使用中か
-  uint32_t count; // フレームカウンタ
+  int x, y;       // Center coordinates of the effect
+  bool bIsUsed;   // Whether this struct is in use
+  uint32_t count; // Frame counter
 
-  SpObj Obj[EXBOMB_OBJMAX]; // エフェクト補助用オブジェクト
+  SpObj Obj[EXBOMB_OBJMAX]; // Helper objects for effects
 
-  uint8_t type; // エフェクトの種類
+  uint8_t type; // Effect type
 };
 using BombEfcCtrl = BombEffectCtrl;
 
-/***** [関数プロトタイプ] *****/
-// 後方互換 inline wrapper は effect_manager.h の末尾に移動
+// [Function prototypes]
+// Backward-compat inline wrappers moved to end of effect_manager.h

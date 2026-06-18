@@ -1,8 +1,6 @@
-/*
- *   2D surfaces
- *
- */
-
+///
+/// 2D surfaces
+///
 #pragma once
 
 #include "game/coords.h"

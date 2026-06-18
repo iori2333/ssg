@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   GIAN.cpp   ゲーム全体の管理                                             */
-/*                                                                           */
-/*                                                                           */
+///
+/// Gian - Game-wide management
+///
 
 #include "gian.h"
 #include "bullet/bullet_manager.h"
@@ -17,14 +16,14 @@
 #include "stage/scroll_manager.h"
 #include <format>
 
-///// [グローバル変数] /////
+// [Global variables]
 // HIGH_SCORE		*HighScore;
 // char			ScoreTable[8][80];
 // GameState.game_count, GameState.game_stage, GameState.game_level →
-// game_manager.cpp の GameManager に移動 Viv → player_manager.cpp の
-// PlayerManager に移動（MAID.h で Player& として宣言）
+// Moved to GameManager in game_manager.cpp; Viv moved to
+// PlayerManager in player_manager.cpp (declared as Player& in MAID.h)
 
-///// [ 関数(非公開) ] /////
+// [Functions (private)]
 void StdStatusOutput() {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
 
@@ -50,7 +49,7 @@ void StdStatusOutput() {
 
   GrpPut16(0, 0, std::format("{:03} FPS", fps).c_str());
 
-  // ---- RANK 表示 ----
+  // ---- RANK display ----
   {
     const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
                                      "Extra"};
@@ -124,5 +123,5 @@ void StdStatusOutput() {
   GrpPut16(column2_left, 440,
            std::format("Left   {}", Players.viv.left).c_str());
   GrpPut16(column2_left, 460,
-           std::format("Credit {}", Players.viv.credit).c_str()); // -1 に注意だ！！
+           std::format("Credit {}", Players.viv.credit).c_str()); // Beware of -1
 }

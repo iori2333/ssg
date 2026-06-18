@@ -1,8 +1,8 @@
-/*
- *   BulletManager — centralized bullet system state
- */
+///
+/// BulletManager - Centralized bullet system state
+///
 
 #include "bullet_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 BulletManager Bullets;

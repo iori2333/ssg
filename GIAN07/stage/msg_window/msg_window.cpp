@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   msg_window.cpp   メッセージウィンドウ処理                                */
-/*                                                                           */
-/*                                                                           */
+///
+/// MsgWindow - Message window processing
+///
 
 #include "msg_window.h"
 
@@ -13,9 +12,9 @@
 
 #include <utility>
 
-///// [グローバル変数] /////
+// [Global variables]
 
-MsgWindow MsgWin; // メッセージウィンドウ (後方互換用、UIManager が本体)
+MsgWindow MsgWin; // Message window (backward compat, UIManager is the main)
 
 void MsgWindow::MsgBlank() {
   line = 0;
@@ -40,26 +39,26 @@ void MsgWindow::Open() {
     return;
   }
 
-  // 状態および、最終値のセット //
+  // Set state and final values
   state = MWIN_OPEN;
-  face_state = MFACE_NONE; // 何も表示しない
+  face_state = MFACE_NONE; // Display nothing
   face_id = 0;
   face_time = 0;
 
-  // 矩形の初期値をセットする //
+  // Set initial rectangle values
   const auto y_mid = ((max_size.bottom + max_size.top) / 2);
   now_size.left = max_size.left;
   now_size.right = max_size.right;
   now_size.top = y_mid - 4;
   now_size.bottom = y_mid + 4;
 
-  Cmd(MWCMD_NORMALFONT); // ノーマルフォント
+  Cmd(MWCMD_NORMALFONT); // Normal font
 
-  // ウィンドウ内に表示するものの初期化 //
+  // Initialize display contents in the window
   MsgBlank();
 }
 
-// メッセージウィンドウをクローズする //
+// Close the message window
 void MsgWindow::Close() {
   //	if(state != MWIN_FREE) return;
 
@@ -67,16 +66,16 @@ void MsgWindow::Close() {
   state = MWIN_CLOSE;
 }
 
-// メッセージウィンドウを強制クローズする //
+// Force close the message window
 void MsgWindow::ForceClose() {
   face_state = MFACE_NONE;
   state = MWIN_DEAD;
 }
 
-// メッセージウィンドウを動作させる //
+// Tick the message window
 void MsgWindow::Tick() {
   switch (face_state) {
-  case MFACE_OPEN: // 顔を表示しようとしている
+  case MFACE_OPEN: // Attempting to display face
     face_time += 16;
     if (face_time == 0) {
       face_state = MFACE_WAIT;
@@ -92,7 +91,7 @@ void MsgWindow::Tick() {
     }
     break;
 
-  case MFACE_CLOSE: // 顔を消そうとしている
+  case MFACE_CLOSE: // Attempting to hide face
     face_time += 16;
     if (face_time == 0) {
       face_state = MFACE_NONE;
@@ -108,7 +107,7 @@ void MsgWindow::Tick() {
     now_size.top -= 2;
     now_size.bottom += 2;
 
-    // 完全にオープンできた場合 //
+    // When fully opened
     if (now_size.top <= max_size.top) {
       now_size = max_size;
       state = MWIN_FREE;
@@ -121,7 +120,7 @@ void MsgWindow::Tick() {
     now_size.right += 6;
     now_size.left -= 6;
 
-    // 完全にクローズできた場合 //
+    // When fully closed
     if (now_size.top >= now_size.bottom) {
       state = MWIN_DEAD;
     }
@@ -133,43 +132,43 @@ void MsgWindow::Tick() {
   }
 }
 
-// メッセージウィンドウを描画する(上に同じ) //
+// Draw the message window (same as above)
 void MsgWindow::Draw() {
   PIXEL_LTRB src;
 
-  const auto x = now_size.left;         // ウィンドウ左上Ｘ
-  const auto y = now_size.top;          // ウィンドウ左上Ｙ
-  const auto w = (now_size.right - x);  // ウィンドウ幅
-  const auto h = (now_size.bottom - y); // ウィンドウ高さ
+  const auto x = now_size.left;         // Window top-left X
+  const auto y = now_size.top;          // Window top-left Y
+  const auto w = (now_size.right - x);  // Window width
+  const auto h = (now_size.bottom - y); // Window height
   int len = 0;
   int time = 0;
   int oy = 0;
 
-  // メッセージウィンドウが死んでいたら何もしない //
+  // Do nothing if the message window is dead
   if (state == MWIN_DEAD) {
     return;
   }
 
-  // 半透明部の描画 //
+  // Draw translucent part
   GrpGeom->Lock();
   GrpGeom->SetAlphaNorm((GrpGeom_FB() != nullptr) ? (64 + 32) : 110);
   GrpGeom->SetColor({0, 0, 3});
   GrpGeom->DrawBoxA((x + 4), (y + 4), (x + w - 4), (y + h - 4));
   GrpGeom->Unlock();
 
-  // 文字列を表示するのはウィンドウが[FREE]である場合だけ        //
-  // -> こうしないと文字列用 Surface を作成することになるので... //
+  // Display text only when window is [FREE]
+  // -> Otherwise a Surface for text would have to be created...
   if ((state == MWIN_FREE) && trr) {
     const auto topleft = (WINDOW_POINT{x, y} + text_topleft);
     const auto trr = this->trr.value();
     const auto &text = this->text;
     TextObj.Render(topleft, trr, text, [this](TEXTRENDER_SESSION &s) {
-      // セットされたフォントで描画
+      // Draw with the set font
       s.SetFont(font_id);
       for (auto i = 0; std::cmp_less(i, line); i++) {
         const auto m = msg[i];
 
-        // 一応安全対策
+        // Safety measure
         if (m.empty()) {
           continue;
         }
@@ -177,10 +176,10 @@ void MsgWindow::Draw() {
         const auto left =
             (!!(flags & MsgWindowFlags::CENTER) ? TextLayoutXCenter(s, m) : 0);
 
-        // 灰色で１どっとずらして描画
+        // Draw offset by 1 pixel in gray
         s.Put({.x = (left + 1), .y = top}, m,
               RGB{.r = 128, .g = 128, .b = 128});
-        // 白で表示すべき位置に表示
+        // Draw in white at the correct position
         s.Put({.x = (left + 0), .y = top}, m,
               RGB{.r = 255, .g = 255, .b = 255});
       }
@@ -189,7 +188,7 @@ void MsgWindow::Draw() {
 
   DrawWindowFrame(x, y, w, h);
 
-  // お顔をかきましょう(表示を要請されている場合にだけ) //
+  // Draw face (only when display is requested)
   const auto sid = (SURFACE_ID::FACE + (face_id / FACE_NUMX));
   switch (face_state) {
   case MFACE_WAIT:
@@ -241,13 +240,13 @@ void MsgWindow::Msg(std::string_view s) {
   Line = line;
 
   if (std::cmp_equal(Line, max_line)) {
-    // すでに表示最大行数を超えていた場合 //
+    // When already exceeding max display lines
     for (i = 1; i < max_line - 1; i++) {
       msg[i] = msg[i + 1];
     }
     msg[Line - 1] = s;
   } else {
-    // ポインタセット＆行数更新 //
+    // Set pointer and update line count
     msg[Line] = s;
     line = Line + 1;
   }
@@ -259,13 +258,13 @@ void MsgWindow::Msg(std::string_view s) {
   }
 }
 
-// 顔をセットする //
+// Set the face
 void MsgWindow::Face(uint8_t faceID) {
   if (state == MWIN_DEAD) {
-    return; // 表示不可
+    return; // Cannot display
   }
   if (faceID / FACE_NUMX >= FACE_MAX) {
-    return; // あり得ない数字
+    return; // Impossible number
   }
 
   assert(text_topleft.x == FACE_W);
@@ -282,42 +281,42 @@ void MsgWindow::Face(uint8_t faceID) {
   face_time = 0;
 }
 
-// コマンドを送る //
+// Send command
 void MsgWindow::Cmd(uint8_t cmd) {
   int temp = 0;
   int Ysize = 0;
 
   switch (cmd) {
-  case MWCMD_LARGEFONT: // ラージフォントを使用する
+  case MWCMD_LARGEFONT: // Use large font
     Ysize += 8;
     [[fallthrough]];
-  case MWCMD_NORMALFONT: // ノーマルフォントを使用する
+  case MWCMD_NORMALFONT: // Use normal font
     Ysize += 2;
     [[fallthrough]];
-  case MWCMD_SMALLFONT: // スモールフォントを使用する
+  case MWCMD_SMALLFONT: // Use small font
     Ysize += 14;
     temp = max_size.bottom - max_size.top - 16;
-    max_line = temp / Ysize;                                 // 表示可能最大行数
-    font_dy = ((temp % Ysize) / (temp / Ysize)) + Ysize + 1; // Ｙ増量
-    font_id = Cast::down_enum<FONT_ID>(cmd);                 // 使用フォント
+    max_line = temp / Ysize;                                 // Max displayable lines
+    font_dy = ((temp % Ysize) / (temp / Ysize)) + Ysize + 1; // Y increment
+    font_id = Cast::down_enum<FONT_ID>(cmd);                 // Font to use
     [[fallthrough]];
 
-  case MWCMD_NEWPAGE: // 改ページする
-    // 文字列無効化, 最初の行へ
+  case MWCMD_NEWPAGE: // New page
+    // Invalidate strings, go to first line
     MsgBlank();
     break;
 
-  default: // ここに来たらバグね...
+  default: // Bug if we get here...
     break;
   }
 }
 
-// ヘルプ文字列を送る //
+// Send help string
 void MsgWindow::Help(MenuController *ws) {
-  // アクティブなウィンドウを検索し、メッセージ領域をクリアする //
+  // Search active window and clear message area
   const auto *p = ws->SearchActive();
   MsgBlank();
 
-  // 一列だけ文字列を割り当てる //
+  // Assign a single row of strings
   Msg(p->ItemPtr[ws->CurrentSelection()]->Help);
 }

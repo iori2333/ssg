@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   Lens.cpp   レンズエフェクト                                             */
-/*                                                                           */
-/*                                                                           */
+///
+/// Lens - Lens effect
+///
 
 #include "lens.h"
 #include "constants.h"
@@ -12,7 +11,7 @@
 
 #include <utility>
 
-// 半径:r  出っ張り:m  のレンズを作成 //
+// Create a lens with radius:r and bulge:m
 std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
   int dx = 0;
   int z = 0;
@@ -22,8 +21,8 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
   // still contain byte offsets, regardless of our main pixel format.
   const auto BitWeight = GrpBackend_PixelFormat().PixelByteSize();
 
-  assert(r > 0); // 半径がおかしい
-  assert(r > m); // 出っ張りは半径より小さくせよ！
+  assert(r > 0); // Invalid radius
+  assert(r > m); // Bulge must be smaller than radius!
 
   const uint16_t Diameter = (r * 2);
   const uint16_t area = (Diameter * Diameter);
@@ -49,16 +48,16 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
   const auto s = isqrt(r2 - (Cast::up_sign<int32_t>(m) * m));
 
   for (auto i = -Cast::up_sign<int32_t>(r); std::cmp_less(i, r); i++) {
-    // ｘ座標の測定だ //
+    // Measure x coordinate
     dx = (s * s) - (i * i);
 
-    if (dx > 0) { // 円の内部
+    if (dx > 0) { // Inside the circle
       dx = isqrt(dx);
       *Table = w = dx * 2;
       Table++; // Width
       *Table = (r - dx) * BitWeight;
       Table++; // Dx
-    } else {   // 円の外部
+    } else {   // Outside the circle
       w = 0;
       *Table = 0;
       Table++; // Width
@@ -70,9 +69,9 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
       z = (dx - w) * (dx - w);
       z = isqrt(r2 - z - (i * i));
 
-      *Table = ((i * m) / z) + r;                     // ｙ座標
-      *Table = (*Table * Diameter);                   // 幅を掛ける
-      *Table = (*Table + ((((dx - w) * m) / z) + r)); // ｘ座標
+      *Table = ((i * m) / z) + r;                     // y-coordinate
+      *Table = (*Table * Diameter);                   // Multiply by width
+      *Table = (*Table + ((((dx - w) * m) / z) + r)); // x-coordinate
 
       Table++;
     }
@@ -81,9 +80,9 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
   return NewLens;
 }
 
-// GrpLock() 系関数 : レンズボールを描画する //
+// GrpLock()-family functions : Draw the lens ball
 void LensInfo::Draw(WINDOW_POINT center) {
-  // (x,y) が中心になるように補正する //
+  // Adjust so (x,y) becomes the center
   const WINDOW_COORD left = (center.x - r);
   const WINDOW_COORD top = (center.y - r);
 
@@ -97,7 +96,7 @@ void LensInfo::Draw(WINDOW_POINT center) {
     const auto fov_size = (static_cast<size_t>(Height) * Height);
     const std::span fov = {fov_buffer, fov_size};
 
-    auto *Table = Data.get(); // テーブル参照用
+    auto *Table = Data.get(); // For table lookup
     auto *Dest = &pixels[(top * pitch) + (left * sizeof(P))];
 
     // Capture the pixels under the lens

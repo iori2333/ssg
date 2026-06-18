@@ -1,7 +1,6 @@
-/*
- *   Common paths and path manipulation via SDL
- *
- */
+///
+/// Common paths and path manipulation via SDL
+///
 
 // SDL headers must come first to avoid import→#include bugs on Clang 19.
 #include <SDL3/SDL_filesystem.h>

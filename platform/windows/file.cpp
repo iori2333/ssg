@@ -1,7 +1,6 @@
-/*
- *   File I/O (Win32 implementation)
- *
- */
+///
+/// File I/O (Win32 implementation)
+///
 
 #define WIN32_LEAN_AND_MEAN
 

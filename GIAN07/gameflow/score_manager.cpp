@@ -1,6 +1,6 @@
-/*
- *   ScoreManager — global instance
- */
+///
+/// ScoreManager - Global instance
+///
 
 #include "score_manager.h"
 

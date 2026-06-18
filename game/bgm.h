@@ -1,8 +1,6 @@
-/*
- *   Format-independent background music interface
- *
- */
-
+///
+/// Format-independent background music interface
+///
 #pragma once
 
 #include "game/hash.h"
@@ -43,7 +41,7 @@ std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void);
 std::string_view BGM_Title(void);
 // ---------------
 
-bool BGM_ChangeMIDIDevice(int8_t direction); // 出力デバイスを変更する
+bool BGM_ChangeMIDIDevice(int8_t direction); // Change output device
 
 // Playback
 // --------
@@ -72,19 +70,19 @@ void BGM_SetGainApply(bool apply);
 
 void BGM_UpdateVolume(void);
 
-// フェードアウト(数字が大きいほど早い)
+// Fade out (higher number = faster)
 void BGM_FadeOut(uint8_t speed);
 // --------------
 
 // Tempo control
 // -------------
 
-static constexpr uint8_t BGM_TEMPO_DENOM = (1 << 7); // 標準のテンポ
+static constexpr uint8_t BGM_TEMPO_DENOM = (1 << 7); // Default tempo
 static constexpr int8_t BGM_TEMPO_MIN = -100;
 static constexpr int8_t BGM_TEMPO_MAX = 100;
 
 int8_t BGM_GetTempo(void);
-void BGM_SetTempo(int8_t tempo); // テンポを変更する
+void BGM_SetTempo(int8_t tempo); // Change tempo
 // -------------
 
 // BGM pack management

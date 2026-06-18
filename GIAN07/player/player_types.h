@@ -1,77 +1,76 @@
-/*
- *   Player type definition (separated to resolve circular dependency)
- *   Included by MAID.h and player_manager.h
- */
+///
+/// PlayerTypes - Player type definitions
+///
 
 #pragma once
 
 #include <cstdint>
 
-///// [ Player クラス ] /////
+// [Player class]
 
 struct Player {
-  // --- 座標 ---
-  int x, y;     // 現在の<表示>座標
-  int vx, vy;   // オプションのズレ具合
-  int opx, opy; // 現在のオプション基本座標
+  // --- Coordinates ---
+  int x, y;     // Current display coordinates
+  int vx, vy;   // Option offset
+  int opx, opy; // Current option base coordinates
 
-  // --- スコア ---
-  int64_t score;  // 得点カウンタ
-  int64_t dscore; // 得点増加値
+  // --- Score ---
+  int64_t score;  // Score counter
+  int64_t dscore; // Score increment
 
-  // --- かすり ---
-  uint32_t evade_sum; // かすり合計
-  int evadesc;        // かすり得点
-  uint16_t evade;     // かすり回数
-  uint16_t evade_c;   // 連続「かすり」の残り許容時間
+  // --- Graze ---
+  uint32_t evade_sum; // Total graze count
+  int evadesc;        // Graze score
+  uint16_t evade;     // Graze count
+  uint16_t evade_c;   // Consecutive graze remaining tolerance
 
-  // --- ステータス ---
-  char v;              // サボテンの移動速度基本値(後で64~45倍にする)
-  uint8_t weapon;      // "とげ" の種類
-  uint8_t exp;         // サボテンの経験値？
-  uint8_t bomb;        // ボムの数
-  uint8_t left;        // 残りサボテン数
-  uint8_t credit;      // のこりクレジット
-  uint16_t miss_count; // ミス回数
-  uint16_t bomb_used;  // ボム使用回数
+  // --- Status ---
+  char v;              // Cactus base movement speed (later multiply by 64~45)
+  uint8_t weapon;      // Thorn type
+  uint8_t exp;         // Cactus experience?
+  uint8_t bomb;        // Bomb count
+  uint8_t left;        // Remaining cactus count
+  uint8_t credit;      // Remaining credits
+  uint16_t miss_count; // Miss count
+  uint16_t bomb_used;  // Bomb usage count
 
-  uint8_t GrpID; // 表示すべきグラフィック
+  uint8_t GrpID; // Graphic to display
 
-  // --- タイマー/状態 ---
-  uint16_t bomb_time;   // ボムウェイト用
-  uint16_t exp2;        // 経験値増加抑制用
-  uint16_t muteki;      // 無敵フラグ(0:off !0:無敵時間カウンタ)
-  uint16_t lay_time;    // レーザーの発射タイミング用
-  uint8_t lay_grp;      // レーザーのグラフィック用
-  uint8_t toge_time;    // "とげ" の発射タイミング用
-  uint8_t toge_ex;      // とげ発射用特殊変数
-  uint8_t ShiftCounter; // 押しっぱなし低速移動用
+  // --- Timer/State ---
+  uint16_t bomb_time;   // Bomb wait timer
+  uint16_t exp2;        // Experience gain suppression
+  uint16_t muteki;      // Invincibility flag (0:off !0:invincibility timer)
+  uint16_t lay_time;    // Laser fire timing
+  uint8_t lay_grp;      // Laser graphic
+  uint8_t toge_time;    // Thorn fire timing
+  uint8_t toge_ex;      // Thorn fire special variable
+  uint8_t ShiftCounter; // Hold-to-move-slowly counter
 
-  bool bGameOver; // ゲームオーバー判定用フラグ
-  bool BuzzSound; // かすった音を連続再生させないためのフラグ
+  bool bGameOver; // Game over flag
+  bool BuzzSound; // Prevent continuous graze sound
 
-  // --- メソッド ---
-  void Draw();             // プレイヤー描画 (MaidDraw)
-  void DrawStatus() const; // 各種ステータス描画 (StateDraw)
-  void Update();           // 毎フレーム更新 (MaidMove)
-  void Initialize();       // 初期化 (MaidSet)
-  void PrepareNextStage(); // 次のステージ準備 (MaidNextStage)
-  void OnDeath();          // 死亡処理 (MaidDead)
+  // --- Methods ---
+  void Draw();             // Player draw (MaidDraw)
+  void DrawStatus() const; // Status draw (StateDraw)
+  void Update();           // Per-frame update (MaidMove)
+  void Initialize();       // Initialize (MaidSet)
+  void PrepareNextStage(); // Next stage preparation (MaidNextStage)
+  void OnDeath();          // Death handler (MaidDead)
 
-  void AddEvade(uint8_t n); // かすりゲージ上昇 (evade_add)
+  void AddEvade(uint8_t n); // Graze gauge increase (evade_add)
   void AddEvadeEx(int x, int y,
-                  uint8_t n);   // 指定座標からかすりエフェクト (evade_addEx)
-  void AddScore(int sc);        // スコア加算 (score_add)
-  void DrawWideBomb() const;    // ワイドボム描画 (WideBombDraw)
-  void PowerUp(uint8_t damage); // パワーアップ処理
-  [[nodiscard]] uint8_t GetLaserDeg() const; // レーザー角度取得
+                  uint8_t n);   // Graze effect from specified coordinates (evade_addEx)
+  void AddScore(int sc);        // Score addition (score_add)
+  void DrawWideBomb() const;    // Wide bomb draw (WideBombDraw)
+  void PowerUp(uint8_t damage); // Power-up processing
+  [[nodiscard]] uint8_t GetLaserDeg() const; // Get laser angle
   static uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
   static uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);
 
 private:
-  void DrawLaserBomb() const; // レーザーボム描画
+  void DrawLaserBomb() const; // Laser bomb draw
   static uint8_t GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i);
 };
 
-// 後方互換用エイリアス
+// Backward-compatible alias
 // (MAID alias removed — use Player directly)

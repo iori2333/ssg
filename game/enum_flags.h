@@ -1,8 +1,6 @@
-/*
- *   Operators for using enums as flags.
- *
- */
-
+///
+/// Enum flag operators
+///
 #pragma once
 
 #include <bit>

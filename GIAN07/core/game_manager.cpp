@@ -1,8 +1,8 @@
-/*
- *   GameManager — centralized game state
- */
+///
+/// GameManager - Centralized game state
+///
 
 #include "game_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 GameManager GameState;

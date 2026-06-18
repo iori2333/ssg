@@ -1,7 +1,6 @@
-/*
- * 敵の命令長定義ファイル
- * 作成日時    01/31/01  01:34:57
- */
+///
+/// ecl_len.h - Enemy command length definition file
+///
 
 #include <cstdint>
 

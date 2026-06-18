@@ -1,7 +1,6 @@
-/*
- *   Threads via SDL
- *
- */
+///
+/// Threads via SDL
+///
 
 #pragma once
 

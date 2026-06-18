@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   WINDOWSYS.h   コマンドウィンドウ処理                                    */
-/*                                                                           */
-/*                                                                           */
+///
+/// WindowSys - Command window processing
+///
 
 #pragma once
 
@@ -12,36 +11,32 @@
 #include "game/input.h"
 #include "game/text.h"
 
-///// [更新履歴] /////
-/*
- * 2000/07/26 : 操作性を改善した
- *
- * 2000/02/28 : メッセージウィンドウの半透明部を高速化
- * 2000/02/10 : PWINDOW->WINDOWSYS
- *            : WINDOWSYS
- * において、コマンドウィンドウは、スタックで選択状態を保持する。 :
- * ウィンドウを動かしたり枠を付けたりするのはあとでね...
- *
- * 2000/01/31 : 開発はじめ
- *
- */
+// [Revision history]
+// 2000/07/26 : Improved operability
+//
+// 2000/02/28 : Faster semi-transparent message window
+// 2000/02/10 : PWINDOW -> WINDOWSYS
+//            : In WINDOWSYS, the command window holds selection state on a stack.
+// TODO: Moving windows and adding frames (deferred)
+//
+// 2000/01/31 : Development started
 
 // Constants
 // ---------
 
-// 最大数に関する定数 //
-inline constexpr auto WINITEM_MAX = 20;  // 項目の最大数
-inline constexpr auto WINDOW_DEPTH = 10; // ウィンドウの深さ
-inline constexpr auto MSG_HEIGHT = 5;    // メッセージウィンドウの高さ
+// Constants related to maximum counts
+inline constexpr auto WINITEM_MAX = 20;  // Maximum number of items
+inline constexpr auto WINDOW_DEPTH = 10; // Window depth
+inline constexpr auto MSG_HEIGHT = 5;    // Message window height
 
-// コマンドウィンドウの状態 //
-inline constexpr auto CWIN_DEAD = 0x00;   // 使用されていない
-inline constexpr auto CWIN_FREE = 0x01;   // 入力待ち状態
-inline constexpr auto CWIN_OPEN = 0x02;   // 項目移動中(進む)
-inline constexpr auto CWIN_CLOSE = 0x03;  // 項目移動中(戻る)
-inline constexpr auto CWIN_NEXT = 0x04;   // 次のウィンドウに移行中
-inline constexpr auto CWIN_BEFORE = 0x05; // 前のウィンドウに移行中
-inline constexpr auto CWIN_INIT = 0xff;   // 初期化処理中
+// Command window state
+inline constexpr auto CWIN_DEAD = 0x00;   // Not in use
+inline constexpr auto CWIN_FREE = 0x01;   // Waiting for input
+inline constexpr auto CWIN_OPEN = 0x02;   // Moving through items (forward)
+inline constexpr auto CWIN_CLOSE = 0x03;  // Moving through items (back)
+inline constexpr auto CWIN_NEXT = 0x04;   // Transitioning to next window
+inline constexpr auto CWIN_BEFORE = 0x05; // Transitioning to previous window
+inline constexpr auto CWIN_INIT = 0xff;   // Initializing
 
 constexpr auto CWIN_FONT = FONT_ID::SMALL;
 
@@ -52,30 +47,30 @@ constexpr PIXEL_COORD CWIN_MAX_H = ((WINITEM_MAX + 1) * CWIN_ITEM_H);
 constexpr PIXEL_COORD FACE_W = 96;
 constexpr PIXEL_COORD FACE_H = 96;
 
-// メッセージウィンドウ・コマンド //
-inline constexpr auto MWCMD_SMALLFONT = 0x00;  // スモールフォントを使用する
-inline constexpr auto MWCMD_NORMALFONT = 0x01; // ノーマルフォントを使用する
-inline constexpr auto MWCMD_LARGEFONT = 0x02;  // ラージフォントを使用する
-inline constexpr auto MWCMD_NEWPAGE = 0x03;    // 改ページする
+// Message window commands
+inline constexpr auto MWCMD_SMALLFONT = 0x00;  // Use small font
+inline constexpr auto MWCMD_NORMALFONT = 0x01; // Use normal font
+inline constexpr auto MWCMD_LARGEFONT = 0x02;  // Use large font
+inline constexpr auto MWCMD_NEWPAGE = 0x03;    // New page
 
-// メッセージウィンドウの状態 //
-inline constexpr auto MWIN_DEAD = 0x00;  // 使用されていない
-inline constexpr auto MWIN_OPEN = 0x01;  // オープン中
-inline constexpr auto MWIN_CLOSE = 0x02; // クローズ中
-inline constexpr auto MWIN_FREE = 0x03;  // 待ち状態
+// Message window state
+inline constexpr auto MWIN_DEAD = 0x00;  // Not in use
+inline constexpr auto MWIN_OPEN = 0x01;  // Opening
+inline constexpr auto MWIN_CLOSE = 0x02; // Closing
+inline constexpr auto MWIN_FREE = 0x03;  // Waiting
 
-// メッセージウィンドウ(顔の状態) //
-inline constexpr auto MFACE_NONE = 0x00;  // 表示されていない
-inline constexpr auto MFACE_OPEN = 0x01;  // オープン中
-inline constexpr auto MFACE_CLOSE = 0x02; // クローズ中
-inline constexpr auto MFACE_NEXT = 0x03;  // 次の顔へ
-inline constexpr auto MFACE_WAIT = 0x04;  // 待ち状態
+// Message window (face state)
+inline constexpr auto MFACE_NONE = 0x00;  // Not displayed
+inline constexpr auto MFACE_OPEN = 0x01;  // Opening
+inline constexpr auto MFACE_CLOSE = 0x02; // Closing
+inline constexpr auto MFACE_NEXT = 0x03;  // Next face
+inline constexpr auto MFACE_WAIT = 0x04;  // Waiting
 
-// その他の定数 //
+// Other constants
 inline constexpr auto CWIN_KEYWAIT = 8;
 // ---------
 
-///// [構造体] /////
+// [Structures]
 
 enum class MenuFlags : uint8_t {
   HAS_BITFLAG_OPERATORS = 0,
@@ -101,7 +96,7 @@ class MenuController;
 
 // Shared data for menu titles and choices.
 struct MenuLabel {
-  const char *Title; // タイトル文字列へのポインタ(実体ではない！)
+  const char *Title; // Pointer to title string (not the actual string!)
 
   MenuFlags Flags = MenuFlags::NONE;
 
@@ -113,9 +108,9 @@ struct MenuLabel {
       : Title(title), Flags(flags) {}
 };
 
-// 子ウィンドウの情報 //
+// Sub-window information
 struct MenuItem : public MenuLabel {
-  // コールバック関数の型 //
+  // Callback function type
   using ActionFn = std::function<bool(MenuController &, INPUT_BITS)>;
   using AdjustFn = std::function<void(MenuController &, int_fast8_t)>;
 
@@ -123,9 +118,9 @@ struct MenuItem : public MenuLabel {
   using ActionFnPtr = bool (*)(MenuController &, INPUT_BITS);
   using AdjustFnPtr = void (*)(MenuController &, int_fast8_t);
 
-  const char *Help; // ヘルプ文字列へのポインタ(これも実体ではない)
+  const char *Help; // Pointer to help string (not the actual string)
 
-  // 特殊処理用コールバック関数(未使用なら空)
+  // Special callback function (empty if unused)
   ActionFn CallBackFn;
 
   // Callback function for options (falls back on [CallBackFn] if empty)
@@ -159,9 +154,9 @@ struct MenuDef {
   using RefreshFn = std::function<void(MenuController &, bool tick)>;
 
   MenuLabel *Title = nullptr;
-  MenuItem *ItemPtr[WINITEM_MAX] = {nullptr}; // 次の項目へのポインタ
+  MenuItem *ItemPtr[WINITEM_MAX] = {nullptr}; // Pointer to next item
   RefreshFn SetItems = [](MenuController &, bool) {};
-  uint8_t NumItems = 0; // 項目数(<ITEM_MAX)
+  uint8_t NumItems = 0; // Number of items (<ITEM_MAX)
 
   MenuDef() = default;
 
@@ -177,7 +172,7 @@ struct MenuDef {
     }
   }
 
-  // std::vector など動的サイズコンテナ用のコンストラクタ。
+  // Constructor for dynamically sized containers (std::vector, etc.)
   MenuDef(
       std::span<MenuItem> children,
       RefreshFn set_items = [](MenuController &, bool) {},
@@ -198,7 +193,7 @@ struct MenuDef {
     }
   }
 
-  // std::vector<MenuItem *> などの動的ポインタ配列用。
+  // For dynamic pointer arrays (std::vector<MenuItem *>, etc.)
   MenuDef(RefreshFn set_items, std::span<MenuItem *const> children,
           MenuLabel *title = nullptr)
       : Title(title), SetItems(std::move(set_items)),
@@ -213,24 +208,24 @@ struct MenuDef {
   [[nodiscard]] uint8_t MaxItems() const;
 };
 
-// ウィンドウ群 //
+// Window group
 class MenuController {
 public:
   explicit MenuController(MenuDef &parent) : Parent(parent) {}
 
-  // --- 初期化 ---
+  // --- Initialization ---
   void Init(PIXEL_COORD w);                    // Prepares text rendering.
-  void Open(WINDOW_POINT topleft, int select); // コマンドウィンドウの初期化
+  void Open(WINDOW_POINT topleft, int select); // Initialize command window
   void OpenCentered(PIXEL_COORD w, int select);
 
-  // --- 毎フレーム処理 ---
-  void Tick(INPUT_BITS key); // CWinMove を置き換え (キーを引数で受け取る)
-  void Draw();               // CWinDraw を置き換え
+  // --- Per-frame processing ---
+  void Tick(INPUT_BITS key); // Replaces CWinMove (takes key as argument)
+  void Draw();               // Replaces CWinDraw
 
-  // --- 検索 ---
-  MenuDef *SearchActive(); // CWinSearchActive を置き換え
+  // --- Search ---
+  MenuDef *SearchActive(); // Replaces CWinSearchActive
 
-  // --- 状態検査 ---
+  // --- State inspection ---
   bool Active() const { return State != CWIN_DEAD; }
   uint8_t Depth() const { return SelectDepth; }
   uint8_t CurrentSelection() const { return Select[SelectDepth]; }
@@ -238,7 +233,7 @@ public:
   INPUT_BITS LastKey() const { return OldKey; }
   int Y() const { return y; }
 
-  // --- 状態操作 (コールバック / スクロールメニュー用) ---
+  // --- State manipulation (callbacks / scroll menus) ---
   void SetCurrentSelection(uint8_t sel) { Select[SelectDepth] = sel; }
   void PopLevel() {
     if (SelectDepth > 0)
@@ -252,27 +247,27 @@ public:
   MenuDef &Root() { return Parent; }
 
 private:
-  void KeyEvent(INPUT_BITS key); // CWinKeyEvent を置き換え
+  void KeyEvent(INPUT_BITS key); // Replaces CWinKeyEvent
 
-  MenuDef &Parent;  // 親ウィンドウ
-  int x = 0, y = 0; // ウィンドウ左上の座標
+  MenuDef &Parent;  // Parent window
+  int x = 0, y = 0; // Top-left coordinates of window
   PIXEL_COORD W = 0;
-  uint32_t Count = 0;                // フレームカウンタ
-  uint8_t Select[WINDOW_DEPTH] = {}; // 選択中の項目スタック
-  uint8_t SelectDepth = 0;           // 選択中の項目に対するＳＰ
-  uint8_t State = CWIN_DEAD;         // 状態
+  uint32_t Count = 0;                // Frame counter
+  uint8_t Select[WINDOW_DEPTH] = {}; // Selected item stack
+  uint8_t SelectDepth = 0;           // Stack pointer for selected items
+  uint8_t State = CWIN_DEAD;         // State
 
-  INPUT_BITS OldKey = 0;      // 前に押されていたキー
-  uint8_t KeyCount = 0;       // キーボードウェイト
-  uint8_t FastRepeatWait = 0; // FAST_REPEAT 項目のウェイト
-  bool FirstWait = false;     // 最初のキー解放待ち
+  INPUT_BITS OldKey = 0;      // Previously pressed key
+  uint8_t KeyCount = 0;       // Keyboard wait
+  uint8_t FastRepeatWait = 0; // FAST_REPEAT item wait
+  bool FirstWait = false;     // Wait for first key release
 
-  TEXTRENDER_RECT_ID TRRs[1 + WINITEM_MAX] = {}; // Init() で初期化。
+  TEXTRENDER_RECT_ID TRRs[1 + WINITEM_MAX] = {}; // Initialized in Init().
 };
 
-///// [ 関数 ] /////
+// [Functions]
 
-// コマンドウィンドウ処理 //
+// Command window processing
 bool CWinExitFn(MenuController &ctrl, INPUT_BITS key);
 
 // Calculates the rendered width of the given text in the menu item font,

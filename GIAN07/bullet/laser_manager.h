@@ -1,6 +1,6 @@
-/*
- *   LaserManager — centralized laser system state
- */
+///
+/// LaserManager - Centralized laser system state
+///
 
 #pragma once
 
@@ -11,17 +11,17 @@
 #include <cstdint>
 
 struct LaserManager {
-  // --- 反射レーザー ---
+  // --- Reflective laser ---
   LaserCommand cmd{};                              // LaserCmd
   uint16_t count = 0;                              // LaserNow
   std::array<LASER_DATA, LASER_MAX> lasers{};      // Laser[]
   std::array<uint16_t, LASER_MAX> laser_indices{}; // LaserInd[]
 
-  // --- 長レーザー ---
+  // --- Long laser ---
   std::array<LongLaserData, LLASER_MAX> long_lasers{}; // LLaser[]
   LongLaserCommand long_cmd{};                         // LLaserCmd
 
-  // --- ホーミングレーザー ---
+  // --- Homing laser ---
   uint16_t homing_count = 0;                            // HLaserNow
   HomingLaserInfo homing_cmd{};                         // HLaserCmd
   std::array<HomingLaserData, HLASER_MAX> homing_buf{}; // HLaserBuf[]

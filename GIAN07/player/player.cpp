@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   Maid.cpp   メイドさん関連の処理                                         */
-/*                                                                           */
-/*                                                                           */
+///
+/// Player - Player-related processing
+///
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
@@ -21,9 +20,9 @@
 #include "gian.h"
 #include "player.h"
 
-// Viv → player_manager.cpp の PlayerManager に移動
+// Moved to PlayerManager in player_manager.cpp
 
-// --- Player メソッド実装 ---
+// --- Player method implementations ---
 
 void Player::DrawWideBomb() const {
   static PIXEL_LTRB data[6] = {
@@ -202,12 +201,12 @@ void Player::DrawLaserBomb() const {
 void Player::Draw() {
   static PIXEL_LTRB VivBit[4][2] = {
       {{480, 128, 480 + 24, 128 + 24},
-       {504, 128, 504 + 24, 128 + 24}}, // ワイド
+       {504, 128, 504 + 24, 128 + 24}}, // wide
       {{480, 152, 480 + 24, 152 + 24},
-       {504, 152, 504 + 24, 152 + 24}}, // ホーミング
+       {504, 152, 504 + 24, 152 + 24}}, // homing
       {{528, 152, 528 + 24, 152 + 24},
-       {552, 152, 552 + 24, 152 + 24}}, // レーザー
-      {{480, 152, 480 + 24, 152 + 24}, {504, 152, 504 + 24, 152 + 24}}, // 仮
+       {552, 152, 552 + 24, 152 + 24}}, // laser
+      {{480, 152, 480 + 24, 152 + 24}, {504, 152, 504 + 24, 152 + 24}}, // temp
   };
 
   static uint8_t draw_flag = 0;
@@ -281,7 +280,7 @@ void Player::Update() {
   int v = 0;
   constexpr int VivSpeed = (64 * 18);
 
-  // かすり残り時間を減らす //
+  // Decrease graze remaining time
   if (evade_c != 0U) {
     if ((bomb_time != 0U) && evade_c >= 2) {
       evade_c -= 2;
@@ -299,12 +298,12 @@ void Player::Update() {
     }
   }
 
-  // 無敵時間を減らす(ボム中は減らさない) //
+  // Decrease invincibility time (not during bomb)
   if ((muteki != 0U) && bomb_time == 0) {
     muteki--;
   }
 
-  // 得点変化処理 //
+  // Score change processing
   if (dscore >= 100000) {
     score += 100000, dscore -= 100000;
   } else if (dscore >= 20000) {
@@ -319,7 +318,7 @@ void Player::Update() {
     score += 10, dscore -= 10;
   }
 
-  // 押しっぱなし減速を有効にするのか //
+  // Enable held-button slowdown
   if ((ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) != 0) {
     if ((Key_Data & KEY_TAMA) != 0) {
       if (ShiftCounter < 8) {
@@ -384,7 +383,7 @@ void Player::Update() {
   opx = x;
   opy = y;
 
-  // オプションの処理 //
+  // Option processing
   if (vx < 0) {
     vx += 64;
   }
@@ -414,7 +413,7 @@ void Player::Update() {
   opx = x + vx;
   opy = y + vy + (64 * 6);
 
-  // 弾＆ボムのセット //
+  // Bullet & bomb setup
   Players.SetMaidShot();
 
   if (bomb_time != 0U) {
@@ -495,8 +494,8 @@ void Player::OnDeath() {
     return;
   }
 
-  // 自動ボム：练习模式为自动Bomb以上时，Bomb キーが押されておらず、かつ Bomb
-  // 残量がある場合、 死亡の代わりに自動で Bomb を発動する
+  // Auto bomb: in practice mode with auto-bomb or higher, if bomb key is not
+  // pressed and bomb stock remains, automatically activate bomb instead of dying
   if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB &&
       ((Key_Data & KEY_BOMB) == 0) && (bomb_time == 0) && (bomb > 0) &&
       (!Scroller.scene.MsgFlag)) {
@@ -505,7 +504,7 @@ void Player::OnDeath() {
     muteki = BOMBMUTEKI_VAL;
     bomb--;
     bomb_used++;
-    Ranking.Add(-25); // 自动Bomb降低Rank
+    Ranking.Add(-25); // auto bomb decreases rank
     Bullets.Clear();
     Lasers.Clear();
     return;
@@ -530,7 +529,7 @@ void Player::OnDeath() {
   bomb = ConfigDat.BombStock.v;
   muteki = VIVDEAD_VAL;
 
-  Ranking.Add(-100); // 死亡降低Rank
+  Ranking.Add(-100); // death decreases rank
 
   if (left != 0U) {
     left -= 1;
@@ -627,7 +626,7 @@ void Player::PowerUp(uint8_t damage) {
     }
     return;
   case 8:
-    return; // フルパワーアップ時
+    return; // at full power-up
   }
 }
 
@@ -648,7 +647,7 @@ uint8_t Player::GetLeftLaserDeg(uint8_t LaserDeg, int i) {
   return (64 - 48 + GetLeftOrRightLaserDeg(LaserDeg, i));
 }
 
-// 後方互換用：MAIDTAMA.cpp などから参照される自由関数ラッパー
+// Backward compatibility: free function wrappers referenced from MAIDTAMA.cpp etc.
 uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i) {
   return Player::GetRightLaserDeg(LaserDeg, i);
 }

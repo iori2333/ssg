@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   Maid.h   メイドさん関連の処理                                           */
-/*                                                                           */
-/*                                                                           */
+///
+/// Player - Player (maid) related logic
+///
 
 #pragma once
 
@@ -10,29 +9,29 @@
 #include "player_types.h"
 #include <cstdint>
 
-///// [ 定数 ] /////
+// [ Constants ]
 
-// サボテン定数 //
-inline constexpr int VIVDEAD_VAL = 300;   // びびっとの死亡時間．．．
-inline constexpr int VIVMUTEKI_VAL = 180; // びびっとの無敵時間
+// Cactus/viv constants
+inline constexpr int VIVDEAD_VAL = 300;   // Viv death time
+inline constexpr int VIVMUTEKI_VAL = 180; // Viv invincibility time
 
-inline constexpr int MAID_MOVE_DISABLE_TIME = (250 - 100); // 行動不能な時間
+inline constexpr int MAID_MOVE_DISABLE_TIME = (250 - 100); // Move-disabled duration
 
-inline constexpr int BOMBMUTEKI_VAL = 60; // ボムの終端無敵時間
-inline constexpr int SBOPT_DX = 26;       // オプションのずれ幅(x64ではない)
+inline constexpr int BOMBMUTEKI_VAL = 60; // Bomb-end invincibility
+inline constexpr int SBOPT_DX = 26;       // Option offset (not x64)
 
-inline constexpr int EVADETIME_MAX = 256; // かすりマックス時の待ち時間
+inline constexpr int EVADETIME_MAX = 256; // Max graze wait time
 
-inline constexpr int SSP_WIDE = (64 * 9);   //
-inline constexpr int SSP_HOMING = (64 * 9); //
-inline constexpr int SSP_LASER = (64 * 13); //
+inline constexpr int SSP_WIDE = (64 * 9);
+inline constexpr int SSP_HOMING = (64 * 9);
+inline constexpr int SSP_LASER = (64 * 13);
 
-///// [ Player クラス ] → player_types.h に移動
+// [ Player class ] moved to player_types.h
 
-///// [ 変数 ] /////
-// Players.viv で直接アクセス
+// [ Variables ]
+// Accessed directly via Players.viv
 
-///// [ 後方互換用関数ラッパー（段階的に廃止予定）] /////
+// [ Backward-compatibility function wrappers (to be phased out) ]
 inline void MaidDraw() { Players.viv.Draw(); }
 inline void StateDraw() { Players.viv.DrawStatus(); }
 inline void MaidMove() { Players.viv.Update(); }
@@ -47,6 +46,6 @@ inline void score_add(int sc) { Players.viv.AddScore(sc); }
 inline void WideBombDraw() { Players.viv.DrawWideBomb(); }
 inline void PowerUp(uint8_t damage) { Players.viv.PowerUp(damage); }
 inline uint8_t GetLaserDeg() { return Players.viv.GetLaserDeg(); }
-// レーザー角度計算（MAIDTAMA.cpp から参照されるため public に公開）
+// Laser angle calculation (public because MAIDTAMA.cpp references it)
 uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
 uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);

@@ -1,14 +1,13 @@
-/*                                                                           */
-/*   ExDef.h   いろんなものの定義とか                                        */
-/*                                                                           */
-/*                                                                           */
+///
+/// Point - Miscellaneous definitions
+///
 
 #pragma once
 
 #include <cstdint>
 
-// 角度付き座標の管理用構造体 //
+// Structure for managing angular coordinates
 struct DegPoint {
-  int x, y;  // 座標
-  uint8_t d; // 角度
+  int x, y;  // Coordinates
+  uint8_t d; // Angle
 };

@@ -1,7 +1,6 @@
-/*************************************************************************************************/
-/*   FRAGMENT.C   破片処理関数群 */
-/*                                                                                               */
-/*************************************************************************************************/
+///
+/// Fragment - Fragment processing functions
+///
 
 #include "fragment.h"
 #include "effect_manager.h"
@@ -10,7 +9,7 @@
 #include "loader.h"
 #include "platform/graphics_backend.h"
 
-// fragments[], fragment_ptr → effect_manager.cpp の EffectManager に移動
+// fragments[], fragment_ptr moved to EffectManager in effect_manager.cpp
 
 static void FDraw(const FragmentData *f);
 
@@ -104,7 +103,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
     break;
 
   default:
-    // バグだけど... //
+    // It's a bug, but...
     break;
   }
 
@@ -205,7 +204,7 @@ static void FDraw(const FragmentData *f) {
     break;
 
   default:
-    // ここには来ないはずだが ... //
+    // Shouldn't reach here, but...
     break;
   }
 }

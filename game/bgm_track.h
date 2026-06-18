@@ -1,9 +1,6 @@
-/*
- *   BGM tracks that are rendered as PCM and output via the Snd subsystem
- *
- *   Adapted from thcrap's bgmmod module.
- */
-
+///
+/// BGM tracks rendered as PCM and output via the Snd subsystem
+///
 #pragma once
 
 #include "game/hash.h"

@@ -1,8 +1,8 @@
-/*
- *   DemoManager — centralized demo/replay system state
- */
+///
+/// DemoManager - Centralized demo/replay system state
+///
 
 #include "demo_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 DemoManager Demos;

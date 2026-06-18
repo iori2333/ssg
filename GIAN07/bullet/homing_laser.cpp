@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   HomingL.cpp   長いレーザーの処理                                        */
-/*                                                                           */
-/*                                                                           */
+///
+/// HomingLaser - Long laser processing
+///
 
 #include "homing_laser.h"
 
@@ -16,21 +15,21 @@
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 
-// homing_count → homing_count で直接アクセス
+// Access directly via homing_count
 
-///// [マクロ] /////
+// [Macros]
 constexpr int HLASER_GETNEXT(int current) {
-  // 後で mod -> and に変更すること //
+  // Change mod -> and later
   return (current + (HLASER_LEN * HLASER_SECTION) - 1) %
          (HLASER_LEN * HLASER_SECTION);
 }
 
 constexpr int HLASER_GETPREV(int current, int n) {
-  // 後で mod -> and に変更すること //
+  // Change mod -> and later
   return (current + n) % (HLASER_LEN * HLASER_SECTION);
 }
 
-// ホーミングレーザーの初期化を行う //
+// Initialize homing laser
 void LaserManager::InitHoming() {
   int i = 0;
 
@@ -46,35 +45,35 @@ void LaserManager::InitHoming() {
   homing_buf[HLASER_MAX - 1].Next = nullptr;
 }
 
-// ホーミングレーザーをセットする //
+// Set up homing laser
 void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
   int i = 0;
   int j = 0;
   uint8_t deg = 0;
   HomingLaserData *p = nullptr;
 
-  // 1-n としているのは、角度設定のためね... //
+  // Using 1-n for angle setting...
   for (i = 1; std::cmp_less_equal(i, (hinfo->n)); i++) {
     p = free_list.Next;
     if (p == nullptr) {
-      return; // データを確保できない
+      return; // Cannot allocate data
     }
 
-    // ポインタ結合を行う //
+    // Link pointers
     free_list.Next = free_list.Next->Next;
     p->Next = active.Next;
     active.Next = p;
     homing_count++;
 
-    p->v = 64 * 4;  // 加速度セット
-    p->a = 10;      // 速度セット
-    p->Count = 0;   // フレームカウンタ
-    p->Current = 0; // 先頭
-    p->Left = 1;    // 残りホーミング回数
+    p->v = 64 * 4;  // Set acceleration
+    p->a = 10;      // Set speed
+    p->Count = 0;   // Frame counter
+    p->Current = 0; // Head
+    p->Left = 1;    // Remaining homing count
 
-    p->c = hinfo->c;       // 色
-    p->Type = hinfo->type; // 種類
-    p->State = HLS_NORM;   // 状態
+    p->c = hinfo->c;       // Color
+    p->Type = hinfo->type; // Type
+    p->State = HLS_NORM;   // State
 
     if ((hinfo->n & 1) != 0) {
       deg = hinfo->d + ((i >> 1) * (hinfo->dw) * (1 - ((i & 1) << 1)));
@@ -83,7 +82,7 @@ void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
             ((i >> 1) * (hinfo->dw) * (1 - ((i & 1) << 1)));
     }
 
-    // しっぽ情報を初期化する //
+    // Initialize tail info
     for (j = 0; j < HLASER_LEN * HLASER_SECTION; j++) {
       p->p[j].x = hinfo->x;
       p->p[j].y = hinfo->y;
@@ -92,7 +91,7 @@ void LaserManager::SpawnHoming(const HomingLaserInfo *hinfo) {
   }
 }
 
-// ホーミングレーザーを動作させる //
+// Move homing laser
 void LaserManager::MoveHoming() {
   HomingLaserData *hl = nullptr;
   HomingLaserData *temp = nullptr;
@@ -103,18 +102,18 @@ void LaserManager::MoveHoming() {
   int deg = 0;
   int deg2 = 0;
 
-  // 次のフレームに移行する //
+  // Advance to next frame
   for (hl = active.Next; hl != nullptr; hl = hl->Next) {
-    // 前回の先頭を一時保存する //
+    // Save previous head temporarily
     x = hl->p[hl->Current].x;
     y = hl->p[hl->Current].y;
     deg = hl->p[hl->Current].d;
 
-    // 共通の更新を行う //
+    // Do common update
     hl->Count++;
     hl->Current = HLASER_GETNEXT(hl->Current);
 
-    // 種類別の移動処理 //
+    // Type-specific movement
     switch (hl->Type) {
     case HL_TYPE1:
       deg2 = -deg + atan8(Players.viv.x - x, Players.viv.y - y);
@@ -160,12 +159,12 @@ void LaserManager::MoveHoming() {
       break;
     }
 
-    // 今回のしっぽを一時保存する //
+    // Save current tail temporarily
     i = HLASER_GETNEXT(hl->Current);
     x = hl->p[i].x;
     y = hl->p[i].y;
 
-    // 範囲外チェック //
+    // Out-of-range check
     if (x < GX_MIN - (4 * 64) || x > GX_MAX + (4 * 64) ||
         y < GY_MIN - (4 * 64) || y > GY_MAX + (4 * 64)) {
       hl->State = HLS_DEAD;
@@ -181,17 +180,17 @@ void LaserManager::MoveHoming() {
       x = hl->p[j].x;
       y = hl->p[j].y;
 
-      // かすり判定 //
+      // Graze check
       if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH + (15 * 64)) &&
           HITCHK(y, Players.viv.y, HOMINGL_WIDTH + (15 * 64))) {
         ev_flag = true;
       }
 
-      // 当たり判定 //
+      // Hit check
       if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH * 2 / 3) &&
           HITCHK(y, Players.viv.y, HOMINGL_WIDTH * 2 / 3)) {
-        //	hl->State = HLS_DEAD;	// こいつは消去
-        MaidDead(); // 殺っておしまい
+        //	hl->State = HLS_DEAD;	// Delete this one
+        MaidDead(); // Kill it
       }
     }
     if (ev_flag) {
@@ -199,7 +198,7 @@ void LaserManager::MoveHoming() {
     }
   }
 
-  // 不要なデータを削除する //
+  // Remove unnecessary data
   for (hl = &active; (hl->Next) != nullptr;) {
     if (hl->Next->State == HLS_DEAD) {
       temp = hl->Next->Next;
@@ -209,7 +208,7 @@ void LaserManager::MoveHoming() {
 
       homing_count--;
     }
-    // そうでなければポインタを進める //
+    // Otherwise advance pointer
     else {
       hl = hl->Next;
     }
@@ -233,7 +232,7 @@ void CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
   gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
 }
 
-// ホーミングレーザーを描画する //
+// Draw homing laser
 void LaserManager::DrawHoming() const {
   HomingLaserData *hl = nullptr;
   int i = 0;
@@ -268,7 +267,7 @@ void LaserManager::DrawHoming() const {
     current = hl->Current;
     p = &(hl->p[current]);
 
-    // 後で最適化するのぢゃ //
+    // Optimize later
     src[0].x = (p->x + cosl(p->d - 64, w)) >> 6;
     src[0].y = (p->y + sinl(p->d - 64, w)) >> 6;
     src[1].x = (p->x - cosl(p->d - 64, w)) >> 6;
@@ -354,14 +353,12 @@ void LaserManager::DrawHoming() const {
   GrpGeom->Unlock();
 }
 
-// ホーミングレーザーに消去エフェクトをセット //
+// Set homing laser clear effect
 void LaserManager::ClearHoming() {
   //	HLaserData	*hl;
 
   InitHoming();
-  /*
-  for(hl = active.Next; hl != nullptr; hl = hl->Next) {
-          hl->State = HLS_CLEAR;
-  }
-  */
+  // for(hl = active.Next; hl != nullptr; hl = hl->Next) {
+  //         hl->State = HLS_CLEAR;
+  // }
 }

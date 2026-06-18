@@ -1,8 +1,6 @@
-/*
- *   std::array with one element for each member of an enum, delimited with a
- *   `COUNT` field.
- */
-
+///
+/// Enum-indexed std::array
+///
 #pragma once
 
 #include <array>

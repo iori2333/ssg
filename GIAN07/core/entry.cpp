@@ -1,7 +1,6 @@
-/*
- *   Generic, cross-platform subsystem initialization and cleanup
- *
- */
+///
+/// Entry - Generic, cross-platform subsystem initialization and cleanup
+///
 
 #include "entry.h"
 #include "config.h"
@@ -102,17 +101,17 @@ bool XInit() {
 
   DebugSetup();
 
-  // コンフィグをロードする //
+  // Load config
   ConfigLoad();
   Grp_FPSDivisor = ConfigDat.FPSDivisor.v;
   ConfigDat.MidFlags.v = Mid_SetFlags(ConfigDat.MidFlags.v);
 
-  // コンフィグ依存の初期化処理
+  // Config-dependent initialization
   if (!GrpBackend_Enum()) {
     return false;
   }
 
-  // グラフィックの初期化 //
+  // Initialize graphics
   const auto maybe_params = Grp_InitOrFallback(ConfigDat.GraphicsParams());
   if (!maybe_params) {
     return false;
@@ -120,10 +119,10 @@ bool XInit() {
   ConfigDat.GraphicsParamsApply(maybe_params.value().live);
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  // キーボード(JoyPad)入力を受け付ける //
+  // Accept keyboard (JoyPad) input
   Key_Start();
 
-  // ＢＧＭの初期化 //
+  // Initialize BGM
   if ((ConfigDat.SoundFlags.v & SNDF_BGM_ENABLE) != 0) {
     BGM_Init();
   }

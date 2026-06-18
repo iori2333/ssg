@@ -1,22 +1,21 @@
-/*                                                                           */
-/*   PRankCtrl.cpp   プレイランク管理                                        */
-/*                                                                           */
-/*                                                                           */
+///
+/// PlayRank - Play rank management
+///
 
 #include "play_rank.h"
 #include "gian.h"
 #include "level.h"
 
-// PlayRank → rank_manager.cpp に移動
+// PlayRank moved to rank_manager.cpp
 
-// 難易度の許容範囲内でプレイランクを増減する
+// Increase/decrease play rank within difficulty range
 void RankManager::Add(int n) {
-  // イージー 　　　0 ～ 24
-  // ノーマル　　　16 ～ 40
-  // ハード　　 　　32 ～ 48
-  // ルナティック  40 ～ 64
+  // Easy           0 .. 24
+  // Normal         16 .. 40
+  // Hard           32 .. 48
+  // Lunatic        40 .. 64
 
-  // 難易度を変化させる //
+  // Change difficulty
   if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
     if (n > 0) {
       state.Rank += (std::max)(+1, (n / 4));
@@ -27,7 +26,7 @@ void RankManager::Add(int n) {
     state.Rank += n;
   }
 
-  // この分岐に関しては、基本的にコンフィグの値に基づく //
+  // This branch is based on config values
   switch (GameState.game_level) {
   case GAME_EASY:
     if (state.Rank < 0) {
@@ -94,7 +93,7 @@ void RankManager::Add(int n) {
   }
 }
 
-// 現在の難易度に応じてプレイランクを初期化
+// Initialize play rank based on current difficulty
 void RankManager::Reset() {
   state.GameLevel = GameState.game_level;
 

@@ -1,39 +1,38 @@
-/*************************************************************************************************/
-/*   FRAGMENT.H   破片処理関数群 */
-/*                                                                                               */
-/*************************************************************************************************/
+///
+/// Fragment - Fragment processing functions
+///
 
 #pragma once
 
 #include <array>
 #include <cstdint>
 
-//// 破片定数 ////
-inline constexpr auto FRAGMENT_MAX = 1000;  // 破片の最大数
-inline constexpr auto FRG_EVADE = 0x00;     // かすり(開発中)
-inline constexpr auto FRG_SMOKE = 0x01;     // 煙その１
-inline constexpr auto FRG_FATCIRCLE = 0x02; // 赤丸...
-inline constexpr auto FRG_STAR1 = 0x03;     // お星様１
-inline constexpr auto FRG_STAR2 = 0x04;     // お星様２
-inline constexpr auto FRG_HIT = 0x05;       // ショットがヒットした
+// Fragment constants
+inline constexpr auto FRAGMENT_MAX = 1000;  // Maximum number of fragments
+inline constexpr auto FRG_EVADE = 0x00;     // Graze (under development)
+inline constexpr auto FRG_SMOKE = 0x01;     // Smoke 1
+inline constexpr auto FRG_FATCIRCLE = 0x02; // Red circle...
+inline constexpr auto FRG_STAR1 = 0x03;     // Star 1
+inline constexpr auto FRG_STAR2 = 0x04;     // Star 2
+inline constexpr auto FRG_HIT = 0x05;       // Shot hit
 inline constexpr auto FRG_STAR3 = 0x06;
-inline constexpr auto FRG_HEART = 0x07; // ハート型
+inline constexpr auto FRG_HEART = 0x07; // Heart shape
 
-inline constexpr auto FRG_ESCAPE = 0x10;   // 指定座標から逃げる
-inline constexpr auto FRG_APPROACH = 0x20; // 指定座標に近づく
+inline constexpr auto FRG_ESCAPE = 0x10;   // Escape from specified coordinates
+inline constexpr auto FRG_APPROACH = 0x20; // Approach specified coordinates
 
-//// 破片構造体 ////
+// Fragment data structure
 struct FragmentData {
-  int x, y;      // 現在の座標
-  int vx, vy;    // 速度成分 (x64)
-  uint8_t count; // フレームカウンタ(０の時は使用していないとする)
-  uint8_t cmd;   // どんな破片？
+  int x, y;      // Current coordinates
+  int vx, vy;    // Velocity components (x64)
+  uint8_t count; // Frame counter (0 means not in use)
+  uint8_t cmd;   // Fragment type
 };
 // (FRAGMENT_DATA alias removed — use FragmentData directly)
 
-//// 破片用変数 ////
+// Fragment variables
 // Fragment[], FragmentPtr → Effects.fragments, Effects.fragment_ptr
-// で直接アクセス
+// Access directly
 
-//// 破片関数 ////
-// 後方互換 inline wrapper は effect_manager.h の末尾に移動
+// Fragment functions
+// Backward compatibility inline wrapper moved to end of effect_manager.h

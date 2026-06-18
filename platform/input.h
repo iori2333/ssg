@@ -1,16 +1,15 @@
-/*
- *   Keyboard and pad input interface
- *
- */
+///
+/// Keyboard and pad input interface
+///
 
 #pragma once
 
 #include "game/input.h"
 #include <optional>
 
-// 関数プロトタイプ宣言 //
-bool Key_Start(void); // キー入力開始
-void Key_End(void);   // キー入力終了
+// Function prototype declarations
+bool Key_Start(void); // Start key input
+void Key_End(void);   // End key input
 
 void Key_Read(void);
 

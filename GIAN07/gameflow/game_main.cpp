@@ -1,9 +1,8 @@
-/*                                                                           */
-/*   GameMain.cpp   ウィンドウシステム切り替えなどの処理                     */
-/*                                                                           */
-/*                                                                           */
+///
+/// GameMain - Window system switching and other processing
+///
 #include "game_main.h"
-#include "bomb_efc.h" // 爆発エフェクト処理
+#include "bomb_efc.h" // Explosion effect processing
 #include "config.h"
 #include "demo_manager.h"
 #include "demo_play.h"
@@ -69,39 +68,39 @@ void Render(PIXEL_COORD top) {
 
 // GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
 // current_name, current_rank, current_dif, viv_temp, GameState.is_demoplay,
-// input_locked → gameflow_manager.cpp の GameFlowManager に移動
+// input_locked moved to GameFlowManager in gameflow_manager.cpp
 
-// 変換済み関数 → inline wrapper は gameflow_manager.h で提供
+// Converted functions -> inline wrappers provided in gameflow_manager.h
 // (TitleProc, WeaponSelectProc, GameOverProc0, NameRegistProc, ScoreNameProc,
 // ScoreDraw)
 
 void GameProc(bool & /*unused*/);
-void GameOverProc(bool & /*unused*/); // ゲームオーバー
+void GameOverProc(bool & /*unused*/); // Game over
 void PauseProc(bool & /*unused*/);
-void DemoProc(bool & /*unused*/); // デモプレイ
+void DemoProc(bool & /*unused*/); // Demo play
 
 void ReplayProcAll(bool & /*unused*/);
 void GameOverSaveProc(bool & /*unused*/);
 
-// 西方Ｐｒｏｊｅｃｔ初期化部
-void SProjectProc(bool & /*unused*/); // 西方Ｐｒｏｊｅｃｔ表示動作部
+// West Project initialization section
+void SProjectProc(bool & /*unused*/); // West Project display operation section
 
-void GameSTD_Init(); // ゲームを立ち上げる際に必ず行う初期化関数群
-bool DemoInit();     // デモプレイの初期化を行う
+void GameSTD_Init(); // Initialization functions required when starting the game
+bool DemoInit();     // Initialize demo play
 
 void GameDraw();
 void GameMove();
 
-// game_main 初期値 → gameflow_manager.cpp で設定
+// game_main initial values set in gameflow_manager.cpp
 
 uint8_t CurrentLevel() {
   return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA
                                                      : GameState.game_level);
 }
 
-// input_locked → gameflow_manager.cpp の GameFlowManager に移動
+// input_locked moved to GameFlowManager in gameflow_manager.cpp
 
-// スコアネーム表示の準備を行う //
+// Prepare score name display
 bool ScoreNameInit() {
   GameFlow.current_dif = CurrentLevel();
 
@@ -128,7 +127,7 @@ bool ScoreNameInit() {
   return true;
 }
 
-// スコアネームの表示 //
+// Display score name
 void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
   static const char *ExString[5] = {"Easy", "Normal", "Hard", "Lunatic",
                                     "Extra"};
@@ -176,7 +175,7 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
   Grp_Flip();
 }
 
-// スコアの描画 //
+// Draw score
 void GameFlowManager::ScoreDraw() {
   int i = 0;
   int gx = 0;
@@ -215,7 +214,7 @@ void GameFlowManager::ScoreDraw() {
     gy = (Scores.score_strings[i].y >> 6) + 25;
     GrpPutScore(gx, gy, Scores.score_strings[i].Evade.c_str());
 
-    // いや、時間が無いのは分かるんだけどさぁ... //
+    // I know there's no time, but...
     gx = (Scores.score_strings[i].x >> 6) + 224;
     gy = (Scores.score_strings[i].y >> 6) + 25;
     if (Scores.score_strings[i].Stage[0] == '7') {
@@ -238,17 +237,17 @@ static constexpr auto NR_EXCHAR_BACK = 0;
 static constexpr auto NR_EXCHAR_END = -1;
 static constexpr auto NR_EXCHAR_ERROR = -2;
 
-// 座標から選択文字を取得する //
+// Get selected character from coordinates
 char GameFlowManager::GetAddr2Char(int x, int y) {
-  // 大文字 //
+  // Uppercase
   if (y == 0) {
     return ('A' + (x % 26));
   }
-  // 小文字 //
+  // Lowercase
   if (y == 1) {
     return ('a' + (x % 26));
   }
-  // その他記号など //
+  // Other symbols
 
   switch (x) {
   case 0:
@@ -305,9 +304,9 @@ char GameFlowManager::GetAddr2Char(int x, int y) {
   }
 }
 
-// お名前入力 //
+// Name input
 void GameFlowManager::NameRegistProc(bool & /*unused*/) {
-  // <- DemoInit() を修正するのだぞ
+  // <- Fix DemoInit()
   PIXEL_LTRB src = {0, 0, 400, 64};
   int gx = 0;
   int gy = 0;
@@ -365,7 +364,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       }
       Snd_SEPlay(SOUND_ID_SELECT);
 
-      // 最後の文字まで来ていた場合 //
+      // If at the last character
       if (strlen(Scores.score_strings[current_rank - 1].Name) ==
           NR_NAME_LEN - 1) {
         switch (c = GetAddr2Char(x, y)) {
@@ -385,7 +384,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
         break;
       }
 
-      // それ以外の場合 //
+      // Otherwise
       switch (c = GetAddr2Char(x, y)) {
       case NR_EXCHAR_END:
       case NR_EXCHAR_ERROR:
@@ -402,7 +401,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       }
       break;
 
-    // １文字前に戻る //
+    // Go back one character
     BACK_NR_PROC:
       len = strlen(Scores.score_strings[current_rank - 1].Name);
       if (len != 0) {
@@ -410,7 +409,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       }
       break;
 
-    // ネームレジスト終了処理 //
+    // Name registration end processing
     EXIT_NR_PROC:
       if (strlen(Scores.score_strings[current_rank - 1].Name) == 0) {
         std::format_to_n(Scores.score_strings[current_rank - 1].Name,
@@ -477,11 +476,11 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
 
   ScoreDraw();
 
-  // 名前入力用文字列群 //
+  // Name input string group
   src = {0, 432, 416, 480};
   GrpSurface_Blit({112, 420}, sid, src);
 
-  // カーソル //
+  // Cursor
   if ((x >= 20) && (y == 2)) {
     src = PIXEL_LTWH{432, (432 + ((count >> 3) << 4)), 32, 16};
   } else {
@@ -492,17 +491,15 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
   // sprintf(buf,"(%2d,%2d)", x, y);
   // GrpPut16(0,0,buf);
 
-  /*
-          GrpPut16(400,100,temps);
-          for(i=0; i<5; i++){
-                  GrpPut16(100, 100+i*32, Scores.score_strings[i].Score);
-                  if(current_rank == i+1) GrpPut16(85, 100+i*32, "!!");
-          }
-  */
+  //	GrpPut16(400,100,temps);
+  //	for(i=0; i<5; i++){
+  //		GrpPut16(100, 100+i*32, Scores.score_strings[i].Score);
+  //		if(current_rank == i+1) GrpPut16(85, 100+i*32, "!!");
+  //	}
   Grp_Flip();
 }
 
-// お名前入力の初期化 //
+// Initialize name input
 bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   for (auto &it : current_name.Name) {
     it = '\0';
@@ -516,11 +513,11 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
     current_name.Stage = GameState.game_stage;
   }
 
-  // デバッグ用... //
-  Snd_SEStop(8); // ワーニング音を止める
+  // For debugging...
+  Snd_SEStop(8); // Stop warning sound
   Snd_SEStopAll();
 
-  // ハイスコアで無いならばタイトルに移行する //
+  // If not a high score, transition to title
   current_rank = Scores.SetScoreString(&current_name, CurrentLevel());
   if (current_rank == 0) {
     return GameExit();
@@ -548,7 +545,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   return true;
 }
 
-// ゲームを立ち上げる際に必ず行う初期化関数群 //
+// Initialization functions required when starting the game
 void GameSTD_Init() {
   Scroller.key_wait_count = 0;
   UI.MsgForceClose();
@@ -560,7 +557,7 @@ void GameSTD_Init() {
   // MaidSet();
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
-  Bullets.SetIndices(400 + 200); // 小型弾に４００
+  Bullets.SetIndices(400 + 200); // 400 for small bullets
   Lasers.SetIndices();
   Lasers.SetupLong();
   Lasers.InitHoming();
@@ -617,7 +614,7 @@ bool GameInit(std::function<void(bool &)> next_proc) {
   }
   if (GameFlow.current_state == GameState::Game ||
       GameFlow.current_state == GameState::ReplayAll) {
-    // ウィンドウの表示位置を設定する //
+    // Set window display position
     // Replays don't show dialog, so this is the only place where we need
     // to do this.
     const auto flags = MsgWindowFlags::WITH_FACE;
@@ -637,7 +634,7 @@ bool GameInit(std::function<void(bool &)> next_proc) {
   return true;
 }
 
-// 次のステージに移行する //
+// Transition to next stage
 bool GameNextStage() {
 #ifdef PBG_DEBUG
   Demos.SaveDemo();
@@ -645,9 +642,9 @@ bool GameNextStage() {
 
   GameState.game_stage++;
 
-  // エンディングに移行する //
+  // Transition to ending
   GameState.game_stage =
-      std::min<int>(GameState.game_stage, STAGE_MAX); // 後で変更のこと
+      std::min<int>(GameState.game_stage, STAGE_MAX); // To be changed later
 
   GameSTD_Init();
   MaidNextStage();
@@ -664,7 +661,7 @@ bool GameNextStage() {
   return true;
 }
 
-// マルチステージ・リプレイ用の初期化を行う //
+// Initialize for multi-stage replay
 bool GameReplayInitAll(const char *fn) {
   MaidSet();
 
@@ -757,7 +754,7 @@ void ReplayProcAll(bool & /*unused*/) {
   }
 }
 
-// デモプレイの初期化を行う //
+// Initialize demo play
 bool DemoInit() {
   GrpBackend_Clear();
   Grp_Flip();
@@ -770,7 +767,7 @@ bool DemoInit() {
   GameState.game_stage = (rnd() % STAGE_MAX) + 1;
 
   if (!Demos.LoadDemo(GameState.game_stage)) {
-    // DebugOut("デモプレイデータが存在せず");
+    // DebugOut("Demo play data does not exist");
     return false;
   }
 
@@ -789,7 +786,7 @@ bool DemoInit() {
   return GameInit([](bool &q) { DemoProc(q); });
 }
 
-// 西方Ｐｒｏｊｅｃｔ表示動作部 //
+// West Project display operation section
 std::optional<LensInfo> Lens;
 
 void SProjectProc(bool & /*unused*/) {
@@ -845,7 +842,7 @@ void SProjectProc(bool & /*unused*/) {
   }
 }
 
-// 西方Ｐｒｏｊｅｃｔ表示の初期化 //
+// Initialize West Project display
 bool SProjectInit() {
   GrpBackend_PixelAccessStart();
 
@@ -854,7 +851,7 @@ bool SProjectInit() {
     return false;
   }
 
-  // レンズをすでに作成しているのなら、破棄する //
+  // If lens already exists, destroy it
   Lens = GrpCreateLensBall(70, 36);
   if (!Lens) {
     return false;
@@ -866,13 +863,13 @@ bool SProjectInit() {
   return true;
 }
 
-// ゲームを再開する(ESC 抜けから) //
+// Resume game (from ESC exit)
 void GameRestart() {
   GameFlow.game_main = GameProc;
   GameFlow.current_state = GameState::Game;
 }
 
-// ゲームから抜ける //
+// Exit game
 bool GameExit(bool bNeedChgMusic) {
   GrpBackend_PixelAccessEnd();
   TextObj.Clear();
@@ -885,8 +882,8 @@ bool GameExit(bool bNeedChgMusic) {
   }
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  Lasers.SetupLong(); // 音を止める
-  Snd_SEStop(8);      // ワーニング音を止めるのだ
+  Lasers.SetupLong(); // Stop sound
+  Snd_SEStop(8);      // Stop warning sound
 
   const auto flags = MsgWindowFlags::CENTER;
   UI.MsgForceClose();
@@ -919,7 +916,7 @@ bool GameExit(bool bNeedChgMusic) {
   return true;
 }
 
-// ゲームオーバーの前処理
+// Game over preprocessing
 void GameOverInit() {
   Effects.SpawnGameOverEffect();
 
@@ -929,7 +926,7 @@ void GameOverInit() {
   GameFlow.current_state = GameState::GameOver0;
 }
 
-// コンティニューを行う場合
+// When continuing
 void GameContinue() {
   Players.viv.evade_sum = 0;
   Players.viv.left = ConfigDat.PlayerStock.v;
@@ -938,9 +935,9 @@ void GameContinue() {
   GameFlow.game_main = GameProc;
   GameFlow.current_state = GameState::Game;
 
-  // ここに入らなかったらバグなのだが... //
+  // If we don't reach here, it's a bug...
   if (Players.viv.credit != 0U) {
-    // クレジットの残っている場合(コンティニュー Y/N 処理へ) //
+    // If credits remain (go to continue Y/N processing)
     Players.viv.credit -= 1;
   }
 }
@@ -962,18 +959,16 @@ void GameProc(bool & /*unused*/) {
     GameFlow.current_state = GameState::Pause;
     return;
   }
-  /*
-          static BYTE count;
-          if(count) count--;
-          if((Key_Data & KEY_TAMA) && count==0){
-                  CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE2);//STAR);
-                  count = 30;
-          }
-          if((Key_Data & KEY_BOMB) && count==0){
-                  CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE1);//STAR);
-                  count = 30;
-          }
-  */
+  //	static BYTE count;
+  //	if(count) count--;
+  //	if((Key_Data & KEY_TAMA) && count==0){
+  //		CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE2);//STAR);
+  //		count = 30;
+  //	}
+  //	if((Key_Data & KEY_BOMB) && count==0){
+  //		CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE1);//STAR);
+  //		count = 30;
+  //	}
   GameMove();
   if (GameFlow.current_state != GameState::Game) {
     return;
@@ -989,7 +984,7 @@ void GameProc(bool & /*unused*/) {
   }
 }
 
-// ゲームオーバー出現用
+  // For game over appearance
 void GameFlowManager::GameOverProc0(bool & /*unused*/) {
   switch (game_over_timer) {
   default:
@@ -1022,7 +1017,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
     if (Players.viv.credit == 0) {
       NameRegistInit(true);
       // GameExit();
-      return; // 仮
+      return; // Temporary
     }
 
     UI.Continue().Open({250, 200}, 0);
@@ -1051,7 +1046,7 @@ void GameOverSaveProc(bool & /*unused*/) {
   }
 }
 
-// ゲームオーバー
+// Game over
 void GameOverProc(bool & /*unused*/) {
   UI.Continue().Tick(Key_Data);
   if (GameFlow.current_state != GameState::GameOver) {
@@ -1062,16 +1057,15 @@ void GameOverProc(bool & /*unused*/) {
   if (GameFlow.IsDraw()) {
     GameDraw();
     UI.Continue().Draw();
-    /*
-    if(DemoplaySaveEnable){
-            constexpr PIXEL_LTRB rc = PIXEL_LTWH{ 288, 80, 24, 8 };
-            GrpSurface_Blit({ 128, 470 }, SURFACE_ID::SYSTEM, rc);
-    }*/
+    //	if(DemoplaySaveEnable){
+    //		constexpr PIXEL_LTRB rc = PIXEL_LTWH{ 288, 80, 24, 8 };
+    //		GrpSurface_Blit({ 128, 470 }, SURFACE_ID::SYSTEM, rc);
+    //	}
     Grp_Flip();
   }
 }
 
-// デモプレイ
+// Demo play
 void DemoProc(bool & /*unused*/) {
   static uint8_t ExTimer = 0;
 
@@ -1085,7 +1079,7 @@ void DemoProc(bool & /*unused*/) {
 
   GameState.is_demoplay = true;
 
-  // ＥＳＣが押されたら即、終了 //
+  // Exit immediately if ESC is pressed
   if ((Key_Data & KEY_ESC) != 0) {
     Demos.Cleanup();
     GameState.is_demoplay = false;
@@ -1096,9 +1090,9 @@ void DemoProc(bool & /*unused*/) {
   GameMove();
 
   if (GameFlow.current_state != GameState::Demo) {
-    Demos.Cleanup(); // 後始末
+    Demos.Cleanup(); // Cleanup
     GameState.is_demoplay = false;
-    GameExit(); // 強制終了させる(ゲームオーバー対策)
+    GameExit(); // Force exit (game over countermeasure)
     return;
   }
 
@@ -1111,7 +1105,7 @@ void DemoProc(bool & /*unused*/) {
   }
 }
 
-// 装備選択 //
+// Weapon selection
 void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   PIXEL_LTRB rc;
   int i = 0;
@@ -1360,18 +1354,16 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     }
     GrpGeom->Unlock();
 
-    /*
-                    HDC		hdc;
-                    char	buf[100];
-                    DxObj.Back->GetDC(&hdc);
-                    sprintf(buf,"Players.viv.weapon = %d",Players.viv.weapon);
-                    TextOut(hdc,0,0,buf,strlen(buf));
-                    DxObj.Back->ReleaseDC(hdc);
-
-    #ifdef PBG_DEBUG
-                    StdStatusOutput();
-    #endif
-    */
+    //	HDC		hdc;
+    //	char	buf[100];
+    //	DxObj.Back->GetDC(&hdc);
+    //	sprintf(buf,"Players.viv.weapon = %d",Players.viv.weapon);
+    //	TextOut(hdc,0,0,buf,strlen(buf));
+    //	DxObj.Back->ReleaseDC(hdc);
+    //
+    //#ifdef PBG_DEBUG
+    //		StdStatusOutput();
+    //#endif
     Grp_Flip();
   }
 }
@@ -1382,15 +1374,13 @@ void GameFlowManager::TitleProc(bool &quit) {
   // PIXEL_LTRB	src = { 0, 0, 195, 256 };
   // PIXEL_LTRB	src = { 0, 0, 275, 256 };
 
-  /*
-          // 鳩プロテクト? //
-          if(
-                  (GetAsyncKeyState(VK_F1) & 0x80000000) &&
-                  (GetAsyncKeyState(VK_F10) & 0x8000000)
-          ) {
-                  quit = true;
-          }
-  */
+  //	// Pigeon protect?
+  //	if(
+  //		(GetAsyncKeyState(VK_F1) & 0x80000000) &&
+  //		(GetAsyncKeyState(VK_F10) & 0x8000000)
+  //	) {
+  //		quit = true;
+  //	}
   // Running this here to prevent MIDI processing from jumping over a large
   // number of events once the player enters the Music Room.
   BGM_UpdateMIDITables();
@@ -1476,12 +1466,10 @@ void PauseProc(bool & /*unused*/) {
   }
 }
 
-/*
-inline XAdd(DWORD old,int id)
-{
-        RndBuf[id] += (random_ref-old);
-}
-*/
+//inline XAdd(DWORD old,int id)
+//{
+//	RndBuf[id] += (random_ref-old);
+//}
 
 void GameMove() {
   UI.MsgTick();
@@ -1504,7 +1492,7 @@ void GameMove() {
   Effects.MoveWarningEffect();
   Effects.MoveScreenEffect();
 
-  // この２行の位置を変更しました //
+  // Changed position of these two lines
   MaidMove();
   Players.MoveMaidShot();
 }
@@ -1517,7 +1505,7 @@ void GameDraw() {
 
   Bosses.Draw();
 
-  WideBombDraw(); // 多分、ここで良いと思うが...
+  WideBombDraw(); // Probably fine here but...
 
   Effects.DrawBombEffects();
 

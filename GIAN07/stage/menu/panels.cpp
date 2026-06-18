@@ -1,9 +1,6 @@
-/*                                                                           */
-/*   panels.cpp   メニューパネルクラス実装                                    */
-/*                                                                           */
-/*   全パネルの構築・リフレッシュ・コールバック実装。 */
-/*   sprintf/strcpy を std::format に置き換え、char[] を MenuText に置換。    */
-/*                                                                           */
+///
+/// Panels - Menu panel class implementation
+///
 
 #include "panels.h"
 
@@ -33,7 +30,7 @@
 using namespace std::chrono_literals;
 
 // ---------------------------------------------------------------------------
-// ヘルパー
+// Helpers
 // ---------------------------------------------------------------------------
 
 static constexpr void RingStep(uint8_t &var, int_fast8_t delta, uint8_t min,
@@ -50,7 +47,7 @@ constexpr auto HELP_SUBMENU_EXIT = "一つ前のメニューにもどります";
 constexpr auto HELP_API_DEFAULT = "Let the backend choose a graphics API";
 constexpr auto HELP_API_SPECIFIC = "Select to override default API selection";
 
-// 共有アイテム
+// Shared items
 static MenuItem SubmenuExitItem = {"Exit", HELP_SUBMENU_EXIT, CWinExitFn};
 static MenuItem HRuleItem = {"-------------------"};
 
@@ -433,7 +430,7 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
   title_skip_.Format("FrameRate[ {} ]", FRate[ConfigDat.FPSDivisor.v]);
   title_msg_.Format("MsgWindow[{}]", UorD[u_or_d]);
 
-  // ヘルプ文字列
+  // Help strings
 #ifdef SUPPORT_GRP_WINDOWED
   if (fs.exclusive) {
     help_fs_mode_.Format("Fullscreen changes resolution to {}x{}", GRP_RES.w,
@@ -472,7 +469,7 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
   }
 #endif
 
-  // アイテムのタイトルを再ポインタ
+  // Re-point item titles
   size_t idx = 0;
 #ifdef SUPPORT_GRP_WINDOWED
   item_ptrs_[idx++]->Title = title_disp_.Lit();

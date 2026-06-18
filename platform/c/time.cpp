@@ -1,7 +1,6 @@
-/*
- *   Time interface (std::chrono implementation)
- *
- */
+///
+/// Time interface (std::chrono implementation)
+///
 
 #include "platform/time.h"
 #include <assert.h>

@@ -1,7 +1,6 @@
-/*
- *   Packfiles and compression
- *
- */
+///
+/// LzUty - Packfiles and compression
+///
 
 #include "lz_uty.h"
 #include "game/guard.h"

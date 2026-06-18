@@ -1,7 +1,6 @@
-/*
- *   Platform-specific time interface
- *
- */
+///
+/// Platform-specific time interface
+///
 
 #include <cstdint>
 

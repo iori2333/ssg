@@ -1,20 +1,18 @@
-/*
- *   PCM sound interface
- *
- */
-
+///
+/// PCM sound interface
+///
 #pragma once
 
-// ヘッダファイル //
+// Header files
 #include "constants.h"
 #include "game/enum_flags.h"
 #include "game/volume.h"
 #include "platform/buffer.h"
 
-// 定数＆マクロ //
+// Constants & macros
 using SND_INSTANCE_ID = uint8_t;
 
-#define SND_OBJ_MAX 30 // 効果音の種類の最大数
+#define SND_OBJ_MAX 30 // Maximum number of SE types
 
 extern const uint8_t &Snd_BGMTempoNum;
 extern const uint8_t &Snd_BGMTempoDenom;
@@ -39,7 +37,7 @@ void Snd_SECleanup(void);
 
 bool Snd_SELoad(BYTE_BUFFER_OWNED buffer, uint8_t id, SND_INSTANCE_ID max);
 
-// 再生＆停止 //
+// Playback & stop
 void Snd_SEPlay(uint8_t id, int x = SND_X_MID, bool loop = false);
 void Snd_SEStop(uint8_t id);
 void Snd_SEStopAll(void);

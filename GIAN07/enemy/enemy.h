@@ -1,112 +1,110 @@
-/*************************************************************************************************/
-/*   ENEMY.h   敵の管理とか発生制御等 */
-/*                                                                                               */
-/*************************************************************************************************/
+///
+/// ENEMY.h - Enemy management and spawn control
+///
 
 #pragma once
 
-///// [ 更新履歴 ] /////
+// [Revision history]
 
-// 2000/10/17 : プレイランクの変数を参照するのを間違えていた(ConfigDat
-// のほうを参照していた) 2000/03/22 : LLaser
-// の処理を追加(実際の発射は構造体そのものに直接代入する事で行う) 2000/02/25 :
-// 敵の当たり判定チェック用関数 enemy_damage() を追加 2000/02/22 :
-// 敵のクリッピング範囲を変更した。
+// 2000/10/17 : Fixed referencing wrong variable for play rank (was referencing ConfigDat)
+// 2000/03/22 : Added LLaser processing (actual firing done by direct assignment to struct)
+// 2000/02/25 : Added enemy hit-check function enemy_damage()
+// 2000/02/22 : Changed enemy clipping range.
 
 #include "bullet/bullet.h"
 #include "bullet/laser.h"
 #include "ecl.h"
 #include "platform/buffer.h"
 
-//// 敵定数 ////
-inline constexpr uint16_t ENEMY_MAX = 50; // 敵の最大発生数
+// Enemy constants
+inline constexpr uint16_t ENEMY_MAX = 50; // Maximum number of enemies
 
-// 敵状態フラグ
-inline constexpr uint8_t EF_DRAW = 0x01;   // 敵を描画するか
-inline constexpr uint8_t EF_CLIP = 0x02;   // 敵が画面外に出たとき消去するか
-inline constexpr uint8_t EF_DAMAGE = 0x04; // 敵にダメージを与えられるか
-inline constexpr uint8_t EF_HITSB = 0x08;  // 敵と自機は接触するか
-inline constexpr uint8_t EF_RLCHG = 0x10;  // ＥＣＬ左右反転を有効にするか
-inline constexpr uint8_t EF_BOMB = 0x20;   // 敵が爆発中である
-inline constexpr uint8_t EF_DELETE = 0x40; // 敵をこのターン中に消去する
+// Enemy state flags
+inline constexpr uint8_t EF_DRAW = 0x01;   // Whether to draw the enemy
+inline constexpr uint8_t EF_CLIP = 0x02;   // Whether to delete when off-screen
+inline constexpr uint8_t EF_DAMAGE = 0x04; // Whether the enemy can take damage
+inline constexpr uint8_t EF_HITSB = 0x08;  // Whether enemy collides with player
+inline constexpr uint8_t EF_RLCHG = 0x10;  // Whether to enable ECL horizontal flip
+inline constexpr uint8_t EF_BOMB = 0x20;   // Enemy is exploding
+inline constexpr uint8_t EF_DELETE = 0x40; // Delete enemy this frame
 
 inline constexpr int ENEMY_BOMB_SPD = 4;
 
-//// ホーミング定数 ////
+// Homing constants
 inline constexpr int HOMING_DUMMY =
-    (500 * 64); // 敵をホーミングしない場合のダミー値
+    (500 * 64); // Dummy value when not homing
 
-////アニメーション定数////
-inline constexpr uint8_t ANIME_MAX = 50;    // アニメーションの種類
-inline constexpr uint8_t ANIMEPTN_MAX = 16; // アニメーションパターンの最大値
-inline constexpr uint8_t ANM_NORM = 0x00;   // 普通のアニメーション
-inline constexpr uint8_t ANM_DEG = 0x01;    // 角度でアニメーションする
-inline constexpr uint8_t ANM_STOP = 0x02;   // 最終パターンで静止する
+// Animation constants
+inline constexpr uint8_t ANIME_MAX = 50;    // Number of animation types
+inline constexpr uint8_t ANIMEPTN_MAX = 16; // Maximum animation patterns
+inline constexpr uint8_t ANM_NORM = 0x00;   // Normal animation
+inline constexpr uint8_t ANM_DEG = 0x01;    // Animate by angle
+inline constexpr uint8_t ANM_STOP = 0x02;   // Stop at final pattern
 
-//// 割り込みベクタ構造体 ////
+// Interrupt vector structure
 struct InterruptVector {
-  uint32_t vect; // 割り込みベクタ(0 なら無効)
-  int value;     // 比較値
+  uint32_t vect; // Interrupt vector (0 if disabled)
+  int value;     // Comparison value
 };
 
-//// 敵データ構造体 ////
+// Enemy data structure
 struct EnemyData {
-  WORLD_COORD x, y; // 表示座標
-  int vx, vy;       // 速度の(x,y)成分 x64系
+  WORLD_COORD x, y; // Display coordinates
+  int vx, vy;       // Velocity (x,y) components (x64)
 
-  int v; // 速度成分 x64系
+  int v; // Velocity component (x64)
 
-  uint32_t hp;        // 残り体力(大きすぎるか？)
-  uint32_t item;      // アイテムその他に使用か？
-  uint32_t cmd;       // ECLコマンドの絶対アドレス(DOS版との大きな変更点)
-  uint32_t count;     // 多目的フレームカウンタ
-  uint32_t call_addr; // RET 実行後にジャンプするアドレス
+  uint32_t hp;        // Remaining HP (too large?)
+  uint32_t item;      // Used for items etc.?
+  uint32_t cmd;       // ECL command absolute address (major change from DOS version)
+  uint32_t count;     // Multipurpose frame counter
+  uint32_t call_addr; // Address to jump to after RET execution
 
-  uint32_t score;   // 得点(時間による得点変動対応か？)
-  uint32_t evscore; // かすり得点用
+  uint32_t score;   // Score (time-based score variation?)
+  uint32_t evscore; // Graze score
 
-  uint32_t IntTimer; // 割り込みようタイマー
+  uint32_t IntTimer; // Interrupt timer
 
-  uint32_t GR[ECLREG_MAX];           // 変数用レジスタ
-  InterruptVector Vect[ECLVECT_MAX]; // 割り込みベクタ
+  uint32_t GR[ECLREG_MAX];           // Variable registers
+  InterruptVector Vect[ECLVECT_MAX]; // Interrupt vectors
 
-  uint16_t g_width;  // グラフィックの幅  /2*64(当たり判定にも使用)
-  uint16_t g_height; // グラフィックの高さ/2*64(上に同じ)
-  uint16_t rep_c;    // REP 命令用カウンタ
-  uint16_t cmd_c;    // 実行中コマンドの繰り返し回数
-  uint16_t anm_c;    // アニメーションカウンタ
+  uint16_t g_width;  // Graphic width /2*64 (also used for hit detection)
+  uint16_t g_height; // Graphic height /2*64 (same as above)
+  uint16_t rep_c;    // REP instruction counter
+  uint16_t cmd_c;    // Current command repeat count
+  uint16_t anm_c;    // Animation counter
 
-  uint8_t d;         // 進行角 256
-  char vd;           // 角速度 128
-  uint8_t amp;       // 振幅   256
-  uint8_t anm_ptn;   // 使用しているアニメーションパターン
-  uint8_t anm_ptnEx; // ダメージ中のアニメーションパターン
-  char anm_sp;       // アニメーションスピード
-  uint8_t IsDamaged; // ダメージを受けたか
+  uint8_t d;         // Direction angle 256
+  char vd;           // Angular velocity 128
+  uint8_t amp;       // Amplitude 256
+  uint8_t anm_ptn;   // Current animation pattern
+  uint8_t anm_ptnEx; // Animation pattern while damaged
+  char anm_sp;       // Animation speed
+  uint8_t IsDamaged; // Whether damaged
 
-  uint8_t flag;   // 敵状態フラグ(状況によってサイズ変更のこと)
-  uint8_t tama_c; // 弾発射用カウンタ
-  uint8_t t_rep;  // 弾発射間隔
+  uint8_t flag;   // Enemy state flags (resize as needed)
+  uint8_t tama_c; // Bullet fire counter
+  uint8_t t_rep;  // Bullet fire interval
 
-  uint8_t LLaserRef; // 太レーザーの参照カウント
+  uint8_t LLaserRef; // Thick laser reference count
 
-  BulletCommand t_cmd; // 弾発射用コマンド
-  LaserCommand l_cmd;  // レーザー発射用コマンド
+  BulletCommand t_cmd; // Bullet fire command
+  LaserCommand l_cmd;  // Laser fire command
 
-  // --- メソッド ---
+  // --- Methods ---
   void Draw() const;
   void UpdateAnimation(); // EnemyAnimeMove()
 };
 
-// 後方互換用エイリアス
+// Backward compatibility aliases
 // (ENEMY_DATA alias removed — use EnemyData directly)
 // (INT_VECTOR alias removed — use InterruptVector directly)
 
 struct ANIME_DATA {
-  uint8_t mode;                 // アニメーションモード
-  uint8_t n;                    // アニメーションパターン数
-  PIXEL_SIZE size;              // 絵の幅, 絵の高さ
-  PIXEL_LTRB ptn[ANIMEPTN_MAX]; // アニメーションの存在する矩形領域
+  uint8_t mode;                 // Animation mode
+  uint8_t n;                    // Number of animation patterns
+  PIXEL_SIZE size;              // Image width, image height
+  PIXEL_LTRB ptn[ANIMEPTN_MAX]; // Rectangular areas for animation
 
   template <uint8_t Count>
   void SetSheet(PIXEL_POINT topleft, PIXEL_SIZE size, uint8_t mode) {
@@ -132,10 +130,9 @@ struct ANIME_DATA {
   }
 };
 
-//// 敵変数 ////
-// Enemies.entities, Enemies.indices, Enemies.count, Enemies.anime
-// で直接アクセス
+// Enemy variables
+// Access directly via Enemies.entities, Enemies.indices, Enemies.count, Enemies.anime
 
-//// 敵制御関数 ////
-// 後方互換 inline wrapper は enemy_manager.h 末尾に移動
-// 実装は EnemyManager メソッドに移行
+// Enemy control functions
+// Backward-compatible inline wrapper moved to enemy_manager.h
+// Implementation migrated to EnemyManager methods

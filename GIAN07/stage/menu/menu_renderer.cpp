@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   menu_renderer.cpp   メニューウィンドウ描画                               */
-/*                                                                           */
-/*                                                                           */
+///
+/// MenuRenderer - Menu window drawing
+///
 
 #include "menu_renderer.h"
 
@@ -10,7 +9,7 @@
 #include "platform/graphics_backend.h"
 #include "platform/windows/text_gdi.h"
 
-// メニューラベル(タイトル / 項目)の描画 //
+// Draw menu label (title / item)
 void MenuDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
                    bool is_title) {
   struct COLOR_PAIR {
@@ -47,26 +46,26 @@ void MenuDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
   s.Put({.x = (left + 0), .y = 0}, label.Title, col.text);
 }
 
-// ウィンドウ枠を描画する //
+// Draw window frame
 void DrawWindowFrame(int x, int y, int w, int h) {
   PIXEL_LTRB src;
 
   w = w >> 1;
   h = h >> 1;
 
-  // 左上 //
+  // Top-left
   src = {0, 0, w, h};
   GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
 
-  // 右上 //
+  // Top-right
   src = {(384 - w), 0, 384, h};
   GrpSurface_Blit({(x + w), y}, SURFACE_ID::SYSTEM, src);
 
-  // 左下 //
+  // Bottom-left
   src = {0, (80 - h), w, 80};
   GrpSurface_Blit({x, (y + h)}, SURFACE_ID::SYSTEM, src);
 
-  // 右下 //
+  // Bottom-right
   src = {(384 - w), (80 - h), 384, 80};
   GrpSurface_Blit({(x + w), (y + h)}, SURFACE_ID::SYSTEM, src);
 }

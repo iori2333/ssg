@@ -1,7 +1,6 @@
-/*
- *   Generic, cross-platform subsystem initialization and cleanup
- *
- */
+///
+/// Entry - Generic, cross-platform subsystem initialization and cleanup
+///
 
 #pragma once
 

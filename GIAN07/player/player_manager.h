@@ -1,6 +1,6 @@
-/*
- *   PlayerManager — centralized player system state and operations
- */
+///
+/// PlayerManager - Centralized player system state and operations
+///
 
 #pragma once
 
@@ -15,7 +15,7 @@ struct PlayerManager {
   std::array<uint16_t, MAIDTAMA_MAX> maid_tama_ind{}; // MaidTamaInd[]
   uint16_t maid_tama_now = 0;                         // MaidTamaNow
 
-  // === メソッド ===
+  // === Methods ===
   void SetMaidShot();
   void MoveMaidShot();
   void DrawMaidShot();

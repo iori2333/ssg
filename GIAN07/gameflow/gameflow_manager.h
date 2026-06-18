@@ -1,6 +1,6 @@
-/*
- *   GameFlowManager — centralized game flow state
- */
+///
+/// GameFlowManager - Centralized game flow state
+///
 
 #pragma once
 
@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <functional>
 
-///// [ ゲーム状態列挙 ] /////
+///// [ Game state enum ] /////
 enum class GameState {
   Title,
   WeaponSelect,
@@ -27,7 +27,7 @@ enum class GameState {
   SProject,
   ReplayAll,
   MusicRoom,
-  External, // GameInit() 等での外部指定
+  External, // External specification via GameInit(), etc.
 };
 
 struct GameFlowManager {
@@ -43,7 +43,7 @@ struct GameFlowManager {
   Player viv_temp = {};
   bool input_locked = false;
 
-  // === メソッド ===
+  // === Methods ===
   void TitleProc(bool &);
   void ScoreNameProc(bool &);
   static void ScoreDraw();

@@ -1,7 +1,6 @@
-/*
- *   Backend-independent geometry rendering functions
- *
- */
+///
+/// Geometry - Backend-independent geometry rendering functions
+///
 
 #include "geometry.h"
 #include "game/ut_math.h"

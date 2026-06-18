@@ -1,8 +1,6 @@
-/*
- *   Game-specific compile-time constants and types to be shared with the
- *   platform layers
- *
- */
+///
+/// Constants - Game-specific compile-time constants and types shared with platform layers
+///
 
 #pragma once
 
@@ -27,32 +25,31 @@ constexpr auto GRP_TRIANGLES_MAX = 66;
 constexpr auto FRAME_TIME_TARGET = 16;
 
 // ID types
-// --------
 
-constexpr auto FACE_MAX = 3; // 同時にロード可能な人数...
+constexpr auto FACE_MAX = 3; // Maximum simultaneous face loads
 constexpr auto ENDING_PIC_MAX = 6;
 
 enum class SURFACE_ID : uint8_t {
-  SYSTEM = 0, // システム用
+  SYSTEM = 0, // System
 
   // Title Screen
-  TITLE = 2, // たいとる用
+  TITLE = 2, // Title screen
 
   // Music Room
-  MUSIC = 2, // 音楽室用
+  MUSIC = 2, // Music room
 
   // Name Registration
-  NAMEREG = 2, // お名前登録用
+  NAMEREG = 2, // Name registration
 
   // In-game
-  MAPCHIP = 1, // 背景用
-  ENEMY = 2,   // 敵(雑魚＆ボス)用
-  FACE = 3,    // 顔グラ用
+  MAPCHIP = 1, // Background
+  ENEMY = 2,   // Enemies (trash & bosses)
+  FACE = 3,    // Face graphics
   FACE_last = (FACE + FACE_MAX - 1),
-  BOMBER = 6, // ボム用グラフィック用
+  BOMBER = 6, // Bomb graphics
 
   // Splash screen
-  SPROJECT = 1, // 西方Project表示用
+  SPROJECT = 1, // Western Project display
 
   // Endings
   ENDING_CREDITS = 1,
@@ -76,19 +73,17 @@ static constexpr SURFACE_ID operator+(SURFACE_ID lhs, uint8_t rhs) {
 
 enum class FONT_ID : uint8_t {
   // IDs referenced by original game data
-  SMALL = 0,  // フォント(小さい文字用)
-  NORMAL = 1, // フォント(通常の文字用)
-  LARGE = 2,  // フォント(大きい文字用)
+  SMALL = 0,  // Font (small characters)
+  NORMAL = 1, // Font (normal characters)
+  LARGE = 2,  // Font (large characters)
 
   // Newly added in this fork
   TINY = 3,
 
   COUNT = 4,
 };
-// --------
 
 // Mapping world coordinates to a position in the stereo field
-// -----------------------------------------------------------
 // These constants map the [x] parameter from any source unit to a position in
 // the stereo field. The resulting unit is the attenuation volume of either the
 // right (negative) or left (positive) channel, expressed in decibels.
@@ -103,11 +98,10 @@ enum class FONT_ID : uint8_t {
 // By transforming the calculation to pixel space and full decibels, we end up
 // with ((16 / 64) × 100) = 25 pixels per shifted decibel.
 
-// Ｘ座標の中心のデフォルト値
+// Default X-coordinate center
 constexpr int SND_X_MID = PixelToWorld(320);
 
 constexpr int SND_X_PER_DECIBEL = PixelToWorld(25);
-// -----------------------------------------------------------
 
 // At least on Windows, SDL 3's default graphics API (Direct3D 11) also appears
 // to be the most performant choice:

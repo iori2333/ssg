@@ -1,7 +1,6 @@
-/*
- *   Internal logging helpers for the SDL platform
- *
- */
+///
+/// Internal logging helpers for the SDL platform
+///
 
 #pragma once
 

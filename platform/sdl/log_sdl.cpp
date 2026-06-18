@@ -1,7 +1,6 @@
-/*
- *   Internal logging helpers for the SDL platform
- *
- */
+///
+/// Internal logging helpers for the SDL platform
+///
 
 // SDL headers must come first to avoid import→#include bugs on Clang 19.
 #include <SDL3/SDL_messagebox.h>

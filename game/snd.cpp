@@ -1,7 +1,6 @@
-/*
- *   Sound interface
- *
- */
+///
+/// Sound interface
+///
 
 #include <SDL3/SDL_audio.h>
 

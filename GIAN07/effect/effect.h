@@ -1,61 +1,60 @@
-/*                                                                           */
-/*   EFFECT.h   エフェクト管理                                               */
-/*                                                                           */
-/*                                                                           */
+///
+/// Effect - Effect-related definitions
+///
 
 #pragma once
 
 #include <array>
 #include <cstdint>
 
-///// [更新履歴] /////
-// 2000/04/28 : 円エフェクトを作成
-// 2000/04/15 : 円形フェード系関数の追加
-// 2000/02/23 : 開発開始(->Ver0.20)
+// [Change history]
+// 2000/04/28 : Created circle effect
+// 2000/04/15 : Added circular fade functions
+// 2000/02/23 : Development started (->Ver0.20)
 
-///// [ 定数 ] /////
+// [Constants]
 inline constexpr auto SEFFECT_MAX = 1000;
-inline constexpr auto LOCKON_MAX = 2;      // 最大ロック数
-inline constexpr auto CIRCLE_EFC_MAX = 10; // 円エフェクト最大数
+inline constexpr auto LOCKON_MAX = 2;      // Max lock-on count
+inline constexpr auto CIRCLE_EFC_MAX = 10; // Max circle effects
 
-inline constexpr auto CEFC_NONE = 0x00;    // CircleEffect未使用
-inline constexpr auto CEFC_STAR = 0x01;    // お星様系エフェクト
-inline constexpr auto CEFC_CIRCLE1 = 0x02; // 集まる円エフェクト
-inline constexpr auto CEFC_CIRCLE2 = 0x03; // 離れる円エフェクト
+inline constexpr auto CEFC_NONE = 0x00;    // CircleEffect not in use
+inline constexpr auto CEFC_STAR = 0x01;    // Star-like effect
+inline constexpr auto CEFC_CIRCLE1 = 0x02; // Converging circle effect
+inline constexpr auto CEFC_CIRCLE2 = 0x03; // Diverging circle effect
 
-inline constexpr auto SEFC_NONE = 0x00;   // 未使用
-inline constexpr auto SEFC_STR1 = 0x01;   // 文字列エフェクト１
-inline constexpr auto SEFC_STR1_2 = 0x02; // 文字列一時停止
-inline constexpr auto SEFC_STR1_3 = 0x03; // 文字列爆発
+inline constexpr auto SEFC_NONE = 0x00;   // Not used
+inline constexpr auto SEFC_STR1 = 0x01;   // String effect 1
+inline constexpr auto SEFC_STR1_2 = 0x02; // String pause
+inline constexpr auto SEFC_STR1_3 = 0x03; // String explosion
 
-inline constexpr auto SEFC_MTITLE1 = 0x04; // 曲名表示エフェクト(出動)
-inline constexpr auto SEFC_MTITLE2 = 0x05; // 曲名表示エフェクト(停止)
-inline constexpr auto SEFC_MTITLE3 = 0x06; // 曲名表示エフェクト(退却)
+inline constexpr auto SEFC_MTITLE1 = 0x04; // Music title effect (start)
+inline constexpr auto SEFC_MTITLE2 = 0x05; // Music title effect (stop)
+inline constexpr auto SEFC_MTITLE3 = 0x06; // Music title effect (retreat)
 
-inline constexpr auto SEFC_GAMEOVER = 0x07;  // ワーニングの表示とか
-inline constexpr auto SEFC_GAMEOVER2 = 0x08; // ワーニングの表示とか
+inline constexpr auto SEFC_GAMEOVER = 0x07;  // Warning display etc.
+inline constexpr auto SEFC_GAMEOVER2 = 0x08; // Warning display etc.
 
-inline constexpr auto SEFC_STR2 = 0x10; // 得点アイテム用？エフェクト
+inline constexpr auto SEFC_STR2 = 0x10; // Score item effect?
 
-inline constexpr auto LOCKON_NONE = 0x00; // ロックしていない
-inline constexpr auto LOCKON_01 = 0x01;   // ロックオン開始
-inline constexpr auto LOCKON_02 = 0x02;   // ロックオン停止
-inline constexpr auto LOCKON_03 = 0x03;   // ロックオン解放？
+inline constexpr auto LOCKON_NONE = 0x00; // Not locked
+inline constexpr auto LOCKON_01 = 0x01;   // Lock-on start
+inline constexpr auto LOCKON_02 = 0x02;   // Lock-on stop
+inline constexpr auto LOCKON_03 = 0x03;   // Lock-on release?
 
-inline constexpr auto SCNEFC_NONE = 0x00;     // エフェクト無し
-inline constexpr auto SCNEFC_CFADEIN = 0x01;  // 円形フェードイン
-inline constexpr auto SCNEFC_CFADEOUT = 0x02; // 円形フェードアウト
-inline constexpr auto SCNEFC_WHITEIN = 0x03;  // ホワイトイン
-inline constexpr auto SCNEFC_WHITEOUT = 0x04; // ホワイトアウト
+inline constexpr auto SCNEFC_NONE = 0x00;     // No effect
+inline constexpr auto SCNEFC_CFADEIN = 0x01;  // Circular fade-in
+inline constexpr auto SCNEFC_CFADEOUT = 0x02; // Circular fade-out
+inline constexpr auto SCNEFC_WHITEIN = 0x03;  // White-in
+inline constexpr auto SCNEFC_WHITEOUT = 0x04; // White-out
 
-///// [構造体] /////
+// [Structs]
 struct CircleEffectData {
-  int x, y;       // 中心座標
-  int r, rmax;    // 半径／最大半径
-  uint32_t count; // カウンタ
-  uint8_t type;   // 円エフェクトの種類
-                  //	uint8_t	Level;	// 円エフェクトの段階
-  uint8_t d;      // 円エフェクトの角度(謎)
+  int x, y;       // Center coordinates
+  int r, rmax;    // Radius / max radius
+  uint32_t count; // Counter
+  uint8_t type;   // Circle effect type
+                  // uint8_t Level; // Circle effect level
+  uint8_t d;      // Circle effect angle (mystery)
 };
 // (CIRCLE_EFC_DATA alias removed — use CircleEffectData directly)
 
@@ -72,24 +71,24 @@ struct StringEffectData {
 // (SEFFECT_DATA alias removed — use StringEffectData directly)
 
 struct LockOnInfo {
-  int *x, *y;        // ロック座標へのポインタ
-  int width, height; // 幅＆高さ
-  int vx, vy;        // 速度成分
-  uint32_t count;    // カウンタ
-  uint8_t state;     // 状態
+  int *x, *y;        // Pointer to lock-on coordinates
+  int width, height; // Width and height
+  int vx, vy;        // Velocity components
+  uint32_t count;    // Counter
+  uint8_t state;     // State
 };
 // (LOCKON_INFO alias removed — use LockOnInfo directly)
 
 struct ScreenEffectState {
-  uint8_t cmd;    // 発動中エフェクト
-  uint32_t count; // エフェクトに対するカウンタ
+  uint8_t cmd;    // Active effect
+  uint32_t count; // Effect counter
 };
 // (SCREENEFC_INFO alias removed — use ScreenEffectState directly)
 
-///// [ 関数 ] /////
-// 後方互換 inline wrapper は effect_manager.h の末尾に移動
-void GrpDrawSpect(int x, int y); // スペアナ描画 (MUSIC.cpp)
-void GrpDrawNote();              // 押されているところを表示 (MUSIC.cpp)
+// [Functions]
+// Backward-compatible inline wrappers moved to end of effect_manager.h
+void GrpDrawSpect(int x, int y); // Spectrum analyzer draw (MUSIC.cpp)
+void GrpDrawNote();              // Display pressed keys (MUSIC.cpp)
 
-///// [ 変数 ] /////
-// 全エフェクト変数 → Effects.xxx で直接アクセス（effect_manager.h 参照）
+// [Variables]
+// All effect variables -> access directly via Effects.xxx (see effect_manager.h)

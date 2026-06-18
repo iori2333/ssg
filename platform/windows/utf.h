@@ -1,7 +1,6 @@
-/*
- *   Unicode conversion helpers
- *
- */
+///
+/// Unicode conversion helpers
+///
 
 #pragma once
 

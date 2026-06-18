@@ -1,22 +1,20 @@
-/*                                                                           */
-/*   DX_ERROR.h   DirectX のエラー出力用関数                                 */
-/*                                                                           */
-/*                                                                           */
-
+///
+/// Debug output functions
+///
 #ifndef PBGWIN_DX_ERROR_H
 #define PBGWIN_DX_ERROR_H "DX_ERROR : Version 0.01 : Update 1999/11/20"
 
 #include <string_view>
 
-// 更新履歴 //
+// Revision history
 
-// 1999/12/10 : ファイルにエラー出力をする関数を追加
-// 1999/11/20 : 作成開始
+// 1999/12/10 : Added file error output function
+// 1999/11/20 : Started
 
-// 関数プロトタイプ宣言 //
-extern void DebugSetup(void);   // エラー出力準備(->LogFile)
-extern void DebugCleanup(void); // エラー吐き出し用ファイルを閉じる
+// Function prototypes
+extern void DebugSetup(void);   // Prepare error output (->LogFile)
+extern void DebugCleanup(void); // Close the error output file
 extern void DebugLog(std::string_view s);
-extern void DebugOut(std::string_view s); // デバッグメッセージ吐き出し
+extern void DebugOut(std::string_view s); // Output debug message
 
 #endif

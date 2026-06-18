@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   WINDOWSYS.cpp   コマンドウィンドウ処理                                  */
-/*                                                                           */
-/*                                                                           */
+///
+/// WindowSys - Command window processing
+///
 
 #include "window_sys.h"
 
@@ -13,7 +12,7 @@
 #include "platform/text_backend.h"
 #include <utility>
 
-///// [MenuDef / MenuItem メソッド] /////
+// [MenuDef / MenuItem methods]
 
 uint8_t MenuDef::MaxItems() const {
   uint8_t ret = NumItems;
@@ -30,7 +29,7 @@ void MenuItem::SetActive(bool active) {
               static_cast<std::underlying_type_t<enum MenuFlags>>(!active));
 }
 
-///// [MenuController メソッド] /////
+// [MenuController methods]
 
 void MenuController::Init(PIXEL_COORD w) {
   W = w;
@@ -68,30 +67,30 @@ void MenuController::OpenCentered(PIXEL_COORD w, int select) {
   Open(topleft, select);
 }
 
-// コマンドウィンドウを１フレーム動作させる //
+// Process command window for one frame
 void MenuController::Tick(INPUT_BITS key) {
   switch (State) {
-  case CWIN_DEAD: // 使用されていない
+  case CWIN_DEAD: // Not in use
     return;
 
-  case CWIN_FREE: // 入力待ち状態
+  case CWIN_FREE: // Waiting for input
     KeyEvent(key);
     Count = 0;
     return;
 
-  case CWIN_OPEN: // 項目移動中(進む)
+  case CWIN_OPEN: // Item moving forward
     break;
 
-  case CWIN_CLOSE: // 項目移動中(戻る)
+  case CWIN_CLOSE: // Item moving backward
     break;
 
-  case CWIN_NEXT: // 次のウィンドウに移行中
+  case CWIN_NEXT: // Switching to next window
     break;
 
-  case CWIN_BEFORE: // 前のウィンドウに移行中
+  case CWIN_BEFORE: // Switching to previous window
     break;
 
-  case CWIN_INIT: // 初期化処理中
+  case CWIN_INIT: // Initializing
     State = CWIN_FREE;
     break;
   }
@@ -99,15 +98,15 @@ void MenuController::Tick(INPUT_BITS key) {
   Count++;
 }
 
-// コマンドウィンドウの描画 //
+// Draw command window
 void MenuController::Draw() {
   int i = 0;
   WINDOW_COORD top = y;
 
-  // アクティブな項目を検索する //
+  // Find active item
   auto *p = SearchActive();
 
-  // 半透明ＢＯＸの描画 //
+  // Draw semi-transparent box
   const uint8_t alpha = ((GrpGeom_FB() != nullptr) ? (64 + 32) : 128);
 
   GrpGeom->Lock();
@@ -132,7 +131,7 @@ void MenuController::Draw() {
   }
   GrpGeom->Unlock();
 
-  // 文字列の描画 //
+  // Draw text
   WINDOW_POINT topleft = {x, y};
   const auto trr = TRRs[0];
   std::string_view str = p->Title->Title;
@@ -153,9 +152,9 @@ void MenuController::Draw() {
   }
 }
 
-// アクティブなウィンドウを探す //
+// Find active window
 MenuDef *MenuController::SearchActive() {
-  // 現在アクティブな項目を探す //
+  // Find currently active item
   auto *p = &Parent;
   for (auto i = 0; std::cmp_less(i, SelectDepth); i++) {
     p = p->ItemPtr[Select[i]]->Submenu;
@@ -163,7 +162,7 @@ MenuDef *MenuController::SearchActive() {
   return p;
 }
 
-// 長いサブメニュー用にウィンドウ Y 座標を調整する //
+// Adjust window Y for tall submenus
 void MenuController::AdjustYForTallMenu(int baseline_y, int max_visible) {
   const auto *active = SearchActive();
   if (active == nullptr) {
@@ -175,7 +174,7 @@ void MenuController::AdjustYForTallMenu(int baseline_y, int max_visible) {
   }
 }
 
-// キーボード入力を処理する //
+// Process keyboard input
 void MenuController::KeyEvent(INPUT_BITS key) {
   if (FirstWait) {
     if (key != 0U) {
@@ -184,14 +183,14 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     FirstWait = false;
   }
 
-  // 操作性が悪かった点を修正 //
+  // Fix for poor responsiveness
   if (key == 0 && (KeyCount != 0U)) {
     OldKey = 0;
     KeyCount = 0;
     return;
   }
 
-  // アクティブなウィンドウを検索する //
+  // Find active window
   const auto *p = SearchActive();
   auto Depth = SelectDepth;
 
@@ -200,10 +199,10 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     Select[Depth] = ((Select[Depth] + 1) % p->NumItems);
   }
 
-  // アクティブな項目をセットする //
+  // Set active item
   auto *p2 = p->ItemPtr[Select[Depth]];
 
-  // キーボードの過剰なリピート防止 //
+  // Prevent excessive keyboard repeat
   if (KeyCount != 0U) {
     KeyCount--;
     if (KeyCount == 0) {
@@ -226,7 +225,7 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     return;
   }
   if (Input_IsOK(OldKey) || Input_IsCancel(OldKey)) {
-    // いかなる場合もリピートを許可しないキー //
+    // Never allow repeat for these keys
     if (key == OldKey) {
       return;
     }
@@ -252,9 +251,9 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     SearchActive()->SetItems(*this, false);
   };
 
-  // 一部のキーボード入力を処理する(KEY_UP/KEY_DOWN) //
+  // Handle keyboard input (KEY_UP/KEY_DOWN)
   if ((key == KEY_UP) || (key == KEY_DOWN)) {
-    // 一つ上の項目へ / 一つ下の項目へ
+    // One item up / One item down
     const auto delta = ((key == KEY_UP) ? -1 : +1);
     Select[Depth] = next_active(*p, Select[Depth], delta);
     Snd_SEPlay(SOUND_ID_SELECT);
@@ -267,7 +266,7 @@ void MenuController::KeyEvent(INPUT_BITS key) {
   }
 
   if (p2->OptionFn || p2->CallBackFn) {
-    // コールバック動作時の処理 //
+    // Callback processing
     const auto ret = ([this, p, p2, key] {
       if (p2->OptionFn) {
         if (Input_IsCancel(key)) {
@@ -289,9 +288,9 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     if (!ret) {
       if (Depth == 0) {
         if (!Input_IsCancel(key)) {
-          // 後で (CWIN_CLOSE) に変更すること//
+          // Change to (CWIN_CLOSE) later
           State = CWIN_DEAD;
-          OldKey = 0; // ここは結構重要
+          OldKey = 0; // This is quite important
         }
       } else {
         move_to_previous_level();
@@ -302,9 +301,9 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     // where we wouldn't fall into the branch above...
     p->SetItems(*this, false);
 
-    // デフォルトのキーボード動作 //
+    // Default keyboard operation
     if (Input_IsOK(key)) {
-      // 決定・選択
+      // Confirm / Select
       if ((p2->Submenu != nullptr) && (p2->Submenu->NumItems != 0)) {
         p2->Submenu->Title = p2;
         p2->Submenu->SetItems(*this, false);
@@ -316,15 +315,15 @@ void MenuController::KeyEvent(INPUT_BITS key) {
         SelectDepth++;
       }
     } else if (Input_IsCancel(key)) {
-      // キャンセル
+      // Cancel
       move_to_previous_level();
     }
   }
 }
 
-///// [ユーティリティ関数] /////
+// [Utility functions]
 
-// コマンド [Exit] のデフォルト処理関数 //
+// Default handler for [Exit] command
 bool CWinExitFn(MenuController & /*ctrl*/, INPUT_BITS key) {
   return !(Input_IsOK(key) || Input_IsCancel(key));
 }

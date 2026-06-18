@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   SCROLL.h   スクロール処理                                               */
-/*                                                                           */
-/*                                                                           */
+///
+/// Scroll - Scrolling processing
+///
 
 #pragma once
 
@@ -9,93 +8,93 @@
 #include "platform/buffer.h"
 #include <array>
 
-///// [更新履歴] /////
-// 2000/04/01 : スクロールコマンドを追加(STAGE2_BOSS)
-// 2000/02/28 : ＢＯＳＳ命令を Level2 に変更
-// 2000/02/24 : みぢ命令を追加
-// 2000/02/18 : 敵配置処理と結合する
-// 2000/02/01 : 開発開始
+// [Change history]
+// 2000/04/01 : Added scroll command (STAGE2_BOSS)
+// 2000/02/28 : Changed BOSS instruction to Level 2
+// 2000/02/24 : Added midi instruction
+// 2000/02/18 : Integrated with enemy placement processing
+// 2000/02/01 : Development started
 //
 
-///// [ 定数 ] /////
+// [Constants]
 
-// マップエディタと共有する定数 //
-inline constexpr auto LAYER_MAX = 5;         // レイヤーの深さ
-inline constexpr auto TIME_PER_FRAME = 20;   // １フレームでどれだけ時間が進むか
-inline constexpr auto MAP_WIDTH = 24;        // マップの横幅
-inline constexpr auto MAPDATA_NONE = 0xffff; // マップ上に何も置かれていない状態
+// Constants shared with map editor
+inline constexpr auto LAYER_MAX = 5;         // Layer depth
+inline constexpr auto TIME_PER_FRAME = 20;   // Time advance per frame
+inline constexpr auto MAP_WIDTH = 24;        // Map width
+inline constexpr auto MAPDATA_NONE = 0xffff; // Nothing placed on map
 
-// スクロールステータス //
-inline constexpr auto SST_NORMAL = 0x00; // 通常時
-inline constexpr auto SST_STOP = 0x01;   // 停止中
+// Scroll status
+inline constexpr auto SST_NORMAL = 0x00; // Normal
+inline constexpr auto SST_STOP = 0x01;   // Stopped
 
-// スクロールコマンド //
-inline constexpr auto SCMD_QUAKE = 0x01;      // 画面を振動させる
-inline constexpr auto SCMD_STG2BOSS = 0x02;   // ２面ボスの反転スクロール
-inline constexpr auto SCMD_RASTER_ON = 0x03;  // ラスタースクロール開始
-inline constexpr auto SCMD_RASTER_OFF = 0x04; // ラスタースクロー終了
+// Scroll commands
+inline constexpr auto SCMD_QUAKE = 0x01;      // Shake screen
+inline constexpr auto SCMD_STG2BOSS = 0x02;   // Stage 2 boss reverse scroll
+inline constexpr auto SCMD_RASTER_ON = 0x03;  // Raster scroll start
+inline constexpr auto SCMD_RASTER_OFF = 0x04; // Raster scroll end
 inline constexpr auto SCMD_STG3BOSS =
-    0x05; // 背景雲をゲイツモード(謎)に変更する
-inline constexpr auto SCMD_STG3RESET = 0x06; // ３面の背景をノーマルモードに戻す
-inline constexpr auto SCMD_STG6CUBE = 0x07;  // ６面ボスの３Ｄキューブモード
+    0x05; // Change background clouds to gates mode (?)
+inline constexpr auto SCMD_STG3RESET = 0x06; // Return stage 3 background to normal mode
+inline constexpr auto SCMD_STG6CUBE = 0x07;  // Stage 6 boss 3D cube mode
 inline constexpr auto SCMD_STG6RNDECL =
-    0x08;                                    // ６面ボスのランダム偽ＥＣＬ列配置
-inline constexpr auto SCMD_STG4ROCK = 0x09;  // ４面岩
-inline constexpr auto SCMD_STG4LEAVE = 0x0a; // ４面岩を画面外に吐き出す
-inline constexpr auto SCMD_STG6RASTER = 0x0b; // ６面ラスター
-inline constexpr auto SCMD_STG3STAR = 0x0c;   // ３面高速星
+    0x08;                                    // Stage 6 boss random fake ECL column arrangement
+inline constexpr auto SCMD_STG4ROCK = 0x09;  // Stage 4 rock
+inline constexpr auto SCMD_STG4LEAVE = 0x0a; // Eject stage 4 rocks off screen
+inline constexpr auto SCMD_STG6RASTER = 0x0b; // Stage 6 raster
+inline constexpr auto SCMD_STG3STAR = 0x0c;   // Stage 3 high-speed stars
 
-///// [  型  ] /////
-using PBGMAP = uint16_t; // マップパーツ格納用の型
+// [Types]
+using PBGMAP = uint16_t; // Type for map parts storage
 
-///// [マクロ] /////
+// [Macros]
 
-///// [構造体] /////
+// [Structures]
 
-// スクロール管理用構造体 //
+// Scroll management structure
 struct ScrollState {
-  //	GRP		lpMapOffs;					//
-  // マップパーツデータ(Graphic)の格納先
+//	GRP		lpMapOffs;					//
+// Map parts data (Graphic) storage destination
 
-  BYTE_BUFFER_OWNED DataHead; // マップデータのヘッダ
+  BYTE_BUFFER_OWNED DataHead; // Map data header
 
-  PBGMAP *LayerHead[LAYER_MAX];  // 各レイヤーのヘッダ
-  PBGMAP *LayerPtr[LAYER_MAX];   // 現在のレイヤーのポインタ
-  uint32_t LayerWait[LAYER_MAX]; // レイヤーの重み
-  int LayerCount[LAYER_MAX];     // レイヤーごとのカウンタ
-  uint8_t LayerDy[LAYER_MAX];    // レイヤーの1Dot単位のズレ
+  PBGMAP *LayerHead[LAYER_MAX];  // Each layer header
+  PBGMAP *LayerPtr[LAYER_MAX];   // Current layer pointer
+  uint32_t LayerWait[LAYER_MAX]; // Layer weight
+  int LayerCount[LAYER_MAX];     // Per-layer counter
+  uint8_t LayerDy[LAYER_MAX];    // Layer offset in 1-dot units
 
-  int NumLayer;      // レイヤー数
-  int ScrollSpeed;   // スクロール速度
-  uint32_t Count;    // 現在の時刻
-  uint32_t InfStart; // 無限ループの開始時刻(デフォルトは０)
-  uint32_t InfEnd;   // 無限ループの終了時刻(デフォルトはマップの長さの最小値)
+  int NumLayer;      // Number of layers
+  int ScrollSpeed;   // Scroll speed
+  uint32_t Count;    // Current time
+  uint32_t InfStart; // Infinite loop start time (default 0)
+  uint32_t InfEnd;   // Infinite loop end time (default map length minimum)
 
-  uint8_t State;   // スクロールステータス
-  uint8_t IsQuake; // 振動中か？
+  uint8_t State;   // Scroll status
+  uint8_t IsQuake; // Whether shaking
 
-  char RasterDx[31];   // ラスタースクロールによるＸ加算値
-  uint8_t RasterWidth; // ラスタースクロールにおける振幅
-  uint8_t RasterDeg;   // ラスタースクロール用の角度
+  char RasterDx[31];   // Raster scroll X offset
+  uint8_t RasterWidth; // Raster scroll amplitude
+  uint8_t RasterDeg;   // Raster scroll angle
 
-  void (*ExCmd)(void); // 特殊コマンド
-  uint32_t ExCount;    // 特殊コマンド用カウンタ
+  void (*ExCmd)(void); // Special command
+  uint32_t ExCount;    // Special command counter
 };
 
-// ＳＣＬ管理用構造体 //
+// SCL management structure
 struct SceneState {
-  bool MsgFlag;    // メッセージスキップ用フラグ
-  bool ReturnFlag; // リターンキー用フラグ
+  bool MsgFlag;    // Message skip flag
+  bool ReturnFlag; // Return key flag
 };
 
-// 後方互換用エイリアス
+// Backward-compatible aliases
 // (SCROLL_INFO alias removed — use ScrollState directly)
 // (SCL_INFO alias removed — use SceneState directly)
 
-///// [ 関数 ] /////
-// 後方互換 inline wrapper は scroll_manager.h 末尾に移動
-// 実装は ScrollManager メソッドに移行
+// [Functions]
+// Backward-compat inline wrapper moved to end of scroll_manager.h
+// Implementation migrated to ScrollManager methods
 
-///// [ 変数 ] /////
-// Scroller.scroll, Scroller.scene, Scroller.key_wait_count,
-// Scroller.map_chip_rects で直接アクセス
+// [Variables]
+// Access directly via Scroller.scroll, Scroller.scene, Scroller.key_wait_count,
+// Scroller.map_chip_rects

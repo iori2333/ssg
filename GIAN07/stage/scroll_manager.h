@@ -1,6 +1,6 @@
-/*
- *   ScrollManager — centralized scroll/scene system state and operations
- */
+///
+/// ScrollManager - Centralized scroll/scene system state and operations
+///
 
 #pragma once
 
@@ -14,7 +14,7 @@ struct ScrollManager {
   int key_wait_count = 0;                      // SclKeyWaitCount
   std::array<PIXEL_LTRB, 1200> map_chip_rects; // rcMapChip[]
 
-  // === メソッド ===
+  // === Methods ===
   void Move();
   void Draw();
   void SetSpeed(int speed);

@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   DX_ERROR.c   DirectX のエラー出力用関数                                 */
-/*                                                                           */
-/*                                                                           */
+///
+/// Debug output functions
+///
 
 #include <SDL3/SDL_iostream.h>
 
@@ -10,9 +9,7 @@
 #include "game/debug.h"
 #include "platform/file.h"
 #include "platform/time.h"
-#pragma message(PBGWIN_DX_ERROR_H)
-
-// グローバル変数 //
+// Global variables
 constexpr auto ErrorOut = "ErrLOG_UTF8.TXT";
 static bool ErrorActive = false;
 

@@ -1,7 +1,6 @@
-/*
- *   2D surfaces via GDI bitmaps
- *
- */
+///
+/// 2D surfaces via GDI bitmaps
+///
 
 #pragma once
 

@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   Item.cpp   アイテムの処理                                               */
-/*                                                                           */
-/*                                                                           */
+///
+/// Item - Item processing
+///
 
 #include "item.h"
 
@@ -13,9 +12,9 @@
 #include "platform/graphics_backend.h"
 #include <utility>
 
-// entities[], indices[], count → item_manager.cpp に移動
+// entities[], indices[], count moved to item_manager.cpp
 
-// アイテムを発生させる //
+// Spawn an item
 void ItemManager::Spawn(int x, int y, uint8_t type) {
   if (count + 1 >= ITEM_MAX) {
     return;
@@ -48,14 +47,14 @@ void ItemManager::Spawn(int x, int y, uint8_t type) {
   }
 }
 
-// アイテムを動かす //
+// Move items
 void ItemManager::Move() {
   int i = 0;
   int tx = 0;
   int ty = 0;
   int l = 0;
 
-  // 自機がこの高さより上にいる場合、アイテム自動回収
+  // Auto-collect items when player is above this height
   constexpr int AUTO_COLLECT_Y = (120 * 64);
 
   // point = 100+(Players.viv.evade)*100;
@@ -66,7 +65,7 @@ void ItemManager::Move() {
     auto *ip = &entities[indices[i]];
     if (Players.viv.bomb_time == 0U) {
       if (Players.viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
-        // 自機が回収ラインより上、または既に自動回収が発動済み
+        // Player above collect line or auto-collect already active
         ip->auto_collect = true;
         tx = (Players.viv.x - ip->x);
         ty = (Players.viv.y - ip->y);
@@ -94,7 +93,7 @@ void ItemManager::Move() {
       switch (ip->type) {
       case ITEM_SCORE:
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        // Ranking.Add((SY_MAX-Players.viv.y)>>10);	// 道具回收不再增加 Rank
+        // Ranking.Add((SY_MAX-Players.viv.y)>>10);	// Item pickup no longer increases Rank
         score_add(point);
         Effects.SpawnPointEffect(ip->x, ip->y, point);
         if (Players.viv.evade != 0U) {
@@ -118,7 +117,7 @@ void ItemManager::Move() {
       ip->type = ITEM_DELETE;
     }
 
-    // 上方向では消去しない //
+    // Do not delete upward
     if ((ip->x) < GX_MIN - (8 * 64) || (ip->x) > GX_MAX + (8 * 64) ||
         (ip->y) > GY_MAX + (8 * 64)) {
       ip->type = ITEM_DELETE;
@@ -129,7 +128,7 @@ void ItemManager::Move() {
           [](const ItemData &i) { return (i.type == ITEM_DELETE); });
 }
 
-// アイテムを描画する //
+// Draw items
 void ItemManager::Draw() {
   int i = 0;
   int j = 0;
@@ -186,7 +185,7 @@ void ItemManager::Draw() {
   }
 }
 
-// アイテム配列の初期化 //
+// Initialize item array
 void ItemManager::SetIndices() {
   int i = 0;
 

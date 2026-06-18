@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   LOADER.cpp   グラフィック、サウンド等のロード                           */
-/*                                                                           */
-/*                                                                           */
+///
+/// Loader - Resource loading and MIDI loop point references
+///
 
 #include "config.h"
 #include "enemy.h"
@@ -41,45 +40,45 @@ static constinit const auto LOOPS = HashesSorted<MID_LOOP_FOR_HASH, 66>({{
     // -------------------------------
     // clang-format off
 
-	/* #01 秋霜玉　～ Clockworks */
+	// #01 秋霜玉　～ Clockworks
 	{ .hash="04a44d2751f0cc155b9dbcabf7886bf999801f27f31ffee8566a18449e95ba4f"_B3, .loop={  .start=16557,  .end=94317 } },
-	/* #02 フォルスストロベリー */
+	// #02 フォルスストロベリー
 	{ .hash="e040b0ae4a9a36be23f88d5b0f66c6c5e60f0dfe648404c143f9095b75d1f036"_B3, .loop={  .start=75361, .end=183841 } },
-	/* #03 プリムローズシヴァ */
+	// #03 プリムローズシバ
 	{ .hash="4727240794872e31d2591850b0d662af13fa25a77d9798c925cca61da114df43"_B3, .loop={  .start=31561,  .end=93001 } },
-	/* #04 幻想帝都 */
+	// #04 幻想帝都
 	{ .hash="d01300e4053bb07abc909fba83b0b1addb00104ee1ac3c9ad981e348b9c66622"_B3, .loop={   .start=4800,  .end=89280 } },
-	/* #05 ディザストラスジェミニ */
+	// #05 ディザストラスジェミニ
 	{ .hash="694543bea96390d6a6e85771e19561853515f456839f2672516516a6fbd074a4"_B3, .loop={   .start=1184,  .end=77984 } },
-	/* #06 華の幻想　紅夢の宙 */
+	// #06 華の幻想　紅夢の宙
 	{ .hash="b58f7178ca77351f8d014efce152c50f6057adabbd969efe93610b65161f2a2e"_B3, .loop={  .start=73666, .end=181186 } },
-	/* #07 天空アーミー */
+	// #07 天空アーミー
 	{ .hash="ac10269db4ad75f752fe8a52531238871baf8dcd87f6b2e90d130645e9bf0841"_B3, .loop={   .start=8640, .end=104640 } },
-	/* #08 スプートニク幻夜 */
+	// #08 スプートニク幻夜
 	{ .hash="c8402fa2769f9341fb71db27d24550d5e534a652e71a2f21e45417a3a5764f3a"_B3, .loop={  .start=31606, .end=158326 } },
-	/* #09 機械サーカス　～ Reverie */
+	// #09 機械サーカス　～ Reverie
 	{ .hash="bde78f7de7bb640ce3e65589b7ccc79b4b702a32475c902eaf04170b6b1da538"_B3, .loop={    .start=961,  .end=93121 } },
-	/* #10 カナベラルの夢幻少女 */
+	// #10 カナベラルの夢幻少女
 	{ .hash="c804078d44983f3163220d51f22c035dddc19e78e5bbd129564bcb66447096ae"_B3, .loop={ .start=108481, .end=223681 } },
-	/* #11 魔法少女十字軍 */
+	// #11 魔法少女十字軍
 	{ .hash="203b58f72fe30a532575de19ba58de11d0836d20c033eead82c4d4575f359ad1"_B3, .loop={   .start=8641, .end=127681 } },
-	/* #12 アンティークテラー */
+	// #12 アンティークテラー
 	{ .hash="0a0a45aa7bae3a6b7ebb082970960e1679c4ae4ce5c3e011d12e73899b99390f"_B3, .loop={   .start=1198, .end=140398 } },
-	/* #13 夢機械　～ Innocent Power */
+	// #13 夢機械　～ Innocent Power
 	{ .hash="052382df9912024fc1bcb11c60ca4555998d7206be2f7beefddef22e80ad5e3d"_B3, .loop={    .start=961,  .end=62401 } },
-	/* #14 幻想科学 ～ Doll's Phantom */
+	// #14 幻想科学　～ Doll's Phantom
 	{ .hash="0b8a97180a2229c42d22556c734668c8c9ccec9d1f32e0c936d7e7bb7a1fddab"_B3, .loop={  .start=75601, .end=185041 } },
-	/* #15 少女神性　～ Pandora's Box */
+	// #15 少女神性　～ Pandora's Box
 	{ .hash="109d226ed66538074c2e15d4637631e77506321a66b644e627c77fd91d94ce3e"_B3, .loop={  .start=90510, .end=183630 } },
-	/* #16 シルクロードアリス */
+	// #16 シルクロードアリス
 	{ .hash="46c876e99f605c5c8e5957d6adcecc2231c5e795f7284cca7f496a42a3758b2f"_B3, .loop={   .start=6721, .end=141121 } },
-	/* #17 魔女達の舞踏会　～ Magus */
+	// #17 魔女達の舞踏会　～ Magus
 	{ .hash="a0a5ccd7c1b0e78c0365f5290fbf453ddc3d97298a1cf1f6ccc66365785d69c4"_B3, .loop={    .start=961,  .end=77761 } },
-	/* #18 二色蓮花蝶　～ Ancients */
+	// #18 二色蓮花蝶　～ Ancients
 	{ .hash="67b2b4690067193ea1703569eaa0eeada59a6577ff10f4e0fb7f7b0e55559435"_B3, .loop={   .start=2880, .end=144960 } },
-	/* #19 ハーセルヴス */
+	// #19 ハーセルヴス
 	{ .hash="f8cfe5c314ad1d8b7ed435cd876dae2b7750c00f03c1fa9a748428344feaa27e"_B3, .loop={  .start=86401, .end=101761 } },
-	/* #20 タイトルドメイド */
+	// #20 タイトルドメイド
 	{ .hash="4931e9b4220ecd94d6006fec0805c882f3409840af15dc5a5336d36a65e4e70f"_B3, .loop={    .start=961,  .end=43201 } },
 	// -------------------------------
 
@@ -89,95 +88,95 @@ static constinit const auto LOOPS = HashesSorted<MID_LOOP_FOR_HASH, 66>({{
 	// rows to the edited non-echo and echo versions in the arranged soundtrack
 	// BGM packs.
 
-	/* #01 秋霜玉　～ Clockworks */
+	// #01 秋霜玉　～ Clockworks
 	{ .hash="02838ce71bcb2922278d86331af10caebb893ad4dbd7bf66771501dd16640fda"_B3, .loop={  .start=16321,  .end=94081 } },
 	{ .hash="cf98509de1158239e06b0e4cba330b47ef10c9d6325aff13fb57f3e1c177308a"_B3, .loop={  .start=16321,  .end=94081 } },
 	{ .hash="de54464adade220c4e682d833160b768cbdf7c86a74061064472bb9d2e700799"_B3, .loop={  .start=16321,  .end=94081 } },
-	/* #02 フォルスストロベリー
-		<ssg_02.mid mly cut 466: | mly loop-unfold 240: | mly loop-find */
+	// #02 フォルスストロベリー
+	//		<ssg_02.mid mly cut 466: | mly loop-unfold 240: | mly loop-find
 	{ .hash="2cada452b1d1d1cbcff2e2f2430217fcbbcf4887e44dcbbd7c48d99ee39771f4"_B3, .loop={  .start=75361, .end=183841 } },
 	{ .hash="1e6532a487f574b28d8540d46245884030812c2fba36d86722e6f6ba61feb8d8"_B3, .loop={  .start=75361, .end=183841 } },
 	{ .hash="3fd235970a395feba43fac52b8843d225d2828cb9f178ac73833ae26b6e4492c"_B3, .loop={  .start=75361, .end=183841 } },
-	/* #03 プリムローズシヴァ
-	   Uses Reverb Macro 0 (Room 1), doesn't need an echo edit. */
+	// #03 プリムローズシバ
+	//   Uses Reverb Macro 0 (Room 1), doesn't need an echo edit.
 	{ .hash="63b0ed5d24e83b20ca603052e01a427477a89d9ec1903b188bd184eed09cf034"_B3, .loop={    .start=961,  .end=62401 } },
 	{ .hash="ff336846794befbbf4188dcdc7496b3f029896b343b8978553527ecc324677fe"_B3, .loop={    .start=961,  .end=62401 } },
-	/* #04 幻想帝都
-		<ssg_04.mid mly smf0 | mly loop-find */
+	// #04 幻想帝都
+	//		<ssg_04.mid mly smf0 | mly loop-find
 	{ .hash="2232a7c30b6bee76709342c62997fafab08a483fcde9d3595ba3b0e5d1819d18"_B3, .loop={   .start=4800,  .end=89280 } },
 	{ .hash="8b5f5b50209c725fe7cc6b5506d8f57d5df91cf6fa135e88ca9c6f22dbfda2ea"_B3, .loop={   .start=4800,  .end=89280 } },
 	{ .hash="b7c704265773d3f2efa64dbda283c6e0a45ac8d0e28075136d2152e01936a446"_B3, .loop={   .start=4800,  .end=89280 } },
-	/* #05 ディザストラスジェミニ
-		<ssg_05.mid mly smf0 | mly cut 386: | mly loop-unfold 226: | mly loop-find */
+	// #05 ディザストラスジェミニ
+	//		<ssg_05.mid mly smf0 | mly cut 386: | mly loop-unfold 226: | mly loop-find
 	{ .hash="26b734bec6e53b3ca02ce82d67f5bc2473f892ac7bc3b0f92703f66e55bfef17"_B3, .loop={  .start=62520, .end=139320 } },
 	{ .hash="6cb425f3501c6c36dbf563f2f515a99e5cabd9772b198f8a5720a2871a178e5f"_B3, .loop={  .start=62520, .end=139320 } },
 	{ .hash="eb2a7526fc9f7d1bbd86aeb99f5055b7d2f75d99240746fdab159645eb0fd1d3"_B3, .loop={  .start=62520, .end=139320 } },
-	/* #06 華の幻想　紅夢の宙
-		<ssg_06.mid mly cut 494: | mly loop-unfold 270: | mly loop-find */
+	// #06 華の幻想　紅夢の宙
+	//		<ssg_06.mid mly cut 494: | mly loop-unfold 270: | mly loop-find
 	{ .hash="6e53bcd7c38a0e54d167d673ecbf0b47404442832c55b858c22edb1b63747939"_B3, .loop={  .start=73681, .end=181201 } },
 	{ .hash="f0f4ce32eb747727ca160da4aab6b6432f9365d3b7c76ea411c089d79e87d2ef"_B3, .loop={  .start=73681, .end=181201 } },
 	{ .hash="4f24b13ad086126c0825363aafd7f6036b042a828c0ef18cd7d42db7989e8300"_B3, .loop={  .start=73681, .end=181201 } },
-	/* #07 天空アーミー */
+	// #07 天空アーミー
 	{ .hash="adba179af78f437b209eef82dc5f043087dfc42f8e584bd7688a57f510a3c26a"_B3, .loop={   .start=8640, .end=104640 } },
 	{ .hash="9c08d7f4dee7bc344431bf7e1a1edbada0593b41adb9046e19dc890d8c1c4bf2"_B3, .loop={   .start=8640, .end=104640 } },
 	{ .hash="f6ff4062e72a2ddf9cd04a1376446b7a87de65b29b30d8cc2370dc328e741dee"_B3, .loop={   .start=8640, .end=104640 } },
-	/* #08 スプートニク幻夜 */
+	// #08 スプートニク幻夜
 	{ .hash="75087ec2ce1237d6dfe62e543d174b558343a8d2b09a0e7e767f0fead08644ea"_B3, .loop={  .start=31606, .end=158326 } },
 	{ .hash="07f3114ca2cb648fbcddeb584d9c5c4522ccc05bfca2723267c91de6e87c50c9"_B3, .loop={  .start=31606, .end=158326 } },
 	{ .hash="47dc15bc5bf03e6cd09703bd546a387f8bee58ce9c6b1f45946c74c98745adce"_B3, .loop={  .start=31606, .end=158326 } },
-	/* #09 機械サーカス　～ Reverie
-		Every supposed loop modulates up by a semitone 16 measures before it
-		ends and remains in that new key at the start of the next loop, so the
-		piece technically doesn't loop at all. The original stays in G♯m
-		throughout. */
+	// #09 機械サーカス　～ Reverie
+	//		Every supposed loop modulates up by a semitone 16 measures before it
+	//		ends and remains in that new key at the start of the next loop, so the
+	//		piece technically doesn't loop at all. The original stays in G♯m
+	//		throughout.
 
-	/* #10 カナベラルの夢幻少女
-		<ssg_10.mid mly smf0 | mly loop-find */
+	// #10 カナベラルの夢幻少女
+	//		<ssg_10.mid mly smf0 | mly loop-find
 	{ .hash="d959e251a069bb198c8c79dcdd61dacfdbb63041bd163018bf4befd3331d30d1"_B3, .loop={    .start=961, .end=116161 } },
 	{ .hash="5bb79c1e0c1fbf94f11a980bed4f43a55107eafa3d9f427f5043101a300b0b3d"_B3, .loop={    .start=961, .end=116161 } },
 	{ .hash="58faba5c7f48a29dae657979b139a2fa55335652cff116ddb4a5fe5b25722a7f"_B3, .loop={    .start=961, .end=116161 } },
-	/* #11 魔法少女十字軍 */
+	// #11 魔法少女十字軍
 	{ .hash="b70b6b7ed80b1c605a4b97b26a9d1c564ecab3699e980ba512b40e947260e77c"_B3, .loop={   .start=8641, .end=127681 } },
 	{ .hash="1e04bea18f35790e7a8ada516b9f8f98f6ecf64163f604f7c0f8f0699a4952bc"_B3, .loop={   .start=8641, .end=127681 } },
 	{ .hash="cdc8c3fbd717048a98cb5f92fabeef78a42892a3fa9ef91ea2c0396049aa659c"_B3, .loop={   .start=8641, .end=127681 } },
-	/* #12 アンティークテラー
-		<ssg_12.mid mly cut 602: | mly loop-unfold 312: | mly loop-find */
+	// #12 アンティークテラー
+	//		<ssg_12.mid mly cut 602: | mly loop-unfold 312: | mly loop-find
 	{ .hash="15eca8c0ea2e60e752a93cbcb09043a7213b4b7993b8493d529a4cd440176c63"_B3, .loop={  .start=16081, .end=155281 } },
 	{ .hash="b81e3526f2f6690664106f825d3af8d21a843526e1ceb32191f4e9e82298f1ec"_B3, .loop={  .start=16081, .end=155281 } },
 	{ .hash="5b7dfe45bf71fd138f9b439c4fbfeb4f990a9d96c8abd5c41f80317d36875bb7"_B3, .loop={  .start=16081, .end=155281 } },
-	/* #13 夢機械　～ Innocent Power
-		Has a unique ending section that starts in Gm and then modulates
-		through Em and Fm before it fades out on F♯m. */
+	// #13 夢機械　～ Innocent Power
+	//		Has a unique ending section that starts in Gm and then modulates
+	//		through Em and Fm before it fades out on F♯m.
 
-	/* #14 幻想科学 ～ Doll's Phantom
-		<ssg_14.mid mly cut 550: | mly loop-unfold 322: | mly loop-find */
+	// #14 幻想科学　～ Doll's Phantom
+	//		<ssg_14.mid mly cut 550: | mly loop-unfold 322: | mly loop-find
 	{ .hash="3b94f8d5b87cfc2db73dee57744d2de5a4a0daa67cb8b122b0fef26f4fc5cd63"_B3, .loop={  .start=75601, .end=185041 } },
 	{ .hash="acdd1bff05f7fdab9ba6569fd7512c58038be69aef26f7b59cf3ed9463f0cdf8"_B3, .loop={  .start=75601, .end=185041 } },
 	{ .hash="bbd1bfefdd54506f92e1a3b5d77c61884ff11ae2e41512568d36fa7e1507ac1c"_B3, .loop={  .start=75601, .end=185041 } },
-	/* #15 少女神性　～ Pandora's Box
-		<ssg_15.mid mly cut 522: | mly loop-unfold 328: | mly loop-find */
+	// #15 少女神性　～ Pandora's Box
+	//		<ssg_15.mid mly cut 522: | mly loop-unfold 328: | mly loop-find
 	{ .hash="7728681d569155c34a71e28e3c75fc104d7b439835fb33fad2a94b6c46e8fe59"_B3, .loop={  .start=90220, .end=183340 } },
 	{ .hash="581ee417e1b3aa578a26c2acc56dd2cffb3bdde722877cfe80d56486122463b4"_B3, .loop={  .start=90220, .end=183340 } },
 	{ .hash="0e401c20edc6dbc29c7b9f968e4f9686e09218b22400035261f71aa3ef123551"_B3, .loop={  .start=90220, .end=183340 } },
-	/* #16 シルクロードアリス
-		<ssg_16.mid mly cut 624: | mly loop-unfold 344: | mly loop-find */
+	// #16 シルクロードアリス
+	//		<ssg_16.mid mly cut 624: | mly loop-unfold 344: | mly loop-find
 	{ .hash="384f15ef0325b4806f878e5144cccf2a502217705106e2b7e918a4106554e74c"_B3, .loop={  .start=30721, .end=165121 } },
-	/*	    <16.mid mly cut 614: | mly loop-unfold 334: | mly loop-find
-	   Uses custom reverb settings, doesn't need an echo edit. */
+	//	    <16.mid mly cut 614: | mly loop-unfold 334: | mly loop-find
+	//   Uses custom reverb settings, doesn't need an echo edit.
 	{ .hash="16732bcc91a128f1a9dd5595f99f8fc0b36a3c5781a50e9eeaecc491d08fb89c"_B3, .loop={  .start=25921, .end=160321 } },
-	/* #17 魔女達の舞踏会
-		Has a unique 8-bar ending section that first appears in Cm and then
-		loops in C♯m while fading out. The fade starts during the first loop,
-		so we can't loop this section in-game (unless Romantique Tp were to
-		re-record it without the fade). */
+	// #17 魔女達の舞踏会　～ Magus
+	//		Has a unique 8-bar ending section that first appears in Cm and then
+	//		loops in C♯m while fading out. The fade starts during the first loop,
+	//		so we can't loop this section in-game (unless Romantique Tp were to
+	//		re-record it without the fade).
 
-	/* #18 二色蓮花蝶　～ Ancients
-	   Uses Reverb Macro 1 (Room 2), doesn't need an echo edit. */
+	// #18 二色蓮花蝶　～ Ancients
+	//   Uses Reverb Macro 1 (Room 2), doesn't need an echo edit.
 	{ .hash="9a695e4659a1293e2d08fe287eb55f4dc6279beab2317004ae520029e552d602"_B3, .loop={   .start=3841, .end=145921 } },
 	{ .hash="3adb2cc55b56bb773704ad564546a07b43df0c7bc4e80928dd03d4aad03a27ce"_B3, .loop={   .start=2881, .end=144961 } },
-	/* #19 ハーセルヴス
-		Features a unique and very beautiful ending section. Let's let it
-		fade out to silence for dramatic effect. */
+	// #19 ハーセルヴス
+	//		Features a unique and very beautiful ending section. Let's let it
+	//		fade out to silence for dramatic effect.
 	{ .hash="0f29ba3a086246621cf0624638a044fc6c6622fee49744da66cf4ae8641d3475"_B3, .loop={     .start=-1,     .end=-1 } },
 	{ .hash="276e1fa39fe52368986bed512b3a248034e17ab79b23b00122be3cd2ed3a6187"_B3, .loop={     .start=-1,     .end=-1 } },
 	{ .hash="5e596cc00a3c99d73e301c858b085f34b13ad33be9417368eec185e7e53b5848"_B3, .loop={     .start=-1,     .end=-1 } },
@@ -369,7 +368,7 @@ bool Check() {
   return ret;
 }
 
-// ｎ番目の曲をロードする //
+// Load the n-th song //
 bool LoadMusic(fil_no_t filno) {
   const auto &music = Packs[PACK_ID::MUSIC].BlockUntilLoaded();
   if (filno >= MusicHashes.size()) {
@@ -481,47 +480,46 @@ void LoaderCleanup() {
   }
 }
 
-// グローバル変数 //
-uint32_t MusicNum = 0;                // 曲数
-FaceData face_data[FACE_MAX];         // 顔グラ用
-EndingGrp ending_pic[ENDING_PIC_MAX]; // エンディング用
+// Global variables //
+uint32_t MusicNum = 0;                // Number of songs
+FaceData face_data[FACE_MAX];         // For face graphics
+EndingGrp ending_pic[ENDING_PIC_MAX]; // For endings
 
-/*
-static BOOL			bIsBombPalette = FALSE;
-static PALETTEENTRY	tempPalette[256];
-*/
+// Unused
+// static BOOL			bIsBombPalette = FALSE;
+// static PALETTEENTRY	tempPalette[256];
 
 static PALETTE EnemyPalette;
 PALETTE SProjectPalette;
 
-// 秘密の関数 //
+// Secret function //
 static void SetAnimeRect2(ANIME_DATA *anm, int x1, int y1, int x2, int y2);
 
 static int LoadedStage = 0;
 
-// あるステージのグラフィックをロードする //
+// Load graphics for a given stage //
 bool LoadGraph(int stage) {
   //	bIsBombPalette = FALSE;
   LoadedStage = stage;
   const auto &graph = DAT::Packfile(DAT::PACK_ID::GRAPH);
 
-  // 音楽室用 //
+  // For music room //
   if (stage == GRAPH_ID_MUSICROOM) {
     return (GrpBMPLoadP(graph, 0, SURFACE_ID::SYSTEM) &&
             GrpBMPLoadP(graph, (19 + 4), SURFACE_ID::MUSIC));
   }
-  // タイトル画面用 //
+  // For title screen //
   if (stage == GRAPH_ID_TITLE) {
     return (GrpBMPLoadP(graph, 0, SURFACE_ID::SYSTEM) &&
             GrpBMPLoadP(graph, (20 + 4), SURFACE_ID::TITLE));
     // LoadPaletteFrom(SURFACE_ID::ENEMY);
   }
-  // お名前登録画面用 //
+  // For name registration screen //
   if (stage == GRAPH_ID_NAMEREGIST) {
     return (GrpBMPLoadP(graph, 0, SURFACE_ID::SYSTEM) &&
             GrpBMPLoadP(graph, (21 + 4), SURFACE_ID::NAMEREG));
   }
-  // 西方Ｐｒｏｊｅｃｔ表示用 //
+  // For Seihou Project display //
   if (stage == GRAPH_ID_SPROJECT) {
     if (!GrpBMPLoadP(graph, 31, SURFACE_ID::SPROJECT)) {
       return false;
@@ -533,7 +531,7 @@ bool LoadGraph(int stage) {
     // }
     return true;
   }
-  // エンディング全画像ロード(パレット含む) //
+  // Load all ending images (including palette) //
   if (stage == GRAPH_ID_ENDING) {
     const auto &in = DAT::Packfile(DAT::PACK_ID::GRAPH2);
 
@@ -549,7 +547,7 @@ bool LoadGraph(int stage) {
     return true;
   }
 
-  // エキストラステージシステム用 //
+  // For extra stage system //
   if (stage == GRAPH_ID_EXSTAGE) {
     if (!GrpBMPLoadP(graph, 0, SURFACE_ID::SYSTEM)) {
       return false;
@@ -563,7 +561,7 @@ bool LoadGraph(int stage) {
       return false;
     }
 
-    // 諸事情により、ここにいるのです //
+    // For various reasons, it's here //
     if (!GrpBMPLoadP(graph, 26, SURFACE_ID::BOMBER)) {
       return false;
     }
@@ -571,7 +569,7 @@ bool LoadGraph(int stage) {
     return true;
   }
 
-  // エキストラステージボス用(1) //
+  // For extra stage boss (1) //
   if (stage == GRAPH_ID_EXBOSS1) {
     if (!GrpBMPLoadP(graph, 29, SURFACE_ID::ENEMY)) {
       return false;
@@ -580,7 +578,7 @@ bool LoadGraph(int stage) {
     return true;
   }
 
-  // エキストラステージボス用(2) //
+  // For extra stage boss (2) //
   if (stage == GRAPH_ID_EXBOSS2) {
     if (!GrpBMPLoadP(graph, 30, SURFACE_ID::ENEMY)) {
       return false;
@@ -593,7 +591,7 @@ bool LoadGraph(int stage) {
     return false;
   }
 
-  // マップチップのロードは後で変換すること //
+  // Map chips will be converted after loading //
   if (!GrpBMPLoadP(graph, 0, SURFACE_ID::SYSTEM)) {
     return false;
   }
@@ -602,14 +600,14 @@ bool LoadGraph(int stage) {
   }
   GrpBackend_PaletteGet(EnemyPalette);
 
-  // 本当は STAGE_MAX とすべき
+  // Should really be STAGE_MAX
   // const fil_no_t MapChipID[STAGE_MAX] = { 7, 7, 8, 9, 10, 11 };
   const fil_no_t MapChipID[STAGE_MAX] = {7, 8, 9, 10, 11, 12};
   if (!GrpBMPLoadP(graph, MapChipID[stage - 1], SURFACE_ID::MAPCHIP)) {
     return false;
   }
 
-  // 諸事情により、ここにいるのです //
+  // For various reasons, it's here //
   return GrpBMPLoadP(graph, 26, SURFACE_ID::BOMBER);
 }
 
@@ -627,24 +625,24 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
     return false;
   }
 
-  // パレットを保存する //
+  // Save palette //
   GrpBackend_PaletteGet(face_data[FaceID].pal);
 
   return true;
 }
 
-// 敵のパレットにする
+// Set enemy palette
 void LoadPaletteFromEnemy() {
   if (GrpBackend_PixelFormat().IsPalettized()) {
     GrpBackend_PaletteSet(EnemyPalette);
   }
 }
 
-// ＥＣＬ&ＳＣＬデータ列をメモリ上にロードする //
+// Load ECL & SCL data into memory //
 bool LoadStageData(uint8_t stage) {
   int i = 0;
 
-  // メモリを解放だ！ //
+  // Free memory! //
   Enemies.scl_now = nullptr;
   Enemies.ecl_head = nullptr;
   Enemies.scl_head = nullptr;
@@ -652,7 +650,7 @@ bool LoadStageData(uint8_t stage) {
 
   const auto &enemy = DAT::Packfile(DAT::PACK_ID::ENEMY);
 
-  // エキストラステージシステム用 //
+  // For extra stage system //
   if (stage == GRAPH_ID_EXSTAGE) {
     // ECL Load
     if ((Enemies.ecl_head = enemy.MemExpand(24)) == nullptr) {
@@ -677,7 +675,7 @@ bool LoadStageData(uint8_t stage) {
     GameState.game_count = 0;
     return true;
   } else {
-    // 各データをロードする //
+    // Load each data //
     if ((stage < 1) || (stage > STAGE_MAX)) {
       return false;
     }
@@ -699,50 +697,50 @@ bool LoadStageData(uint8_t stage) {
     }
   }
 
-  // スクロール用変数の初期化 //
+  // Initialize scroll variables //
   if (!Scroller.Init()) {
     return false;
   }
 
-  // 各変数の初期化 //
+  // Initialize variables //
   Enemies.scl_now = Enemies.scl_head.get();
   GameState.game_count = 0;
 
-  // アニメーションの準備 //
+  // Prepare animations //
   switch (stage) {
-  case GRAPH_ID_EXSTAGE: // エキストラステージのグラフィック矩形
+  case GRAPH_ID_EXSTAGE: // Extra stage graphics rectangles
     // Extra Boss I //
-    // 00 : ■Ａ　0 ～ 3   :  翼無し通常　（10fpp)
+    // 00 : ■A  0-3   :  Normal (no wings) (10fps)
     Enemies.anime[0].SetSheet<4, 80>({.x = 0, .y = 0}, ANM_NORM);
 
-    // 01 : ■Ｂ　4 ～ 7   :  翼有り通常　（10fpp)
+    // 01 : ■B  4-7   :  Normal (with wings) (10fps)
     Enemies.anime[1].SetSheet<4, 80>({.x = 320, .y = 0}, ANM_NORM);
 
-    // 02 : ■Ｃ　8 ～ 13  :  翼装着　（翼無し->有り）　（6fpp)
+    // 02 : ■C  8-13  :  Attach wings (no wings -> with wings) (6fps)
     Enemies.anime[2].SetSheet<6, 80>({.x = 0, .y = 80}, ANM_STOP);
 
-    // 03 : ■Ｄ　14 ～ 15 :  翼有り時攻撃（移動無し）　（6fpp)
+    // 03 : ■D  14-15 :  Attack with wings (stationary) (6fps)
     Enemies.anime[3].SetSheet<2, 80>({.x = 480, .y = 80}, ANM_NORM);
 
-    // 04 : ■Ｅ　16 ～ 17 :  翼装着時移動（もしくは移動攻撃）左　（6fpp)
+    // 04 : ■E  16-17 :  Move with wings (or moving attack) left (6fps)
     Enemies.anime[4].SetSheet<2, 80>({.x = 0, .y = 160}, ANM_NORM);
 
-    // 05 : ■Ｆ　18 ～ 19 :  翼装着時移動（もしくは移動攻撃）右　（6fpp)
+    // 05 : ■F  18-19 :  Move with wings (or moving attack) right (6fps)
     Enemies.anime[5].SetSheet<2, 80>({.x = 160, .y = 160}, ANM_NORM);
 
-    // 06 : ■Ｇ　24 ～ 30 :  段階変化　（翼有り->無し）　（6fpp)
+    // 06 : ■G  24-30 :  Gradual change (with wings -> no wings) (6fps)
     Enemies.anime[6].SetSheet<6, 80>({.x = 0, .y = 240}, ANM_STOP);
 
-    // 07 : ■20 : 通常時ダメージ用マスク　（翼有り、無し兼用）
+    // 07 : ■20 : Damage mask for normal state (with/without wings)
     Enemies.anime[7].SetSheet<1, 80>({.x = 320, .y = 160}, ANM_NORM);
 
-    // 08 : ■21 : 停止攻撃時ダメージ用マスク　
+    // 08 : ■21 : Damage mask for stationary attack
     Enemies.anime[8].SetSheet<1, 80>({.x = 400, .y = 160}, ANM_NORM);
 
-    // 09 : ■22 : 移動時（左）ダメージ用マスク　
+    // 09 : ■22 : Damage mask for moving (left)
     Enemies.anime[9].SetSheet<1, 80>({.x = 480, .y = 160}, ANM_NORM);
 
-    // 10 : ■23 : 移動時（右）ダメージ用マスク　
+    // 10 : ■23 : Damage mask for moving (right)
     Enemies.anime[10].SetSheet<1, 80>({.x = 560, .y = 160}, ANM_NORM);
 
     Enemies.anime[11].SetSheet<4, 32>({.x = 0, .y = (320 + (32 * 0))},
@@ -760,43 +758,43 @@ bool LoadStageData(uint8_t stage) {
                                       ANM_NORM);
 
     // Extra Boss II //
-    // 18 : ■Ａ : 停止アニメ　（10～12fpp)
+    // 18 : ■A : Stopped animation (10-12fps)
     Enemies.anime[18].SetSheet<4, 80>({.x = 0, .y = 0}, ANM_NORM);
 
-    // 19 : ■Ｂ : 通常段階攻撃１　（?fpp)
+    // 19 : ■B : Normal phase attack 1 (?fps)
     Enemies.anime[19].SetSheet<4, 80>({.x = 320, .y = 0}, ANM_STOP);
 
-    // 20 : ■Ｃ :  通常段階攻撃２　および、高速移動前溜めポーズ　（6fpp)
+    // 20 : ■C :  Normal phase attack 2 and high-speed move charge pose (6fps)
     Enemies.anime[20].SetSheet<2, 80>({.x = 0, .y = 80}, ANM_NORM);
 
-    // 21 : ■Ｄ : 魂状態（ショットに当たらない無敵） (1 ～ 2 fpp）
+    // 21 : ■D : Soul state (invincible, not hit by shots) (1-2 fps)
     // (160,80), (200,80), (240,80), (280,80)
     Enemies.anime[21].SetSheet<4, 40>({.x = 160, .y = 80}, ANM_NORM);
 
-    // 22 : ■Ｅ : ダメージマスク(A)
+    // 22 : ■E : Damage mask (A)
     Enemies.anime[22].SetSheet<1, 80>({.x = 320, .y = 80}, ANM_NORM);
 
-    // 23 : ■Ｅ : ダメージマスク(B)
+    // 23 : ■E : Damage mask (B)
     Enemies.anime[23].SetSheet<1, 80>({.x = 400, .y = 80}, ANM_NORM);
 
-    // 24 : ■Ｅ : ダメージマスク(G)
+    // 24 : ■E : Damage mask (G)
     Enemies.anime[24].SetSheet<1, 80>({.x = 480, .y = 80}, ANM_NORM);
 
-    // 25 : ■Ｅ : ダメージマスク(C)
+    // 25 : ■E : Damage mask (C)
     Enemies.anime[25].SetSheet<1, 80>({.x = 560, .y = 80}, ANM_NORM);
 
-    // 26 : ■Ｆ : 高速移動アニメ
+    // 26 : ■F : High-speed movement animation
     Enemies.anime[26].size = {.w = 80, .h = 80};
     Enemies.anime[26].n = 16;
-    Enemies.anime[26].mode = ANM_DEG; // 16 パターンで助かりましたな...
+    Enemies.anime[26].mode = ANM_DEG; // Glad it fits in 16 patterns...
     for (i = 0; i < 16; i++) {
       Enemies.anime[26].ptn[i] = PIXEL_LTWH{((i * 80) % 640), 160, 80, 80};
     }
 
-    // 27 : ■Ｇ : 通常段階攻撃２溜めポーズ　および、ワープ前後、
+    // 27 : ■G : Normal phase attack 2 charge pose and before/after warp
     Enemies.anime[27].SetSheet<1, 80>({.x = 560, .y = 320}, ANM_NORM);
 
-    // 28-32 : 陰陽玉ｘ５
+    // 28-32 : Yin-Yang Orbs x5
     Enemies.anime[28].SetSheet<8, 32>({.x = 0, .y = 384}, ANM_NORM);
     Enemies.anime[29].SetSheet<8, 32>({.x = 0, .y = (384 + 32)}, ANM_NORM);
     Enemies.anime[30].SetSheet<8, 32>({.x = 0, .y = (384 + 64)}, ANM_NORM);
@@ -809,32 +807,32 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[36].SetSheetDeg<32>({.x = 0, .y = 96});
     Enemies.anime[37].SetSheetDeg<32>({.x = 0, .y = 128});
 
-    // レーザー発射物 //
+    // Laser projectile //
     Enemies.anime[38].size = {.w = 40, .h = 56};
     Enemies.anime[38].n = 1;
     Enemies.anime[38].mode = ANM_NORM;
     Enemies.anime[38].ptn[0] = PIXEL_LTWH{512, 0, 40, 56};
 
-    // 中ボス //
+    // Mid-boss //
     Enemies.anime[39].size = {.w = 72, .h = 56};
     Enemies.anime[39].n = 2;
     Enemies.anime[39].mode = ANM_NORM;
     Enemies.anime[39].ptn[0] = {0, 424, 72, 480};
     Enemies.anime[39].ptn[1] = {72, 424, (72 * 2), 480};
 
-    // 中ボスヒット //
+    // Mid-boss hit //
     Enemies.anime[40].size = {.w = 72, .h = 56};
     Enemies.anime[40].n = 1;
     Enemies.anime[40].mode = ANM_NORM;
     Enemies.anime[40].ptn[0] = {(72 * 2), 424, (72 * 3), 480};
 
-    // レーザー発射物ヒット //
+    // Laser projectile hit //
     Enemies.anime[41].size = {.w = 40, .h = 64};
     Enemies.anime[41].n = 1;
     Enemies.anime[41].mode = ANM_NORM;
     Enemies.anime[41].ptn[0] = PIXEL_LTWH{512, 56, 40, 56};
 
-    // 謎の光弾 //
+    // Mysterious light bullet //
     Enemies.anime[42].size = {.w = 24, .h = 24};
     Enemies.anime[42].n = 4;
     Enemies.anime[42].mode = ANM_NORM;
@@ -844,8 +842,8 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[42].ptn[3] = PIXEL_LTWH{552, 48, 24, 24};
     break;
 
-  case 1: // Ｓｔａｇｅ１のグラフィック矩形
-    // 中ボス //
+  case 1: // Stage 1 graphics rectangles
+    // Mid-boss //
     Enemies.anime[0].size = {.w = 72, .h = 56};
     Enemies.anime[0].n = 2;
     Enemies.anime[0].mode = ANM_NORM;
@@ -857,27 +855,27 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[3].SetSheetDeg<32>({.x = 0, .y = (56 + 64)});
     Enemies.anime[4].SetSheetDeg<32>({.x = 0, .y = (56 + 96)});
 
-    // ボス //
+    // Boss //
     Enemies.anime[5].size = {.w = 72, .h = 64};
     Enemies.anime[5].n = 1;
     Enemies.anime[5].mode = ANM_NORM;
     Enemies.anime[5].ptn[0] = {0, 184, 72, 248};
 
-    // 中ボスフラッシュ用 //
+    // Mid-boss flash //
     Enemies.anime[6].size = {.w = 72, .h = 56};
     Enemies.anime[6].n = 2;
     Enemies.anime[6].mode = ANM_NORM;
     Enemies.anime[6].ptn[0] = {(72 * 2), 0, (72 * 3), 56};
     Enemies.anime[6].ptn[1] = {(72 * 3), 0, (72 * 4), 56};
 
-    // ボスフラッシュ //
+    // Boss flash //
     Enemies.anime[7].size = {.w = 72, .h = 64};
     Enemies.anime[7].n = 1;
     Enemies.anime[7].mode = ANM_NORM;
     Enemies.anime[7].ptn[0] = {72, 184, (72 * 2), 248};
     break;
 
-  case 2: // Ｓｔａｇｅ２のグラフィック矩形
+  case 2: // Stage 2 graphics rectangles
     Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});
     Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32});
     Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64});
@@ -894,68 +892,66 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[6].mode = ANM_NORM;
     Enemies.anime[6].ptn[0] = {112, 160, 176, 208};
 
-    // 中ボス //
+    // Mid-boss //
     Enemies.anime[7].size = {.w = 64, .h = 64};
     Enemies.anime[7].n = 1;
     Enemies.anime[7].mode = ANM_NORM;
     Enemies.anime[7].ptn[0] = {0, 208, 64, 272};
 
-    // ボス羽 //
+    // Boss wings //
     Enemies.anime[8].size = {.w = 112, .h = 48};
     Enemies.anime[8].n = 1;
     Enemies.anime[8].mode = ANM_NORM;
     Enemies.anime[8].ptn[0] = {176, 160, 288, 208};
 
-    // ボス丸 //
+    // Boss orb //
     Enemies.anime[9].size = {.w = 64, .h = 48};
     Enemies.anime[9].n = 1;
     Enemies.anime[9].mode = ANM_NORM;
     Enemies.anime[9].ptn[0] = {288, 160, 352, 208};
 
-    // ボスフラッシュ１ //
+    // Boss flash 1 //
     Enemies.anime[10].size = {.w = 112, .h = 48};
     Enemies.anime[10].n = 1;
     Enemies.anime[10].mode = ANM_NORM;
     Enemies.anime[10].ptn[0] = {176, (160 + 48), 288, (208 + 48)};
 
-    // ボスフラッシュ２ //
+    // Boss flash 2 //
     Enemies.anime[11].size = {.w = 64, .h = 48};
     Enemies.anime[11].n = 1;
     Enemies.anime[11].mode = ANM_NORM;
     Enemies.anime[11].ptn[0] = {288, (160 + 48), 352, (208 + 48)};
 
-    // 中ボスフラッシュ //
+    // Mid-boss flash //
     Enemies.anime[12].size = {.w = 64, .h = 64};
     Enemies.anime[12].n = 1;
     Enemies.anime[12].mode = ANM_NORM;
     Enemies.anime[12].ptn[0] = {(0 + 64), 208, (64 + 64), 272};
 
-    /*
-                            // 羽モノ Left-I //
-                            Enemies.anime[10].size = { 104, 72 };
-                            Enemies.anime[10].n      = 1;
-                            Enemies.anime[10].mode   = ANM_NORM;
-                            Enemies.anime[10].ptn[0] = { 184, 208, 288, 280 };
-
-                            // 羽モノ Right-I //
-                            Enemies.anime[11].size = { 104, 72 };
-                            Enemies.anime[11].n      = 1;
-                            Enemies.anime[11].mode   = ANM_NORM;
-                            Enemies.anime[11].ptn[0] = { 288, 208, 392, 280 };
-
-                            // 羽モノ Left-0 //
-                            Enemies.anime[12].size = { 88, 80 };
-                            Enemies.anime[12].n      = 1;
-                            Enemies.anime[12].mode   = ANM_NORM;
-                            Enemies.anime[12].ptn[0] = { 200, 280, 288, 360 };
-
-                            // 羽モノ Right-0 //
-                            Enemies.anime[13].size = { 88, 80 };
-                            Enemies.anime[13].n      = 1;
-                            Enemies.anime[13].mode   = ANM_NORM;
-                            Enemies.anime[13].ptn[0] = { 288, 280, 376, 360 };
-    */
-    SetAnimeRect2(Enemies.anime + 14, 0, 288, 159, 479);   // 雲
+    //                            // Winged Left-I //
+    //                            Enemies.anime[10].size = { 104, 72 };
+    //                            Enemies.anime[10].n      = 1;
+    //                            Enemies.anime[10].mode   = ANM_NORM;
+    //                            Enemies.anime[10].ptn[0] = { 184, 208, 288, 280 };
+    //
+    //                            // Winged Right-I //
+    //                            Enemies.anime[11].size = { 104, 72 };
+    //                            Enemies.anime[11].n      = 1;
+    //                            Enemies.anime[11].mode   = ANM_NORM;
+    //                            Enemies.anime[11].ptn[0] = { 288, 208, 392, 280 };
+    //
+    //                            // Winged Left-0 //
+    //                            Enemies.anime[12].size = { 88, 80 };
+    //                            Enemies.anime[12].n      = 1;
+    //                            Enemies.anime[12].mode   = ANM_NORM;
+    //                            Enemies.anime[12].ptn[0] = { 200, 280, 288, 360 };
+    //
+    //                            // Winged Right-0 //
+    //                            Enemies.anime[13].size = { 88, 80 };
+    //                            Enemies.anime[13].n      = 1;
+    //                            Enemies.anime[13].mode   = ANM_NORM;
+    //                            Enemies.anime[13].ptn[0] = { 288, 280, 376, 360 };
+    SetAnimeRect2(Enemies.anime + 14, 0, 288, 159, 479);   // Clouds
     SetAnimeRect2(Enemies.anime + 15, 160, 384, 271, 479); //
     SetAnimeRect2(Enemies.anime + 16, 272, 368, 390, 478); //
     SetAnimeRect2(Enemies.anime + 17, 400, 368, 496, 431); //
@@ -965,7 +961,7 @@ bool LoadStageData(uint8_t stage) {
     SetAnimeRect2(Enemies.anime + 21, 576, 320, 639, 399); //
     break;
 
-  case 3: // ゲイツ殿のステージ
+  case 3: // Lord Gates' stage
     Enemies.anime[0].size = {.w = 56, .h = 56};
     Enemies.anime[0].n = 16;
     Enemies.anime[0].mode = ANM_DEG;
@@ -992,7 +988,7 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[5].ptn[0] = PIXEL_LTWH{592, 32, 48, 16};
     Enemies.anime[5].ptn[1] = PIXEL_LTWH{592, 48, 48, 16};
 
-    // ボス (464,384)
+    // Boss (464,384)
     Enemies.anime[6].size = {.w = 11 * 16, .h = (5 * 16) + 8};
     Enemies.anime[6].n = 1;
     Enemies.anime[6].mode = ANM_NORM;
@@ -1001,27 +997,26 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[7].SetSheetDeg<32>({.x = 0, .y = 208});
     Enemies.anime[8].SetSheetDeg<40>({.x = 0, .y = 240});
 
-    // ボスの影 //
+    // Boss shadow //
     Enemies.anime[10].size = {.w = 196, .h = 100};
     Enemies.anime[10].n = 1;
     Enemies.anime[10].mode = ANM_NORM;
     Enemies.anime[10].ptn[0] = {444, 292, 640, 392};
 
-    // ボスフラッシュ
+    // Boss flash
     Enemies.anime[9].size = {.w = 128, .h = 76};
     Enemies.anime[9].n = 1;
     Enemies.anime[9].mode = ANM_NORM;
     Enemies.anime[9].ptn[0] = {512, 164, 640, 240};
-    /*	Enemies.anime[9].size = { (11 * 16), ((5 *16) + 8) };
-            Enemies.anime[9].n      = 1;
-            Enemies.anime[9].mode   = ANM_NORM;
-            Enemies.anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 * 16),
-       ((5 * 16)
-       + 8) };
-    */
+    //	Enemies.anime[9].size = { (11 * 16), ((5 *16) + 8) };
+    //            Enemies.anime[9].n      = 1;
+    //            Enemies.anime[9].mode   = ANM_NORM;
+    //            Enemies.anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 * 16),
+    //       ((5 * 16)
+    //       + 8) };
     break;
 
-  case 4: // マリーさんのステージ
+  case 4: // Marie's stage
     Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});
     Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32});
     Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64});
@@ -1035,26 +1030,26 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[6].mode = ANM_NORM;
     Enemies.anime[6].ptn[0] = {304, 296, 640, 480};
 
-    // ボスのフラッシュ //
+    // Boss flash //
     Enemies.anime[7].size = {.w = (640 - 304 - 32),
-                             .h = (480 - 296)}; // ここに注意
+                             .h = (480 - 296)}; // Note this
     Enemies.anime[7].n = 1;
     Enemies.anime[7].mode = ANM_NORM;
     Enemies.anime[7].ptn[0] = {0, 296, 304, 480};
     break;
 
-  case 5:                                                // ご主人様のステージ
-    Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});  // 赤いヤツ
-    Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32}); // 赤いヤツの出現用演出
-    Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64}); // 蒼いヤツ
-    Enemies.anime[3].SetSheetDeg<32>({.x = 0, .y = 96}); // 緑のヤツ
-    Enemies.anime[4].SetSheetDeg<32>({.x = 0, .y = 128}); // オレンジなやつ
+  case 5:                                                // Master's stage
+    Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});  // Red one
+    Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32}); // Red one appearance effect
+    Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64}); // Blue one
+    Enemies.anime[3].SetSheetDeg<32>({.x = 0, .y = 96}); // Green one
+    Enemies.anime[4].SetSheetDeg<32>({.x = 0, .y = 128}); // Orange one
     Enemies.anime[5].SetSheet<4, 32>({.x = 512, .y = 0},
-                                     ANM_NORM); // 原子炉搭載ビット
+                                     ANM_NORM); // Reactor-equipped bit
     Enemies.anime[6].SetSheet<4, 32>({.x = 512, .y = 64},
-                                     ANM_NORM); // オレンジなヤツの出現用演出
+                                     ANM_NORM); // Orange one appearance effect
 
-    // 中ボス用のオプション //
+    // Mid-boss options //
     Enemies.anime[7].size = {.w = 24, .h = 24};
     Enemies.anime[7].n = 4;
     Enemies.anime[7].mode = ANM_NORM;
@@ -1064,15 +1059,15 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[7].ptn[3] = PIXEL_LTWH{592, (96 + 48), 24, 24};
 
     Enemies.anime[8].SetSheet<1>({.x = 512, .y = 96}, {.w = 80, .h = 72},
-                                 ANM_NORM); // 屈強なる中ボス
+                                 ANM_NORM); // Sturdy mid-boss
 
-    // メタリックご主人 //
+    // Metallic master //
     Enemies.anime[9].SetSheet<1>({.x = 304, .y = 256}, {.w = 336, .h = 224},
                                  ANM_NORM);
     break;
 
   case 6:
-    // ラスボス(座り->立ち) //
+    // Final boss (sitting -> standing) //
     Enemies.anime[0].size = {.w = 56, .h = 72};
     Enemies.anime[0].n = 6;
     Enemies.anime[0].mode = ANM_STOP;
@@ -1083,7 +1078,7 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[0].ptn[4] = PIXEL_LTWH{(56 * 4), 72, 56, 72};
     Enemies.anime[0].ptn[5] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
 
-    // ラスボス(立ち->座り) //
+    // Final boss (standing -> sitting) //
     Enemies.anime[1].size = {.w = 56, .h = 72};
     Enemies.anime[1].n = 6;
     Enemies.anime[1].mode = ANM_STOP;
@@ -1094,7 +1089,7 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[1].ptn[4] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
     Enemies.anime[1].ptn[5] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
 
-    // ラスボス(ガード) //
+    // Final boss (guard) //
     Enemies.anime[2].size = {.w = 56, .h = 72};
     Enemies.anime[2].n = 4;
     Enemies.anime[2].mode = ANM_NORM;
@@ -1103,7 +1098,7 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[2].ptn[2] = PIXEL_LTWH{(56 * 6), 72, 56, 72};
     Enemies.anime[2].ptn[3] = PIXEL_LTWH{(56 * 8), 72, 56, 72};
 
-    // ラスボス(攻撃-壱) //
+    // Final boss (attack 1) //
     Enemies.anime[3].size = {.w = 56, .h = 72};
     Enemies.anime[3].n = 9 + 1;
     Enemies.anime[3].mode = ANM_STOP;
@@ -1116,12 +1111,12 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[3].ptn[6] = PIXEL_LTWH{(56 * 6), 0, 56, 72};
     Enemies.anime[3].ptn[7] = PIXEL_LTWH{(56 * 7), 0, 56, 72};
     Enemies.anime[3].ptn[8] = PIXEL_LTWH{(56 * 8), 0, 56, 72};
-    Enemies.anime[3].ptn[9] = PIXEL_LTWH{(56 * 5), 72, 56, 72}; // ちょっと追加
+    Enemies.anime[3].ptn[9] = PIXEL_LTWH{(56 * 5), 72, 56, 72}; // Added extra
 
-    // 幼虫期(//
+    // Larva stage //
     SetAnimeRect2(Enemies.anime + 4, 432, 272, 632, 464);
 
-    // ラスボス(ジャンプに見えるといいなぁ) //
+    // Final boss (hope it looks like a jump) //
     Enemies.anime[5].size = {.w = 56, .h = 72};
     Enemies.anime[5].n = 11;
     Enemies.anime[5].mode = ANM_STOP;
@@ -1137,7 +1132,7 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[5].ptn[9] = PIXEL_LTWH{(56 * 1), 72, 56, 72};
     Enemies.anime[5].ptn[10] = PIXEL_LTWH{(56 * 0), 72, 56, 72};
 
-    // 蝶状態で放つビット？(Open) //
+    // Bits released in butterfly state? (Open) //
     Enemies.anime[6].size = {.w = 33, .h = 32};
     Enemies.anime[6].n = 10;
     Enemies.anime[6].mode = ANM_STOP;
@@ -1152,7 +1147,7 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[6].ptn[8] = PIXEL_LTWH{(32 * 2), 448, 32, 32};
     Enemies.anime[6].ptn[9] = PIXEL_LTWH{(32 * 3), 448, 32, 32};
 
-    // 蝶状態で放つビット？(Close) //
+    // Bits released in butterfly state? (Close) //
     Enemies.anime[7].size = {.w = 33, .h = 32};
     Enemies.anime[7].n = 10;
     Enemies.anime[7].mode = ANM_STOP;
@@ -1168,14 +1163,14 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[7].ptn[9] = PIXEL_LTWH{(32 * 0), 416, 32, 32};
 
     Enemies.anime[8].SetSheet<1>({.x = 0, .y = 368}, {.w = 48, .h = 48},
-                                 ANM_NORM); // 屈強なる中ボス
+                                 ANM_NORM); // Sturdy mid-boss
     break;
   }
 
   return true;
 }
 
-// １パターンのグラフィックをアニメとして定義する //
+// Define a single pattern graphic as an animation //
 static void SetAnimeRect2(ANIME_DATA *anm, int x1, int y1, int x2, int y2) {
   anm->size = {.w = (x2 - x1), .h = (y2 - y1)};
   anm->n = 1;
@@ -1184,7 +1179,7 @@ static void SetAnimeRect2(ANIME_DATA *anm, int x1, int y1, int x2, int y2) {
   anm->ptn[0] = {x1, y1, x2, y2};
 }
 
-// ｎ番目の曲をロードする //
+// Load the n-th song //
 bool LoadMusic(unsigned int no) { return DAT::LoadMusic(no); }
 
 bool LoadMusicByHash(const HASH &hash) { return DAT::LoadMusicByHash(hash); }
@@ -1194,10 +1189,10 @@ bool LoadMIDIBuffer(BYTE_BUFFER_OWNED buf) {
   return LoadMIDIWithPotentialLoop(std::move(buf), hash);
 }
 
-// 全てのSoundデータをロードする //
+// Load all Sound data //
 bool LoadSound(const PACKFILE_READ &in) {
-  // サウンドの初期化 //
-  // 何らかの理由で使用できなければ、Disable とする //
+  // Initialize sound //
+  // Disable if unavailable for any reason //
   if (((ConfigDat.SoundFlags.v & SNDF_SE_ENABLE) == 0) || !Snd_SEInit()) {
     ConfigDat.SoundFlags.v &= (~SNDF_SE_ENABLE);
     return false;

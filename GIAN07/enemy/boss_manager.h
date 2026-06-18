@@ -1,6 +1,6 @@
-/*
- *   BossManager — centralized boss system state and operations
- */
+///
+/// BossManager - centralized boss system state and operations
+///
 
 #pragma once
 
@@ -14,48 +14,48 @@ struct BossManager {
   uint16_t count = 0;                    // BossNow
   BossHpgInfo hpg;                       // BossHPG
 
-  // Snaky/Bit データ（旧 EnemyExCtrl.cpp ファイル静的変数）
+  // Snaky/Bit data (formerly file-static in EnemyExCtrl.cpp)
   SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX]; // SnakeData[]
   BitData bit_data;                         // BitData
 
-  // === メソッド ===
+  // === Methods ===
 
-  // 初期化・セット
+  // Initialization and setup
   void Init();
   void Set(int x, int y, uint32_t BossID);
   void SetEx(int x, int y, uint32_t BossID);
 
-  // 移動・描画
+  // Movement and drawing
   void Move();
   void Draw();
   void ClearCmd();
   void DrawHPG();
 
-  // 体力
+  // HP
   void KillAll();
   uint32_t GetHPSum();
 
-  // ダメージ
+  // Damage
   bool ApplyDamage(BossData &b, EnemyData &e, int damage);
   bool DamageAt(int x, int y, int damage);
   bool DamageAt2(int x, int y, int damage);
   void DamageAt3(int x, int y, uint8_t d);
   void DamageAll(int damage);
 
-  // 割り込み・ビット制御
+  // Interrupts and bit control
   void Interrupt(EnemyData *e, uint8_t IntID);
   void BitAttack(EnemyData *e, uint32_t AtkID);
   void BitLaser(EnemyData *e, uint8_t cmd);
   void BitCommand(EnemyData *e, uint8_t Cmd, int Param);
   int GetBitLeft() const;
 
-  // 蛇型の敵 (was in EnemyExCtrl.cpp)
+  // Snake-type enemy (was in EnemyExCtrl.cpp)
   void SnakyInit();
   void SnakySet(BossData *b, int len, uint32_t TailID);
   void SnakyMove();
   void SnakyDelete(const BossData *b);
 
-  // ビット (was in EnemyExCtrl.cpp)
+  // Bit (was in EnemyExCtrl.cpp)
   void BitInit();
   void BitSet(BossData *b, uint8_t NumBits, uint32_t BitID);
   void BitMove();

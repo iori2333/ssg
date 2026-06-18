@@ -1,8 +1,6 @@
-/*                                                                           */
-/*   menu_renderer.h   メニューウィンドウ描画                                 */
-/*                                                                           */
-/*   描画処理を [window_sys.cpp] / [msg_window.cpp] から分離した。            */
-/*                                                                           */
+///
+/// MenuRenderer - Menu window rendering
+///
 
 #pragma once
 
@@ -10,9 +8,9 @@
 
 struct TEXTRENDER_SESSION;
 
-// メニューラベル(タイトル / 項目)の描画 //
+// Draw menu label (title / item)
 void MenuDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
                    bool is_title);
 
-// ウィンドウ枠を描画する //
+// Draw window frame
 void DrawWindowFrame(int x, int y, int w, int h);

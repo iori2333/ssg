@@ -1,6 +1,6 @@
-/*
- *   ScoreManager — centralized score data persistence and display state
- */
+///
+/// ScoreManager - Centralized score data persistence and display state
+///
 
 #pragma once
 
@@ -14,32 +14,32 @@
 #include <span>
 
 struct ScoreManager {
-  // スコア表示用文字列
+  // Score display strings
   std::array<NrScoreString, NR_RANK_MAX> score_strings = {};
 
-  // スコアデータキャッシュ（旧 SCORE.cpp ファイル静的変数）
+  // Score data cache (formerly file-static in SCORE.cpp)
   std::unique_ptr<NrScoreData> score_cache = nullptr;
 
-  // マスク定数
+  // Mask constant
   static constexpr uint64_t PBG_MASK_VALUE = 0xb97eb2c6542d3a41;
 
-  // === 公開メソッド ===
+  // === Public methods ===
 
-  // 現在のスコア列を取得する（Ret: 0=ハイスコアでない それ以外=順位）
+  // Get current score string (Ret: 0=not high score, otherwise=rank)
   [[nodiscard]] uint8_t SetScoreString(NrNameData *NData, uint8_t Dif);
 
-  // ハイスコアかどうか（0: ハイスコアでない, それ以外: 順位）
+  // Check if high score (0: not high score, otherwise: rank)
   [[nodiscard]] uint8_t IsHighScore(const NrNameData *NData, uint8_t Dif);
 
-  // スコアデータを書き出す
+  // Save score data
   [[nodiscard]] bool SaveScoreData(NrNameData *NData, uint8_t Dif);
 
 private:
-  // 型エイリアス
+  // Type aliases
   using NR_SCORE_LIST = std::span<NrNameData, NR_RANK_MAX>;
   using NR_CONST_SCORE_LIST = std::span<const NrNameData, NR_RANK_MAX>;
 
-  // 内部ヘルパー
+  // Internal helpers
   bool LoadScoreData();
   void ReleaseScoreData();
   std::optional<NR_SCORE_LIST> GetNList(uint8_t Dif) const;

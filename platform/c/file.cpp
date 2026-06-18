@@ -1,7 +1,6 @@
-/*
- *   File I/O (libc implementation)
- *
- */
+///
+/// File I/O (libc implementation)
+///
 
 #include <SDL3/SDL_iostream.h>
 

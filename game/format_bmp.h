@@ -1,7 +1,6 @@
-/*
- *   .BMP file format
- *
- */
+///
+/// .BMP file format
+///
 
 #pragma once
 

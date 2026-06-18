@@ -1,180 +1,178 @@
-/*************************************************************************************************/
-/*   TAMA.H   たまに関する定義とかいろいろ */
-/*                                                                                               */
-/*************************************************************************************************/
+///
+/// Bullet - Definitions and various things related to bullets
+///
 
 #pragma once
 
 #include "core/entity.h"
 
-///// [更新履歴] /////
+///// [Update history] /////
 
-/* -> ここから、ちと古いよ(1999...)
- * 変更しなけりゃいけないこと、とか
- * >ox,oy を廃止すること(TAMA.C も変更しなきゃならんし、面倒だな...)
- *
- * > 5/17 (2:43)  : ox,oy を廃止した。
- * 弾の種類によっては自動的にクリッピングをするようにした : 上の奴との関連により
- * .flag の機能を拡張しました(下の定数参照)
- *
- * > 6/13 (8:05)  : どっと単位のクリッピング
- */
+// -> From here, a bit old (1999...)
+// Things that need to be changed, etc.
+// > Eliminate ox, oy (TAMA.C also needs to be changed, troublesome...)
+//
+// > 5/17 (2:43): Eliminated ox, oy.
+// Made automatic clipping depending on bullet type: related to the above
+// Expanded .flag functionality (see constants below)
+//
+// > 6/13 (8:05): Dot-unit clipping
 
-////弾定数////
-inline constexpr auto TAMA_MAX = (801 * 3); // 弾の最大発生数
-inline constexpr auto TAMA_EVADE = 1;       // 弾のかすり値
+////Bullet constants////
+inline constexpr auto TAMA_MAX = (801 * 3); // Maximum number of bullets
+inline constexpr auto TAMA_EVADE = 1;       // Bullet graze value
 
-inline constexpr auto TAMA1_POINT = 10000; // 弾の得点
-inline constexpr auto TAMA2_POINT = 15000; // 弾の得点
+inline constexpr auto TAMA1_POINT = 10000; // Bullet score
+inline constexpr auto TAMA2_POINT = 15000; // Bullet score
 
-inline constexpr auto TAMA_HITX = (2 * 64); // 弾の当たり判定
-inline constexpr auto TAMA_HITY = (4 * 64); // 弾の当たり判定
+inline constexpr auto TAMA_HITX = (2 * 64); // Bullet hitbox
+inline constexpr auto TAMA_HITY = (4 * 64); // Bullet hitbox
 inline constexpr auto TAMA_EVX_SMALL =
-    ((8 + 8) * 64); // たま（小）のかすり判定(x)
+    ((8 + 8) * 64); // Small bullet graze detection (X)
 inline constexpr auto TAMA_EVY_SMALL =
-    ((16 + 8) * 64); // たま（小）のかすり判定(y)
+    ((16 + 8) * 64); // Small bullet graze detection (Y)
 inline constexpr auto TAMA_EVX_LARGE =
-    ((8 + 16) * 64); // たま（大）のかすり判定(x)
+    ((8 + 16) * 64); // Large bullet graze detection (X)
 inline constexpr auto TAMA_EVY_LARGE =
-    ((16 + 16) * 64); // たま（大）のかすり判定(y)
+    ((16 + 16) * 64); // Large bullet graze detection (Y)
 
-inline constexpr auto TAMA_SMALL = 0x00; // 弾が小型弾である場合の上位４ビット
-inline constexpr auto TAMA_LARGE = 0x10; // 弾が大型弾である場合の上位４ビット
+inline constexpr auto TAMA_SMALL = 0x00; // Upper 4 bits when bullet is small type
+inline constexpr auto TAMA_LARGE = 0x10; // Upper 4 bits when bullet is large type
 inline constexpr auto TAMA_ANGLE =
-    0x20; // 弾が方向指定系である場合の上位４ビット
+    0x20; // Upper 4 bits when bullet is direction-specified type
 inline constexpr auto TAMA_EXTRA =
-    0x30; // 弾がエキストラ用である場合の上位４ビット
+    0x30; // Upper 4 bits when bullet is extra type
 inline constexpr auto TAMA_EXTRA2 =
-    0x40;                              // 弾が「おふだ」である場合の上位４ビット
-inline constexpr auto TAMA_REN = 0x04; // 弾の連射属性
-inline constexpr auto TAMA_ZSET = 0x08;   // 弾のサボテン(自機)セット属性
-inline constexpr auto TAMASP_RND0 = 0x00; // 速度ランダム無し
-inline constexpr auto TAMASP_RND1 = 0x40; // 速度ランダム？？
-inline constexpr auto TAMASP_RND2 = 0x80; // 速度ランダム？？
-inline constexpr auto TAMASP_RND3 = 0xc0; // 速度ランダム？？
+    0x40;                              // Upper 4 bits when bullet is "ofuda" type
+inline constexpr auto TAMA_REN = 0x04; // Bullet rapid-fire attribute
+inline constexpr auto TAMA_ZSET = 0x08;   // Bullet cactus (player) set attribute
+inline constexpr auto TAMASP_RND0 = 0x00; // No speed random
+inline constexpr auto TAMASP_RND1 = 0x40; // Speed random??
+inline constexpr auto TAMASP_RND2 = 0x80; // Speed random??
+inline constexpr auto TAMASP_RND3 = 0xc0; // Speed random??
 
-////弾の種類定数(上位４ビットは現在、使用目的がない)////
+////Bullet type constants (upper 4 bits currently unused)////
 inline constexpr auto T_NORM =
-    0x00; // 通常弾			:(vx,vy)で移動します
+    0x00; // Normal bullet: moves with (vx, vy)
 inline constexpr auto T_NORM_A =
-    0x01; // 加速弾			:rep 加速回数?
+    0x01; // Accelerating: rep acceleration count?
 inline constexpr auto T_HOMING =
-    0x02; // ｎ回ホーミング	:rep ホーミング回数 / a 加速度
+    0x02; // N-homing: rep homing count / a acceleration
 inline constexpr auto T_HOMING_M =
-    0x03; // ｎ％ホーミング	:a 加速度 / vd ホーミング率
+    0x03; // N% homing: a acceleration / vd homing rate
 inline constexpr auto T_ROLL =
-    0x04; // 回転弾			:rep 回転時間 / vd 角速度
+    0x04; // Rolling: rep rotation time / vd angular velocity
 inline constexpr auto T_ROLL_A =
-    0x05; // 回転弾(加速)		:上の奴 + a 加速度
-inline constexpr auto T_ROLL_R = 0x06; // 回転弾(反転)		:上の奴と同じ
+    0x05; // Rolling (accelerating): above + a acceleration
+inline constexpr auto T_ROLL_R = 0x06; // Rolling (reverse): same as above
 inline constexpr auto T_GRAVITY =
-    0x07; // 落下弾 :(vx,vy)＆vyに(加速度a)がかかる
+    0x07; // Gravity: (vx, vy) & vy accelerated by (acceleration a)
 inline constexpr auto T_CHANGE =
-    0x08; // 角度変更弾		:rep フレームでvdに角度変更
-inline constexpr auto T_SBHOMING = 0x09; // サボテン用ホーミング
-inline constexpr auto T_SBHBOMB = 0x0a;  // サボテン用ホーミングボム
+    0x08; // Angle change: changes angle to vd every rep frames
+inline constexpr auto T_SBHOMING = 0x09; // Cactus homing
+inline constexpr auto T_SBHBOMB = 0x0a;  // Cactus homing bomb
 
-////弾オプション定数(下位４ビットはオプションの成分指定用)////
-inline constexpr auto TOP_NONE = 0x00;  // オプションなし
-inline constexpr auto TOP_WAVE = 0x10;  // 波		: 振幅
-inline constexpr auto TOP_ROLL = 0x20;  // 回転		: 回転半径
-inline constexpr auto TOP_PURU = 0x30;  // ぷるぷる	: ぷるぷる度
-inline constexpr auto TOP_REFX = 0x40;  // 反射Ｘ	: 反射回数
-inline constexpr auto TOP_REFY = 0x50;  // 反射Ｙ	: 反射回数
-inline constexpr auto TOP_REFXY = 0x60; // 反射ＸＹ	: 反射回数
-inline constexpr auto TOP_DIV = 0x70;   // 分裂		: 分裂時の弾コマンド
-inline constexpr auto TOP_BOMB = 0x80;  // ボム???	: 爆発半径
+////Bullet option constants (lower 4 bits for option component spec)////
+inline constexpr auto TOP_NONE = 0x00;  // No option
+inline constexpr auto TOP_WAVE = 0x10;  // Wave: amplitude
+inline constexpr auto TOP_ROLL = 0x20;  // Roll: rotation radius
+inline constexpr auto TOP_PURU = 0x30;  // Vibrate: vibration intensity
+inline constexpr auto TOP_REFX = 0x40;  // Reflect X: reflection count
+inline constexpr auto TOP_REFY = 0x50;  // Reflect Y: reflection count
+inline constexpr auto TOP_REFXY = 0x60; // Reflect XY: reflection count
+inline constexpr auto TOP_DIV = 0x70;   // Split: bullet command on split
+inline constexpr auto TOP_BOMB = 0x80;  // Bomb???: explosion radius
 
-////弾コマンド定数////
-inline constexpr auto TC_WAY = 0x00;   // 扇状発射
-inline constexpr auto TC_ALL = 0x01;   // 全方向発射
-inline constexpr auto TC_RND = 0x02;   // 基本角セット有りランダム
-inline constexpr auto TC_WAYS = 0x04;  // 扇状発射＆連射
-inline constexpr auto TC_ALLS = 0x05;  // 全方向発射＆連射
-inline constexpr auto TC_RNDS = 0x06;  // 基本角セット有りランダム＆連射
-inline constexpr auto TC_WAYZ = 0x08;  // 扇状発射＆サボテンセット
-inline constexpr auto TC_ALLZ = 0x09;  // 全方向発射＆サボテンセット
-inline constexpr auto TC_RNDZ = 0x0a;  // 基本角サボテンセットランダム
-inline constexpr auto TC_WAYSZ = 0x0c; // 扇状発射＆連射＆サボテンセット
-inline constexpr auto TC_ALLSZ = 0x0d; // 全方向発射＆連射＆サボテンセット
-inline constexpr auto TC_RNDSZ = 0x0e; // 基本角サボテンセットランダム＆連射
+////Bullet command constants////
+inline constexpr auto TC_WAY = 0x00;   // Fan-shaped fire
+inline constexpr auto TC_ALL = 0x01;   // All-direction fire
+inline constexpr auto TC_RND = 0x02;   // Random with base angle set
+inline constexpr auto TC_WAYS = 0x04;  // Fan-shaped fire & rapid fire
+inline constexpr auto TC_ALLS = 0x05;  // All-direction fire & rapid fire
+inline constexpr auto TC_RNDS = 0x06;  // Random with base angle set & rapid fire
+inline constexpr auto TC_WAYZ = 0x08;  // Fan-shaped fire & cactus set
+inline constexpr auto TC_ALLZ = 0x09;  // All-direction fire & cactus set
+inline constexpr auto TC_RNDZ = 0x0a;  // Random cactus set with base angle
+inline constexpr auto TC_WAYSZ = 0x0c; // Fan-shaped fire & rapid fire & cactus set
+inline constexpr auto TC_ALLSZ = 0x0d; // All-direction fire & rapid fire & cactus set
+inline constexpr auto TC_RNDSZ = 0x0e; // Random cactus set with base angle & rapid fire
 
-////弾エフェクト定数(下位４ビットの使用方法は現在考案中!!)////
-inline constexpr auto TE_NONE = 0x00;    // エフェクトなし
-inline constexpr auto TE_ROLL1 = 0x10;   // 回転ためエフェクト
-inline constexpr auto TE_ROLL2 = 0x20;   // 回転ためエフェクト
-inline constexpr auto TE_WARN = 0x30;    // Warning表示
-inline constexpr auto TE_ROCK = 0x40;    // ロックオン
-inline constexpr auto TE_CIRCLE1 = 0x50; // わっかエフェクト(小->大)
-inline constexpr auto TE_CIRCLE2 = 0x60; // わっかエフェクト(大->小)
-inline constexpr auto TE_DELETE = 0xf0;  // 消去エフェクト
+////Bullet effect constants (lower 4 bits usage currently being designed!!)////
+inline constexpr auto TE_NONE = 0x00;    // No effect
+inline constexpr auto TE_ROLL1 = 0x10;   // Rolling charge effect
+inline constexpr auto TE_ROLL2 = 0x20;   // Rolling charge effect
+inline constexpr auto TE_WARN = 0x30;    // Warning display
+inline constexpr auto TE_ROCK = 0x40;    // Lock-on
+inline constexpr auto TE_CIRCLE1 = 0x50; // Ring effect (small -> large)
+inline constexpr auto TE_CIRCLE2 = 0x60; // Ring effect (large -> small)
+inline constexpr auto TE_DELETE = 0xf0;  // Delete effect
 
-////弾フラグ定数////
-inline constexpr auto TF_NONE = 0x00;   // フラグが立っていない状態
-inline constexpr auto TF_CLIP = 0x01;   // 画面外に出ても消去しない
-inline constexpr auto TF_EVADE = 0x02;  // 一回かすっている場合
-inline constexpr auto TF_DELETE = 0x80; // その弾を消去する
+////Bullet flag constants////
+inline constexpr auto TF_NONE = 0x00;   // Flag not set
+inline constexpr auto TF_CLIP = 0x01;   // Do not delete even when off-screen
+inline constexpr auto TF_EVADE = 0x02;  // Has grazed once
+inline constexpr auto TF_DELETE = 0x80; // Delete this bullet
 
-////弾コマンド構造体(安全性アップ)////
+////Bullet command struct (improved safety)////
 struct BulletCommand {
-  int x, y; // 弾の発射位置
+  int x, y; // Bullet spawn position
 
-  uint8_t d;  // 発射角
-  uint8_t dw; // 発射幅
-  uint8_t n;  // 弾数(ｎ方向に発射)
-  uint8_t ns; // 連射数(cmdのsビットがONのときだけ有効)
-  uint8_t v;  // 速度(下位６ビット)＆ランダム要素(上位２ビット)
-  uint8_t c;  // 弾の色＆形状
-  char a;     // 加速度(速度とは単位が違うので注意)
+  uint8_t d;  // Firing angle
+  uint8_t dw; // Firing spread width
+  uint8_t n;  // Bullet count (fire in n directions)
+  uint8_t ns; // Rapid-fire count (only valid when cmd s-bit is ON)
+  uint8_t v;  // Speed (lower 6 bits) & random element (upper 2 bits)
+  uint8_t c;  // Bullet color & shape
+  char a;     // Acceleration (note: unit differs from speed)
 
-  char vd; // 角速度｜ホーミング率(BYTE にキャスト)
+  char vd; // Angular velocity | homing rate (cast to BYTE)
 
-  uint8_t rep;    // 繰り返し回数(回転、ｎ回ホーミング等)
-  uint8_t cmd;    // 弾コマンド＆エフェクト
-  uint8_t type;   // 弾の種類
-  uint8_t option; // 弾の属性(バイブレーション,反射,炸裂,ボム)
+  uint8_t rep;    // Repeat count (rotation, n-homing, etc.)
+  uint8_t cmd;    // Bullet command & effect
+  uint8_t type;   // Bullet type
+  uint8_t option; // Bullet attribute (vibration, reflection, burst, bomb)
 };
 
-////弾データ構造体////
+////Bullet data struct////
 struct Bullet {
-  int x, y;   // 現在の<表示>座標
-  int tx, ty; // 振動系エフェクト使用時の演算用座標
-  int vx, vy; // 速度の(X,Y)成分
+  int x, y;   // Current display coordinates
+  int tx, ty; // Calculation coordinates when using vibration effects
+  int vx, vy; // Velocity (X, Y) components
 
-  int v;  // 速度
-  int v0; // 初速度(回転系エフェクト等で使用)
-  char a; // 加速度
+  int v;  // Velocity
+  int v0; // Initial velocity (used in rotation effects, etc.)
+  char a; // Acceleration
 
-  uint8_t d;    // 進行角
-  uint16_t d16; // 進行角(固定小数点 x256) -> ｎ％ホーミングでのみ使用する
-  int8_t vd;    // 角速度
+  uint8_t d;    // Direction angle
+  uint16_t d16; // Direction angle (fixed-point x256) -> used only in n% homing
+  int8_t vd;    // Angular velocity
 
-  uint8_t c; // 弾の色＆形状
+  uint8_t c; // Bullet color & shape
 
-  uint8_t rep;    // typeによる制御を行う回数
-  uint8_t type;   // 弾の種類(通常,加速,ホーミング2,回転3,落下,変更)
-  uint8_t option; // 弾の属性(バイブレーション,反射,炸裂,ボム)
-  uint8_t effect; // 実行中のエフェクト(なし,ロック,サークル,消去)
+  uint8_t rep;    // Number of times to perform control by type
+  uint8_t type;   // Bullet type (normal, accelerating, homing 2, rolling 3, gravity, change)
+  uint8_t option; // Bullet attribute (vibration, reflection, burst, bomb)
+  uint8_t effect; // Current effect (none, lock, ring, delete)
 
-  uint16_t count; // フレームカウンタ
-  uint8_t flag;   // 弾消去要請フラグ
+  uint16_t count; // Frame counter
+  uint8_t flag;   // Bullet deletion request flag
 };
 
-// 後方互換用エイリアス
+// Backward compatibility aliases
 // (TAMA_CMD alias removed — use BulletCommand directly)
 // (TAMA_DATA alias removed — use Bullet directly)
 
-////弾の各種変数たち////
-// Bullets.bullets, Bullets.command, Bullets.indices_small/large,
-// Bullets.count_small/large で直接アクセス
+////Various bullet variables////
+// Access directly via Bullets.bullets, Bullets.command, Bullets.indices_small/large,
+// Bullets.count_small/large
 
-////弾関数////
-// 実装は BulletManager メソッドに移行
-// TamaSetForm, TamaSTDForm, TamaSetDeg, TamaSetNum, TamaSetSpd, TamaSetXY →
-// bullet_manager.h に移動
+////Bullet functions////
+// Implementation moved to BulletManager methods
+// TamaSetForm, TamaSTDForm, TamaSetDeg, TamaSetNum, TamaSetSpd, TamaSetXY ->
+// moved to bullet_manager.h
 
-//// かすり用マクロ ////
-void evade_addEx(int x, int y, uint8_t n); // かすりゲージを上昇させる
+//// Graze macros ////
+void evade_addEx(int x, int y, uint8_t n); // Increase the graze gauge
 
 inline void TamaEvadeAdd(Bullet *t) {
   if (t->flag & TF_EVADE)

@@ -1,6 +1,6 @@
-/*
- *   ItemManager — centralized item system state and operations
- */
+///
+/// ItemManager - Centralized item system state and operations
+///
 
 #pragma once
 
@@ -11,7 +11,7 @@ struct ItemManager {
   std::array<uint16_t, ITEM_MAX> indices;  // Items.indices[]
   uint16_t count = 0;                      // Items.count
 
-  // === メソッド ===
+  // === Methods ===
   void Spawn(int x, int y, uint8_t type);
   void Move();
   void Draw();
@@ -20,4 +20,4 @@ struct ItemManager {
 
 extern ItemManager Items;
 
-// === 後方互換 inline wrapper ===
+// === Backward-compatibility inline wrappers ===

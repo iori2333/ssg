@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   LLaser.cpp   長いレーザーの処理                                         */
-/*                                                                           */
-/*                                                                           */
+///
+/// LongLaser - Long laser processing
+///
 
 #include "long_laser.h"
 #include "game/snd.h"
@@ -12,18 +11,18 @@
 #include "player.h"
 #include "player_manager.h"
 
-//// レーザー変数２ → laser_manager.cpp に移動
-// long_lasers[], LLaserCmd は laser_manager.cpp で定義
+// Laser variables 2 moved to laser_manager.cpp
+// long_lasers[], LLaserCmd defined in laser_manager.cpp
 
-//// ローカル関数 ////
+// Local functions
 // private methods declared in laser_manager.h
 // private methods declared in laser_manager.h
 // private methods declared in laser_manager.h
 
 bool LaserManager::SpawnLongLaser(uint8_t id) {
-  // この部分で空いているレーザーのサーチを行う             //
-  // もし、レーザーが見つからなければ、FALSE をリターンする //
-  // つまり、その場合は、参照カウントを増加させない         //
+  // Search for an available laser slot
+  // If no laser found, return FALSE
+  // Don't increment reference count in that case
   auto lp = std::ranges::find_if(
       long_lasers, [](const auto &lp) { return (lp.flag == LLF_DISABLE); });
   if (lp == std::end(long_lasers)) {
@@ -67,7 +66,7 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
 
   lp->count = 0;
 
-  SetLongPoint(&*lp); // p[4] をセット
+  SetLongPoint(&*lp); // Set p[4]
 
   lp->flag = LLF_LINE;
 
@@ -113,12 +112,12 @@ void LaserManager::LineLong(const EnemyData *e, uint8_t id) {
 }
 
 void LaserManager::UpdateLongXY(int id) {
-  // 注意！！この関数のid は旧式のid の意味を持つことに注意 //
+  // Note: id in this function has the meaning of the old-style id
 
   long_lasers[id].x = long_lasers[id].e->x + long_lasers[id].dx;
   long_lasers[id].y = long_lasers[id].e->y + long_lasers[id].dy;
 
-  SetLongPoint(&long_lasers[id]); // p[4] をセット
+  SetLongPoint(&long_lasers[id]); // Set p[4]
 }
 
 void LaserManager::RotateLongAbs(const EnemyData *e, uint8_t d, uint8_t id) {
@@ -130,13 +129,13 @@ void LaserManager::RotateLongAbs(const EnemyData *e, uint8_t d, uint8_t id) {
       lp->lx = cosl(lp->d, lp->w >> 6);
       lp->ly = sinl(lp->d, lp->w >> 6);
 
-      lp->wx = -(lp->ly); // lx,ly を６４だけ回転
-      lp->wy = lp->lx;    //
+      lp->wx = -(lp->ly); // Rotate lx, ly by 64
+      lp->wy = lp->lx;
 
       lp->infx = cosl(lp->d, 800);
       lp->infy = sinl(lp->d, 800);
 
-      SetLongPoint(lp); // p[4] をセット
+      SetLongPoint(lp); // Set p[4]
     }
   }
 }
@@ -150,23 +149,23 @@ void LaserManager::RotateLongRel(const EnemyData *e, char d, uint8_t id) {
       lp->lx = cosl(lp->d, lp->w >> 6);
       lp->ly = sinl(lp->d, lp->w >> 6);
 
-      lp->wx = -(lp->ly); // lx,ly を６４だけ回転
-      lp->wy = lp->lx;    //
+      lp->wx = -(lp->ly); // Rotate lx, ly by 64
+      lp->wy = lp->lx;
 
       lp->infx = cosl(lp->d, 800);
       lp->infy = sinl(lp->d, 800);
 
-      SetLongPoint(lp); // p[4] をセット
+      SetLongPoint(lp); // Set p[4]
     }
   }
 }
 
-// 敵に関連づけられたレーザーを強制クローズ(Level2...) //
+// Force close laser associated with enemy (Level2...)
 void LaserManager::ForceCloseLong(const EnemyData *e) {
   for (auto &it : long_lasers) {
     auto *lp = &it;
 
-    // (参考) すでにクローズ状態であっても LLaserClose() は問題を発生させない //
+    // (Note) LLaserClose() will not cause issues even if already in closed state
     if (lp->e == e) {
       lp->flag = LLF_CLOSE;
       Snd_SEStop(2);
@@ -181,24 +180,24 @@ void LaserManager::MoveLong() {
 
   for (i = 0, lp = long_lasers.data(); i < LLASER_MAX; i++, lp++) {
 
-    // 角度セットモードで、敵の角度と現在の角度が異なっていたら再度セット //
+    // In angle-set mode, re-set if enemy angle differs from current angle
     if (lp->type == LLS_SETDEG && (lp->e != nullptr) && lp->d != lp->e->d) {
       lp->d = lp->e->d;
 
       lp->lx = cosl(lp->d, lp->w >> 6);
       lp->ly = sinl(lp->d, lp->w >> 6);
 
-      lp->wx = -(lp->ly); // lx,ly を６４だけ回転
-      lp->wy = lp->lx;    //
+      lp->wx = -(lp->ly); // Rotate lx, ly by 64
+      lp->wy = lp->lx;
 
       lp->infx = cosl(lp->d, 800);
       lp->infy = sinl(lp->d, 800);
 
-      SetLongPoint(lp); // p[4] をセット
+      SetLongPoint(lp); // Set p[4]
     }
 
     switch (lp->flag) {
-    // 太くなる場合 //
+    // Thickening case
     case LLF_OPEN:
       UpdateLongXY(i);
       lp->w += lp->v;
@@ -213,11 +212,11 @@ void LaserManager::MoveLong() {
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
 
-      SetLongPoint(lp); // p[4] をセット
+      SetLongPoint(lp); // Set p[4]
       HitCheckLong(lp);
       break;
 
-    // 細くなる場合 //
+    // Thinning case
     case LLF_CLOSE:
     case LLF_CLOSEL:
       UpdateLongXY(i);
@@ -240,18 +239,18 @@ void LaserManager::MoveLong() {
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
 
-      SetLongPoint(lp); // p[4] をセット
+      SetLongPoint(lp); // Set p[4]
                         // HitCheckLong(lp);
       break;
 
-    // 直線状態 //
+    // Line state
     case LLF_LINE:
       UpdateLongXY(i);
-      // この部分にレーザー溜めエフェクトを仕掛ける //
+      // Place laser charge effect here
       // fragment_set(lp->x,lp->y,FRG_LASER);
       break;
 
-    // ノーマル //
+    // Normal
     case LLF_NORM:
       UpdateLongXY(i);
       HitCheckLong(lp);
@@ -290,7 +289,7 @@ void LaserManager::DrawLong() {
     const auto *lp = &it;
     const auto c = lp->c;
     switch (lp->flag) {
-    // 太さを持った状態 //
+    // State with thickness
     case LLF_OPEN:
     case LLF_NORM:
     case LLF_CLOSE:
@@ -302,16 +301,14 @@ void LaserManager::DrawLong() {
       len = isqrt((wx * wx) + (wy * wy));
 
       if (len != 0) {
-        /*
-        p[0].x = p[1].x = lp->p[0].x ;//- wx*4/len;
-        p[0].y = p[1].y = lp->p[0].y ;//- wy*4/len;
-        p[3].x = p[2].x = lp->p[3].x ;//+ wx*4/len;
-        p[3].y = p[2].y = lp->p[3].y ;//+ wy*4/len;
-        p[1].x += lp->infx;
-        p[1].y += lp->infy;
-        p[2].x += lp->infx;
-        p[2].y += lp->infy;
-        */
+        // p[0].x = p[1].x = lp->p[0].x ;//- wx*4/len;
+        // p[0].y = p[1].y = lp->p[0].y ;//- wy*4/len;
+        // p[3].x = p[2].x = lp->p[3].x ;//+ wx*4/len;
+        // p[3].y = p[2].y = lp->p[3].y ;//+ wy*4/len;
+        // p[1].x += lp->infx;
+        // p[1].y += lp->infy;
+        // p[2].x += lp->infx;
+        // p[2].y += lp->infy;
         if (auto *gp = GrpGeom_Poly()) {
           // gp->SetColor({ 3, 0, 3 });
           const RGBA col = Table16Bit[c].ToRGB().WithAlpha(0xFF);
@@ -379,7 +376,7 @@ void LaserManager::DrawLong() {
       GeomCircleF({x, y}, (len - (len / 4))); // (lp->w >> 6));
       break;
 
-    // ライン状態の場合 //
+    // Line state case
     case LLF_LINE:
       x = (lp->x) >> 6;
       y = (lp->y) >> 6;
@@ -387,7 +384,7 @@ void LaserManager::DrawLong() {
       GrpGeom->DrawLine(x, y, (x + lp->infx), (y + lp->infy));
       break;
 
-    // 使用中で無い場合 //
+    // Not in use case
     case LLF_DISABLE:
       break;
     }
@@ -397,7 +394,7 @@ void LaserManager::DrawLong() {
 }
 
 void LaserManager::ClearLong() {
-  // 存在するレーザー全てを閉じる //
+  // Close all existing lasers
   for (auto &it : long_lasers) {
     if (it.flag != LLF_DISABLE) {
       it.flag = LLF_CLOSE;
@@ -451,23 +448,22 @@ void LaserManager::HitCheckLong(const LongLaserData *lp) {
   length = cosl(lp->d, tx) + sinl(lp->d, ty);
   width = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
 
-  /*
-          // 計算上の注意 : 座標の計算にはx64をつかう //
-          // sinm(),cosm()を使っているので/256補正が必要となる //
-          tx = ((lp->x)-(Players.viv.x));	ty = ((lp->y)-(Players.viv.y));
-          length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
-          tx <<= 8;	ty <<= 8;
-
-          if(cosm(lp->d)==0)
-                  w1 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
-          else if(sinm(lp->d)==0)
-                  w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
-          else{
-                  w2 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
-                  w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
-                  w1 = (w1+w2)/2;	// 精度アップ
-          }
-  */
+  // Calculation note: use x64 for coordinate calculation
+          // Using sinm(),cosm() so /256 correction is needed
+          // tx = ((lp->x)-(Players.viv.x));	ty = ((lp->y)-(Players.viv.y));
+          // length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
+          // tx <<= 8;	ty <<= 8;
+          //
+          // if(cosm(lp->d)==0)
+          //         w1 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
+          // else if(sinm(lp->d)==0)
+          //         w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
+          // else{
+          //         w2 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
+          //         w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
+          //         w1 = (w1+w2)/2;	// Improved accuracy
+          // }
+  // */
   if (length > 0 && width <= (lp->w + (64 * 15))) {
     evade_add(LLASER_EVADE);
   }

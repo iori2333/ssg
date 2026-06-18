@@ -1,6 +1,6 @@
-/*
- *   EnemyManager — centralized enemy system state and operations
- */
+///
+/// EnemyManager - centralized enemy system state and operations
+///
 
 #pragma once
 
@@ -10,55 +10,55 @@
 #include <cstdint>
 
 struct EnemyManager {
-  // --- 敵データ ---
+  // --- Enemy data ---
   std::array<EnemyData, ENEMY_MAX> entities; // Enemy[]
   std::array<uint16_t, ENEMY_MAX> indices;   // EnemyInd[]
   uint16_t count = 0;                        // EnemyNow
 
-  // --- ECL/SCL データ ---
+  // --- ECL/SCL data ---
   BYTE_BUFFER_OWNED ecl_head; // ECL_Head
   BYTE_BUFFER_OWNED scl_head; // SCL_Head
   uint8_t *scl_now = nullptr; // SCL_Now
 
-  // --- アニメーション ---
+  // --- Animation ---
   ANIME_DATA anime[ANIME_MAX]; // Anime[]
 
-  // --- ホーミング ---
+  // --- Homing ---
   int homing_x = 0;    // HomingX
   int homing_y = 0;    // HomingY
   int homing_flag = 0; // HomingFlag
 
-  // --- 特殊角度（ENEMY.cpp 内で使用）---
+  // --- Special angle (used in ENEMY.cpp) ---
   uint8_t enemy_exdeg = 0;   // EnemyEXDEG
   uint8_t enemy_exdeg_d = 0; // EnemyEXDEG_D
 
-  // === メソッド ===
+  // === Methods ===
 
-  // ホーミング
+  // Homing
   void UpdateHoming(const EnemyData *e);
 
-  // ナナメレーザーヒットチェック（ユーティリティ）
+  // Diagonal laser hit check (utility)
   static bool LaserHITCHK(const EnemyData *e, int ox, int oy, uint8_t d);
 
-  // 敵の移動・描画・管理
+  // Enemy movement, drawing and management
   void Move();
   void Draw();
   void Clear();
   void InitIndices();
 
-  // ダメージ
+  // Damage
   static bool ApplyDamage(EnemyData &e, int damage);
   bool DamageAt(int x, int y, int damage);
   bool DamageAt2(int x, int y, int damage);
   void DamageAt3(int x, int y, uint8_t d);
   void DamageAll(int damage);
 
-  // 敵データ初期化
+  // Enemy data initialization
   void InitDataX64(EnemyData *e, int x, int y, uint32_t EclID);
   void InitDataSTD(EnemyData *e, short x, short y, uint32_t EclID);
   void LongJump(EnemyData *e, uint32_t EclID);
 
-  // アニメーション
+  // Animation
   void UpdateAnimation(EnemyData *e);
 
   // ECL

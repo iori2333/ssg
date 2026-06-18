@@ -1,8 +1,8 @@
-/*
- *   BossManager — centralized boss system state
- */
+///
+/// BossManager - centralized boss system state
+///
 
 #include "boss_manager.h"
 
-// --- グローバルインスタンス ---
+// --- Global instance ---
 BossManager Bosses;

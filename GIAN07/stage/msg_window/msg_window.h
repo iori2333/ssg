@@ -1,7 +1,6 @@
-/*                                                                           */
-/*   msg_window.h   メッセージウィンドウ処理                                  */
-/*                                                                           */
-/*                                                                           */
+///
+/// MsgWindow - Message window processing
+///
 
 #pragma once
 
@@ -10,7 +9,7 @@
 #include <optional>
 #include <string>
 
-// メッセージウィンドウのフラグ //
+// Message window flags
 enum class MsgWindowFlags : uint8_t {
   NONE = 0x0,
   WITH_FACE = 0x1, // Pads all text to leave room for a face portrait.
@@ -18,43 +17,43 @@ enum class MsgWindowFlags : uint8_t {
   HAS_BITFLAG_OPERATORS = 3,
 };
 
-// メッセージウィンドウ管理用クラス //
-// 元は [MSG_WINDOW] 構造体 + ファイル静的グローバル [MsgWindow] だったが、
-// 状態をカプセル化するためクラス化した。[MWin*] 自由関数はこのグローバル
-// インスタンスへの薄い転調として残されている。
+// Message window management class
+// Originally a [MSG_WINDOW] struct + file-static global [MsgWindow], but
+// was made a class to encapsulate state. The [MWin*] free functions remain
+// as thin wrappers around this global instance.
 class MsgWindow {
 public:
   void Init(const WINDOW_LTRB &rc, MsgWindowFlags flags = MsgWindowFlags::NONE);
-  void Open();                       // メッセージウィンドウをオープンする
-  void Close();                      // メッセージウィンドウをクローズする
-  void ForceClose();                 // メッセージウィンドウを強制クローズする
-  void Tick();                       // メッセージウィンドウを動作させる
-  void Draw();                       // メッセージウィンドウを描画する
-  void Msg(std::string_view str); // メッセージ文字列を送る
-  void Face(uint8_t faceID);         // 顔をセットする
-  void Cmd(uint8_t cmd);             // コマンドを送る
-  void Help(MenuController *ws);     // メッセージウィンドウにヘルプ文字列を送る
+  void Open();                       // Open the message window
+  void Close();                      // Close the message window
+  void ForceClose();                 // Force close the message window
+  void Tick();                       // Run message window logic
+  void Draw();                       // Draw the message window
+  void Msg(std::string_view str); // Send a message string
+  void Face(uint8_t faceID);         // Set the face portrait
+  void Cmd(uint8_t cmd);             // Send a command
+  void Help(MenuController *ws);     // Send help text to the message window
 
 private:
-  void MsgBlank(); // 文字列をクリアし、最初の行へ戻す
+  void MsgBlank(); // Clear strings and reset to first line
 
-  WINDOW_LTRB max_size{}; // ウィンドウの最終的な大きさ
-  WINDOW_LTRB now_size{}; // ウィンドウの現在のサイズ
+  WINDOW_LTRB max_size{}; // Final window size
+  WINDOW_LTRB now_size{}; // Current window size
   PIXEL_POINT text_topleft{};
 
   MsgWindowFlags flags{};
-  FONT_ID font_id{};  // 使用するフォント
-  uint8_t font_dy{};  // フォントのＹ増量値
-  uint8_t state{};    // 状態
-  uint8_t max_line{}; // 最大表示可能行数
-  uint8_t line{};     // 次に挿入する行
+  FONT_ID font_id{};  // Font to use
+  uint8_t font_dy{};  // Font Y increment
+  uint8_t state{};    // State
+  uint8_t max_line{}; // Max displayable lines
+  uint8_t line{};     // Next line index
 
-  uint8_t face_id{};    // 使用する顔番号
-  uint8_t next_face{};  // 次に表示する顔番号
-  uint8_t face_state{}; // 顔の状態
-  uint8_t face_time{};  // 顔表示用カウンタ
+  uint8_t face_id{};    // Current face ID
+  uint8_t next_face{};  // Next face ID to show
+  uint8_t face_state{}; // Face state
+  uint8_t face_time{};  // Face display counter
 
-  std::string_view msg[MSG_HEIGHT]{}; // 表示するメッセージへのポインタ
+  std::string_view msg[MSG_HEIGHT]{}; // Pointers to displayed messages
 
   // Contains all text from [msg], concatenated with '\n'.
   std::string text;
@@ -62,5 +61,5 @@ private:
   std::optional<TEXTRENDER_RECT_ID> trr;
 };
 
-// 移行用グローバルインスタンス。最終的には UIManager 等に集約する。
+// Migration global instance. To be consolidated into UIManager etc.
 extern MsgWindow MsgWin;

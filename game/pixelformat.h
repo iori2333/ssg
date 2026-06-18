@@ -1,8 +1,6 @@
-/*
- *   Bit depths and pixel formats
- *
- */
-
+///
+/// Bit depths and pixel formats
+///
 #pragma once
 
 #include <algorithm>

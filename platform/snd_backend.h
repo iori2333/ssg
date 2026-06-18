@@ -1,7 +1,6 @@
-/*
- *   Platform-specific PCM sound interface
- *
- */
+///
+/// Platform-specific PCM sound interface
+///
 
 #pragma once
 

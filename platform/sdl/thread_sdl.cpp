@@ -1,7 +1,6 @@
-/*
- *   Threads via SDL
- *
- */
+///
+/// Threads via SDL
+///
 
 #include <SDL3/SDL_thread.h>
 

@@ -1,8 +1,6 @@
-/*
- *   Common font rendering interface, independent of a specific rasterizer
- *
- */
-
+///
+/// Common font rendering interface, independent of a specific rasterizer
+///
 #pragma once
 
 #include "constants.h"

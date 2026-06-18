@@ -1,8 +1,6 @@
-/*
- *   Coordinate systems
- *
- */
-
+///
+/// Coordinate systems
+///
 #pragma once
 
 #include <compare>
