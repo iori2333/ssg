@@ -303,6 +303,14 @@ void Player::Update() {
     muteki--;
   }
 
+  // Deathbomb window countdown
+  if (deathbomb_time != 0U) {
+    deathbomb_time--;
+    if (deathbomb_time == 0U) {
+      OnDeath(false); // sound already played in OnHit
+    }
+  }
+
   // Score change processing
   if (dscore >= 100000) {
     score += 100000, dscore -= 100000;
@@ -439,6 +447,7 @@ void Player::Initialize() {
   bomb_used = 0;
 
   bomb_time = 0;
+  deathbomb_time = 0;
   evade_c = evade = 0;
   evadesc = 0;
   evade_sum = 0;
@@ -471,12 +480,43 @@ void Player::PrepareNextStage() {
 
   muteki = VIVDEAD_VAL;
   bomb_time = 0;
+  deathbomb_time = 0;
   ShiftCounter = 0;
 
   BuzzSound = false;
 }
 
-void Player::OnDeath() {
+void Player::OnHit() {
+#ifdef PBG_DEBUG
+  if (!DebugDat.Hit)
+    return;
+#endif
+  if (muteki != 0)
+    return;
+  if (deathbomb_time != 0)
+    return;
+
+  // Practice modes are handled inside OnDeath
+  if (ConfigDat.PracticeMode.v >= PRACTICE_AUTOBOMB) {
+    OnDeath();
+    return;
+  }
+
+  // Play death sound immediately for feedback
+  Snd_SEPlay(SOUND_ID_DEAD);
+
+  if (bomb > 0 && bomb_time == 0) {
+    deathbomb_time = DEATHBOMB_WINDOW;
+    muteki = DEATHBOMB_WINDOW;
+    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
+    return;
+  }
+
+  // No bomb stock — instant death, sound already played
+  OnDeath(false);
+}
+
+void Player::OnDeath(bool play_se) {
   int i = 0;
 
 #ifdef PBG_DEBUG
@@ -489,7 +529,8 @@ void Player::OnDeath() {
     for (i = 0; i < 50; i++) {
       Effects.SpawnFragment(x, y, FRG_HEART);
     }
-    Snd_SEPlay(SOUND_ID_DEAD);
+    if (play_se)
+      Snd_SEPlay(SOUND_ID_DEAD);
     muteki = 30;
     return;
   }
@@ -516,7 +557,8 @@ void Player::OnDeath() {
     Effects.SpawnFragment(x, y, FRG_HEART);
   }
 
-  Snd_SEPlay(SOUND_ID_DEAD);
+  if (play_se)
+    Snd_SEPlay(SOUND_ID_DEAD);
 
   x = opx = SX_START;
   y = opx = SY_START;

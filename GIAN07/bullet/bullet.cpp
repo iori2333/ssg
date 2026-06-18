@@ -287,7 +287,7 @@ void BulletManager::Move() {
       if (HITCHK(t->x, Players.viv.x, TAMA_HITX) &&
           HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
         t->flag = TF_DELETE;
-        MaidDead();
+        MaidHit();
       }
     } else {
       MoveByEffect(t);
@@ -319,7 +319,7 @@ void BulletManager::Move() {
       if (HITCHK(t->x, Players.viv.x, TAMA_HITX) &&
           HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
         t->flag = TF_DELETE;
-        MaidDead();
+        MaidHit();
       }
     } else {
       MoveByEffect(t);

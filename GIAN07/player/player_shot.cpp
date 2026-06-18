@@ -113,7 +113,7 @@ void PlayerManager::SetMaidShot() {
 
   // Activate bomb if conditions are met
   if (((Key_Data & KEY_BOMB) != 0) && (viv.bomb_time == 0) &&
-      (viv.muteki < VIVDEAD_VAL) && // Do not activate bomb while dead
+      (viv.muteki == 0 || viv.deathbomb_time != 0) && // No bomb during invincibility (except deathbomb window)
       (viv.bomb != 0U) && (!Scroller.scene.MsgFlag)) {
     // if(viv.weapon == 0) EnterBombPalette();
 
@@ -121,6 +121,7 @@ void PlayerManager::SetMaidShot() {
     viv.muteki = BOMBMUTEKI_VAL;
     viv.bomb--;
     viv.bomb_used++;
+    viv.deathbomb_time = 0; // Cancel pending deathbomb
     Ranking.Add(-25); // Difficulty down
   }
 

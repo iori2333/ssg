@@ -463,7 +463,7 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     // Improved precision
     //                    }
     if (length > 0 && length <= (lp->l) && w1 <= (lp->w)) {
-      MaidDead();
+      MaidHit();
     } else if (length > 0 && length <= (lp->l) &&
                w1 <= (lp->w + LASER_EVADE_WIDTH)) {
       if (lp->evade != 0U) {

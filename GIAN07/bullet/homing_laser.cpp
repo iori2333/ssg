@@ -190,7 +190,7 @@ void LaserManager::MoveHoming() {
       if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH * 2 / 3) &&
           HITCHK(y, Players.viv.y, HOMINGL_WIDTH * 2 / 3)) {
         //	hl->State = HLS_DEAD;	// Delete this one
-        MaidDead(); // Kill it
+        MaidHit(); // Kill it
       }
     }
     if (ev_flag) {

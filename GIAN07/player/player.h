@@ -15,10 +15,14 @@
 inline constexpr int VIVDEAD_VAL = 300;   // Viv death time
 inline constexpr int VIVMUTEKI_VAL = 180; // Viv invincibility time
 
-inline constexpr int MAID_MOVE_DISABLE_TIME = (250 - 100); // Move-disabled duration
+inline constexpr int MAID_MOVE_DISABLE_TIME =
+    (250 - 100); // Move-disabled duration
 
 inline constexpr int BOMBMUTEKI_VAL = 60; // Bomb-end invincibility
 inline constexpr int SBOPT_DX = 26;       // Option offset (not x64)
+
+inline constexpr int DEATHBOMB_WINDOW =
+    12; // Deathbomb input window (~192ms @62.5fps)
 
 inline constexpr int EVADETIME_MAX = 256; // Max graze wait time
 
@@ -38,6 +42,7 @@ inline void MaidMove() { Players.viv.Update(); }
 inline void MaidSet() { Players.viv.Initialize(); }
 inline void MaidNextStage() { Players.viv.PrepareNextStage(); }
 inline void MaidDead() { Players.viv.OnDeath(); }
+inline void MaidHit() { Players.viv.OnHit(); }
 inline void evade_add(uint8_t n) { Players.viv.AddEvade(n); }
 inline void evade_addEx(int x, int y, uint8_t n) {
   Players.viv.AddEvadeEx(x, y, n);
