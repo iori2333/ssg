@@ -22,8 +22,8 @@ void SDLCALL LogCriticalAsMessageBox(void *userdata, int category,
   }
 }
 
-void Log_Init(const char8_t *title) {
-  log_title = reinterpret_cast<const char *>(title);
+void Log_Init(const char *title) {
+  log_title = title;
 
   // The easiest workaround for SDL_ShowSimpleMessageBox()'s lack of built-in
   // string interpolation: Route errors through the log system instead.

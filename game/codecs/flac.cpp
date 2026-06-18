@@ -89,7 +89,7 @@ static void CB_FLAC_Meta(void *user_data, drflac_metadata *metadata) {
   drflac_uint32 cmt_len = 0;
   while ((cmt_str = drflac_next_vorbis_comment(&it, &cmt_len)) != nullptr) {
     OnVorbisComment(cb_data->on_metadata,
-                    {reinterpret_cast<const char8_t *>(cmt_str), cmt_len});
+                    {cmt_str, cmt_len});
   }
 }
 // ---------

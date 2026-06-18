@@ -35,15 +35,13 @@ struct LINE {
   WINDOW_COORD left;
 };
 
-LINE Line[1];
-
-constexpr std::string_view BUILD_LABEL = "BUILD";
-constexpr Narrow::string_view BUILD_VALUE = (" " VERSION_TAG);
+static LINE Line;
+constexpr auto BUILD_LABEL = "BUILD";
 
 void Init() {
-  const auto build_w = TextObj.TextExtent(FONT_ID::TINY, BUILD_VALUE).w;
-  Line[0].trr = TextObj.Register({.w = 136, .h = 10});
-  Line[0].left = (GRP_RES.w - build_w);
+  const auto build_w = TextObj.TextExtent(FONT_ID::TINY, VERSION_TAG).w;
+  Line.trr = TextObj.Register({.w = 136, .h = 10});
+  Line.left = (GRP_RES.w - build_w);
 }
 
 void Render(PIXEL_COORD top) {
@@ -54,17 +52,17 @@ void Render(PIXEL_COORD top) {
 
   constexpr auto BUILD_LABEL_EXTENT = GrpExtent5(BUILD_LABEL);
   const WINDOW_POINT build_label_topleft = {
-      {.x = (Line[0].left - BUILD_LABEL_EXTENT.w),
+      {.x = (Line.left - BUILD_LABEL_EXTENT.w),
 
        // MS Gothic 10 is actually 7 pixels high and starts at a Y coordinate
        // of 2.
        .y = (top + 2 + 7 - BUILD_LABEL_EXTENT.h)}};
 
   GrpPut55(build_label_topleft, BUILD_LABEL);
-  TextObj.Render({Line[0].left, top}, Line[0].trr, BUILD_VALUE,
+  TextObj.Render({Line.left, top}, Line.trr, VERSION_TAG,
                  [gradient_func](auto &s) {
-                   const std::span strs = {&BUILD_VALUE, 1};
-                   DrawGrdFont(s, strs, FONT_ID::TINY, false, gradient_func);
+                   std::array<std::string_view, 1> strs = {VERSION_TAG};
+                   DrawGrdFont(s, {strs}, FONT_ID::TINY, false, gradient_func);
                  });
 }
 }; // namespace Version
@@ -117,7 +115,7 @@ bool ScoreNameInit() {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_NAMEREGIST)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     return false;
   }
 
@@ -211,11 +209,11 @@ void GameFlowManager::ScoreDraw() {
 
     gx = (Scores.score_strings[i].x >> 6) + 232 - 16;
     gy = (Scores.score_strings[i].y >> 6) + 4;
-    GrpPut16c2(gx, gy, Scores.score_strings[i].Score);
+    GrpPut16c2(gx, gy, Scores.score_strings[i].Score.c_str());
 
     gx = (Scores.score_strings[i].x >> 6) + 120;
     gy = (Scores.score_strings[i].y >> 6) + 25;
-    GrpPutScore(gx, gy, Scores.score_strings[i].Evade);
+    GrpPutScore(gx, gy, Scores.score_strings[i].Evade.c_str());
 
     // いや、時間が無いのは分かるんだけどさぁ... //
     gx = (Scores.score_strings[i].x >> 6) + 224;
@@ -225,7 +223,7 @@ void GameFlowManager::ScoreDraw() {
       GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::SYSTEM, src);
     } else {
       {
-        GrpPutScore(gx, gy, Scores.score_strings[i].Stage);
+        GrpPutScore(gx, gy, Scores.score_strings[i].Stage.c_str());
       }
     }
 
@@ -533,7 +531,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_NAMEREGIST)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     return false;
   }
 
@@ -655,11 +653,11 @@ bool GameNextStage() {
   MaidNextStage();
 
   if (!LoadGraph(GameState.game_stage)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut(u8"ENEMY.DAT が破壊されています");
+    DebugOut("ENEMY.DAT が破壊されています");
     return false;
   }
 
@@ -667,7 +665,7 @@ bool GameNextStage() {
 }
 
 // マルチステージ・リプレイ用の初期化を行う //
-bool GameReplayInitAll(const char8_t *fn) {
+bool GameReplayInitAll(const char *fn) {
   MaidSet();
 
   if (!Demos.LoadReplayAll(fn)) {
@@ -683,13 +681,13 @@ bool GameReplayInitAll(const char8_t *fn) {
   GameSTD_Init();
 
   if (!LoadGraph(GameState.game_stage)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut(u8"ENEMY.DAT が破壊されています");
+    DebugOut("ENEMY.DAT が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
@@ -772,18 +770,18 @@ bool DemoInit() {
   GameState.game_stage = (rnd() % STAGE_MAX) + 1;
 
   if (!Demos.LoadDemo(GameState.game_stage)) {
-    // DebugOut(u8"デモプレイデータが存在せず");
+    // DebugOut("デモプレイデータが存在せず");
     return false;
   }
 
   Ranking.Reset();
 
   if (!LoadGraph(GameState.game_stage)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut(u8"ENEMY.DAT が破壊されています");
+    DebugOut("ENEMY.DAT が破壊されています");
     return false;
   }
 
@@ -852,7 +850,7 @@ bool SProjectInit() {
   GrpBackend_PixelAccessStart();
 
   if (!LoadGraph(GRAPH_ID_SPROJECT)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     return false;
   }
 
@@ -882,7 +880,7 @@ bool GameExit(bool bNeedChgMusic) {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_TITLE)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     return false;
   }
   GrpBackend_SetClip(GRP_RES_RECT);
@@ -1249,11 +1247,11 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     Demos.Init();
 
     if (!LoadGraph(GameState.game_stage)) {
-      DebugOut(u8"GRAPH.DAT が破壊されています");
+      DebugOut("GRAPH.DAT が破壊されています");
       return;
     }
     if (!LoadStageData(GameState.game_stage)) {
-      DebugOut(u8"ENEMY.DAT が破壊されています");
+      DebugOut("ENEMY.DAT が破壊されています");
       return;
     }
 
@@ -1340,10 +1338,10 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     rc = PIXEL_LTWH{72, (272 + 16), 56, 8};
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
-    GrpPutScore(500, 400,
-                std::format("{}",
-                            ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5))
-                    .c_str());
+    GrpPutScore(
+        500, 400,
+        std::format("{}", ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5))
+            .c_str());
 
     GrpBackend_SetClip(GRP_RES_RECT);
 

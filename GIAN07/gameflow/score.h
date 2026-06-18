@@ -5,8 +5,9 @@
 
 #pragma once
 
-#include "game/string_format.h"
+#include <cstddef>
 #include <cstdint>
+#include <string>
 
 ///// [ 定数 ] /////
 inline constexpr std::size_t NR_NAME_LEN =
@@ -38,11 +39,11 @@ struct NrScoreString {
   int x, y;         // 描画用座標
   bool bMoveEnable; // 移動可能か？
 
-  char Name[NR_NAME_LEN];                                      // 名前
-  char Score[STRING_NUM_CAP<decltype(NrNameData::Score)> + 1]; // 得点
-  char Evade[STRING_NUM_CAP<decltype(NrNameData::Evade)> + 1]; // かすり
-  char Stage[STRING_NUM_CAP<decltype(NrNameData::Stage)> + 1]; // ステージ
-  uint8_t Weapon;                                              // 装備
+  char Name[NR_NAME_LEN];          // 名前
+  std::string Score;                // 得点
+  std::string Evade;                // かすり
+  std::string Stage;                // ステージ
+  uint8_t Weapon;                   // 装備
 };
 // (NR_SCORE_STRING alias removed — use NrScoreString directly)
 

@@ -20,7 +20,7 @@
 // ScoreData → Scores.score_cache に移動
 // GameFlow.score_string[] → Scores.score_strings に移動
 
-const auto ScoreFileName = u8"秋霜SC.DAT"; // スコアデータ格納ファイル名
+constexpr char ScoreFileName[] = "秋霜SC.DAT"; // スコアデータ格納ファイル名
 
 // 現在のスコア列を取得する(名前挿入アリ) //
 // NData == NULL の場合、挿入しません     //
@@ -81,12 +81,9 @@ uint8_t ScoreManager::SetScoreString(NrNameData *NData, uint8_t Dif) {
 
     Res[i].Weapon = p[i].Weapon % 4;
 
-    std::format_to_n(Res[i].Score, sizeof(Res[i].Score), "{:11}",
-                     p[i].Score);
-    std::format_to_n(Res[i].Evade, sizeof(Res[i].Evade), "{:6}",
-                     p[i].Evade);
-    std::format_to_n(Res[i].Stage, sizeof(Res[i].Stage), "{:1}",
-                     p[i].Stage);
+    Res[i].Score = std::format("{:11}", p[i].Score);
+    Res[i].Evade = std::format("{:6}", p[i].Evade);
+    Res[i].Stage = std::format("{:1}", p[i].Stage);
   }
 
   ReleaseScoreData();

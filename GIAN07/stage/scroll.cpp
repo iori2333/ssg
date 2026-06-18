@@ -56,7 +56,7 @@ static void Stg3BossMapDraw(); // ゲイツ雲描画
 static void ScrollCmdStg4Rock(); // ４面岩
 
 // デバッグ用マクロ //
-static void SCL_DEBUG(std::u8string_view s) {
+static void SCL_DEBUG(std::string_view s) {
 #ifdef SCRIPT_TRACE
   DebugLog(s);
 #endif
@@ -202,7 +202,7 @@ static void enemy_set() {
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)
       }
-      SCL_DEBUG(u8"--- SCL_TIME ---");
+      SCL_DEBUG("--- SCL_TIME ---");
     } break;
 
     case SCL_ENEMY:
@@ -210,7 +210,7 @@ static void enemy_set() {
         PutEnemy(cmd + 1); // ボス出現中は出て来ちゃダメ
       }
       Enemies.scl_now += 6; // cmd(1)+x(2)+y(2)+id(1)
-      SCL_DEBUG(u8"--- SCL_ENEMY ---");
+      SCL_DEBUG("--- SCL_ENEMY ---");
       break;
 
     case SCL_BOSS: { // ボスをセットする(X(16),Y(16),ID(8))
@@ -269,7 +269,7 @@ static void enemy_set() {
                   UI.Msg().Cmd(MWCMD_NEWPAGE);
                   UI.Msg().Cmd(MWCMD_LARGEFONT);
                   UI.Msg().Msg("ＳＣＬ完了ですの");
-                  SCL_DEBUG(u8"--- SCL_END ---");
+                  SCL_DEBUG("--- SCL_END ---");
                   */
       return;
 
@@ -456,7 +456,7 @@ static void enemy_set() {
       UI.Msg().Cmd(MWCMD_NEWPAGE);
       UI.Msg().Cmd(MWCMD_LARGEFONT);
       UI.Msg().Msg("バグ発生だにょ");
-      SCL_DEBUG(u8"---- SCL !BUG! ---");
+      SCL_DEBUG("---- SCL !BUG! ---");
       return;
     }
   }

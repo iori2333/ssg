@@ -23,7 +23,7 @@ using SAMPLE_COUNT = uint32_t;
 // --------
 
 struct TRACK_METADATA {
-  std::u8string title;
+  std::string title;
 
   // Hash of a MIDI file inside `MUSIC.DAT` that this track is a recording of.
   std::optional<HASH> source_midi;
@@ -33,11 +33,11 @@ struct TRACK_METADATA {
 };
 
 // Vorbis comments are specified to use UTF-8.
-using METADATA_CALLBACK = std::function<void(const std::u8string_view tag,
-                                             const std::u8string_view value)>;
+using METADATA_CALLBACK =
+    std::function<void(std::string_view tag, std::string_view value)>;
 
 // Calls [func] for the given Vorbis comment.
-void OnVorbisComment(METADATA_CALLBACK func, const std::u8string_view comment);
+void OnVorbisComment(METADATA_CALLBACK func, std::string_view comment);
 // --------
 
 // Base class for a track
@@ -144,6 +144,6 @@ using PCM_PART_OPEN = std::unique_ptr<PCM_PART>(
 
 // Tries to open a waveform track whose name starts with [base_fn] and has one
 // of the supported codec extensions.
-std::unique_ptr<TRACK> TrackOpen(const std::u8string_view base_fn);
+std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn);
 
 } // namespace BGM

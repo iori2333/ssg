@@ -218,7 +218,7 @@ void ScreenshotPanel::Refresh(MenuController &ctrl, bool) {
       }
     }
     item.Title = title_perf_[i].Lit();
-    item.Help = Narrow::literal{help_perf_.c_str()};
+    item.Help = help_perf_.c_str();
   }
 }
 
@@ -259,12 +259,11 @@ void ApiPanel::Init() {
 
 void ApiPanel::Refresh(MenuController &, bool) {
   const bool is_def_api = ConfigDat.GraphicsAPI.empty();
-  const Narrow::string_view api_active =
-      GrpBackend_APILabel(GrpBackend_APIString());
+  std::string_view api_active = GrpBackend_APILabel(GrpBackend_APIString());
 
   item_def_.SetActive(!is_def_api);
   for (auto &api : items_ | std::views::take(GrpBackend_APICount())) {
-    const auto is_selected = strcmp(api_active.data(), api.Title.ptr) == 0;
+    const auto is_selected = strcmp(api_active.data(), api.Title) == 0;
     EnumFlagSet(api.Flags, MenuFlags::HIGHLIGHT,
                 static_cast<std::underlying_type_t<MenuFlags>>(is_selected));
   }

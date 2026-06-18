@@ -112,7 +112,7 @@ HelpSetFullscreenMode(SDL_Window *window, GRAPHICS_FULLSCREEN_FLAGS fs) {
   return fs;
 }
 
-int8_t WndBackend_ValidateRenderDriver(const std::u8string_view hint) {
+int8_t WndBackend_ValidateRenderDriver(std::string_view hint) {
   const auto id = GrpBackend_APIID(hint);
   if (id >= 0) {
     return id;
@@ -124,9 +124,7 @@ int8_t WndBackend_ValidateRenderDriver(const std::u8string_view hint) {
       LOG_CAT,
       "Unsupported renderer \"%s\" specified in " SDL_HINT_RENDER_DRIVER
       " hint, falling back to %s default (%s).",
-      std::bit_cast<const char *>(hint.data()),
-      (GRP_SDL_DEFAULT_API ? "the" : "SDL's"),
-      std::bit_cast<const char *>(default_driver));
+      hint.data(), (GRP_SDL_DEFAULT_API ? "the" : "SDL's"), default_driver);
   SDL_UnsetEnvironmentVariable(SDL_GetEnvironment(), SDL_HINT_RENDER_DRIVER);
 
   // If this succeeds, the hint came from SDL, not the environment.
@@ -136,14 +134,13 @@ int8_t WndBackend_ValidateRenderDriver(const std::u8string_view hint) {
   return -1;
 }
 
-std::u8string_view WndBackend_SDLRendererName(int8_t id) {
+std::string_view WndBackend_SDLRendererName(int8_t id) {
   assert(id < SDL_GetNumRenderDrivers());
   if (id >= 0) {
     return GrpBackend_APIString(id);
   }
 
-  auto *hint =
-      std::bit_cast<const char8_t *>(SDL_GetHint(SDL_HINT_RENDER_DRIVER));
+  auto *hint = SDL_GetHint(SDL_HINT_RENDER_DRIVER);
   if (!hint) {
     hint = GRP_SDL_DEFAULT_API;
   }
@@ -182,12 +179,10 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
 
   // We can actually get empty strings on SDL 2 here!
   if (driver_env_ptr && (driver_env_ptr[0] != '\0')) {
-    params.api = WndBackend_ValidateRenderDriver(
-        std::bit_cast<const char8_t *>(driver_env_ptr));
+    params.api = WndBackend_ValidateRenderDriver(driver_env_ptr);
   } else if (GRP_SDL_DEFAULT_API) {
     if ((params.api < 0) && !SDL_GetHint(SDL_HINT_RENDER_DRIVER)) {
-      SDL_SetHint(SDL_HINT_RENDER_DRIVER,
-                  std::bit_cast<const char *>(GRP_SDL_DEFAULT_API));
+      SDL_SetHint(SDL_HINT_RENDER_DRIVER, GRP_SDL_DEFAULT_API);
     }
   }
 
@@ -196,7 +191,7 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   // the correct flags.
   const auto name = WndBackend_SDLRendererName(params.api);
   uint32_t flags = 0;
-  if (name.starts_with(u8"opengl")) {
+  if (name.starts_with("opengl")) {
     flags |= SDL_WINDOW_OPENGL;
     SDL_GL_ResetAttributes();
 
@@ -208,10 +203,10 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
     // `SDL_GL_CONTEXT_PROFILE_MASK` got set to regular/non-ES OpenGL.
     // So, we're forced to specify the correct flags ourselves after all.
     const auto [maj, min] = ([name]() -> std::pair<int, int> {
-      if (name.starts_with(u8"opengles")) {
+      if (name.starts_with("opengles")) {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                             SDL_GL_CONTEXT_PROFILE_ES);
-        if (name == u8"opengles2") {
+        if (name == "opengles2") {
           return {2, OPENGL_TARGET_ES2_MIN};
         }
         return {1, OPENGL_TARGET_ES1_MIN};

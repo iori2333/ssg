@@ -26,14 +26,14 @@ UIManager UI;
 // ---------------------------------------------------------------------------
 
 namespace {
-constexpr Narrow::string_view BGMPackTitle = " BGM pack";
-constexpr Narrow::string_view BGMPackTitleFmt = " BGM pack ({}/{})";
-constexpr Narrow::string_view BGMPackTitleNone = "<使用しない>";
-constexpr Narrow::string_view BGMPackTitleDownload = "<Download>";
+constexpr std::string_view BGMPackTitle = " BGM pack";
+constexpr std::string_view BGMPackTitleFmt = " BGM pack ({}/{})";
+constexpr std::string_view BGMPackTitleNone = "<使用しない>";
+constexpr std::string_view BGMPackTitleDownload = "<Download>";
 constexpr auto BGMPackHelpNone = "デフォルトのMIDIサントラに戻ります";
 constexpr auto BGMPackHelpDownload = "収録のサントラをダウンロードします";
 
-constexpr Narrow::string_view ReplayFilesTitle = "    Replay Files";
+constexpr std::string_view ReplayFilesTitle = "    Replay Files";
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -204,8 +204,7 @@ void UIManager::BGMPackGenerate(MenuItem &ret, size_t generated,
     ret.Title = BGMPackTitleDownload.data();
     ret.Help = BGMPackHelpDownload;
   } else {
-    ret.Title = Narrow::literal{
-        reinterpret_cast<const char *>(bgm_packs_[generated - 1].c_str())};
+    ret.Title = bgm_packs_[generated - 1].c_str();
     ret.Help = "";
   }
 
@@ -256,7 +255,11 @@ void UIManager::OpenBGMPack() {
     if (pack == ConfigDat.BGMPack) {
       bgm_sel_at_open_ = i;
     }
-    w = (std::max)(w, CWinItemExtent(pack).w);
+    w = (std::max)(w,
+                   CWinItemExtent(std::string_view{
+                                      std::bit_cast<const char *>(pack.c_str()),
+                                      pack.size()})
+                       .w);
     i++;
   }
   w = (std::min)(w, GRP_RES.w);
@@ -280,8 +283,8 @@ void UIManager::ReplayFilesGenerate(MenuItem &ret, size_t generated,
     ret.Title = " Exit";
     ret.Help = "一つ前のメニューにもどります";
   } else if (generated < replay_files_.size()) {
-    ret.Title = Narrow::literal{
-        reinterpret_cast<const char *>(replay_files_[generated].c_str())};
+    ret.Title =
+        reinterpret_cast<const char *>(replay_files_[generated].c_str());
     ret.Help = "Play replay file";
   } else {
     ret.Title = " No replays found";
@@ -322,8 +325,8 @@ void UIManager::OpenReplayFiles() {
       ".",
       [](void *ctx, const char *, const char *name) {
         if (strstr(name, "replay_") == name && strstr(name, ".DAT")) {
-          auto &files = *static_cast<std::vector<std::u8string> *>(ctx);
-          files.emplace_back(reinterpret_cast<const char8_t *>(name));
+          auto &files = *static_cast<std::vector<std::string> *>(ctx);
+          files.emplace_back(name);
         }
         return SDL_ENUM_CONTINUE;
       },
@@ -332,7 +335,10 @@ void UIManager::OpenReplayFiles() {
 
   PIXEL_COORD w = CWinItemExtent(ReplayFilesTitle).w;
   for (const auto &f : replay_files_) {
-    w = (std::max)(w, CWinItemExtent(f).w);
+    w = (std::max)(w, CWinItemExtent(
+                          std::string_view{
+                              std::bit_cast<const char *>(f.c_str()), f.size()})
+                          .w);
   }
   w = (std::max)(w, CWinItemExtent(" Exit").w);
   w = (std::min)(w, GRP_RES.w);

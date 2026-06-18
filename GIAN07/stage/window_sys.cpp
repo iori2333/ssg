@@ -135,7 +135,7 @@ void MenuController::Draw() {
   // 文字列の描画 //
   WINDOW_POINT topleft = {x, y};
   const auto trr = TRRs[0];
-  const Narrow::string_view str = p->Title->Title;
+  std::string_view str = p->Title->Title;
   TextObj.Render(topleft, trr, str, [=](TEXTRENDER_SESSION &s) {
     MenuDrawLabel(s, *p->Title, true);
   });
@@ -144,8 +144,7 @@ void MenuController::Draw() {
   for (i = 0; std::cmp_less(i, p->NumItems); i++) {
     const auto trr = TRRs[1 + i];
     auto *item = p->ItemPtr[i];
-    const Narrow::string_view c =
-        ((item->Flags == item->FlagsPrev) ? item->Title : "");
+    std::string_view c = ((item->Flags == item->FlagsPrev) ? item->Title : "");
     TextObj.Render(topleft, trr, c, [=](TEXTRENDER_SESSION &s) {
       MenuDrawLabel(s, *item, false);
     });
@@ -221,8 +220,8 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     }
     return;
   }
-  if ((OldKey == KEY_UP) || (OldKey == KEY_DOWN) ||
-      (OldKey == KEY_LEFT) || (OldKey == KEY_RIGHT)) {
+  if ((OldKey == KEY_UP) || (OldKey == KEY_DOWN) || (OldKey == KEY_LEFT) ||
+      (OldKey == KEY_RIGHT)) {
     KeyCount = CWIN_KEYWAIT;
     return;
   }
@@ -330,11 +329,11 @@ bool CWinExitFn(MenuController & /*ctrl*/, INPUT_BITS key) {
   return !(Input_IsOK(key) || Input_IsCancel(key));
 }
 
-PIXEL_SIZE CWinTextExtent(Narrow::string_view str) {
+PIXEL_SIZE CWinTextExtent(std::string_view str) {
   return TextObj.TextExtent(FONT_ID::SMALL, str);
 }
 
-PIXEL_SIZE CWinItemExtent(Narrow::string_view str) {
+PIXEL_SIZE CWinItemExtent(std::string_view str) {
   auto ret = CWinTextExtent(str);
   ret.w += CWIN_ITEM_LEFT;
   ret.h = CWIN_ITEM_H;

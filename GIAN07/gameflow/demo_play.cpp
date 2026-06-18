@@ -16,24 +16,20 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <format>
 #include <utility>
 
 // ファイル静的変数 → demo_manager.h の DemoManager struct に移動
 
-std::u8string ReplayAllFN(bool exstg) {
+std::string ReplayAllFN(bool exstg) {
   const auto now = std::chrono::system_clock::now();
   const auto time = std::chrono::system_clock::to_time_t(now);
   struct tm tm;
   localtime_s(&tm, &time);
-  char buf[64];
-  if (exstg) {
-    sprintf_s(buf, "replay_ex_%04d%02d%02d_%02d%02d%02d.DAT", tm.tm_year + 1900,
-              tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  } else {
-    sprintf_s(buf, "replay_%04d%02d%02d_%02d%02d%02d.DAT", tm.tm_year + 1900,
-              tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  }
-  return std::u8string(reinterpret_cast<const char8_t *>(buf));
+  const auto prefix = exstg ? "replay_ex" : "replay";
+  return std::format("{}_{:04}{:02}{:02}_{:02}{:02}{:02}.DAT", prefix,
+                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
+                     tm.tm_min, tm.tm_sec);
 }
 
 void DemoManager::Init() {
@@ -133,7 +129,7 @@ void DemoManager::SaveDemo() {
   demo_buffer[demo_frame_cur] = KEY_ESC;
   demo_info.FrameCount = (demo_frame_cur + 1);
 
-  char8_t fn[] = u8"STG_Demo.DAT";
+  char fn[] = "STG_Demo.DAT";
   fn[3] = ('0' + GameState.game_stage);
 
   auto *f = SDL_IOFromFile(fn, "wb");
@@ -234,7 +230,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
   multi_stage_count = 0;
 }
 
-bool DemoManager::LoadReplayAll(const char8_t *fn) {
+bool DemoManager::LoadReplayAll(const char *fn) {
   const auto in = FilStartR(fn);
   if (!in) {
     return false;

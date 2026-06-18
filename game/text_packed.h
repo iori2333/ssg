@@ -7,12 +7,14 @@
 #pragma once
 
 #include "game/text.h"
+#include <string>
+#include <string_view>
 
 class TEXTRENDER_PACKED {
 protected:
   struct RECT_AND_CONTENTS {
     PIXEL_LTWH rect;
-    std::optional<Narrow::string> contents;
+    std::optional<std::string> contents;
   };
 
   PIXEL_SIZE bounds = {};
@@ -45,7 +47,7 @@ public:
 
   template <typename Self>
   bool Render(this Self &&self, WINDOW_POINT dst, TEXTRENDER_RECT_ID rect_id,
-              Narrow::string_view contents,
+              std::string_view contents,
               std::invocable<TEXTRENDER_SESSION &> auto func,
               std::optional<PIXEL_LTWH> subrect = std::nullopt) {
     assert(rect_id < self.rects.size());

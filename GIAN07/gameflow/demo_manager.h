@@ -16,7 +16,7 @@ struct DemoManager {
   bool load_all_enable = false;
   MULTI_REPLAY_INFO multi_play_info = {};
   uint8_t playback_max_stage = 0;
-  std::u8string pending_replay_file;
+  std::string pending_replay_file;
   DemoPlayState demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};
 
@@ -44,7 +44,7 @@ struct DemoManager {
   INPUT_BITS Move();
   void Cleanup();
   void SaveReplayAll(bool exstg);
-  [[nodiscard]] bool LoadReplayAll(const char8_t *fn);
+  [[nodiscard]] bool LoadReplayAll(const char *fn);
 };
 
 extern DemoManager Demos;

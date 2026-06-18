@@ -235,16 +235,16 @@ enum class PACK_ID : uint8_t {
   COUNT,
 };
 
-constexpr ENUMARRAY<const std::u8string_view, PACK_ID> BASENAMES = {{
-    u8"ENEMY.DAT",
-    u8"GRAPH.DAT",
-    u8"GRAPH2.DAT",
-    u8"MUSIC.DAT",
-    u8"SOUND.DAT",
+constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
+    "ENEMY.DAT",
+    "GRAPH.DAT",
+    "GRAPH2.DAT",
+    "MUSIC.DAT",
+    "SOUND.DAT",
 }};
 
-constexpr std::u8string_view NOT_FOUND = u8"☐ ";
-constexpr std::u8string_view FOUND = u8"☑ ";
+constexpr std::string_view NOT_FOUND = "\xe2\x98\x90 ";
+constexpr std::string_view FOUND = "\xe2\x98\x91 ";
 
 // Packfiles can be in these four states:
 //
@@ -273,11 +273,11 @@ class PACK {
 private:
   PACKFILE_READ pack;
   THREAD load_thread;
-  std::u8string filename_with_found_prefix;
+  std::string filename_with_found_prefix;
 
 public:
-  bool Load(std::u8string_view path_data, PACK_ID id);
-  [[nodiscard]] const std::u8string &FilenameWithFoundPrefix() const {
+  bool Load(std::string_view path_data, PACK_ID id);
+  [[nodiscard]] const std::string &FilenameWithFoundPrefix() const {
     return filename_with_found_prefix;
   }
 
@@ -323,7 +323,7 @@ void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
   }
 };
 
-bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
+bool PACK::Load(std::string_view path_data, PACK_ID id) {
   if (pack) {
     return true;
   }
@@ -332,7 +332,7 @@ bool PACK::Load(std::u8string_view path_data, PACK_ID id) {
     const auto basename = BASENAMES[id];
     const auto cap = (NOT_FOUND.size() + path_data.size() + basename.size());
     filename_with_found_prefix.resize_and_overwrite(
-        cap, [&](char8_t *buf, size_t) {
+        cap, [&](char *buf, size_t) {
           std::ranges::in_out_result p = {.in = path_data.begin(), .out = buf};
           p = std::ranges::copy(NOT_FOUND, p.out);
           p = std::ranges::copy(path_data, p.out);
@@ -393,7 +393,7 @@ bool LoadMusicByHash(const HASH &hash) {
 // -----------------------
 
 namespace DAT_MISSING {
-constexpr Narrow::string_view TITLE = "Missing game data files";
+constexpr std::string_view TITLE = "Missing game data files";
 
 bool FoundAll = false;
 
@@ -446,7 +446,7 @@ void Init() {
   for (const auto i : std::views::iota(0U, DAT::BASENAMES.size())) {
     const auto id = Cast::down_enum<DAT::PACK_ID>(i);
     const auto &title = DAT::Packs[id].FilenameWithFoundPrefix();
-    Info[1 + i].Title = title;
+    Info[1 + i].Title = title.c_str();
   }
   const auto w = (std::max)(CWinTextExtent(TITLE).w,
                             std::ranges::max(std::views::transform(

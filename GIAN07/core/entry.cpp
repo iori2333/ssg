@@ -71,7 +71,7 @@ bool XInit() {
   // The release archive might have added some 0-byte binaries that we need
   // to get rid of, though.
   SDL_EnumerateDirectory(
-      std::bit_cast<const char *>(path_data.data()),
+      path_data.data(),
       [](void *, const char *, const char *basename_p) {
         const auto *ext = SDL_strrchr(basename_p, '.');
         if (!ext) {
@@ -131,7 +131,7 @@ bool XInit() {
     ConfigDat.BGMPack.clear();
   }
   BGM_SetGainApply((ConfigDat.SoundFlags.v & SNDF_BGM_NOT_VOL_NORM) == 0);
-  Grp_ScreenshotSetPrefix(u8"screenshots/");
+  Grp_ScreenshotSetPrefix("screenshots/");
   LoaderInit();
   return true;
 }

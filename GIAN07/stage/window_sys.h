@@ -101,15 +101,15 @@ class MenuController;
 
 // Shared data for menu titles and choices.
 struct MenuLabel {
-  Narrow::literal Title; // タイトル文字列へのポインタ(実体ではない！)
+  const char *Title; // タイトル文字列へのポインタ(実体ではない！)
 
   MenuFlags Flags = MenuFlags::NONE;
 
   // Required for forcing the item to be re-rendered after a flag change.
   MenuFlags FlagsPrev = MenuFlags::FORCE_RERENDER;
 
-  constexpr MenuLabel(const Narrow::literal title = "",
-                         MenuFlags flags = MenuFlags::NONE) noexcept
+  constexpr MenuLabel(const char *title = "",
+                      MenuFlags flags = MenuFlags::NONE) noexcept
       : Title(title), Flags(flags) {}
 };
 
@@ -123,7 +123,7 @@ struct MenuItem : public MenuLabel {
   using ActionFnPtr = bool (*)(MenuController &, INPUT_BITS);
   using AdjustFnPtr = void (*)(MenuController &, int_fast8_t);
 
-  Narrow::literal Help; // ヘルプ文字列へのポインタ(これも実体ではない)
+  const char *Help; // ヘルプ文字列へのポインタ(これも実体ではない)
 
   // 特殊処理用コールバック関数(未使用なら空)
   ActionFn CallBackFn;
@@ -133,30 +133,22 @@ struct MenuItem : public MenuLabel {
 
   MenuDef *Submenu = nullptr;
 
-  MenuItem(const Narrow::literal title = "",
-                const Narrow::literal help = "",
-                ActionFnPtr callback_fn = nullptr,
-                MenuFlags flags = MenuFlags::NONE)
+  MenuItem(const char *title = "", const char *help = "",
+           ActionFnPtr callback_fn = nullptr, MenuFlags flags = MenuFlags::NONE)
       : MenuLabel(title, flags), Help(help), CallBackFn(callback_fn) {
     if (!CallBackFn) {
       Flags |= MenuFlags::DISABLED;
     }
   }
 
-  MenuItem(const Narrow::literal title,
-                const Narrow::literal help,
-                AdjustFnPtr option_fn,
-                MenuFlags flags = MenuFlags::NONE)
+  MenuItem(const char *title, const char *help, AdjustFnPtr option_fn,
+           MenuFlags flags = MenuFlags::NONE)
       : MenuLabel(title, flags), Help(help), OptionFn(option_fn) {}
 
-  MenuItem(const Narrow::literal title,
-                const Narrow::literal help,
-                MenuFlags flags)
+  MenuItem(const char *title, const char *help, MenuFlags flags)
       : MenuLabel(title, flags), Help(help) {}
 
-  MenuItem(const Narrow::literal title,
-                const Narrow::literal help,
-                MenuDef &submenu)
+  MenuItem(const char *title, const char *help, MenuDef &submenu)
       : MenuLabel(title), Help(help), Submenu(&submenu) {}
 
   void SetActive(bool active);
@@ -198,9 +190,9 @@ struct MenuDef {
     }
   }
 
-  MenuDef(RefreshFn set_items,
-              std::initializer_list<MenuItem *> children)
-      : Title(nullptr), SetItems(std::move(set_items)), NumItems(children.size()) {
+  MenuDef(RefreshFn set_items, std::initializer_list<MenuItem *> children)
+      : Title(nullptr), SetItems(std::move(set_items)),
+        NumItems(children.size()) {
     for (size_t i = 0; const auto &item : children) {
       ItemPtr[i++] = item;
     }
@@ -249,7 +241,8 @@ public:
   // --- 状態操作 (コールバック / スクロールメニュー用) ---
   void SetCurrentSelection(uint8_t sel) { Select[SelectDepth] = sel; }
   void PopLevel() {
-    if (SelectDepth > 0) SelectDepth--;
+    if (SelectDepth > 0)
+      SelectDepth--;
   }
   void Close() { State = CWIN_DEAD; }
   void SetLastKey(INPUT_BITS key) { OldKey = key; }
@@ -261,18 +254,18 @@ public:
 private:
   void KeyEvent(INPUT_BITS key); // CWinKeyEvent を置き換え
 
-  MenuDef &Parent;                       // 親ウィンドウ
-  int x = 0, y = 0;                          // ウィンドウ左上の座標
+  MenuDef &Parent;  // 親ウィンドウ
+  int x = 0, y = 0; // ウィンドウ左上の座標
   PIXEL_COORD W = 0;
-  uint32_t Count = 0;                        // フレームカウンタ
-  uint8_t Select[WINDOW_DEPTH] = {};         // 選択中の項目スタック
-  uint8_t SelectDepth = 0;                   // 選択中の項目に対するＳＰ
-  uint8_t State = CWIN_DEAD;                 // 状態
+  uint32_t Count = 0;                // フレームカウンタ
+  uint8_t Select[WINDOW_DEPTH] = {}; // 選択中の項目スタック
+  uint8_t SelectDepth = 0;           // 選択中の項目に対するＳＰ
+  uint8_t State = CWIN_DEAD;         // 状態
 
-  INPUT_BITS OldKey = 0;                     // 前に押されていたキー
-  uint8_t KeyCount = 0;                      // キーボードウェイト
-  uint8_t FastRepeatWait = 0;                // FAST_REPEAT 項目のウェイト
-  bool FirstWait = false;                    // 最初のキー解放待ち
+  INPUT_BITS OldKey = 0;      // 前に押されていたキー
+  uint8_t KeyCount = 0;       // キーボードウェイト
+  uint8_t FastRepeatWait = 0; // FAST_REPEAT 項目のウェイト
+  bool FirstWait = false;     // 最初のキー解放待ち
 
   TEXTRENDER_RECT_ID TRRs[1 + WINITEM_MAX] = {}; // Init() で初期化。
 };
@@ -284,8 +277,8 @@ bool CWinExitFn(MenuController &ctrl, INPUT_BITS key);
 
 // Calculates the rendered width of the given text in the menu item font,
 // without any padding.
-PIXEL_SIZE CWinTextExtent(Narrow::string_view str);
+PIXEL_SIZE CWinTextExtent(std::string_view str);
 
 // Calculates the rendered width of a whole padded menu item with the given
 // text.
-PIXEL_SIZE CWinItemExtent(Narrow::string_view str);
+PIXEL_SIZE CWinItemExtent(std::string_view str);

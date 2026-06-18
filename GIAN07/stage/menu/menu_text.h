@@ -1,13 +1,11 @@
 /*                                                                           */
 /*   menu_text.h   動的メニューテキスト                                       */
 /*                                                                           */
-/*   std::string を所有し、std::format でフォーマットする。 */
-/*   Narrow::literal ビューを提供し、MenuItem::Title への設定を可能にする。   */
+/*   std::string を所有し、std::format でフォーマットする。             */
+/*   const char* ビューを提供し、MenuItem::Title への設定を可能にする。   */
 /*                                                                           */
 
 #pragma once
-
-#include "game/narrow.h"
 
 #include <format>
 #include <string>
@@ -30,9 +28,9 @@ public:
   // テキストをクリアする。
   void Clear() { storage_.clear(); }
 
-  // 現在の内容への Narrow::literal ビューを返す。
+  // 現在の内容への const char* ビューを返す。
   // 有効期限: 次の Format/Set/Clear 呼び出しまで。
-  Narrow::literal Lit() const { return Narrow::literal{storage_.c_str()}; }
+  const char *Lit() const { return storage_.c_str(); }
 
   const char *c_str() const { return storage_.c_str(); }
   std::string_view View() const { return storage_; }

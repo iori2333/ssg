@@ -12,6 +12,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 struct EndingManager {
   // === ネスト型（旧 ENDING.cpp ファイル静的型） ===
@@ -39,12 +40,12 @@ struct EndingManager {
   };
 
   struct Text {
-    Narrow::string_view Text[10];
+    std::string_view Text[10];
     int NumText = 0;
     TEXTRENDER_RECT_ID Rect = {};
 
     // Contains all text from [Text], concatenated with '\n'.
-    Narrow::string TextStr;
+    std::string TextStr;
 
     void Blank() {
       NumText = 0;

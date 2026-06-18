@@ -34,7 +34,7 @@ void GameOverInit(); // ゲームオーバーの前処理
 void GameContinue(); // コンティニューを行う場合
 
 [[nodiscard]] bool
-GameReplayInitAll(const char8_t *fn); // マルチステージリプレイ用の初期化
+GameReplayInitAll(const char *fn); // マルチステージリプレイ用の初期化
 
 [[nodiscard]] bool SProjectInit(); // 西方Ｐｒｏｊｅｃｔ表示の初期化
 

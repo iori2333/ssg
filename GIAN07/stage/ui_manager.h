@@ -89,7 +89,7 @@ private:
   // --- BGM Pack スクロールメニュー状態 ---
   MenuText bgm_title_text_;
   MenuLabel bgm_title_item_;
-  std::vector<std::u8string> bgm_packs_;
+  std::vector<std::string> bgm_packs_;
   size_t bgm_sel_at_open_ = 0;
   ScrollMenu bgm_pack_scroll_menu_;
   MenuController bgm_pack_window_;
@@ -97,7 +97,7 @@ private:
   // --- Replay Files スクロールメニュー状態 ---
   MenuText replay_title_text_;
   MenuLabel replay_title_item_;
-  std::vector<std::u8string> replay_files_;
+  std::vector<std::string> replay_files_;
   ScrollMenu replay_files_scroll_menu_;
   MenuController replay_files_window_;
 };

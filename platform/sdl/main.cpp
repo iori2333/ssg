@@ -26,11 +26,8 @@
 #include "platform/window_backend.h"
 #include "GIAN07/core/constants.h"
 
-#define UTF8_(S) u8##S
-#define UTF8(S) UTF8_(S)
-
 int main(int argc, char **args) {
-  Log_Init(UTF8(GAME_TITLE));
+  Log_Init(GAME_TITLE);
 
 #ifndef APP_ID
 #define APP_ID "GIAN07"

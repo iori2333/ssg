@@ -118,7 +118,7 @@ struct CONFIG_DATA {
 
   // グラフィック関連 //
   OPTION<uint8_t> DeviceID = {0}; // 何番目のデバイスか
-  std::u8string GraphicsAPI;
+  std::string GraphicsAPI;
   OPTION<uint8_t> WindowScale4x = {0};
   OPTION<int16_t> WindowLeft = {GRAPHICS_TOPLEFT_UNDEFINED};
   OPTION<int16_t> WindowTop = {GRAPHICS_TOPLEFT_UNDEFINED};
@@ -138,7 +138,7 @@ struct CONFIG_DATA {
   OPTION<MID_FLAGS> MidFlags = {MID_FLAGS::FIX_SYSEX_BUGS, Flag<MID_FLAGS>};
   OPTION<VOLUME> SEVolume = {((VOLUME_MAX * 4) / 10), ValidateVolume};
   OPTION<VOLUME> BGMVolume = {((VOLUME_MAX * 4) / 10), ValidateVolume};
-  std::u8string BGMPack;
+  std::string BGMPack;
 
   // 入力に関するフラグ
   OPTION<uint8_t> InputFlags = {INPF_Z_MSKIP_ENABLE, Mask<INPF_MASK>};

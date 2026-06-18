@@ -13,7 +13,7 @@
 #include "platform/window_backend.h"
 
 ///// Constants /////
-constexpr auto DBG_FN = u8"秋霜DBG.DAT";
+constexpr auto DBG_FN = "秋霜DBG.DAT";
 
 // Data types
 // ----------
@@ -42,7 +42,7 @@ bool OptionWrite(SDL_IOStream &f, const CONFIG_OPTION_VALUE<T> &opt) {
   return SDL_MustWriteIO(&f, &d_v, sizeof(T));
 }
 
-bool OptionRead(std::u8string &opt, SDL_IOStream &f) {
+bool OptionRead(std::string &opt, SDL_IOStream &f) {
   U32BE d_len;
   if (!SDL_MustReadIO(&f, &d_len, sizeof(d_len))) {
     return false;
@@ -50,10 +50,10 @@ bool OptionRead(std::u8string &opt, SDL_IOStream &f) {
   const uint32_t len = d_len;
   opt.resize_and_overwrite(
       len, [&f](auto buf, size_t n) { return SDL_ReadIO(&f, buf, n); });
-  return ((opt.size() * sizeof(std::u8string::value_type)) == len);
+  return ((opt.size() * sizeof(std::string::value_type)) == len);
 }
 
-bool OptionWrite(SDL_IOStream &f, const std::u8string &opt) {
+bool OptionWrite(SDL_IOStream &f, const std::string &opt) {
   if (opt.size() > std::numeric_limits<uint32_t>::max()) {
     return false;
   }
@@ -61,7 +61,7 @@ bool OptionWrite(SDL_IOStream &f, const std::u8string &opt) {
   if (!SDL_MustWriteIO(&f, &d_size, sizeof(d_size))) {
     return false;
   }
-  const auto str_size = (opt.size() * sizeof(std::u8string::value_type));
+  const auto str_size = (opt.size() * sizeof(std::string::value_type));
   return SDL_MustWriteIO(&f, opt.data(), str_size);
 }
 
@@ -81,7 +81,7 @@ bool OptionWrite(SDL_IOStream &f, const std::tuple<Options &...> &opts) {
 // On-disk config file
 // -------------------
 
-static constexpr auto CFG_FN = u8"SSG.CFG";
+static constexpr auto CFG_FN = "SSG.CFG";
 
 static constexpr auto CFG_OPTIONS =
     std::tie(ConfigDat.GameLevel, ConfigDat.PlayerStock, ConfigDat.BombStock,

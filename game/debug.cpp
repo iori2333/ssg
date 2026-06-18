@@ -4,8 +4,8 @@
 /*                                                                           */
 
 #include <SDL3/SDL_iostream.h>
-#include <array>
-#include <bit>
+
+#include <format>
 
 #include "game/debug.h"
 #include "platform/file.h"
@@ -13,10 +13,10 @@
 #pragma message(PBGWIN_DX_ERROR_H)
 
 // グローバル変数 //
-constexpr auto ErrorOut = u8"ErrLOG_UTF8.TXT";
+constexpr auto ErrorOut = "ErrLOG_UTF8.TXT";
 static bool ErrorActive = false;
 
-void DebugLog(std::u8string_view prefix, std::u8string_view s) {
+void DebugLog(std::string_view prefix, std::string_view s) {
   if (!ErrorActive) {
     return;
   }
@@ -31,23 +31,15 @@ void DebugLog(std::u8string_view prefix, std::u8string_view s) {
 }
 
 extern void DebugSetup() {
-#pragma warning(suppress : 26494) // type.5
-  std::array<char8_t, 64> str;
-
   const auto tm = Time_NowLocal();
-  const auto len =
-      snprintf(std::bit_cast<char *>(str.data()), str.size(),
-               "[%02u/%02u/%02u][%02u:%02u:%02u]", tm.month, tm.day,
-               (tm.year % 100), tm.hour, tm.minute, tm.second);
-  if (len <= 0) {
-    return;
-  }
+  auto str = std::format("[{:02}/{:02}/{:02}][{:02}:{:02}:{:02}]", tm.month,
+                         tm.day, (tm.year % 100), tm.hour, tm.minute, tm.second);
   ErrorActive = true;
-  DebugLog(u8"", {str.data(), static_cast<size_t>(len)});
+  DebugLog("", str);
 }
 
 extern void DebugCleanup(void) { ErrorActive = false; }
 
-void DebugLog(std::u8string_view s) { return DebugLog(u8"", s); }
+void DebugLog(std::string_view s) { return DebugLog("", s); }
 
-extern void DebugOut(std::u8string_view s) { return DebugLog(u8"Error : ", s); }
+extern void DebugOut(std::string_view s) { return DebugLog("Error : ", s); }

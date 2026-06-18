@@ -8,6 +8,7 @@
 #include "game/text.h"
 #include "window_sys.h" // MSG_HEIGHT, WINDOW_LTRB, FONT_ID, MenuController
 #include <optional>
+#include <string>
 
 // メッセージウィンドウのフラグ //
 enum class MsgWindowFlags : uint8_t {
@@ -29,7 +30,7 @@ public:
   void ForceClose();                 // メッセージウィンドウを強制クローズする
   void Tick();                       // メッセージウィンドウを動作させる
   void Draw();                       // メッセージウィンドウを描画する
-  void Msg(Narrow::string_view str); // メッセージ文字列を送る
+  void Msg(std::string_view str); // メッセージ文字列を送る
   void Face(uint8_t faceID);         // 顔をセットする
   void Cmd(uint8_t cmd);             // コマンドを送る
   void Help(MenuController *ws);     // メッセージウィンドウにヘルプ文字列を送る
@@ -53,10 +54,10 @@ private:
   uint8_t face_state{}; // 顔の状態
   uint8_t face_time{};  // 顔表示用カウンタ
 
-  Narrow::string_view msg[MSG_HEIGHT]{}; // 表示するメッセージへのポインタ
+  std::string_view msg[MSG_HEIGHT]{}; // 表示するメッセージへのポインタ
 
   // Contains all text from [msg], concatenated with '\n'.
-  Narrow::string text;
+  std::string text;
 
   std::optional<TEXTRENDER_RECT_ID> trr;
 };

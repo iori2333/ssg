@@ -126,7 +126,7 @@ extern std::chrono::steady_clock::duration
     Grp_ScreenshotTimes[GRP_SCREENSHOT_EFFORT_COUNT];
 
 // Required to enable the screenshot feature as a whole.
-void Grp_ScreenshotSetPrefix(std::u8string_view prefix);
+void Grp_ScreenshotSetPrefix(std::string_view prefix);
 
 struct SDL_Surface;
 

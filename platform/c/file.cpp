@@ -18,8 +18,8 @@ struct FILE_TIMESTAMPS_C : public FILE_TIMESTAMPS {
   statx_timestamp mtime;
 };
 
-std::unique_ptr<FILE_TIMESTAMPS> File_TimestampsGet(const char8_t *fn) {
-  const auto *s = std::bit_cast<const char *>(fn);
+std::unique_ptr<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn) {
+  const auto *s = fn;
 
   struct statx stx;
   if (statx(AT_FDCWD, s, 0, STATX_MTIME, &stx) == 0) {

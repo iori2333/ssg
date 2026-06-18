@@ -51,7 +51,7 @@ constexpr PIXEL_COORD GrpExtent5(const char c) {
   }
 }
 
-constexpr PIXEL_SIZE GrpExtent5(const std::string_view s) {
+constexpr PIXEL_SIZE GrpExtent5(std::string_view s) {
   PIXEL_SIZE ret = {.w = 0, .h = 5};
   for (const char c : s) {
     ret.w += (GrpExtent5(c) + 1);
@@ -64,6 +64,6 @@ void GrpPut55(WINDOW_POINT topleft, std::string_view s);
 // ------------------------------------------------------------------
 
 // グラデーション付きフォントを描画する
-PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
-                       std::span<const Narrow::string_view> strs, FONT_ID font,
-                       bool shadow, uint8_t (*gradient_func)(PIXEL_COORD y));
+PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s, std::span<std::string_view> strs,
+                       FONT_ID font, bool shadow,
+                       uint8_t (*gradient_func)(PIXEL_COORD y));

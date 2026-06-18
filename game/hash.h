@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "game/narrow.h"
+#include <string_view>
+#include <bit>
 #include "platform/buffer.h"
 #include <algorithm>
 #include <array>
@@ -15,7 +16,7 @@
 
 using HASH = std::array<std::byte, 32>;
 
-static constexpr std::optional<HASH> HashFrom(Narrow::string_view str) {
+static constexpr std::optional<HASH> HashFrom(std::string_view str) {
   if (str.size() != (std::tuple_size_v<HASH> * 2)) {
     return std::nullopt;
   }
@@ -40,7 +41,7 @@ static constexpr std::optional<HASH> HashFrom(Narrow::string_view str) {
 HASH Hash(const BYTE_BUFFER_BORROWED &buffer);
 
 constexpr HASH operator""_B3(const char *str, size_t len) {
-  const auto ret = HashFrom(Narrow::string_view{str, len});
+  const auto ret = HashFrom(std::string_view{str, len});
   if (!ret) {
     throw "Invalid hash literal";
   }

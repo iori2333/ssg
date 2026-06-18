@@ -227,7 +227,7 @@ void EffectManager::SpawnGameOverEffect() {
 }
 
 // 曲名の表示 //
-void EffectManager::SetMusicTitle(int y, Narrow::string_view s) {
+void EffectManager::SetMusicTitle(int y, std::string_view s) {
   // 空きバッファ検索 //
   auto e = std::ranges::find_if(
       string_effects, [](const auto &e) { return (e.cmd == SEFC_NONE); });
