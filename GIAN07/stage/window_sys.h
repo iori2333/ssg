@@ -185,11 +185,35 @@ struct MenuDef {
     }
   }
 
+  // std::vector など動的サイズコンテナ用のコンストラクタ。
+  MenuDef(
+      std::span<MenuItem> children,
+      RefreshFn set_items = [](MenuController &, bool) {},
+      MenuLabel *title = nullptr)
+      : Title(title), SetItems(std::move(set_items)),
+        NumItems(static_cast<uint8_t>(children.size())) {
+    assert(children.size() <= WINITEM_MAX);
+    for (size_t i = 0; i < children.size(); i++) {
+      ItemPtr[i] = &children[i];
+    }
+  }
+
   MenuDef(RefreshFn set_items,
               std::initializer_list<MenuItem *> children)
       : Title(nullptr), SetItems(std::move(set_items)), NumItems(children.size()) {
     for (size_t i = 0; const auto &item : children) {
       ItemPtr[i++] = item;
+    }
+  }
+
+  // std::vector<MenuItem *> などの動的ポインタ配列用。
+  MenuDef(RefreshFn set_items, std::span<MenuItem *const> children,
+          MenuLabel *title = nullptr)
+      : Title(title), SetItems(std::move(set_items)),
+        NumItems(static_cast<uint8_t>(children.size())) {
+    assert(children.size() <= WINITEM_MAX);
+    for (size_t i = 0; i < children.size(); i++) {
+      ItemPtr[i] = children[i];
     }
   }
 
