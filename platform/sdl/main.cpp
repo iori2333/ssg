@@ -20,7 +20,7 @@
 #include <SDL3/SDL_main.h>
 
 #include "GIAN07/core/ENTRY.h"
-#include "game/defer.h"
+#include "game/guard.h"
 #include "obj/platform_constants.h"
 #include "platform/sdl/log_sdl.h"
 #include "platform/window_backend.h"
@@ -40,7 +40,7 @@ int main(int argc, char **args) {
     Log_Fail(SDL_LOG_CATEGORY_VIDEO, "Error initializing SDL");
     return 1;
   }
-  defer(SDL_Quit());
+  auto sdl_guard = make_guard(SDL_Quit);
 
   // The X11 and Wayland backends load their dynamic symbols by trying to
   // look up each function in each of the hardcoded .so files until it's
@@ -76,7 +76,7 @@ int main(int argc, char **args) {
     SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s", str);
     return 1;
   }
-  defer(XCleanup());
+  auto app_guard = make_guard(XCleanup);
 
   return WndBackend_Run();
 }

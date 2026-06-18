@@ -7,7 +7,7 @@
 
 #include "config.h"
 #include "game/bgm.h"
-#include "game/defer.h"
+#include "game/guard.h"
 #include "game/endian.h"
 #include "platform/file.h"
 #include "platform/window_backend.h"
@@ -99,7 +99,7 @@ static bool ConfigFileLoad() {
   if (f == nullptr) {
     return false;
   }
-  defer(SDL_CloseIO(f));
+  auto f_guard = make_guard(f, SDL_CloseIO);
   return OptionRead(CFG_OPTIONS, *f);
 }
 
@@ -108,7 +108,7 @@ static void ConfigFileSave() {
   if (f == nullptr) {
     return;
   }
-  defer(SDL_CloseIO(f));
+  auto f_guard = make_guard(f, SDL_CloseIO);
   OptionWrite(*f, CFG_OPTIONS);
 }
 // -------------------
@@ -153,13 +153,13 @@ static void DebugInit(void) {
   if (!f) {
     return;
   }
+  auto f_guard = make_guard(f, SDL_CloseIO);
   if (!SDL_MustReadIO(f, &DebugDat, sizeof(DebugDat))) {
     DebugDat.Hit = true;
     DebugDat.MsgDisplay = true;
     DebugDat.DemoSave = false;
     DebugDat.StgSelect = 1;
   }
-  SDL_CloseIO(f);
 }
 #endif
 

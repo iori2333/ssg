@@ -5,7 +5,7 @@
 
 #include <SDL3/SDL_audio.h>
 
-#include "game/defer.h"
+#include "game/guard.h"
 #include "game/enum_flags.h"
 #include "game/snd.h"
 #include "platform/snd_backend.h"
@@ -97,7 +97,7 @@ bool Snd_SELoad(BYTE_BUFFER_OWNED buffer, uint8_t id, SND_INSTANCE_ID max) {
   if (!SDL_LoadWAV_IO(io, true, &spec, &pcm_buf, &pcm_len)) {
     return false;
   }
-  defer(SDL_free(pcm_buf));
+  auto pcm_guard = make_guard(pcm_buf, SDL_free);
   return SndBackend_SELoad(id, max, spec, {pcm_buf, pcm_len});
 }
 

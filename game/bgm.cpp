@@ -9,7 +9,6 @@
 
 #include "game/bgm.h"
 #include "game/bgm_track.h"
-#include "game/defer.h"
 #include "game/midi.h"
 #include "game/snd.h"
 #include "game/volume.h"

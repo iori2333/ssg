@@ -8,7 +8,7 @@
 #include <fontconfig/fontconfig.h>
 #include <pango/pangocairo.h>
 
-#include "game/defer.h"
+#include "game/guard.h"
 #include "platform/text_backend.h"
 
 constexpr auto FORMAT = CAIRO_FORMAT_ARGB32;
@@ -60,7 +60,7 @@ bool MetricHintingNeededFor(PangoFontDescription *desc) {
   if (!pat_in) {
     return false;
   }
-  defer(FcPatternDestroy(pat_in));
+  auto pat_in_guard = make_guard(pat_in, FcPatternDestroy);
 
   // PangoFc only exposes a conversion from `PangoFontDescription` to
   // `FcPattern`, but *of course* not the other way around...
@@ -76,7 +76,7 @@ bool MetricHintingNeededFor(PangoFontDescription *desc) {
 
   FcResult result;
   auto *pat_out = FcFontMatch(nullptr, pat_in, &result);
-  defer(FcPatternDestroy(pat_out));
+  auto pat_out_guard = make_guard(pat_out, FcPatternDestroy);
 
   char *family_out = nullptr;
   const auto matched = FcPatternGetString(

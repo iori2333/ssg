@@ -4,7 +4,7 @@
  */
 
 #include "lz_uty.h"
-#include "game/defer.h"
+#include "game/guard.h"
 #include "platform/file.h"
 #include <SDL3/SDL_iostream.h>
 #include <algorithm>
@@ -213,8 +213,7 @@ bool PACKFILE_WRITE::Write(
   if (stream == nullptr) {
     return false;
   }
-  defer(
-      File_CloseWithTimestamps(std::move(stream), std::move(maybe_timestamps)));
+  auto close_guard = make_guard([&] { File_CloseWithTimestamps(std::move(stream), std::move(maybe_timestamps)); });
 
   // Write temporary header
   if (!write_header(stream)) {

@@ -12,7 +12,7 @@
 #include <tuple>
 #include <vector>
 
-#include "game/defer.h"
+#include "game/guard.h"
 #include "game/enum_flags.h"
 #include "platform/input.h"
 #include <assert.h>
@@ -148,14 +148,14 @@ Pad_GetAxisIDs(int device_index) {
   if (!gamepad) {
     return {axis_x, axis_y};
   }
-  defer(SDL_CloseGamepad(gamepad));
+  auto gamepad_guard = make_guard(gamepad, SDL_CloseGamepad);
 
   int binding_count = 0;
   auto **bindings = SDL_GetGamepadBindings(gamepad, &binding_count);
   if (!bindings) {
     return {axis_x, axis_y};
   }
-  defer(SDL_free(bindings));
+  auto bindings_guard = make_guard(bindings, SDL_free);
 
   for (const auto i : std::views::iota(0, binding_count)) {
     const auto *binding = bindings[i];

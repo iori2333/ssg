@@ -14,7 +14,7 @@
 using SDL_COLOR = SDL_FColor;
 
 #include "constants.h"
-#include "game/defer.h"
+#include "game/guard.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
 #include "platform/sdl/graphics_sdl.h"
@@ -757,7 +757,7 @@ void TakeScreenshot(void) {
     Log_Fail(LOG_CAT, "Error taking screenshot");
     return;
   }
-  defer(SDL_DestroySurface(src));
+  auto src_guard = make_guard(src, SDL_DestroySurface);
   Grp_ScreenshotSave(src, t_start);
 }
 
@@ -770,8 +770,10 @@ void GrpBackend_Flip(bool take_screenshot) {
     if (SDL_MUSTLOCK(SoftwareSurface)) {
       SDL_LockSurface(SoftwareSurface);
     }
-    defer(if (SDL_MUSTLOCK(SoftwareSurface)) {
-      SDL_UnlockSurface(SoftwareSurface);
+    auto unlock_guard = make_guard([&] {
+      if (SDL_MUSTLOCK(SoftwareSurface)) {
+        SDL_UnlockSurface(SoftwareSurface);
+      }
     });
     auto *tex = EnsureSoftwareTexture();
     if (!tex) {
@@ -841,7 +843,7 @@ bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp) {
 
   auto *rwops = SDL_IOFromMem(bmp.buffer.get(), bmp.buffer.size());
   auto *surf = SDL_LoadBMP_IO(rwops, 1);
-  defer(SDL_DestroySurface(surf));
+  auto surf_guard = make_guard(surf, SDL_DestroySurface);
   std::ignore = std::move(bmp);
 
   if (surf->format == SDL_PIXELFORMAT_INDEX8) {
