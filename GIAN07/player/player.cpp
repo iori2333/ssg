@@ -499,23 +499,22 @@ void Player::OnHit() {
 
   // Practice modes are handled inside OnDeath
   if (ConfigDat.PracticeMode.v >= PRACTICE_AUTOBOMB) {
-    OnDeath();
+    OnDeath(true);
     return;
   }
 
-  // Play death sound immediately for feedback
-  Snd_SEPlay(SOUND_ID_DEAD);
-
   if (bomb > 0 && bomb_time == 0) {
+    // Enter deathbomb window with immediate feedback
+    Snd_SEPlay(SOUND_ID_DEAD);
+    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
     const auto window = DEATHBOMB_WINDOW + (GAME_LUNATIC - static_cast<int>(GameState.game_level)) * 2;
     deathbomb_time = static_cast<uint16_t>(window);
     muteki = static_cast<uint16_t>(window);
-    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
     return;
   }
 
-  // No bomb stock — instant death, sound already played
-  OnDeath(false);
+  // No bomb stock — instant death
+  OnDeath(true);
 }
 
 void Player::OnDeath(bool play_se) {
@@ -553,7 +552,8 @@ void Player::OnDeath(bool play_se) {
     return;
   }
 
-  Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
+  if (play_se)
+    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
 
   for (i = 0; i < 50; i++) {
     Effects.SpawnFragment(x, y, FRG_HEART);
