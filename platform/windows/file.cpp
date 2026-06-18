@@ -6,6 +6,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <SDL3/SDL_iostream.h>
+#include <bit>
 
 #include "game/defer.h"
 #include "platform/file.h"
@@ -33,9 +34,9 @@ File_TimestampsGetW(const std::wstring_view fn_w) {
                                                     FILE_TIMESTAMPS_WIN32(ret));
 }
 
-std::unique_ptr<FILE_TIMESTAMPS> File_TimestampsGet(const char8_t *fn) {
-  return UTF::WithUTF16<std::unique_ptr<FILE_TIMESTAMPS>>(fn,
-                                                          File_TimestampsGetW)
+std::unique_ptr<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn) {
+  return UTF::WithUTF16<std::unique_ptr<FILE_TIMESTAMPS>>(
+             std::string_view{fn}, File_TimestampsGetW)
       .value_or(nullptr);
 }
 

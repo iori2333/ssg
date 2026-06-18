@@ -95,10 +95,10 @@ void BGM_SetTempo(int8_t tempo); // テンポを変更する
 bool BGM_PacksAvailable(bool invalidate_cache = false);
 
 size_t BGM_PackCount(void);
-void BGM_PackForeach(std::function<void(std::u8string_view pack)> func);
+void BGM_PackForeach(std::function<void(std::string_view pack)> func);
 
 // Restarts any currently playing BGM when switching to a different [pack].
 // Returns `false` if the given [pack] doesn't exist, and switches to the empty
 // pack in that case.
-bool BGM_PackSet(const std::u8string_view pack);
+bool BGM_PackSet(const std::string_view pack);
 // -------------------

@@ -20,7 +20,7 @@
 // ScoreData → Scores.score_cache に移動
 // GameFlow.score_string[] → Scores.score_strings に移動
 
-const auto ScoreFileName = u8"秋霜SC.DAT"; // スコアデータ格納ファイル名
+constexpr char ScoreFileName[] = "秋霜SC.DAT"; // スコアデータ格納ファイル名
 
 // 現在のスコア列を取得する(名前挿入アリ) //
 // NData == NULL の場合、挿入しません     //

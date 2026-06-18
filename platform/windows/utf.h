@@ -8,7 +8,6 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <assert.h>
-#include <bit>
 #include <string_view>
 #include <malloc.h>
 #include <optional>
@@ -44,26 +43,6 @@ std::optional<R> WithUTF16(std::string_view str,
   auto ret = func({str_w, static_cast<size_t>(len_w)});
   _freea(str_w);
   return ret;
-}
-
-template <typename R>
-std::optional<R>
-WithUTF16(std::u8string_view str,
-          std::invocable<const std::wstring_view> auto &&func) {
-  return WithUTF16<R>(
-      std::string_view{std::bit_cast<const char *>(str.data()), str.size()},
-      func, 0);
-}
-
-// Wrapper for null-terminated strings that are guaranteed to be UTF-8.
-template <typename R>
-std::optional<R>
-WithUTF16(const char8_t *str,
-          std::invocable<const std::wstring_view> auto &&func) {
-  // The terminating \0 must be part of the view.
-  const size_t len = (strlen(reinterpret_cast<const char *>(str)) + 1);
-  return WithUTF16<R>(
-      std::string_view{std::bit_cast<const char *>(str), len}, func);
 }
 
 } // namespace UTF

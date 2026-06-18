@@ -20,7 +20,7 @@
 
 // ファイル静的変数 → demo_manager.h の DemoManager struct に移動
 
-std::u8string ReplayAllFN(bool exstg) {
+std::string ReplayAllFN(bool exstg) {
   const auto now = std::chrono::system_clock::now();
   const auto time = std::chrono::system_clock::to_time_t(now);
   struct tm tm;
@@ -33,7 +33,7 @@ std::u8string ReplayAllFN(bool exstg) {
     sprintf_s(buf, "replay_%04d%02d%02d_%02d%02d%02d.DAT", tm.tm_year + 1900,
               tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   }
-  return std::u8string(reinterpret_cast<const char8_t *>(buf));
+  return std::string(buf);
 }
 
 void DemoManager::Init() {
@@ -133,7 +133,7 @@ void DemoManager::SaveDemo() {
   demo_buffer[demo_frame_cur] = KEY_ESC;
   demo_info.FrameCount = (demo_frame_cur + 1);
 
-  char8_t fn[] = u8"STG_Demo.DAT";
+  char fn[] = "STG_Demo.DAT";
   fn[3] = ('0' + GameState.game_stage);
 
   auto *f = SDL_IOFromFile(fn, "wb");
@@ -234,7 +234,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
   multi_stage_count = 0;
 }
 
-bool DemoManager::LoadReplayAll(const char8_t *fn) {
+bool DemoManager::LoadReplayAll(const char *fn) {
   const auto in = FilStartR(fn);
   if (!in) {
     return false;

@@ -21,14 +21,14 @@ std::string_view GrpBackend_DeviceLabel(uint8_t id);
 
 // Rendering APIs.
 int8_t GrpBackend_APICount(void);
-std::u8string_view GrpBackend_APILabel(std::u8string_view api);
+std::string_view GrpBackend_APILabel(std::string_view api);
 
 // Maps an API string back to its ID. Returns -1 for an unavailable API.
-int8_t GrpBackend_APIID(std::u8string_view api);
+int8_t GrpBackend_APIID(std::string_view api);
 
 // Maps an API ID to its string representation. Returns the empty string for
 // -1.
-std::u8string_view GrpBackend_APIString(int8_t id);
+std::string_view GrpBackend_APIString(int8_t id);
 
 // Returns the maximum usable display size in windowed or fullscreen mode.
 PIXEL_SIZE GrpBackend_DisplaySize(bool fullscreen);
@@ -65,7 +65,7 @@ void GrpBackend_Clear(uint8_t col_palettized = RGB216{0, 0, 0}.PaletteIndex(),
 void GrpBackend_SetClip(const WINDOW_LTRB &rect);
 
 // Returns the currently active rendering API.
-std::u8string_view GrpBackend_APIString(void);
+std::string_view GrpBackend_APIString(void);
 
 // Returns the current pixel format of the backbuffer.
 PIXELFORMAT GrpBackend_PixelFormat(void);

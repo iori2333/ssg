@@ -135,7 +135,7 @@ bool MusicRoomInit() {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_MUSICROOM)) {
-    DebugOut(u8"GRAPH.DAT が破壊されています");
+    DebugOut("GRAPH.DAT が破壊されています");
     return false;
   }
 
@@ -152,7 +152,7 @@ bool MusicRoomInit() {
   // BGM_Stop();
   auto comment_buf = LoadMusicRoomComment(0);
   if (!comment_buf) {
-    DebugOut(u8"ENEMY.DAT がはかいされています");
+    DebugOut("ENEMY.DAT がはかいされています");
     GameExit();
     return false;
   }
@@ -168,7 +168,7 @@ bool MusicRoomInit() {
 
   /*
           if(!LoadMusic(0)) {
-                  DebugOut(u8"MUSIC.DAT が破壊されています");
+                  DebugOut("MUSIC.DAT が破壊されています");
                   GameExit();
                   return false;
           }

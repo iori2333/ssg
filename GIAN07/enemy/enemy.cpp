@@ -21,8 +21,8 @@
 // ＥＣＬデバッグ用マクロ //
 static void ECL_DEBUG(const char *s, auto param) {
 #ifdef SCRIPT_TRACE
-  char8_t _ECL_Debug[1000];
-  const auto size = sprintf(reinterpret_cast<char *>(_ECL_Debug), s, param);
+  char _ECL_Debug[1000];
+  const auto size = sprintf(_ECL_Debug, s, param);
   if (size <= 0) {
     return;
   }
@@ -1616,7 +1616,7 @@ ECL_HEAD:
       break; // 敵の角度
 
     default:
-      DebugOut(u8"ナゾのレジスタ指定++");
+      DebugOut("ナゾのレジスタ指定++");
       break;
     }
     bRetFlag = false;
@@ -1636,7 +1636,7 @@ ECL_HEAD:
       break;
 
     default: // レジスタ指定がおかしい
-      DebugOut(u8"ナゾのレジスタ指定");
+      DebugOut("ナゾのレジスタ指定");
       break;
     }
     bRetFlag = false;
@@ -1656,7 +1656,7 @@ ECL_HEAD:
       break;
 
     default: // レジスタ指定がおかしい
-      DebugOut(u8"ナゾのレジスタ指定");
+      DebugOut("ナゾのレジスタ指定");
       break;
     }
     bRetFlag = false;
@@ -1676,7 +1676,7 @@ ECL_HEAD:
       break;
 
     default: // レジスタ指定がおかしい
-      DebugOut(u8"ナゾのレジスタ指定");
+      DebugOut("ナゾのレジスタ指定");
       break;
     }
     bRetFlag = false;
@@ -1696,7 +1696,7 @@ ECL_HEAD:
       break;
 
     default: // レジスタ指定がおかしいに
-      DebugOut(u8"ナゾのレジスタ指定");
+      DebugOut("ナゾのレジスタ指定");
       break;
     }
     bRetFlag = false;
@@ -1716,7 +1716,7 @@ ECL_HEAD:
       break;
 
     default: // レジスタ指定がおかしいに
-      DebugOut(u8"ナゾのレジスタ指定");
+      DebugOut("ナゾのレジスタ指定");
       break;
     }
     bRetFlag = false;
@@ -1758,7 +1758,7 @@ ECL_HEAD:
       break;
 
     default: // レジスタ指定がおかしい
-      DebugOut(u8"ナゾのレジスタ指定");
+      DebugOut("ナゾのレジスタ指定");
       break;
     }
     bRetFlag = false;
@@ -1778,7 +1778,7 @@ ECL_HEAD:
       break;
 
     default: // レジスタ指定がおかしい
-      DebugOut(u8"ナゾのレジスタ指定");
+      DebugOut("ナゾのレジスタ指定");
       break;
     }
     bRetFlag = false;
@@ -1885,7 +1885,7 @@ void EnemyManager::CheckInterrupts(EnemyData *e) {
         e->cmd_c = 0; // コマンド繰り返しカウンタ
         e->rep_c = 0; // LOOP(旧REP)命令カウンタ
         e->t_rep = 0; // 自動弾発射タイミング(0:自動発射せず)
-        // DebugOut(u8"受理");
+        // DebugOut("受理");
         return;
       }
       break;

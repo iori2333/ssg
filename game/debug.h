@@ -16,7 +16,7 @@
 // 関数プロトタイプ宣言 //
 extern void DebugSetup(void);   // エラー出力準備(->LogFile)
 extern void DebugCleanup(void); // エラー吐き出し用ファイルを閉じる
-extern void DebugLog(std::u8string_view s);
-extern void DebugOut(std::u8string_view s); // デバッグメッセージ吐き出し
+extern void DebugLog(std::string_view s);
+extern void DebugOut(std::string_view s); // デバッグメッセージ吐き出し
 
 #endif

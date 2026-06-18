@@ -61,19 +61,18 @@ void Grp_PaletteSetDefault(void) {
 using NUM_TYPE = unsigned int;
 
 static NUM_TYPE ScreenshotNum = 0;
-static std::u8string ScreenshotBuf;
+static std::string ScreenshotBuf;
 
-static void ScreenshotFindLastFor(std::u8string_view ext) {
+static void ScreenshotFindLastFor(std::string_view ext) {
   SDL_EnumerateDirectory(
-      std::bit_cast<const char *>(ScreenshotBuf.c_str()),
+      ScreenshotBuf.c_str(),
       [](void *ext_p, const char *, const char *basename_p) {
-        const auto *ext = std::bit_cast<std::u8string_view *>(ext_p);
-        const auto *ext_data = std::bit_cast<const char *>(ext->data());
+        const auto *ext = static_cast<std::string_view *>(ext_p);
         const auto *basename_ext = SDL_strrchr(basename_p, '.');
         if (!basename_ext) {
           return SDL_ENUM_CONTINUE;
         }
-        if (SDL_strncasecmp(basename_ext, ext_data, ext->size())) {
+        if (SDL_strncasecmp(basename_ext, ext->data(), ext->size())) {
           return SDL_ENUM_CONTINUE;
         }
         const NUM_TYPE num = SDL_strtoul(basename_p, nullptr, 10);
@@ -83,7 +82,7 @@ static void ScreenshotFindLastFor(std::u8string_view ext) {
       &ext);
 }
 
-void Grp_ScreenshotSetPrefix(std::u8string_view prefix) {
+void Grp_ScreenshotSetPrefix(std::string_view prefix) {
   const auto cap = (prefix.length() + STRING_NUM_CAP<NUM_TYPE> + 5);
   ScreenshotBuf.resize_and_overwrite(cap, [&](auto *p, size_t) {
     return (std::ranges::copy(prefix, p).out - p);
@@ -92,7 +91,7 @@ void Grp_ScreenshotSetPrefix(std::u8string_view prefix) {
 
 // Increments the screenshot number to the next file with the given extension
 // that doesn't exist yet, then opens a write stream for that file.
-SDL_IOStream *Grp_NextScreenshotStream(std::u8string_view ext) {
+SDL_IOStream *Grp_NextScreenshotStream(std::string_view ext) {
   if (ScreenshotBuf.size() == 0) {
     return nullptr;
   }
@@ -123,7 +122,7 @@ SDL_IOStream *Grp_NextScreenshotStream(std::u8string_view ext) {
 static bool ScreenshotSaveBMP(SDL_Surface *src) {
   assert(src->w < std::numeric_limits<PIXEL_COORD>::max());
   assert(src->h < std::numeric_limits<PIXEL_COORD>::max());
-  const auto stream = Grp_NextScreenshotStream(u8".BMP");
+  const auto stream = Grp_NextScreenshotStream(".BMP");
   if (!stream) {
     return false;
   }
@@ -258,7 +257,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   if (!ret) {
     return false;
   }
-  const auto stream = Grp_NextScreenshotStream(u8".webp");
+  const auto stream = Grp_NextScreenshotStream(".webp");
   if (!stream) {
     return false;
   }

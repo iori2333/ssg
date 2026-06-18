@@ -236,10 +236,10 @@ HelpSwitchFullscreen(const GRAPHICS_FULLSCREEN_FLAGS &fs_prev,
 // Pretty API version strings
 // --------------------------
 
-constexpr std::pair<std::u8string_view, std::u8string_view> API_NICE[] = {
-    {u8"direct3d", u8"Direct3D 9"},    {u8"direct3d11", u8"Direct3D 11"},
-    {u8"direct3d12", u8"Direct3D 12"}, {u8"software", u8"Software"},
-    {u8"vulkan", u8"Vulkan"},
+constexpr std::pair<std::string_view, std::string_view> API_NICE[] = {
+    {"direct3d", "Direct3D 9"},    {"direct3d11", "Direct3D 11"},
+    {"direct3d12", "Direct3D 12"}, {"software", "Software"},
+    {"vulkan", "Vulkan"},
 };
 
 namespace APIVersions {
@@ -255,10 +255,10 @@ constexpr size_t FMT_SIZE = std::max(
     (PRETTY_SIZE_MAX + 1 + STRING_NUM_CAP<int> + 1 + STRING_NUM_CAP<int>));
 
 struct VERSION {
-  std::u8string_view name_sdl;
+  std::string_view name_sdl;
   const char *name_pretty;
   void (*update)(VERSION &self);
-  char8_t buf[FMT_SIZE + 1];
+  char buf[FMT_SIZE + 1];
 };
 
 void UpdateGPU(VERSION &self) {
@@ -266,20 +266,16 @@ void UpdateGPU(VERSION &self) {
   auto *gpu_device = static_cast<SDL_GPUDevice *>(SDL_GetPointerProperty(
       props, SDL_PROP_RENDERER_GPU_DEVICE_POINTER, nullptr));
 
-  std::u8string_view device_name =
-      reinterpret_cast<const char8_t *>(SDL_GetGPUDeviceDriver(gpu_device));
+  std::string_view device_name = SDL_GetGPUDeviceDriver(gpu_device);
   for (const auto &nice : API_NICE) {
     if (nice.first == device_name) {
       device_name = nice.second;
       break;
     }
   }
-  auto *buf = reinterpret_cast<char *>(self.buf);
-  const auto *via_name =
-      (device_name.empty()
-           ? "?"
-           : reinterpret_cast<const char *>(device_name.data()));
-  sprintf(&buf[0], &GPU_FMT[0], via_name);
+  auto *buf = self.buf;
+  const auto *via_name = (device_name.empty() ? "?" : device_name.data());
+  sprintf(buf, &GPU_FMT[0], via_name);
 }
 
 void UpdateOpenGL(VERSION &self) {
@@ -288,25 +284,25 @@ void UpdateOpenGL(VERSION &self) {
   SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
   SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
 
-  auto *buf = reinterpret_cast<char *>(self.buf);
-  sprintf(&buf[0], &OPENGL_FMT[0], self.name_pretty, major, minor);
+  auto *buf = self.buf;
+  sprintf(buf, &OPENGL_FMT[0], self.name_pretty, major, minor);
 }
 
 #define TARGET_(pretty, maj, min) pretty " ~" #maj "." #min
 #define TARGET(pretty, maj, min) TARGET_(pretty, maj, min)
 
 constinit VERSION Versions[] = {
-    {u8"gpu", nullptr, UpdateGPU, u8"GPU"},
-    {u8"opengl", "OpenGL", UpdateOpenGL,
-     TARGET(u8"OpenGL", OPENGL_TARGET_CORE_MAJ, OPENGL_TARGET_CORE_MIN)},
-    {u8"opengles2", "OpenGL ES", UpdateOpenGL,
-     TARGET(u8"OpenGL ES", 2, OPENGL_TARGET_ES2_MIN)},
+    {"gpu", nullptr, UpdateGPU, "GPU"},
+    {"opengl", "OpenGL", UpdateOpenGL,
+     TARGET("OpenGL", OPENGL_TARGET_CORE_MAJ, OPENGL_TARGET_CORE_MIN)},
+    {"opengles2", "OpenGL ES", UpdateOpenGL,
+     TARGET("OpenGL ES", 2, OPENGL_TARGET_ES2_MIN)},
 };
 
 #undef TARGET
 #undef TARGET_
 
-void Update(std::u8string_view driver_str) {
+void Update(std::string_view driver_str) {
   auto *version = std::ranges::find(Versions, driver_str, &VERSION::name_sdl);
   if (version == std::end(Versions)) {
     return;
@@ -330,7 +326,7 @@ std::string_view GrpBackend_DeviceLabel(uint8_t) { return {}; }
 
 int8_t GrpBackend_APICount(void) { return SDL_GetNumRenderDrivers(); }
 
-std::u8string_view GrpBackend_APILabel(std::u8string_view api) {
+std::string_view GrpBackend_APILabel(std::string_view api) {
   for (const auto &nice : API_NICE) {
     if (nice.first == api) {
       return nice.second;
@@ -344,7 +340,7 @@ std::u8string_view GrpBackend_APILabel(std::u8string_view api) {
   return api;
 }
 
-int8_t GrpBackend_APIID(std::u8string_view api) {
+int8_t GrpBackend_APIID(std::string_view api) {
   for (const auto i : std::views::iota(0, SDL_GetNumRenderDrivers())) {
     if (GrpBackend_APIString(i) == api) {
       return i;
@@ -353,10 +349,9 @@ int8_t GrpBackend_APIID(std::u8string_view api) {
   return -1;
 }
 
-std::u8string_view GrpBackend_APIString(int8_t id) {
-  // Guard against `nullptr`s
-  const auto *ret = std::bit_cast<const char8_t *>(SDL_GetRenderDriver(id));
-  return (ret ? ret : std::u8string_view{});
+std::string_view GrpBackend_APIString(int8_t id) {
+  const auto *ret = SDL_GetRenderDriver(id);
+  return (ret ? ret : std::string_view{});
 }
 
 PIXEL_SIZE GrpBackend_DisplaySize(bool fullscreen) {
@@ -545,7 +540,7 @@ std::optional<GRAPHICS_INIT_RESULT> PrimaryInitFull(GRAPHICS_PARAMS params) {
   if (!PrimaryRenderer) {
     const auto driver_str = WndBackend_SDLRendererName(params.api);
     const auto label = GrpBackend_APILabel(driver_str);
-    const auto *api = std::bit_cast<const char *>(label.data());
+    const auto *api = label.data();
     SDL_LogCritical(LOG_CAT, "Error creating %s renderer: %s", api,
                     SDL_GetError());
     return PrimaryCleanup();
@@ -591,7 +586,7 @@ std::optional<GRAPHICS_INIT_RESULT> PrimaryInitFull(GRAPHICS_PARAMS params) {
     SDL_LogCritical(LOG_CAT,
                     "The \"%s\" renderer does not support any of the game's "
                     "supported software rendering pixel formats.",
-                    std::bit_cast<const char *>(label.data()));
+                    label.data());
     return PrimaryCleanup();
   }
 
@@ -651,7 +646,7 @@ GrpBackend_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
     // the same display the window was spawned on, so let's just throw it
     // away.
     const auto name = WndBackend_SDLRendererName(params.api);
-    if (!fs_prev.fullscreen && (name == u8"direct3d")) {
+    if (!fs_prev.fullscreen && (name == "direct3d")) {
       return reinit_full(params);
     }
   }
@@ -737,13 +732,12 @@ void GrpBackend_SetClip(const WINDOW_LTRB &rect) {
   SDL_SetRenderClipRect(*Renderer, &sdl_rect);
 }
 
-std::u8string_view GrpBackend_APIString(void) {
+std::string_view GrpBackend_APIString(void) {
   // More efficient than the hash table insertion done by
   // SDL_GetRendererName().
   assert(PrimaryRenderer);
   const auto props = SDL_GetRendererProperties(PrimaryRenderer);
-  return {std::bit_cast<const char8_t *>(
-      SDL_GetStringProperty(props, SDL_PROP_RENDERER_NAME_STRING, nullptr))};
+  return SDL_GetStringProperty(props, SDL_PROP_RENDERER_NAME_STRING, nullptr);
 }
 
 PIXELFORMAT GrpBackend_PixelFormat(void) {

@@ -184,13 +184,13 @@ int BulletManager::SpeedEx(uint8_t d) const {
 
   switch (command.v & 0xc0) {
   case TAMASP_RND1:
-    temp = (rnd() % 16) - 8; /* DebugOut(u8"2"); */
+    temp = (rnd() % 16) - 8; /* DebugOut("2"); */
     break;
   case TAMASP_RND2:
-    temp = (rnd() % 32) - 16; /* DebugOut(u8"3"); */
+    temp = (rnd() % 32) - 16; /* DebugOut("3"); */
     break;
   case TAMASP_RND3:
-    temp = (rnd() % 64) - 32; /* DebugOut(u8"4"); */
+    temp = (rnd() % 64) - 32; /* DebugOut("4"); */
     break;
   }
 
@@ -796,7 +796,7 @@ uint8_t BulletManager::Dir(uint16_t i) const {
     return deg + ((i << 8) / command.n);
 
   case TC_RND:
-    // DebugOut(u8"1");
+    // DebugOut("1");
     return deg + (rnd() % command.dw) - (command.dw >> 1);
 
   default:
@@ -812,13 +812,13 @@ int BulletManager::NewSpeed(uint16_t i) const {
   // 速度ランダムは基本値のｎ％変化とするべきかもしれないが... //
   switch (command.v & 0xc0) {
   case TAMASP_RND1:
-    temp = (rnd() % 16) - 8; /* DebugOut(u8"2"); */
+    temp = (rnd() % 16) - 8; /* DebugOut("2"); */
     break;
   case TAMASP_RND2:
-    temp = (rnd() % 32) - 16; /* DebugOut(u8"3"); */
+    temp = (rnd() % 32) - 16; /* DebugOut("3"); */
     break;
   case TAMASP_RND3:
-    temp = (rnd() % 64) - 32; /* DebugOut(u8"4"); */
+    temp = (rnd() % 64) - 32; /* DebugOut("4"); */
     break;
   }
 
@@ -853,13 +853,13 @@ int BulletManager::Speed(uint16_t i) const {
   // 速度ランダムは基本値のｎ％変化とするべきかもしれないが... //
   switch (command.v & 0xc0) {
   case TAMASP_RND1:
-    temp = (rnd() % 16) - 8; /* DebugOut(u8"2"); */
+    temp = (rnd() % 16) - 8; /* DebugOut("2"); */
     break;
   case TAMASP_RND2:
-    temp = (rnd() % 32) - 16; /* DebugOut(u8"3"); */
+    temp = (rnd() % 32) - 16; /* DebugOut("3"); */
     break;
   case TAMASP_RND3:
-    temp = (rnd() % 64) - 32; /* DebugOut(u8"4"); */
+    temp = (rnd() % 64) - 32; /* DebugOut("4"); */
     break;
   }
 

@@ -117,4 +117,4 @@ constexpr int SND_X_PER_DECIBEL = PixelToWorld(25);
 // pbg's original build by default:
 //
 // 	https://rec98.nmlgc.net/blog/2024-10-22#lines-2024-10-22
-constexpr const char8_t *GRP_SDL_DEFAULT_API = nullptr;
+constexpr const char *GRP_SDL_DEFAULT_API = nullptr;

@@ -108,7 +108,7 @@ Vorbis_Open(SDL_IOStream &stream,
         BGM::OnVorbisComment(
             *metadata_cb,
             {
-                reinterpret_cast<const char8_t *>(vc->user_comments[i]),
+                vc->user_comments[i],
                 static_cast<size_t>(len),
             });
       }

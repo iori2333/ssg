@@ -64,7 +64,7 @@ struct BIT_DEVICE_WRITE {
 
   void PutBit(uint8_t bit);
   void PutBits(uint32_t bits, unsigned int bitcount);
-  bool Write(const char8_t *s) const;
+  bool Write(const char *s) const;
 };
 
 struct BIT_FILE_READ : public BIT_DEVICE_READ {
@@ -92,11 +92,11 @@ struct PACKFILE_READ {
 struct PACKFILE_WRITE {
   std::vector<BYTE_BUFFER_BORROWED> files;
 
-  bool Write(const char8_t *s,
+  bool Write(const char *s,
              std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps = nullptr) const;
 };
 
-BIT_FILE_READ BitFilCreateR(const char8_t *s);
+BIT_FILE_READ BitFilCreateR(const char *s);
 PACKFILE_READ FilStartR(BYTE_BUFFER_OWNED packfile);
 PACKFILE_READ FilStartR(SDL_IOStream *stream);
-PACKFILE_READ FilStartR(const char8_t *s);
+PACKFILE_READ FilStartR(const char *s);

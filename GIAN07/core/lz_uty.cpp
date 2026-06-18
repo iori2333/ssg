@@ -95,7 +95,7 @@ void BIT_DEVICE_WRITE::PutBits(uint32_t bits, unsigned int bitcount) {
   }
 }
 
-bool BIT_DEVICE_WRITE::Write(const char8_t *s) const {
+bool BIT_DEVICE_WRITE::Write(const char *s) const {
   return SDL_SaveFile(s, buffer.data(), buffer.size());
 }
 
@@ -198,7 +198,7 @@ BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
 }
 
 bool PACKFILE_WRITE::Write(
-    const char8_t *s, std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps) const {
+    const char *s, std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps) const {
   PBG_FILEHEAD head = {.n = files.size()};
   std::vector<PBG_FILEINFO> info(files.size());
   fil_checksum_t sum = 0; // in native byte order
@@ -245,7 +245,7 @@ bool PACKFILE_WRITE::Write(
           write_header(stream));
 }
 
-BIT_FILE_READ BitFilCreateR(const char8_t *s) { return {SDL_LoadFile(s)}; }
+BIT_FILE_READ BitFilCreateR(const char *s) { return {SDL_LoadFile(s)}; }
 
 PACKFILE_READ FilStartR(BYTE_BUFFER_OWNED packfile) {
   auto packfile_cursor = packfile.cursor();
@@ -292,4 +292,4 @@ PACKFILE_READ FilStartR(SDL_IOStream *stream) {
   return FilStartR(SDL_LoadFile_IO(stream, true));
 }
 
-PACKFILE_READ FilStartR(const char8_t *s) { return FilStartR(SDL_LoadFile(s)); }
+PACKFILE_READ FilStartR(const char *s) { return FilStartR(SDL_LoadFile(s)); }

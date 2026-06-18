@@ -20,9 +20,9 @@
 
 namespace BGM {
 
-void OnVorbisComment(METADATA_CALLBACK func, const std::u8string_view comment) {
+void OnVorbisComment(METADATA_CALLBACK func, const std::string_view comment) {
   const auto eq_i = comment.find('=');
-  if (eq_i == std::u8string_view::npos) {
+  if (eq_i == std::string_view::npos) {
     return;
   }
   func(comment.substr(0, eq_i), comment.substr(eq_i + 1));
@@ -116,7 +116,7 @@ TRACK_PCM::~TRACK_PCM() {
 // ------
 
 struct CODEC_PCM {
-  std::u8string_view ext;
+  std::string_view ext;
   PCM_PART_OPEN &open;
 };
 
@@ -127,28 +127,27 @@ Vorbis_Open(SDL_IOStream &stream, std::optional<METADATA_CALLBACK> on_metadata);
 
 // Sorted in order of preference.
 static constexpr const CODEC_PCM CODECS_PCM[] = {
-    {u8".flac", FLAC_Open},
-    {u8".ogg", Vorbis_Open},
+    {".flac", FLAC_Open},
+    {".ogg", Vorbis_Open},
 };
 // ------
 
-static constexpr std::u8string_view LOOP_INFIX = u8".loop";
+static constexpr std::string_view LOOP_INFIX = ".loop";
 static constexpr size_t EXT_CAP =
     std::ranges::max_element(CODECS_PCM, [](const auto &a, const auto &b) {
       return (a.ext.size() < b.ext.size());
     })->ext.size();
 
-static bool TagEquals(const std::u8string_view a, const std::u8string_view b) {
+static bool TagEquals(const std::string_view a, const std::string_view b) {
   return ((a.size() == b.size()) &&
-          !SDL_strncasecmp(std::bit_cast<const char *>(a.data()),
-                           std::bit_cast<const char *>(b.data()), b.size()));
+          !SDL_strncasecmp(a.data(), b.data(), b.size()));
 }
 
-std::unique_ptr<TRACK> TrackOpen(const std::u8string_view base_fn) {
+std::unique_ptr<TRACK> TrackOpen(const std::string_view base_fn) {
   const size_t base_len = base_fn.size();
   const size_t fn_len = (LOOP_INFIX.size() + EXT_CAP);
-  std::u8string fn;
-  fn.resize_and_overwrite((base_len + fn_len), [&](char8_t *buf, size_t len) {
+  std::string fn;
+  fn.resize_and_overwrite((base_len + fn_len), [&](char *buf, size_t len) {
     std::ranges::copy(base_fn, buf);
     return base_len;
   });
@@ -165,17 +164,16 @@ std::unique_ptr<TRACK> TrackOpen(const std::u8string_view base_fn) {
     TRACK_METADATA meta;
 
     intro_part = codec.open(*intro_stream, [&](auto tag, auto value) {
-      if (meta.title.empty() && TagEquals(tag, u8"TITLE")) {
+      if (meta.title.empty() && TagEquals(tag, "TITLE")) {
         meta.title = value;
         return;
       }
-      if (!meta.source_midi && TagEquals(tag, u8"SOURCE MIDI")) {
-        meta.source_midi = HashFrom(std::string_view{
-            std::bit_cast<const char *>(value.data()), value.size()});
+      if (!meta.source_midi && TagEquals(tag, "SOURCE MIDI")) {
+        meta.source_midi = HashFrom(std::string_view{value});
         return;
       }
-      if (!meta.gain_factor && TagEquals(tag, u8"GAIN FACTOR")) {
-        const auto first = std::bit_cast<const char *>(value.data());
+      if (!meta.gain_factor && TagEquals(tag, "GAIN FACTOR")) {
+        const auto first = value.data();
         const auto last = (first + value.size());
 
 #if (__cpp_lib_to_chars >= 201611L)

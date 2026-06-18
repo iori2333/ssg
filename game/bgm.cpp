@@ -19,8 +19,8 @@
 
 using namespace std::chrono_literals;
 
-static constexpr std::u8string_view BGM_ROOT = u8"bgm/";
-static constexpr std::u8string_view EXT_MID = u8".mid";
+static constexpr std::string_view BGM_ROOT = "bgm/";
+static constexpr std::string_view EXT_MID = ".mid";
 
 // State
 // -----
@@ -35,7 +35,7 @@ static unsigned int LoadedNum = 0; // 0 = nothing
 static std::chrono::milliseconds MIDITableUpdatePrev;
 
 static std::optional<bool> PacksAvailable = std::nullopt;
-static std::u8string PackPath;
+static std::string PackPath;
 static std::shared_ptr<BGM::TRACK> Waveform; // nullptr = playing MIDI
 // -----
 
@@ -97,7 +97,7 @@ std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void) {
 
 std::string_view BGM_Title(void) {
   auto ret = ((Waveform && !Waveform->metadata.title.empty())
-                  ? std::string_view{std::bit_cast<const char *>(Waveform->metadata.title.data()), Waveform->metadata.title.size()}
+                  ? std::string_view{Waveform->metadata.title}
                   : Mid_GetTitle());
 
   // pbg bug: Four of the original track titles start with leading fullwidth
@@ -304,21 +304,20 @@ void BGM_SetTempo(int8_t tempo) {
   SndBackend_BGMUpdateTempo();
 }
 
-static bool BGM_PackIterator(std::invocable<std::u8string_view> auto callback) {
+static bool BGM_PackIterator(std::invocable<std::string_view> auto callback) {
   return SDL_EnumerateDirectory(
-      std::bit_cast<const char *>(BGM_ROOT.data()),
+      BGM_ROOT.data(),
       [](void *cb, const char *bgm_root, const char *basename) {
         char *fn = nullptr;
         if (SDL_asprintf(&fn, "%s%s", bgm_root, basename) < 0) {
           return SDL_ENUM_FAILURE;
         }
         defer(SDL_free(fn));
-        if (!PathIsDirectory(std::bit_cast<const char8_t *>(fn))) {
+        if (!PathIsDirectory(fn)) {
           return SDL_ENUM_CONTINUE;
         }
         return (std::bit_cast<decltype(callback) *>(cb))
-            ->operator()(
-                std::u8string_view{std::bit_cast<const char8_t *>(basename)});
+            ->operator()(std::string_view{basename});
       },
       &callback);
 }
@@ -328,28 +327,28 @@ bool BGM_PacksAvailable(bool invalidate_cache) {
     return PacksAvailable.value();
   }
   PacksAvailable = BGM_PackIterator(
-      [](const std::u8string_view) { return SDL_ENUM_SUCCESS; });
+      [](const std::string_view) { return SDL_ENUM_SUCCESS; });
   return PacksAvailable.value();
 }
 
 size_t BGM_PackCount(void) {
   size_t ret = 0;
-  BGM_PackIterator([&](const std::u8string_view) {
+  BGM_PackIterator([&](const std::string_view) {
     ret++;
     return SDL_ENUM_CONTINUE;
   });
   return ret;
 }
 
-void BGM_PackForeach(std::function<void(std::u8string_view pack)> func) {
-  BGM_PackIterator([&](std::u8string_view pack) {
+void BGM_PackForeach(std::function<void(std::string_view pack)> func) {
+  BGM_PackIterator([&](std::string_view pack) {
     func(pack);
     return SDL_ENUM_CONTINUE;
   });
 }
 
-bool BGM_PackSet(const std::u8string_view pack) {
-  const std::u8string_view cur = PackPath;
+bool BGM_PackSet(const std::string_view pack) {
+  const std::string_view cur = PackPath;
   if (!pack.empty()) {
     const auto path_data = PathForData();
     const auto root_len = (path_data.size() + BGM_ROOT.size());
@@ -362,7 +361,7 @@ bool BGM_PackSet(const std::u8string_view pack) {
     const auto pack_len = (pack.size() + 1);
     const auto file_len = (STRING_NUM_CAP<unsigned int> + EXT_MID.size());
     const auto len = (root_len + pack_len + file_len + 1);
-    PackPath.resize_and_overwrite(len, [&](char8_t *buf, size_t len) {
+    PackPath.resize_and_overwrite(len, [&](char *buf, size_t len) {
       std::ranges::in_out_result p = {path_data.begin(), buf};
       p = std::ranges::copy(path_data, p.out);
       p = std::ranges::copy(BGM_ROOT, p.out);

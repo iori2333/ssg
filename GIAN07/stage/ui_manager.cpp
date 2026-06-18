@@ -204,7 +204,7 @@ void UIManager::BGMPackGenerate(MenuItem &ret, size_t generated,
     ret.Title = BGMPackTitleDownload.data();
     ret.Help = BGMPackHelpDownload;
   } else {
-    ret.Title = reinterpret_cast<const char *>(bgm_packs_[generated - 1].c_str());
+    ret.Title = bgm_packs_[generated - 1].c_str();
     ret.Help = "";
   }
 
@@ -255,10 +255,11 @@ void UIManager::OpenBGMPack() {
     if (pack == ConfigDat.BGMPack) {
       bgm_sel_at_open_ = i;
     }
-    w = (std::max)(w, CWinItemExtent(std::string_view{
-                           std::bit_cast<const char *>(pack.c_str()),
-                           pack.size()})
-                           .w);
+    w = (std::max)(w,
+                   CWinItemExtent(std::string_view{
+                                      std::bit_cast<const char *>(pack.c_str()),
+                                      pack.size()})
+                       .w);
     i++;
   }
   w = (std::min)(w, GRP_RES.w);
@@ -282,7 +283,8 @@ void UIManager::ReplayFilesGenerate(MenuItem &ret, size_t generated,
     ret.Title = " Exit";
     ret.Help = "一つ前のメニューにもどります";
   } else if (generated < replay_files_.size()) {
-    ret.Title = reinterpret_cast<const char *>(replay_files_[generated].c_str());
+    ret.Title =
+        reinterpret_cast<const char *>(replay_files_[generated].c_str());
     ret.Help = "Play replay file";
   } else {
     ret.Title = " No replays found";
@@ -323,8 +325,8 @@ void UIManager::OpenReplayFiles() {
       ".",
       [](void *ctx, const char *, const char *name) {
         if (strstr(name, "replay_") == name && strstr(name, ".DAT")) {
-          auto &files = *static_cast<std::vector<std::u8string> *>(ctx);
-          files.emplace_back(reinterpret_cast<const char8_t *>(name));
+          auto &files = *static_cast<std::vector<std::string> *>(ctx);
+          files.emplace_back(name);
         }
         return SDL_ENUM_CONTINUE;
       },
@@ -333,9 +335,10 @@ void UIManager::OpenReplayFiles() {
 
   PIXEL_COORD w = CWinItemExtent(ReplayFilesTitle).w;
   for (const auto &f : replay_files_) {
-    w = (std::max)(w, CWinItemExtent(std::string_view{
-                           std::bit_cast<const char *>(f.c_str()), f.size()})
-                           .w);
+    w = (std::max)(w, CWinItemExtent(
+                          std::string_view{
+                              std::bit_cast<const char *>(f.c_str()), f.size()})
+                          .w);
   }
   w = (std::max)(w, CWinItemExtent(" Exit").w);
   w = (std::min)(w, GRP_RES.w);
