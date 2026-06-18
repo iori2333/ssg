@@ -52,8 +52,8 @@ constexpr auto HELP_API_DEFAULT = "Let the backend choose a graphics API";
 constexpr auto HELP_API_SPECIFIC = "Select to override default API selection";
 
 // 共有アイテム
-MenuItem SubmenuExitItem = {"Exit", HELP_SUBMENU_EXIT, CWinExitFn};
-MenuItem HRuleItem = {"-------------------"};
+static MenuItem SubmenuExitItem = {"Exit", HELP_SUBMENU_EXIT, CWinExitFn};
+static MenuItem HRuleItem = {"-------------------"};
 
 // ---------------------------------------------------------------------------
 // DifficultyPanel
