@@ -783,12 +783,12 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
   track.ConsumeDelta(tempo, loop);
 }
 
-Any::string_view Mid_GetTitle(void) {
+std::string_view Mid_GetTitle(void) {
   std::optional<MID_EVENT> maybe_ev;
 
   const auto extra_data_as_string_view = [](const MID_EVENT &ev) {
     const auto *str = reinterpret_cast<const char *>(ev.extra_data.data());
-    return Any::string_view{str, ev.extra_data.size()};
+    return std::string_view{str, ev.extra_data.size()};
   };
 
   // 通常のファイル用 たまに変なファイルだと間違ったものを表示するが... //

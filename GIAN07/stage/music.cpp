@@ -53,7 +53,7 @@ std::optional<MUSICROOM_TEXT> MusicRoomText;
 // -----
 
 void MUSICROOM_TEXT::RenderVersion(WINDOW_POINT topleft) const {
-  static constexpr Narrow::string_view VERSION =
+  static constexpr std::string_view VERSION =
       "秋霜玉    Version 1.005     ★デモ対応版＃★";
   TextObj.Render(topleft, version, VERSION, [](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
@@ -69,7 +69,7 @@ void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
     return;
   }
   const auto dev_full = maybe_dev_full.value();
-  const Narrow::string_view dev = {dev_full.data(),
+  const std::string_view dev = {dev_full.data(),
                                    std::min(dev_full.size(), 13UZ)};
   TextObj.Render(topleft, mid_dev, dev, [&dev](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
@@ -84,7 +84,7 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
   // not possible to change the track title without switching to a different
   // track first.
   auto num_str = std::format("#{:02}", (MidiPlayID + 1));
-  Narrow::string_view num = {num_str.c_str(), num_str.size()};
+  std::string_view num = num_str;
 
   TextObj.Render(topleft, title, num, [&num](TEXTRENDER_SESSION &s) {
     const auto &title = BGM_Title();
@@ -104,10 +104,10 @@ void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
   struct LINE {
     char c[19 * 2];
 
-    operator Narrow::string_view() const { return {c, sizeof(c)}; }
+    operator std::string_view() const { return {c, sizeof(c)}; }
   };
 
-  Narrow::string_view comment_str = {};
+  std::string_view comment_str = {};
   BYTE_BUFFER_CURSOR<const uint8_t> cursor = {std::span<const uint8_t>()};
   if (BGM_LoadedOriginalMIDI()) {
     // Skip the title in the comment

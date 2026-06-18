@@ -14,7 +14,6 @@
 #endif
 
 #include "game/bgm_track.h"
-#include "game/narrow.h"
 #include "game/volume.h"
 #include <assert.h>
 #include <version> // need the library feature test macros...
@@ -171,11 +170,12 @@ std::unique_ptr<TRACK> TrackOpen(const std::u8string_view base_fn) {
         return;
       }
       if (!meta.source_midi && TagEquals(tag, u8"SOURCE MIDI")) {
-        meta.source_midi = HashFrom(value);
+        meta.source_midi = HashFrom(std::string_view{
+            std::bit_cast<const char *>(value.data()), value.size()});
         return;
       }
       if (!meta.gain_factor && TagEquals(tag, u8"GAIN FACTOR")) {
-        const auto first = Narrow::string_view(value).data();
+        const auto first = std::bit_cast<const char *>(value.data());
         const auto last = (first + value.size());
 
 #if (__cpp_lib_to_chars >= 201611L)

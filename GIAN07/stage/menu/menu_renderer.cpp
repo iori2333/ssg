@@ -38,7 +38,7 @@ void MenuDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,
   // obviously. Also, non-centered titles that don't start with spaces
   // shouldn't be dedented relative to the menu items.
   const auto starts_with_space =
-      ((label.Title.ptr != nullptr) && (*label.Title.ptr == ' '));
+      ((label.Title != nullptr) && (*label.Title == ' '));
   const auto left =
       (!!(label.Flags & MenuFlags::CENTER)
            ? TextLayoutXCenter(s, label.Title)

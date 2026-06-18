@@ -47,7 +47,7 @@ struct EffectManager {
   std::array<LockOnInfo, LOCKON_MAX> lock_info;
   ScreenEffectState screen_info;
   TEXTRENDER_RECT_ID mtitle_rect = {};
-  Narrow::string_view mtitle_strs[2] = {"♪ "};
+  std::string_view mtitle_strs[2] = {"♪ "};
   bool enable_warn_efc = false;
   uint16_t warn_efc_time = 0;
 
@@ -86,7 +86,7 @@ struct EffectManager {
   void SpawnStringEffect(int x, int y, const char *s);
   void SpawnPointEffect(int x, int y, uint32_t point);
   void SpawnGameOverEffect();
-  void SetMusicTitle(int y, Narrow::string_view s);
+  void SetMusicTitle(int y, std::string_view s);
   void MoveStringEffects();
   void DrawStringEffects();
 

@@ -7,7 +7,7 @@
 
 #include "constants.h"
 #include "game/graphics.h"
-#include "game/narrow.h"
+#include <string_view>
 
 /// Enumeration and pre-initialization queries
 /// ------------------------------------------
@@ -17,7 +17,7 @@ bool GrpBackend_Enum(void);
 
 // Physical graphics adapters.
 uint8_t GrpBackend_DeviceCount(void);
-Any::string_view GrpBackend_DeviceLabel(uint8_t id);
+std::string_view GrpBackend_DeviceLabel(uint8_t id);
 
 // Rendering APIs.
 int8_t GrpBackend_APICount(void);

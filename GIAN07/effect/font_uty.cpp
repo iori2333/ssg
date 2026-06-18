@@ -292,7 +292,7 @@ void GrpPutMidNum(int x, int y, int n) {
 }
 
 PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
-                       std::span<const Narrow::string_view> strs, FONT_ID font,
+                       std::span<const std::string_view> strs, FONT_ID font,
                        bool shadow, uint8_t (*gradient_func)(PIXEL_COORD y)) {
   PIXEL_SIZE extent = {.w = 0, .h = 0};
 

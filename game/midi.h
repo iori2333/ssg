@@ -14,8 +14,8 @@
 //            : 処理の追いつかない MIDI
 //            があった場合は、メッセージ送出に工夫が必要かも
 
-#include "game/narrow.h"
 #include "game/volume.h"
+#include <string_view>
 #include "platform/buffer.h"
 #include <chrono>
 
@@ -93,7 +93,7 @@ void Mid_SetLoop(const MID_LOOP &loop);
 
 bool Mid_Loaded(void);
 
-Any::string_view Mid_GetTitle(void); // この曲のお名前は？
+std::string_view Mid_GetTitle(void); // この曲のお名前は？
 
 // Processes and outputs the next time [delta] of the currently loaded MIDI
 // sequence.

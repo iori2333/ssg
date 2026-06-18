@@ -6,7 +6,6 @@
 #pragma once
 
 #include "game/hash.h"
-#include "game/narrow.h"
 #include "platform/buffer.h"
 #include <chrono>
 #include <cstdint>
@@ -41,7 +40,7 @@ bool BGM_HasGainFactor(void);
 bool BGM_GainApply(void);
 BGM_PLAYING BGM_Playing(void);
 std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void);
-Narrow::string_view BGM_Title(void);
+std::string_view BGM_Title(void);
 // ---------------
 
 bool BGM_ChangeMIDIDevice(int8_t direction); // 出力デバイスを変更する

@@ -95,9 +95,9 @@ std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void) {
   return Mid_PlayTime.realtime;
 }
 
-Narrow::string_view BGM_Title(void) {
+std::string_view BGM_Title(void) {
   auto ret = ((Waveform && !Waveform->metadata.title.empty())
-                  ? Narrow::string_view(Waveform->metadata.title)
+                  ? std::string_view{std::bit_cast<const char *>(Waveform->metadata.title.data()), Waveform->metadata.title.size()}
                   : Mid_GetTitle());
 
   // pbg bug: Four of the original track titles start with leading fullwidth
@@ -120,7 +120,7 @@ Narrow::string_view BGM_Title(void) {
   // Since the in-game animation code does clearly intend these titles to be
   // right-aligned, it makes more sense to just remove all leading
   // whitespace. Doing this here will also benefit the Music Room.
-  const auto trim_leading = [](auto &str, Narrow::string_view prefix) {
+  const auto trim_leading = [](auto &str, std::string_view prefix) {
     const auto ret = str.starts_with(prefix);
     if (ret) {
       str.remove_prefix(prefix.size());

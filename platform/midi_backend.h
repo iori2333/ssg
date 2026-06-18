@@ -11,8 +11,8 @@
 
 #ifdef SUPPORT_MIDI_BACKEND
 
-#include "game/narrow.h"
 #include <cstdint>
+#include <string_view>
 #include <optional>
 #include <span>
 
@@ -24,7 +24,7 @@ void MidBackend_Cleanup(void); // ＭＩＤＩ関連おしまい
 
 // Returns the name of the current MIDI device, or std::nullopt if the backend
 // is not initialized. Can also be used for general initialization checks.
-std::optional<Narrow::string_view> MidBackend_DeviceName(void);
+std::optional<std::string_view> MidBackend_DeviceName(void);
 
 // Switches to the next working output device in the given positive or negative
 // [direction].

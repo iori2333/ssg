@@ -35,7 +35,7 @@ public:
   }
 } Fonts;
 
-PIXEL_SIZE TextGDIExtent(std::optional<HFONT> font, Narrow::string_view str) {
+PIXEL_SIZE TextGDIExtent(std::optional<HFONT> font, std::string_view str) {
   const auto hdc = GrpSurface_GDIText_Surface().dc;
   const auto font_prev = (font ? SelectObject(hdc, font.value()) : nullptr);
   const auto ret =
@@ -120,12 +120,12 @@ void TEXTRENDER_SESSION::SetColor(const RGB color) {
   }
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::Extent(Narrow::string_view str) {
+PIXEL_SIZE TEXTRENDER_SESSION::Extent(std::string_view str) {
   return TextGDIExtent(std::nullopt, str);
 }
 
 void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
-                             Narrow::string_view str,
+                             std::string_view str,
                              std::optional<RGB> color) {
   UTF::WithUTF16<int>(str, [&](const std::wstring_view str_w) {
     const auto hdc = GrpSurface_GDIText_Surface().dc;
@@ -173,7 +173,7 @@ void TEXTRENDER::WipeBeforeNextRender() {
   GrpSurface_GDIText_Surface().size = {0, 0};
 }
 
-PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, Narrow::string_view str) {
+PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
   return TextGDIExtent(Fonts.ForID(font), str);
 }
 

@@ -393,7 +393,7 @@ bool LoadMusicByHash(const HASH &hash) {
 // -----------------------
 
 namespace DAT_MISSING {
-constexpr Narrow::string_view TITLE = "Missing game data files";
+constexpr std::string_view TITLE = "Missing game data files";
 
 bool FoundAll = false;
 
@@ -446,7 +446,7 @@ void Init() {
   for (const auto i : std::views::iota(0U, DAT::BASENAMES.size())) {
     const auto id = Cast::down_enum<DAT::PACK_ID>(i);
     const auto &title = DAT::Packs[id].FilenameWithFoundPrefix();
-    Info[1 + i].Title = title;
+    Info[1 + i].Title = std::bit_cast<const char *>(title.c_str());
   }
   const auto w = (std::max)(CWinTextExtent(TITLE).w,
                             std::ranges::max(std::views::transform(

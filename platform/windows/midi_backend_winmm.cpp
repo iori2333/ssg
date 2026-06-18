@@ -90,7 +90,7 @@ void MidBackend_Cleanup(void) {
   Mid_WinMM.nDevice = Mid_WinMM.NowID = 0;
 }
 
-std::optional<Narrow::string_view> MidBackend_DeviceName(void) {
+std::optional<std::string_view> MidBackend_DeviceName(void) {
   if (Mid_WinMM.mp == nullptr) {
     return std::nullopt;
   }

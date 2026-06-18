@@ -101,14 +101,14 @@ class MenuController;
 
 // Shared data for menu titles and choices.
 struct MenuLabel {
-  Narrow::literal Title; // タイトル文字列へのポインタ(実体ではない！)
+  const char * Title; // タイトル文字列へのポインタ(実体ではない！)
 
   MenuFlags Flags = MenuFlags::NONE;
 
   // Required for forcing the item to be re-rendered after a flag change.
   MenuFlags FlagsPrev = MenuFlags::FORCE_RERENDER;
 
-  constexpr MenuLabel(const Narrow::literal title = "",
+  constexpr MenuLabel(const const char * title = "",
                          MenuFlags flags = MenuFlags::NONE) noexcept
       : Title(title), Flags(flags) {}
 };
@@ -123,7 +123,7 @@ struct MenuItem : public MenuLabel {
   using ActionFnPtr = bool (*)(MenuController &, INPUT_BITS);
   using AdjustFnPtr = void (*)(MenuController &, int_fast8_t);
 
-  Narrow::literal Help; // ヘルプ文字列へのポインタ(これも実体ではない)
+  const char * Help; // ヘルプ文字列へのポインタ(これも実体ではない)
 
   // 特殊処理用コールバック関数(未使用なら空)
   ActionFn CallBackFn;
@@ -133,8 +133,8 @@ struct MenuItem : public MenuLabel {
 
   MenuDef *Submenu = nullptr;
 
-  MenuItem(const Narrow::literal title = "",
-                const Narrow::literal help = "",
+  MenuItem(const const char * title = "",
+                const const char * help = "",
                 ActionFnPtr callback_fn = nullptr,
                 MenuFlags flags = MenuFlags::NONE)
       : MenuLabel(title, flags), Help(help), CallBackFn(callback_fn) {
@@ -143,19 +143,19 @@ struct MenuItem : public MenuLabel {
     }
   }
 
-  MenuItem(const Narrow::literal title,
-                const Narrow::literal help,
+  MenuItem(const const char * title,
+                const const char * help,
                 AdjustFnPtr option_fn,
                 MenuFlags flags = MenuFlags::NONE)
       : MenuLabel(title, flags), Help(help), OptionFn(option_fn) {}
 
-  MenuItem(const Narrow::literal title,
-                const Narrow::literal help,
+  MenuItem(const const char * title,
+                const const char * help,
                 MenuFlags flags)
       : MenuLabel(title, flags), Help(help) {}
 
-  MenuItem(const Narrow::literal title,
-                const Narrow::literal help,
+  MenuItem(const const char * title,
+                const const char * help,
                 MenuDef &submenu)
       : MenuLabel(title), Help(help), Submenu(&submenu) {}
 
@@ -284,8 +284,8 @@ bool CWinExitFn(MenuController &ctrl, INPUT_BITS key);
 
 // Calculates the rendered width of the given text in the menu item font,
 // without any padding.
-PIXEL_SIZE CWinTextExtent(Narrow::string_view str);
+PIXEL_SIZE CWinTextExtent(std::string_view str);
 
 // Calculates the rendered width of a whole padded menu item with the given
 // text.
-PIXEL_SIZE CWinItemExtent(Narrow::string_view str);
+PIXEL_SIZE CWinItemExtent(std::string_view str);

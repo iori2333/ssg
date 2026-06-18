@@ -281,7 +281,7 @@ void EndingManager::SCLDecode() {
 
     case SCL_MSG: { // メッセージを出力する
       const auto *line_p = std::bit_cast<const char *>(cmd + 1);
-      const Narrow::string_view line = line_p;
+      const std::string_view line = line_p;
       text.Text[text.NumText++] = line;
       text.TextStr += line_p;
       text.TextStr += '\n';

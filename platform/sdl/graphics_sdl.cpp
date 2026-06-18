@@ -326,7 +326,7 @@ bool GrpBackend_Enum(void) {
 }
 
 uint8_t GrpBackend_DeviceCount(void) { return 0; }
-Any::string_view GrpBackend_DeviceLabel(uint8_t) { return {}; }
+std::string_view GrpBackend_DeviceLabel(uint8_t) { return {}; }
 
 int8_t GrpBackend_APICount(void) { return SDL_GetNumRenderDrivers(); }
 

@@ -9,7 +9,7 @@
 #include "game/coords.h"
 #include "game/enum_array.h"
 #include "game/graphics.h"
-#include "game/narrow.h"
+#include <string_view>
 
 using TEXTRENDER_RECT_ID = unsigned int;
 
@@ -18,7 +18,7 @@ using TEXTRENDER_RECT_ID = unsigned int;
 template <class T>
 concept TEXTRENDER_SESSION_BASE =
     (ENUMARRAY_ID<FONT_ID> &&
-     requires(T t, PIXEL_POINT topleft_rel, Narrow::string_view str, RGB color,
+     requires(T t, PIXEL_POINT topleft_rel, std::string_view str, RGB color,
               FONT_ID font) {
        { t.RectSize() } -> std::same_as<PIXEL_SIZE>;
 
@@ -29,8 +29,8 @@ concept TEXTRENDER_SESSION_BASE =
        // current font.
        { t.Extent(str) } -> std::same_as<PIXEL_SIZE>;
 
-       // Text display with the current color and font. [str] can be either
-       // UTF-8 or Shift-JIS.
+        // Text display with the current color and font. [str] can be either
+        // UTF-8 or GBK.
        t.Put(topleft_rel, str);
 
        // Convenience overload to change the color before rendering the text.
@@ -40,7 +40,7 @@ class TEXTRENDER_SESSION;
 
 // Horizontally centers [str] on [s]'s rectangle.
 PIXEL_COORD TextLayoutXCenter(TEXTRENDER_SESSION_BASE auto &s,
-                              Narrow::string_view str) {
+                              std::string_view str) {
   return ((s.RectSize().w - s.Extent(str).w) / 2);
 }
 
@@ -48,7 +48,7 @@ PIXEL_COORD TextLayoutXCenter(TEXTRENDER_SESSION_BASE auto &s,
 template <class T>
 concept TEXTRENDER_BASE =
     requires(T t, FONT_ID font, PIXEL_SIZE size, WINDOW_POINT dst,
-             Narrow::string_view contents, TEXTRENDER_RECT_ID rect_id,
+             std::string_view contents, TEXTRENDER_RECT_ID rect_id,
              void (*func)(TEXTRENDER_SESSION &),
              std::optional<PIXEL_LTWH> subrect) {
       // Rectangle management

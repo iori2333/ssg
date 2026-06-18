@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "game/narrow.h"
 #include <array>
 #include <cstdint>
 

@@ -33,8 +33,8 @@ struct PANGOCAIRO_STATE {
   PANGOCAIRO_STATE &operator=(PANGOCAIRO_STATE &&) noexcept;
 
   void SetFont(const PANGOCAIRO_FONT *);
-  void SetText(Narrow::string_view);
-  PIXEL_SIZE Extent(const PANGOCAIRO_FONT *, Narrow::string_view);
+  void SetText(std::string_view);
+  PIXEL_SIZE Extent(const PANGOCAIRO_FONT *, std::string_view);
 };
 
 // Pango's hinting (which is, *of course*, controlled by a property in Cairo
@@ -185,7 +185,7 @@ void PANGOCAIRO_STATE::SetFont(const PANGOCAIRO_FONT *font) {
   pango_layout_set_font_description(layout, font->desc);
 }
 
-void PANGOCAIRO_STATE::SetText(Narrow::string_view str) {
+void PANGOCAIRO_STATE::SetText(std::string_view str) {
   const auto *in_buf = str.data();
   const auto in_size = str.size();
   if (g_utf8_validate_len(in_buf, in_size, nullptr)) {
@@ -202,7 +202,7 @@ void PANGOCAIRO_STATE::SetText(Narrow::string_view str) {
 }
 
 PIXEL_SIZE PANGOCAIRO_STATE::Extent(const PANGOCAIRO_FONT *font,
-                                    Narrow::string_view str) {
+                                    std::string_view str) {
   PIXEL_SIZE ret = {0, 0};
   SetFont(font);
   SetText(str);
@@ -276,12 +276,12 @@ void TEXTRENDER_SESSION::SetColor(const RGB &color) {
   }
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::Extent(Narrow::string_view str) {
+PIXEL_SIZE TEXTRENDER_SESSION::Extent(std::string_view str) {
   return State.Extent(nullptr, str);
 }
 
 void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
-                             Narrow::string_view str,
+                             std::string_view str,
                              std::optional<RGB> color) {
   if (color) {
     SetColor(color.value());
@@ -330,7 +330,7 @@ TEXTRENDER::Session(TEXTRENDER_RECT_ID rect_id) {
 
 void TEXTRENDER::WipeBeforeNextRender() { TEXTRENDER_PACKED::Wipe(); }
 
-PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, Narrow::string_view str) {
+PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
   // Luckily, Pango calculates extents just fine on 0×0 surfaces.
   if (!State) {
     State = {cairo_image_surface_create(FORMAT, 0, 0)};

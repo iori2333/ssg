@@ -234,7 +234,7 @@ void MsgWindow::Draw() {
   }
 }
 
-void MsgWindow::Msg(Narrow::string_view s) {
+void MsgWindow::Msg(std::string_view s) {
   int Line = 0;
   int i = 0;
 

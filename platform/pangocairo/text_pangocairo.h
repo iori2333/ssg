@@ -38,8 +38,8 @@ public:
   PIXEL_SIZE RectSize(void) const;
   void SetFont(FONT_ID font);
   void SetColor(const RGB &color);
-  PIXEL_SIZE Extent(Narrow::string_view str);
-  void Put(const PIXEL_POINT &topleft_rel, Narrow::string_view str,
+  PIXEL_SIZE Extent(std::string_view str);
+  void Put(const PIXEL_POINT &topleft_rel, std::string_view str,
            std::optional<RGB> color = std::nullopt);
   auto PixelAccess(std::invocable<PIXELACCESS &> auto f) {
     PIXELACCESS p;
@@ -57,5 +57,5 @@ class TEXTRENDER : public TEXTRENDER_PACKED {
 
 public:
   void WipeBeforeNextRender();
-  PIXEL_SIZE TextExtent(FONT_ID font, Narrow::string_view str);
+  PIXEL_SIZE TextExtent(FONT_ID font, std::string_view str);
 };

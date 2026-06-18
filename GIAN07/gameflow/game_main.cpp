@@ -38,7 +38,7 @@ struct LINE {
 LINE Line[1];
 
 constexpr std::string_view BUILD_LABEL = "BUILD";
-constexpr Narrow::string_view BUILD_VALUE = (" " VERSION_TAG);
+constexpr std::string_view BUILD_VALUE = (" " VERSION_TAG);
 
 void Init() {
   const auto build_w = TextObj.TextExtent(FONT_ID::TINY, BUILD_VALUE).w;
