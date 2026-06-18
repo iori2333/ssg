@@ -31,16 +31,18 @@ struct Player {
   uint8_t bomb;        // Bomb count
   uint8_t left;        // Remaining cactus count
   uint8_t credit;      // Remaining credits
-  uint16_t miss_count; // Miss count
-  uint16_t bomb_used;  // Bomb usage count
+  uint16_t miss_count;        // Miss count
+  uint16_t bomb_used;         // Bomb usage count
+  uint16_t deathbomb_count;   // Deathbomb success count
 
   uint8_t GrpID; // Graphic to display
 
   // --- Timer/State ---
   uint16_t bomb_time;   // Bomb wait timer
   uint16_t exp2;        // Experience gain suppression
-  uint16_t muteki;      // Invincibility flag (0:off !0:invincibility timer)
-  uint16_t lay_time;    // Laser fire timing
+  uint16_t muteki;         // Invincibility flag (0:off !0:invincibility timer)
+  uint16_t deathbomb_time; // Deathbomb window timer (0=inactive)
+  uint16_t lay_time;       // Laser fire timing
   uint8_t lay_grp;      // Laser graphic
   uint8_t toge_time;    // Thorn fire timing
   uint8_t toge_ex;      // Thorn fire special variable
@@ -55,7 +57,8 @@ struct Player {
   void Update();           // Per-frame update (MaidMove)
   void Initialize();       // Initialize (MaidSet)
   void PrepareNextStage(); // Next stage preparation (MaidNextStage)
-  void OnDeath();          // Death handler (MaidDead)
+  void OnHit();                     // Hit handler (deathbomb entry point)
+  void OnDeath(bool play_se = true); // Death handler (MaidDead)
 
   void AddEvade(uint8_t n); // Graze gauge increase (evade_add)
   void AddEvadeEx(int x, int y,

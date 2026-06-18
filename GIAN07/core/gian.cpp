@@ -62,6 +62,8 @@ void StdStatusOutput() {
              std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
     GrpPut16(0, 82, std::format("Miss{:5}", Players.viv.miss_count).c_str());
     GrpPut16(0, 98, std::format("Bomb{:5}", Players.viv.bomb_used).c_str());
+    GrpPut16(0, 114,
+             std::format("DthB{:5}", Players.viv.deathbomb_count).c_str());
   }
 
 #ifdef PBG_DEBUG

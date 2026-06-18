@@ -128,7 +128,7 @@ void EnemyManager::Move() {
           HITCHK(e->y, Players.viv.y, e->g_height) && Players.viv.muteki == 0) {
         // Might be interesting to damage the enemy around here?
         if ((e->flag & EF_HITSB) != 0) {
-          MaidDead();
+          MaidHit();
         }
       }
 
