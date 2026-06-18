@@ -4,7 +4,8 @@
 /*                                                                           */
 
 #include <SDL3/SDL_iostream.h>
-#include <array>
+
+#include <format>
 
 #include "game/debug.h"
 #include "platform/file.h"
@@ -30,19 +31,11 @@ void DebugLog(std::string_view prefix, std::string_view s) {
 }
 
 extern void DebugSetup() {
-#pragma warning(suppress : 26494) // type.5
-  std::array<char, 64> str;
-
   const auto tm = Time_NowLocal();
-  const auto len =
-      snprintf(str.data(), str.size(),
-               "[%02u/%02u/%02u][%02u:%02u:%02u]", tm.month, tm.day,
-               (tm.year % 100), tm.hour, tm.minute, tm.second);
-  if (len <= 0) {
-    return;
-  }
+  auto str = std::format("[{:02}/{:02}/{:02}][{:02}:{:02}:{:02}]", tm.month,
+                         tm.day, (tm.year % 100), tm.hour, tm.minute, tm.second);
   ErrorActive = true;
-  DebugLog("", {str.data(), static_cast<size_t>(len)});
+  DebugLog("", str);
 }
 
 extern void DebugCleanup(void) { ErrorActive = false; }

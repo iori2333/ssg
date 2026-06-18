@@ -309,12 +309,8 @@ static bool BGM_PackIterator(std::invocable<std::string_view> auto callback) {
   return SDL_EnumerateDirectory(
       BGM_ROOT.data(),
       [](void *cb, const char *bgm_root, const char *basename) {
-        char *fn = nullptr;
-        if (SDL_asprintf(&fn, "%s%s", bgm_root, basename) < 0) {
-          return SDL_ENUM_FAILURE;
-        }
-        defer(SDL_free(fn));
-        if (!PathIsDirectory(fn)) {
+        auto fn = std::format("{}{}", bgm_root, basename);
+        if (!PathIsDirectory(fn.c_str())) {
           return SDL_ENUM_CONTINUE;
         }
         return (std::bit_cast<decltype(callback) *>(cb))

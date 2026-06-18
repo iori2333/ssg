@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <format>
 #include <utility>
 
 // ファイル静的変数 → demo_manager.h の DemoManager struct に移動
@@ -25,15 +26,10 @@ std::string ReplayAllFN(bool exstg) {
   const auto time = std::chrono::system_clock::to_time_t(now);
   struct tm tm;
   localtime_s(&tm, &time);
-  char buf[64];
-  if (exstg) {
-    sprintf_s(buf, "replay_ex_%04d%02d%02d_%02d%02d%02d.DAT", tm.tm_year + 1900,
-              tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  } else {
-    sprintf_s(buf, "replay_%04d%02d%02d_%02d%02d%02d.DAT", tm.tm_year + 1900,
-              tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  }
-  return std::string(buf);
+  const auto prefix = exstg ? "replay_ex" : "replay";
+  return std::format("{}_{:04}{:02}{:02}_{:02}{:02}{:02}.DAT", prefix,
+                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
+                     tm.tm_min, tm.tm_sec);
 }
 
 void DemoManager::Init() {

@@ -22,11 +22,12 @@
 static void ECL_DEBUG(const char *s, auto param) {
 #ifdef SCRIPT_TRACE
   char _ECL_Debug[1000];
-  const auto size = sprintf(_ECL_Debug, s, param);
+  const auto size = snprintf(_ECL_Debug, sizeof(_ECL_Debug), s, param);
   if (size <= 0) {
     return;
   }
-  DebugLog({_ECL_Debug, static_cast<size_t>(size)});
+  DebugLog({_ECL_Debug,
+            static_cast<size_t>(std::min(size, (int)(sizeof(_ECL_Debug) - 1)))});
 #endif
 }
 
