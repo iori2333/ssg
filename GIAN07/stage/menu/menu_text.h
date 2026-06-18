@@ -1,7 +1,7 @@
 /*                                                                           */
 /*   menu_text.h   動的メニューテキスト                                       */
 /*                                                                           */
-/*   std::string を所有し、std::format でフォーマットする。                    */
+/*   std::string を所有し、std::format でフォーマットする。 */
 /*   Narrow::literal ビューを提供し、MenuItem::Title への設定を可能にする。   */
 /*                                                                           */
 

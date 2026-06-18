@@ -5,8 +5,6 @@
 
 #include "msg_window.h"
 
-#include "font_uty.h"
-#include "game/cast.h"
 #include "game/ut_math.h"
 #include "loader.h"
 #include "menu/menu_renderer.h"
@@ -176,9 +174,8 @@ void MsgWindow::Draw() {
           continue;
         }
         const PIXEL_COORD top = (i * font_dy);
-        const auto left = (!!(flags & MsgWindowFlags::CENTER)
-                               ? TextLayoutXCenter(s, m)
-                               : 0);
+        const auto left =
+            (!!(flags & MsgWindowFlags::CENTER) ? TextLayoutXCenter(s, m) : 0);
 
         // 灰色で１どっとずらして描画
         s.Put({.x = (left + 1), .y = top}, m,
@@ -300,9 +297,9 @@ void MsgWindow::Cmd(uint8_t cmd) {
   case MWCMD_SMALLFONT: // スモールフォントを使用する
     Ysize += 14;
     temp = max_size.bottom - max_size.top - 16;
-    max_line = temp / Ysize;                // 表示可能最大行数
+    max_line = temp / Ysize;                                 // 表示可能最大行数
     font_dy = ((temp % Ysize) / (temp / Ysize)) + Ysize + 1; // Ｙ増量
-    font_id = Cast::down_enum<FONT_ID>(cmd); // 使用フォント
+    font_id = Cast::down_enum<FONT_ID>(cmd);                 // 使用フォント
     [[fallthrough]];
 
   case MWCMD_NEWPAGE: // 改ページする

@@ -18,8 +18,8 @@ public:
   using ListSizeFn = std::function<size_t()>;
   using GenerateFn =
       std::function<void(MenuItem &ret, size_t generated, size_t selected)>;
-  using HandleFn =
-      std::function<bool(MenuController &ctrl, INPUT_BITS key, size_t selected)>;
+  using HandleFn = std::function<bool(MenuController &ctrl, INPUT_BITS key,
+                                      size_t selected)>;
 
   ScrollMenu(MenuLabel &title, ListSizeFn list_size, GenerateFn generate,
              HandleFn handle, size_t max_visible = WINITEM_MAX);

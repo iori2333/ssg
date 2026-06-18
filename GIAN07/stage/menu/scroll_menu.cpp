@@ -10,8 +10,7 @@
 #include <utility>
 
 ScrollMenu::ScrollMenu(MenuLabel &title, ListSizeFn list_size,
-                       GenerateFn generate, HandleFn handle,
-                       size_t max_visible)
+                       GenerateFn generate, HandleFn handle, size_t max_visible)
     : menu_(), max_visible_(max_visible), list_size_(std::move(list_size)),
       generate_(std::move(generate)), handle_(std::move(handle)) {
   assert(max_visible_ <= items_.size());
@@ -31,8 +30,7 @@ void ScrollMenu::Init(MenuController &ctrl, size_t sel,
   ctrl_ = &ctrl;
   return_to_ = return_to;
   sel_ = sel;
-  menu_.NumItems = static_cast<uint8_t>(
-      (std::min)(list_size_(), max_visible_));
+  menu_.NumItems = static_cast<uint8_t>((std::min)(list_size_(), max_visible_));
   Scroll();
 }
 
@@ -42,12 +40,13 @@ void ScrollMenu::Scroll() {
   const auto visible_half = (menu_.NumItems / 2);
   size_t generated_i =
       ((std::cmp_less(sel_, visible_half)) ? 0
-       : (sel_ >= (total - visible_half)) ? (total - visible)
-                                          : (sel_ - visible_half));
+       : (sel_ >= (total - visible_half))  ? (total - visible)
+                                           : (sel_ - visible_half));
   for (auto item_i = decltype(visible){0}; item_i < visible; item_i++) {
     // 各項目のコールバックをこのインスタンスの [Fn] にバインドする。
-    items_[item_i].CallBackFn =
-        [this](MenuController &c, INPUT_BITS k) { return Fn(c, k); };
+    items_[item_i].CallBackFn = [this](MenuController &c, INPUT_BITS k) {
+      return Fn(c, k);
+    };
     generate_(items_[item_i], generated_i, sel_);
     if (generated_i == sel_) {
       ctrl_->SetCurrentSelection(static_cast<uint8_t>(item_i));

@@ -1,7 +1,7 @@
 /*                                                                           */
 /*   ui_manager.cpp   UI マネージャ                                           */
 /*                                                                           */
-/*   すべてのメニュー状態を所有し、外部へはアクセサで公開する。                 */
+/*   すべてのメニュー状態を所有し、外部へはアクセサで公開する。 */
 /*                                                                           */
 
 #include "ui_manager.h"
@@ -11,16 +11,10 @@
 
 #include "config.h"
 #include "demo_play.h"
-#include "entry.h"
 #include "game/bgm.h"
-#include "game/snd.h"
 #include "game_main.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/gameflow_manager.h"
-#include "level.h"
-#include "loader.h"
-#include "music.h"
-#include "platform/input.h"
 
 #include <algorithm>
 
@@ -78,8 +72,8 @@ UIManager::UIManager()
                      return true;
                    }},
       },
-      exit_menu_(std::span(exit_items_), [](MenuController &, bool) {},
-                 &exit_title_),
+      exit_menu_(
+          std::span(exit_items_), [](MenuController &, bool) {}, &exit_title_),
       exit_window_(exit_menu_),
 
       continue_title_(" Ｃｏｎｔｉｎｕｅ？"),
@@ -101,8 +95,9 @@ UIManager::UIManager()
                      return true;
                    }},
       },
-      continue_menu_(std::span(continue_items_), [](MenuController &, bool) {},
-                     &continue_title_),
+      continue_menu_(
+          std::span(continue_items_), [](MenuController &, bool) {},
+          &continue_title_),
       continue_window_(continue_menu_),
 
       game_over_save_title_("  Save Replay?"),
@@ -126,15 +121,14 @@ UIManager::UIManager()
                      return true;
                    }},
       },
-      game_over_save_menu_(std::span(game_over_save_items_),
-                           [](MenuController &, bool) {},
-                           &game_over_save_title_),
+      game_over_save_menu_(
+          std::span(game_over_save_items_), [](MenuController &, bool) {},
+          &game_over_save_title_),
       game_over_save_window_(game_over_save_menu_),
 
       bgm_title_item_(""),
       bgm_pack_scroll_menu_(
-          bgm_title_item_,
-          [this]() { return BGMPackListSize(); },
+          bgm_title_item_, [this]() { return BGMPackListSize(); },
           [this](MenuItem &ret, size_t g, size_t s) {
             BGMPackGenerate(ret, g, s);
           },
@@ -146,8 +140,7 @@ UIManager::UIManager()
 
       replay_title_item_(""),
       replay_files_scroll_menu_(
-          replay_title_item_,
-          [this]() { return ReplayFilesListSize(); },
+          replay_title_item_, [this]() { return ReplayFilesListSize(); },
           [this](MenuItem &ret, size_t g, size_t s) {
             ReplayFilesGenerate(ret, g, s);
           },
@@ -200,7 +193,7 @@ void UIManager::MsgHelp() {
 size_t UIManager::BGMPackListSize() { return (1 + bgm_packs_.size() + 1); }
 
 void UIManager::BGMPackGenerate(MenuItem &ret, size_t generated,
-                                 size_t selected) {
+                                size_t selected) {
   const auto sel_none = 0;
   const auto sel_download = (BGMPackListSize() - 1);
 
@@ -216,8 +209,8 @@ void UIManager::BGMPackGenerate(MenuItem &ret, size_t generated,
     ret.Help = "";
   }
 
-  ret.Flags =
-      ((generated == bgm_sel_at_open_) ? MenuFlags::HIGHLIGHT : MenuFlags::NONE);
+  ret.Flags = ((generated == bgm_sel_at_open_) ? MenuFlags::HIGHLIGHT
+                                               : MenuFlags::NONE);
 
   if (generated == selected) {
     if ((generated == sel_none) || (generated == sel_download)) {
@@ -230,7 +223,7 @@ void UIManager::BGMPackGenerate(MenuItem &ret, size_t generated,
 }
 
 bool UIManager::BGMPackHandle(MenuController &ctrl, INPUT_BITS key,
-                               size_t selected) {
+                              size_t selected) {
   if (Input_IsOK(key)) {
     const auto sel_download = (BGMPackListSize() - 1);
     if (selected == sel_download) {
@@ -282,7 +275,7 @@ size_t UIManager::ReplayFilesListSize() {
 }
 
 void UIManager::ReplayFilesGenerate(MenuItem &ret, size_t generated,
-                                     size_t selected) {
+                                    size_t selected) {
   if (generated == (ReplayFilesListSize() - 1)) {
     ret.Title = " Exit";
     ret.Help = "一つ前のメニューにもどります";
@@ -307,7 +300,7 @@ void UIManager::ReplayFilesGenerate(MenuItem &ret, size_t generated,
 }
 
 bool UIManager::ReplayFilesHandle(MenuController &, INPUT_BITS key,
-                                   size_t selected) {
+                                  size_t selected) {
   if (Input_IsOK(key)) {
     if (selected == (ReplayFilesListSize() - 1)) {
       return false;

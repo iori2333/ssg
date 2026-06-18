@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "game/enum_flags.h"
 #include "game/text.h"
 #include "window_sys.h" // MSG_HEIGHT, WINDOW_LTRB, FONT_ID, MenuController
 #include <optional>
@@ -24,17 +23,16 @@ enum class MsgWindowFlags : uint8_t {
 // インスタンスへの薄い転調として残されている。
 class MsgWindow {
 public:
-  void Init(const WINDOW_LTRB &rc,
-            MsgWindowFlags flags = MsgWindowFlags::NONE);
-  void Open();       // メッセージウィンドウをオープンする
-  void Close();      // メッセージウィンドウをクローズする
-  void ForceClose(); // メッセージウィンドウを強制クローズする
-  void Tick();       // メッセージウィンドウを動作させる
-  void Draw();       // メッセージウィンドウを描画する
+  void Init(const WINDOW_LTRB &rc, MsgWindowFlags flags = MsgWindowFlags::NONE);
+  void Open();                       // メッセージウィンドウをオープンする
+  void Close();                      // メッセージウィンドウをクローズする
+  void ForceClose();                 // メッセージウィンドウを強制クローズする
+  void Tick();                       // メッセージウィンドウを動作させる
+  void Draw();                       // メッセージウィンドウを描画する
   void Msg(Narrow::string_view str); // メッセージ文字列を送る
   void Face(uint8_t faceID);         // 顔をセットする
   void Cmd(uint8_t cmd);             // コマンドを送る
-  void Help(MenuController *ws);      // メッセージウィンドウにヘルプ文字列を送る
+  void Help(MenuController *ws);     // メッセージウィンドウにヘルプ文字列を送る
 
 private:
   void MsgBlank(); // 文字列をクリアし、最初の行へ戻す
@@ -44,11 +42,11 @@ private:
   PIXEL_POINT text_topleft{};
 
   MsgWindowFlags flags{};
-  FONT_ID font_id{};   // 使用するフォント
-  uint8_t font_dy{};   // フォントのＹ増量値
-  uint8_t state{};     // 状態
-  uint8_t max_line{};  // 最大表示可能行数
-  uint8_t line{};      // 次に挿入する行
+  FONT_ID font_id{};  // 使用するフォント
+  uint8_t font_dy{};  // フォントのＹ増量値
+  uint8_t state{};    // 状態
+  uint8_t max_line{}; // 最大表示可能行数
+  uint8_t line{};     // 次に挿入する行
 
   uint8_t face_id{};    // 使用する顔番号
   uint8_t next_face{};  // 次に表示する顔番号

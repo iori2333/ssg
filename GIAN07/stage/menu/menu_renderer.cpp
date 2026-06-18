@@ -8,7 +8,7 @@
 #include "game/coords.h"
 #include "game/text.h"
 #include "platform/graphics_backend.h"
-#include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 
 // メニューラベル(タイトル / 項目)の描画 //
 void MenuDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,

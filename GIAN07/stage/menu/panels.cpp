@@ -14,7 +14,6 @@
 #include "game/midi.h"
 #include "game/snd.h"
 #include "game_main.h"
-#include "gameflow/demo_manager.h"
 #include "gameflow/gameflow_manager.h"
 #include "level.h"
 #include "loader.h"
