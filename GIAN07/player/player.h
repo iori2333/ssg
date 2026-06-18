@@ -22,7 +22,7 @@ inline constexpr int BOMBMUTEKI_VAL = 60; // Bomb-end invincibility
 inline constexpr int SBOPT_DX = 26;       // Option offset (not x64)
 
 inline constexpr int DEATHBOMB_WINDOW =
-    8; // Deathbomb input window (base, Lunatic)
+    12; // Deathbomb input window (base, Lunatic)
 
 inline constexpr int EVADETIME_MAX = 256; // Max graze wait time
 

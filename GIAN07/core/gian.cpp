@@ -50,30 +50,25 @@ void StdStatusOutput() {
   GrpPut16(0, 0, std::format("{:03} FPS", fps).c_str());
 
   // ---- RANK display ----
-  {
-    const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
-                                     "Extra"};
-    const auto lv = (GameState.game_stage == GRAPH_ID_EXSTAGE)
-                        ? GAME_EXTRA
-                        : GameState.game_level;
+  const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
+                                   "Extra"};
+  const auto lv = (GameState.game_stage == GRAPH_ID_EXSTAGE)
+                      ? GAME_EXTRA
+                      : GameState.game_level;
 
-    GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
-    GrpPut16(0, 50,
-             std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
-    GrpPut16(0, 82, std::format("Miss{:5}", Players.viv.miss_count).c_str());
-    GrpPut16(0, 98, std::format("Bomb{:5}", Players.viv.bomb_used).c_str());
-    GrpPut16(0, 114,
-             std::format("DthB{:5}", Players.viv.deathbomb_count).c_str());
-    GrpPut16(0, 130, "Stars");
-    {
-      const auto capped = (Players.viv.star_counter > 9999)
-                              ? 9999u
-                              : Players.viv.star_counter;
-      GrpPut16(0, 146, std::format("{:4}/{:4}", capped,
-                                   Players.viv.star_threshold)
-                           .c_str());
-    }
-  }
+  GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
+  GrpPut16(0, 50,
+           std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
+  GrpPut16(0, 82, std::format("Miss{:5}", Players.viv.miss_count).c_str());
+  GrpPut16(0, 98, std::format("Bomb{:5}", Players.viv.bomb_used).c_str());
+  GrpPut16(0, 114,
+           std::format("DthB{:5}", Players.viv.deathbomb_count).c_str());
+  GrpPut16(0, 146, "Stars");
+
+  const auto capped = std::min(Players.viv.star_counter, 9999U);
+  GrpPut16(
+      0, 162,
+      std::format("{:4}/{:4}", capped, Players.viv.star_threshold).c_str());
 
 #ifdef PBG_DEBUG
 #ifdef SUPPORT_GRP_BITDEPTH
@@ -86,8 +81,7 @@ void StdStatusOutput() {
   GrpPut16(0, 96 + 40, std::format("Enemy {:3}", Enemies.count).c_str());
 
   GrpPut16(0, 128 + 40, std::format("Tama1 {:3}", Bullets.count_small).c_str());
-  GrpPut16(0, 148 + 40,
-           std::format("Tama2 {:3}", Bullets.count_large).c_str());
+  GrpPut16(0, 148 + 40, std::format("Tama2 {:3}", Bullets.count_large).c_str());
   GrpPut16(0, 176 + 40, std::format("Laser {:3}", Lasers.count).c_str());
   GrpPut16(0, 196 + 40,
            std::format("HLaser {:2}", Lasers.homing_count).c_str());
@@ -117,14 +111,13 @@ void StdStatusOutput() {
 
   GrpPut16(column2_left, 0, "Date");
   GrpPut16(column2_left, 20,
-           std::format("{:02}/{:02}/{:02}", tm.month, tm.day,
-                       (tm.year % 100U))
+           std::format("{:02}/{:02}/{:02}", tm.month, tm.day, (tm.year % 100U))
                .c_str());
 
   GrpPut16(column2_left, 50, "Time");
-  GrpPut16(column2_left, 70,
-           std::format("{:02}:{:02}:{:02}", tm.hour, tm.minute, tm.second)
-               .c_str());
+  GrpPut16(
+      column2_left, 70,
+      std::format("{:02}:{:02}:{:02}", tm.hour, tm.minute, tm.second).c_str());
 
 #ifndef PBG_DEBUG // pbg quirk
   GrpPut16(column2_left, 400,
@@ -133,6 +126,7 @@ void StdStatusOutput() {
 
   GrpPut16(column2_left, 440,
            std::format("Left   {}", Players.viv.left).c_str());
-  GrpPut16(column2_left, 460,
-           std::format("Credit {}", Players.viv.credit).c_str()); // Beware of -1
+  GrpPut16(
+      column2_left, 460,
+      std::format("Credit {}", Players.viv.credit).c_str()); // Beware of -1
 }

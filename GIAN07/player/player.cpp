@@ -200,12 +200,10 @@ void Player::DrawLaserBomb() const {
 
 void Player::Draw() {
   static PIXEL_LTRB VivBit[4][2] = {
-      {{480, 128, 480 + 24, 128 + 24},
-       {504, 128, 504 + 24, 128 + 24}}, // wide
+      {{480, 128, 480 + 24, 128 + 24}, {504, 128, 504 + 24, 128 + 24}}, // wide
       {{480, 152, 480 + 24, 152 + 24},
        {504, 152, 504 + 24, 152 + 24}}, // homing
-      {{528, 152, 528 + 24, 152 + 24},
-       {552, 152, 552 + 24, 152 + 24}}, // laser
+      {{528, 152, 528 + 24, 152 + 24}, {552, 152, 552 + 24, 152 + 24}}, // laser
       {{480, 152, 480 + 24, 152 + 24}, {504, 152, 504 + 24, 152 + 24}}, // temp
   };
 
@@ -228,6 +226,21 @@ void Player::Draw() {
   if (muteki == 0 || (draw_flag != 0U)) {
     src = PIXEL_LTWH{(384 + (GrpID * 32)), 128, (16 * 2), (16 * 3)};
     GrpSurface_Blit({sx, sy}, SURFACE_ID::SYSTEM, src);
+  }
+
+  if ((Key_Data & KEY_SHIFT) != 0 && muteki < VIVDEAD_VAL) {
+    const auto cx = (x >> 6);
+    const auto cy = (y >> 6);
+
+    GrpGeom->Lock();
+
+    GrpGeom->SetColor({5, 5, 5});
+    GeomCircleF({cx, cy}, 3);
+
+    GrpGeom->SetColor({5, 2, 2});
+    GeomCircleF({cx, cy}, 1);
+
+    GrpGeom->Unlock();
   }
 
   if (((exp + 1) >> 5) != 0) {
@@ -290,8 +303,7 @@ void Player::Update() {
 
     if (evade_c == 0) {
       Effects.SpawnStringEffect(
-          180, 40,
-          std::format("{:3} Evade  {:7}Pts", evade, evadesc).c_str());
+          180, 40, std::format("{:3} Evade  {:7}Pts", evade, evadesc).c_str());
       AddScore(evadesc);
       evade = 0;
       evadesc = 0;
@@ -511,7 +523,9 @@ void Player::OnHit() {
     // Enter deathbomb window with immediate feedback
     Snd_SEPlay(SOUND_ID_DEAD);
     Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
-    const auto window = DEATHBOMB_WINDOW + (GAME_LUNATIC - static_cast<int>(GameState.game_level)) * 2;
+    const auto window =
+        DEATHBOMB_WINDOW +
+        (GAME_LUNATIC - static_cast<int>(GameState.game_level)) * 2;
     deathbomb_time = static_cast<uint16_t>(window);
     muteki = static_cast<uint16_t>(window);
     return;
@@ -541,7 +555,8 @@ void Player::OnDeath(bool play_se) {
   }
 
   // Auto bomb: in practice mode with auto-bomb or higher, if bomb key is not
-  // pressed and bomb stock remains, automatically activate bomb instead of dying
+  // pressed and bomb stock remains, automatically activate bomb instead of
+  // dying
   if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB &&
       ((Key_Data & KEY_BOMB) == 0) && (bomb_time == 0) && (bomb > 0) &&
       (!Scroller.scene.MsgFlag)) {
@@ -695,7 +710,8 @@ uint8_t Player::GetLeftLaserDeg(uint8_t LaserDeg, int i) {
   return (64 - 48 + GetLeftOrRightLaserDeg(LaserDeg, i));
 }
 
-// Backward compatibility: free function wrappers referenced from MAIDTAMA.cpp etc.
+// Backward compatibility: free function wrappers referenced from MAIDTAMA.cpp
+// etc.
 uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i) {
   return Player::GetRightLaserDeg(LaserDeg, i);
 }
