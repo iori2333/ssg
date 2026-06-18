@@ -5,12 +5,13 @@
 
 #include <SDL3/SDL_filesystem.h>
 
+#include <format>
+
 #include "game/bgm.h"
 #include "game/bgm_track.h"
 #include "game/defer.h"
 #include "game/midi.h"
 #include "game/snd.h"
-#include "game/string_format.h"
 #include "game/volume.h"
 #include "platform/file.h"
 #include "platform/midi_backend.h"
@@ -152,7 +153,7 @@ static bool BGM_Load(unsigned int id) {
   if (!PackPath.empty()) {
     LoadedOriginalMIDI = false;
     const auto prefix_len = PackPath.size();
-    StringCatNum<2>((id + 1), PackPath);
+    PackPath += std::format("{:02}", (id + 1));
 
     // Try loading a waveform track
     bool waveform_new = false;
@@ -358,17 +359,7 @@ bool BGM_PackSet(std::string_view pack) {
     ) {
       return true;
     }
-    const auto pack_len = (pack.size() + 1);
-    const auto file_len = (STRING_NUM_CAP<unsigned int> + EXT_MID.size());
-    const auto len = (root_len + pack_len + file_len + 1);
-    PackPath.resize_and_overwrite(len, [&](char *buf, size_t len) {
-      std::ranges::in_out_result p = {path_data.begin(), buf};
-      p = std::ranges::copy(path_data, p.out);
-      p = std::ranges::copy(BGM_ROOT, p.out);
-      p = std::ranges::copy(pack, p.out);
-      *(p.out++) = '/';
-      return (p.out - buf);
-    });
+    PackPath = std::format("{}{}{}/", path_data, BGM_ROOT, pack);
 
     // Check if this path exists
     if (!PathIsDirectory(PackPath.c_str())) {

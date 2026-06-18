@@ -209,11 +209,11 @@ void GameFlowManager::ScoreDraw() {
 
     gx = (Scores.score_strings[i].x >> 6) + 232 - 16;
     gy = (Scores.score_strings[i].y >> 6) + 4;
-    GrpPut16c2(gx, gy, Scores.score_strings[i].Score);
+    GrpPut16c2(gx, gy, Scores.score_strings[i].Score.c_str());
 
     gx = (Scores.score_strings[i].x >> 6) + 120;
     gy = (Scores.score_strings[i].y >> 6) + 25;
-    GrpPutScore(gx, gy, Scores.score_strings[i].Evade);
+    GrpPutScore(gx, gy, Scores.score_strings[i].Evade.c_str());
 
     // いや、時間が無いのは分かるんだけどさぁ... //
     gx = (Scores.score_strings[i].x >> 6) + 224;
@@ -223,7 +223,7 @@ void GameFlowManager::ScoreDraw() {
       GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::SYSTEM, src);
     } else {
       {
-        GrpPutScore(gx, gy, Scores.score_strings[i].Stage);
+        GrpPutScore(gx, gy, Scores.score_strings[i].Stage.c_str());
       }
     }
 

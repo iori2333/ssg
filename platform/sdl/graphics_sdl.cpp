@@ -8,13 +8,15 @@
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_render.h>
 
+#include <format>
+#include <string>
+
 using SDL_COLOR = SDL_FColor;
 
 #include "constants.h"
 #include "game/defer.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
-#include "game/string_format.h"
 #include "platform/sdl/graphics_sdl.h"
 #include "platform/sdl/log_sdl.h"
 #include "platform/sdl/window_sdl.h"
@@ -243,22 +245,11 @@ constexpr std::pair<std::string_view, std::string_view> API_NICE[] = {
 };
 
 namespace APIVersions {
-constexpr const char GPU_FMT[] = "GPU (%s)";
-constexpr const char OPENGL_FMT[] = "%s %d.%d";
-constexpr size_t PRETTY_SIZE_MAX = 9;
-constexpr size_t API_SIZE_MAX =
-    std::ranges::max_element(API_NICE, [](const auto &a, const auto &b) {
-      return (a.second.size() < b.second.size());
-    })->second.size();
-constexpr size_t FMT_SIZE = std::max(
-    (sizeof(GPU_FMT) + API_SIZE_MAX),
-    (PRETTY_SIZE_MAX + 1 + STRING_NUM_CAP<int> + 1 + STRING_NUM_CAP<int>));
-
 struct VERSION {
   std::string_view name_sdl;
   const char *name_pretty;
   void (*update)(VERSION &self);
-  char buf[FMT_SIZE + 1];
+  std::string buf;
 };
 
 void UpdateGPU(VERSION &self) {
@@ -273,9 +264,8 @@ void UpdateGPU(VERSION &self) {
       break;
     }
   }
-  auto *buf = self.buf;
   const auto *via_name = (device_name.empty() ? "?" : device_name.data());
-  sprintf(buf, &GPU_FMT[0], via_name);
+  self.buf = std::format("GPU ({})", via_name);
 }
 
 void UpdateOpenGL(VERSION &self) {
@@ -284,14 +274,13 @@ void UpdateOpenGL(VERSION &self) {
   SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
   SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
 
-  auto *buf = self.buf;
-  sprintf(buf, &OPENGL_FMT[0], self.name_pretty, major, minor);
+  self.buf = std::format("{} {}.{}", self.name_pretty, major, minor);
 }
 
 #define TARGET_(pretty, maj, min) pretty " ~" #maj "." #min
 #define TARGET(pretty, maj, min) TARGET_(pretty, maj, min)
 
-constinit VERSION Versions[] = {
+VERSION Versions[] = {
     {"gpu", nullptr, UpdateGPU, "GPU"},
     {"opengl", "OpenGL", UpdateOpenGL,
      TARGET("OpenGL", OPENGL_TARGET_CORE_MAJ, OPENGL_TARGET_CORE_MIN)},
@@ -334,7 +323,7 @@ std::string_view GrpBackend_APILabel(std::string_view api) {
   }
   for (const auto &nice : APIVersions::Versions) {
     if (nice.name_sdl == api) {
-      return &nice.buf[0];
+      return nice.buf;
     }
   }
   return api;

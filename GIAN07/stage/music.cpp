@@ -15,7 +15,6 @@
 #include "game/debug.h"
 #include "game/input.h"
 #include "game/midi.h"
-#include "game/string_format.h"
 #include "game/text.h"
 #include "game/ut_math.h"
 #include "game_main.h"

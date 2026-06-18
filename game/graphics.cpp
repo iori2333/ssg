@@ -10,11 +10,12 @@
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_surface.h>
 
+#include <format>
+
 #include "game/defer.h"
 #include "game/format_bmp.h"
 #include "game/graphics.h"
 #include "game/input.h"
-#include "game/string_format.h"
 #include "platform/file.h"
 #include "platform/graphics_backend.h"
 #include "platform/path.h"
@@ -83,10 +84,7 @@ static void ScreenshotFindLastFor(std::string_view ext) {
 }
 
 void Grp_ScreenshotSetPrefix(std::string_view prefix) {
-  const auto cap = (prefix.length() + STRING_NUM_CAP<NUM_TYPE> + 5);
-  ScreenshotBuf.resize_and_overwrite(cap, [&](auto *p, size_t) {
-    return (std::ranges::copy(prefix, p).out - p);
-  });
+  ScreenshotBuf = prefix;
 }
 
 // Increments the screenshot number to the next file with the given extension
@@ -105,7 +103,7 @@ SDL_IOStream *Grp_NextScreenshotStream(std::string_view ext) {
   // Prevent the theoretical infinite loop...
   while (ScreenshotNum < (std::numeric_limits<NUM_TYPE>::max)()) {
     const auto prefix_len = ScreenshotBuf.size();
-    StringCatNum<4>(ScreenshotNum++, ScreenshotBuf);
+    ScreenshotBuf += std::format("{:04}", ScreenshotNum++);
     ScreenshotBuf += ext;
     auto *ret = SDL_IOFromFile(ScreenshotBuf.c_str(), "wxb");
     ScreenshotBuf.resize(prefix_len);
