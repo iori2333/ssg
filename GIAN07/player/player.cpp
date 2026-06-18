@@ -447,6 +447,10 @@ void Player::Initialize() {
   bomb_used = 0;
   deathbomb_count = 0;
 
+  star_counter = 0;
+  star_threshold = 400;
+  star_extend_count = 0;
+
   bomb_time = 0;
   deathbomb_time = 0;
   evade_c = evade = 0;

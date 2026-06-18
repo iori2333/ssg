@@ -931,6 +931,9 @@ void GameContinue() {
   Players.viv.evade_sum = 0;
   Players.viv.left = ConfigDat.PlayerStock.v;
   Players.viv.score = ((Players.viv.score % 10) + 1);
+  Players.viv.star_counter = 0;
+  Players.viv.star_threshold = 400;
+  Players.viv.star_extend_count = 0;
 
   GameFlow.game_main = GameProc;
   GameFlow.current_state = GameState::Game;

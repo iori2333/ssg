@@ -64,6 +64,15 @@ void StdStatusOutput() {
     GrpPut16(0, 98, std::format("Bomb{:5}", Players.viv.bomb_used).c_str());
     GrpPut16(0, 114,
              std::format("DthB{:5}", Players.viv.deathbomb_count).c_str());
+    GrpPut16(0, 130, "Stars");
+    {
+      const auto capped = (Players.viv.star_counter > 9999)
+                              ? 9999u
+                              : Players.viv.star_counter;
+      GrpPut16(0, 146, std::format("{:4}/{:4}", capped,
+                                   Players.viv.star_threshold)
+                           .c_str());
+    }
   }
 
 #ifdef PBG_DEBUG

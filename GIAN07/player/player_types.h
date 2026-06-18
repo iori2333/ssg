@@ -24,6 +24,11 @@ struct Player {
   uint16_t evade;     // Graze count
   uint16_t evade_c;   // Consecutive graze remaining tolerance
 
+  // --- Star counter ---
+  uint32_t star_counter;      // Cumulative star count
+  uint32_t star_threshold;    // Next extend threshold
+  uint8_t star_extend_count;  // Extends granted via stars
+
   // --- Status ---
   char v;              // Cactus base movement speed (later multiply by 64~45)
   uint8_t weapon;      // Thorn type

@@ -100,6 +100,14 @@ void ItemManager::Move() {
           Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
           Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
         }
+        Players.viv.star_counter += (Players.viv.evade != 0U) ? 2 : 1;
+        if (Players.viv.star_counter >= Players.viv.star_threshold &&
+            Players.viv.left < 9) {
+          Players.viv.left++;
+          Players.viv.star_threshold += 250;
+          Players.viv.star_extend_count++;
+          Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
+        }
         break;
 
       case ITEM_EXTEND:

@@ -162,3 +162,31 @@ set_target_properties(GIAN07 PROPERTIES
 if(MSVC)
     target_compile_options(GIAN07 PRIVATE /MP)
 endif()
+
+# ============================================================
+# Pack tool (standalone utility)
+# ============================================================
+add_executable(pack_tool
+    tools/pack_tool.cpp
+    GIAN07/core/lz_uty.cpp
+    platform/sdl/buffer_sdl.cpp
+    platform/sdl/file_sdl.cpp
+)
+if(WIN32)
+    target_sources(pack_tool PRIVATE platform/windows/file.cpp)
+    target_compile_definitions(pack_tool PRIVATE WIN32)
+    target_link_libraries(pack_tool PRIVATE ${WIN32_SYSTEM_LIBS})
+elseif(UNIX)
+    target_sources(pack_tool PRIVATE platform/c/file.cpp)
+endif()
+target_include_directories(pack_tool PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
+)
+target_link_libraries(pack_tool PRIVATE SDL3::SDL3-static)
+set_target_properties(pack_tool PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+if(MSVC)
+    target_compile_options(pack_tool PRIVATE /MP)
+endif()
