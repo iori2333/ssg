@@ -121,7 +121,10 @@ void PlayerManager::SetMaidShot() {
     viv.muteki = BOMBMUTEKI_VAL;
     viv.bomb--;
     viv.bomb_used++;
-    viv.deathbomb_time = 0; // Cancel pending deathbomb
+    if (viv.deathbomb_time != 0) {
+      viv.deathbomb_count++;
+      viv.deathbomb_time = 0;
+    }
     Ranking.Add(-25); // Difficulty down
   }
 

@@ -445,6 +445,7 @@ void Player::Initialize() {
 
   miss_count = 0;
   bomb_used = 0;
+  deathbomb_count = 0;
 
   bomb_time = 0;
   deathbomb_time = 0;
@@ -506,8 +507,9 @@ void Player::OnHit() {
   Snd_SEPlay(SOUND_ID_DEAD);
 
   if (bomb > 0 && bomb_time == 0) {
-    deathbomb_time = DEATHBOMB_WINDOW;
-    muteki = DEATHBOMB_WINDOW;
+    const auto window = DEATHBOMB_WINDOW + (GAME_LUNATIC - static_cast<int>(GameState.game_level)) * 2;
+    deathbomb_time = static_cast<uint16_t>(window);
+    muteki = static_cast<uint16_t>(window);
     Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
     return;
   }

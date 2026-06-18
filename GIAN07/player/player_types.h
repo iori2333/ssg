@@ -31,8 +31,9 @@ struct Player {
   uint8_t bomb;        // Bomb count
   uint8_t left;        // Remaining cactus count
   uint8_t credit;      // Remaining credits
-  uint16_t miss_count; // Miss count
-  uint16_t bomb_used;  // Bomb usage count
+  uint16_t miss_count;        // Miss count
+  uint16_t bomb_used;         // Bomb usage count
+  uint16_t deathbomb_count;   // Deathbomb success count
 
   uint8_t GrpID; // Graphic to display
 
