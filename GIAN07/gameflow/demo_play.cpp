@@ -6,6 +6,7 @@
 #include "demo_play.h"
 #include "config.h"
 #include "demo_manager.h"
+#include "game/guard.h"
 #include "game/input.h"
 #include "game/ut_math.h"
 #include "gian.h"
@@ -134,10 +135,10 @@ void DemoManager::SaveDemo() {
 
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f != nullptr) {
+    auto f_guard = make_guard(f, SDL_CloseIO);
     SDL_WriteIO(f, &demo_info, sizeof(demo_info));
     SDL_WriteIO(f, demo_buffer.data(),
                 (sizeof(demo_buffer[0]) * demo_info.FrameCount));
-    SDL_CloseIO(f);
   }
 }
 

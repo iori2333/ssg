@@ -6,7 +6,7 @@
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
 #include "score.h"
-#include "game/defer.h"
+#include "game/guard.h"
 #include "level.h"
 #include "lz_uty.h"
 #include "score_manager.h"
@@ -96,7 +96,7 @@ uint8_t ScoreManager::IsHighScore(const NrNameData *NData, uint8_t Dif) {
   if (!LoadScoreData()) {
     return 0;
   }
-  defer(ReleaseScoreData());
+  auto score_guard = make_guard([this] { ReleaseScoreData(); });
 
   // 難易度でポインタを振り分ける //
   const auto maybe_temp = GetNList(Dif);

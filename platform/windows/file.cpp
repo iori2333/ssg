@@ -8,7 +8,7 @@
 #include <SDL3/SDL_iostream.h>
 #include <bit>
 
-#include "game/defer.h"
+#include "game/guard.h"
 #include "platform/file.h"
 #include "platform/windows/utf.h"
 #include <windows.h>
@@ -25,7 +25,7 @@ File_TimestampsGetW(const std::wstring_view fn_w) {
   if (handle == INVALID_HANDLE_VALUE) {
     return nullptr;
   }
-  defer(CloseHandle(handle));
+  auto handle_guard = make_guard(handle, CloseHandle);
   FILE_TIMESTAMPS_WIN32 ret;
   if (!GetFileTime(handle, &ret.ctime, nullptr, &ret.mtime)) {
     return nullptr;

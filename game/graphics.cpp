@@ -12,7 +12,7 @@
 
 #include <format>
 
-#include "game/defer.h"
+#include "game/guard.h"
 #include "game/format_bmp.h"
 #include "game/graphics.h"
 #include "game/input.h"
@@ -124,7 +124,7 @@ static bool ScreenshotSaveBMP(SDL_Surface *src) {
   if (!stream) {
     return false;
   }
-  defer(SDL_CloseIO(stream));
+  auto stream_guard = make_guard(stream, SDL_CloseIO);
 
   // SDL_SaveBMP_IO() is very slow and unoptimized, especially on Windows
   // where SDL_IOStream still uses unbuffered writes as of SDL 3.2.24. For
@@ -171,7 +171,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   if (!WebPPictureInit(&pic)) {
     return false;
   }
-  defer(WebPPictureFree(&pic));
+  auto pic_guard = make_guard(&pic, WebPPictureFree);
 
   pic.width = src->w;
   pic.height = src->h;
@@ -247,7 +247,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
 
   WebPMemoryWriter wrt;
   WebPMemoryWriterInit(&wrt);
-  defer(WebPMemoryWriterClear(&wrt));
+  auto wrt_guard = make_guard(&wrt, WebPMemoryWriterClear);
   pic.writer = WebPMemoryWrite;
   pic.custom_ptr = &wrt;
 
@@ -259,7 +259,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   if (!stream) {
     return false;
   }
-  defer(SDL_CloseIO(stream));
+  auto stream_guard2 = make_guard(stream, SDL_CloseIO);
   return SDL_MustWriteIO(stream, wrt.mem, wrt.size);
 }
 
