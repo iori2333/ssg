@@ -3,7 +3,7 @@
 /*                                                                           */
 /*   旧来の namespace + 静的グローバル変数をデータクラスで置き換える。        */
 /*   各パネルは自身のテキストバッファ(MenuItem タイトル)、項目配列、          */
-/*   MenuDef を所有し、コールバックで状態を更新する。                          */
+/*   MenuDef を所有し、コールバックで状態を更新する。 */
 /*                                                                           */
 
 #pragma once
@@ -73,8 +73,8 @@ public:
   ApiPanel();
   MenuDef &Menu() { return menu_; }
 
-  MenuItem &ApiItem() { return item_def_; }
-  std::array<MenuItem, 8> &Items() { return items_; }
+  // 利用可能なグラフィック API に応じてメニュー項目を構築する。
+  void Init();
 
   static void FnDef(MenuController &, int_fast8_t);
   static void FnOverride(MenuController &, int_fast8_t);
@@ -97,10 +97,9 @@ public:
   MenuDef &Menu() { return menu_; }
 
   ScreenshotPanel &Screenshot() { return screenshot_; }
-#ifdef SUPPORT_GRP_API
-  ApiPanel &Api() { return api_; }
-  MenuItem &ApiMenuItem() { return item_api_; }
-#endif
+
+  // API 項目を含むサブメニューを初期化する。
+  void Init();
 
 private:
   void Refresh(MenuController &ctrl, bool tick);
@@ -237,6 +236,9 @@ public:
   SoundPanel &Sound() { return sound_; }
   InputPanel &Input() { return input_; }
 
+  // サブパネルを初期化する。
+  void Init();
+
 private:
   DifficultyPanel difficulty_;
   GraphicsPanel graphics_;
@@ -256,6 +258,9 @@ public:
 
   ConfigPanel &Config() { return config_; }
   SoundPanel &Sound() { return config_.Sound(); }
+
+  // サブパネルを初期化する。
+  void Init();
 
   void Refresh(MenuController &ctrl, bool tick);
 

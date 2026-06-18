@@ -20,7 +20,6 @@
 #include "level.h"
 #include "loader.h"
 #include "music.h"
-#include "platform/graphics_backend.h"
 #include "platform/input.h"
 
 #include <algorithm>
@@ -163,31 +162,7 @@ UIManager::UIManager()
 // ---------------------------------------------------------------------------
 
 void UIManager::InitMain() {
-#ifdef SUPPORT_GRP_API
-  const auto grp_api_count = GrpBackend_APICount();
-  if (grp_api_count >= 2) {
-    assert(grp_api_count <= 8);
-    auto &api = main_panel_.Config().Graphics().Api();
-    auto &menu = api.Menu();
-    auto *menu_p = menu.ItemPtr;
-
-    *(menu_p++) = &api.ApiItem();
-    for (const auto i : std::views::iota(0, grp_api_count)) {
-      const auto driver_str = GrpBackend_APIString(i);
-      const auto label = GrpBackend_APILabel(driver_str);
-      assert(!label.empty());
-      api.Items()[i] = MenuItem(
-          reinterpret_cast<const char *>(label.data()),
-          "Select to override default API selection", ApiPanel::FnOverride);
-      *(menu_p++) = &api.Items()[i];
-    }
-    *(menu_p++) = &SubmenuExitItem;
-    menu.NumItems = static_cast<uint8_t>(std::distance(menu.ItemPtr, menu_p));
-  } else {
-    main_panel_.Config().Graphics().ApiMenuItem().Flags |= MenuFlags::DISABLED;
-  }
-#endif
-
+  main_panel_.Init();
   main_window_.Init(140);
 }
 

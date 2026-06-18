@@ -240,6 +240,24 @@ void ApiPanel::FnOverride(MenuController &ctrl, int_fast8_t) {
   XGrpTry([&](auto &params) { params.api = (ctrl.CurrentSelection() - 1); });
 }
 
+void ApiPanel::Init() {
+  const auto grp_api_count = GrpBackend_APICount();
+  assert(grp_api_count <= 8);
+
+  auto *menu_p = menu_.ItemPtr;
+  *(menu_p++) = &item_def_;
+  for (const auto i : std::views::iota(0, grp_api_count)) {
+    const auto driver_str = GrpBackend_APIString(i);
+    const auto label = GrpBackend_APILabel(driver_str);
+    assert(!label.empty());
+    items_[i] = MenuItem(reinterpret_cast<const char *>(label.data()),
+                         HELP_API_SPECIFIC, FnOverride);
+    *(menu_p++) = &items_[i];
+  }
+  *(menu_p++) = &SubmenuExitItem;
+  menu_.NumItems = static_cast<uint8_t>(std::distance(menu_.ItemPtr, menu_p));
+}
+
 void ApiPanel::Refresh(MenuController &, bool) {
   const bool is_def_api = ConfigDat.GraphicsAPI.empty();
   const Narrow::string_view api_active =
@@ -296,6 +314,16 @@ GraphicsPanel::GraphicsPanel() {
 
   menu_ = MenuDef([this](MenuController &c, bool t) { Refresh(c, t); },
                   std::span<MenuItem *const>(item_ptrs_));
+}
+
+void GraphicsPanel::Init() {
+#ifdef SUPPORT_GRP_API
+  if (GrpBackend_APICount() >= 2) {
+    api_.Init();
+  } else {
+    item_api_.Flags |= MenuFlags::DISABLED;
+  }
+#endif
 }
 
 void GraphicsPanel::FnDisp(MenuController &, int_fast8_t) {
@@ -737,6 +765,8 @@ ConfigPanel::ConfigPanel() {
   menu_ = MenuDef(std::span(items_));
 }
 
+void ConfigPanel::Init() { graphics_.Init(); }
+
 // ---------------------------------------------------------------------------
 // MainMenuPanel
 // ---------------------------------------------------------------------------
@@ -755,6 +785,8 @@ MainMenuPanel::MainMenuPanel() : title_("     Main Menu") {
       std::span(items_), [this](MenuController &c, bool t) { Refresh(c, t); },
       &title_);
 }
+
+void MainMenuPanel::Init() { config_.Init(); }
 
 bool MainMenuPanel::FnGameStart(MenuController &, INPUT_BITS key) {
   if (Input_IsOK(key)) {
