@@ -35,15 +35,13 @@ struct LINE {
   WINDOW_COORD left;
 };
 
-LINE Line[1];
-
-constexpr std::string_view BUILD_LABEL = "BUILD";
-constexpr std::string_view BUILD_VALUE = (" " VERSION_TAG);
+static LINE Line;
+constexpr auto BUILD_LABEL = "BUILD";
 
 void Init() {
-  const auto build_w = TextObj.TextExtent(FONT_ID::TINY, BUILD_VALUE).w;
-  Line[0].trr = TextObj.Register({.w = 136, .h = 10});
-  Line[0].left = (GRP_RES.w - build_w);
+  const auto build_w = TextObj.TextExtent(FONT_ID::TINY, VERSION_TAG).w;
+  Line.trr = TextObj.Register({.w = 136, .h = 10});
+  Line.left = (GRP_RES.w - build_w);
 }
 
 void Render(PIXEL_COORD top) {
@@ -54,17 +52,17 @@ void Render(PIXEL_COORD top) {
 
   constexpr auto BUILD_LABEL_EXTENT = GrpExtent5(BUILD_LABEL);
   const WINDOW_POINT build_label_topleft = {
-      {.x = (Line[0].left - BUILD_LABEL_EXTENT.w),
+      {.x = (Line.left - BUILD_LABEL_EXTENT.w),
 
        // MS Gothic 10 is actually 7 pixels high and starts at a Y coordinate
        // of 2.
        .y = (top + 2 + 7 - BUILD_LABEL_EXTENT.h)}};
 
   GrpPut55(build_label_topleft, BUILD_LABEL);
-  TextObj.Render({Line[0].left, top}, Line[0].trr, BUILD_VALUE,
+  TextObj.Render({Line.left, top}, Line.trr, VERSION_TAG,
                  [gradient_func](auto &s) {
-                   const std::span strs = {&BUILD_VALUE, 1};
-                   DrawGrdFont(s, strs, FONT_ID::TINY, false, gradient_func);
+                   std::array<std::string_view, 1> strs = {VERSION_TAG};
+                   DrawGrdFont(s, {strs}, FONT_ID::TINY, false, gradient_func);
                  });
 }
 }; // namespace Version
@@ -1340,10 +1338,10 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     rc = PIXEL_LTWH{72, (272 + 16), 56, 8};
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
-    GrpPutScore(500, 400,
-                std::format("{}",
-                            ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5))
-                    .c_str());
+    GrpPutScore(
+        500, 400,
+        std::format("{}", ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5))
+            .c_str());
 
     GrpBackend_SetClip(GRP_RES_RECT);
 

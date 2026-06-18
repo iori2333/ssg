@@ -326,14 +326,14 @@ bool BGM_PacksAvailable(bool invalidate_cache) {
   if (PacksAvailable.has_value() && !invalidate_cache) {
     return PacksAvailable.value();
   }
-  PacksAvailable = BGM_PackIterator(
-      [](const std::string_view) { return SDL_ENUM_SUCCESS; });
+  PacksAvailable =
+      BGM_PackIterator([](std::string_view) { return SDL_ENUM_SUCCESS; });
   return PacksAvailable.value();
 }
 
 size_t BGM_PackCount(void) {
   size_t ret = 0;
-  BGM_PackIterator([&](const std::string_view) {
+  BGM_PackIterator([&](std::string_view) {
     ret++;
     return SDL_ENUM_CONTINUE;
   });
@@ -347,8 +347,8 @@ void BGM_PackForeach(std::function<void(std::string_view pack)> func) {
   });
 }
 
-bool BGM_PackSet(const std::string_view pack) {
-  const std::string_view cur = PackPath;
+bool BGM_PackSet(std::string_view pack) {
+  std::string_view cur = PackPath;
   if (!pack.empty()) {
     const auto path_data = PathForData();
     const auto root_len = (path_data.size() + BGM_ROOT.size());

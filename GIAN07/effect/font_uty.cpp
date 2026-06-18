@@ -260,7 +260,7 @@ void GrpPutScore(int x, int y, const char *s) {
   }
 }
 
-void GrpPut55(WINDOW_POINT topleft, const std::string_view s) {
+void GrpPut55(WINDOW_POINT topleft, std::string_view s) {
   for (const char c : s) {
     const auto w = GrpExtent5(c);
     if (w == 0) {
@@ -291,9 +291,9 @@ void GrpPutMidNum(int x, int y, int n) {
   }
 }
 
-PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s,
-                       std::span<const std::string_view> strs, FONT_ID font,
-                       bool shadow, uint8_t (*gradient_func)(PIXEL_COORD y)) {
+PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s, std::span<std::string_view> strs,
+                       FONT_ID font, bool shadow,
+                       uint8_t (*gradient_func)(PIXEL_COORD y)) {
   PIXEL_SIZE extent = {.w = 0, .h = 0};
 
   // ここら辺は、一種の常套手段か？ //

@@ -235,7 +235,7 @@ enum class PACK_ID : uint8_t {
   COUNT,
 };
 
-constexpr ENUMARRAY<const std::string_view, PACK_ID> BASENAMES = {{
+constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
     "ENEMY.DAT",
     "GRAPH.DAT",
     "GRAPH2.DAT",

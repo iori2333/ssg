@@ -20,7 +20,7 @@
 
 namespace BGM {
 
-void OnVorbisComment(METADATA_CALLBACK func, const std::string_view comment) {
+void OnVorbisComment(METADATA_CALLBACK func, std::string_view comment) {
   const auto eq_i = comment.find('=');
   if (eq_i == std::string_view::npos) {
     return;
@@ -138,12 +138,12 @@ static constexpr size_t EXT_CAP =
       return (a.ext.size() < b.ext.size());
     })->ext.size();
 
-static bool TagEquals(const std::string_view a, const std::string_view b) {
+static bool TagEquals(std::string_view a, std::string_view b) {
   return ((a.size() == b.size()) &&
           !SDL_strncasecmp(a.data(), b.data(), b.size()));
 }
 
-std::unique_ptr<TRACK> TrackOpen(const std::string_view base_fn) {
+std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
   const size_t base_len = base_fn.size();
   const size_t fn_len = (LOOP_INFIX.size() + EXT_CAP);
   std::string fn;

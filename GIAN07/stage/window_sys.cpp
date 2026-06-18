@@ -135,7 +135,7 @@ void MenuController::Draw() {
   // 文字列の描画 //
   WINDOW_POINT topleft = {x, y};
   const auto trr = TRRs[0];
-  const std::string_view str = p->Title->Title;
+  std::string_view str = p->Title->Title;
   TextObj.Render(topleft, trr, str, [=](TEXTRENDER_SESSION &s) {
     MenuDrawLabel(s, *p->Title, true);
   });
@@ -144,8 +144,7 @@ void MenuController::Draw() {
   for (i = 0; std::cmp_less(i, p->NumItems); i++) {
     const auto trr = TRRs[1 + i];
     auto *item = p->ItemPtr[i];
-    const std::string_view c =
-        ((item->Flags == item->FlagsPrev) ? item->Title : "");
+    std::string_view c = ((item->Flags == item->FlagsPrev) ? item->Title : "");
     TextObj.Render(topleft, trr, c, [=](TEXTRENDER_SESSION &s) {
       MenuDrawLabel(s, *item, false);
     });
@@ -221,8 +220,8 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     }
     return;
   }
-  if ((OldKey == KEY_UP) || (OldKey == KEY_DOWN) ||
-      (OldKey == KEY_LEFT) || (OldKey == KEY_RIGHT)) {
+  if ((OldKey == KEY_UP) || (OldKey == KEY_DOWN) || (OldKey == KEY_LEFT) ||
+      (OldKey == KEY_RIGHT)) {
     KeyCount = CWIN_KEYWAIT;
     return;
   }

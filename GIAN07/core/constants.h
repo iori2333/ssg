@@ -7,10 +7,7 @@
 #pragma once
 
 #include "game/coords.h"
-#define GAME_ORG "rec98"
-#define GAME_APP "sh01"
-#define GAME_TITLE "秋霜玉"
-#define VERSION_TAG "v1.0"
+
 #include <assert.h>
 #include <cstdint>
 #include <utility>
@@ -18,6 +15,10 @@
 // The game's native resolution.
 constexpr WINDOW_SIZE GRP_RES = {.w = 640, .h = 480};
 constexpr WINDOW_LTRB GRP_RES_RECT = {{.x = 0, .y = 0}, GRP_RES};
+constexpr auto GAME_ORG = "rec98";
+constexpr auto GAME_APP = "sh01";
+constexpr auto GAME_TITLE = "秋霜玉";
+constexpr auto VERSION_TAG = "v1.0";
 
 // Maximum number of triangles rendered in a single draw call.
 constexpr auto GRP_TRIANGLES_MAX = 66;

@@ -112,7 +112,7 @@ HelpSetFullscreenMode(SDL_Window *window, GRAPHICS_FULLSCREEN_FLAGS fs) {
   return fs;
 }
 
-int8_t WndBackend_ValidateRenderDriver(const std::string_view hint) {
+int8_t WndBackend_ValidateRenderDriver(std::string_view hint) {
   const auto id = GrpBackend_APIID(hint);
   if (id >= 0) {
     return id;
@@ -124,9 +124,7 @@ int8_t WndBackend_ValidateRenderDriver(const std::string_view hint) {
       LOG_CAT,
       "Unsupported renderer \"%s\" specified in " SDL_HINT_RENDER_DRIVER
       " hint, falling back to %s default (%s).",
-      hint.data(),
-      (GRP_SDL_DEFAULT_API ? "the" : "SDL's"),
-      default_driver);
+      hint.data(), (GRP_SDL_DEFAULT_API ? "the" : "SDL's"), default_driver);
   SDL_UnsetEnvironmentVariable(SDL_GetEnvironment(), SDL_HINT_RENDER_DRIVER);
 
   // If this succeeds, the hint came from SDL, not the environment.

@@ -23,7 +23,7 @@ std::pair<int16_t, int16_t> HelpGetWindowPosition(SDL_Window *window);
 // Returns the SDL render driver index that matches [hint]. If the hint doesn't
 // match any driver, the function resets SDL's render driver hints and returns
 // -1.
-int8_t WndBackend_ValidateRenderDriver(const std::string_view hint);
+int8_t WndBackend_ValidateRenderDriver(std::string_view hint);
 
 // Looks like it belongs into `graphics_sdl`, but is also needed for window
 // creation.

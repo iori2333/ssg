@@ -259,7 +259,7 @@ void ApiPanel::Init() {
 
 void ApiPanel::Refresh(MenuController &, bool) {
   const bool is_def_api = ConfigDat.GraphicsAPI.empty();
-  const std::string_view api_active = GrpBackend_APILabel(GrpBackend_APIString());
+  std::string_view api_active = GrpBackend_APILabel(GrpBackend_APIString());
 
   item_def_.SetActive(!is_def_api);
   for (auto &api : items_ | std::views::take(GrpBackend_APICount())) {
