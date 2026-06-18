@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <functional>
 #include <utility>
 
 #include "game/enum_flags.h"
@@ -76,7 +77,7 @@ inline constexpr auto CWIN_KEYWAIT = 8;
 
 ///// [構造体] /////
 
-enum class WINDOW_FLAGS : uint8_t {
+enum class MenuFlags : uint8_t {
   HAS_BITFLAG_OPERATORS = 0,
   NONE = 0x00,
 
@@ -95,88 +96,124 @@ enum class WINDOW_FLAGS : uint8_t {
   FORCE_RERENDER = 0x10,
 };
 
-struct WINDOW_MENU;
+struct MenuDef;
+class MenuController;
 
 // Shared data for menu titles and choices.
-struct WINDOW_LABEL {
+struct MenuLabel {
   Narrow::literal Title; // タイトル文字列へのポインタ(実体ではない！)
 
-  WINDOW_FLAGS Flags = WINDOW_FLAGS::NONE;
+  MenuFlags Flags = MenuFlags::NONE;
 
   // Required for forcing the item to be re-rendered after a flag change.
-  WINDOW_FLAGS FlagsPrev = WINDOW_FLAGS::FORCE_RERENDER;
+  MenuFlags FlagsPrev = MenuFlags::FORCE_RERENDER;
 
-  constexpr WINDOW_LABEL(const Narrow::literal title = "",
-                         WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
+  constexpr MenuLabel(const Narrow::literal title = "",
+                         MenuFlags flags = MenuFlags::NONE) noexcept
       : Title(title), Flags(flags) {}
 };
 
 // 子ウィンドウの情報 //
-struct WINDOW_CHOICE : public WINDOW_LABEL {
+struct MenuItem : public MenuLabel {
+  // コールバック関数の型 //
+  using ActionFn = std::function<bool(MenuController &, INPUT_BITS)>;
+  using AdjustFn = std::function<void(MenuController &, int_fast8_t)>;
+
+  // Raw pointer aliases for constructor overloading disambiguation.
+  using ActionFnPtr = bool (*)(MenuController &, INPUT_BITS);
+  using AdjustFnPtr = void (*)(MenuController &, int_fast8_t);
+
   Narrow::literal Help; // ヘルプ文字列へのポインタ(これも実体ではない)
 
-  // 特殊処理用コールバック関数(未使用ならNULL)
-  bool (*CallBackFn)(INPUT_BITS) = nullptr;
+  // 特殊処理用コールバック関数(未使用なら空)
+  ActionFn CallBackFn;
 
-  // Callback function for options (falls back on [CallBackFn] if nullptr)
-  void (*OptionFn)(int_fast8_t delta) = nullptr;
+  // Callback function for options (falls back on [CallBackFn] if empty)
+  AdjustFn OptionFn;
 
-  WINDOW_MENU *Submenu = nullptr;
+  MenuDef *Submenu = nullptr;
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title = "",
-                          const Narrow::literal help = "",
-                          decltype(CallBackFn) callback_fn = nullptr,
-                          WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
-      : WINDOW_LABEL(title, flags), Help(help), CallBackFn(callback_fn) {
-    if (callback_fn == nullptr) {
-      Flags |= WINDOW_FLAGS::DISABLED;
+  MenuItem(const Narrow::literal title = "",
+                const Narrow::literal help = "",
+                ActionFnPtr callback_fn = nullptr,
+                MenuFlags flags = MenuFlags::NONE)
+      : MenuLabel(title, flags), Help(help), CallBackFn(callback_fn) {
+    if (!CallBackFn) {
+      Flags |= MenuFlags::DISABLED;
     }
   }
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title,
-                          const Narrow::literal help,
-                          decltype(OptionFn) option_fn,
-                          WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
-      : WINDOW_LABEL(title, flags), Help(help), OptionFn(option_fn) {}
+  MenuItem(const Narrow::literal title,
+                const Narrow::literal help,
+                AdjustFnPtr option_fn,
+                MenuFlags flags = MenuFlags::NONE)
+      : MenuLabel(title, flags), Help(help), OptionFn(option_fn) {}
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title,
-                          const Narrow::literal help,
-                          WINDOW_FLAGS flags = WINDOW_FLAGS::NONE) noexcept
-      : WINDOW_LABEL(title, flags), Help(help) {}
+  MenuItem(const Narrow::literal title,
+                const Narrow::literal help,
+                MenuFlags flags)
+      : MenuLabel(title, flags), Help(help) {}
 
-  constexpr WINDOW_CHOICE(const Narrow::literal title,
-                          const Narrow::literal help,
-                          WINDOW_MENU &submenu) noexcept
-      : WINDOW_LABEL(title), Help(help), Submenu(&submenu) {}
+  MenuItem(const Narrow::literal title,
+                const Narrow::literal help,
+                MenuDef &submenu)
+      : MenuLabel(title), Help(help), Submenu(&submenu) {}
 
   void SetActive(bool active);
 };
 
 // Dynamic collection of menu items at a single hierarchy level.
-struct WINDOW_MENU {
-  WINDOW_LABEL *Title;
-  WINDOW_CHOICE *ItemPtr[WINITEM_MAX] = {nullptr}; // 次の項目へのポインタ
-  void (*SetItems)(bool tick) = [](bool) {};
-  uint8_t NumItems; // 項目数(<ITEM_MAX)
+struct MenuDef {
+  using RefreshFn = std::function<void(MenuController &, bool tick)>;
+
+  MenuLabel *Title = nullptr;
+  MenuItem *ItemPtr[WINITEM_MAX] = {nullptr}; // 次の項目へのポインタ
+  RefreshFn SetItems = [](MenuController &, bool) {};
+  uint8_t NumItems = 0; // 項目数(<ITEM_MAX)
+
+  MenuDef() = default;
 
   template <size_t N>
-  constexpr WINDOW_MENU(
-      std::span<WINDOW_CHOICE, N> children,
-      void (*set_items)(bool) = [](bool) {},
-      WINDOW_LABEL *title = nullptr) noexcept
-      : Title(title), SetItems(set_items), NumItems(N) {
+  MenuDef(
+      std::span<MenuItem, N> children,
+      RefreshFn set_items = [](MenuController &, bool) {},
+      MenuLabel *title = nullptr) noexcept
+      : Title(title), SetItems(std::move(set_items)), NumItems(N) {
     static_assert(N <= WINITEM_MAX);
-    assert(set_items != nullptr);
     for (size_t i = 0; auto &item : children) {
       ItemPtr[i++] = &item;
     }
   }
 
-  constexpr WINDOW_MENU(void (*set_items)(bool),
-                        std::initializer_list<WINDOW_CHOICE *> children)
-      : Title(nullptr), SetItems(set_items), NumItems(children.size()) {
+  // std::vector など動的サイズコンテナ用のコンストラクタ。
+  MenuDef(
+      std::span<MenuItem> children,
+      RefreshFn set_items = [](MenuController &, bool) {},
+      MenuLabel *title = nullptr)
+      : Title(title), SetItems(std::move(set_items)),
+        NumItems(static_cast<uint8_t>(children.size())) {
+    assert(children.size() <= WINITEM_MAX);
+    for (size_t i = 0; i < children.size(); i++) {
+      ItemPtr[i] = &children[i];
+    }
+  }
+
+  MenuDef(RefreshFn set_items,
+              std::initializer_list<MenuItem *> children)
+      : Title(nullptr), SetItems(std::move(set_items)), NumItems(children.size()) {
     for (size_t i = 0; const auto &item : children) {
       ItemPtr[i++] = item;
+    }
+  }
+
+  // std::vector<MenuItem *> などの動的ポインタ配列用。
+  MenuDef(RefreshFn set_items, std::span<MenuItem *const> children,
+          MenuLabel *title = nullptr)
+      : Title(title), SetItems(std::move(set_items)),
+        NumItems(static_cast<uint8_t>(children.size())) {
+    assert(children.size() <= WINITEM_MAX);
+    for (size_t i = 0; i < children.size(); i++) {
+      ItemPtr[i] = children[i];
     }
   }
 
@@ -185,113 +222,65 @@ struct WINDOW_MENU {
 };
 
 // ウィンドウ群 //
-struct WINDOW_SYSTEM {
-  WINDOW_MENU &Parent; // 親ウィンドウ
-  int x, y;            // ウィンドウ左上の座標
-  PIXEL_COORD W;
-  uint32_t Count;               // フレームカウンタ
-  uint8_t Select[WINDOW_DEPTH]; // 選択中の項目スタック
-  uint8_t SelectDepth;          // 選択中の項目に対するＳＰ
-  uint8_t State;                // 状態
-
-  INPUT_BITS OldKey;      // 前に押されていたキー
-  uint8_t KeyCount;       // キーボードウェイト
-  uint8_t FastRepeatWait; // Current wait time for FAST_REPEAT items
-  bool FirstWait;         // 最初のキー解放待ち
-
-  TEXTRENDER_RECT_ID TRRs[1 + WINITEM_MAX]; // Initialized by Init().
-
-  // Prepares text rendering for a window with the given width.
-  void Init(PIXEL_COORD w);
-
-  // コマンドウィンドウの初期化 //
-  void Open(WINDOW_POINT topleft, int select);
-
-  void OpenCentered(PIXEL_COORD w, int select);
-};
-
-// Vertically scrolling menu with elements generated on the fly.
-// Unfortunately has to be a template because [WINDOW_SYSTEM::CallBackFn]
-// doesn't take a reference to a window system object.
-template <WINDOW_LABEL &Title, size_t (*ListSize)(),
-          void (*Generate)(WINDOW_CHOICE &ret, size_t generated,
-                           size_t selected),
-          bool (*Handle)(INPUT_BITS key, size_t selected),
-          size_t MaxVisible = WINITEM_MAX>
-class WINDOW_MENU_SCROLL {
-  // Rewritten when scrolling.
-  static inline std::array<WINDOW_CHOICE, MaxVisible> Item = {};
-
-  static inline size_t Sel = 0;
-  static inline WINDOW_SYSTEM *Sys = nullptr;
-  static inline WINDOW_SYSTEM *ReturnTo = nullptr;
-
-  static void Scroll() {
-    const auto total = ListSize();
-    const auto visible = Menu.NumItems;
-    const auto visible_half = (Menu.NumItems / 2);
-    size_t generated_i =
-        ((std::cmp_less(Sel, visible_half)) ? 0
-         : (Sel >= (total - visible_half))  ? (total - visible)
-                                            : (Sel - visible_half));
-    for (auto item_i = decltype(visible){0}; item_i < visible; item_i++) {
-      Item[item_i].CallBackFn = Fn;
-      Generate(Item[item_i], generated_i, Sel);
-      if (generated_i == Sel) {
-        Sys->Select[Sys->SelectDepth] = item_i;
-      }
-      generated_i++;
-    }
-  }
-
-  static bool Fn(INPUT_BITS key) {
-    if (key == KEY_UP) {
-      if (Sel == 0) {
-        Sel = ListSize();
-      }
-      Sel--;
-      Scroll();
-    } else if (key == KEY_DOWN) {
-      Sel++;
-      if (Sel >= ListSize()) {
-        Sel = 0;
-      }
-      Scroll();
-    } else if ((key == KEY_BOMB) || (key == KEY_ESC)) {
-      if (Sys->SelectDepth > 0) {
-        Sys->SelectDepth--;
-      } else {
-        Sys->State = CWIN_DEAD;
-      }
-      if (ReturnTo != nullptr) {
-        ReturnTo->OldKey = key;
-      }
-      return false;
-    }
-    return Handle(key, Sel);
-  }
-
+class MenuController {
 public:
-  static inline WINDOW_MENU Menu = {std::span(Item), [](bool) {}, &Title};
+  explicit MenuController(MenuDef &parent) : Parent(parent) {}
 
-  static void Init(WINDOW_SYSTEM &sys, size_t sel, WINDOW_SYSTEM *return_to) {
-    assert(sel < ListSize());
-    Sys = &sys;
-    ReturnTo = return_to;
-    Menu.NumItems = (std::min)(ListSize(), Item.size());
-    Scroll();
+  // --- 初期化 ---
+  void Init(PIXEL_COORD w);                    // Prepares text rendering.
+  void Open(WINDOW_POINT topleft, int select); // コマンドウィンドウの初期化
+  void OpenCentered(PIXEL_COORD w, int select);
+
+  // --- 毎フレーム処理 ---
+  void Tick(INPUT_BITS key); // CWinMove を置き換え (キーを引数で受け取る)
+  void Draw();               // CWinDraw を置き換え
+
+  // --- 検索 ---
+  MenuDef *SearchActive(); // CWinSearchActive を置き換え
+
+  // --- 状態検査 ---
+  bool Active() const { return State != CWIN_DEAD; }
+  uint8_t Depth() const { return SelectDepth; }
+  uint8_t CurrentSelection() const { return Select[SelectDepth]; }
+  uint8_t SelectionAt(uint8_t depth) const { return Select[depth]; }
+  INPUT_BITS LastKey() const { return OldKey; }
+  int Y() const { return y; }
+
+  // --- 状態操作 (コールバック / スクロールメニュー用) ---
+  void SetCurrentSelection(uint8_t sel) { Select[SelectDepth] = sel; }
+  void PopLevel() {
+    if (SelectDepth > 0) SelectDepth--;
   }
+  void Close() { State = CWIN_DEAD; }
+  void SetLastKey(INPUT_BITS key) { OldKey = key; }
+  void SetY(int new_y) { y = new_y; }
+  void AdjustYForTallMenu(int baseline_y, int max_visible);
+
+  MenuDef &Root() { return Parent; }
+
+private:
+  void KeyEvent(INPUT_BITS key); // CWinKeyEvent を置き換え
+
+  MenuDef &Parent;                       // 親ウィンドウ
+  int x = 0, y = 0;                          // ウィンドウ左上の座標
+  PIXEL_COORD W = 0;
+  uint32_t Count = 0;                        // フレームカウンタ
+  uint8_t Select[WINDOW_DEPTH] = {};         // 選択中の項目スタック
+  uint8_t SelectDepth = 0;                   // 選択中の項目に対するＳＰ
+  uint8_t State = CWIN_DEAD;                 // 状態
+
+  INPUT_BITS OldKey = 0;                     // 前に押されていたキー
+  uint8_t KeyCount = 0;                      // キーボードウェイト
+  uint8_t FastRepeatWait = 0;                // FAST_REPEAT 項目のウェイト
+  bool FirstWait = false;                    // 最初のキー解放待ち
+
+  TEXTRENDER_RECT_ID TRRs[1 + WINITEM_MAX] = {}; // Init() で初期化。
 };
 
 ///// [ 関数 ] /////
 
 // コマンドウィンドウ処理 //
-void CWinMove(WINDOW_SYSTEM *ws); // コマンドウィンドウを１フレーム動作させる
-void CWinDraw(WINDOW_SYSTEM *ws); // コマンドウィンドウの描画
-bool CWinExitFn(INPUT_BITS key);  // コマンド [Exit] のデフォルト処理関数
-
-// アクティブなウィンドウを探す
-WINDOW_MENU *CWinSearchActive(WINDOW_SYSTEM *ws);
+bool CWinExitFn(MenuController &ctrl, INPUT_BITS key);
 
 // Calculates the rendered width of the given text in the menu item font,
 // without any padding.
@@ -300,28 +289,3 @@ PIXEL_SIZE CWinTextExtent(Narrow::string_view str);
 // Calculates the rendered width of a whole padded menu item with the given
 // text.
 PIXEL_SIZE CWinItemExtent(Narrow::string_view str);
-
-// メッセージウィンドウ処理 //
-
-enum class MSG_WINDOW_FLAGS : uint8_t {
-  NONE = 0x0,
-  WITH_FACE = 0x1, // Pads all text to leave room for a face portrait.
-  CENTER = 0x2,    // Horizontally centers all text.
-  HAS_BITFLAG_OPERATORS = 3,
-};
-
-// Prepares text rendering for a window with the given dimensions.
-void MWinInit(const WINDOW_LTRB &rc,
-              MSG_WINDOW_FLAGS flags = MSG_WINDOW_FLAGS::NONE);
-
-void MWinOpen();       // メッセージウィンドウをオープンする
-void MWinClose();      // メッセージウィンドウをクローズする
-void MWinForceClose(); // メッセージウィンドウを強制クローズする
-void MWinMove();       // メッセージウィンドウを動作させる(後で上と統合する)
-void MWinDraw();       // メッセージウィンドウを描画する(上に同じ)
-
-void MWinMsg(Narrow::string_view str); // メッセージ文字列を送る
-void MWinFace(uint8_t faceID);         // 顔をセットする
-void MWinCmd(uint8_t cmd);             // コマンドを送る
-
-void MWinHelp(WINDOW_SYSTEM *ws); // メッセージウィンドウにヘルプ文字列を送る

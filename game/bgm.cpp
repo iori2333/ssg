@@ -341,8 +341,8 @@ size_t BGM_PackCount(void) {
   return ret;
 }
 
-void BGM_PackForeach(void func(const std::u8string_view pack)) {
-  BGM_PackIterator([&](const std::u8string_view pack) {
+void BGM_PackForeach(std::function<void(std::u8string_view pack)> func) {
+  BGM_PackIterator([&](std::u8string_view pack) {
     func(pack);
     return SDL_ENUM_CONTINUE;
   });
