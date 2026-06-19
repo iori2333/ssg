@@ -15,17 +15,17 @@ void WideForm::FireMain(uint8_t tier) {
   switch (tier) {
   case 0:
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(player_.x, player_.y);
+    TamaSetXY(player_.X(), player_.Y());
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     player_.SpawnShot_();
     break;
   case 1: {
-    player_.toge_ex += 32;
-    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex, 6));
+    player_.toge_ex_ += 32;
+    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex_, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(player_.x, player_.y);
+    TamaSetXY(player_.X(), player_.Y());
     TamaSetDeg(-64 + dd, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -33,10 +33,10 @@ void WideForm::FireMain(uint8_t tier) {
     break;
   }
   case 2: {
-    player_.toge_ex += 32;
-    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex, 6));
+    player_.toge_ex_ += 32;
+    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex_, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(player_.x - (6 * 64), player_.y);
+    TamaSetXY(player_.X() - (6 * 64), player_.Y());
     TamaSetDeg(-64 + dd, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -48,10 +48,10 @@ void WideForm::FireMain(uint8_t tier) {
   case 3:
   case 4:
   case 5: {
-    player_.toge_ex += 32;
-    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex, 6));
+    player_.toge_ex_ += 32;
+    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex_, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(player_.x, player_.y);
+    TamaSetXY(player_.X(), player_.Y());
     TamaSetDeg(-64 + dd, 4);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
@@ -60,10 +60,10 @@ void WideForm::FireMain(uint8_t tier) {
   }
   default: {
     // tier 6-8: 5-way
-    player_.toge_ex += 32;
-    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex, 6));
+    player_.toge_ex_ += 32;
+    const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex_, 6));
     TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(player_.x, player_.y);
+    TamaSetXY(player_.X(), player_.Y());
     TamaSetDeg(-64 + dd, 3);
     TamaSetSpd(54, 0);
     TamaSetNum(5, 0);
@@ -81,48 +81,48 @@ void WideForm::FireSub(uint8_t tier) {
   case 2:
   case 3:
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 5, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 5, 0);
     player_.SpawnShot_();
     break;
   case 4:
   case 5:
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 8, 7);
     TamaSetSpd(54, 0);
     TamaSetNum(2, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 8, 7);
     player_.SpawnShot_();
     break;
   case 6:
   case 7:
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 10, 8);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 10, 8);
     player_.SpawnShot_();
     break;
   default:
     // tier 8
     TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 12, 8);
     TamaSetSpd(54, 0);
     TamaSetNum(4, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 12, 8);
     player_.SpawnShot_();
     break;
@@ -132,12 +132,12 @@ void WideForm::FireSub(uint8_t tier) {
 void WideForm::FireBomb() {
   int dx = 0, dy = 0, l = 0;
 
-  if (player_.bomb_time > WIDE_BOMB_TIME - 30) {
+  if (player_.bomb_time_ > WIDE_BOMB_TIME - 30) {
     return;
   }
 
-  const auto d = Cast::down<uint8_t>(player_.bomb_time * 3U);
-  l = (WIDE_BOMB_TIME - player_.bomb_time) * 26;
+  const auto d = Cast::down<uint8_t>(player_.bomb_time_ * 3U);
+  l = (WIDE_BOMB_TIME - player_.bomb_time_) * 26;
   dx = GX_MID + (64 * 70 / 2) + cosl(d, l << 1);
   dy = GY_MID - (64 * 90 / 2) + sinl(d << 1, l);
 
@@ -157,7 +157,7 @@ void WideFocusForm::FireMain(uint8_t tier) {
   case 0:
   case 1:
     TamaSTDForm(TID_WIDE_FOCUS_MAIN);
-    TamaSetXY(player_.x, player_.y);
+    TamaSetXY(player_.X(), player_.Y());
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
@@ -168,7 +168,7 @@ void WideFocusForm::FireMain(uint8_t tier) {
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
-    TamaSetXY(player_.x - (6 * 64), player_.y);
+    TamaSetXY(player_.X() - (6 * 64), player_.Y());
     player_.SpawnShot_();
     Bullets.command.x += (12 * 64);
     player_.SpawnShot_();
@@ -182,7 +182,7 @@ void WideFocusForm::FireMain(uint8_t tier) {
       TamaSetDeg(-64, 0);
       TamaSetSpd(54, 0);
       TamaSetNum(1, 0);
-      TamaSetXY(player_.x - spread / 2, player_.y);
+      TamaSetXY(player_.X() - spread / 2, player_.Y());
       for (int i = 0; i < count; i++) {
         player_.SpawnShot_();
         Bullets.command.x += (12 * 64);
@@ -200,48 +200,48 @@ void WideFocusForm::FireSub(uint8_t tier) {
   case 2:
   case 3:
     TamaSTDForm(TID_WIDE_FOCUS_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 2, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 2, 0);
     player_.SpawnShot_();
     break;
   case 4:
   case 5:
     TamaSTDForm(TID_WIDE_FOCUS_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 2, 1);
     TamaSetSpd(54, 0);
     TamaSetNum(2, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 2, 1);
     player_.SpawnShot_();
     break;
   case 6:
   case 7:
     TamaSTDForm(TID_WIDE_FOCUS_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 3, 2);
     TamaSetSpd(54, 0);
     TamaSetNum(3, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 3, 2);
     player_.SpawnShot_();
     break;
   default:
     // tier 8
     TamaSTDForm(TID_WIDE_FOCUS_SUB);
-    TamaSetXY(player_.opx + (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 + 4, 2);
     TamaSetSpd(54, 0);
     TamaSetNum(4, 0);
     player_.SpawnShot_();
-    TamaSetXY(player_.opx - (SBOPT_DX * 64), player_.opy);
+    TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
     TamaSetDeg(-64 - 4, 2);
     player_.SpawnShot_();
     break;

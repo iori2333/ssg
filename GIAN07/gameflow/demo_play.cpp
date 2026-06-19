@@ -38,10 +38,10 @@ void DemoManager::Init() {
       ((Cast::up<uint32_t>(rnd()) + 1U) * (Cast::up<uint32_t>(rnd()) + 1U));
   rnd_seed_set(demo_info.RndSeed);
 
-  demo_info.Exp = Players.exp;
-  demo_info.Weapon = Players.weapon;
+  demo_info.Exp = Players.Power();
+  demo_info.Weapon = Players.Weapon();
   demo_info.CfgDat.GameLevel = GameState.game_level;
-  demo_info.CfgDat.PlayerStock = Players.left;
+  demo_info.CfgDat.PlayerStock = Players.Lives();
   demo_info.CfgDat.BombStock = ConfigDat.BombStock.v;
   demo_info.CfgDat.InputFlags = ConfigDat.InputFlags.v;
 
@@ -94,10 +94,8 @@ bool DemoManager::LoadSetup() {
   GameState.game_level = demo_info.CfgDat.GameLevel;
 
   // Restore player stats
-  Players.exp = demo_info.Exp;
-  Players.weapon = demo_info.Weapon;
-  Players.left = ConfigDat.PlayerStock.v;
-  Players.bomb = ConfigDat.BombStock.v;
+  Players.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
+                           ConfigDat.PlayerStock.v, ConfigDat.BombStock.v);
 
   // Initialize random number
   // Sync random seed last

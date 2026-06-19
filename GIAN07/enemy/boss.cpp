@@ -161,11 +161,11 @@ void BossManager::Move() {
       b->ExMove(b);
 
       // Cactus hit check //
-      if (HITCHK(e->x, Players.x, e->g_width) &&
-          HITCHK(e->y, Players.y, e->g_height) && Players.muteki == 0) {
+      if (HITCHK(e->x, Players.X(), e->g_width) &&
+          HITCHK(e->y, Players.Y(), e->g_height) && Players.IsInvincible() == 0) {
         // Might be interesting to deal damage to the enemy around here? //
         if ((e->flag & EF_HITSB) != 0) {
-          MaidHit();
+          Players.OnHit();
         }
       }
 
@@ -211,7 +211,7 @@ void BossManager::Draw() {
       y = (e->y >> 6);
 
       // Spirit state //
-      if (b->ExState == BEXST_SHILD2 && (Players.bomb_time != 0U) &&
+      if (b->ExState == BEXST_SHILD2 && (Players.IsBombActive() != 0U) &&
           ((e->flag & EF_DRAW) != 0)) {
         wing = PIXEL_LTWH{
             (160 + ((Cast::sign<int32_t>(e->count / 2) % 4) * 40)), 80, 40, 40};
@@ -228,7 +228,7 @@ void BossManager::Draw() {
       }
 
       // Barrier state //
-      if (b->ExState == BEXST_SHILD1 && (Players.bomb_time != 0U) &&
+      if (b->ExState == BEXST_SHILD1 && (Players.IsBombActive() != 0U) &&
           ((e->flag & EF_DRAW) != 0)) {
         GrpGeom->Lock();
         for (uint8_t j = 0; j <= 5; j++) {
@@ -499,7 +499,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     if (e.LLaserRef != 0U) {
       Lasers.ForceCloseLong(&e); // Force close laser
     }
-    PowerUp(Cast::down<uint8_t>(e.hp));
+    Players.PowerUp(Cast::down<uint8_t>(e.hp));
     e.hp = 0;
     e.count = 0;
     e.flag = EF_BOMB;
@@ -507,23 +507,23 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     // If it was the last one //
     if (count == 1) {
       const auto temp = Bullets.ScoreToItems(); // Bullet -> score effect
-      // sprintf(buf, "%3d Evade  %5dPts", Players.evade,
+      // sprintf(buf, "%3d Evade  %5dPts", Players.GrazeCount(),
       // Players.evadesc);
       Effects.SpawnStringEffect(
           180, 60, std::format("  Bonus    {:7}Pts", temp).c_str());
-      score_add(temp);
+      Players.AddScore(temp);
     }
 
     if (e.item != 0U) {
       Items.Spawn(e.x, e.y, e.item);
     }
-    score_add(e.score);
+    Players.AddScore(e.score);
     Lasers.Clear();
     b.IsUsed = false;
     count--; // Uses boss reference count?
   } else {
     Snd_SEPlay(SOUND_ID_HIT, e.x);
-    PowerUp(damage);
+    Players.PowerUp(damage);
     e.hp -= damage;
   }
   return true;
@@ -543,7 +543,7 @@ bool BossManager::DamageAt(int x, int y, int damage) {
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.bomb_time != 0U) {
+      if (Players.IsBombActive() != 0U) {
         continue;
       }
     }
@@ -579,7 +579,7 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.bomb_time != 0U) {
+      if (Players.IsBombActive() != 0U) {
         continue;
       }
     }
@@ -616,7 +616,7 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.bomb_time != 0U) {
+      if (Players.IsBombActive() != 0U) {
         continue;
       }
     }
@@ -650,7 +650,7 @@ void BossManager::DamageAll(int damage) {
   for (auto &it : bosses) {
     auto *b = &it;
     if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.bomb_time != 0U) {
+      if (Players.IsBombActive() != 0U) {
         continue;
       }
     }

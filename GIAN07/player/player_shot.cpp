@@ -3,7 +3,7 @@
 /// movement, collision, and drawing.
 ///
 /// Attack form logic (FireMain / FireSub / FireBomb) lives in the
-/// weapon/ strategy classes.  This file owns the shared shot pool,
+/// weapon_/ strategy classes.  This file owns the shared shot pool,
 /// damage table, and per-frame dispatch.
 ///
 
@@ -29,7 +29,7 @@ constexpr uint8_t TogeDamage[0x0c] = {
     TDM_LASER_MAIN,
     TDM_LASER_SUB, // TYPE_C
     1,
-    1, // For homing bomb
+    1, // For homing bomb_
     TDM_WIDE_FOCUS_MAIN,
     TDM_WIDE_FOCUS_SUB, // TYPE_A focus (WIDE)
     TDM_HOMING_FOCUS_MAIN,
@@ -40,45 +40,45 @@ constexpr uint8_t TogeDamage[0x0c] = {
 
 void Player::SetMaidShot() {
   // Start fire cooldown when the fire key is pressed.
-  if (((Key_Data & KEY_TAMA) != 0) && toge_time == 0 &&
-      muteki < MAID_MOVE_DISABLE_TIME) {
-    toge_time = MAID_TAMA_START;
+  if (((Key_Data & KEY_TAMA) != 0) && toge_time_ == 0 &&
+      muteki_ < MAID_MOVE_DISABLE_TIME) {
+    toge_time_ = MAID_TAMA_START;
   }
 
-  // Activate bomb if conditions are met.
-  if (((Key_Data & KEY_BOMB) != 0) && (bomb_time == 0) &&
-      (muteki == 0 || deathbomb_time != 0) &&
-      (bomb != 0U) && (!Scroller.scene.MsgFlag)) {
-    bomb_time = BaseForm_()->BombDuration();
-    muteki = BOMBMUTEKI_VAL;
-    bomb--;
-    bomb_used++;
-    if (deathbomb_time != 0) {
-      deathbomb_count++;
-      deathbomb_time = 0;
+  // Activate bomb_ if conditions are met.
+  if (((Key_Data & KEY_BOMB) != 0) && (bomb_time_ == 0) &&
+      (muteki_ == 0 || deathbomb_time_ != 0) &&
+      (bomb_ != 0U) && (!Scroller.scene.MsgFlag)) {
+    bomb_time_ = BaseForm_()->BombDuration();
+    muteki_ = BOMBMUTEKI_VAL;
+    bomb_--;
+    bomb_used_++;
+    if (deathbomb_time_ != 0) {
+      deathbomb_count_++;
+      deathbomb_time_ = 0;
     }
     Ranking.Add(-25); // Difficulty down
   }
 
   // Bomb update (always uses the base form, not focus).
-  if (bomb_time != 0U) {
-    bomb_time--;
+  if (bomb_time_ != 0U) {
+    bomb_time_--;
     BaseForm_()->FireBomb();
   }
 
   // Main / sub shot dispatch via the active (possibly focus) form.
-  if (toge_time != 0U) {
-    const uint8_t tier = (exp + 1) >> 5;
-    if (IsMainShotFrame_(toge_time)) {
+  if (toge_time_ != 0U) {
+    const uint8_t tier = (exp_ + 1) >> 5;
+    if (IsMainShotFrame_(toge_time_)) {
       ActiveForm_()->FireMain(tier);
     }
-    if (IsSubShotFrame_(toge_time)) {
+    if (IsSubShotFrame_(toge_time_)) {
       ActiveForm_()->FireSub(tier);
     }
-    toge_time--;
+    toge_time_--;
   }
 
-  // Per-frame form tick (laser forms manage lay_time / lay_grp).
+  // Per-frame form tick (laser forms manage lay_time_ / lay_grp_).
   BaseForm_()->OnFireTick();
 }
 
@@ -87,8 +87,8 @@ void Player::SetMaidShot() {
 void Player::MoveMaidShot() {
   int i = 0;
 
-  for (i = 0; std::cmp_less(i, maid_tama_now); i++) {
-    auto *t = &maid_tama[maid_tama_ind[i]];
+  for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
+    auto *t = &maid_tama_[maid_tama_ind_[i]];
     if (t->c == TID_HOMING_BOMB_B) {
       Enemies.DamageAt(t->x, t->y, TogeDamage[t->c]);
       t->count++;
@@ -125,18 +125,18 @@ void Player::MoveMaidShot() {
       }
     }
   }
-  Indsort(maid_tama_ind, maid_tama_now, maid_tama,
+  Indsort(maid_tama_ind_, maid_tama_now_, maid_tama_,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
   // Laser collision check
-  if (weapon == 2 && (lay_grp != 0U)) {
+  if (weapon_ == 2 && (lay_grp_ != 0U)) {
     // Focus (low-speed) form: narrow the two beams and slightly raise damage.
     const bool focus = ((Key_Data & KEY_SHIFT) != 0);
     const int loff = focus ? (SBOPT_DX / 2) : SBOPT_DX;
     const int ldmg =
-        focus ? ((lay_grp / 3) + 2) : ((lay_grp / 3) + 1);
-    Enemies.DamageAt2(opx + (loff << 6), opy, ldmg);
-    Enemies.DamageAt2(opx - (loff << 6), opy, ldmg);
+        focus ? ((lay_grp_ / 3) + 2) : ((lay_grp_ / 3) + 1);
+    Enemies.DamageAt2(opx_ + (loff << 6), opy_, ldmg);
+    Enemies.DamageAt2(opx_ - (loff << 6), opy_, ldmg);
   }
 }
 
@@ -154,8 +154,8 @@ void Player::DrawMaidShot() {
                                      {568, 104, 568 + 32, 104 + 32},
                                      {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; std::cmp_less(i, maid_tama_now); i++) {
-    auto *t = &maid_tama[maid_tama_ind[i]];
+  for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
+    auto *t = &maid_tama_[maid_tama_ind_[i]];
 
     x = (t->x >> 6) - 8;
     y = (t->y >> 6) - 8;
@@ -203,28 +203,28 @@ void Player::DrawMaidShot() {
   }
 
   // Laser drawing
-  if (weapon == 2 && (lay_grp != 0U)) {
+  if (weapon_ == 2 && (lay_grp_ != 0U)) {
     // Focus (low-speed) form: pull the two beams closer together.
     const int loff =
         ((Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
-    ltemp = PIXEL_LTWH{(384 + ((lay_grp - 1) << 4)), 240, 8, 16};
+    ltemp = PIXEL_LTWH{(384 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
 
-    x = (opx >> 6) + 4 - 8 + loff;
-    y = (opy >> 6) - 20;
+    x = (opx_ >> 6) + 4 - 8 + loff;
+    y = (opy_ >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    x = (opx >> 6) + 4 - 8 - loff;
-    y = (opy >> 6) - 20;
+    x = (opx_ >> 6) + 4 - 8 - loff;
+    y = (opy_ >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    ltemp = PIXEL_LTWH{(384 + 8 + ((lay_grp - 1) << 4)), 240, 8, 16};
-    for (i = (opy >> 6) - 36; i > -16; i -= 16) {
-      x = (opx >> 6) + 4 - 8 + loff;
+    ltemp = PIXEL_LTWH{(384 + 8 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
+    for (i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+      x = (opx_ >> 6) + 4 - 8 + loff;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
-    for (i = (opy >> 6) - 36; i > -16; i -= 16) {
-      x = (opx >> 6) + 4 - 8 - loff;
+    for (i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+      x = (opx_ >> 6) + 4 - 8 - loff;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
@@ -235,23 +235,23 @@ void Player::DrawMaidShot() {
 
 void Player::SetMaidShotIndices() {
   for (int i = 0; i < MAIDTAMA_MAX; i++) {
-    maid_tama_ind[i] = i;
+    maid_tama_ind_[i] = i;
   }
-  maid_tama_now = 0;
+  maid_tama_now_ = 0;
 }
 
 // --- Laser fire trigger ---
 
 void Player::SetMLaser(uint16_t time) {
-  if ((Players.bomb_time != 0U) ||
-      Players.muteki > MAID_MOVE_DISABLE_TIME) {
-    Players.lay_time = 0;
-    Players.lay_grp = 0;
+  if ((Players.bomb_time_ != 0U) ||
+      Players.muteki_ > MAID_MOVE_DISABLE_TIME) {
+    Players.lay_time_ = 0;
+    Players.lay_grp_ = 0;
     return;
   }
 
-  if (Players.lay_time == 0) {
-    Players.lay_time = time;
-    Snd_SEPlay(SOUND_ID_SBLASER, Players.x);
+  if (Players.lay_time_ == 0) {
+    Players.lay_time_ = time;
+    Snd_SEPlay(SOUND_ID_SBLASER, Players.X());
   }
 }

@@ -59,16 +59,16 @@ void StdStatusOutput() {
   GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
   GrpPut16(0, 50,
            std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
-  GrpPut16(0, 82, std::format("Miss{:5}", Players.miss_count).c_str());
-  GrpPut16(0, 98, std::format("Bomb{:5}", Players.bomb_used).c_str());
+  GrpPut16(0, 82, std::format("Miss{:5}", Players.MissCount()).c_str());
+  GrpPut16(0, 98, std::format("Bomb{:5}", Players.BombUsed()).c_str());
   GrpPut16(0, 114,
-           std::format("DthB{:5}", Players.deathbomb_count).c_str());
+           std::format("DthB{:5}", Players.DeathbombCount()).c_str());
   GrpPut16(0, 146, "Stars");
 
-  const auto capped = std::min(Players.star_counter, 9999U);
+  const auto capped = std::min(Players.StarCounter(), 9999U);
   GrpPut16(
       0, 162,
-      std::format("{:4}/{:4}", capped, Players.star_threshold).c_str());
+      std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
 
 #ifdef PBG_DEBUG
 #ifdef SUPPORT_GRP_BITDEPTH
@@ -87,11 +87,11 @@ void StdStatusOutput() {
            std::format("HLaser {:2}", Lasers.homing_count).c_str());
 
   GrpPut16(0, 224 + 40,
-           std::format("MTama {:3}", Players.maid_tama_now).c_str());
+           std::format("MTama {:3}", Players.ShotCount()).c_str());
 
   GrpPut16(0, 252 + 40, std::format("Item  {:3}", Items.count).c_str());
 
-  GrpPut16(0, 290 + 40, std::format("Pow   {:3}", Players.exp).c_str());
+  GrpPut16(0, 290 + 40, std::format("Pow   {:3}", Players.Power()).c_str());
 
   GrpPut16(0, 320 + 40,
            std::format("SSPD  {:3}", Scroller.scroll.ScrollSpeed).c_str());
@@ -121,12 +121,12 @@ void StdStatusOutput() {
 
 #ifndef PBG_DEBUG // pbg quirk
   GrpPut16(column2_left, 400,
-           std::format("Bomb   {}", Players.bomb).c_str());
+           std::format("Bomb   {}", Players.Bombs()).c_str());
 #endif
 
   GrpPut16(column2_left, 440,
-           std::format("Left   {}", Players.left).c_str());
+           std::format("Left   {}", Players.Lives()).c_str());
   GrpPut16(
       column2_left, 460,
-      std::format("Credit {}", Players.credit).c_str()); // Beware of -1
+      std::format("Credit {}", Players.Credits()).c_str()); // Beware of -1
 }

@@ -166,7 +166,7 @@ void LaserManager::Move() {
       lp->flag = LF_DELETE;
     }
 
-    if (Players.muteki == 0 && ((lp->flag & (LF_CLEAR | LF_DELETE)) == 0)) {
+    if (Players.IsInvincible() == 0 && ((lp->flag & (LF_CLEAR | LF_DELETE)) == 0)) {
       HitCheck(lp);
     }
   }
@@ -283,7 +283,7 @@ uint8_t LaserManager::CalcDir(uint16_t i) const {
   uint8_t deg = 0;
 
   if ((cmd.cmd & LS_ZSET) != 0) {
-    deg = atan8(Players.x - cmd.x, Players.y - cmd.y);
+    deg = atan8(Players.X() - cmd.x, Players.Y() - cmd.y);
   }
 
   deg += cmd.d; // Base angle set
@@ -446,12 +446,12 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     // Calculation note: uses x64 for coordinate calculations
     // /256 correction needed because sinm(),cosm() are used
 
-    tx = Players.x - lp->x;
-    ty = Players.y - lp->y;
+    tx = Players.X() - lp->x;
+    ty = Players.Y() - lp->y;
     length = cosl(lp->d, tx) + sinl(lp->d, ty);
     w1 = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
-    //tx = ((lp->x)-(Players.x));	ty =
-    //((lp->y)-(Players.y)); length =
+    //tx = ((lp->x)-(Players.X()));	ty =
+    //((lp->y)-(Players.Y())); length =
     //-((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8); tx <<= 8;	ty <<= 8;
     //
     //                    if(cosm(lp->d)==0)
@@ -463,16 +463,16 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     // Improved precision
     //                    }
     if (length > 0 && length <= (lp->l) && w1 <= (lp->w)) {
-      MaidHit();
+      Players.OnHit();
     } else if (length > 0 && length <= (lp->l) &&
                w1 <= (lp->w + LASER_EVADE_WIDTH)) {
       if (lp->evade != 0U) {
         {
-          evade_add(0);
+          Players.AddEvade(0);
         }
       } else {
         lp->evade = 0xff;
-        evade_add(SLASER_EVADE);
+        Players.AddEvade(SLASER_EVADE);
       }
     }
     break;
