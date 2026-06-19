@@ -123,9 +123,10 @@ void DifficultyPanel::Refresh(MenuController &, bool) {
   titles_[7].Format("DemoSave  {}", CHOICE_OFF_ON[DebugDat.DemoSave]);
 #endif
 
-  for (size_t i = 0; i < 8; i++) {
+  for (size_t i = 0; i < items_.size() - 1; i++) {
     items_[i].Title = titles_[i].Lit();
   }
+  items_.back().Title = "Exit";
 }
 
 // ---------------------------------------------------------------------------
