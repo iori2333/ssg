@@ -39,6 +39,10 @@ inline constexpr auto WIDE_BOMB_TIME = (60 * 4);
 inline constexpr auto HOMING_BOMB_TIME = (60 * 3);
 inline constexpr auto LASER_BOMB_TIME = (60 * 2);
 
+inline constexpr int VIV_SPEED_WIDE = (64 * 15);
+inline constexpr int VIV_SPEED_HOMING = (64 * 18);
+inline constexpr int VIV_SPEED_LASER = (64 * 21);
+
 inline constexpr auto MAID_TAMA_START = 18;
 inline constexpr auto MAID_MAIN_SHOT = 6;
 inline constexpr auto MAID_SUB_SHOT = 9;
@@ -55,11 +59,11 @@ class LaserFocusForm;
 // [ Player class ]
 
 class Player {
- public:
+public:
   Player();
   ~Player();
-  Player(const Player& other);
-  Player& operator=(const Player& other);
+  Player(const Player &other);
+  Player &operator=(const Player &other);
 
   // --- Lifecycle ---
   void Draw();
@@ -123,8 +127,14 @@ class Player {
   void SetScore(int64_t s) { score_ = s; }
   void ResetForContinue();
   void ClearInvincibility() { muteki_ = 0; }
-  void ClearLaserState() { lay_time_ = 0; lay_grp_ = 0; }
-  void SetPosition(int nx, int ny) { x_ = nx; y_ = ny; }
+  void ClearLaserState() {
+    lay_time_ = 0;
+    lay_grp_ = 0;
+  }
+  void SetPosition(int nx, int ny) {
+    x_ = nx;
+    y_ = ny;
+  }
   void PickupBomb() { bomb_++; }
   void PickupExtend() { left_++; }
   void AddStar(uint32_t n);
@@ -141,7 +151,7 @@ class Player {
   // --- Shot pool helper (used by WeaponForm subclasses) ---
   void SpawnShot_();
 
- private:
+private:
   friend class WeaponForm;
   friend class WideForm;
   friend class WideFocusForm;
@@ -152,8 +162,8 @@ class Player {
 
   // --- Weapon form strategy objects ---
   std::array<std::unique_ptr<WeaponForm>, 6> forms_;
-  WeaponForm* BaseForm_() const;
-  WeaponForm* ActiveForm_() const;
+  WeaponForm *BaseForm_() const;
+  WeaponForm *ActiveForm_() const;
 
   // --- Shot helpers (internal) ---
   bool IsMainShotFrame_(uint16_t t) const;
@@ -236,8 +246,8 @@ class Player {
   };
   std::optional<StateSnapshot> preview_snapshot_;
 
-  void SaveSnapshot_(StateSnapshot& s) const;
-  void RestoreSnapshot_(const StateSnapshot& s);
+  void SaveSnapshot_(StateSnapshot &s) const;
+  void RestoreSnapshot_(const StateSnapshot &s);
 };
 
 // [ Global instance ]

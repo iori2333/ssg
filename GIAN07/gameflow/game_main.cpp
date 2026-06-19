@@ -1159,6 +1159,9 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   Key_Data &= ~(KEY_STAGE1 | KEY_STAGE2 | KEY_STAGE3 | KEY_STAGE4 | KEY_STAGE5 |
                 KEY_STAGE6);
 
+  const auto shift_held = Key_Data & KEY_SHIFT;
+  Key_Data &= ~KEY_SHIFT;
+
   switch (Key_Data) {
   case KEY_RIGHT:
     if (spd < 0) {
@@ -1300,7 +1303,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     }
 
     Enemies.homing_flag = HOMING_DUMMY;
-    Key_Data = KEY_TAMA;
+    Key_Data = KEY_TAMA | shift_held;
 
     Players.ClearInvincibility();
     Players.SetPosition((400 * 64) + sinl((count / 3) * 6, 60 * 64),
