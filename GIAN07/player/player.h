@@ -20,8 +20,7 @@
 inline constexpr int VIVDEAD_VAL = 300;   // Viv death time
 inline constexpr int VIVMUTEKI_VAL = 180; // Viv invincibility time
 
-inline constexpr int MAID_MOVE_DISABLE_TIME =
-    (250 - 100); // Move-disabled duration
+inline constexpr int MAID_MOVE_DISABLE_TIME = 150; // Move-disabled duration
 
 inline constexpr int BOMBMUTEKI_VAL = 60; // Bomb-end invincibility
 inline constexpr int SBOPT_DX = 26;       // Option offset (not x64)
@@ -29,23 +28,27 @@ inline constexpr int SBOPT_DX = 26;       // Option offset (not x64)
 inline constexpr int DEATHBOMB_WINDOW =
     12; // Deathbomb input window (base, Lunatic)
 
-inline constexpr int EVADETIME_MAX = 256; // Max graze wait time
+inline constexpr uint16_t EVADETIME_MAX = 256; // Max graze wait time
+inline constexpr uint16_t EVADETIME_INCR = 2;  // Wait time increase value
 
-inline constexpr int SSP_WIDE = (64 * 9);
-inline constexpr int SSP_HOMING = (64 * 9);
-inline constexpr int SSP_LASER = (64 * 13);
+inline constexpr auto WIDE_BOMB_TIME = 60 * 4;
+inline constexpr auto HOMING_BOMB_TIME = 60 * 3;
+inline constexpr auto LASER_BOMB_TIME = 60 * 2;
 
-inline constexpr auto WIDE_BOMB_TIME = (60 * 4);
-inline constexpr auto HOMING_BOMB_TIME = (60 * 3);
-inline constexpr auto LASER_BOMB_TIME = (60 * 2);
-
-inline constexpr int VIV_SPEED_WIDE = (64 * 15);
-inline constexpr int VIV_SPEED_HOMING = (64 * 18);
-inline constexpr int VIV_SPEED_LASER = (64 * 21);
+inline constexpr auto VIV_SPEED_WIDE = 64 * 15;
+inline constexpr auto VIV_SPEED_HOMING = 64 * 18;
+inline constexpr auto VIV_SPEED_LASER = 64 * 21;
 
 inline constexpr auto MAID_TAMA_START = 18;
 inline constexpr auto MAID_MAIN_SHOT = 6;
 inline constexpr auto MAID_SUB_SHOT = 9;
+
+inline constexpr auto STAR_THRESHOLD_INIT = 300;
+inline constexpr auto STAR_THRESHOLD_INCR = 150;
+inline constexpr auto STAR_EXTEND_LOOP = 3;
+
+inline constexpr auto BOMB_RANK_DECR = 25;
+inline constexpr auto DEATH_RANK_DECR = 100;
 
 // [ Forward declarations ]
 class WeaponForm;
@@ -57,6 +60,7 @@ class LaserForm;
 class LaserFocusForm;
 
 // [ Player class ]
+enum class PlayerReward : uint8_t { NONE, BOMB, EXTEND };
 
 class Player {
 public:
@@ -109,6 +113,7 @@ public:
   uint16_t DeathbombCount() const { return deathbomb_count_; }
   uint16_t GrazeCount() const { return evade_; }
   uint32_t GrazeSum() const { return evade_sum_; }
+  uint16_t GrazeWaitTime() const { return evade_c_; }
   uint32_t StarCounter() const { return star_counter_; }
   uint32_t StarThreshold() const { return star_threshold_; }
   bool IsInvincible() const { return muteki_ != 0; }
@@ -137,7 +142,7 @@ public:
   }
   void PickupBomb() { bomb_++; }
   void PickupExtend() { left_++; }
-  void AddStar(uint32_t n);
+  [[nodiscard]] PlayerReward AddStar(uint32_t n);
   void ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
                         uint8_t bombs);
 

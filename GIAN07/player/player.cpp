@@ -2,10 +2,6 @@
 /// Player - Player-related processing
 ///
 
-// GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
-// imaxdiv_t'` if this appears after a module import.
-#include <cinttypes> // for PRId64
-
 #include <algorithm>
 
 #include <format>
@@ -15,15 +11,12 @@
 #include "font_uty.h"
 #include "game/input.h"
 #include "game/snd.h"
-#include "game/ut_math.h"
 #include "geometry.h"
 #include "gian.h"
 #include "player.h"
 #include "weapon/homing_form.h"
 #include "weapon/laser_form.h"
 #include "weapon/wide_form.h"
-
-// Moved to PlayerManager in player_manager.cpp
 
 // --- Player method implementations ---
 
@@ -357,7 +350,9 @@ void Player::Draw() {
 
   if (((exp_ + 1) >> 5) != 0) {
     if (muteki_ < VIVDEAD_VAL) {
-      const int opt_off = (weapon_ == 2 && (Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
+      const int opt_off = (weapon_ == 2 && (Key_Data & KEY_SHIFT) != 0)
+                              ? (SBOPT_DX / 2)
+                              : SBOPT_DX;
       src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
       GrpSurface_Blit({(ox + opt_off), oy}, SURFACE_ID::SYSTEM, src);
       src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
@@ -404,7 +399,8 @@ void Player::Update() {
   int vx = 0;
   int vy = 0;
   int v = 0;
-  constexpr int speed_tbl[] = {VIV_SPEED_WIDE, VIV_SPEED_HOMING, VIV_SPEED_LASER};
+  constexpr int speed_tbl[] = {VIV_SPEED_WIDE, VIV_SPEED_HOMING,
+                               VIV_SPEED_LASER};
 
   // Decrease graze remaining time
   if (evade_c_ != 0U) {
@@ -415,9 +411,12 @@ void Player::Update() {
     }
 
     if (evade_c_ == 0) {
-      Effects.SpawnStringEffect(
-          180, 40,
-          std::format("{:3} Evade  {:7}Pts", evade_, evadesc_).c_str());
+      if (evade_ > 100) {
+        Effects.SpawnStringEffect(
+            180, 40,
+            std::format("{:3} Evade  {:7} Pts", evade_, evadesc_).c_str());
+      }
+
       AddScore(evadesc_);
       evade_ = 0;
       evadesc_ = 0;
@@ -467,7 +466,8 @@ void Player::Update() {
 
   if (muteki_ < MAID_MOVE_DISABLE_TIME) {
     vx = vy = 0;
-    v = ((Key_Data & KEY_SHIFT) != 0) ? (speed_tbl[weapon_] / 3) : speed_tbl[weapon_];
+    v = ((Key_Data & KEY_SHIFT) != 0) ? (speed_tbl[weapon_] / 3)
+                                      : speed_tbl[weapon_];
     if ((Key_Data & KEY_UP) != 0) {
       vy -= v;
     }
@@ -574,7 +574,7 @@ void Player::Initialize() {
   deathbomb_count_ = 0;
 
   star_counter_ = 0;
-  star_threshold_ = 400;
+  star_threshold_ = STAR_THRESHOLD_INIT;
   star_extend_count_ = 0;
 
   bomb_time_ = 0;
@@ -684,7 +684,7 @@ void Player::OnDeath(bool play_se) {
     muteki_ = BOMBMUTEKI_VAL;
     bomb_--;
     bomb_used_++;
-    Ranking.Add(-25); // auto bomb_ decreases rank
+    Ranking.Add(-BOMB_RANK_DECR); // auto bomb_ decreases rank
     Bullets.Clear();
     Lasers.Clear();
     return;
@@ -705,7 +705,7 @@ void Player::OnDeath(bool play_se) {
   bomb_ = ConfigDat.BombStock.v;
   muteki_ = VIVDEAD_VAL;
 
-  Ranking.Add(-100); // death decreases rank
+  Ranking.Add(-DEATH_RANK_DECR); // death decreases rank
 
   if (left_ != 0U) {
     left_ -= 1;
@@ -749,7 +749,8 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   }
 
   if (evade_ != 0U) {
-    evade_c_ = EVADETIME_MAX;
+    evade_c_ = std::min(static_cast<uint16_t>(evade_c_ + EVADETIME_INCR),
+                        EVADETIME_MAX);
   }
 }
 
@@ -806,7 +807,6 @@ void Player::PowerUp(uint8_t damage) {
 
 uint8_t Player::GetLaserDeg() const { return ((120 - bomb_time_) * 3) / 2; }
 
-#pragma warning(suppress : 26497) // f.4
 uint8_t Player::GetLeftOrRightLaserDeg_(uint8_t LaserDeg, int i) {
   return ((LaserDeg < 58)
               ? ((LaserDeg * 3) + ((i * (64 - LaserDeg)) / 2))
@@ -828,13 +828,23 @@ void Player::RotateWeapon(int dir) {
   weapon_ = (weapon_ + (dir < 0 ? 2 : 1)) % 3;
 }
 
-void Player::AddStar(uint32_t n) {
+PlayerReward Player::AddStar(uint32_t n) {
   star_counter_ += n;
-  if (star_counter_ >= star_threshold_ && left_ < 9) {
-    left_++;
-    star_threshold_ += 250;
+  if (star_counter_ >= star_threshold_) {
+    star_threshold_ += STAR_THRESHOLD_INCR;
     star_extend_count_++;
+
+    // reward loop: EB...B|EB...B
+    if (star_extend_count_ % STAR_EXTEND_LOOP == 1) {
+      left_++;
+      return PlayerReward::EXTEND;
+    }
+
+    bomb_++;
+    return PlayerReward::BOMB;
   }
+
+  return PlayerReward::NONE;
 }
 
 void Player::ResetForContinue() {
@@ -842,7 +852,7 @@ void Player::ResetForContinue() {
   left_ = ConfigDat.PlayerStock.v;
   score_ = ((score_ % 10) + 1);
   star_counter_ = 0;
-  star_threshold_ = 400;
+  star_threshold_ = STAR_THRESHOLD_INIT;
   star_extend_count_ = 0;
 }
 

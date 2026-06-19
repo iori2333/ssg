@@ -10,6 +10,7 @@
 #include "gian.h"
 #include "item_manager.h"
 #include "platform/graphics_backend.h"
+#include "player.h"
 #include <utility>
 
 // entities[], indices[], count moved to item_manager.cpp
@@ -49,7 +50,6 @@ void ItemManager::Spawn(int x, int y, uint8_t type) {
 
 // Move items
 void ItemManager::Move() {
-  int i = 0;
   int tx = 0;
   int ty = 0;
   int l = 0;
@@ -61,10 +61,12 @@ void ItemManager::Move() {
   const uint32_t point =
       ((((SY_MAX - Players.Y()) >> 6) + (Players.GrazeCount() * 4)) * 160);
 
-  for (i = 0; std::cmp_less(i, count); i++) {
+  for (uint16_t i = 0; i < count; i++) {
     auto *ip = &entities[indices[i]];
-    if (Players.IsBombActive() == 0U) {
-      if (Players.Y() < AUTO_COLLECT_Y || ip->auto_collect) {
+    if (!Players.IsBombActive()) {
+      if (Players.Y() < AUTO_COLLECT_Y ||
+          (Players.GrazeCount() > 100 && Players.GrazeWaitTime() > 128) ||
+          ip->auto_collect) {
         // Player above collect line or auto-collect already active
         ip->auto_collect = true;
         tx = (Players.X() - ip->x);
@@ -93,19 +95,28 @@ void ItemManager::Move() {
       switch (ip->type) {
       case ITEM_SCORE: {
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        // Ranking.Add((SY_MAX-Players.Y())>>10);	// Item pickup no longer increases Rank
+        // Ranking.Add((SY_MAX-Players.Y())>>10);	// Item pickup no longer
+        // increases Rank
         Players.AddScore(point);
         Effects.SpawnPointEffect(ip->x, ip->y, point);
         if (Players.GrazeCount() != 0U) {
           Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
           Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
         }
+
         const uint32_t star_amt = (Players.GrazeCount() != 0U) ? 2 : 1;
-        Players.AddStar(star_amt);
-        if (Players.Lives() < 9 && Players.StarCounter() >= Players.StarThreshold()) {
-          // AddStar already handled extend; just show effect
+        const auto reward = Players.AddStar(star_amt);
+        switch (reward) {
+        case PlayerReward::EXTEND:
           Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
+          break;
+        case PlayerReward::BOMB:
+          Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
+          break;
+        case PlayerReward::NONE:
+          break;
         }
+
         break;
       }
 
