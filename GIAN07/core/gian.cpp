@@ -12,7 +12,7 @@
 #include "level.h"
 #include "platform/time.h"
 #include "player/item_manager.h"
-#include "player/player_manager.h"
+#include "player/player.h"
 #include "stage/scroll_manager.h"
 #include <format>
 

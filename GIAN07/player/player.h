@@ -13,6 +13,7 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 // [ Constants ]
 
@@ -130,6 +131,13 @@ class Player {
   void ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
                         uint8_t bombs);
 
+  // --- Weapon select preview ---
+  // Saves a snapshot of the current state and resets weapon to 0.
+  void BeginWeaponPreview();
+  // Commits the currently-previewed weapon into the snapshot and
+  // restores the saved state.  No-op if no preview is active.
+  void CommitWeaponSelection();
+
   // --- Shot pool helper (used by WeaponForm subclasses) ---
   void SpawnShot_();
 
@@ -205,6 +213,31 @@ class Player {
   std::array<Bullet, MAIDTAMA_MAX> maid_tama_{};
   std::array<uint16_t, MAIDTAMA_MAX> maid_tama_ind_{};
   uint16_t maid_tama_now_ = 0;
+
+  // --- Weapon-select preview snapshot ---
+  // Lightweight state save/restore for the weapon select screen.
+  // Only the fields touched by copy-assignment are captured; the shot
+  // pool and forms_ are excluded (they belong to the live instance).
+  struct StateSnapshot {
+    int x, y, vx, vy, opx, opy;
+    int64_t score, dscore;
+    uint32_t evade_sum;
+    int evadesc;
+    uint16_t evade, evade_c;
+    uint32_t star_counter, star_threshold;
+    uint8_t star_extend_count;
+    char v;
+    uint8_t weapon, exp, bomb, left, credit;
+    uint16_t miss_count, bomb_used, deathbomb_count;
+    uint8_t grp_id;
+    uint16_t bomb_time, exp2, muteki, deathbomb_time, lay_time;
+    uint8_t lay_grp, toge_time, toge_ex, shift_counter;
+    bool game_over, buzz_sound;
+  };
+  std::optional<StateSnapshot> preview_snapshot_;
+
+  void SaveSnapshot_(StateSnapshot& s) const;
+  void RestoreSnapshot_(const StateSnapshot& s);
 };
 
 // [ Global instance ]

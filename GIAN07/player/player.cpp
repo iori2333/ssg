@@ -855,3 +855,100 @@ void Player::ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
   left_ = left;
   bomb_ = bombs;
 }
+
+// --- Weapon-select preview ---
+
+void Player::SaveSnapshot_(StateSnapshot& s) const {
+  s.x = x_;
+  s.y = y_;
+  s.vx = vx_;
+  s.vy = vy_;
+  s.opx = opx_;
+  s.opy = opy_;
+  s.score = score_;
+  s.dscore = dscore_;
+  s.evade_sum = evade_sum_;
+  s.evadesc = evadesc_;
+  s.evade = evade_;
+  s.evade_c = evade_c_;
+  s.star_counter = star_counter_;
+  s.star_threshold = star_threshold_;
+  s.star_extend_count = star_extend_count_;
+  s.v = v_;
+  s.weapon = weapon_;
+  s.exp = exp_;
+  s.bomb = bomb_;
+  s.left = left_;
+  s.credit = credit_;
+  s.miss_count = miss_count_;
+  s.bomb_used = bomb_used_;
+  s.deathbomb_count = deathbomb_count_;
+  s.grp_id = grp_id_;
+  s.bomb_time = bomb_time_;
+  s.exp2 = exp2_;
+  s.muteki = muteki_;
+  s.deathbomb_time = deathbomb_time_;
+  s.lay_time = lay_time_;
+  s.lay_grp = lay_grp_;
+  s.toge_time = toge_time_;
+  s.toge_ex = toge_ex_;
+  s.shift_counter = shift_counter_;
+  s.game_over = game_over_;
+  s.buzz_sound = buzz_sound_;
+}
+
+void Player::RestoreSnapshot_(const StateSnapshot& s) {
+  x_ = s.x;
+  y_ = s.y;
+  vx_ = s.vx;
+  vy_ = s.vy;
+  opx_ = s.opx;
+  opy_ = s.opy;
+  score_ = s.score;
+  dscore_ = s.dscore;
+  evade_sum_ = s.evade_sum;
+  evadesc_ = s.evadesc;
+  evade_ = s.evade;
+  evade_c_ = s.evade_c;
+  star_counter_ = s.star_counter;
+  star_threshold_ = s.star_threshold;
+  star_extend_count_ = s.star_extend_count;
+  v_ = s.v;
+  weapon_ = s.weapon;
+  exp_ = s.exp;
+  bomb_ = s.bomb;
+  left_ = s.left;
+  credit_ = s.credit;
+  miss_count_ = s.miss_count;
+  bomb_used_ = s.bomb_used;
+  deathbomb_count_ = s.deathbomb_count;
+  grp_id_ = s.grp_id;
+  bomb_time_ = s.bomb_time;
+  exp2_ = s.exp2;
+  muteki_ = s.muteki;
+  deathbomb_time_ = s.deathbomb_time;
+  lay_time_ = s.lay_time;
+  lay_grp_ = s.lay_grp;
+  toge_time_ = s.toge_time;
+  toge_ex_ = s.toge_ex;
+  shift_counter_ = s.shift_counter;
+  game_over_ = s.game_over;
+  buzz_sound_ = s.buzz_sound;
+}
+
+void Player::BeginWeaponPreview() {
+  StateSnapshot s;
+  SaveSnapshot_(s);
+  preview_snapshot_ = s;
+  weapon_ = 0;
+}
+
+void Player::CommitWeaponSelection() {
+  if (!preview_snapshot_) {
+    return;
+  }
+  const uint8_t selected = weapon_;
+  RestoreSnapshot_(*preview_snapshot_);
+  weapon_ = selected;
+  preview_snapshot_.reset();
+}

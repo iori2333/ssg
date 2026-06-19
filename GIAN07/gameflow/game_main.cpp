@@ -67,7 +67,7 @@ void Render(PIXEL_COORD top) {
 }; // namespace Version
 
 // GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
-// current_name, current_rank, current_dif, viv_temp, GameState.is_demoplay,
+// current_name, current_rank, current_dif, GameState.is_demoplay,
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
 
 // Converted functions -> inline wrappers provided in gameflow_manager.h
@@ -594,14 +594,12 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_SetClip(GRP_RES_RECT);
 
   weapon_key_wait = 1;
-  Players.SetWeapon(0);
+  Players.BeginWeaponPreview();
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
     GameState.game_stage = GRAPH_ID_EXSTAGE;
   }
-
-  viv_temp = Players;
 
   return true;
 }
@@ -1189,8 +1187,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       }
     }
 
-    viv_temp.SetWeapon(Players.Weapon());
-    Players = viv_temp;
+    Players.CommitWeaponSelection();
     Players.SetMaidShotIndices();
     count = 0;
 

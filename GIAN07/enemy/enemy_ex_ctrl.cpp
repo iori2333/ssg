@@ -18,7 +18,6 @@
 #include "long_laser.h"
 #include "platform/graphics_backend.h"
 #include "player.h"
-#include "player_manager.h"
 #include <utility>
 
 static constexpr auto BIT_VIRTUAL_HP = 990000; // Bit virtual HP

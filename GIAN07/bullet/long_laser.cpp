@@ -9,7 +9,6 @@
 #include "laser_manager.h"
 #include "platform/graphics_backend.h"
 #include "player.h"
-#include "player_manager.h"
 
 // Laser variables 2 moved to laser_manager.cpp
 // long_lasers[], LLaserCmd defined in laser_manager.cpp
