@@ -1,5 +1,10 @@
 ///
-/// PlayerShot - Maid shot processing
+/// PlayerShot - Player shot pool management: fire dispatch, bullet
+/// movement, collision, and drawing.
+///
+/// Attack form logic (FireMain / FireSub / FireBomb) lives in the
+/// weapon_/ strategy classes.  This file owns the shared shot pool,
+/// damage table, and per-frame dispatch.
 ///
 
 #include "player_shot.h"
@@ -10,60 +15,12 @@
 #include "game/ut_math.h"
 #include "gian.h"
 #include "platform/graphics_backend.h"
-#include "player_manager.h"
+#include "player.h"
+#include "weapon/weapon_form.h"
 #include <utility>
 
-// [Secret functions]
-static void MTamaSet();
-
-static void SetT_A0(); // Maid shot TYPE-A
-static void SetT_A1();
-static void SetT_A2();
-static void SetT_A3();
-static void SetT_A4();
-static void SetT_A5();
-static void SetT_A6();
-static void SetT_A7();
-static void SetT_A8();
-
-static void SetT_B0(); // Maid shot TYPE-B
-static void SetT_B1();
-static void SetT_B2();
-static void SetT_B3();
-static void SetT_B4();
-static void SetT_B5();
-static void SetT_B6();
-static void SetT_B7();
-static void SetT_B8();
-
-static void SetT_C0(); // Maid shot TYPE-C
-static void SetT_C1();
-static void SetT_C2();
-static void SetT_C3();
-static void SetT_C4();
-static void SetT_C5();
-static void SetT_C6();
-static void SetT_C7();
-static void SetT_C8();
-
-static void SetT_D0(); // Maid shot TYPE-D
-static void SetT_D1();
-static void SetT_D2();
-static void SetT_D3();
-static void SetT_D4();
-static void SetT_D5();
-static void SetT_D6();
-static void SetT_D7();
-static void SetT_D8();
-
-static void SetWideBomb();
-static void SetHomingBomb();
-static void SetLaserBomb();
-static void SetCactusBomb();
-
-// maid_tama[], maid_tama_ind[], maid_tama_now moved to PlayerManager in player_manager.cpp
-
-constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
+// --- Damage table indexed by bullet ID (t->c) ---
+constexpr uint8_t TogeDamage[0x0c] = {
     // MainWeapon		// SubWeapon
     TDM_WIDE_MAIN,
     TDM_WIDE_SUB, // TYPE_A(WIDE)
@@ -72,103 +29,66 @@ constexpr uint8_t TogeDamage[(4 * 2) + 2] = {
     TDM_LASER_MAIN,
     TDM_LASER_SUB, // TYPE_C
     1,
-    1 // For homing bomb
+    1, // For homing bomb_
+    TDM_WIDE_FOCUS_MAIN,
+    TDM_WIDE_FOCUS_SUB, // TYPE_A focus (WIDE)
+    TDM_HOMING_FOCUS_MAIN,
+    TDM_HOMING_FOCUS_SUB // TYPE_B focus (HOMING)
 };
 
-static void (*MaidTamaFunc[4][9])(void) = {
-    {SetT_A0, SetT_A1, SetT_A2, SetT_A3, SetT_A4, SetT_A5, SetT_A6, SetT_A7,
-     SetT_A8},
-    {SetT_B0, SetT_B1, SetT_B2, SetT_B3, SetT_B4, SetT_B5, SetT_B6, SetT_B7,
-     SetT_B8},
-    {SetT_C0, SetT_C1, SetT_C2, SetT_C3, SetT_C4, SetT_C5, SetT_C6, SetT_C7,
-     SetT_C8},
-    {SetT_D0, SetT_D1, SetT_D2, SetT_D3, SetT_D4, SetT_D5, SetT_D6, SetT_D7,
-     SetT_D8}};
+// --- Fire dispatch ---
 
-static void (*MaidBombFunc[4])(void) = {SetWideBomb, SetHomingBomb,
-                                        SetLaserBomb, SetCactusBomb};
-
-static constexpr auto WIDE_BOMB_TIME = (60 * 4);
-static constexpr auto HOMING_BOMB_TIME = (60 * 3);
-static constexpr auto LASER_BOMB_TIME = (60 * 2);
-static constexpr auto CACTUS_BOMB_TIME = 0;
-
-static constexpr uint8_t MaidBombTime[4] = {WIDE_BOMB_TIME, HOMING_BOMB_TIME,
-                                            LASER_BOMB_TIME, CACTUS_BOMB_TIME};
-
-static constexpr auto MAID_TAMA_START = 18; // 12
-static constexpr auto MAID_MAIN_SHOT = 6;   // 4
-static constexpr auto MAID_SUB_SHOT = 9;    // 6
-
-// Fire shot!
-void PlayerManager::SetMaidShot() {
-  // This function checks the previous fire state (Viv_St).
-  // If fire is possible, it fires; otherwise, it simply returns.
-  // Uses functions compatible with TAMA.cpp for setting bullets.
-
-  if (((Key_Data & KEY_TAMA) != 0) && viv.toge_time == 0 &&
-      viv.muteki < MAID_MOVE_DISABLE_TIME) {
-    viv.toge_time = MAID_TAMA_START;
+void Player::SetMaidShot() {
+  // Start fire cooldown when the fire key is pressed.
+  if (((Key_Data & KEY_TAMA) != 0) && toge_time_ == 0 &&
+      muteki_ < MAID_MOVE_DISABLE_TIME) {
+    toge_time_ = MAID_TAMA_START;
   }
 
-  // Activate bomb if conditions are met
-  if (((Key_Data & KEY_BOMB) != 0) && (viv.bomb_time == 0) &&
-      (viv.muteki == 0 || viv.deathbomb_time != 0) && // No bomb during invincibility (except deathbomb window)
-      (viv.bomb != 0U) && (!Scroller.scene.MsgFlag)) {
-    // if(viv.weapon == 0) EnterBombPalette();
-
-    viv.bomb_time = MaidBombTime[viv.weapon & 3]; // Change per equipment
-    viv.muteki = BOMBMUTEKI_VAL;
-    viv.bomb--;
-    viv.bomb_used++;
-    if (viv.deathbomb_time != 0) {
-      viv.deathbomb_count++;
-      viv.deathbomb_time = 0;
+  // Activate bomb_ if conditions are met.
+  if (((Key_Data & KEY_BOMB) != 0) && (bomb_time_ == 0) &&
+      (muteki_ == 0 || deathbomb_time_ != 0) &&
+      (bomb_ != 0U) && (!Scroller.scene.MsgFlag)) {
+    bomb_time_ = BaseForm_()->BombDuration();
+    muteki_ = BOMBMUTEKI_VAL;
+    bomb_--;
+    bomb_used_++;
+    if (deathbomb_time_ != 0) {
+      deathbomb_count_++;
+      deathbomb_time_ = 0;
     }
     Ranking.Add(-25); // Difficulty down
   }
 
-  if (viv.bomb_time != 0U) {
-    viv.bomb_time--;
-    MaidBombFunc[viv.weapon]();
-
-    // if(viv.bomb_time == 0 && viv.weapon == 0)
-    //	LeaveBombPalette();
+  // Bomb update (always uses the base form, not focus).
+  if (bomb_time_ != 0U) {
+    bomb_time_--;
+    BaseForm_()->FireBomb();
   }
 
-  if (viv.toge_time != 0U) {
-    MaidTamaFunc[viv.weapon & 3][(viv.exp + 1) >> 5]();
-    viv.toge_time--;
-  }
-
-  // When laser is equipped
-  if (viv.weapon == 2 && (viv.lay_time != 0U)) {
-    viv.lay_time--;
-    if (viv.lay_time < 64) {
-      viv.lay_grp = 0;
-    } else if (viv.lay_time < 64 + 50) {
-      viv.lay_grp = 1;
-    } else if (viv.lay_time < 64 + 100) {
-      viv.lay_grp = 2;
-    } else if (viv.lay_time < 64 + 150) {
-      viv.lay_grp = 3;
-    } else {
-      viv.lay_grp = 4;
+  // Main / sub shot dispatch via the active (possibly focus) form.
+  if (toge_time_ != 0U) {
+    const uint8_t tier = (exp_ + 1) >> 5;
+    if (IsMainShotFrame_(toge_time_)) {
+      ActiveForm_()->FireMain(tier);
     }
-    // viv.lay_grp = (viv.lay_time+63)>>6;
+    if (IsSubShotFrame_(toge_time_)) {
+      ActiveForm_()->FireSub(tier);
+    }
+    toge_time_--;
   }
+
+  // Per-frame form tick (laser forms manage lay_time_ / lay_grp_).
+  BaseForm_()->OnFireTick();
 }
 
-// Bullet movement & hit check
-void PlayerManager::MoveMaidShot() {
-  // Uses enemy bullet movement from TAMA.cpp.
-  // Collision detection is against enemies!
-  // Collision is checked by passing coordinates to functions in ENEMY.cpp.
+// --- Bullet movement & hit check ---
 
+void Player::MoveMaidShot() {
   int i = 0;
 
-  for (i = 0; std::cmp_less(i, maid_tama_now); i++) {
-    auto *t = &maid_tama[maid_tama_ind[i]];
+  for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
+    auto *t = &maid_tama_[maid_tama_ind_[i]];
     if (t->c == TID_HOMING_BOMB_B) {
       Enemies.DamageAt(t->x, t->y, TogeDamage[t->c]);
       t->count++;
@@ -182,7 +102,7 @@ void PlayerManager::MoveMaidShot() {
       Bullets.MoveByOption(t);
       t->count++;
       if (((t->flag & TF_CLIP) == 0) && ((t->x) < GX_MIN || (t->x) > GX_MAX ||
-                                         (t->y) < GY_MIN || (t->y) > GY_MAX)) {
+                                          (t->y) < GY_MIN || (t->y) > GY_MAX)) {
         t->flag = TF_DELETE;
       }
 
@@ -194,7 +114,7 @@ void PlayerManager::MoveMaidShot() {
           TamaSetDeg(-64, 16);
           TamaSetSpd(10, 0);
           TamaSetNum(1, 0);
-          MTamaSet();
+          SpawnShot_();
         }
         t->flag = TF_DELETE;
         Effects.SpawnFragment(t->x, t->y, FRG_HIT);
@@ -205,24 +125,16 @@ void PlayerManager::MoveMaidShot() {
       }
     }
   }
-  Indsort(maid_tama_ind, maid_tama_now, maid_tama,
+  Indsort(maid_tama_ind_, maid_tama_now_, maid_tama_,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
-  // Laser collision check
-  if (viv.weapon == 2 && (viv.lay_grp != 0U)) {
-    // x = (viv.opx>>6)+4 -8 + SBOPT_DX;
-    // y = (viv.opy>>6)-20;
-    Enemies.DamageAt2(viv.opx + (SBOPT_DX << 6), viv.opy,
-                      (viv.lay_grp / 3) + 1);
-    Enemies.DamageAt2(viv.opx - (SBOPT_DX << 6), viv.opy,
-                      (viv.lay_grp / 3) + 1);
-  }
+  // Weapon-specific continuous-beam collision (laser).
+  ActiveForm_()->OnCollisionTick();
 }
 
-// Bullet drawing
-void PlayerManager::DrawMaidShot() {
-  // Cannot use TAMA.cpp functions here, so implement custom drawing.
+// --- Bullet drawing ---
 
+void Player::DrawMaidShot() {
   int i = 0;
   int x = 0;
   int y = 0;
@@ -234,13 +146,12 @@ void PlayerManager::DrawMaidShot() {
                                      {568, 104, 568 + 32, 104 + 32},
                                      {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; std::cmp_less(i, maid_tama_now); i++) {
-    auto *t = &maid_tama[maid_tama_ind[i]];
+  for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
+    auto *t = &maid_tama_[maid_tama_ind_[i]];
 
-    x = (t->x >> 6) - 8; // -8 is for coordinate correction
-    y = (t->y >> 6) - 8; // Same as above
+    x = (t->x >> 6) - 8;
+    y = (t->y >> 6) - 8;
 
-    // Set drawing rectangle based on bullet type
     switch (t->c) {
     case TID_WIDE_MAIN:
       src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 176, 16, 16};
@@ -264,671 +175,75 @@ void PlayerManager::DrawMaidShot() {
     case TID_HOMING_BOMB_B:
       src = HomingBomb[(t->count / 4) % 5];
       break;
+
+    // Focus (low-speed) form shots reuse the base-form sprite rows.
+    case TID_WIDE_FOCUS_MAIN:
+      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 176, 16, 16};
+      break;
+    case TID_WIDE_FOCUS_SUB:
+      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 192, 16, 16};
+      break;
+    case TID_HOMING_FOCUS_MAIN:
+      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 208, 16, 16};
+      break;
+    case TID_HOMING_FOCUS_SUB:
+      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 224, 16, 16};
+      break;
     }
 
-    // Full clipping with bounds check
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
   }
 
   // Laser drawing
-  if (viv.weapon == 2 && (viv.lay_grp != 0U)) {
-    ltemp = PIXEL_LTWH{(384 + ((viv.lay_grp - 1) << 4)), 240, 8, 16};
+  if (weapon_ == 2 && (lay_grp_ != 0U)) {
+    // Focus (low-speed) form: pull the two beams closer together.
+    const int loff =
+        ((Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
+    ltemp = PIXEL_LTWH{(384 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
 
-    x = (viv.opx >> 6) + 4 - 8 + SBOPT_DX;
-    y = (viv.opy >> 6) - 20;
+    x = (opx_ >> 6) + 4 - 8 + loff;
+    y = (opy_ >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    x = (viv.opx >> 6) + 4 - 8 - SBOPT_DX;
-    y = (viv.opy >> 6) - 20;
+    x = (opx_ >> 6) + 4 - 8 - loff;
+    y = (opy_ >> 6) - 20;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
-    ltemp = PIXEL_LTWH{(384 + 8 + ((viv.lay_grp - 1) << 4)), 240, 8, 16};
-    for (i = (viv.opy >> 6) - 36; i > -16; i -= 16) {
-      x = (viv.opx >> 6) + 4 - 8 + SBOPT_DX;
+    ltemp = PIXEL_LTWH{(384 + 8 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
+    for (i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+      x = (opx_ >> 6) + 4 - 8 + loff;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
-    for (i = (viv.opy >> 6) - 36; i > -16; i -= 16) {
-      x = (viv.opx >> 6) + 4 - 8 - SBOPT_DX;
+    for (i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+      x = (opx_ >> 6) + 4 - 8 - loff;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
   }
 }
 
-// Bullet hash table initialization
-void PlayerManager::SetMaidShotIndices() {
-  int i = 0;
+// --- Shot pool initialization ---
 
-  // Initializing this array initializes all bullets
-  for (i = 0; i < MAIDTAMA_MAX; i++) {
-    maid_tama_ind[i] = i;
-    // memset(Players.maid_tama+i,0,sizeof(TAMA_DATA));
+void Player::SetMaidShotIndices() {
+  for (int i = 0; i < MAIDTAMA_MAX; i++) {
+    maid_tama_ind_[i] = i;
   }
-
-  // Don't forget to zero-initialize the current count
-  maid_tama_now = 0;
+  maid_tama_now_ = 0;
 }
 
-static void MTamaSet() {
-  for (decltype(Bullets.command.n) i = 0; i < Bullets.command.n; i++) {
-    if (Players.maid_tama_now + 1 >= MAIDTAMA_MAX) {
-      return; // Cannot set
-    }
+// --- Laser fire trigger ---
 
-    auto *t =
-        &Players.maid_tama[Players.maid_tama_ind
-                               [Players.maid_tama_now++]]; // Set bullet pointer
-
-    t->x = t->tx = Bullets.command.x; // Set X coordinate
-    t->y = t->ty = Bullets.command.y; // Set Y coordinate
-
-    t->v = t->v0 = Bullets.Speed(i); // Set initial speed
-    t->a = Bullets.command.a;        // Note: size is char
-
-    t->d = Bullets.Dir(i); // Bullet launch angle
-    t->d16 = (t->d << 8);  // Used for angular velocity movement
-
-    t->vx = cosl(t->d, t->v); // Set velocity X component
-    t->vy = sinl(t->d, t->v); // Set velocity Y component
-
-    t->vd = Bullets.command.vd;         // Angular velocity or homing rate
-    t->c = Bullets.command.c;           // Bullet ID
-    t->rep = Bullets.command.rep;       // Repeat count
-    t->type = Bullets.command.type;     // Bullet type
-    t->option = Bullets.command.option; // Bullet attributes (vibe, reflect, etc.)
-    t->effect = 0;                      // Bullets.command.cmd & 0xf0;			//
-                                        // Bullet effect
-    t->count = 0;                       // Initialize counter
-    t->flag = Bullets.Flag();           // Initialize flag
-  }
-}
-
-inline bool IsMainShot(uint16_t t) {
-  return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
-          t == MAID_MAIN_SHOT * 3);
-}
-inline bool IsSubShot(uint16_t t) {
-  return (t == 0 || t == MAID_SUB_SHOT) && Players.viv.bomb_time == 0;
-}
-
-void PlayerManager::SetMLaser(uint16_t time) {
-  if ((Players.viv.bomb_time != 0U) ||
-      Players.viv.muteki > MAID_MOVE_DISABLE_TIME) {
-    Players.viv.lay_time = 0;
-    Players.viv.lay_grp = 0;
+void Player::SetMLaser(uint16_t time) {
+  if ((Players.bomb_time_ != 0U) ||
+      Players.muteki_ > MAID_MOVE_DISABLE_TIME) {
+    Players.lay_time_ = 0;
+    Players.lay_grp_ = 0;
     return;
   }
 
-  if (Players.viv.lay_time == 0) {
-    Players.viv.lay_time = time;
-    Snd_SEPlay(SOUND_ID_SBLASER, Players.viv.x);
+  if (Players.lay_time_ == 0) {
+    Players.lay_time_ = time;
+    Snd_SEPlay(SOUND_ID_SBLASER, Players.X());
   }
 }
-
-// Shot TYPE-A
-static void SetT_A0() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Single center shot only
-    TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_A1() {
-  char dd = 0;
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Option shot (right)
-    TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 + 5, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 - 5, 0);
-    MTamaSet();
-  }
-
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Lightly spread main shot
-    Players.viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
-    TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64 + dd, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_A2() {
-  char dd = 0;
-
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 2-shot
-    Players.viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
-
-    TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
-    TamaSetDeg(-64 + dd, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-    Bullets.command.x += (12 * 64);
-    MTamaSet();
-  }
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Option shot (right)
-    TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    TamaSetDeg(-64 + 5, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 - 5, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_A3() {
-  char dd = 0;
-
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 3-way shot
-    Players.viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
-    TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64 + dd, 4);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    MTamaSet();
-  }
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Option shot (right)
-    TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 + 5, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 - 5, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_A4() {
-  char dd = 0;
-
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 3-way shot
-    Players.viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
-    TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64 + dd, 4);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    MTamaSet();
-  }
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Option shot (right)
-    TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 + 8, 7); //(-64+5,7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(2, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 - 8, 7); //(-64-5,7);
-    MTamaSet();
-  }
-}
-
-static void SetT_A5() { SetT_A4(); }
-
-static void SetT_A6() {
-  char dd = 0;
-
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 4-way shot
-    Players.viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
-    TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64 + dd, 3);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    MTamaSet();
-  }
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Option shot (right)
-    TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 + 10, 8); //-64+6,4);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 - 10, 8); //(-64-6,4);
-    MTamaSet();
-  }
-}
-
-static void SetT_A7() { SetT_A6(); }
-
-static void SetT_A8() {
-  char dd = 0;
-
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 4-way shot
-    Players.viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 6));
-    TamaSTDForm(TID_WIDE_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64 + dd, 3);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    MTamaSet();
-  }
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Option shot (right)
-    TamaSTDForm(TID_WIDE_SUB);
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 + 12, 8); //(-64+7,4);
-    TamaSetSpd(54, 0);
-    TamaSetNum(4, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(-64 - 12, 8); //(-64-7,4);
-    MTamaSet();
-  }
-}
-
-// Shot TYPE-B
-static void SetT_B0() {
-  char dd = 0;
-
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Lightly spread main shot
-    Players.viv.toge_ex += 32;
-    dd = Cast::down<int8_t>(sinl(Players.viv.toge_ex, 4));
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64 + dd, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-  }
-  // Players.viv.toge_time = 3;
-}
-
-static void SetT_B1() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 2-shot
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-    Bullets.command.x += (12 * 64);
-    MTamaSet();
-  }
-  // Players.viv.toge_time = 4;
-  // if((++Players.viv.toge_ex)&7) return;
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Homing bullet
-    // Option shot (right)
-    TamaSTDForm(TID_HOMING_SUB);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64 - 5, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(64 + 5, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_B2() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 3-way shot
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    MTamaSet();
-  }
-
-  // Players.viv.toge_time = 4;
-  // if((++Players.viv.toge_ex)&7) return;
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Homing bullet
-    // Option shot (right)
-    TamaSTDForm(TID_HOMING_SUB);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64 - 5, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(64 + 5, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_B3() { SetT_B2(); }
-
-static void SetT_B4() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 5-way shot
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    MTamaSet();
-  }
-
-  // Players.viv.toge_time = 4;
-  // if((++Players.viv.toge_ex)&7) return;
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Homing bullet
-    // Option shot (right)
-    TamaSTDForm(TID_HOMING_SUB);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64 - 5, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(64 + 5, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_B5() { SetT_B4(); }
-
-static void SetT_B6() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 5-way shot
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    MTamaSet();
-  }
-
-  // Players.viv.toge_time = 4;
-  // if((++Players.viv.toge_ex)&3) return;
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Homing bullet
-    // Option shot (right)
-    TamaSTDForm(TID_HOMING_SUB);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64 - 5, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(64 + 5, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_B7() { SetT_B6(); }
-
-static void SetT_B8() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 5-way shot
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    MTamaSet();
-  }
-
-  // Players.viv.toge_time = 4;
-  // if((++Players.viv.toge_ex)&3) return;
-
-  if (IsSubShot(Players.viv.toge_time)) {
-    // Homing bullet
-    // Option shot (right)
-    TamaSTDForm(TID_HOMING_SUB);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(Players.viv.opx + (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64 - 22, 30);
-    TamaSetNum(2, 0);
-    MTamaSet();
-
-    // Option shot (left)
-    TamaSetXY(Players.viv.opx - (SBOPT_DX * 64), Players.viv.opy);
-    TamaSetDeg(64 + 22, 30);
-    MTamaSet();
-  }
-}
-
-// Shot TYPE-C
-static void SetT_C0() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Single center shot only
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-  }
-}
-
-static void SetT_C1() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 2-column shot
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    MTamaSet();
-    Bullets.command.x += (12 * 64);
-    MTamaSet();
-  }
-
-  PlayerManager::SetMLaser(64 + 50);
-}
-
-static void SetT_C2() { SetT_C1(); }
-
-static void SetT_C3() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 3-way shot
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 6);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    MTamaSet();
-  }
-
-  PlayerManager::SetMLaser(64 + 100);
-}
-
-static void SetT_C4() { SetT_C3(); }
-
-static void SetT_C5() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 4-way shot (center in 2 columns)
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetSpd(54, 0);
-
-    TamaSetDeg(-64 - 5, 10);
-    TamaSetXY(Players.viv.x - (6 * 64), Players.viv.y);
-    TamaSetNum(2, 0);
-    MTamaSet();
-
-    TamaSetDeg(-64 + 5, 10);
-    Bullets.command.x += (12 * 64);
-    MTamaSet();
-  }
-
-  PlayerManager::SetMLaser(64 + 150);
-}
-
-static void SetT_C6() { SetT_C5(); }
-
-static void SetT_C7() { SetT_C5(); }
-
-static void SetT_C8() {
-  if (IsMainShot(Players.viv.toge_time)) {
-    // Center 5-way shot
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetDeg(-64, 6);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    MTamaSet();
-  }
-
-  PlayerManager::SetMLaser(64 + 200);
-}
-
-// Shot TYPE-D
-static void SetT_D0() {}
-
-static void SetT_D1() {}
-
-static void SetT_D2() {}
-
-static void SetT_D3() {}
-
-static void SetT_D4() {}
-
-static void SetT_D5() {}
-
-static void SetT_D6() {}
-
-static void SetT_D7() {}
-
-static void SetT_D8() {}
-
-static void SetWideBomb() {
-  int dx = 0;
-  int dy = 0;
-  int l = 0;
-
-  if (Players.viv.bomb_time > WIDE_BOMB_TIME - 30) {
-    return;
-  }
-
-  const auto d = Cast::down<uint8_t>(Players.viv.bomb_time * 3U);
-  l = (WIDE_BOMB_TIME - Players.viv.bomb_time) * 26; // 16-32
-  dx = GX_MID + (64 * 70 / 2) + cosl(d, l << 1);
-  dy = GY_MID - (64 * 90 / 2) + sinl(d << 1, l);
-
-  Effects.SpawnFragment(dx, dy, FRG_STAR1);
-  Effects.SpawnFragment(dx, dy, FRG_STAR1);
-  Effects.SpawnFragment(dx, dy, FRG_STAR2);
-
-  Enemies.DamageAll(1);
-}
-
-static void SetHomingBomb() {
-  if (Players.viv.bomb_time % 30 == 1) {
-    TamaSTDForm(TID_HOMING_BOMB_A);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(Players.viv.x, Players.viv.y);
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64, 16);
-    TamaSetNum(8, 1);
-    MTamaSet();
-
-    // Defective, discontinued
-    // ObjectLockOn(&HomingX, &HomingY, 32*64, 32*64);
-  }
-}
-
-// This acts more like a HitCheck than a Set
-static void SetLaserBomb() {
-  int ox = 0;
-  int oy = 0;
-  int i = 0;
-
-  const auto LaserDeg = GetLaserDeg();
-
-  ox = Players.viv.opx + (SBOPT_DX * 64);
-  oy = Players.viv.opy;
-  for (i = -3; i <= 3; i++) {
-    const auto d = GetRightLaserDeg(LaserDeg, i);
-    Enemies.DamageAt3(ox, oy, d);
-  }
-
-  ox = Players.viv.opx - (SBOPT_DX * 64);
-  oy = Players.viv.opy;
-  for (i = -3; i <= 3; i++) {
-    const auto d = GetLeftLaserDeg(LaserDeg, i);
-    Enemies.DamageAt3(ox, oy, d);
-  }
-}
-
-static void SetCactusBomb() {}

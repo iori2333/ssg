@@ -1,8 +1,8 @@
 ///
-/// PlayerManager - Centralized player system state
+/// PlayerManager - Global instance definition (merged into Player)
 ///
 
-#include "player_manager.h"
+#include "player.h"
 
 // --- Global instance ---
-PlayerManager Players;
+Player Players;

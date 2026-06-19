@@ -36,7 +36,7 @@
 #include "loader.h"                 // Various loaders
 #include "player/item_manager.h"    // ItemManager + backward-compat wrappers
 #include "player/player.h"          // As the name suggests
-#include "player/player_manager.h"  // PlayerManager + backward-compat wrappers
+#include "player/player.h"  // Player + weapon forms
 #include "player/player_shot.h"     // Player shot processing
 #include "stage/scroll.h"           // Background scrolling & SCL management
 #include "stage/scroll_manager.h"   // ScrollManager + backward-compat wrappers

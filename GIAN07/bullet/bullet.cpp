@@ -22,6 +22,15 @@
 // Private methods are declared in bullet_manager.h
 void TamaEffectDraw(const Bullet *t); // Draw bullet as effect?
 
+void TamaEvadeAdd(Bullet *t) {
+  if (t->flag & TF_EVADE)
+    Players.AddEvadeEx(t->x, t->y, 0);
+  else {
+    t->flag |= TF_EVADE;
+    Players.AddEvadeEx(t->x, t->y, TAMA_EVADE);
+  }
+}
+
 void BulletManager::Spawn() {
   int v = 0;
 
@@ -277,17 +286,17 @@ void BulletManager::Move() {
         t->flag = TF_DELETE;
       }
       t->count++;
-      if (Players.viv.muteki != 0U) {
+      if (Players.IsInvincible() != 0U) {
         continue;
       }
-      if (HITCHK(t->x, Players.viv.x, TAMA_EVX_SMALL) &&
-          HITCHK(t->y, Players.viv.y, TAMA_EVY_SMALL)) {
+      if (HITCHK(t->x, Players.X(), TAMA_EVX_SMALL) &&
+          HITCHK(t->y, Players.Y(), TAMA_EVY_SMALL)) {
         TamaEvadeAdd(t);
       }
-      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) &&
-          HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
+      if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
+          HITCHK(t->y, Players.Y(), TAMA_HITY)) {
         t->flag = TF_DELETE;
-        MaidHit();
+        Players.OnHit();
       }
     } else {
       MoveByEffect(t);
@@ -309,17 +318,17 @@ void BulletManager::Move() {
         t->flag = TF_DELETE;
       }
       t->count++;
-      if (Players.viv.muteki != 0U) {
+      if (Players.IsInvincible() != 0U) {
         continue;
       }
-      if (HITCHK(t->x, Players.viv.x, TAMA_EVX_LARGE) &&
-          HITCHK(t->y, Players.viv.y, TAMA_EVY_LARGE)) {
+      if (HITCHK(t->x, Players.X(), TAMA_EVX_LARGE) &&
+          HITCHK(t->y, Players.Y(), TAMA_EVY_LARGE)) {
         TamaEvadeAdd(t);
       }
-      if (HITCHK(t->x, Players.viv.x, TAMA_HITX) &&
-          HITCHK(t->y, Players.viv.y, TAMA_HITY)) {
+      if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
+          HITCHK(t->y, Players.Y(), TAMA_HITY)) {
         t->flag = TF_DELETE;
-        MaidHit();
+        Players.OnHit();
       }
     } else {
       MoveByEffect(t);
@@ -602,7 +611,7 @@ uint32_t BulletManager::ScoreToItems() {
   uint32_t sum = 0;
   uint32_t Score = 0;
 
-  Score = TAMA1_POINT + (Players.viv.evade * 100);
+  Score = TAMA1_POINT + (Players.GrazeCount() * 100);
   for (const auto i : std::views::iota(0U, count_small)) {
     auto *t = &bullets[indices_small[i]];
     if (t->effect != TE_DELETE) {
@@ -617,7 +626,7 @@ uint32_t BulletManager::ScoreToItems() {
   Indsort(indices_small, count_small, bullets,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
-  Score = TAMA2_POINT + (Players.viv.evade * 100);
+  Score = TAMA2_POINT + (Players.GrazeCount() * 100);
   for (const auto i : std::views::iota(0U, count_large)) {
     auto *t = &bullets[indices_large[i]];
     if (t->effect != TE_DELETE) {
@@ -640,7 +649,7 @@ void BulletManager::ToItems(uint8_t n) {
   // uint32_t sum = 0;
   // uint32_t Score;
 
-  //	Score = TAMA1_POINT + Players.viv.evade * 100;
+  //	Score = TAMA1_POINT + Players.GrazeCount() * 100;
 
   if (n == 0) {
     Clear();
@@ -667,7 +676,7 @@ void BulletManager::ToItems(uint8_t n) {
   Indsort(indices_small, count_small, bullets,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
-  //	Score = TAMA2_POINT + Players.viv.evade * 100;
+  //	Score = TAMA2_POINT + Players.GrazeCount() * 100;
   for (const auto i : std::views::iota(0U, count_large)) {
     auto *t = &bullets[indices_large[i]];
     if (t->effect != TE_DELETE) {
@@ -776,7 +785,7 @@ void BulletManager::SetLunatic() {
 uint8_t BulletManager::Dir(uint16_t i) const {
   uint8_t deg =
       (((command.cmd & TAMA_ZSET) != 0)
-           ? atan8((Players.viv.x - command.x), (Players.viv.y - command.y))
+           ? atan8((Players.X() - command.x), (Players.Y() - command.y))
            : 0);
 
   deg += command.d;  // Base angle set complete
@@ -921,7 +930,7 @@ void BulletManager::MoveByType(Bullet *t) {
     }
     if ((t->a < 0) && (t->v <= 0)) {
       t->a = -(t->a);
-      t->d = atan8((Players.viv.x) - (t->x), (Players.viv.y) - (t->y));
+      t->d = atan8((Players.X()) - (t->x), (Players.Y()) - (t->y));
     }
     return;
 
@@ -929,7 +938,7 @@ void BulletManager::MoveByType(Bullet *t) {
     // Not optimized... //
     if ((t->count > 19) && (t->count % 2 == 0)) {
       deg_t =
-          atan8((Players.viv.x) - (t->x), (Players.viv.y) - (t->y)) - (t->d);
+          atan8((Players.X()) - (t->x), (Players.Y()) - (t->y)) - (t->d);
       if (deg_t < -128) {
         deg_t += 256;
       }

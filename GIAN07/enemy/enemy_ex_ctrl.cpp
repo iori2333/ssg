@@ -18,7 +18,6 @@
 #include "long_laser.h"
 #include "platform/graphics_backend.h"
 #include "player.h"
-#include "player_manager.h"
 #include <utility>
 
 static constexpr auto BIT_VIRTUAL_HP = 990000; // Bit virtual HP
@@ -688,7 +687,7 @@ void BossManager::BitSendCommand(uint8_t Command, int Param) {
   case BITCMD_MOVTARGET: // Boomerang move toward target (Vivit)
     bit_data.v = 64 * 10;
     bit_data.a = -8;
-    bit_data.d = atan8(Players.viv.x - bit_data.x, Players.viv.y - bit_data.y);
+    bit_data.d = atan8(Players.X() - bit_data.x, Players.Y() - bit_data.y);
     bit_data.State = BITCMD_MOVTARGET;
     break;
 

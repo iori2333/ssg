@@ -5,7 +5,6 @@
 #pragma once
 
 #include "game_main.h"
-#include "player/player_types.h"
 #include "score.h"
 #include <array>
 #include <cstdint>
@@ -40,7 +39,6 @@ struct GameFlowManager {
   NrNameData current_name = {};
   uint8_t current_rank = 0;
   uint8_t current_dif = 0;
-  Player viv_temp = {};
   bool input_locked = false;
 
   // === Methods ===

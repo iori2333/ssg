@@ -171,16 +171,7 @@ struct Bullet {
 // TamaSetForm, TamaSTDForm, TamaSetDeg, TamaSetNum, TamaSetSpd, TamaSetXY ->
 // moved to bullet_manager.h
 
-//// Graze macros ////
-void evade_addEx(int x, int y, uint8_t n); // Increase the graze gauge
-
-inline void TamaEvadeAdd(Bullet *t) {
-  if (t->flag & TF_EVADE)
-    evade_addEx(t->x, t->y, 0);
-  else {
-    t->flag |= TF_EVADE;
-    evade_addEx(t->x, t->y, TAMA_EVADE);
-  }
-}
+//// Graze (implementation in bullet.cpp where player.h is available) ////
+void TamaEvadeAdd(Bullet *t);
 
 // (Indsort<Bullet> wrapper removed — pass predicate directly)

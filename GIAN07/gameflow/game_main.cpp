@@ -67,7 +67,7 @@ void Render(PIXEL_COORD top) {
 }; // namespace Version
 
 // GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
-// current_name, current_rank, current_dif, viv_temp, GameState.is_demoplay,
+// current_name, current_rank, current_dif, GameState.is_demoplay,
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
 
 // Converted functions -> inline wrappers provided in gameflow_manager.h
@@ -504,9 +504,9 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   for (auto &it : current_name.Name) {
     it = '\0';
   }
-  current_name.Score = Players.viv.score;
-  current_name.Evade = Players.viv.evade_sum;
-  current_name.Weapon = Players.viv.weapon;
+  current_name.Score = Players.Score();
+  current_name.Evade = Players.GrazeSum();
+  current_name.Weapon = Players.Weapon();
   if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
     current_name.Stage = 1;
   } else {
@@ -554,7 +554,7 @@ void GameSTD_Init() {
 
   Bosses.Init();
 
-  // MaidSet();
+  // Players.Initialize();
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
   Bullets.SetIndices(400 + 200); // 400 for small bullets
@@ -589,19 +589,17 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GameSTD_Init();
   Ranking.Reset();
 
-  MaidSet();
+  Players.Initialize();
 
   GrpBackend_SetClip(GRP_RES_RECT);
 
   weapon_key_wait = 1;
-  Players.viv.weapon = 0;
+  Players.BeginWeaponPreview();
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
     GameState.game_stage = GRAPH_ID_EXSTAGE;
   }
-
-  viv_temp = Players.viv;
 
   return true;
 }
@@ -647,7 +645,7 @@ bool GameNextStage() {
       std::min<int>(GameState.game_stage, STAGE_MAX); // To be changed later
 
   GameSTD_Init();
-  MaidNextStage();
+  Players.PrepareNextStage();
 
   if (!LoadGraph(GameState.game_stage)) {
     DebugOut("GRAPH.DAT が破壊されています");
@@ -663,7 +661,7 @@ bool GameNextStage() {
 
 // Initialize for multi-stage replay
 bool GameReplayInitAll(const char *fn) {
-  MaidSet();
+  Players.Initialize();
 
   if (!Demos.LoadReplayAll(fn)) {
     return false;
@@ -691,7 +689,7 @@ bool GameReplayInitAll(const char *fn) {
   }
 
   if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
-    Players.viv.credit = 0;
+    Players.SetCredits(0);
   }
 
   GameFlow.current_state = GameState::ReplayAll;
@@ -761,7 +759,7 @@ bool DemoInit() {
 
   GameSTD_Init();
 
-  MaidSet();
+  Players.Initialize();
 
   rnd_seed_set(Time_SteadyTicksMS());
   GameState.game_stage = (rnd() % STAGE_MAX) + 1;
@@ -928,20 +926,15 @@ void GameOverInit() {
 
 // When continuing
 void GameContinue() {
-  Players.viv.evade_sum = 0;
-  Players.viv.left = ConfigDat.PlayerStock.v;
-  Players.viv.score = ((Players.viv.score % 10) + 1);
-  Players.viv.star_counter = 0;
-  Players.viv.star_threshold = 400;
-  Players.viv.star_extend_count = 0;
+  Players.ResetForContinue();
 
   GameFlow.game_main = GameProc;
   GameFlow.current_state = GameState::Game;
 
   // If we don't reach here, it's a bug...
-  if (Players.viv.credit != 0U) {
+  if (Players.Credits() != 0U) {
     // If credits remain (go to continue Y/N processing)
-    Players.viv.credit -= 1;
+    Players.UseCredit();
   }
 }
 
@@ -965,11 +958,11 @@ void GameProc(bool & /*unused*/) {
   //	static BYTE count;
   //	if(count) count--;
   //	if((Key_Data & KEY_TAMA) && count==0){
-  //		CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE2);//STAR);
+  //		CEffectSet(Players.X(),Players.Y(),CEFC_CIRCLE2);//STAR);
   //		count = 30;
   //	}
   //	if((Key_Data & KEY_BOMB) && count==0){
-  //		CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE1);//STAR);
+  //		CEffectSet(Players.X(),Players.Y(),CEFC_CIRCLE1);//STAR);
   //		count = 30;
   //	}
   GameMove();
@@ -1017,7 +1010,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
       return;
     }
 
-    if (Players.viv.credit == 0) {
+    if (Players.Credits() == 0) {
       NameRegistInit(true);
       // GameExit();
       return; // Temporary
@@ -1129,12 +1122,12 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   deg += spd;
   if (deg >= 85 || deg <= -85) {
     // if(deg>=64 || deg<=-64){
-    // if(spd<0) Players.viv.weapon = (Players.viv.weapon+3)%4;
-    // else      Players.viv.weapon = (Players.viv.weapon+1)%4;
+    // if(spd<0) Players.Weapon() = (Players.Weapon()+3)%4;
+    // else      Players.Weapon() = (Players.Weapon()+1)%4;
     if (spd < 0) {
-      Players.viv.weapon = (Players.viv.weapon + 2) % 3;
+      Players.RotateWeapon(-1);
     } else {
-      Players.viv.weapon = (Players.viv.weapon + 1) % 3;
+      Players.RotateWeapon(1);
     }
     spd = 0;
     deg = 0;
@@ -1169,9 +1162,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   switch (Key_Data) {
   case KEY_RIGHT:
     if (spd < 0) {
-      // Players.viv.weapon = (Players.viv.weapon+3)%4;
-      // deg+=64;
-      Players.viv.weapon = (Players.viv.weapon + 2) % 3;
+      Players.RotateWeapon(-1);
       deg += 85;
     }
     spd = 3;
@@ -1179,9 +1170,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
   case KEY_LEFT:
     if (spd > 0) {
-      // Players.viv.weapon = (Players.viv.weapon+1)%4;
-      // deg-=64;
-      Players.viv.weapon = (Players.viv.weapon + 1) % 3;
+      Players.RotateWeapon(1);
       deg -= 85;
     }
     spd = -3;
@@ -1193,13 +1182,12 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       break;
     }
     if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
-      if (((1 << Players.viv.weapon) & ConfigDat.ExtraStgFlags.v) == 0) {
+      if (((1 << Players.Weapon()) & ConfigDat.ExtraStgFlags.v) == 0) {
         break;
       }
     }
 
-    viv_temp.weapon = Players.viv.weapon;
-    Players.viv = viv_temp;
+    Players.CommitWeaponSelection();
     Players.SetMaidShotIndices();
     count = 0;
 
@@ -1211,34 +1199,34 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       else
         GameState.game_stage = DebugDat.StgSelect;
       if (GameState.game_stage == 2)
-        Players.viv.exp = 160;
+        Players.SetPower(160);
       if (GameState.game_stage >= 3)
-        Players.viv.exp = 255;
+        Players.SetPower(255);
 #else
       if (forceStage != 0) {
         GameState.game_stage = forceStage;
         if (GameState.game_stage == 2) {
-          Players.viv.exp = 160;
+          Players.SetPower(160);
         }
         if (GameState.game_stage >= 3) {
-          Players.viv.exp = 255;
+          Players.SetPower(255);
         }
       } else if (ConfigDat.StageSelect.v != 0U) {
         GameState.game_stage = ConfigDat.StageSelect.v;
         if (GameState.game_stage == 2) {
-          Players.viv.exp = 160;
+          Players.SetPower(160);
         }
         if (GameState.game_stage >= 3) {
-          Players.viv.exp = 255;
+          Players.SetPower(255);
         }
       } else {
         GameState.game_stage = 1;
       }
 #endif
     } else {
-      Players.viv.credit = 0;
-      Players.viv.left = EXTRA_LIVES;
-      Players.viv.exp = 255;
+    Players.SetCredits(0);
+      Players.SetLives(EXTRA_LIVES);
+      Players.SetPower(255);
     }
 
     Demos.Init();
@@ -1283,8 +1271,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     for (i = 0; i < 3; i++) {
       // for(i=0;i<4;i++){
-      // d = (-i+Players.viv.weapon)*64 + deg - 64;
-      d = ((-i + Players.viv.weapon) * 85) + deg - 64;
+      // d = (-i+Players.Weapon())*64 + deg - 64;
+      d = ((-i + Players.Weapon()) * 85) + deg - 64;
       x = 120 + cosl(d, 90) - (56 / 2);
       y = 260 + sinl(d, 110) - (48 / 2);
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src[i]);
@@ -1299,45 +1287,45 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
         continue;
       }
 
-      d = ((-i + Players.viv.weapon) * 85) + deg - 64;
+      d = ((-i + Players.Weapon()) * 85) + deg - 64;
       x = 120 + cosl(d, 90) - (56 / 2);
       y = 260 + sinl(d, 110) - (48 / 2);
       GrpGeom->DrawBoxA(x, y, (x + 56), (y + 48));
     }
     GrpGeom->Unlock();
 
-    Players.viv.exp = std::min(count, 255);
-    if (Players.viv.exp < 31) {
-      Players.viv.lay_time = Players.viv.lay_grp = 0;
+    Players.SetPower(static_cast<uint8_t>(std::min(count, 255)));
+    if (Players.Power() < 31) {
+      Players.ClearLaserState();
     }
 
     Enemies.homing_flag = HOMING_DUMMY;
     Key_Data = KEY_TAMA;
 
-    Players.viv.muteki = 0;
-    Players.viv.x = (400 * 64) + sinl((count / 3) * 6, 60 * 64);
-    Players.viv.y = (350 * 64) + sinl((count / 3) * 4, 30 * 64);
+    Players.ClearInvincibility();
+    Players.SetPosition((400 * 64) + sinl((count / 3) * 6, 60 * 64),
+                        (350 * 64) + sinl((count / 3) * 4, 30 * 64));
 
-    MaidMove();
+    Players.Update();
     Players.MoveMaidShot();
 
     GrpBackend_SetClip({(400 - 110), (400 - 300 + 2), (400 + 110), (400 + 10)});
     for (x = 400 - 110 - 2; x < 400 + 110; x += 32) {
       for (y = 400 - 300 + 2 + ((count * 2) % 32) - 32; y < 400 + 10; y += 32) {
-        d = Players.viv.weapon << 4;
+        d = Players.Weapon() << 4;
         rc = PIXEL_LTWH{224, 256, 32, 32};
         // rc = PIXEL_LTWH{ d, (296 - 24), 16, 16 };
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, rc);
       }
     }
-    MaidDraw();
+    Players.Draw();
     Players.DrawMaidShot();
 
     rc = PIXEL_LTWH{72, (272 + 16), 56, 8};
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
     GrpPutScore(
         500, 400,
-        std::format("{}", ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5))
+        std::format("{}", ((Cast::up<uint16_t>(Players.Power()) + 1) >> 5))
             .c_str());
 
     GrpBackend_SetClip(GRP_RES_RECT);
@@ -1360,7 +1348,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     //	HDC		hdc;
     //	char	buf[100];
     //	DxObj.Back->GetDC(&hdc);
-    //	sprintf(buf,"Players.viv.weapon = %d",Players.viv.weapon);
+    //	sprintf(buf,"Players.Weapon() = %d",Players.Weapon());
     //	TextOut(hdc,0,0,buf,strlen(buf));
     //	DxObj.Back->ReleaseDC(hdc);
     //
@@ -1496,7 +1484,7 @@ void GameMove() {
   Effects.MoveScreenEffect();
 
   // Changed position of these two lines
-  MaidMove();
+  Players.Update();
   Players.MoveMaidShot();
 }
 
@@ -1508,7 +1496,7 @@ void GameDraw() {
 
   Bosses.Draw();
 
-  WideBombDraw(); // Probably fine here but...
+  Players.DrawWideBomb(); // Probably fine here but...
 
   Effects.DrawBombEffects();
 
@@ -1516,7 +1504,7 @@ void GameDraw() {
 
   Players.DrawMaidShot();
 
-  MaidDraw();
+  Players.Draw();
 
   if (GrpGeom_FB() != nullptr) {
     Lasers.DrawLong();
@@ -1544,7 +1532,7 @@ void GameDraw() {
   // DrawWarning();
 
   Effects.DrawStringEffects();
-  StateDraw();
+  Players.DrawStatus();
 
   Bosses.DrawHPG();
   Effects.DrawScreenEffect();

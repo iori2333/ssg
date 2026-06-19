@@ -19,10 +19,124 @@
 #include "geometry.h"
 #include "gian.h"
 #include "player.h"
+#include "weapon/homing_form.h"
+#include "weapon/laser_form.h"
+#include "weapon/wide_form.h"
 
 // Moved to PlayerManager in player_manager.cpp
 
 // --- Player method implementations ---
+
+// Constructor: create weapon_ form strategy objects.
+Player::Player() {
+  forms_[0] = std::make_unique<WideForm>(*this);
+  forms_[1] = std::make_unique<WideFocusForm>(*this);
+  forms_[2] = std::make_unique<HomingForm>(*this);
+  forms_[3] = std::make_unique<HomingFocusForm>(*this);
+  forms_[4] = std::make_unique<LaserForm>(*this);
+  forms_[5] = std::make_unique<LaserFocusForm>(*this);
+}
+
+Player::~Player() = default;
+
+// Copy operations: duplicate player state but keep our own weapon_ forms
+// (forms hold a reference to *this and must not be shared).
+Player::Player(const Player& other) : Player() { *this = other; }
+
+Player& Player::operator=(const Player& other) {
+  if (this == &other) {
+    return *this;
+  }
+  x_ = other.x_;
+  y_ = other.y_;
+  vx_ = other.vx_;
+  vy_ = other.vy_;
+  opx_ = other.opx_;
+  opy_ = other.opy_;
+  score_ = other.score_;
+  dscore_ = other.dscore_;
+  evade_sum_ = other.evade_sum_;
+  evadesc_ = other.evadesc_;
+  evade_ = other.evade_;
+  evade_c_ = other.evade_c_;
+  star_counter_ = other.star_counter_;
+  star_threshold_ = other.star_threshold_;
+  star_extend_count_ = other.star_extend_count_;
+  v_ = other.v_;
+  weapon_ = other.weapon_;
+  exp_ = other.exp_;
+  bomb_ = other.bomb_;
+  left_ = other.left_;
+  credit_ = other.credit_;
+  miss_count_ = other.miss_count_;
+  bomb_used_ = other.bomb_used_;
+  deathbomb_count_ = other.deathbomb_count_;
+  grp_id_ = other.grp_id_;
+  bomb_time_ = other.bomb_time_;
+  exp2_ = other.exp2_;
+  muteki_ = other.muteki_;
+  deathbomb_time_ = other.deathbomb_time_;
+  lay_time_ = other.lay_time_;
+  lay_grp_ = other.lay_grp_;
+  toge_time_ = other.toge_time_;
+  toge_ex_ = other.toge_ex_;
+  shift_counter_ = other.shift_counter_;
+  game_over_ = other.game_over_;
+  buzz_sound_ = other.buzz_sound_;
+  // maid_tama_ / maid_tama_ind_ / maid_tama_now_ are not copied: the shot
+  // pool belongs to the live Player instance, not a state snapshot.
+  // forms_ is intentionally preserved (not copied).
+  return *this;
+}
+
+WeaponForm* Player::BaseForm_() const {
+  return forms_[weapon_ * 2].get();
+}
+
+WeaponForm* Player::ActiveForm_() const {
+  const bool focus = (Key_Data & KEY_SHIFT) != 0;
+  return forms_[weapon_ * 2 + (focus ? 1 : 0)].get();
+}
+
+bool Player::IsMainShotFrame_(uint16_t t) const {
+  return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
+          t == MAID_MAIN_SHOT * 3);
+}
+
+bool Player::IsSubShotFrame_(uint16_t t) const {
+  return (t == 0 || t == MAID_SUB_SHOT) && bomb_time_ == 0;
+}
+
+void Player::SpawnShot_() {
+  for (decltype(Bullets.command.n) i = 0; i < Bullets.command.n; i++) {
+    if (maid_tama_now_ + 1 >= MAIDTAMA_MAX) {
+      return;
+    }
+
+    auto *t = &maid_tama_[maid_tama_ind_[maid_tama_now_++]];
+
+    t->x = t->tx = Bullets.command.x;
+    t->y = t->ty = Bullets.command.y;
+
+    t->v = t->v0 = Bullets.Speed(i);
+    t->a = Bullets.command.a;
+
+    t->d = Bullets.Dir(i);
+    t->d16 = (t->d << 8);
+
+    t->vx = cosl(t->d, t->v);
+    t->vy = sinl(t->d, t->v);
+
+    t->vd = Bullets.command.vd;
+    t->c = Bullets.command.c;
+    t->rep = Bullets.command.rep;
+    t->type = Bullets.command.type;
+    t->option = Bullets.command.option;
+    t->effect = 0;
+    t->count = 0;
+    t->flag = Bullets.Flag();
+  }
+}
 
 void Player::DrawWideBomb() const {
   static PIXEL_LTRB data[6] = {
@@ -37,26 +151,26 @@ void Player::DrawWideBomb() const {
   constexpr int BX_MIN = (X_MIN + 100);
   constexpr int BY_MIN = (Y_MIN + 100);
 
-  if (weapon != 0 || bomb_time == 0) {
+  if (weapon_ != 0 || bomb_time_ == 0) {
     return;
   }
 
   x = BX_MIN;
   y = BY_MIN;
 
-  if (bomb_time > 80) {
-    t = (((60 * 4) - bomb_time) / 4);
+  if (bomb_time_ > 80) {
+    t = (((60 * 4) - bomb_time_) / 4);
     t = std::max(t, 0);
     t = std::min(t, 5);
   } else {
-    t = (bomb_time / 4);
+    t = (bomb_time_ / 4);
     t = std::min(t, 5);
   }
 
   GrpSurface_Blit({x, y}, SURFACE_ID::BOMBER, data[t]);
 }
 
-void Player::DrawLaserBomb() const {
+void Player::DrawLaserBomb_() const {
   constexpr RGBA col_channeled = RGB216{0, 0, 5}.ToRGB().WithAlpha(0xFF);
   VERTEX_XY p[4];
   int i = 0;
@@ -77,14 +191,14 @@ void Player::DrawLaserBomb() const {
         ly = sinl(d, 850);
         wx = cosl(d + 64, w);
         wy = sinl(d + 64, w);
-        p[0].x = (opx >> 6) + SBOPT_DX + 0 + wx;
-        p[0].y = (opy >> 6) + 0 + wy;
-        p[3].x = (opx >> 6) + SBOPT_DX + 0 - wx;
-        p[3].y = (opy >> 6) + 0 - wy;
-        p[2].x = (opx >> 6) + SBOPT_DX + lx - wx;
-        p[2].y = (opy >> 6) + ly - wy;
-        p[1].x = (opx >> 6) + SBOPT_DX + lx + wx;
-        p[1].y = (opy >> 6) + ly + wy;
+        p[0].x = (opx_ >> 6) + SBOPT_DX + 0 + wx;
+        p[0].y = (opy_ >> 6) + 0 + wy;
+        p[3].x = (opx_ >> 6) + SBOPT_DX + 0 - wx;
+        p[3].y = (opy_ >> 6) + 0 - wy;
+        p[2].x = (opx_ >> 6) + SBOPT_DX + lx - wx;
+        p[2].y = (opy_ >> 6) + ly - wy;
+        p[1].x = (opx_ >> 6) + SBOPT_DX + lx + wx;
+        p[1].y = (opy_ >> 6) + ly + wy;
         if (auto *gp = GrpGeom_Poly()) {
           gp->SetAlphaOne();
           GeomGrdRectA(*gp, p, col_channeled);
@@ -110,14 +224,14 @@ void Player::DrawLaserBomb() const {
         ly = sinl(d, 850);
         wx = cosl(d + 64, w);
         wy = sinl(d + 64, w);
-        p[0].x = (opx >> 6) - SBOPT_DX + 0 + wx;
-        p[0].y = (opy >> 6) + 0 + wy;
-        p[3].x = (opx >> 6) - SBOPT_DX + 0 - wx;
-        p[3].y = (opy >> 6) + 0 - wy;
-        p[2].x = (opx >> 6) - SBOPT_DX + lx - wx;
-        p[2].y = (opy >> 6) + ly - wy;
-        p[1].x = (opx >> 6) - SBOPT_DX + lx + wx;
-        p[1].y = (opy >> 6) + ly + wy;
+        p[0].x = (opx_ >> 6) - SBOPT_DX + 0 + wx;
+        p[0].y = (opy_ >> 6) + 0 + wy;
+        p[3].x = (opx_ >> 6) - SBOPT_DX + 0 - wx;
+        p[3].y = (opy_ >> 6) + 0 - wy;
+        p[2].x = (opx_ >> 6) - SBOPT_DX + lx - wx;
+        p[2].y = (opy_ >> 6) + ly - wy;
+        p[1].x = (opx_ >> 6) - SBOPT_DX + lx + wx;
+        p[1].y = (opy_ >> 6) + ly + wy;
         if (auto *gp = GrpGeom_Poly()) {
           gp->SetAlphaOne();
           GeomGrdRectA(*gp, p, col_channeled);
@@ -150,14 +264,14 @@ void Player::DrawLaserBomb() const {
         ly = sinl(d, 850);
         wx = cosl(d + 64, w);
         wy = sinl(d + 64, w);
-        p[0].x = (opx >> 6) + SBOPT_DX + 0 + wx;
-        p[0].y = (opy >> 6) + 0 + wy;
-        p[3].x = (opx >> 6) + SBOPT_DX + 0 - wx;
-        p[3].y = (opy >> 6) + 0 - wy;
-        p[2].x = (opx >> 6) + SBOPT_DX + lx - wx;
-        p[2].y = (opy >> 6) + ly - wy;
-        p[1].x = (opx >> 6) + SBOPT_DX + lx + wx;
-        p[1].y = (opy >> 6) + ly + wy;
+        p[0].x = (opx_ >> 6) + SBOPT_DX + 0 + wx;
+        p[0].y = (opy_ >> 6) + 0 + wy;
+        p[3].x = (opx_ >> 6) + SBOPT_DX + 0 - wx;
+        p[3].y = (opy_ >> 6) + 0 - wy;
+        p[2].x = (opx_ >> 6) + SBOPT_DX + lx - wx;
+        p[2].y = (opy_ >> 6) + ly - wy;
+        p[1].x = (opx_ >> 6) + SBOPT_DX + lx + wx;
+        p[1].y = (opy_ >> 6) + ly + wy;
         if (auto *gp = GrpGeom_Poly()) {
           gp->SetAlphaOne();
           GeomGrdRectA(*gp, p, col_channeled);
@@ -173,14 +287,14 @@ void Player::DrawLaserBomb() const {
         ly = sinl(d, 850);
         wx = cosl(d + 64, w);
         wy = sinl(d + 64, w);
-        p[0].x = (opx >> 6) - SBOPT_DX + 0 + wx;
-        p[0].y = (opy >> 6) + 0 + wy;
-        p[3].x = (opx >> 6) - SBOPT_DX + 0 - wx;
-        p[3].y = (opy >> 6) + 0 - wy;
-        p[2].x = (opx >> 6) - SBOPT_DX + lx - wx;
-        p[2].y = (opy >> 6) + ly - wy;
-        p[1].x = (opx >> 6) - SBOPT_DX + lx + wx;
-        p[1].y = (opy >> 6) + ly + wy;
+        p[0].x = (opx_ >> 6) - SBOPT_DX + 0 + wx;
+        p[0].y = (opy_ >> 6) + 0 + wy;
+        p[3].x = (opx_ >> 6) - SBOPT_DX + 0 - wx;
+        p[3].y = (opy_ >> 6) + 0 - wy;
+        p[2].x = (opx_ >> 6) - SBOPT_DX + lx - wx;
+        p[2].y = (opy_ >> 6) + ly - wy;
+        p[1].x = (opx_ >> 6) - SBOPT_DX + lx + wx;
+        p[1].y = (opy_ >> 6) + ly + wy;
         if (auto *gp = GrpGeom_Poly()) {
           gp->SetAlphaOne();
           GeomGrdRectA(*gp, p, col_channeled);
@@ -210,27 +324,27 @@ void Player::Draw() {
   static uint8_t draw_flag = 0;
   static uint8_t draw_flag2 = 0;
 
-  const auto sx = ((x >> 6) - 16);
-  const auto sy = ((y >> 6) - 24);
-  const auto ox = ((opx >> 6) - 12);
-  const auto oy = ((opy >> 6) - 12);
+  const auto sx = ((x_ >> 6) - 16);
+  const auto sy = ((y_ >> 6) - 24);
+  const auto ox = ((opx_ >> 6) - 12);
+  const auto oy = ((opy_ >> 6) - 12);
   PIXEL_LTRB src;
 
   draw_flag = 1 - draw_flag;
   draw_flag2++;
 
-  if (muteki == VIVDEAD_VAL) {
+  if (muteki_ == VIVDEAD_VAL) {
     draw_flag = 0;
   }
 
-  if (muteki == 0 || (draw_flag != 0U)) {
-    src = PIXEL_LTWH{(384 + (GrpID * 32)), 128, (16 * 2), (16 * 3)};
+  if (muteki_ == 0 || (draw_flag != 0U)) {
+    src = PIXEL_LTWH{(384 + (grp_id_ * 32)), 128, (16 * 2), (16 * 3)};
     GrpSurface_Blit({sx, sy}, SURFACE_ID::SYSTEM, src);
   }
 
-  if ((Key_Data & KEY_SHIFT) != 0 && muteki < VIVDEAD_VAL) {
-    const auto cx = (x >> 6);
-    const auto cy = (y >> 6);
+  if ((Key_Data & KEY_SHIFT) != 0 && muteki_ < VIVDEAD_VAL) {
+    const auto cx = (x_ >> 6);
+    const auto cy = (y_ >> 6);
 
     GrpGeom->Lock();
 
@@ -243,17 +357,17 @@ void Player::Draw() {
     GrpGeom->Unlock();
   }
 
-  if (((exp + 1) >> 5) != 0) {
-    if (muteki < VIVDEAD_VAL) {
-      src = VivBit[weapon & 3][(draw_flag2 >> 2) & 1];
+  if (((exp_ + 1) >> 5) != 0) {
+    if (muteki_ < VIVDEAD_VAL) {
+      src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
       GrpSurface_Blit({(ox + SBOPT_DX), oy}, SURFACE_ID::SYSTEM, src);
-      src = VivBit[weapon & 3][(draw_flag2 >> 2) & 1];
+      src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
       GrpSurface_Blit({(ox - SBOPT_DX), oy}, SURFACE_ID::SYSTEM, src);
     }
   }
 
-  if ((bomb_time != 0U) && weapon == 2) {
-    DrawLaserBomb();
+  if ((bomb_time_ != 0U) && weapon_ == 2) {
+    DrawLaserBomb_();
   }
 }
 
@@ -262,12 +376,12 @@ void Player::DrawStatus() const {
   int temp = 0;
   constexpr PIXEL_LTRB src = {0, 80, 128, (80 + 24)};
 
-  if (evade_c != 0U) {
+  if (evade_c_ != 0U) {
     GrpGeom->Lock();
     GrpGeom->SetColor({5, 1, 0});
     GrpGeom->SetAlphaOne();
     for (i = 0; i <= 10; i++) {
-      temp = 128 + 9 + (evade_c >> 2) + (5 - i);
+      temp = 128 + 9 + (evade_c_ >> 2) + (5 - i);
       if (temp > (128 + 8)) {
         GrpGeom->DrawBoxA((128 + 8), (16 + 3 + i), temp, (16 + 3 + i + 1));
       }
@@ -275,13 +389,13 @@ void Player::DrawStatus() const {
     GrpGeom->Unlock();
   }
   GrpSurface_Blit({128, 16}, SURFACE_ID::SYSTEM, src);
-  GrpPut57(128 + 95, 16 + 91 - 80, std::format("{:3}", evade).c_str());
+  GrpPut57(128 + 95, 16 + 91 - 80, std::format("{:3}", evade_).c_str());
 
-  GrpPut16(128, 0, std::format("{:9}", score).c_str());
+  GrpPut16(128, 0, std::format("{:9}", score_).c_str());
 
-  GrpPut16(280, 0, std::format("       Bomb {}", bomb).c_str());
+  GrpPut16(280, 0, std::format("       Bomb {}", bomb_).c_str());
 
-  for (i = 0; std::cmp_less(i, left); i++) {
+  for (i = 0; std::cmp_less(i, left_); i++) {
     constexpr PIXEL_LTWH life_src = {608, 432, 16, 16};
     GrpSurface_Blit({(280 + (i * 14)), 0}, SURFACE_ID::SYSTEM, life_src);
   }
@@ -294,64 +408,64 @@ void Player::Update() {
   constexpr int VivSpeed = (64 * 18);
 
   // Decrease graze remaining time
-  if (evade_c != 0U) {
-    if ((bomb_time != 0U) && evade_c >= 2) {
-      evade_c -= 2;
+  if (evade_c_ != 0U) {
+    if ((bomb_time_ != 0U) && evade_c_ >= 2) {
+      evade_c_ -= 2;
     } else {
-      evade_c -= 1;
+      evade_c_ -= 1;
     }
 
-    if (evade_c == 0) {
+    if (evade_c_ == 0) {
       Effects.SpawnStringEffect(
-          180, 40, std::format("{:3} Evade  {:7}Pts", evade, evadesc).c_str());
-      AddScore(evadesc);
-      evade = 0;
-      evadesc = 0;
+          180, 40, std::format("{:3} Evade  {:7}Pts", evade_, evadesc_).c_str());
+      AddScore(evadesc_);
+      evade_ = 0;
+      evadesc_ = 0;
     }
   }
 
-  // Decrease invincibility time (not during bomb)
-  if ((muteki != 0U) && bomb_time == 0) {
-    muteki--;
+  // Decrease invincibility time (not during bomb_)
+  if ((muteki_ != 0U) && bomb_time_ == 0) {
+    muteki_--;
   }
 
   // Deathbomb window countdown
-  if (deathbomb_time != 0U) {
-    deathbomb_time--;
-    if (deathbomb_time == 0U) {
+  if (deathbomb_time_ != 0U) {
+    deathbomb_time_--;
+    if (deathbomb_time_ == 0U) {
       OnDeath(false); // sound already played in OnHit
     }
   }
 
   // Score change processing
-  if (dscore >= 100000) {
-    score += 100000, dscore -= 100000;
-  } else if (dscore >= 20000) {
-    score += 20000, dscore -= 20000;
-  } else if (dscore >= 2000) {
-    score += 2000, dscore -= 2000;
-  } else if (dscore >= 200) {
-    score += 200, dscore -= 200;
-  } else if (dscore >= 20) {
-    score += 20, dscore -= 20;
-  } else if (dscore >= 10) {
-    score += 10, dscore -= 10;
+  if (dscore_ >= 100000) {
+    score_ += 100000, dscore_ -= 100000;
+  } else if (dscore_ >= 20000) {
+    score_ += 20000, dscore_ -= 20000;
+  } else if (dscore_ >= 2000) {
+    score_ += 2000, dscore_ -= 2000;
+  } else if (dscore_ >= 200) {
+    score_ += 200, dscore_ -= 200;
+  } else if (dscore_ >= 20) {
+    score_ += 20, dscore_ -= 20;
+  } else if (dscore_ >= 10) {
+    score_ += 10, dscore_ -= 10;
   }
 
   // Enable held-button slowdown
   if ((ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) != 0) {
     if ((Key_Data & KEY_TAMA) != 0) {
-      if (ShiftCounter < 8) {
-        ShiftCounter++;
+      if (shift_counter_ < 8) {
+        shift_counter_++;
       } else {
         Key_Data = Key_Data | KEY_SHIFT;
       }
     } else {
-      ShiftCounter = 0;
+      shift_counter_ = 0;
     }
   }
 
-  if (muteki < MAID_MOVE_DISABLE_TIME) {
+  if (muteki_ < MAID_MOVE_DISABLE_TIME) {
     vx = vy = 0;
     v = ((Key_Data & KEY_SHIFT) != 0) ? (VivSpeed / 3) : VivSpeed;
     if ((Key_Data & KEY_UP) != 0) {
@@ -368,40 +482,40 @@ void Player::Update() {
     }
 
     if ((vx != 0) && (vy != 0)) {
-      x += (vx / 6);
-      y += (vy / 6);
+      x_ += (vx / 6);
+      y_ += (vy / 6);
     } else {
-      x += (vx >> 2);
-      y += (vy >> 2);
+      x_ += (vx >> 2);
+      y_ += (vy >> 2);
     }
 
-    if (y < SY_MIN) {
-      y = SY_MIN;
-    } else if (y > SY_MAX) {
-      y = SY_MAX;
+    if (y_ < SY_MIN) {
+      y_ = SY_MIN;
+    } else if (y_ > SY_MAX) {
+      y_ = SY_MAX;
     }
 
-    if (x < SX_MIN) {
-      x = SX_MIN;
-    } else if (x > SX_MAX) {
-      x = SX_MAX;
+    if (x_ < SX_MIN) {
+      x_ = SX_MIN;
+    } else if (x_ > SX_MAX) {
+      x_ = SX_MAX;
     }
   } else {
     vx = 0;
     vy = -(64 + 32);
-    y += vy;
+    y_ += vy;
   }
 
   if (vx > 0) {
-    GrpID = 2;
+    grp_id_ = 2;
   } else if (vx < 0) {
-    GrpID = 0;
+    grp_id_ = 0;
   } else {
-    GrpID = 1;
+    grp_id_ = 1;
   }
 
-  opx = x;
-  opy = y;
+  opx_ = x_;
+  opy_ = y_;
 
   // Option processing
   if (vx < 0) {
@@ -430,77 +544,77 @@ void Player::Update() {
     vy -= 2 * 64;
   }
 
-  opx = x + vx;
-  opy = y + vy + (64 * 6);
+  opx_ = x_ + vx;
+  opy_ = y_ + vy + (64 * 6);
 
-  // Bullet & bomb setup
-  Players.SetMaidShot();
+  // Bullet & bomb_ setup
+  SetMaidShot();
 
-  if (bomb_time != 0U) {
+  if (bomb_time_ != 0U) {
     Bullets.Clear();
     Lasers.Clear();
   }
 
-  BuzzSound = false;
+  buzz_sound_ = false;
 }
 
 void Player::Initialize() {
   PrepareNextStage();
 
-  score = 0;
-  dscore = 0;
-  exp = 0;
-  exp2 = 0;
-  bomb = ConfigDat.BombStock.v;
-  left = ConfigDat.PlayerStock.v;
-  credit = 4;
+  score_ = 0;
+  dscore_ = 0;
+  exp_ = 0;
+  exp2_ = 0;
+  bomb_ = ConfigDat.BombStock.v;
+  left_ = ConfigDat.PlayerStock.v;
+  credit_ = 4;
 
-  miss_count = 0;
-  bomb_used = 0;
-  deathbomb_count = 0;
+  miss_count_ = 0;
+  bomb_used_ = 0;
+  deathbomb_count_ = 0;
 
-  star_counter = 0;
-  star_threshold = 400;
-  star_extend_count = 0;
+  star_counter_ = 0;
+  star_threshold_ = 400;
+  star_extend_count_ = 0;
 
-  bomb_time = 0;
-  deathbomb_time = 0;
-  evade_c = evade = 0;
-  evadesc = 0;
-  evade_sum = 0;
+  bomb_time_ = 0;
+  deathbomb_time_ = 0;
+  evade_c_ = evade_ = 0;
+  evadesc_ = 0;
+  evade_sum_ = 0;
 
-  GrpID = 1;
+  grp_id_ = 1;
 
-  muteki = VIVDEAD_VAL;
+  muteki_ = VIVDEAD_VAL;
 
-  bGameOver = false;
+  game_over_ = false;
 
-  toge_ex = 0;
-  toge_time = 0;
-  lay_time = 0;
-  lay_grp = 0;
-  ShiftCounter = 0;
+  toge_ex_ = 0;
+  toge_time_ = 0;
+  lay_time_ = 0;
+  lay_grp_ = 0;
+  shift_counter_ = 0;
 
-  BuzzSound = false;
+  buzz_sound_ = false;
 }
 
 void Player::PrepareNextStage() {
-  x = opx = SX_START;
-  y = opx = SY_START;
-  vx = 0;
-  vy = 0;
+  x_ = opx_ = SX_START;
+  y_ = opx_ = SY_START;
+  vx_ = 0;
+  vy_ = 0;
 
-  toge_ex = 0;
-  toge_time = 0;
-  lay_time = 0;
-  lay_grp = 0;
+  toge_ex_ = 0;
+  toge_time_ = 0;
+  lay_time_ = 0;
+  lay_grp_ = 0;
 
-  muteki = VIVDEAD_VAL;
-  bomb_time = 0;
-  deathbomb_time = 0;
-  ShiftCounter = 0;
+  muteki_ = VIVDEAD_VAL;
+  bomb_time_ = 0;
+  deathbomb_time_ = 0;
+  shift_counter_ = 0;
 
-  BuzzSound = false;
+  buzz_sound_ = false;
 }
 
 void Player::OnHit() {
@@ -508,9 +622,9 @@ void Player::OnHit() {
   if (!DebugDat.Hit)
     return;
 #endif
-  if (muteki != 0)
+  if (muteki_ != 0)
     return;
-  if (deathbomb_time != 0)
+  if (deathbomb_time_ != 0)
     return;
 
   // Practice modes are handled inside OnDeath
@@ -519,19 +633,19 @@ void Player::OnHit() {
     return;
   }
 
-  if (bomb > 0 && bomb_time == 0) {
+  if (bomb_ > 0 && bomb_time_ == 0) {
     // Enter deathbomb window with immediate feedback
     Snd_SEPlay(SOUND_ID_DEAD);
-    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
+    Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
     const auto window =
         DEATHBOMB_WINDOW +
         (GAME_LUNATIC - static_cast<int>(GameState.game_level)) * 2;
-    deathbomb_time = static_cast<uint16_t>(window);
-    muteki = static_cast<uint16_t>(window);
+    deathbomb_time_ = static_cast<uint16_t>(window);
+    muteki_ = static_cast<uint16_t>(window);
     return;
   }
 
-  // No bomb stock — instant death
+  // No bomb_ stock — instant death
   OnDeath(true);
 }
 
@@ -544,66 +658,65 @@ void Player::OnDeath(bool play_se) {
 #endif
 
   if (ConfigDat.PracticeMode.v == PRACTICE_INVINCIBLE) {
-    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
+    Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
     for (i = 0; i < 50; i++) {
-      Effects.SpawnFragment(x, y, FRG_HEART);
+      Effects.SpawnFragment(x_, y_, FRG_HEART);
     }
     if (play_se)
       Snd_SEPlay(SOUND_ID_DEAD);
-    muteki = 30;
+    muteki_ = 30;
     return;
   }
 
-  // Auto bomb: in practice mode with auto-bomb or higher, if bomb key is not
-  // pressed and bomb stock remains, automatically activate bomb instead of
+  if (play_se) {
+    Snd_SEPlay(SOUND_ID_DEAD);
+    Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
+  }
+
+  // Auto bomb_: in practice mode with auto-bomb_ or higher, if bomb_ key is not
+  // pressed and bomb_ stock remains, automatically activate bomb_ instead of
   // dying
   if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB &&
-      ((Key_Data & KEY_BOMB) == 0) && (bomb_time == 0) && (bomb > 0) &&
+      ((Key_Data & KEY_BOMB) == 0) && (bomb_time_ == 0) && (bomb_ > 0) &&
       (!Scroller.scene.MsgFlag)) {
     static constexpr uint8_t bomb_time_tbl[4] = {60 * 4, 60 * 3, 60 * 2, 0};
-    bomb_time = bomb_time_tbl[weapon & 3];
-    muteki = BOMBMUTEKI_VAL;
-    bomb--;
-    bomb_used++;
-    Ranking.Add(-25); // auto bomb decreases rank
+    bomb_time_ = bomb_time_tbl[weapon_ & 3];
+    muteki_ = BOMBMUTEKI_VAL;
+    bomb_--;
+    bomb_used_++;
+    Ranking.Add(-25); // auto bomb_ decreases rank
     Bullets.Clear();
     Lasers.Clear();
     return;
   }
 
-  if (play_se)
-    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
-
   for (i = 0; i < 50; i++) {
-    Effects.SpawnFragment(x, y, FRG_HEART);
+    Effects.SpawnFragment(x_, y_, FRG_HEART);
   }
 
-  if (play_se)
-    Snd_SEPlay(SOUND_ID_DEAD);
+  x_ = opx_ = SX_START;
+  y_ = opx_ = SY_START;
+  vx_ = 0;
+  vy_ = 0;
 
-  x = opx = SX_START;
-  y = opx = SY_START;
-  vx = 0;
-  vy = 0;
+  lay_time_ = 0;
+  lay_grp_ = 0;
 
-  lay_time = 0;
-  lay_grp = 0;
-
-  bomb = ConfigDat.BombStock.v;
-  muteki = VIVDEAD_VAL;
+  bomb_ = ConfigDat.BombStock.v;
+  muteki_ = VIVDEAD_VAL;
 
   Ranking.Add(-100); // death decreases rank
 
-  if (left != 0U) {
-    left -= 1;
-    miss_count++;
+  if (left_ != 0U) {
+    left_ -= 1;
+    miss_count_++;
   } else {
-    bGameOver = true;
-    score += dscore;
+    game_over_ = true;
+    score_ += dscore_;
 
-    evade_c = 0;
-    evade = 0;
-    evadesc = 0;
+    evade_c_ = 0;
+    evade_ = 0;
+    evadesc_ = 0;
 
     GameOverInit();
   }
@@ -612,15 +725,15 @@ void Player::OnDeath(bool play_se) {
   Lasers.Clear();
 }
 
-void Player::AddEvade(uint8_t n) { AddEvadeEx(x, y, n); }
+void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }
 
 void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   int i = 0;
 
   if (n != 0U) {
-    if (!BuzzSound) {
+    if (!buzz_sound_) {
       Snd_SEPlay(SOUND_ID_BUZZ, ex);
-      BuzzSound = true;
+      buzz_sound_ = true;
     }
     Effects.SpawnFragment(ex, ey, FRG_EVADE);
     Effects.SpawnFragment(ex, ey, FRG_EVADE);
@@ -628,64 +741,64 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   }
 
   for (i = 0; std::cmp_less(i, n); i++) {
-    if (evade == 999) {
-      evade_c = 1;
+    if (evade_ == 999) {
+      evade_c_ = 1;
       return;
     }
-    evade += 1;
-    evade_sum += 1;
-    evadesc += evade * 20;
+    evade_ += 1;
+    evade_sum_ += 1;
+    evadesc_ += evade_ * 20;
   }
 
-  if (evade != 0U) {
-    evade_c = EVADETIME_MAX;
+  if (evade_ != 0U) {
+    evade_c_ = EVADETIME_MAX;
   }
 }
 
-void Player::AddScore(int sc) { dscore += sc; }
+void Player::AddScore(int sc) { dscore_ += sc; }
 
 void Player::PowerUp(uint8_t damage) {
-  exp2 += damage;
+  exp2_ += damage;
 
-  switch ((Cast::up<uint16_t>(exp) + 1) >> 5) {
+  switch ((Cast::up<uint16_t>(exp_) + 1) >> 5) {
   case 0:
-    if (exp2 > 5 - 3) {
-      exp++, exp2 = 0;
+    if (exp2_ > 5 - 3) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 1:
-    if (exp2 > 25 - 15) {
-      exp++, exp2 = 0;
+    if (exp2_ > 25 - 15) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 2:
-    if (exp2 > 50 - 20) {
-      exp++, exp2 = 0;
+    if (exp2_ > 50 - 20) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 3:
-    if (exp2 > 80) {
-      exp++, exp2 = 0;
+    if (exp2_ > 80) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 4:
-    if (exp2 > 120) {
-      exp++, exp2 = 0;
+    if (exp2_ > 120) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 5:
-    if (exp2 > 140) {
-      exp++, exp2 = 0;
+    if (exp2_ > 140) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 6:
-    if (exp2 > 160) {
-      exp++, exp2 = 0;
+    if (exp2_ > 160) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 7:
-    if (exp2 > 180) {
-      exp++, exp2 = 0;
+    if (exp2_ > 180) {
+      exp_++, exp2_ = 0;
     }
     return;
   case 8:
@@ -693,28 +806,149 @@ void Player::PowerUp(uint8_t damage) {
   }
 }
 
-uint8_t Player::GetLaserDeg() const { return ((120 - bomb_time) * 3) / 2; }
+uint8_t Player::GetLaserDeg() const { return ((120 - bomb_time_) * 3) / 2; }
 
 #pragma warning(suppress : 26497) // f.4
-uint8_t Player::GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i) {
+uint8_t Player::GetLeftOrRightLaserDeg_(uint8_t LaserDeg, int i) {
   return ((LaserDeg < 58)
               ? ((LaserDeg * 3) + ((i * (64 - LaserDeg)) / 2))
               : ((58 * 3) + ((i * (64 - (std::min)(62, int{LaserDeg}))) / 2)));
 }
 
 uint8_t Player::GetRightLaserDeg(uint8_t LaserDeg, int i) {
-  return (64 + 48 - GetLeftOrRightLaserDeg(LaserDeg, i));
+  return (64 + 48 - GetLeftOrRightLaserDeg_(LaserDeg, i));
 }
 
 uint8_t Player::GetLeftLaserDeg(uint8_t LaserDeg, int i) {
-  return (64 - 48 + GetLeftOrRightLaserDeg(LaserDeg, i));
+  return (64 - 48 + GetLeftOrRightLaserDeg_(LaserDeg, i));
 }
 
-// Backward compatibility: free function wrappers referenced from MAIDTAMA.cpp
-// etc.
-uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i) {
-  return Player::GetRightLaserDeg(LaserDeg, i);
+// --- New action methods ---
+
+void Player::RotateWeapon(int dir) {
+  // dir: +1 = forward, -1 = backward; wraps among 3 weapons.
+  weapon_ = (weapon_ + (dir < 0 ? 2 : 1)) % 3;
 }
-uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i) {
-  return Player::GetLeftLaserDeg(LaserDeg, i);
+
+void Player::AddStar(uint32_t n) {
+  star_counter_ += n;
+  if (star_counter_ >= star_threshold_ && left_ < 9) {
+    left_++;
+    star_threshold_ += 250;
+    star_extend_count_++;
+  }
+}
+
+void Player::ResetForContinue() {
+  evade_sum_ = 0;
+  left_ = ConfigDat.PlayerStock.v;
+  score_ = ((score_ % 10) + 1);
+  star_counter_ = 0;
+  star_threshold_ = 400;
+  star_extend_count_ = 0;
+}
+
+void Player::ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
+                              uint8_t bombs) {
+  weapon_ = weapon;
+  exp_ = exp;
+  left_ = left;
+  bomb_ = bombs;
+}
+
+// --- Weapon-select preview ---
+
+void Player::SaveSnapshot_(StateSnapshot& s) const {
+  s.x = x_;
+  s.y = y_;
+  s.vx = vx_;
+  s.vy = vy_;
+  s.opx = opx_;
+  s.opy = opy_;
+  s.score = score_;
+  s.dscore = dscore_;
+  s.evade_sum = evade_sum_;
+  s.evadesc = evadesc_;
+  s.evade = evade_;
+  s.evade_c = evade_c_;
+  s.star_counter = star_counter_;
+  s.star_threshold = star_threshold_;
+  s.star_extend_count = star_extend_count_;
+  s.v = v_;
+  s.weapon = weapon_;
+  s.exp = exp_;
+  s.bomb = bomb_;
+  s.left = left_;
+  s.credit = credit_;
+  s.miss_count = miss_count_;
+  s.bomb_used = bomb_used_;
+  s.deathbomb_count = deathbomb_count_;
+  s.grp_id = grp_id_;
+  s.bomb_time = bomb_time_;
+  s.exp2 = exp2_;
+  s.muteki = muteki_;
+  s.deathbomb_time = deathbomb_time_;
+  s.lay_time = lay_time_;
+  s.lay_grp = lay_grp_;
+  s.toge_time = toge_time_;
+  s.toge_ex = toge_ex_;
+  s.shift_counter = shift_counter_;
+  s.game_over = game_over_;
+  s.buzz_sound = buzz_sound_;
+}
+
+void Player::RestoreSnapshot_(const StateSnapshot& s) {
+  x_ = s.x;
+  y_ = s.y;
+  vx_ = s.vx;
+  vy_ = s.vy;
+  opx_ = s.opx;
+  opy_ = s.opy;
+  score_ = s.score;
+  dscore_ = s.dscore;
+  evade_sum_ = s.evade_sum;
+  evadesc_ = s.evadesc;
+  evade_ = s.evade;
+  evade_c_ = s.evade_c;
+  star_counter_ = s.star_counter;
+  star_threshold_ = s.star_threshold;
+  star_extend_count_ = s.star_extend_count;
+  v_ = s.v;
+  weapon_ = s.weapon;
+  exp_ = s.exp;
+  bomb_ = s.bomb;
+  left_ = s.left;
+  credit_ = s.credit;
+  miss_count_ = s.miss_count;
+  bomb_used_ = s.bomb_used;
+  deathbomb_count_ = s.deathbomb_count;
+  grp_id_ = s.grp_id;
+  bomb_time_ = s.bomb_time;
+  exp2_ = s.exp2;
+  muteki_ = s.muteki;
+  deathbomb_time_ = s.deathbomb_time;
+  lay_time_ = s.lay_time;
+  lay_grp_ = s.lay_grp;
+  toge_time_ = s.toge_time;
+  toge_ex_ = s.toge_ex;
+  shift_counter_ = s.shift_counter;
+  game_over_ = s.game_over;
+  buzz_sound_ = s.buzz_sound;
+}
+
+void Player::BeginWeaponPreview() {
+  StateSnapshot s;
+  SaveSnapshot_(s);
+  preview_snapshot_ = s;
+  weapon_ = 0;
+}
+
+void Player::CommitWeaponSelection() {
+  if (!preview_snapshot_) {
+    return;
+  }
+  const uint8_t selected = weapon_;
+  RestoreSnapshot_(*preview_snapshot_);
+  weapon_ = selected;
+  preview_snapshot_.reset();
 }

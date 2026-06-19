@@ -47,7 +47,7 @@ static void EnemyDrawBomb(int x, int y, uint32_t count);
 static uint32_t ID2Value(const EnemyData *e, uint8_t id);
 
 void EnemyManager::UpdateHoming(const EnemyData *e) {
-  const int temp = (Players.viv.y - e->y);
+  const int temp = (Players.Y() - e->y);
 
   if (temp < 0) {
     return;
@@ -124,11 +124,11 @@ void EnemyManager::Move() {
       }
 
       // Cactus hit check
-      if (HITCHK(e->x, Players.viv.x, e->g_width) &&
-          HITCHK(e->y, Players.viv.y, e->g_height) && Players.viv.muteki == 0) {
+      if (HITCHK(e->x, Players.X(), e->g_width) &&
+          HITCHK(e->y, Players.Y(), e->g_height) && Players.IsInvincible() == 0) {
         // Might be interesting to damage the enemy around here?
         if ((e->flag & EF_HITSB) != 0) {
-          MaidHit();
+          Players.OnHit();
         }
       }
 
@@ -237,17 +237,17 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
     if (e.LLaserRef != 0U) {
         Lasers.ForceCloseLong(&e); // Force close laser
     }
-    PowerUp(static_cast<uint8_t>(e.hp)); // Power up
+    Players.PowerUp(static_cast<uint8_t>(e.hp)); // Power up
     e.hp = 0;
     e.count = 0;
     e.flag = EF_BOMB;
-    score_add(e.score);
+    Players.AddScore(e.score);
     if (e.item != 0U) {
       Items.Spawn(e.x, e.y, e.item);
     }
   } else {
     Snd_SEPlay(SOUND_ID_HIT, e.x);
-    PowerUp(damage); // Power up here too
+    Players.PowerUp(damage); // Power up here too
     e.hp -= damage;
   }
   return true;
@@ -703,7 +703,7 @@ ECL_HEAD:
   case ECL_JDSB: { // Jump if player heading angle matches
     ECL_DEBUG("ECL_JDSB", 0);
     const uint8_t temp =
-        abs(atan8((Players.viv.x - e->x), (Players.viv.y - e->y)) - (e->d));
+        abs(atan8((Players.X() - e->x), (Players.Y() - e->y)) - (e->d));
     if (temp < 4) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
@@ -1015,7 +1015,7 @@ ECL_HEAD:
     ECL_DEBUG("ECL_MXS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
-      e->vx = ((Players.viv.x) - (e->x)) / e->cmd_c;
+      e->vx = ((Players.X()) - (e->x)) / e->cmd_c;
       e->vy = 0;
     }
     if ((--e->cmd_c) != 0) {
@@ -1030,7 +1030,7 @@ ECL_HEAD:
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
       e->vx = 0;
-      e->vy = ((Players.viv.y) - (e->y)) / e->cmd_c;
+      e->vy = ((Players.Y()) - (e->y)) / e->cmd_c;
     }
     if ((--e->cmd_c) != 0) {
       e->y += e->vy;
@@ -1043,8 +1043,8 @@ ECL_HEAD:
     ECL_DEBUG("ECL_MXYS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
-      e->vx = ((Players.viv.x) - (e->x)) / e->cmd_c;
-      e->vy = ((Players.viv.y) - (e->y)) / e->cmd_c;
+      e->vx = ((Players.X()) - (e->x)) / e->cmd_c;
+      e->vy = ((Players.Y()) - (e->y)) / e->cmd_c;
     }
     if ((--e->cmd_c) != 0) {
       e->x += e->vx;
@@ -1121,7 +1121,7 @@ ECL_HEAD:
 
   case ECL_DEGS: // Angle set to player
     ECL_DEBUG("ECL_DEGS", 0);
-    e->d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
+    e->d = atan8(Players.X() - e->x, Players.Y() - e->y);
     bRetFlag = false;
     break;
 
@@ -1152,8 +1152,8 @@ ECL_HEAD:
     break;
 
   case ECL_XYS:
-    e->x = Players.viv.x;
-    e->y = Players.viv.y;
+    e->x = Players.X();
+    e->y = Players.Y();
     bRetFlag = false;
     break;
 
@@ -1219,7 +1219,7 @@ ECL_HEAD:
 
   case ECL_TDEGS: // Bullet fire angle cactus set
     // Strictly speaking, should use TamaCmd x,y...
-    e->t_cmd.d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
+    e->t_cmd.d = atan8(Players.X() - e->x, Players.Y() - e->y);
     bRetFlag = false;
     break;
 
@@ -1341,7 +1341,7 @@ ECL_HEAD:
 
   case ECL_LDEGS: // Laser fire angle cactus set
     // Strictly speaking, should use LaserCmd x,y...
-    e->l_cmd.d = atan8(Players.viv.x - e->x, Players.viv.y - e->y);
+    e->l_cmd.d = atan8(Players.X() - e->x, Players.Y() - e->y);
     bRetFlag = false;
     break;
 
