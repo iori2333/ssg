@@ -1078,14 +1078,12 @@ static void SetT_FA5() { SetT_FA4(); }
 
 static void SetT_FA6() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // Center 5 parallel straight columns
+    // Center 4 parallel straight columns
     TamaSTDForm(TID_WIDE_FOCUS_MAIN);
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
-    TamaSetXY(Players.viv.x - (24 * 64), Players.viv.y);
-    MTamaSet();
-    Bullets.command.x += (12 * 64);
+    TamaSetXY(Players.viv.x - (18 * 64), Players.viv.y);
     MTamaSet();
     Bullets.command.x += (12 * 64);
     MTamaSet();
@@ -1115,14 +1113,12 @@ static void SetT_FA7() { SetT_FA6(); }
 
 static void SetT_FA8() {
   if (IsMainShot(Players.viv.toge_time)) {
-    // Center 5 parallel straight columns
+    // Center 4 parallel straight columns
     TamaSTDForm(TID_WIDE_FOCUS_MAIN);
     TamaSetDeg(-64, 0);
     TamaSetSpd(54, 0);
     TamaSetNum(1, 0);
-    TamaSetXY(Players.viv.x - (24 * 64), Players.viv.y);
-    MTamaSet();
-    Bullets.command.x += (12 * 64);
+    TamaSetXY(Players.viv.x - (18 * 64), Players.viv.y);
     MTamaSet();
     Bullets.command.x += (12 * 64);
     MTamaSet();
