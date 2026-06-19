@@ -128,16 +128,8 @@ void Player::MoveMaidShot() {
   Indsort(maid_tama_ind_, maid_tama_now_, maid_tama_,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
 
-  // Laser collision check
-  if (weapon_ == 2 && (lay_grp_ != 0U)) {
-    // Focus (low-speed) form: narrow the two beams and slightly raise damage.
-    const bool focus = ((Key_Data & KEY_SHIFT) != 0);
-    const int loff = focus ? (SBOPT_DX / 2) : SBOPT_DX;
-    const int ldmg =
-        focus ? ((lay_grp_ / 3) + 2) : ((lay_grp_ / 3) + 1);
-    Enemies.DamageAt2(opx_ + (loff << 6), opy_, ldmg);
-    Enemies.DamageAt2(opx_ - (loff << 6), opy_, ldmg);
-  }
+  // Weapon-specific continuous-beam collision (laser).
+  ActiveForm_()->OnCollisionTick();
 }
 
 // --- Bullet drawing ---

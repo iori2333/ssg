@@ -106,6 +106,14 @@ void LaserForm::OnFireTick() {
   }
 }
 
+void LaserForm::OnCollisionTick() {
+  if (player_.lay_grp_ != 0U) {
+    const int ldmg = (player_.lay_grp_ / 3) + 1;
+    Enemies.DamageAt2(player_.opx_ + (SBOPT_DX << 6), player_.opy_, ldmg);
+    Enemies.DamageAt2(player_.opx_ - (SBOPT_DX << 6), player_.opy_, ldmg);
+  }
+}
+
 // --- LaserFocusForm (focus: narrowed spread) ---
 
 void LaserFocusForm::FireMain(uint8_t tier) {
@@ -155,12 +163,12 @@ void LaserFocusForm::FireMain(uint8_t tier) {
     Player::SetMLaser(64 + 150);
     break;
   default:
-    // tier 8
+    // tier 8: 4-way narrow spread
     TamaSTDForm(TID_LASER_SUB);
     TamaSetXY(player_.X(), player_.Y());
     TamaSetDeg(-64, 2);
     TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
+    TamaSetNum(4, 0);
     player_.SpawnShot_();
     Player::SetMLaser(64 + 200);
     break;
@@ -181,5 +189,15 @@ void LaserFocusForm::OnFireTick() {
     } else {
       player_.lay_grp_ = 4;
     }
+  }
+}
+
+void LaserFocusForm::OnCollisionTick() {
+  if (player_.lay_grp_ != 0U) {
+    // Focus form: narrowed beam spacing, damage matches base.
+    const int loff = SBOPT_DX / 2;
+    const int ldmg = (player_.lay_grp_ / 3) + 1;
+    Enemies.DamageAt2(player_.opx_ + (loff << 6), player_.opy_, ldmg);
+    Enemies.DamageAt2(player_.opx_ - (loff << 6), player_.opy_, ldmg);
   }
 }

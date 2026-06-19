@@ -34,6 +34,10 @@ class WeaponForm {
   // Laser forms override to manage lay_time / lay_grp countdown.
   virtual void OnFireTick() {}
 
+  // Per-frame collision check for weapon-specific continuous beams
+  // (laser).  Called from MoveMaidShot after bullet hit detection.
+  virtual void OnCollisionTick() {}
+
  protected:
   explicit WeaponForm(Player& player) : player_(player) {}
   Player& player_;

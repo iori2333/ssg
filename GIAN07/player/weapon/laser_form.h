@@ -14,6 +14,7 @@ class LaserForm : public WeaponForm {
   void FireBomb() override;
   uint16_t BombDuration() const override;
   void OnFireTick() override;
+  void OnCollisionTick() override;
 };
 
 class LaserFocusForm : public WeaponForm {
@@ -22,4 +23,5 @@ class LaserFocusForm : public WeaponForm {
   void FireMain(uint8_t tier) override;
   void FireSub(uint8_t tier) override {}
   void OnFireTick() override;
+  void OnCollisionTick() override;
 };
