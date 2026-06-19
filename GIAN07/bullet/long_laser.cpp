@@ -53,7 +53,7 @@ bool LaserManager::SpawnLongLaser(uint8_t id) {
   lp->d = long_cmd.d;
 
   if (long_cmd.type == LLS_LONGZ) {
-    lp->d += atan8(Players.viv.x - lp->x, Players.viv.y - lp->y);
+    lp->d += atan8(Players.x - lp->x, Players.y - lp->y);
     lp->type = LLS_LONG;
   } else {
     {
@@ -438,19 +438,19 @@ void LaserManager::HitCheckLong(const LongLaserData *lp) {
   int length = 0;
   int width = 0;
 
-  if (Players.viv.muteki != 0U) {
+  if (Players.muteki != 0U) {
     return;
   }
 
-  tx = Players.viv.x - lp->x;
-  ty = Players.viv.y - lp->y;
+  tx = Players.x - lp->x;
+  ty = Players.y - lp->y;
 
   length = cosl(lp->d, tx) + sinl(lp->d, ty);
   width = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
 
   // Calculation note: use x64 for coordinate calculation
           // Using sinm(),cosm() so /256 correction is needed
-          // tx = ((lp->x)-(Players.viv.x));	ty = ((lp->y)-(Players.viv.y));
+          // tx = ((lp->x)-(Players.x));	ty = ((lp->y)-(Players.y));
           // length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
           // tx <<= 8;	ty <<= 8;
           //

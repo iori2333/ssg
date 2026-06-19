@@ -434,7 +434,7 @@ void Player::Update() {
   opy = y + vy + (64 * 6);
 
   // Bullet & bomb setup
-  Players.SetMaidShot();
+  SetMaidShot();
 
   if (bomb_time != 0U) {
     Bullets.Clear();
@@ -554,6 +554,11 @@ void Player::OnDeath(bool play_se) {
     return;
   }
 
+  if (play_se) {
+    Snd_SEPlay(SOUND_ID_DEAD);
+    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
+  }
+
   // Auto bomb: in practice mode with auto-bomb or higher, if bomb key is not
   // pressed and bomb stock remains, automatically activate bomb instead of
   // dying
@@ -571,15 +576,9 @@ void Player::OnDeath(bool play_se) {
     return;
   }
 
-  if (play_se)
-    Effects.SpawnFragment(x, y, FRG_FATCIRCLE);
-
   for (i = 0; i < 50; i++) {
     Effects.SpawnFragment(x, y, FRG_HEART);
   }
-
-  if (play_se)
-    Snd_SEPlay(SOUND_ID_DEAD);
 
   x = opx = SX_START;
   y = opx = SY_START;

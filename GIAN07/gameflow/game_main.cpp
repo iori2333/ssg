@@ -504,9 +504,9 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   for (auto &it : current_name.Name) {
     it = '\0';
   }
-  current_name.Score = Players.viv.score;
-  current_name.Evade = Players.viv.evade_sum;
-  current_name.Weapon = Players.viv.weapon;
+  current_name.Score = Players.score;
+  current_name.Evade = Players.evade_sum;
+  current_name.Weapon = Players.weapon;
   if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
     current_name.Stage = 1;
   } else {
@@ -594,14 +594,14 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_SetClip(GRP_RES_RECT);
 
   weapon_key_wait = 1;
-  Players.viv.weapon = 0;
+  Players.weapon = 0;
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
     GameState.game_stage = GRAPH_ID_EXSTAGE;
   }
 
-  viv_temp = Players.viv;
+  viv_temp = Players;
 
   return true;
 }
@@ -691,7 +691,7 @@ bool GameReplayInitAll(const char *fn) {
   }
 
   if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
-    Players.viv.credit = 0;
+    Players.credit = 0;
   }
 
   GameFlow.current_state = GameState::ReplayAll;
@@ -928,20 +928,20 @@ void GameOverInit() {
 
 // When continuing
 void GameContinue() {
-  Players.viv.evade_sum = 0;
-  Players.viv.left = ConfigDat.PlayerStock.v;
-  Players.viv.score = ((Players.viv.score % 10) + 1);
-  Players.viv.star_counter = 0;
-  Players.viv.star_threshold = 400;
-  Players.viv.star_extend_count = 0;
+  Players.evade_sum = 0;
+  Players.left = ConfigDat.PlayerStock.v;
+  Players.score = ((Players.score % 10) + 1);
+  Players.star_counter = 0;
+  Players.star_threshold = 400;
+  Players.star_extend_count = 0;
 
   GameFlow.game_main = GameProc;
   GameFlow.current_state = GameState::Game;
 
   // If we don't reach here, it's a bug...
-  if (Players.viv.credit != 0U) {
+  if (Players.credit != 0U) {
     // If credits remain (go to continue Y/N processing)
-    Players.viv.credit -= 1;
+    Players.credit -= 1;
   }
 }
 
@@ -965,11 +965,11 @@ void GameProc(bool & /*unused*/) {
   //	static BYTE count;
   //	if(count) count--;
   //	if((Key_Data & KEY_TAMA) && count==0){
-  //		CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE2);//STAR);
+  //		CEffectSet(Players.x,Players.y,CEFC_CIRCLE2);//STAR);
   //		count = 30;
   //	}
   //	if((Key_Data & KEY_BOMB) && count==0){
-  //		CEffectSet(Players.viv.x,Players.viv.y,CEFC_CIRCLE1);//STAR);
+  //		CEffectSet(Players.x,Players.y,CEFC_CIRCLE1);//STAR);
   //		count = 30;
   //	}
   GameMove();
@@ -1017,7 +1017,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
       return;
     }
 
-    if (Players.viv.credit == 0) {
+    if (Players.credit == 0) {
       NameRegistInit(true);
       // GameExit();
       return; // Temporary
@@ -1129,12 +1129,12 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   deg += spd;
   if (deg >= 85 || deg <= -85) {
     // if(deg>=64 || deg<=-64){
-    // if(spd<0) Players.viv.weapon = (Players.viv.weapon+3)%4;
-    // else      Players.viv.weapon = (Players.viv.weapon+1)%4;
+    // if(spd<0) Players.weapon = (Players.weapon+3)%4;
+    // else      Players.weapon = (Players.weapon+1)%4;
     if (spd < 0) {
-      Players.viv.weapon = (Players.viv.weapon + 2) % 3;
+      Players.weapon = (Players.weapon + 2) % 3;
     } else {
-      Players.viv.weapon = (Players.viv.weapon + 1) % 3;
+      Players.weapon = (Players.weapon + 1) % 3;
     }
     spd = 0;
     deg = 0;
@@ -1169,9 +1169,9 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   switch (Key_Data) {
   case KEY_RIGHT:
     if (spd < 0) {
-      // Players.viv.weapon = (Players.viv.weapon+3)%4;
+      // Players.weapon = (Players.weapon+3)%4;
       // deg+=64;
-      Players.viv.weapon = (Players.viv.weapon + 2) % 3;
+      Players.weapon = (Players.weapon + 2) % 3;
       deg += 85;
     }
     spd = 3;
@@ -1179,9 +1179,9 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
   case KEY_LEFT:
     if (spd > 0) {
-      // Players.viv.weapon = (Players.viv.weapon+1)%4;
+      // Players.weapon = (Players.weapon+1)%4;
       // deg-=64;
-      Players.viv.weapon = (Players.viv.weapon + 1) % 3;
+      Players.weapon = (Players.weapon + 1) % 3;
       deg -= 85;
     }
     spd = -3;
@@ -1193,13 +1193,13 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       break;
     }
     if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
-      if (((1 << Players.viv.weapon) & ConfigDat.ExtraStgFlags.v) == 0) {
+      if (((1 << Players.weapon) & ConfigDat.ExtraStgFlags.v) == 0) {
         break;
       }
     }
 
-    viv_temp.weapon = Players.viv.weapon;
-    Players.viv = viv_temp;
+    viv_temp.weapon = Players.weapon;
+    Players = viv_temp;
     Players.SetMaidShotIndices();
     count = 0;
 
@@ -1211,34 +1211,34 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       else
         GameState.game_stage = DebugDat.StgSelect;
       if (GameState.game_stage == 2)
-        Players.viv.exp = 160;
+        Players.exp = 160;
       if (GameState.game_stage >= 3)
-        Players.viv.exp = 255;
+        Players.exp = 255;
 #else
       if (forceStage != 0) {
         GameState.game_stage = forceStage;
         if (GameState.game_stage == 2) {
-          Players.viv.exp = 160;
+          Players.exp = 160;
         }
         if (GameState.game_stage >= 3) {
-          Players.viv.exp = 255;
+          Players.exp = 255;
         }
       } else if (ConfigDat.StageSelect.v != 0U) {
         GameState.game_stage = ConfigDat.StageSelect.v;
         if (GameState.game_stage == 2) {
-          Players.viv.exp = 160;
+          Players.exp = 160;
         }
         if (GameState.game_stage >= 3) {
-          Players.viv.exp = 255;
+          Players.exp = 255;
         }
       } else {
         GameState.game_stage = 1;
       }
 #endif
     } else {
-      Players.viv.credit = 0;
-      Players.viv.left = EXTRA_LIVES;
-      Players.viv.exp = 255;
+      Players.credit = 0;
+      Players.left = EXTRA_LIVES;
+      Players.exp = 255;
     }
 
     Demos.Init();
@@ -1283,8 +1283,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     for (i = 0; i < 3; i++) {
       // for(i=0;i<4;i++){
-      // d = (-i+Players.viv.weapon)*64 + deg - 64;
-      d = ((-i + Players.viv.weapon) * 85) + deg - 64;
+      // d = (-i+Players.weapon)*64 + deg - 64;
+      d = ((-i + Players.weapon) * 85) + deg - 64;
       x = 120 + cosl(d, 90) - (56 / 2);
       y = 260 + sinl(d, 110) - (48 / 2);
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src[i]);
@@ -1299,24 +1299,24 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
         continue;
       }
 
-      d = ((-i + Players.viv.weapon) * 85) + deg - 64;
+      d = ((-i + Players.weapon) * 85) + deg - 64;
       x = 120 + cosl(d, 90) - (56 / 2);
       y = 260 + sinl(d, 110) - (48 / 2);
       GrpGeom->DrawBoxA(x, y, (x + 56), (y + 48));
     }
     GrpGeom->Unlock();
 
-    Players.viv.exp = std::min(count, 255);
-    if (Players.viv.exp < 31) {
-      Players.viv.lay_time = Players.viv.lay_grp = 0;
+    Players.exp = std::min(count, 255);
+    if (Players.exp < 31) {
+      Players.lay_time = Players.lay_grp = 0;
     }
 
     Enemies.homing_flag = HOMING_DUMMY;
     Key_Data = KEY_TAMA;
 
-    Players.viv.muteki = 0;
-    Players.viv.x = (400 * 64) + sinl((count / 3) * 6, 60 * 64);
-    Players.viv.y = (350 * 64) + sinl((count / 3) * 4, 30 * 64);
+    Players.muteki = 0;
+    Players.x = (400 * 64) + sinl((count / 3) * 6, 60 * 64);
+    Players.y = (350 * 64) + sinl((count / 3) * 4, 30 * 64);
 
     MaidMove();
     Players.MoveMaidShot();
@@ -1324,7 +1324,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpBackend_SetClip({(400 - 110), (400 - 300 + 2), (400 + 110), (400 + 10)});
     for (x = 400 - 110 - 2; x < 400 + 110; x += 32) {
       for (y = 400 - 300 + 2 + ((count * 2) % 32) - 32; y < 400 + 10; y += 32) {
-        d = Players.viv.weapon << 4;
+        d = Players.weapon << 4;
         rc = PIXEL_LTWH{224, 256, 32, 32};
         // rc = PIXEL_LTWH{ d, (296 - 24), 16, 16 };
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, rc);
@@ -1337,7 +1337,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
     GrpPutScore(
         500, 400,
-        std::format("{}", ((Cast::up<uint16_t>(Players.viv.exp) + 1) >> 5))
+        std::format("{}", ((Cast::up<uint16_t>(Players.exp) + 1) >> 5))
             .c_str());
 
     GrpBackend_SetClip(GRP_RES_RECT);
@@ -1360,7 +1360,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     //	HDC		hdc;
     //	char	buf[100];
     //	DxObj.Back->GetDC(&hdc);
-    //	sprintf(buf,"Players.viv.weapon = %d",Players.viv.weapon);
+    //	sprintf(buf,"Players.weapon = %d",Players.weapon);
     //	TextOut(hdc,0,0,buf,strlen(buf));
     //	DxObj.Back->ReleaseDC(hdc);
     //

@@ -57,18 +57,18 @@ void ItemManager::Move() {
   // Auto-collect items when player is above this height
   constexpr int AUTO_COLLECT_Y = (120 * 64);
 
-  // point = 100+(Players.viv.evade)*100;
+  // point = 100+(Players.evade)*100;
   const uint32_t point =
-      ((((SY_MAX - Players.viv.y) >> 6) + (Players.viv.evade * 4)) * 160);
+      ((((SY_MAX - Players.y) >> 6) + (Players.evade * 4)) * 160);
 
   for (i = 0; std::cmp_less(i, count); i++) {
     auto *ip = &entities[indices[i]];
-    if (Players.viv.bomb_time == 0U) {
-      if (Players.viv.y < AUTO_COLLECT_Y || ip->auto_collect) {
+    if (Players.bomb_time == 0U) {
+      if (Players.y < AUTO_COLLECT_Y || ip->auto_collect) {
         // Player above collect line or auto-collect already active
         ip->auto_collect = true;
-        tx = (Players.viv.x - ip->x);
-        ty = (Players.viv.y - ip->y);
+        tx = (Players.x - ip->x);
+        ty = (Players.y - ip->y);
         l = 1 + (isqrt((tx * tx) + (ty * ty)) / 500);
         ip->x += tx / l;
         ip->y += ty / l;
@@ -77,8 +77,8 @@ void ItemManager::Move() {
         ip->y += ip->vy;
       }
     } else {
-      tx = (Players.viv.x - ip->x);
-      ty = (Players.viv.y - ip->y);
+      tx = (Players.x - ip->x);
+      ty = (Players.y - ip->y);
       l = 1 + (isqrt((tx * tx) + (ty * ty)) / 700); // 512(3+6)
       ip->x += tx / l;
       ip->y += ty / l;
@@ -88,24 +88,24 @@ void ItemManager::Move() {
       ip->vy += ITEM_GRAVITY;
     }
     ip->count++;
-    if (HITCHK(ip->x, Players.viv.x, ITEM_HITX) &&
-        HITCHK(ip->y, Players.viv.y, ITEM_HITY)) {
+    if (HITCHK(ip->x, Players.x, ITEM_HITX) &&
+        HITCHK(ip->y, Players.y, ITEM_HITY)) {
       switch (ip->type) {
       case ITEM_SCORE:
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        // Ranking.Add((SY_MAX-Players.viv.y)>>10);	// Item pickup no longer increases Rank
+        // Ranking.Add((SY_MAX-Players.y)>>10);	// Item pickup no longer increases Rank
         score_add(point);
         Effects.SpawnPointEffect(ip->x, ip->y, point);
-        if (Players.viv.evade != 0U) {
+        if (Players.evade != 0U) {
           Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
           Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
         }
-        Players.viv.star_counter += (Players.viv.evade != 0U) ? 2 : 1;
-        if (Players.viv.star_counter >= Players.viv.star_threshold &&
-            Players.viv.left < 9) {
-          Players.viv.left++;
-          Players.viv.star_threshold += 250;
-          Players.viv.star_extend_count++;
+        Players.star_counter += (Players.evade != 0U) ? 2 : 1;
+        if (Players.star_counter >= Players.star_threshold &&
+            Players.left < 9) {
+          Players.left++;
+          Players.star_threshold += 250;
+          Players.star_extend_count++;
           Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
         }
         break;
@@ -113,13 +113,13 @@ void ItemManager::Move() {
       case ITEM_EXTEND:
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
         Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
-        Players.viv.left++;
+        Players.left++;
         break;
 
       case ITEM_BOMB:
         Snd_SEPlay(SOUND_ID_SELECT, ip->x);
         Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
-        Players.viv.bomb++;
+        Players.bomb++;
         break;
       }
       ip->type = ITEM_DELETE;

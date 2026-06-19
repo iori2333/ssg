@@ -166,7 +166,7 @@ void LaserManager::Move() {
       lp->flag = LF_DELETE;
     }
 
-    if (Players.viv.muteki == 0 && ((lp->flag & (LF_CLEAR | LF_DELETE)) == 0)) {
+    if (Players.muteki == 0 && ((lp->flag & (LF_CLEAR | LF_DELETE)) == 0)) {
       HitCheck(lp);
     }
   }
@@ -283,7 +283,7 @@ uint8_t LaserManager::CalcDir(uint16_t i) const {
   uint8_t deg = 0;
 
   if ((cmd.cmd & LS_ZSET) != 0) {
-    deg = atan8(Players.viv.x - cmd.x, Players.viv.y - cmd.y);
+    deg = atan8(Players.x - cmd.x, Players.y - cmd.y);
   }
 
   deg += cmd.d; // Base angle set
@@ -446,12 +446,12 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     // Calculation note: uses x64 for coordinate calculations
     // /256 correction needed because sinm(),cosm() are used
 
-    tx = Players.viv.x - lp->x;
-    ty = Players.viv.y - lp->y;
+    tx = Players.x - lp->x;
+    ty = Players.y - lp->y;
     length = cosl(lp->d, tx) + sinl(lp->d, ty);
     w1 = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
-    //tx = ((lp->x)-(Players.viv.x));	ty =
-    //((lp->y)-(Players.viv.y)); length =
+    //tx = ((lp->x)-(Players.x));	ty =
+    //((lp->y)-(Players.y)); length =
     //-((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8); tx <<= 8;	ty <<= 8;
     //
     //                    if(cosm(lp->d)==0)

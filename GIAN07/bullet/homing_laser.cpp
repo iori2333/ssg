@@ -116,7 +116,7 @@ void LaserManager::MoveHoming() {
     // Type-specific movement
     switch (hl->Type) {
     case HL_TYPE1:
-      deg2 = -deg + atan8(Players.viv.x - x, Players.viv.y - y);
+      deg2 = -deg + atan8(Players.x - x, Players.y - y);
       if (deg2 < -128) {
         deg2 += 256;
       } else if (deg2 > 128) {
@@ -171,7 +171,7 @@ void LaserManager::MoveHoming() {
       continue;
     }
 
-    if (Players.viv.muteki != 0U) {
+    if (Players.muteki != 0U) {
       continue;
     }
 
@@ -181,14 +181,14 @@ void LaserManager::MoveHoming() {
       y = hl->p[j].y;
 
       // Graze check
-      if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH + (15 * 64)) &&
-          HITCHK(y, Players.viv.y, HOMINGL_WIDTH + (15 * 64))) {
+      if (HITCHK(x, Players.x, HOMINGL_WIDTH + (15 * 64)) &&
+          HITCHK(y, Players.y, HOMINGL_WIDTH + (15 * 64))) {
         ev_flag = true;
       }
 
       // Hit check
-      if (HITCHK(x, Players.viv.x, HOMINGL_WIDTH * 2 / 3) &&
-          HITCHK(y, Players.viv.y, HOMINGL_WIDTH * 2 / 3)) {
+      if (HITCHK(x, Players.x, HOMINGL_WIDTH * 2 / 3) &&
+          HITCHK(y, Players.y, HOMINGL_WIDTH * 2 / 3)) {
         //	hl->State = HLS_DEAD;	// Delete this one
         MaidHit(); // Kill it
       }

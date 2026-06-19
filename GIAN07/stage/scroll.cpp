@@ -408,7 +408,7 @@ static void enemy_set() {
         GameState.game_stage = 7;
       }
       if (GameState.game_level != GAME_EASY) {
-        switch (Players.viv.weapon) {
+        switch (Players.weapon) {
         case 0:
           ConfigDat.ExtraStgFlags.v |= 1;
           break;
@@ -614,7 +614,7 @@ void ScrollManager::Draw() {
   }
 
   // Exception: Wide shot bomb active
-  // if(Players.viv.bomb_time && Players.viv.weapon==0){
+  // if(Players.bomb_time && Players.weapon==0){
   //	return;
   //}
 
