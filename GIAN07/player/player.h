@@ -2,7 +2,7 @@
 /// Player - Player (maid) ship: state, movement, attack, and bombs.
 ///
 /// Merges the former Player struct + PlayerManager into a single class.
-/// Phase 1 of the refactor: fields remain public for mechanical migration.
+/// Attack forms are modelled as WeaponForm strategy objects.
 ///
 
 #pragma once
@@ -11,6 +11,7 @@
 #include "player_shot.h"
 #include <array>
 #include <cstdint>
+#include <memory>
 
 // [ Constants ]
 
@@ -33,10 +34,28 @@ inline constexpr int SSP_WIDE = (64 * 9);
 inline constexpr int SSP_HOMING = (64 * 9);
 inline constexpr int SSP_LASER = (64 * 13);
 
+// Bomb durations per weapon type (frames)
+inline constexpr auto WIDE_BOMB_TIME = (60 * 4);
+inline constexpr auto HOMING_BOMB_TIME = (60 * 3);
+inline constexpr auto LASER_BOMB_TIME = (60 * 2);
+
+// Shot timing constants
+inline constexpr auto MAID_TAMA_START = 18; // Fire cooldown frames
+inline constexpr auto MAID_MAIN_SHOT = 6;   // Main-shot fire frame interval
+inline constexpr auto MAID_SUB_SHOT = 9;    // Sub-shot fire frame interval
+
+// [ Forward declarations ]
+class WeaponForm;
+
 // [ Player class ]
 
 class Player {
  public:
+  Player();
+  ~Player();
+  Player(const Player& other);
+  Player& operator=(const Player& other);
+
   // --- Coordinates ---
   int x = 0, y = 0;     // Current display coordinates
   int vx = 0, vy = 0;   // Option offset
@@ -118,9 +137,24 @@ class Player {
   static uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
   static uint8_t GetLeftLaserDeg(uint8_t LaserDeg, int i);
 
+  // --- Shot pool helper (used by WeaponForm subclasses) ---
+  void SpawnShot_();               // Commit Bullets.command to maid_tama pool
+
  private:
-  void DrawLaserBomb() const; // Laser bomb draw
-  static uint8_t GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i);
+  friend class WeaponForm; // Allow forms to access internal state
+
+  // --- Weapon form strategy objects ---
+  // Index = weapon * 2 + (focus ? 1 : 0)
+  std::array<std::unique_ptr<WeaponForm>, 6> forms_;
+  WeaponForm* BaseForm_() const;    // form for current weapon (non-focus)
+  WeaponForm* ActiveForm_() const;  // form for current weapon + focus state
+
+  // --- Shot helpers (internal) ---
+  bool IsMainShotFrame_(uint16_t t) const;
+  bool IsSubShotFrame_(uint16_t t) const;
+
+  void DrawLaserBomb_() const; // Laser bomb draw
+  static uint8_t GetLeftOrRightLaserDeg_(uint8_t LaserDeg, int i);
 };
 
 // [ Global instance ]

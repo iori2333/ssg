@@ -19,10 +19,124 @@
 #include "geometry.h"
 #include "gian.h"
 #include "player.h"
+#include "weapon/homing_form.h"
+#include "weapon/laser_form.h"
+#include "weapon/wide_form.h"
 
 // Moved to PlayerManager in player_manager.cpp
 
 // --- Player method implementations ---
+
+// Constructor: create weapon form strategy objects.
+Player::Player() {
+  forms_[0] = std::make_unique<WideForm>(*this);
+  forms_[1] = std::make_unique<WideFocusForm>(*this);
+  forms_[2] = std::make_unique<HomingForm>(*this);
+  forms_[3] = std::make_unique<HomingFocusForm>(*this);
+  forms_[4] = std::make_unique<LaserForm>(*this);
+  forms_[5] = std::make_unique<LaserFocusForm>(*this);
+}
+
+Player::~Player() = default;
+
+// Copy operations: duplicate player state but keep our own weapon forms
+// (forms hold a reference to *this and must not be shared).
+Player::Player(const Player& other) : Player() { *this = other; }
+
+Player& Player::operator=(const Player& other) {
+  if (this == &other) {
+    return *this;
+  }
+  x = other.x;
+  y = other.y;
+  vx = other.vx;
+  vy = other.vy;
+  opx = other.opx;
+  opy = other.opy;
+  score = other.score;
+  dscore = other.dscore;
+  evade_sum = other.evade_sum;
+  evadesc = other.evadesc;
+  evade = other.evade;
+  evade_c = other.evade_c;
+  star_counter = other.star_counter;
+  star_threshold = other.star_threshold;
+  star_extend_count = other.star_extend_count;
+  v = other.v;
+  weapon = other.weapon;
+  exp = other.exp;
+  bomb = other.bomb;
+  left = other.left;
+  credit = other.credit;
+  miss_count = other.miss_count;
+  bomb_used = other.bomb_used;
+  deathbomb_count = other.deathbomb_count;
+  GrpID = other.GrpID;
+  bomb_time = other.bomb_time;
+  exp2 = other.exp2;
+  muteki = other.muteki;
+  deathbomb_time = other.deathbomb_time;
+  lay_time = other.lay_time;
+  lay_grp = other.lay_grp;
+  toge_time = other.toge_time;
+  toge_ex = other.toge_ex;
+  ShiftCounter = other.ShiftCounter;
+  bGameOver = other.bGameOver;
+  BuzzSound = other.BuzzSound;
+  // maid_tama / maid_tama_ind / maid_tama_now are not copied: the shot
+  // pool belongs to the live Player instance, not a state snapshot.
+  // forms_ is intentionally preserved (not copied).
+  return *this;
+}
+
+WeaponForm* Player::BaseForm_() const {
+  return forms_[weapon * 2].get();
+}
+
+WeaponForm* Player::ActiveForm_() const {
+  const bool focus = (Key_Data & KEY_SHIFT) != 0;
+  return forms_[weapon * 2 + (focus ? 1 : 0)].get();
+}
+
+bool Player::IsMainShotFrame_(uint16_t t) const {
+  return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
+          t == MAID_MAIN_SHOT * 3);
+}
+
+bool Player::IsSubShotFrame_(uint16_t t) const {
+  return (t == 0 || t == MAID_SUB_SHOT) && bomb_time == 0;
+}
+
+void Player::SpawnShot_() {
+  for (decltype(Bullets.command.n) i = 0; i < Bullets.command.n; i++) {
+    if (maid_tama_now + 1 >= MAIDTAMA_MAX) {
+      return;
+    }
+
+    auto *t = &maid_tama[maid_tama_ind[maid_tama_now++]];
+
+    t->x = t->tx = Bullets.command.x;
+    t->y = t->ty = Bullets.command.y;
+
+    t->v = t->v0 = Bullets.Speed(i);
+    t->a = Bullets.command.a;
+
+    t->d = Bullets.Dir(i);
+    t->d16 = (t->d << 8);
+
+    t->vx = cosl(t->d, t->v);
+    t->vy = sinl(t->d, t->v);
+
+    t->vd = Bullets.command.vd;
+    t->c = Bullets.command.c;
+    t->rep = Bullets.command.rep;
+    t->type = Bullets.command.type;
+    t->option = Bullets.command.option;
+    t->effect = 0;
+    t->count = 0;
+    t->flag = Bullets.Flag();
+  }
+}
 
 void Player::DrawWideBomb() const {
   static PIXEL_LTRB data[6] = {
@@ -56,7 +170,7 @@ void Player::DrawWideBomb() const {
   GrpSurface_Blit({x, y}, SURFACE_ID::BOMBER, data[t]);
 }
 
-void Player::DrawLaserBomb() const {
+void Player::DrawLaserBomb_() const {
   constexpr RGBA col_channeled = RGB216{0, 0, 5}.ToRGB().WithAlpha(0xFF);
   VERTEX_XY p[4];
   int i = 0;
@@ -253,7 +367,7 @@ void Player::Draw() {
   }
 
   if ((bomb_time != 0U) && weapon == 2) {
-    DrawLaserBomb();
+    DrawLaserBomb_();
   }
 }
 
@@ -695,18 +809,18 @@ void Player::PowerUp(uint8_t damage) {
 uint8_t Player::GetLaserDeg() const { return ((120 - bomb_time) * 3) / 2; }
 
 #pragma warning(suppress : 26497) // f.4
-uint8_t Player::GetLeftOrRightLaserDeg(uint8_t LaserDeg, int i) {
+uint8_t Player::GetLeftOrRightLaserDeg_(uint8_t LaserDeg, int i) {
   return ((LaserDeg < 58)
               ? ((LaserDeg * 3) + ((i * (64 - LaserDeg)) / 2))
               : ((58 * 3) + ((i * (64 - (std::min)(62, int{LaserDeg}))) / 2)));
 }
 
 uint8_t Player::GetRightLaserDeg(uint8_t LaserDeg, int i) {
-  return (64 + 48 - GetLeftOrRightLaserDeg(LaserDeg, i));
+  return (64 + 48 - GetLeftOrRightLaserDeg_(LaserDeg, i));
 }
 
 uint8_t Player::GetLeftLaserDeg(uint8_t LaserDeg, int i) {
-  return (64 - 48 + GetLeftOrRightLaserDeg(LaserDeg, i));
+  return (64 - 48 + GetLeftOrRightLaserDeg_(LaserDeg, i));
 }
 
 // Backward compatibility: free function wrappers referenced from MAIDTAMA.cpp
