@@ -41,9 +41,9 @@ Player::~Player() = default;
 
 // Copy operations: duplicate player state but keep our own weapon_ forms
 // (forms hold a reference to *this and must not be shared).
-Player::Player(const Player& other) : Player() { *this = other; }
+Player::Player(const Player &other) : Player() { *this = other; }
 
-Player& Player::operator=(const Player& other) {
+Player &Player::operator=(const Player &other) {
   if (this == &other) {
     return *this;
   }
@@ -89,11 +89,9 @@ Player& Player::operator=(const Player& other) {
   return *this;
 }
 
-WeaponForm* Player::BaseForm_() const {
-  return forms_[weapon_ * 2].get();
-}
+WeaponForm *Player::BaseForm_() const { return forms_[weapon_ * 2].get(); }
 
-WeaponForm* Player::ActiveForm_() const {
+WeaponForm *Player::ActiveForm_() const {
   const bool focus = (Key_Data & KEY_SHIFT) != 0;
   return forms_[weapon_ * 2 + (focus ? 1 : 0)].get();
 }
@@ -359,10 +357,11 @@ void Player::Draw() {
 
   if (((exp_ + 1) >> 5) != 0) {
     if (muteki_ < VIVDEAD_VAL) {
+      const int opt_off = (weapon_ == 2 && (Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
       src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
-      GrpSurface_Blit({(ox + SBOPT_DX), oy}, SURFACE_ID::SYSTEM, src);
+      GrpSurface_Blit({(ox + opt_off), oy}, SURFACE_ID::SYSTEM, src);
       src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
-      GrpSurface_Blit({(ox - SBOPT_DX), oy}, SURFACE_ID::SYSTEM, src);
+      GrpSurface_Blit({(ox - opt_off), oy}, SURFACE_ID::SYSTEM, src);
     }
   }
 
@@ -405,7 +404,7 @@ void Player::Update() {
   int vx = 0;
   int vy = 0;
   int v = 0;
-  constexpr int VivSpeed = (64 * 18);
+  constexpr int speed_tbl[] = {VIV_SPEED_WIDE, VIV_SPEED_HOMING, VIV_SPEED_LASER};
 
   // Decrease graze remaining time
   if (evade_c_ != 0U) {
@@ -417,7 +416,8 @@ void Player::Update() {
 
     if (evade_c_ == 0) {
       Effects.SpawnStringEffect(
-          180, 40, std::format("{:3} Evade  {:7}Pts", evade_, evadesc_).c_str());
+          180, 40,
+          std::format("{:3} Evade  {:7}Pts", evade_, evadesc_).c_str());
       AddScore(evadesc_);
       evade_ = 0;
       evadesc_ = 0;
@@ -467,7 +467,7 @@ void Player::Update() {
 
   if (muteki_ < MAID_MOVE_DISABLE_TIME) {
     vx = vy = 0;
-    v = ((Key_Data & KEY_SHIFT) != 0) ? (VivSpeed / 3) : VivSpeed;
+    v = ((Key_Data & KEY_SHIFT) != 0) ? (speed_tbl[weapon_] / 3) : speed_tbl[weapon_];
     if ((Key_Data & KEY_UP) != 0) {
       vy -= v;
     }
@@ -728,8 +728,6 @@ void Player::OnDeath(bool play_se) {
 void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }
 
 void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
-  int i = 0;
-
   if (n != 0U) {
     if (!buzz_sound_) {
       Snd_SEPlay(SOUND_ID_BUZZ, ex);
@@ -740,7 +738,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
     Effects.SpawnFragment(ex, ey, FRG_EVADE);
   }
 
-  for (i = 0; std::cmp_less(i, n); i++) {
+  for (uint8_t i = 0; i < n; i++) {
     if (evade_ == 999) {
       evade_c_ = 1;
       return;
@@ -858,7 +856,7 @@ void Player::ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
 
 // --- Weapon-select preview ---
 
-void Player::SaveSnapshot_(StateSnapshot& s) const {
+void Player::SaveSnapshot_(StateSnapshot &s) const {
   s.x = x_;
   s.y = y_;
   s.vx = vx_;
@@ -897,7 +895,7 @@ void Player::SaveSnapshot_(StateSnapshot& s) const {
   s.buzz_sound = buzz_sound_;
 }
 
-void Player::RestoreSnapshot_(const StateSnapshot& s) {
+void Player::RestoreSnapshot_(const StateSnapshot &s) {
   x_ = s.x;
   y_ = s.y;
   vx_ = s.vx;
