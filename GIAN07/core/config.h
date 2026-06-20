@@ -4,30 +4,31 @@
 
 #pragma once
 
+#include "game/graphics.h"
 #include "game/input.h"
 #include "game/midi.h"
 #include "game/volume.h"
 #include "level.h"
-#include "platform/graphics_backend.h"
 
 // Limits
-constexpr const auto STOCK_PLAYER_MAX = 6;
-constexpr const auto STOCK_BOMB_MAX = 6;
-constexpr const auto FPS_DIVISOR_MAX = 3;
-constexpr const auto STAGE_MAX = 6; // Number of stages
+constexpr auto STOCK_PLAYER_MAX = 6;
+constexpr auto STOCK_BOMB_MAX = 6;
+constexpr auto FPS_DIVISOR_MAX = 3;
+constexpr auto STAGE_MAX = 6; // Number of stages
 
-// Practice mode
-constexpr const auto PRACTICE_OFF = 0;
-constexpr const auto PRACTICE_AUTOBOMB = 1;
-constexpr const auto PRACTICE_INVINCIBLE = 2;
+enum class PracticeMode : uint8_t {
+  OFF = 0,
+  AUTOBOMB = 1,
+  INVINCIBLE = 2,
+};
 
 struct ConfigData {
   // Difficulty settings
 
-  uint8_t game_level = GAME_NORMAL;
+  GameLevel game_level = GameLevel::NORMAL;
   uint8_t player_stock = 2;
   uint8_t bomb_stock = 2;
-  uint8_t practice_mode = PRACTICE_OFF;
+  PracticeMode practice_mode = PracticeMode::OFF;
 
   // Graphics settings
   uint8_t device_id = 0; // Device index
@@ -47,9 +48,9 @@ struct ConfigData {
   uint8_t screenshot_effort = 0;
 
   // Sound/BGM settings
-  bool bgm_enabled = true;      // BGM enabled
-  bool se_enabled = true;       // Sound effects enabled
-  bool bgm_vol_norm = true;     // BGM volume normalization enabled
+  bool bgm_enabled = true;  // BGM enabled
+  bool se_enabled = true;   // Sound effects enabled
+  bool bgm_vol_norm = true; // BGM volume normalization enabled
   MID_FLAGS midi_flags = MID_FLAGS::FIX_SYSEX_BUGS;
   VOLUME se_volume = ((VOLUME_MAX * 4) / 10);
   VOLUME bgm_volume = ((VOLUME_MAX * 4) / 10);

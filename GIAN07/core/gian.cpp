@@ -53,8 +53,8 @@ void StdStatusOutput() {
   const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
                                    "Extra"};
   const auto lv = (GameState.game_stage == GRAPH_ID_EXSTAGE)
-                      ? GAME_EXTRA
-                      : GameState.game_level;
+                      ? std::to_underlying(GameLevel::EXTRA)
+                      : std::to_underlying(GameState.game_level);
 
   GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
   GrpPut16(0, 50,

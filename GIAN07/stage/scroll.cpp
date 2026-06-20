@@ -451,7 +451,7 @@ static void enemy_set() {
       if (GameState.game_stage == STAGE_MAX) {
         GameState.game_stage = 7;
       }
-      if (GameState.game_level != GAME_EASY) {
+      if (GameState.game_level != GameLevel::EASY) {
         switch (Players.Weapon()) {
         case 0:
           ConfigDat.extra_stg_flags |= 1;

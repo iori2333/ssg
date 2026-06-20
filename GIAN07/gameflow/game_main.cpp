@@ -93,8 +93,8 @@ void GameMove();
 
 // game_main initial values set in gameflow_manager.cpp
 
-uint8_t CurrentLevel() {
-  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA
+GameLevel CurrentLevel() {
+  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GameLevel::EXTRA
                                                      : GameState.game_level);
 }
 
@@ -102,9 +102,11 @@ uint8_t CurrentLevel() {
 
 // Prepare score name display
 bool ScoreNameInit() {
-  GameFlow.current_dif = CurrentLevel();
+  GameFlow.current_dif = std::to_underlying(CurrentLevel());
 
-  GameFlow.current_rank = Scores.SetScoreString(nullptr, GameFlow.current_dif);
+  GameFlow.current_rank =
+      Scores.SetScoreString(nullptr,
+                            static_cast<GameLevel>(GameFlow.current_dif));
   if (GameFlow.current_rank == 0) {
     return GameExit();
   }
@@ -151,7 +153,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 4) % 5;
-    current_rank = Scores.SetScoreString(nullptr, current_dif);
+    current_rank = Scores.SetScoreString(
+        nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case KEY_DOWN:
@@ -161,7 +164,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 1) % 5;
-    current_rank = Scores.SetScoreString(nullptr, current_dif);
+    current_rank =
+        Scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case 0:
@@ -584,7 +588,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameState.game_level = (ExStg ? EXTRA_LEVEL : ConfigDat.game_level);
+  GameState.game_level = (ExStg ? GameLevel::HARD : ConfigDat.game_level);
 
   GameSTD_Init();
   Ranking.Reset();
@@ -1228,7 +1232,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 #endif
     } else {
     Players.SetCredits(0);
-      Players.SetLives(EXTRA_LIVES);
+      Players.SetLives(2);
       Players.SetPower(255);
     }
 

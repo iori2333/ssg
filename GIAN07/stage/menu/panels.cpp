@@ -35,8 +35,19 @@ using namespace std::chrono_literals;
 
 static constexpr void RingStep(uint8_t &var, int_fast8_t delta, uint8_t min,
                                uint8_t max) {
-  var = ((delta < 0) ? ((var <= min) ? max : (var - 1))
-                     : ((var == max) ? min : (var + 1)));
+  var = ((delta < 0) ? ((var <= min) ? max : static_cast<uint8_t>(var - 1))
+                     : ((var == max) ? min : static_cast<uint8_t>(var + 1)));
+}
+
+template <typename T>
+  requires std::is_enum_v<T>
+static constexpr void RingStep(T &var, int_fast8_t delta, T min, T max) {
+  using U = std::underlying_type_t<T>;
+  auto v = static_cast<U>(var);
+  v = ((delta < 0)
+           ? ((v <= static_cast<U>(min)) ? static_cast<U>(max) : (v - 1))
+           : ((v == static_cast<U>(max)) ? static_cast<U>(min) : (v + 1)));
+  var = static_cast<T>(v);
 }
 
 static constexpr const char *CHOICE_OFF_ON[2] = {"[O F F]", "[ O N ]"};
@@ -84,11 +95,12 @@ void DifficultyPanel::FnBombStock(MenuController &, int_fast8_t delta) {
 }
 
 void DifficultyPanel::FnDifficulty(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.game_level, delta, GAME_EASY, GAME_LUNATIC);
+  RingStep(ConfigDat.game_level, delta, GameLevel::EASY, GameLevel::LUNATIC);
 }
 
 void DifficultyPanel::FnPracticeMode(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.practice_mode, delta, PRACTICE_OFF, PRACTICE_INVINCIBLE);
+  RingStep(ConfigDat.practice_mode, delta, PracticeMode::OFF,
+           PracticeMode::INVINCIBLE);
 }
 
 #ifdef PBG_DEBUG
@@ -113,8 +125,10 @@ void DifficultyPanel::Refresh(MenuController &, bool) {
 
   titles_[0].Format("PlayerStock [ {} ]", ConfigDat.player_stock + 1);
   titles_[1].Format("BombStock   [ {} ]", ConfigDat.bomb_stock);
-  titles_[2].Format("Difficulty[{}]", dif[ConfigDat.game_level]);
-  titles_[3].Format("PracticeMode[{}]", practice[ConfigDat.practice_mode]);
+  titles_[2].Format("Difficulty[{}]",
+                     dif[std::to_underlying(ConfigDat.game_level)]);
+  titles_[3].Format("PracticeMode[{}]",
+                     practice[std::to_underlying(ConfigDat.practice_mode)]);
 
 #ifdef PBG_DEBUG
   titles_[4].Format("DebugOut  {}", CHOICE_OFF_ON[DebugDat.MsgDisplay]);

@@ -20,15 +20,17 @@ static constexpr auto DBG_FN = "秋霜DBG.DAT";
 
 // Validation helpers
 
-static constexpr bool ValidGameLevel(uint8_t v) { return v <= GAME_LUNATIC; }
+static constexpr bool ValidGameLevel(GameLevel v) {
+  return std::to_underlying(v) <= std::to_underlying(GameLevel::LUNATIC);
+}
 static constexpr bool ValidPlayerStock(uint8_t v) {
   return v <= (STOCK_PLAYER_MAX + 2);
 }
 static constexpr bool ValidBombStock(uint8_t v) {
   return v <= (STOCK_BOMB_MAX + 1);
 }
-static constexpr bool ValidPracticeMode(uint8_t v) {
-  return v <= PRACTICE_INVINCIBLE;
+static constexpr bool ValidPracticeMode(PracticeMode v) {
+  return std::to_underlying(v) <= std::to_underlying(PracticeMode::INVINCIBLE);
 }
 static constexpr bool ValidFPSDivisor(uint8_t v) {
   return v <= FPS_DIVISOR_MAX;
@@ -47,9 +49,18 @@ namespace {
 template <typename T, typename V = decltype([](auto) { return true; })>
 void LoadToml(const toml::table &tbl, const char *key, T &dest,
               V &&validate = {}) {
-  if (auto val = tbl[key].template value<T>()) {
-    if (validate(*val))
-      dest = *val;
+  if constexpr (std::is_enum_v<T>) {
+    using U = std::underlying_type_t<T>;
+    if (auto val = tbl[key].template value<U>()) {
+      auto v = static_cast<T>(*val);
+      if (validate(v))
+        dest = v;
+    }
+  } else {
+    if (auto val = tbl[key].template value<T>()) {
+      if (validate(*val))
+        dest = *val;
+    }
   }
 }
 
@@ -107,14 +118,11 @@ static bool TOMLLoad(const char *fn) {
     LoadToml(*sec, "fps_divisor", ConfigDat.fps_divisor, ValidFPSDivisor);
     LoadToml(*sec, "window_upper", ConfigDat.window_upper);
     LoadToml(*sec, "msg_disable", ConfigDat.msg_disable);
-    if (auto raw = (*sec)["graphics_param_flags"].template value<
-            std::underlying_type_t<GRAPHICS_PARAM_FLAGS>>()) {
-      const auto flags = static_cast<GRAPHICS_PARAM_FLAGS>(*raw);
-      if ((std::to_underlying(flags) &
-           ~std::to_underlying(GRAPHICS_PARAM_FLAGS::MASK)) == 0) {
-        ConfigDat.graphics_param_flags = flags;
-      }
-    }
+    LoadToml(*sec, "graphics_param_flags", ConfigDat.graphics_param_flags,
+             [](GRAPHICS_PARAM_FLAGS f) {
+               return (std::to_underlying(f) &
+                       ~std::to_underlying(GRAPHICS_PARAM_FLAGS::MASK)) == 0;
+             });
     LoadToml(*sec, "screenshot_effort", ConfigDat.screenshot_effort,
                  ValidScreenshotEffort);
   }
@@ -164,10 +172,12 @@ static void TOMLSave(const char *fn) {
   // [difficulty]
   {
     toml::table sec;
-    sec.emplace("game_level", ConfigDat.game_level);
+    sec.emplace("game_level",
+                std::to_underlying(ConfigDat.game_level));
     sec.emplace("player_stock", ConfigDat.player_stock);
     sec.emplace("bomb_stock", ConfigDat.bomb_stock);
-    sec.emplace("practice_mode", ConfigDat.practice_mode);
+    sec.emplace("practice_mode",
+                std::to_underlying(ConfigDat.practice_mode));
     tbl.emplace("difficulty", std::move(sec));
   }
 

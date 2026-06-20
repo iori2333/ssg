@@ -684,17 +684,17 @@ ECL_HEAD:
   case ECL_JDIF: // Jump by difficulty
     ECL_DEBUG("ECL_JDIF", 0);
     switch (Ranking.state.GameLevel) {
-    case GAME_EASY:
+    case GameLevel::EASY:
       e->cmd = U32LEAt(&cmd[1 + 0]);
       break;
     default:
-    case GAME_NORMAL:
+    case GameLevel::NORMAL:
       e->cmd = U32LEAt(&cmd[1 + 4]);
       break;
-    case GAME_HARD:
+    case GameLevel::HARD:
       e->cmd = U32LEAt(&cmd[1 + 8]);
       break;
-    case GAME_LUNATIC:
+    case GameLevel::LUNATIC:
       e->cmd = U32LEAt(&cmd[1 + 12]);
       break;
     }

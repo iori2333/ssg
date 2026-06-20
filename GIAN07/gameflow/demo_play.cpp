@@ -40,7 +40,7 @@ void DemoManager::Init() {
 
   demo_info.Exp = Players.Power();
   demo_info.Weapon = Players.Weapon();
-  demo_info.CfgDat.GameLevel = GameState.game_level;
+  demo_info.CfgDat.GameLevel = std::to_underlying(GameState.game_level);
   demo_info.CfgDat.PlayerStock = Players.Lives();
   demo_info.CfgDat.BombStock = ConfigDat.bomb_stock;
   demo_info.CfgDat.InputFlags = ConfigDat.PackInputFlags();
@@ -91,7 +91,7 @@ bool DemoManager::LoadSetup() {
   ConfigDat.bomb_stock = demo_info.CfgDat.BombStock;
   ConfigDat.player_stock = demo_info.CfgDat.PlayerStock;
   ConfigDat.UnpackInputFlags(demo_info.CfgDat.InputFlags);
-  GameState.game_level = demo_info.CfgDat.GameLevel;
+  GameState.game_level = static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
 
   // Restore player stats
   Players.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
