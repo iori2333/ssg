@@ -88,15 +88,15 @@ static constexpr auto LF_NMOVE = 0x06; // Laser length unchanged (LF_SHOT|LF_HIT
 
 void LaserManager::Spawn() {
   switch (Ranking.state.GameLevel) {
-  case GAME_EASY:
+  case GameLevel::EASY:
     SetEasy();
     break;
 
-  case GAME_HARD:
+  case GameLevel::HARD:
     SetHard();
     break;
 
-  case GAME_LUNATIC:
+  case GameLevel::LUNATIC:
     SetLunatic();
     break;
   }

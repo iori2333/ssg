@@ -14,6 +14,7 @@
 #include "geometry.h"
 #include "gian.h"
 #include "player.h"
+#include "level.h"
 #include "weapon/homing_form.h"
 #include "weapon/laser_form.h"
 #include "weapon/wide_form.h"
@@ -452,7 +453,7 @@ void Player::Update() {
   }
 
   // Enable held-button slowdown
-  if ((ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) != 0) {
+  if (ConfigDat.z_spd_down_enabled) {
     if ((Key_Data & KEY_TAMA) != 0) {
       if (shift_counter_ < 8) {
         shift_counter_++;
@@ -565,8 +566,8 @@ void Player::Initialize() {
   dscore_ = 0;
   exp_ = 0;
   exp2_ = 0;
-  bomb_ = ConfigDat.BombStock.v;
-  left_ = ConfigDat.PlayerStock.v;
+  bomb_ = ConfigDat.bomb_stock;
+  left_ = ConfigDat.player_stock;
   credit_ = 4;
 
   miss_count_ = 0;
@@ -628,7 +629,7 @@ void Player::OnHit() {
     return;
 
   // Practice modes are handled inside OnDeath
-  if (ConfigDat.PracticeMode.v >= PRACTICE_AUTOBOMB) {
+  if (ConfigDat.practice_mode >= PracticeMode::AUTOBOMB) {
     OnDeath(true);
     return;
   }
@@ -639,7 +640,8 @@ void Player::OnHit() {
     Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
     const auto window =
         DEATHBOMB_WINDOW +
-        (GAME_LUNATIC - static_cast<int>(GameState.game_level)) * 2;
+        (static_cast<int>(GameLevel::LUNATIC) -
+         static_cast<int>(std::to_underlying(GameState.game_level))) * 2;
     deathbomb_time_ = static_cast<uint16_t>(window);
     muteki_ = static_cast<uint16_t>(window);
     return;
@@ -657,7 +659,7 @@ void Player::OnDeath(bool play_se) {
     return;
 #endif
 
-  if (ConfigDat.PracticeMode.v == PRACTICE_INVINCIBLE) {
+  if (ConfigDat.practice_mode == PracticeMode::INVINCIBLE) {
     Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
     for (i = 0; i < 50; i++) {
       Effects.SpawnFragment(x_, y_, FRG_HEART);
@@ -676,7 +678,7 @@ void Player::OnDeath(bool play_se) {
   // Auto bomb_: in practice mode with auto-bomb_ or higher, if bomb_ key is not
   // pressed and bomb_ stock remains, automatically activate bomb_ instead of
   // dying
-  if (ConfigDat.PracticeMode.v == PRACTICE_AUTOBOMB &&
+  if (ConfigDat.practice_mode == PracticeMode::AUTOBOMB &&
       ((Key_Data & KEY_BOMB) == 0) && (bomb_time_ == 0) && (bomb_ > 0) &&
       (!Scroller.scene.MsgFlag)) {
     static constexpr uint8_t bomb_time_tbl[4] = {60 * 4, 60 * 3, 60 * 2, 0};
@@ -702,7 +704,7 @@ void Player::OnDeath(bool play_se) {
   lay_time_ = 0;
   lay_grp_ = 0;
 
-  bomb_ = ConfigDat.BombStock.v;
+  bomb_ = ConfigDat.bomb_stock;
   muteki_ = VIVDEAD_VAL;
 
   Ranking.Add(-DEATH_RANK_DECR); // death decreases rank
@@ -849,7 +851,7 @@ PlayerReward Player::AddStar(uint32_t n) {
 
 void Player::ResetForContinue() {
   evade_sum_ = 0;
-  left_ = ConfigDat.PlayerStock.v;
+  left_ = ConfigDat.player_stock;
   score_ = ((score_ % 10) + 1);
   star_counter_ = 0;
   star_threshold_ = STAR_THRESHOLD_INIT;

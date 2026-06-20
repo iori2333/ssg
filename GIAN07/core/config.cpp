@@ -7,143 +7,296 @@
 #include "config.h"
 #include "game/bgm.h"
 #include "game/guard.h"
-#include "game/endian.h"
 #include "platform/file.h"
 #include "platform/window_backend.h"
+#include <toml++/toml.hpp>
 
 ///// Constants /////
-constexpr auto DBG_FN = "秋霜DBG.DAT";
+static constexpr auto CFG_FN = "SSG.TOML";
 
-// Data types
-// ----------
+#ifdef PBG_DEBUG
+static constexpr auto DBG_FN = "秋霜DBG.DAT";
+#endif
 
-template <typename T>
-using DISK =
-    std::conditional_t<std::is_fundamental_v<T>, ENDIAN_SELECT_BIG<T>, T>;
+// Validation helpers
 
-template <typename T>
-bool OptionRead(CONFIG_OPTION_VALUE<T> &opt, SDL_IOStream &f) {
-  DISK<T> d_loaded;
-  if (!SDL_MustReadIO(&f, &d_loaded, sizeof(d_loaded))) {
-    return false;
+static constexpr bool ValidGameLevel(GameLevel v) {
+  return std::to_underlying(v) <= std::to_underlying(GameLevel::LUNATIC);
+}
+static constexpr bool ValidPlayerStock(uint8_t v) {
+  return v <= (STOCK_PLAYER_MAX + 2);
+}
+static constexpr bool ValidBombStock(uint8_t v) {
+  return v <= (STOCK_BOMB_MAX + 1);
+}
+static constexpr bool ValidPracticeMode(PracticeMode v) {
+  return std::to_underlying(v) <= std::to_underlying(PracticeMode::INVINCIBLE);
+}
+static constexpr bool ValidFPSDivisor(uint8_t v) {
+  return v <= FPS_DIVISOR_MAX;
+}
+static constexpr bool ValidScreenshotEffort(uint8_t v) {
+  return v <= GRP_SCREENSHOT_EFFORT_MAX;
+}
+static constexpr bool ValidVolume(VOLUME v) { return v <= VOLUME_MAX; }
+static constexpr bool ValidStageSelect(uint8_t v) { return v <= STAGE_MAX; }
+static constexpr bool ValidWinMMPad(INPUT_PAD_BUTTON v) { return v <= 32; }
+
+// TOML loading helper
+
+namespace {
+
+template <typename T, typename V = decltype([](auto) { return true; })>
+void LoadToml(const toml::table &tbl, const char *key, T &dest,
+              V &&validate = {}) {
+  if constexpr (std::is_enum_v<T>) {
+    using U = std::underlying_type_t<T>;
+    if (auto val = tbl[key].template value<U>()) {
+      auto v = static_cast<T>(*val);
+      if (validate(v))
+        dest = v;
+    }
+  } else {
+    if (auto val = tbl[key].template value<T>()) {
+      if (validate(*val))
+        dest = *val;
+    }
   }
-  const T loaded = d_loaded;
-  opt.loaded = loaded;
-  if (opt.Validate(loaded)) {
-    opt.v = loaded;
-  }
-  return true;
 }
 
-template <typename T>
-bool OptionWrite(SDL_IOStream &f, const CONFIG_OPTION_VALUE<T> &opt) {
-  const DISK<T> d_v = opt.v;
-  return SDL_MustWriteIO(&f, &d_v, sizeof(T));
-}
+} // namespace
 
-bool OptionRead(std::string &opt, SDL_IOStream &f) {
-  U32BE d_len;
-  if (!SDL_MustReadIO(&f, &d_len, sizeof(d_len))) {
-    return false;
-  }
-  const uint32_t len = d_len;
-  opt.resize_and_overwrite(
-      len, [&f](auto buf, size_t n) { return SDL_ReadIO(&f, buf, n); });
-  return ((opt.size() * sizeof(std::string::value_type)) == len);
-}
-
-bool OptionWrite(SDL_IOStream &f, const std::string &opt) {
-  if (opt.size() > std::numeric_limits<uint32_t>::max()) {
-    return false;
-  }
-  const auto d_size = static_cast<U32BE>(opt.size());
-  if (!SDL_MustWriteIO(&f, &d_size, sizeof(d_size))) {
-    return false;
-  }
-  const auto str_size = (opt.size() * sizeof(std::string::value_type));
-  return SDL_MustWriteIO(&f, opt.data(), str_size);
-}
-
-template <class... Options>
-bool OptionRead(const std::tuple<Options &...> &opts, SDL_IOStream &f) {
-  return std::apply([&](auto &...opt) { return (... && OptionRead(opt, f)); },
-                    opts);
-}
-
-template <class... Options>
-bool OptionWrite(SDL_IOStream &f, const std::tuple<Options &...> &opts) {
-  return std::apply(
-      [&](const auto &...opt) { return (... && OptionWrite(f, opt)); }, opts);
-}
-// ----------
-
-// On-disk config file
-// -------------------
-
-static constexpr auto CFG_FN = "SSG.CFG";
-
-static constexpr auto CFG_OPTIONS =
-    std::tie(ConfigDat.GameLevel, ConfigDat.PlayerStock, ConfigDat.BombStock,
-             ConfigDat.DeviceID, ConfigDat.BitDepth, ConfigDat.FPSDivisor,
-             ConfigDat.GraphFlags, ConfigDat.SoundFlags, ConfigDat.InputFlags,
-             ConfigDat.DebugFlags, ConfigDat.PadTama, ConfigDat.PadBomb,
-             ConfigDat.PadShift, ConfigDat.PadCancel, ConfigDat.ExtraStgFlags,
-             ConfigDat.StageSelect, ConfigDat.SEVolume, ConfigDat.BGMVolume,
-             ConfigDat.BGMPack, ConfigDat.MidFlags, ConfigDat.GraphicsAPI,
-             ConfigDat.WindowScale4x, ConfigDat.WindowLeft, ConfigDat.WindowTop,
-             ConfigDat.ScreenshotEffort, ConfigDat.PracticeMode);
-
-static bool ConfigFileLoad() {
-  SDL_IOStream *f = SDL_IOFromFile(CFG_FN, "rb");
+static bool TOMLLoad(const char *fn) {
+  auto *f = SDL_IOFromFile(fn, "rb");
   if (f == nullptr) {
     return false;
   }
   auto f_guard = make_guard(f, SDL_CloseIO);
-  return OptionRead(CFG_OPTIONS, *f);
+
+  const auto size = SDL_GetIOSize(f);
+  if (size <= 0) {
+    return false;
+  }
+
+  std::string buf(static_cast<size_t>(size), '\0');
+  if (SDL_ReadIO(f, buf.data(), size) != size) {
+    return false;
+  }
+
+  toml::table tbl;
+  try {
+    tbl = toml::parse(buf);
+  } catch (const toml::parse_error &) {
+    return false;
+  }
+
+  // [difficulty]
+  if (auto *sec = tbl["difficulty"].as_table()) {
+    LoadToml(*sec, "game_level", ConfigDat.game_level, ValidGameLevel);
+    LoadToml(*sec, "player_stock", ConfigDat.player_stock,
+                 ValidPlayerStock);
+    LoadToml(*sec, "bomb_stock", ConfigDat.bomb_stock, ValidBombStock);
+    LoadToml(*sec, "practice_mode", ConfigDat.practice_mode,
+                 ValidPracticeMode);
+  }
+
+  // [graphics]
+  if (auto *sec = tbl["graphics"].as_table()) {
+    LoadToml(*sec, "device_id", ConfigDat.device_id, [](auto) {
+      return true;
+    });
+    LoadToml(*sec, "api", ConfigDat.graphics_api);
+    LoadToml(*sec, "window_scale_4x", ConfigDat.window_scale_4x,
+                 [](auto) { return true; });
+    LoadToml(*sec, "window_left", ConfigDat.window_left);
+    LoadToml(*sec, "window_top", ConfigDat.window_top);
+    if (auto bpp = (*sec)["bit_depth"].template value<uint8_t>()) {
+      ConfigDat.bit_depth = BITDEPTHS::find_if([&](uint8_t v) {
+        return v == *bpp;
+      });
+    }
+    LoadToml(*sec, "fps_divisor", ConfigDat.fps_divisor, ValidFPSDivisor);
+    LoadToml(*sec, "window_upper", ConfigDat.window_upper);
+    LoadToml(*sec, "msg_disable", ConfigDat.msg_disable);
+    LoadToml(*sec, "graphics_param_flags", ConfigDat.graphics_param_flags,
+             [](GRAPHICS_PARAM_FLAGS f) {
+               return (std::to_underlying(f) &
+                       ~std::to_underlying(GRAPHICS_PARAM_FLAGS::MASK)) == 0;
+             });
+    LoadToml(*sec, "screenshot_effort", ConfigDat.screenshot_effort,
+                 ValidScreenshotEffort);
+  }
+
+  // [sound]
+  if (auto *sec = tbl["sound"].as_table()) {
+    LoadToml(*sec, "bgm_enabled", ConfigDat.bgm_enabled);
+    LoadToml(*sec, "se_enabled", ConfigDat.se_enabled);
+    LoadToml(*sec, "bgm_volume_normalized", ConfigDat.bgm_vol_norm);
+    LoadToml(*sec, "se_volume", ConfigDat.se_volume, ValidVolume);
+    LoadToml(*sec, "bgm_volume", ConfigDat.bgm_volume, ValidVolume);
+    LoadToml(*sec, "bgm_pack", ConfigDat.bgm_pack);
+    bool midi_fix = false;
+    LoadToml(*sec, "midi_fix_sysex_bugs", midi_fix);
+    if (midi_fix) {
+      ConfigDat.midi_flags |= MID_FLAGS::FIX_SYSEX_BUGS;
+    } else {
+      ConfigDat.midi_flags &= ~MID_FLAGS::FIX_SYSEX_BUGS;
+    }
+  }
+
+  // [input]
+  if (auto *sec = tbl["input"].as_table()) {
+    LoadToml(*sec, "joypad_enabled", ConfigDat.joypad_enabled);
+    LoadToml(*sec, "z_msg_skip_enabled", ConfigDat.z_msg_skip_enabled);
+    LoadToml(*sec, "z_spd_down_enabled", ConfigDat.z_spd_down_enabled);
+    LoadToml(*sec, "pad_tama", ConfigDat.pad_tama, ValidWinMMPad);
+    LoadToml(*sec, "pad_bomb", ConfigDat.pad_bomb, ValidWinMMPad);
+    LoadToml(*sec, "pad_shift", ConfigDat.pad_shift, ValidWinMMPad);
+    LoadToml(*sec, "pad_cancel", ConfigDat.pad_cancel, ValidWinMMPad);
+  }
+
+  // [progress]
+  if (auto *sec = tbl["progress"].as_table()) {
+    LoadToml(*sec, "extra_stg_flags", ConfigDat.extra_stg_flags,
+                 [](auto) { return true; });
+    LoadToml(*sec, "stage_select", ConfigDat.stage_select,
+                 ValidStageSelect);
+  }
+
+  return true;
 }
 
-static void ConfigFileSave() {
-  SDL_IOStream *f = SDL_IOFromFile(CFG_FN, "wb");
+static void TOMLSave(const char *fn) {
+  toml::table tbl;
+
+  // [difficulty]
+  {
+    toml::table sec;
+    sec.emplace("game_level",
+                std::to_underlying(ConfigDat.game_level));
+    sec.emplace("player_stock", ConfigDat.player_stock);
+    sec.emplace("bomb_stock", ConfigDat.bomb_stock);
+    sec.emplace("practice_mode",
+                std::to_underlying(ConfigDat.practice_mode));
+    tbl.emplace("difficulty", std::move(sec));
+  }
+
+  // [graphics]
+  {
+    toml::table sec;
+    sec.emplace("device_id", ConfigDat.device_id);
+    sec.emplace("api", ConfigDat.graphics_api);
+    sec.emplace("window_scale_4x", ConfigDat.window_scale_4x);
+    sec.emplace("window_left", ConfigDat.window_left);
+    sec.emplace("window_top", ConfigDat.window_top);
+    sec.emplace("bit_depth", ConfigDat.bit_depth.value());
+    sec.emplace("fps_divisor", ConfigDat.fps_divisor);
+    sec.emplace("window_upper", ConfigDat.window_upper);
+    sec.emplace("msg_disable", ConfigDat.msg_disable);
+    sec.emplace("graphics_param_flags",
+                std::to_underlying(ConfigDat.graphics_param_flags));
+    sec.emplace("screenshot_effort", ConfigDat.screenshot_effort);
+    tbl.emplace("graphics", std::move(sec));
+  }
+
+  // [sound]
+  {
+    toml::table sec;
+    sec.emplace("bgm_enabled", ConfigDat.bgm_enabled);
+    sec.emplace("se_enabled", ConfigDat.se_enabled);
+    sec.emplace("bgm_volume_normalized", ConfigDat.bgm_vol_norm);
+    sec.emplace("se_volume", ConfigDat.se_volume);
+    sec.emplace("bgm_volume", ConfigDat.bgm_volume);
+    sec.emplace("bgm_pack", ConfigDat.bgm_pack);
+    sec.emplace("midi_fix_sysex_bugs",
+                (ConfigDat.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS) !=
+                    MID_FLAGS::NONE);
+    tbl.emplace("sound", std::move(sec));
+  }
+
+  // [input]
+  {
+    toml::table sec;
+    sec.emplace("joypad_enabled", ConfigDat.joypad_enabled);
+    sec.emplace("z_msg_skip_enabled", ConfigDat.z_msg_skip_enabled);
+    sec.emplace("z_spd_down_enabled", ConfigDat.z_spd_down_enabled);
+    sec.emplace("pad_tama", ConfigDat.pad_tama);
+    sec.emplace("pad_bomb", ConfigDat.pad_bomb);
+    sec.emplace("pad_shift", ConfigDat.pad_shift);
+    sec.emplace("pad_cancel", ConfigDat.pad_cancel);
+    tbl.emplace("input", std::move(sec));
+  }
+
+  // [progress]
+  {
+    toml::table sec;
+    sec.emplace("extra_stg_flags", ConfigDat.extra_stg_flags);
+    sec.emplace("stage_select", ConfigDat.stage_select);
+    tbl.emplace("progress", std::move(sec));
+  }
+
+  std::ostringstream oss;
+  oss << tbl;
+
+  auto *f = SDL_IOFromFile(fn, "wb");
   if (f == nullptr) {
     return;
   }
   auto f_guard = make_guard(f, SDL_CloseIO);
-  OptionWrite(*f, CFG_OPTIONS);
+
+  const auto str = oss.str();
+  SDL_MustWriteIO(f, str.data(), str.size());
 }
+
 // -------------------
 
-GRAPHICS_PARAMS CONFIG_DATA::GraphicsParams() const {
-  const auto flags_shifted = (GraphFlags.v >> GRPF_PARAM_SHIFT);
+GRAPHICS_PARAMS ConfigData::GraphicsParams() const {
   return {
-      .flags = static_cast<GRAPHICS_PARAM_FLAGS>(flags_shifted),
-      .device_id = DeviceID.v,
+      .flags = graphics_param_flags,
+      .device_id = device_id,
 #ifdef SUPPORT_GRP_API
-      .api = GrpBackend_APIID(GraphicsAPI),
+      .api = GrpBackend_APIID(graphics_api),
 #endif
-      .window_scale_4x = WindowScale4x.v,
-      .left = WindowLeft.v,
-      .top = WindowTop.v,
-      .bitdepth = BitDepth.v,
+      .window_scale_4x = window_scale_4x,
+      .left = window_left,
+      .top = window_top,
+      .bitdepth = bit_depth,
   };
 }
 
-void CONFIG_DATA::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
-  GraphFlags.v &= ~GRPF_PARAM_MASK;
-  GraphFlags.v |= (std::to_underlying(params.flags) << GRPF_PARAM_SHIFT);
-  DeviceID.v = params.device_id;
+void ConfigData::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
+  graphics_param_flags = params.flags;
+  device_id = params.device_id;
 #ifdef SUPPORT_GRP_API
-  GraphicsAPI = GrpBackend_APIString(params.api);
+  graphics_api = GrpBackend_APIString(params.api);
 #endif
-  WindowScale4x.v = params.window_scale_4x;
-  WindowLeft.v = params.left;
-  WindowTop.v = params.top;
-  BitDepth.v = params.bitdepth;
+  window_scale_4x = params.window_scale_4x;
+  window_left = params.left;
+  window_top = params.top;
+  bit_depth = params.bitdepth;
+}
+
+uint8_t ConfigData::PackInputFlags() const {
+  uint8_t v = 0;
+  if (joypad_enabled)
+    v |= 1;
+  if (z_msg_skip_enabled)
+    v |= 2;
+  if (z_spd_down_enabled)
+    v |= 4;
+  return v;
+}
+
+void ConfigData::UnpackInputFlags(uint8_t v) {
+  joypad_enabled = (v & 1) != 0;
+  z_msg_skip_enabled = (v & 2) != 0;
+  z_spd_down_enabled = (v & 4) != 0;
 }
 
 ///// [Global variables] /////
-CONFIG_DATA ConfigDat;
+ConfigData ConfigDat;
 #ifdef PBG_DEBUG
-DEBUG_DATA DebugDat;
+DebugData DebugDat;
 #endif
 
 #ifdef PBG_DEBUG
@@ -163,29 +316,27 @@ static void DebugInit(void) {
 #endif
 
 // Initialize config contents
-void ConfigLoad() {
+void ConfigData::Load() {
 #ifdef PBG_DEBUG
   DebugInit();
 #endif
 
-  ConfigFileLoad();
+  TOMLLoad(CFG_FN);
 }
 
 // Save config contents
-void ConfigSave() {
+void ConfigData::Save() {
   // Sync runtime audio state into config
-  ConfigDat.SoundFlags.v &= SNDF_SE_ENABLE;
-  ConfigDat.SoundFlags.v |= (static_cast<int>(BGM_Enabled()) * SNDF_BGM_ENABLE);
-  ConfigDat.SoundFlags.v |=
-      (static_cast<int>(!BGM_GainApply()) * SNDF_BGM_NOT_VOL_NORM);
+  ConfigDat.bgm_enabled = BGM_Enabled();
+  ConfigDat.bgm_vol_norm = BGM_GainApply();
 
   if (const auto maybe_topleft = WndBackend_Topleft()) {
     const auto &topleft = maybe_topleft.value();
-    ConfigDat.WindowLeft.v = topleft.first;
-    ConfigDat.WindowTop.v = topleft.second;
+    ConfigDat.window_left = topleft.first;
+    ConfigDat.window_top = topleft.second;
   }
 
-  ConfigFileSave();
+  TOMLSave(CFG_FN);
 
 #ifdef PBG_DEBUG
   SDL_SaveFile(DBG_FN, &DebugDat, sizeof(DebugDat));

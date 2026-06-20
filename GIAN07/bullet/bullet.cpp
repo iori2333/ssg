@@ -37,15 +37,15 @@ void BulletManager::Spawn() {
   // Do not change for NORMAL (in-game difficulty adjustment was planned but not implemented) //
   // Probably should be written inside the switch... //
   switch (Ranking.state.GameLevel) {
-  case GAME_EASY:
+  case GameLevel::EASY:
     SetEasy();
     break;
 
-  case GAME_HARD:
+  case GameLevel::HARD:
     SetHard();
     break;
 
-  case GAME_LUNATIC:
+  case GameLevel::LUNATIC:
     SetLunatic();
     break;
   }

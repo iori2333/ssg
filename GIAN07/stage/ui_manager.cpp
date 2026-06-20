@@ -227,12 +227,12 @@ bool UIManager::BGMPackHandle(MenuController &ctrl, INPUT_BITS key,
       SDL_OpenURL(BGMPackSoundtrackURL);
     } else {
       if (selected == 0) {
-        ConfigDat.BGMPack.clear();
+        ConfigDat.bgm_pack.clear();
       } else {
-        ConfigDat.BGMPack = bgm_packs_[selected - 1];
+        ConfigDat.bgm_pack = bgm_packs_[selected - 1];
       }
       main_panel_.Sound().Refresh(ctrl, false);
-      BGM_PackSet(ConfigDat.BGMPack);
+      BGM_PackSet(ConfigDat.bgm_pack);
     }
     return false;
   }
@@ -250,7 +250,7 @@ void UIManager::OpenBGMPack() {
   std::ranges::sort(bgm_packs_);
   bgm_sel_at_open_ = 0;
   for (size_t i = 1; const auto &pack : bgm_packs_) {
-    if (pack == ConfigDat.BGMPack) {
+    if (pack == ConfigDat.bgm_pack) {
       bgm_sel_at_open_ = i;
     }
     w = (std::max)(w,

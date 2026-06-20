@@ -23,7 +23,7 @@ constexpr char ScoreFileName[] = "秋霜SC.DAT"; // Score data file name
 
 // Get current score string (with name insertion)
 // If NData == NULL, no insertion
-uint8_t ScoreManager::SetScoreString(NrNameData *NData, uint8_t Dif) {
+uint8_t ScoreManager::SetScoreString(NrNameData *NData, GameLevel Dif) {
   NrScoreString *Res = nullptr;
   int i = 0;
   int num = 0;
@@ -90,7 +90,7 @@ uint8_t ScoreManager::SetScoreString(NrNameData *NData, uint8_t Dif) {
   return rank;
 }
 
-uint8_t ScoreManager::IsHighScore(const NrNameData *NData, uint8_t Dif) {
+uint8_t ScoreManager::IsHighScore(const NrNameData *NData, GameLevel Dif) {
   // Cannot load, fail
   if (!LoadScoreData()) {
     return 0;
@@ -117,7 +117,7 @@ uint8_t ScoreManager::IsHighScore(const NrNameData *NData, uint8_t Dif) {
 }
 
 // Write score data
-bool ScoreManager::SaveScoreData(NrNameData *NData, uint8_t Dif) {
+bool ScoreManager::SaveScoreData(NrNameData *NData, GameLevel Dif) {
   // Load score data
   const auto Rank = IsHighScore(NData, Dif);
 
@@ -210,21 +210,21 @@ void ScoreManager::ReleaseScoreData() {
 
 // Assign pointer by difficulty
 std::optional<ScoreManager::NR_SCORE_LIST>
-ScoreManager::GetNList(uint8_t Dif) const {
+ScoreManager::GetNList(GameLevel Dif) const {
   if (!score_cache) {
     return {};
   }
 
   switch (Dif) {
-  case GAME_EASY:
+  case GameLevel::EASY:
     return score_cache->Easy;
-  case GAME_NORMAL:
+  case GameLevel::NORMAL:
     return score_cache->Normal;
-  case GAME_HARD:
+  case GameLevel::HARD:
     return score_cache->Hard;
-  case GAME_LUNATIC:
+  case GameLevel::LUNATIC:
     return score_cache->Lunatic;
-  case GAME_EXTRA:
+  case GameLevel::EXTRA:
     return score_cache->Extra;
   default:
     return {};
@@ -237,8 +237,8 @@ bool ScoreManager::SetDefaultScoreData() {
     return false;
   }
 
-  for (auto i = 0; i < (GAME_EXTRA + 1); i++) {
-    auto maybe_temp = GetNList(i);
+  for (auto i = 0; i < std::to_underlying(GameLevel::EXTRA) + 1; i++) {
+    auto maybe_temp = GetNList(static_cast<GameLevel>(i));
     if (!maybe_temp) {
       return false;
     }

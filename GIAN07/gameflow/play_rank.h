@@ -6,10 +6,12 @@
 
 #include <cstdint>
 
+#include "level.h"
+
 // [Struct]
 struct PlayRankState {
-  uint8_t GameLevel; // Difficulty change also related to direction count
-  int Rank;          // Value related to bullet speed changes
+  GameLevel GameLevel; // Difficulty change also related to direction count
+  int Rank;            // Value related to bullet speed changes
 };
 using PlayRankInfo = PlayRankState;
 

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "level.h"
 #include "lz_uty.h"
 #include "score.h"
 #include <array>
@@ -26,13 +27,13 @@ struct ScoreManager {
   // === Public methods ===
 
   // Get current score string (Ret: 0=not high score, otherwise=rank)
-  [[nodiscard]] uint8_t SetScoreString(NrNameData *NData, uint8_t Dif);
+  [[nodiscard]] uint8_t SetScoreString(NrNameData *NData, GameLevel Dif);
 
   // Check if high score (0: not high score, otherwise: rank)
-  [[nodiscard]] uint8_t IsHighScore(const NrNameData *NData, uint8_t Dif);
+  [[nodiscard]] uint8_t IsHighScore(const NrNameData *NData, GameLevel Dif);
 
   // Save score data
-  [[nodiscard]] bool SaveScoreData(NrNameData *NData, uint8_t Dif);
+  [[nodiscard]] bool SaveScoreData(NrNameData *NData, GameLevel Dif);
 
 private:
   // Type aliases
@@ -42,7 +43,7 @@ private:
   // Internal helpers
   bool LoadScoreData();
   void ReleaseScoreData();
-  std::optional<NR_SCORE_LIST> GetNList(uint8_t Dif) const;
+  std::optional<NR_SCORE_LIST> GetNList(GameLevel Dif) const;
   bool SetDefaultScoreData();
 
   bool LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd);

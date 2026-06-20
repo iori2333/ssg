@@ -137,6 +137,7 @@ target_include_directories(GIAN07 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/bullet
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/effect
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/stage
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/tomlplusplus/include
 )
 
 # Include generated version header

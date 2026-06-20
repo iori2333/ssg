@@ -93,8 +93,8 @@ void GameMove();
 
 // game_main initial values set in gameflow_manager.cpp
 
-uint8_t CurrentLevel() {
-  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GAME_EXTRA
+GameLevel CurrentLevel() {
+  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GameLevel::EXTRA
                                                      : GameState.game_level);
 }
 
@@ -102,9 +102,11 @@ uint8_t CurrentLevel() {
 
 // Prepare score name display
 bool ScoreNameInit() {
-  GameFlow.current_dif = CurrentLevel();
+  GameFlow.current_dif = std::to_underlying(CurrentLevel());
 
-  GameFlow.current_rank = Scores.SetScoreString(nullptr, GameFlow.current_dif);
+  GameFlow.current_rank =
+      Scores.SetScoreString(nullptr,
+                            static_cast<GameLevel>(GameFlow.current_dif));
   if (GameFlow.current_rank == 0) {
     return GameExit();
   }
@@ -151,7 +153,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 4) % 5;
-    current_rank = Scores.SetScoreString(nullptr, current_dif);
+    current_rank = Scores.SetScoreString(
+        nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case KEY_DOWN:
@@ -161,7 +164,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 1) % 5;
-    current_rank = Scores.SetScoreString(nullptr, current_dif);
+    current_rank =
+        Scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case 0:
@@ -584,7 +588,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameState.game_level = (ExStg ? EXTRA_LEVEL : ConfigDat.GameLevel.v);
+  GameState.game_level = (ExStg ? GameLevel::HARD : ConfigDat.game_level);
 
   GameSTD_Init();
   Ranking.Reset();
@@ -616,9 +620,9 @@ bool GameInit(std::function<void(bool &)> next_proc) {
     // Replays don't show dialog, so this is the only place where we need
     // to do this.
     const auto flags = MsgWindowFlags::WITH_FACE;
-    if ((ConfigDat.GraphFlags.v & GRPF_WINDOW_UPPER) != 0) {
+    if (ConfigDat.window_upper) {
       UI.Msg().Init({128, 16, (640 - 128), 96}, flags);
-    } else if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
+    } else if (!ConfigDat.msg_disable) {
       UI.Msg().Init({128, 400, (640 - 128), 480}, flags);
     }
 
@@ -1185,7 +1189,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       break;
     }
     if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
-      if (((1 << Players.Weapon()) & ConfigDat.ExtraStgFlags.v) == 0) {
+      if (((1 << Players.Weapon()) & ConfigDat.extra_stg_flags) == 0) {
         break;
       }
     }
@@ -1214,8 +1218,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
         if (GameState.game_stage >= 3) {
           Players.SetPower(255);
         }
-      } else if (ConfigDat.StageSelect.v != 0U) {
-        GameState.game_stage = ConfigDat.StageSelect.v;
+      } else if (ConfigDat.stage_select != 0U) {
+        GameState.game_stage = ConfigDat.stage_select;
         if (GameState.game_stage == 2) {
           Players.SetPower(160);
         }
@@ -1228,7 +1232,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 #endif
     } else {
     Players.SetCredits(0);
-      Players.SetLives(EXTRA_LIVES);
+      Players.SetLives(2);
       Players.SetPower(255);
     }
 
@@ -1286,7 +1290,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
       if ((GameState.game_stage != GRAPH_ID_EXSTAGE) ||
-          (((1 << i) & ConfigDat.ExtraStgFlags.v) != 0)) {
+          (((1 << i) & ConfigDat.extra_stg_flags) != 0)) {
         continue;
       }
 

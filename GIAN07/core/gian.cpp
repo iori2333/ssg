@@ -53,8 +53,8 @@ void StdStatusOutput() {
   const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
                                    "Extra"};
   const auto lv = (GameState.game_stage == GRAPH_ID_EXSTAGE)
-                      ? GAME_EXTRA
-                      : GameState.game_level;
+                      ? std::to_underlying(GameLevel::EXTRA)
+                      : std::to_underlying(GameState.game_level);
 
   GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
   GrpPut16(0, 50,
@@ -73,7 +73,7 @@ void StdStatusOutput() {
 #ifdef PBG_DEBUG
 #ifdef SUPPORT_GRP_BITDEPTH
   GrpPut16(0, 32,
-           std::format("{:2}BppMode", ConfigDat.BitDepth.v.value()).c_str());
+           std::format("{:2}BppMode", ConfigDat.bit_depth.value()).c_str());
 #endif
   // sprintf(buf,"%s",DItems.entities[ConfigDat.GameState.game_level.v]);
   // GrpPut16(0,50,buf);
