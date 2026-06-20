@@ -19,25 +19,18 @@
 #include "window_sys.h"
 #include <cassert>
 
-#include <cstring>
 #include <utility>
 
 #include "scripts_data.h"
 
-// ============================================================
-// Embedded script loader
-// ============================================================
-
-static BYTE_BUFFER_OWNED LoadEmbeddedScript(int filno) {
+static BYTE_BUFFER_BORROWED LoadEmbeddedScript(int filno) {
   for (size_t i = 0; i < embedded_script_count; i++) {
     if (embedded_scripts[i].index == filno) {
-      BYTE_BUFFER_OWNED buf(embedded_scripts[i].size);
-      std::memcpy(buf.get(), embedded_scripts[i].data,
-                  embedded_scripts[i].size);
-      return buf;
+      return BYTE_BUFFER_BORROWED(embedded_scripts[i].data,
+                                   embedded_scripts[i].size);
     }
   }
-  return nullptr;
+  return {};
 }
 
 // Hardcoded loop points for ZUN's original MIDI files
@@ -663,8 +656,8 @@ bool LoadStageData(uint8_t stage) {
 
   // Free memory! //
   Enemies.scl_now = nullptr;
-  Enemies.ecl_head = nullptr;
-  Enemies.scl_head = nullptr;
+  Enemies.ecl_head = {};
+  Enemies.scl_head = {};
   Scroller.scroll.DataHead = nullptr;
 
   const auto &enemy = DAT::Packfile(DAT::PACK_ID::ENEMY);
@@ -672,12 +665,12 @@ bool LoadStageData(uint8_t stage) {
   // For extra stage system //
   if (stage == GRAPH_ID_EXSTAGE) {
     // ECL Load
-    if ((Enemies.ecl_head = LoadEmbeddedScript(24)) == nullptr) {
+    if ((Enemies.ecl_head = LoadEmbeddedScript(24)).data() == nullptr) {
       return false;
     }
 
     // SCL Load
-    if ((Enemies.scl_head = LoadEmbeddedScript(25)) == nullptr) {
+    if ((Enemies.scl_head = LoadEmbeddedScript(25)).data() == nullptr) {
       return false;
     }
 
@@ -687,10 +680,10 @@ bool LoadStageData(uint8_t stage) {
     }
   } else if (stage == GRAPH_ID_ENDING) {
     // SCL Load
-    if ((Enemies.scl_head = LoadEmbeddedScript(47)) == nullptr) {
+    if ((Enemies.scl_head = LoadEmbeddedScript(47)).data() == nullptr) {
       return false;
     }
-    Enemies.scl_now = Enemies.scl_head.get();
+    Enemies.scl_now = Enemies.scl_head.data();
     GameState.game_count = 0;
     return true;
   } else {
@@ -700,12 +693,14 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // ECL Load
-    if ((Enemies.ecl_head = LoadEmbeddedScript(stage + 0 - 1)) == nullptr) {
+    if ((Enemies.ecl_head =
+             LoadEmbeddedScript(stage + 0 - 1)).data() == nullptr) {
       return false;
     }
 
     // SCL Load
-    if ((Enemies.scl_head = LoadEmbeddedScript(stage + 6 - 1)) == nullptr) {
+    if ((Enemies.scl_head =
+             LoadEmbeddedScript(stage + 6 - 1)).data() == nullptr) {
       return false;
     }
 
@@ -722,7 +717,7 @@ bool LoadStageData(uint8_t stage) {
   }
 
   // Initialize variables //
-  Enemies.scl_now = Enemies.scl_head.get();
+  Enemies.scl_now = Enemies.scl_head.data();
   GameState.game_count = 0;
 
   // Prepare animations //

@@ -16,9 +16,9 @@ struct EnemyManager {
   uint16_t count = 0;                        // EnemyNow
 
   // --- ECL/SCL data ---
-  BYTE_BUFFER_OWNED ecl_head; // ECL_Head
-  BYTE_BUFFER_OWNED scl_head; // SCL_Head
-  uint8_t *scl_now = nullptr; // SCL_Now
+  BYTE_BUFFER_BORROWED ecl_head; // ECL_Head
+  BYTE_BUFFER_BORROWED scl_head; // SCL_Head
+  const uint8_t *scl_now = nullptr; // SCL_Now
 
   // --- Animation ---
   ANIME_DATA anime[ANIME_MAX]; // Anime[]

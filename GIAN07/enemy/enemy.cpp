@@ -494,7 +494,7 @@ void EnemyManager::Execute(EnemyData *e) {
 // A GOTO label in a place like this!!
 ECL_HEAD:
   bRetFlag = true;
-  auto *cmd = (ecl_head.get() + e->cmd);
+  auto *cmd = (ecl_head.data() + e->cmd);
 
   switch (*cmd) {
   case ECL_CEFC: {
