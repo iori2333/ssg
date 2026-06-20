@@ -65,7 +65,8 @@ Original BGM stored in `MUSIC.PAK` (PBG format, unified entries):
 [title_len:u32LE][title:UTF-8][comment_len:u32LE][comment:UTF-8\n][midi:raw SMF]
 ```
 
-Legacy comments previously in `ENEMY.DAT` entries 027–046 have been migrated.
+Legacy comments previously in `ENEMY.DAT` entries 027–046 have been migrated
+to `MUSIC.PAK`. The remaining map/demo data has been repacked as `MAP.PAK`.
 Convert original GBK-encoded data with `pack_tool extract-music` → `pack_tool pack-music`.
 
 ## Generated headers

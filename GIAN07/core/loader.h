@@ -108,7 +108,7 @@ BYTE_BUFFER_OWNED LoadMusicRoomComment(int no);
 
 BYTE_BUFFER_OWNED LoadDemo(int stage);
 
-void LoadPaletteFromEnemy(); // Load enemy palette
+void LoadPaletteFromMAP(); // Load map palette
 
 // Reloads the last stage loaded with LoadGraph().
 void ReloadGraph();

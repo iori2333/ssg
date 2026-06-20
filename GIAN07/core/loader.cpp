@@ -238,7 +238,7 @@ bool LoadSound(const PACKFILE_READ &in);
 
 namespace DAT {
 enum class PACK_ID : uint8_t {
-  ENEMY,
+  MAP,
   GRAPH,
   GRAPH2,
   MUSIC,
@@ -247,7 +247,7 @@ enum class PACK_ID : uint8_t {
 };
 
 constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
-    "ENEMY.DAT",
+    "MAP.PAK",
     "GRAPH.DAT",
     "GRAPH2.DAT",
     "MUSIC.PAK",
@@ -697,8 +697,8 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
   return true;
 }
 
-// Set enemy palette
-void LoadPaletteFromEnemy() {
+// Set map palette
+void LoadPaletteFromMAP() {
 }
 
 // Load ECL & SCL data into memory //
@@ -711,7 +711,7 @@ bool LoadStageData(uint8_t stage) {
   Enemies.scl_head = {};
   Scroller.scroll.DataHead = nullptr;
 
-  const auto &enemy = DAT::Packfile(DAT::PACK_ID::ENEMY);
+  const auto &map_pack = DAT::Packfile(DAT::PACK_ID::MAP);
 
   // For extra stage system //
   if (stage == GRAPH_ID_EXSTAGE) {
@@ -726,7 +726,7 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // MapData Load
-    if ((Scroller.scroll.DataHead = enemy.MemExpand(26)) == nullptr) {
+    if ((Scroller.scroll.DataHead = map_pack.MemExpand(12)) == nullptr) {
       return false;
     }
   } else if (stage == GRAPH_ID_ENDING) {
@@ -756,7 +756,7 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // MapData Load
-    if ((Scroller.scroll.DataHead = enemy.MemExpand(stage + 12 - 1)) ==
+    if ((Scroller.scroll.DataHead = map_pack.MemExpand(stage - 1)) ==
         nullptr) {
       return false;
     }
@@ -1367,5 +1367,5 @@ std::string_view MusicComment(unsigned int index) {
 }
 
 BYTE_BUFFER_OWNED LoadDemo(int stage) {
-  return DAT::Packfile(DAT::PACK_ID::ENEMY).MemExpand(stage - 1 + 18);
+  return DAT::Packfile(DAT::PACK_ID::MAP).MemExpand(stage - 1 + 6);
 }

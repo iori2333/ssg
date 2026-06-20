@@ -656,7 +656,7 @@ bool GameNextStage() {
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut("ENEMY.DAT が破壊されています");
+    DebugOut("MAP.PAK が破壊されています");
     return false;
   }
 
@@ -686,7 +686,7 @@ bool GameReplayInitAll(const char *fn) {
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut("ENEMY.DAT が破壊されています");
+    DebugOut("MAP.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
@@ -780,7 +780,7 @@ bool DemoInit() {
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut("ENEMY.DAT が破壊されています");
+    DebugOut("MAP.PAK が破壊されています");
     return false;
   }
 
@@ -1241,7 +1241,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       return;
     }
     if (!LoadStageData(GameState.game_stage)) {
-      DebugOut("ENEMY.DAT が破壊されています");
+      DebugOut("MAP.PAK が破壊されています");
       return;
     }
 

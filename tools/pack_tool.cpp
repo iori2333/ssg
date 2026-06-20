@@ -250,12 +250,12 @@ Usage:
       Repack all NNN.bin files from in_dir into a PBG pack file
 
   pack_tool strip <in_packfile> <out_packfile>
-      Strip ECL/SCL script and music room comment entries, keeping only
-      non-script data (maps, demos)
+      Strip ECL/SCL script and music room comment entries from an old
+      48-entry ENEMY.DAT, keeping only map + demo data (13 entries)
 
   pack_tool extract-music <data_dir> <out_dir>
       Extract MIDI tracks, titles (GBK→UTF-8), and comments (GBK→UTF-8)
-      from MUSIC.DAT + ENEMY.DAT into out_dir/track_NN/
+      from MUSIC.DAT + legacy ENEMY.DAT into out_dir/track_NN/
 
   pack_tool pack-music <in_dir> <out_packfile>
       Pack unified MUSIC.PAK from track_NN/ directories
@@ -1415,9 +1415,9 @@ static bool cmd_pack_music(const char *in_dir, const char *out_packfile) {
 }
 
 // ============================================================================
-// Strip mode — remove ECL/SCL script entries and music room comment
-// entries from the pack file. Script entries are now embedded in the
-// binary; music comments have been migrated to MUSIC.PAK.
+// Strip mode — remove legacy script and comment entries from an old
+// 48-entry ENEMY.DAT. After conversion to 13-entry MAP.PAK, no entries
+// need stripping.
 // ============================================================================
 
 static bool cmd_strip(const char *in_packfile, const char *out_packfile) {
@@ -1427,14 +1427,14 @@ static bool cmd_strip(const char *in_packfile, const char *out_packfile) {
     return false;
   }
 
-  // Entry indices to replace with placeholders
+  // Entry indices to replace with placeholders (only valid for old 48-entry ENEMY.DAT)
   const std::unordered_set<int> strip_entries = [] {
     std::unordered_set<int> s = {
-        0, 1, 2, 3, 4, 5,    // Stage 1-6 ECL
-        6, 7, 8, 9, 10, 11,  // Stage 1-6 SCL
-        24,                   // Extra stage ECL
-        25,                   // Extra stage SCL
-        47                    // Ending SCL
+        0, 1, 2, 3, 4, 5,    // Stage 1-6 ECL (embedded)
+        6, 7, 8, 9, 10, 11,  // Stage 1-6 SCL (embedded)
+        24,                   // Extra stage ECL (embedded)
+        25,                   // Extra stage SCL (embedded)
+        47                    // Ending SCL (embedded)
     };
     for (int i = 27; i <= 46; i++)
       s.insert(i); // Music room comments (migrated to MUSIC.PAK)
