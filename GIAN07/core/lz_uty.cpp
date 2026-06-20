@@ -197,7 +197,7 @@ BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
 }
 
 bool PACKFILE_WRITE::Write(
-    const char *s, std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps) const {
+    const char *s, std::optional<FILE_TIMESTAMPS> maybe_timestamps) const {
   PBG_FILEHEAD head = {.n = files.size()};
   std::vector<PBG_FILEINFO> info(files.size());
   fil_checksum_t sum = 0; // in native byte order
@@ -212,7 +212,7 @@ bool PACKFILE_WRITE::Write(
   if (stream == nullptr) {
     return false;
   }
-  auto close_guard = make_guard([&] { File_CloseWithTimestamps(std::move(stream), std::move(maybe_timestamps)); });
+  auto close_guard = make_guard([&] { File_CloseWithTimestamps(std::move(stream), s, std::move(maybe_timestamps)); });
 
   // Write temporary header
   if (!write_header(stream)) {

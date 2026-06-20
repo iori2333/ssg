@@ -92,15 +92,15 @@ add_executable(GIAN07
     ${GAME_SRC}
     ${PLATFORM_SDL_SRC}
     ${PLATFORM_MINIAUDIO_SRC}
+    platform/c/file.cpp
+    platform/c/time.cpp
 )
 
 if(WIN32)
     target_sources(GIAN07 PRIVATE
-        platform/windows/file.cpp
         platform/windows/midi_backend_winmm.cpp
         platform/windows/surface_gdi.cpp
         platform/windows/text_gdi.cpp
-        platform/windows/time.cpp
         platform/miniaudio/miniaudio.c
     )
 
@@ -111,8 +111,6 @@ if(WIN32)
     target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})
 elseif(UNIX)
     target_sources(GIAN07 PRIVATE
-        platform/c/file.cpp
-        platform/c/time.cpp
         platform/pangocairo/text_pangocairo.cpp
         platform/miniaudio/miniaudio.c
     )
@@ -172,7 +170,7 @@ add_executable(pack_tool
     platform/sdl/file_sdl.cpp
 )
 if(WIN32)
-    target_sources(pack_tool PRIVATE platform/windows/file.cpp)
+    target_sources(pack_tool PRIVATE platform/c/file.cpp)
     target_compile_definitions(pack_tool PRIVATE WIN32)
     target_link_libraries(pack_tool PRIVATE ${WIN32_SYSTEM_LIBS})
 elseif(UNIX)

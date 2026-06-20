@@ -19,6 +19,7 @@ using SDL_COLOR = SDL_FColor;
 #include "platform/sdl/graphics_sdl.h"
 #include "platform/sdl/log_sdl.h"
 #include "platform/sdl/window_sdl.h"
+#include "platform/text_backend.h"
 #include "platform/window_backend.h"
 
 static constexpr auto LOG_CAT = SDL_LOG_CATEGORY_RENDER;
