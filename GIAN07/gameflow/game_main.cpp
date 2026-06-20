@@ -965,12 +965,9 @@ void GameProc(bool & /*unused*/) {
   //		CEffectSet(Players.X(),Players.Y(),CEFC_CIRCLE1);//STAR);
   //		count = 30;
   //	}
-  const int fast_forward = ((SystemKey_Data & SYSKEY_SKIP) != 0) ? 6 : 1;
-  for (int i = 0; i < fast_forward; i++) {
-    GameMove();
-    if (GameFlow.current_state != GameState::Game) {
-      return;
-    }
+  GameMove();
+  if (GameFlow.current_state != GameState::Game) {
+    return;
   }
 
   if (GameFlow.IsDraw()) {
