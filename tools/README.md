@@ -1,6 +1,6 @@
-# pack_tool — GIAN07 ENEMY.DAT 修改工具
+# pack_tool — GIAN07 pack file 修改工具
 
-对 `bin/ENEMY.DAT` 压缩包文件进行解包、分析和精确修改。
+对 PBG 压缩包文件（`*.DAT`, `*.PAK`）进行解包、分析和修改。
 
 ## 构建
 
@@ -43,17 +43,49 @@ cp bin/ENEMY.DAT bin/ENEMY_ORIG.DAT
 
 ## 数据文件结构
 
-ENEMY.DAT 包含 48 个条目，每个条目经 LZSS 压缩：
+### ENEMY.DAT（已剥离后）
+
+ENEMY.DAT 包含 48 个条目（编号 000–047），每个条目经 LZSS 压缩。
+脚本条目已在编译期嵌入二进制，部署时使用 `pack_tool strip` 将其替换为零字节占位符。
+音乐室评论已迁移至 `MUSIC.PAK`，条目 027–046 同样可置零。
 
 | 条目 | 类型 | 用途 | 加载位置 (LOADER.cpp) |
 |------|------|------|----------------------|
-| 000–005 | ECL | Stage 1–6 敌方脚本 | `stage + 0 - 1` (行 684) |
-| 006–011 | SCL | Stage 1–6 关卡脚本 | `stage + 6 - 1` (行 689) |
-| 012–017 | Map | Stage 1–6 地图数据 | `stage + 12 - 1` (行 694) |
-| 018–023 | Demo | Stage 1–6 Demo 回放（录制的玩家输入帧） | `stage - 1 + 18` (行 1286) |
-| 024–026 | ECL/SCL/Map | Extra Stage | 固定 24/25/26 (行 656–666) |
-| 027–046 | Text | 音乐室评论（20 首曲目，Shift-JIS） | `27 + no` (行 1282) |
-| 047 | SCL | Ending 脚本 | 固定 47 (行 671) |
+| 000–005 | ECL | Stage 1–6 敌方脚本 | `stage + 0 - 1`（行 684） |
+| 006–011 | SCL | Stage 1–6 关卡脚本 | `stage + 6 - 1`（行 689） |
+| 012–017 | Map | Stage 1–6 地图数据 | `stage + 12 - 1`（行 694） |
+| 018–023 | Demo | Stage 1–6 Demo 回放 | `stage - 1 + 18` |
+| 024–026 | ECL/SCL/Map | Extra Stage | 固定 24/25/26 |
+| 027–046 | ~~Text~~ | ~~音乐室评论~~（已迁移至 MUSIC.PAK） | `27 + no`（已废弃） |
+| 047 | SCL | Ending 脚本 | 固定 47 |
+
+### MUSIC.PAK（统一音乐包）
+
+每个条目载荷 = `[title_len:u32LE][title:UTF-8][comment_len:u32LE][comment:UTF-8\n分隔][midi_data:原始SMF]`
+
+由 `pack_tool extract-music` / `pack_tool pack-music` 工具链生成。
+
+---
+
+## 音乐数据迁移（GBK → UTF-8）
+
+将原始 GBK 编码的曲名和评论转换为统一 UTF-8 格式的 `MUSIC.PAK`：
+
+```sh
+# 1. 从 MUSIC.DAT + ENEMY.DAT 提取并转换
+pack_tool extract-music bin/ music_work/
+
+# 输出 music_work/track_00/ ~ track_19/，每目录包含：
+#   midi.mid    原始 SMF MIDI 文件
+#   title.txt   曲名（UTF-8）
+#   comment.txt 评论（UTF-8，多行 \n 分隔）
+
+# 2. 打包为统一格式
+pack_tool pack-music music_work/ bin/MUSIC.PAK
+
+# 3. 剥离 ENEMY.DAT 中已迁移的评论条目 + 脚本条目
+pack_tool strip bin/ENEMY.DAT release/ENEMY.DAT
+```
 
 ---
 

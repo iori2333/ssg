@@ -250,7 +250,7 @@ constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
     "ENEMY.DAT",
     "GRAPH.DAT",
     "GRAPH2.DAT",
-    "MUSIC.DAT",
+    "MUSIC.PAK",
     "SOUND.DAT",
 }};
 
@@ -307,9 +307,15 @@ public:
 };
 ENUMARRAY<PACK, PACK_ID> Packs;
 
-// For MUSIC.DAT, we want to start asynchronously calculating all hashes
+// For MUSIC.PAK, we want to start asynchronously calculating all hashes
 // once the process starts.
 std::vector<HASH> MusicHashes;
+
+struct MusicMeta {
+  std::string title;   // UTF-8
+  std::string comment; // UTF-8, \n-separated
+};
+std::vector<MusicMeta> MusicMetas;
 
 const PACKFILE_READ &Packfile(PACK_ID id) {
   return Packs[id].BlockUntilLoaded();
@@ -318,6 +324,7 @@ const PACKFILE_READ &Packfile(PACK_ID id) {
 void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
   MusicNum = in.info.size();
   MusicHashes.reserve(MusicNum);
+  MusicMetas.resize(MusicNum);
 
   for (auto i = 0; std::cmp_less(i, MusicNum); i++) {
     if (st) {
@@ -327,7 +334,35 @@ void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
       if (st) {
         break;
       }
-      MusicHashes.emplace_back(Hash({file.get(), file.size()}));
+      auto cursor = file.cursor();
+
+      std::string_view title, comment;
+      if (const auto title_len_val =
+              cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+        const auto title_len = title_len_val.value()[0];
+        if (cursor.cursor + title_len <= cursor.size()) {
+          title = {reinterpret_cast<const char *>(&cursor[cursor.cursor]),
+                   title_len};
+          cursor.next<uint8_t>(title_len);
+        }
+      }
+      if (const auto comment_len_val =
+              cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+        const auto comment_len = comment_len_val.value()[0];
+        if (cursor.cursor + comment_len <= cursor.size()) {
+          comment = {reinterpret_cast<const char *>(&cursor[cursor.cursor]),
+                     comment_len};
+          cursor.next<uint8_t>(comment_len);
+        }
+      }
+
+      MusicMetas[i].title = title;
+      MusicMetas[i].comment = comment;
+
+      // Hash only the MIDI portion for loop point matching
+      const auto *midi_data = file.get() + cursor.cursor;
+      const auto midi_size = file.size() - cursor.cursor;
+      MusicHashes.emplace_back(Hash({midi_data, midi_size}));
     } else {
       assert(!"Failure extracting BGM file?");
     }
@@ -386,7 +421,29 @@ bool LoadMusic(fil_no_t filno) {
   if (filno >= MusicHashes.size()) {
     return false;
   }
-  return LoadMIDIWithPotentialLoop(music.MemExpand(filno), MusicHashes[filno]);
+
+  auto raw = music.MemExpand(filno);
+  if (!raw) {
+    return false;
+  }
+
+  auto cursor = raw.cursor();
+  if (const auto title_len_val = cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+    const auto title_len = title_len_val.value()[0];
+    cursor.next<uint8_t>(title_len);
+  }
+  if (const auto comment_len_val = cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+    const auto comment_len = comment_len_val.value()[0];
+    cursor.next<uint8_t>(comment_len);
+  }
+
+  const auto midi_size = raw.size() - cursor.cursor;
+  BYTE_BUFFER_OWNED midi_buf(midi_size);
+  if (midi_buf) {
+    std::memcpy(midi_buf.get(), raw.get() + cursor.cursor, midi_size);
+  }
+
+  return LoadMIDIWithPotentialLoop(std::move(midi_buf), MusicHashes[filno]);
 }
 
 bool LoadMusicByHash(const HASH &hash) {
@@ -1284,10 +1341,29 @@ bool LoadSound(const PACKFILE_READ &in) {
 bool LoadSound() { return LoadSound(DAT::Packfile(DAT::PACK_ID::SOUND)); }
 
 BYTE_BUFFER_OWNED LoadMusicRoomComment(int no) {
-  if ((no < 0) || (no > 19)) {
+  if ((no < 0) || (no >= static_cast<int>(DAT::MusicMetas.size()))) {
     return nullptr;
   }
-  return DAT::Packfile(DAT::PACK_ID::ENEMY).MemExpand(27 + no);
+  const auto &comment = DAT::MusicMetas[no].comment;
+  BYTE_BUFFER_OWNED buf(comment.size());
+  if (buf) {
+    std::memcpy(buf.get(), comment.data(), comment.size());
+  }
+  return buf;
+}
+
+std::string_view MusicTitle(unsigned int index) {
+  if (index < DAT::MusicMetas.size()) {
+    return DAT::MusicMetas[index].title;
+  }
+  return {};
+}
+
+std::string_view MusicComment(unsigned int index) {
+  if (index < DAT::MusicMetas.size()) {
+    return DAT::MusicMetas[index].comment;
+  }
+  return {};
 }
 
 BYTE_BUFFER_OWNED LoadDemo(int stage) {

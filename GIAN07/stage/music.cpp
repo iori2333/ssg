@@ -96,32 +96,33 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
 }
 
 void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
-  struct LINE {
-    char c[19 * 2];
-
-    operator std::string_view() const { return {c, sizeof(c)}; }
-  };
-
-  std::string_view comment_str = {};
-  BYTE_BUFFER_CURSOR<const uint8_t> cursor = {std::span<const uint8_t>()};
-  if (BGM_LoadedOriginalMIDI()) {
-    // Skip the title in the comment
-    cursor = comment_buf.cursor();
-    cursor.next<LINE>();
-    comment_str = {
-        (std::bit_cast<const char *>(comment_buf.get()) + cursor.cursor),
-        (comment_buf.size() - cursor.cursor),
-    };
+  if (!comment_buf || comment_buf.size() == 0) {
+    return;
   }
-  TextObj.Render(topleft, comment, comment_str, [&](TEXTRENDER_SESSION &s) {
-    int y = 0;
-    s.SetFont(FONT_ID::SMALL);
-    s.SetColor(ColorDefault);
-    while (const auto line = cursor.next<LINE>()) {
-      s.Put({.x = 0, .y = y}, line.value()[0]);
-      y += 16;
-    }
-  });
+
+  const std::string_view comment_str = {
+      reinterpret_cast<const char *>(comment_buf.get()), comment_buf.size()};
+
+  TextObj.Render(topleft, comment, comment_str,
+                  [&comment_str](TEXTRENDER_SESSION &s) {
+                    int y = 0;
+                    s.SetFont(FONT_ID::SMALL);
+                    s.SetColor(ColorDefault);
+
+                    size_t pos = 0;
+                    while (pos < comment_str.size()) {
+                      const auto nl = comment_str.find('\n', pos);
+                      const auto line = comment_str.substr(pos, nl - pos);
+                      if (!line.empty() || nl != std::string_view::npos) {
+                        s.Put({.x = 0, .y = y}, line);
+                        y += 16;
+                      }
+                      if (nl == std::string_view::npos) {
+                        break;
+                      }
+                      pos = nl + 1;
+                    }
+                  });
 }
 
 bool MusicRoomInit() {
@@ -147,7 +148,7 @@ bool MusicRoomInit() {
   // BGM_Stop();
   auto comment_buf = LoadMusicRoomComment(0);
   if (!comment_buf) {
-    DebugOut("ENEMY.DAT がはかいされています");
+    DebugOut("MUSIC.PAK がはかいされています");
     GameExit();
     return false;
   }
