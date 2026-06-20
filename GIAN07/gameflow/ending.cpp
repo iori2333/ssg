@@ -177,26 +177,26 @@ void EndingManager::DrawStfInfo() {
 // Text drawing
 void EndingManager::Text::Render(WINDOW_POINT topleft) {
   TextObj.Render(topleft, Rect, TextStr, [this](TEXTRENDER_SESSION &s) {
-    int max = 0;
-
-    for (decltype(NumText) i = 0; i < NumText; i++) {
-      max = (std::max)(max, static_cast<int>(Text[i].size()));
-    }
-
-    const auto dx = (8 * (39 - (max / 2)));
+    int max_px = 0;
 
     s.SetFont(FONT_ID::NORMAL);
+    for (decltype(NumText) i = 0; i < NumText; i++) {
+      max_px = (std::max)(max_px, s.Extent(Text[i]).w);
+    }
+
+    const auto dx = std::max(0, (s.RectSize().w - max_px) / 2);
+
     s.SetColor({.r = 128, .g = 128, .b = 128});
     for (decltype(NumText) i = 0; i < NumText; i++) {
-      s.Put({.x = (dx + 21), .y = (1 + (i * 25))}, Text[i]);
-      s.Put({.x = (dx + 19), .y = (1 + (i * 25))}, Text[i]);
-      s.Put({.x = (dx + 20), .y = (0 + (i * 25))}, Text[i]);
-      s.Put({.x = (dx + 20), .y = (2 + (i * 25))}, Text[i]);
+      s.Put({.x = (dx + 1), .y = (1 + (i * 25))}, Text[i]);
+      s.Put({.x = (dx - 1), .y = (1 + (i * 25))}, Text[i]);
+      s.Put({.x = dx, .y = (0 + (i * 25))}, Text[i]);
+      s.Put({.x = dx, .y = (2 + (i * 25))}, Text[i]);
     }
 
     s.SetColor({.r = 255, .g = 255, .b = 255});
     for (decltype(NumText) i = 0; i < NumText; i++) {
-      s.Put({.x = (dx + 20), .y = (1 + (i * 25))}, Text[i]);
+      s.Put({.x = dx, .y = (1 + (i * 25))}, Text[i]);
     }
   });
 }
