@@ -8,14 +8,14 @@
     FACE id=1
     TIME frame=70
     MSG "[VIVIT]"
-    MSG "  \xCE\xD8\xA3\xAC\xBB\xB9\xC3\xBB\xD3\xD0\xB5\xBD\xB4\xEF\xC4\xBF\xB5\xC4\xB5\xD8\xC3\xB4\xA3\xBF"
-    MSG "  \xD2\xD1\xBE\xAD\xB0\xF8\xCD\xED\xC1\xCB\xB0\xA1\xA1\xA3"
+    MSG "  呜，还没有到达目的地么？"
+    MSG "  已经傍晚了啊。"
     TIME frame=190
     NPG
     FACE id=2
     TIME frame=210
     MSG "[VIVIT]"
-    MSG "  \xE0\xC5\xA3\xA1\xA3\xBF\xD3\xD0\xD6\xD6\xB2\xBB\xBA\xC3\xB5\xC4\xD4\xA4\xB8\xD0\xA1\xAD\xA1\xAD"
+    MSG "  嗯！？有种不好的预感……"
     TIME frame=330
     MWCLOSE
     TIME frame=355
@@ -27,8 +27,8 @@
     FACE id=2
     TIME frame=430
     MSG "[VIVIT]"
-    MSG "  \xD1\xBD\xA3\xA1\xD5\xE2\xCA\xC7\xCA\xB2\xC3\xB4\xCB\xD9\xB6\xC8\xB0\xA1\xA3\xA1"
-    MSG "  \xD5\xE2\xC3\xB4\xCB\xB5\xC4\xC7\xD0\xA9\xD2\xB2\xCA\xC7\xB5\xD0\xC8\xCB\xB0\xC9\xA3\xA1"
+    MSG "  呀！这是什么速度啊！"
+    MSG "  这么说那些也是敌人吧！"
     TIME frame=550
     MWCLOSE
     MUSIC id=3
@@ -511,58 +511,58 @@
     MWOPEN
     FACE id=0
     MSG "[VIVIT]"
-    MSG "  \xD6\xD5\xD3\xDA\xD7\xB7\xC9\xCF\xC1\xCB\xA1\xAD\xA1\xAD"
-    MSG "  \xC4\xE3\xC3\xC7\xBE\xCD\xCA\xC7\xD5\xE2\xB4\xCE\xB5\xC4\xB6\xD4\xCA\xD6\xB0\xC9\xA3\xA1"
+    MSG "  终于追上了……"
+    MSG "  你们就是这次的对手吧！"
     TIME frame=6440
     NPG
     FACE id=12
     TIME frame=6480
-    MSG "[\xDA\xA4]"
-    MSG "  \xD5\xE6\xCA\xC7\xC2\xFD\xB0\xA1\xA1\xA3"
+    MSG "[冥]"
+    MSG "  真是慢啊。"
     TIME frame=6600
     NPG
     FACE id=13
     TIME frame=6640
-    MSG "[\xCE\xE8]"
-    MSG "  \xA1\xAD\xA1\xAD\xCA\xC7\xB0\xA1\xA1\xA3"
+    MSG "[舞]"
+    MSG "  ……是啊。"
     TIME frame=6760
     NPG
     FACE id=0
     TIME frame=6800
     MSG "[VIVIT]"
-    MSG "  \xCA\xC7\xC4\xE3\xC3\xC7\xCC\xAB\xBF\xEC\xC1\xCB\xA1\xAD\xA1\xAD"
-    MSG "  \xC0\xB4\xB0\xC9\xA3\xAC\xD2\xBB\xBE\xF6\xCA\xA4\xB8\xBA\xA3\xA1"
+    MSG "  是你们太快了……"
+    MSG "  来吧，一决胜负！"
     TIME frame=6920
     NPG
     FACE id=14
     TIME frame=6960
-    MSG "[\xDA\xA4\xA3\xA6\xCE\xE8]"
-    MSG "  \xBA\xC3\xB0\xA1\xA3\xAC\xD2\xBB\xBE\xF6\xCA\xA4\xB8\xBA\xA3\xA1"
+    MSG "[冥＆舞]"
+    MSG "  好啊，一决胜负！"
     TIME frame=7080
     NPG
     FACE id=12
     TIME frame=7120
-    MSG "[\xDA\xA4]"
-    MSG "  \xB5\xAB\xCA\xC7\xA3\xAC\xDA\xA4\xBA\xCD\xA1\xAD\xA1\xAD"
+    MSG "[冥]"
+    MSG "  但是，冥和……"
     TIME frame=7240
     NPG
     FACE id=13
     TIME frame=7280
-    MSG "[\xCE\xE8]"
-    MSG "  \xCE\xE8\xCA\xC7\xA1\xAD\xA1\xAD"
+    MSG "[舞]"
+    MSG "  舞是……"
     TIME frame=7400
     NPG
     FACE id=14
     TIME frame=7440
-    MSG "[\xDA\xA4\xA3\xA6\xCE\xE8]"
-    MSG "  \xCE\xDE\xB5\xD0\xB5\xC4\xC5\xB6\xA3\xA1"
+    MSG "[冥＆舞]"
+    MSG "  无敌的哦！"
     TIME frame=7560
     NPG
     FACE id=0
     TIME frame=7600
     MSG "[VIVIT]"
-    MSG "  \xCE\xD2\xB2\xBB\xBB\xE1\xCA\xE4\xB5\xC4\xA3\xA1"
-    MSG "  \xD5\xE2\xD2\xB2\xCA\xC7\xCE\xAA\xC1\xCB\xD6\xF7\xC8\xCB\xA3\xA1"
+    MSG "  我不会输的！"
+    MSG "  这也是为了主人！"
     TIME frame=7720
     MWCLOSE
     MUSIC id=4
@@ -575,56 +575,56 @@
     FACE id=1
     TIME frame=7790
     MSG "[VIVIT]"
-    MSG "  \xD3\xAE\xC1\xCB\xA3\xA1\xA3\xA1"
+    MSG "  赢了！！"
     TIME frame=7910
     NPG
     FACE id=14
     TIME frame=7930
-    MSG "[\xDA\xA4\xA3\xA6\xCE\xE8]"
-    MSG "  \xCE\xD8\xCE\xD8\xA1\xAD\xA1\xAD\xCA\xE4\xB5\xF4\xC1\xCB\xA1\xA3"
+    MSG "[冥＆舞]"
+    MSG "  呜呜……输掉了。"
     TIME frame=8050
     NPG
     FACE id=12
     TIME frame=8070
-    MSG "[\xDA\xA4]"
-    MSG "  \xB5\xAB\xCA\xC7\xB0\xA1\xA3\xAC\xD3\xD0\xB1\xC8\xC6\xF0\xDA\xA4\xBA\xCD\xCE\xE8\xC0\xB4\xA1\xAD\xA1\xAD"
+    MSG "[冥]"
+    MSG "  但是啊，有比起冥和舞来……"
     TIME frame=8190
     NPG
     FACE id=13
     TIME frame=8210
-    MSG "[\xCE\xE8]"
-    MSG "  \xBB\xB9\xD2\xAA\xC7\xBF\xA1\xAB\xB4\xF3\xB5\xC4\xC8\xCB\xD4\xDA\xC4\xD8\xA1\xA3"
+    MSG "[舞]"
+    MSG "  还要强～大的人在呢。"
     TIME frame=8330
     NPG
     FACE id=0
     TIME frame=8350
     MSG "[VIVIT]"
-    MSG "  \xC7\xBF\xA1\xAB\xB4\xF3\xB5\xC4\xC8\xCB\xCA\xC7\xCB\xAD\xB0\xA1\xA3\xBF"
+    MSG "  强～大的人是谁啊？"
     TIME frame=8470
     NPG
     FACE id=14
     TIME frame=8490
-    MSG "[\xDA\xA4\xA3\xA6\xCE\xE8]"
-    MSG "  \xC4\xC7\xB8\xF6\xD1\xBD\xA1\xAD\xA1\xAD\xB2\xBB\xB8\xE6\xCB\xDF\xC4\xE3\xA1\xAB"
+    MSG "[冥＆舞]"
+    MSG "  那个呀……不告诉你～"
     TIME frame=8610
     NPG
     FACE id=0
     TIME frame=8630
     MSG "[VIVIT]"
-    MSG "  \xCE\xD8\xCE\xD8\xCE\xD8\xA3\xAC\xBA\xC3\xD4\xDA\xD2\xE2\xB0\xA1\xA3\xA1\xA3\xA1"
+    MSG "  呜呜呜，好在意啊！！"
     TIME frame=8750
     NPG
     FACE id=6
     TIME frame=8770
-    MSG "[\xD6\xF7\xC8\xCB]"
-    MSG "  \xA3\xD6\xA3\xC9\xA3\xD6\xA1\xAD"
-    MSG "  \xC2\xED\xC9\xCF\xBE\xCD\xBA\xC3\xC1\xCB\xA3\xAC\xBC\xD3\xD3\xCD\xB0\xC9\xA1\xA3"
+    MSG "[主人]"
+    MSG "  ＶＩＶ…"
+    MSG "  马上就好了，加油吧。"
     TIME frame=8890
     NPG
     FACE id=1
     TIME frame=8910
     MSG "[VIVIT]"
-    MSG "  \xCA\xC7\xB5\xC4\xA1\xAB\xD6\xF7\xC8\xCB\xA3\xA1"
+    MSG "  是的～主人！"
     TIME frame=9150
     MWCLOSE
     EFC type=MUSICFADE
