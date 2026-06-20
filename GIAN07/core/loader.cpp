@@ -19,7 +19,26 @@
 #include "window_sys.h"
 #include <cassert>
 
+#include <cstring>
 #include <utility>
+
+#include "scripts_data.h"
+
+// ============================================================
+// Embedded script loader
+// ============================================================
+
+static BYTE_BUFFER_OWNED LoadEmbeddedScript(int filno) {
+  for (size_t i = 0; i < embedded_script_count; i++) {
+    if (embedded_scripts[i].index == filno) {
+      BYTE_BUFFER_OWNED buf(embedded_scripts[i].size);
+      std::memcpy(buf.get(), embedded_scripts[i].data,
+                  embedded_scripts[i].size);
+      return buf;
+    }
+  }
+  return nullptr;
+}
 
 // Hardcoded loop points for ZUN's original MIDI files
 // ---------------------------------------------------
@@ -653,12 +672,12 @@ bool LoadStageData(uint8_t stage) {
   // For extra stage system //
   if (stage == GRAPH_ID_EXSTAGE) {
     // ECL Load
-    if ((Enemies.ecl_head = enemy.MemExpand(24)) == nullptr) {
+    if ((Enemies.ecl_head = LoadEmbeddedScript(24)) == nullptr) {
       return false;
     }
 
     // SCL Load
-    if ((Enemies.scl_head = enemy.MemExpand(25)) == nullptr) {
+    if ((Enemies.scl_head = LoadEmbeddedScript(25)) == nullptr) {
       return false;
     }
 
@@ -668,7 +687,7 @@ bool LoadStageData(uint8_t stage) {
     }
   } else if (stage == GRAPH_ID_ENDING) {
     // SCL Load
-    if ((Enemies.scl_head = enemy.MemExpand(47)) == nullptr) {
+    if ((Enemies.scl_head = LoadEmbeddedScript(47)) == nullptr) {
       return false;
     }
     Enemies.scl_now = Enemies.scl_head.get();
@@ -681,12 +700,12 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // ECL Load
-    if ((Enemies.ecl_head = enemy.MemExpand(stage + 0 - 1)) == nullptr) {
+    if ((Enemies.ecl_head = LoadEmbeddedScript(stage + 0 - 1)) == nullptr) {
       return false;
     }
 
     // SCL Load
-    if ((Enemies.scl_head = enemy.MemExpand(stage + 6 - 1)) == nullptr) {
+    if ((Enemies.scl_head = LoadEmbeddedScript(stage + 6 - 1)) == nullptr) {
       return false;
     }
 

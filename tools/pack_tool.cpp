@@ -4,6 +4,7 @@
 /// Usage:
 ///   pack_tool extract <packfile> <out_dir>
 ///   pack_tool pack <in_dir> <packfile>
+///   pack_tool strip <in_packfile> <out_packfile>
 ///   pack_tool scl <in_file> <multiplier> <out_file>
 ///   pack_tool ecl <in_file> <multiplier> <out_file>
 ///   pack_tool ecl-time <in_file> <script_id> <multiplier> <out_file>
@@ -232,6 +233,10 @@ Usage:
 
   pack_tool pack <in_dir> <packfile>
       Repack all NNN.bin files from in_dir into a PBG pack file
+
+  pack_tool strip <in_packfile> <out_packfile>
+      Strip ECL/SCL script entries (embedded in binary), keeping only
+      non-script data (maps, demos, music room comments)
 
   pack_tool scl <in_file> <multiplier> <out_file>
       Multiply the end-boss SCL_TIME frame value by multiplier
@@ -974,6 +979,70 @@ static bool cmd_ecl_boss(const char *in_file, int script_id, float hp_mult,
 }
 
 // ============================================================================
+// Strip mode — remove ECL/SCL script entries from the pack file.
+// Script entries are now embedded in the binary; the stripped pack file
+// keeps only non-script data (maps, demos, music room comments).
+// ============================================================================
+
+static bool cmd_strip(const char *in_packfile, const char *out_packfile) {
+  auto reader = FilStartR(in_packfile);
+  if (!reader) {
+    std::println(stderr, "Error: Cannot open pack file '{}'", in_packfile);
+    return false;
+  }
+
+  // Script entry indices to replace with placeholders
+  const std::unordered_set<int> script_entries = {
+      0, 1, 2, 3, 4, 5,    // Stage 1-6 ECL
+      6, 7, 8, 9, 10, 11,  // Stage 1-6 SCL
+      24,                   // Extra stage ECL
+      25,                   // Extra stage SCL
+      47                    // Ending SCL
+  };
+
+  const auto n = static_cast<int>(reader.info.size());
+  std::println("Stripping script entries from '{}'...", in_packfile);
+  std::println("  {} total entries, {} script entries will be stripped", n,
+               script_entries.size());
+
+  // Storage for entry data (writer holds non-owning views)
+  std::vector<std::vector<uint8_t>> storage;
+  storage.reserve(n);
+
+  PACKFILE_WRITE writer;
+  size_t skipped_bytes = 0;
+
+  for (int i = 0; i < n; i++) {
+    auto data = reader.MemExpand(i);
+    if (!data) {
+      std::println(stderr, "Error: Failed to decompress entry {}", i);
+      return false;
+    }
+
+    if (script_entries.count(i)) {
+      skipped_bytes += data.size();
+      // Replace with zero-byte placeholder
+      storage.push_back({});
+      writer.files.emplace_back(
+          storage.back().data(), storage.back().size());
+    } else {
+      // Keep original data
+      auto &buf = storage.emplace_back(data.get(), data.get() + data.size());
+      writer.files.emplace_back(buf.data(), buf.size());
+    }
+  }
+
+  if (!writer.Write(out_packfile)) {
+    std::println(stderr, "Error: Failed to write stripped pack file '{}'",
+                 out_packfile);
+    return false;
+  }
+
+  std::println("Done. {} bytes of script data stripped.", skipped_bytes);
+  return true;
+}
+
+// ============================================================================
 // Entry point
 // ============================================================================
 
@@ -999,6 +1068,15 @@ int main(int argc, char **argv) {
       return 1;
     }
     return cmd_pack(argv[2], argv[3]) ? 0 : 1;
+  }
+
+  if (mode == "strip") {
+    if (argc != 4) {
+      std::println(stderr,
+                   "Usage: pack_tool strip <in_packfile> <out_packfile>");
+      return 1;
+    }
+    return cmd_strip(argv[2], argv[3]) ? 0 : 1;
   }
 
   if (mode == "scl") {

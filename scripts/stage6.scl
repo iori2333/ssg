@@ -1,0 +1,432 @@
+    TIME frame=0
+    LOADFACE surf=0 file=0
+    LOADFACE surf=1 file=1
+    LOADFACE surf=2 file=7
+    EFC type=STG6RASTER
+    TIME frame=50
+    MWOPEN
+    NPG
+    FACE id=6
+    TIME frame=70
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xCA\xFD\xCA\xAE\xC4\xEA\xC7\xB0\xA3\xAC"
+    MSG "  \xCE\xD2\xBA\xCD\xC5\xAE\xB6\xF9\xD4\xDA\xB6\xD4\xCF\xC9\xC8\xCB\xD5\xC6\xC4\xDC\xD4\xB4\xBD\xF8\xD0\xD0"
+    MSG "  \xD1\xD0\xBE\xBF\xB5\xC4\xCA\xB1\xBA\xF2\xA3\xAC"
+    TIME frame=190
+    NPG
+    TIME frame=210
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xC4\xDC\xC1\xBF\xB1\xA9\xD7\xDF\xC1\xCB\xA3\xAC"
+    MSG "  \xC5\xAE\xB6\xF9\xCB\xFD\xA1\xAD"
+    MSG "  \xB1\xBB\xB9\xD8\xD4\xDA\xC1\xCB\xD5\xE2\xB8\xF6\xD2\xEC\xBF\xD5\xBC\xE4\xC0\xEF\xA1\xA3"
+    TIME frame=330
+    NPG
+    FACE id=0
+    TIME frame=350
+    MSG "[VIVIT]"
+    MSG "  \xCA\xB2\xC3\xB4\xB0\xA1\xA1\xAD\xD5\xE2\xC0\xEF\xCA\xC7\xA1\xA3"
+    TIME frame=470
+    NPG
+    TIME frame=490
+    MSG "[VIVIT]"
+    MSG "  \xD3\xD6\xC0\xE4\xA1\xAD\xA1\xAD\xD3\xD6\xBF\xC9\xC5\xC2\xA1\xA3"
+    TIME frame=610
+    NPG
+    TIME frame=630
+    MSG "[VIVIT]"
+    MSG "  \xB5\xAB\xCA\xC7\xA1\xAD\xA1\xAD"
+    TIME frame=750
+    MWCLOSE
+    MUSIC id=11
+    TIME frame=840
+    TIME frame=890
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=940
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=990
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1040
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1090
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1140
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1190
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1240
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1290
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1340
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1350
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1360
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1370
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1380
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1390
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1400
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1410
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1420
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1430
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1440
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1450
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1460
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1510
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1560
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1610
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1620
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1630
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1640
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1650
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1660
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1670
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1680
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1690
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1700
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1710
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1760
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1810
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1860
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1870
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1880
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1890
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1900
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1910
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1920
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1930
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1940
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1950
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1960
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1970
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1980
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2030
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2080
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2130
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2140
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2150
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2160
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2170
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2180
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2190
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2200
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2210
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2220
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2230
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2240
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2250
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2300
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2350
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2400
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2410
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2420
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2430
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2440
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2450
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2460
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2470
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2480
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2490
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2500
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2550
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2600
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2650
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2660
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2670
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2680
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2690
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2700
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2710
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2720
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2730
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2740
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2750
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2760
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2770
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2820
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2870
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2920
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2930
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2940
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2950
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2960
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2970
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2980
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2990
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3000
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3010
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3020
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3140
+    ENEMY x=319 y=-10 id=19
+    TIME frame=3360
+    EFC type=WARN
+    TIME frame=3580
+    EFC type=WARNSTOP
+    TIME frame=3630
+    MWOPEN
+    FACE id=12
+    TIME frame=3650
+    MSG "[VIVIT-captured-]"
+    MSG "  \xA1\xAD\xA1\xAD"
+    TIME frame=3770
+    NPG
+    FACE id=3
+    TIME frame=3790
+    MSG "[VIVIT]"
+    MSG "  \xCA\xB2\xC3\xB4\xD1\xBD\xA1\xAD\xA1\xAD\xD5\xE2\xB8\xF6\xA1\xA3"
+    MSG "  \xB5\xBD\xB5\xD7\xCA\xC7\xD4\xF5\xC3\xB4\xBB\xD8\xCA\xC2\xA3\xBF"
+    MSG "  \xD6\xF7\xC8\xCB\xA3\xA1\xA3\xA1\xA3\xA1\xA3\xA1\xA1\xA1"
+    TIME frame=3910
+    NPG
+    FACE id=6
+    TIME frame=3930
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xA1\xAD\xA1\xAD"
+    MSG "  \xA1\xAD\xA1\xAD"
+    MSG "  \xBE\xCD\xCA\xC7\xD5\xE2\xD1\xF9\xA1\xA3"
+    TIME frame=4050
+    TIME frame=4070
+    MSG "  \xC4\xC7\xBE\xCD\xCA\xC7\xCE\xD2\xB5\xC4\xC5\xAE\xB6\xF9\xA1\xAD\xA1\xAD"
+    MSG "  \xB1\xBB\xC4\xDC\xC1\xBF\xCB\xF9\xC7\xD6\xCA\xB4\xA3\xAC"
+    MSG "  \xCA\xA7\xC8\xA5\xD7\xD4\xCE\xD2\xB5\xC4\xB4\xE6\xD4\xDA\xA1\xAD\xA1\xAD"
+    TIME frame=4190
+    NPG
+    FACE id=13
+    TIME frame=4210
+    MSG "[VIVIT-captured-]"
+    MSG "  \xBE\xC8\xBE\xC8\xA1\xAD\xCE\xD2\xA1\xAD\xA1\xAD"
+    TIME frame=4330
+    NPG
+    FACE id=0
+    TIME frame=4350
+    MSG "[VIVIT]"
+    MSG "  \xCE\xD2\xD2\xD1\xBE\xAD\xD2\xBB\xCD\xB7\xCE\xED\xCB\xAE\xC1\xCB\xA3\xA1"
+    MSG "  \xCE\xAA\xCA\xB2\xC3\xB4\xA3\xAC\xBA\xCD\xCE\xD2\xD2\xBB\xC3\xFE\xD2\xBB\xD1\xF9\xB0\xA1\xA3\xA1\xA3\xBF"
+    TIME frame=4470
+    NPG
+    FACE id=6
+    TIME frame=4490
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xA3\xD6\xA3\xC9\xA3\xD6\xA1\xAD\xA1\xAD"
+    MSG "  \xC7\xEB\xCA\xB5\xCF\xD6\xCE\xD2\xB5\xC4\xC3\xCE\xCF\xEB\xA3\xA1"
+    MSG "  \xD5\xFC\xBE\xC8\xCE\xD2\xB5\xC4\xC5\xAE\xB6\xF9\xA3\xA1\xA3\xA1"
+    TIME frame=4610
+    NPG
+    FACE id=12
+    TIME frame=4630
+    MSG "[VIVIT-captured-]"
+    MSG "  \xA1\xAD\xA1\xAD"
+    MSG "  \xA1\xAD\xA1\xAD"
+    MSG "  \xA1\xAD\xA1\xAD"
+    TIME frame=4750
+    NPG
+    FACE id=0
+    TIME frame=4770
+    MSG "[VIVIT]"
+    MSG "  \xCE\xD2\xC3\xF7\xB0\xD7\xC1\xCB\xA1\xA3"
+    MSG "  \xCE\xD2\xBB\xE1\xD5\xFC\xBE\xC8\xCB\xFD\xB5\xC4\xA1\xA3"
+    TIME frame=4890
+    NPG
+    FACE id=12
+    TIME frame=4910
+    MSG "[VIVIT-captured-]"
+    MSG "  \xA1\xAD\xA1\xAD"
+    MSG "  \xBD\xE2\xB7\xC5\xB0\xC9\xA3\xAC\xC8\xCB\xC0\xE0\xA3\xA1\xA3\xA1"
+    TIME frame=5030
+    MWCLOSE
+    MUSIC id=12
+    BOSS x=319 y=-200 id=0
+    WAITEX cond=0 opt=0
+    TIME frame=5080
+    MWOPEN
+    FACE id=13
+    TIME frame=5100
+    MSG "[VIVIT-captured-]"
+    MSG "  \xD1\xBD\xB0\xA1\xB0\xA1\xB0\xA1\xB0\xA1\xB0\xA1\xB0\xA1\xB0\xA1\xB0\xA1\xA3\xA1"
+    TIME frame=5220
+    NPG
+    FACE id=0
+    TIME frame=5240
+    MSG "[VIVIT]"
+    MSG "  \xB0\xA1\xB0\xA1\xA3\xAC\xD6\xF7\xC8\xCB\xA1\xA3"
+    MSG "  \xB4\xF3\xD0\xA1\xBD\xE3\xCB\xFD\xA1\xAD\xA1\xAD\xBA\xDC\xCD\xB4\xBF\xE0\xA1\xA3"
+    TIME frame=5360
+    MWCLOSE
+    EFC type=WHITEIN
+    TIME frame=5392
+    EFC type=WHITEOUT
+    EFC type=STG6CUBE
+    MUSIC id=13
+    BOSS x=319 y=-200 id=9
+    WAITEX cond=0 opt=0
+    TIME frame=5442
+    MWOPEN
+    FACE id=12
+    TIME frame=5462
+    MSG "[VIVIT-captured-]"
+    MSG "  \xC3\xFB\xCE\xAA\xC8\xCB\xC0\xE0\xD5\xDF\xA1\xAD\xA1\xAD"
+    MSG "  \xCB\xF9\xB4\xB4\xD4\xEC\xD6\xAE\xCE\xEF\xB0\xA1\xA1\xA3"
+    TIME frame=5582
+    NPG
+    MSG "[VIVIT-captured-]"
+    MSG "  \xBD\xE2\xB7\xC5\xB0\xC9\xA1\xA3"
+    TIME frame=5702
+    MWCLOSE
+    EFC type=WHITEIN
+    TIME frame=5734
+    EFC type=WHITEOUT
+    EFC type=STG6RNDECL
+    MUSIC id=14
+    BOSS x=319 y=-200 id=16
+    WAITEX cond=0 opt=0
+    TIME frame=5784
+    MWOPEN
+    FACE id=13
+    TIME frame=5804
+    MSG "[VIVIT-captured-]"
+    MSG "  \xE0\xBB\xE0\xDE\xE0\xDE\xE0\xDE\xE0\xDE\xE0\xDE\xE0\xDE\xA1\xAA\xA1\xAA"
+    TIME frame=5924
+    NPG
+    FACE id=6
+    TIME frame=5944
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xA3\xD6\xA3\xC9\xA3\xD6\xA3\xC9\xA3\xD4\xB0\xA1\xA1\xA3"
+    MSG "  \xD0\xBB\xD0\xBB\xC4\xE3\xA1\xA3"
+    TIME frame=6064
+    NPG
+    FACE id=0
+    TIME frame=6084
+    MSG "[VIVIT]"
+    MSG "  \xD6\xF7\xC8\xCB\xA1\xAD\xA1\xAD"
+    MSG "  \xB2\xBB\xB9\xFD\xA3\xAC\xB4\xF3\xD0\xA1\xBD\xE3\xCB\xFD\xA1\xAD\xA1\xAD"
+    MSG "  \xB4\xF3\xD0\xA1\xBD\xE3\xCB\xFD\xC3\xBB\xCA\xC2\xC3\xB4\xA3\xBF"
+    TIME frame=6204
+    NPG
+    FACE id=14
+    TIME frame=6224
+    MSG "[VIVIT-captured-]"
+    MSG "  \xCE\xD8\xA3\xAC\xDF\xED\xA1\xAD"
+    TIME frame=6344
+    NPG
+    FACE id=0
+    TIME frame=6364
+    MSG "[VIVIT]"
+    MSG "  \xB0\xA1\xB0\xA1\xA3\xA1"
+    MSG "  \xD6\xF7\xC8\xCB\xA3\xA1\xD6\xF7\xC8\xCB\xA3\xA1"
+    MSG "  \xCB\xFD\xC3\xBB\xCA\xC2\xA3\xAC\xB4\xF3\xD0\xA1\xBD\xE3\xCB\xFD\xC3\xBB\xCA\xC2\xA3\xA1"
+    TIME frame=6484
+    NPG
+    FACE id=6
+    TIME frame=6504
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xCE\xD2\xB5\xC4\xC5\xAE\xB6\xF9\xB1\xBB\xD5\xFC\xBE\xC8\xB3\xF6\xC0\xB4\xC1\xCB\xA1\xA3"
+    MSG "  \xD0\xBB\xD0\xBB\xC4\xE3\xA3\xAC\xA3\xD6\xA3\xC9\xA3\xD6\xA1\xA3"
+    MSG "  \xC0\xB4\xA3\xAC\xBB\xD8\xBC\xD2\xB0\xC9\xA1\xA3"
+    TIME frame=6624
+    NPG
+    FACE id=1
+    TIME frame=6644
+    MSG "[VIVIT]"
+    MSG "  \xCA\xC7\xA3\xA1\xA3\xA1"
+    TIME frame=6764
+    MWCLOSE
+    EFC type=MUSICFADE
+    EFC type=CFADEOUT
+    TIME frame=6964
+    GAMECLEAR
+    END

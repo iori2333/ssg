@@ -1,0 +1,626 @@
+    TIME frame=0
+    LOADFACE surf=0 file=0
+    LOADFACE surf=1 file=1
+    LOADFACE surf=2 file=4
+    MAPPALETTE
+    SSP speed=1600
+    TIME frame=60
+    TIME frame=90
+    TIME frame=105
+    SSP speed=1400
+    TIME frame=120
+    SSP speed=1200
+    TIME frame=135
+    SSP speed=900
+    TIME frame=150
+    SSP speed=500
+    TIME frame=165
+    SSP speed=90
+    TIME frame=180
+    SSP speed=45
+    MWOPEN
+    FACE id=1
+    TIME frame=200
+    MSG "[VIVIT]"
+    MSG "  \xC4\xC7\xB8\xF6\xA1\xAD\xA1\xAD\xCE\xD2\xCB\xB5\xA3\xAC\xD6\xF7\xC8\xCB\xA3\xAC"
+    MSG "  \xCE\xD2\xB8\xD0\xBE\xF5\xB5\xBD\xC1\xCB\xD2\xBB\xB9\xC9\xC7\xBF\xB4\xF3\xB5\xC4\xC4\xDC\xC1\xBF\xA1\xAD\xA1\xAD"
+    TIME frame=320
+    NPG
+    FACE id=6
+    TIME frame=340
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xC4\xC7\xB8\xF6\xC3\xBB\xD7\xBC\xCA\xC7\xB8\xC7\xB4\xC4\xA1\xA3"
+    TIME frame=370
+    MSG "  \xBE\xDD\xCB\xB5\xCA\xC7\xB8\xF6\xBE\xAD\xD1\xE9\xB7\xE1\xB8\xBB\xB5\xC4\xBE\xFC\xC8\xCB\xA1\xA3"
+    TIME frame=490
+    NPG
+    FACE id=0
+    TIME frame=510
+    MSG "[VIVIT]"
+    MSG "  \xB0\xA5\xA3\xAC\xBA\xDC\xC7\xBF\xA1\xAD\xA1\xAD\xB6\xD4\xB0\xC9\xA1\xA3"
+    TIME frame=630
+    MWCLOSE
+    ENEMY x=319 y=479 id=14
+    TIME frame=680
+    TIME frame=700
+    MWOPEN
+    FACE id=0
+    TIME frame=720
+    MSG "[VIVIT]"
+    MSG "  \xCE\xD8\xCD\xDB\xA1\xAD\xA1\xAD"
+    TIME frame=740
+    MSG "  \xBA\xC3\xB4\xF3\xA1\xAB"
+    TIME frame=760
+    MSG "  \xCE\xAA\xCA\xB2\xC3\xB4\xC4\xC7\xD6\xD6\xB6\xAB\xCE\xF7\xC4\xDC\xB9\xBB\xB7\xC9\xC6\xF0\xC0\xB4\xB0\xA1\xA3\xBF"
+    TIME frame=880
+    NPG
+    FACE id=6
+    TIME frame=900
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xD2\xF2\xCE\xAA\xC4\xC7\xB8\xF6\xBB\xFA\xCC\xE5\xD2\xB2\xC0\xFB\xD3\xC3\xC1\xCB\xC4\xD8"
+    MSG "  \xCF\xC9\xC8\xCB\xD5\xC6\xC4\xDC\xD4\xB4\xA1\xAD\xA1\xAD"
+    TIME frame=1020
+    NPG
+    FACE id=0
+    TIME frame=1040
+    MSG "[VIVIT]"
+    MSG "  \xCD\xDB\xB9\xFE\xB9\xFE\xA1\xAB"
+    TIME frame=1060
+    MSG "  \xBA\xC3\xC9\xB5\xC6\xF8\xB5\xC4\xC3\xFB\xD7\xD6\xB0\xA1\xA1\xAB"
+    TIME frame=1180
+    NPG
+    FACE id=6
+    TIME frame=1200
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xC9\xB5\xA1\xA2\xC9\xB5\xC6\xF8\xA3\xBF"
+    TIME frame=1320
+    MWCLOSE
+    MUSIC id=5
+    TIME frame=1370
+    ENEMY x=96 y=120 id=9
+    TIME frame=1378
+    ENEMY x=96 y=120 id=9
+    TIME frame=1386
+    ENEMY x=96 y=120 id=9
+    TIME frame=1394
+    ENEMY x=96 y=120 id=9
+    TIME frame=1402
+    ENEMY x=96 y=120 id=9
+    TIME frame=1410
+    ENEMY x=96 y=120 id=9
+    TIME frame=1418
+    ENEMY x=96 y=120 id=9
+    TIME frame=1426
+    ENEMY x=96 y=120 id=9
+    TIME frame=1434
+    ENEMY x=96 y=120 id=9
+    TIME frame=1442
+    ENEMY x=96 y=120 id=9
+    TIME frame=1474
+    ENEMY x=543 y=90 id=9
+    TIME frame=1482
+    ENEMY x=543 y=90 id=9
+    TIME frame=1490
+    ENEMY x=543 y=90 id=9
+    TIME frame=1498
+    ENEMY x=543 y=90 id=9
+    TIME frame=1506
+    ENEMY x=543 y=90 id=9
+    TIME frame=1514
+    ENEMY x=543 y=90 id=9
+    TIME frame=1522
+    ENEMY x=543 y=90 id=9
+    TIME frame=1530
+    ENEMY x=543 y=90 id=9
+    TIME frame=1538
+    ENEMY x=543 y=90 id=9
+    TIME frame=1546
+    ENEMY x=543 y=90 id=9
+    TIME frame=1578
+    ENEMY x=543 y=60 id=9
+    TIME frame=1586
+    ENEMY x=543 y=60 id=9
+    TIME frame=1594
+    ENEMY x=543 y=60 id=9
+    TIME frame=1602
+    ENEMY x=543 y=60 id=9
+    TIME frame=1610
+    ENEMY x=543 y=60 id=9
+    TIME frame=1618
+    ENEMY x=543 y=60 id=9
+    TIME frame=1626
+    ENEMY x=543 y=60 id=9
+    TIME frame=1634
+    ENEMY x=543 y=60 id=9
+    TIME frame=1642
+    ENEMY x=543 y=60 id=9
+    TIME frame=1650
+    ENEMY x=543 y=60 id=9
+    TIME frame=1700
+    ENEMY x=96 y=30 id=9
+    TIME frame=1708
+    ENEMY x=96 y=30 id=9
+    TIME frame=1716
+    ENEMY x=96 y=30 id=9
+    TIME frame=1724
+    ENEMY x=96 y=30 id=9
+    TIME frame=1732
+    ENEMY x=96 y=30 id=9
+    TIME frame=1740
+    ENEMY x=96 y=30 id=9
+    TIME frame=1748
+    ENEMY x=96 y=30 id=9
+    TIME frame=1756
+    ENEMY x=96 y=30 id=9
+    TIME frame=1764
+    ENEMY x=96 y=30 id=9
+    TIME frame=1772
+    ENEMY x=96 y=30 id=9
+    TIME frame=1822
+    ENEMY x=104 y=359 id=7
+    TIME frame=1962
+    ENEMY x=96 y=359 id=6
+    TIME frame=1982
+    ENEMY x=64 y=359 id=6
+    TIME frame=2002
+    ENEMY x=219 y=0 id=4
+    ENEMY x=32 y=359 id=6
+    TIME frame=2022
+    ENEMY x=0 y=359 id=6
+    TIME frame=2042
+    ENEMY x=-32 y=359 id=6
+    TIME frame=2062
+    ENEMY x=-64 y=359 id=6
+    TIME frame=2082
+    ENEMY x=-96 y=359 id=6
+    TIME frame=2102
+    ENEMY x=-128 y=359 id=6
+    TIME frame=2132
+    ENEMY x=535 y=359 id=8
+    TIME frame=2272
+    ENEMY x=543 y=359 id=6
+    TIME frame=2292
+    ENEMY x=575 y=359 id=6
+    TIME frame=2312
+    ENEMY x=419 y=0 id=4
+    ENEMY x=607 y=359 id=6
+    TIME frame=2332
+    ENEMY x=639 y=359 id=6
+    TIME frame=2352
+    ENEMY x=671 y=359 id=6
+    TIME frame=2372
+    ENEMY x=703 y=359 id=6
+    TIME frame=2392
+    ENEMY x=735 y=359 id=6
+    TIME frame=2412
+    ENEMY x=767 y=359 id=6
+    TIME frame=2452
+    ENEMY x=96 y=0 id=5
+    TIME frame=2457
+    ENEMY x=96 y=40 id=5
+    TIME frame=2462
+    ENEMY x=96 y=80 id=5
+    TIME frame=2467
+    ENEMY x=96 y=120 id=5
+    TIME frame=2472
+    ENEMY x=96 y=150 id=5
+    TIME frame=2502
+    ENEMY x=543 y=0 id=5
+    TIME frame=2507
+    ENEMY x=543 y=40 id=5
+    TIME frame=2512
+    ENEMY x=543 y=80 id=5
+    TIME frame=2517
+    ENEMY x=543 y=120 id=5
+    TIME frame=2522
+    ENEMY x=543 y=150 id=5
+    TIME frame=2552
+    ENEMY x=32 y=0 id=5
+    TIME frame=2557
+    ENEMY x=32 y=40 id=5
+    TIME frame=2562
+    ENEMY x=32 y=80 id=5
+    TIME frame=2567
+    ENEMY x=32 y=120 id=5
+    TIME frame=2572
+    ENEMY x=32 y=150 id=5
+    TIME frame=2602
+    ENEMY x=607 y=0 id=5
+    TIME frame=2607
+    ENEMY x=607 y=40 id=5
+    TIME frame=2612
+    ENEMY x=607 y=80 id=5
+    TIME frame=2617
+    ENEMY x=607 y=120 id=5
+    TIME frame=2622
+    ENEMY x=607 y=150 id=5
+    TIME frame=2662
+    ENEMY x=158 y=-150 id=0
+    TIME frame=2682
+    ENEMY x=228 y=-200 id=0
+    TIME frame=2702
+    ENEMY x=298 y=-250 id=0
+    TIME frame=2822
+    ENEMY x=543 y=120 id=9
+    TIME frame=2830
+    ENEMY x=543 y=120 id=9
+    TIME frame=2838
+    ENEMY x=543 y=120 id=9
+    TIME frame=2846
+    ENEMY x=543 y=120 id=9
+    TIME frame=2854
+    ENEMY x=543 y=120 id=9
+    TIME frame=2862
+    ENEMY x=543 y=120 id=9
+    TIME frame=2870
+    ENEMY x=543 y=120 id=9
+    TIME frame=2878
+    ENEMY x=543 y=120 id=9
+    TIME frame=2886
+    ENEMY x=543 y=120 id=9
+    TIME frame=2894
+    ENEMY x=543 y=120 id=9
+    EFC type=RASTERON
+    TIME frame=2934
+    ENEMY x=481 y=-150 id=0
+    TIME frame=2954
+    ENEMY x=411 y=-200 id=0
+    TIME frame=2974
+    ENEMY x=341 y=-250 id=0
+    TIME frame=3094
+    ENEMY x=96 y=120 id=9
+    TIME frame=3102
+    ENEMY x=96 y=120 id=9
+    TIME frame=3110
+    ENEMY x=96 y=120 id=9
+    TIME frame=3118
+    ENEMY x=96 y=120 id=9
+    TIME frame=3126
+    ENEMY x=96 y=120 id=9
+    TIME frame=3134
+    ENEMY x=96 y=120 id=9
+    TIME frame=3142
+    ENEMY x=96 y=120 id=9
+    TIME frame=3150
+    ENEMY x=96 y=120 id=9
+    TIME frame=3158
+    ENEMY x=96 y=120 id=9
+    TIME frame=3166
+    ENEMY x=96 y=120 id=9
+    ENEMY x=104 y=359 id=7
+    ENEMY x=104 y=239 id=7
+    TIME frame=3306
+    ENEMY x=96 y=359 id=6
+    ENEMY x=96 y=239 id=6
+    TIME frame=3326
+    ENEMY x=64 y=359 id=6
+    ENEMY x=64 y=239 id=6
+    TIME frame=3346
+    ENEMY x=32 y=359 id=6
+    ENEMY x=32 y=239 id=6
+    TIME frame=3366
+    ENEMY x=0 y=359 id=6
+    ENEMY x=0 y=239 id=6
+    TIME frame=3386
+    ENEMY x=-32 y=359 id=6
+    ENEMY x=-32 y=239 id=6
+    TIME frame=3406
+    ENEMY x=-64 y=359 id=6
+    ENEMY x=-64 y=239 id=6
+    TIME frame=3426
+    ENEMY x=-96 y=359 id=6
+    ENEMY x=-96 y=239 id=6
+    TIME frame=3446
+    ENEMY x=-128 y=359 id=6
+    ENEMY x=-128 y=239 id=6
+    TIME frame=3466
+    ENEMY x=535 y=359 id=8
+    ENEMY x=535 y=239 id=8
+    TIME frame=3606
+    ENEMY x=543 y=359 id=6
+    ENEMY x=543 y=239 id=6
+    TIME frame=3626
+    ENEMY x=575 y=359 id=6
+    ENEMY x=575 y=239 id=6
+    TIME frame=3646
+    ENEMY x=607 y=359 id=6
+    ENEMY x=607 y=239 id=6
+    TIME frame=3666
+    ENEMY x=639 y=359 id=6
+    ENEMY x=639 y=239 id=6
+    TIME frame=3686
+    ENEMY x=671 y=359 id=6
+    ENEMY x=671 y=239 id=6
+    TIME frame=3706
+    ENEMY x=703 y=359 id=6
+    ENEMY x=703 y=239 id=6
+    TIME frame=3726
+    ENEMY x=735 y=359 id=6
+    ENEMY x=735 y=239 id=6
+    TIME frame=3746
+    ENEMY x=767 y=359 id=6
+    ENEMY x=767 y=239 id=6
+    TIME frame=3896
+    BOSS x=169 y=-80 id=10
+    TIME frame=3960
+    ENEMY x=168 y=0 id=4
+    TIME frame=4020
+    ENEMY x=168 y=0 id=4
+    TIME frame=4080
+    ENEMY x=168 y=0 id=4
+    TIME frame=4140
+    ENEMY x=268 y=0 id=4
+    TIME frame=4200
+    ENEMY x=368 y=0 id=4
+    TIME frame=4260
+    ENEMY x=468 y=0 id=4
+    TIME frame=4320
+    ENEMY x=368 y=0 id=4
+    TIME frame=4380
+    ENEMY x=268 y=0 id=4
+    TIME frame=4440
+    ENEMY x=168 y=0 id=4
+    TIME frame=4500
+    ENEMY x=268 y=0 id=4
+    TIME frame=4560
+    ENEMY x=368 y=0 id=4
+    TIME frame=4620
+    ENEMY x=168 y=0 id=4
+    TIME frame=4680
+    ENEMY x=168 y=0 id=4
+    TIME frame=4740
+    ENEMY x=168 y=0 id=4
+    TIME frame=4800
+    ENEMY x=268 y=0 id=4
+    TIME frame=4860
+    ENEMY x=368 y=0 id=4
+    TIME frame=4920
+    ENEMY x=468 y=0 id=4
+    TIME frame=4980
+    ENEMY x=368 y=0 id=4
+    TIME frame=5040
+    ENEMY x=268 y=0 id=4
+    TIME frame=5100
+    ENEMY x=168 y=0 id=4
+    TIME frame=5160
+    ENEMY x=268 y=0 id=4
+    TIME frame=5220
+    ENEMY x=368 y=0 id=4
+    TIME frame=5400
+    BOSSDEAD
+    TIME frame=5440
+    ENEMY x=96 y=0 id=5
+    TIME frame=5445
+    ENEMY x=96 y=40 id=5
+    TIME frame=5450
+    ENEMY x=96 y=80 id=5
+    TIME frame=5455
+    ENEMY x=96 y=120 id=5
+    TIME frame=5460
+    ENEMY x=96 y=150 id=5
+    TIME frame=5490
+    ENEMY x=543 y=0 id=5
+    TIME frame=5495
+    ENEMY x=543 y=40 id=5
+    TIME frame=5500
+    ENEMY x=543 y=80 id=5
+    TIME frame=5505
+    ENEMY x=543 y=120 id=5
+    TIME frame=5510
+    ENEMY x=543 y=150 id=5
+    TIME frame=5540
+    ENEMY x=32 y=0 id=5
+    TIME frame=5545
+    ENEMY x=32 y=40 id=5
+    TIME frame=5550
+    ENEMY x=32 y=80 id=5
+    TIME frame=5555
+    ENEMY x=32 y=120 id=5
+    TIME frame=5560
+    ENEMY x=32 y=150 id=5
+    TIME frame=5590
+    ENEMY x=607 y=0 id=5
+    TIME frame=5595
+    ENEMY x=607 y=40 id=5
+    TIME frame=5600
+    ENEMY x=607 y=80 id=5
+    TIME frame=5605
+    ENEMY x=607 y=120 id=5
+    TIME frame=5610
+    ENEMY x=607 y=150 id=5
+    TIME frame=5650
+    ENEMY x=571 y=-180 id=2
+    TIME frame=5670
+    ENEMY x=168 y=-16 id=4
+    ENEMY x=631 y=-120 id=2
+    TIME frame=5690
+    ENEMY x=691 y=-60 id=2
+    TIME frame=5710
+    ENEMY x=218 y=-16 id=4
+    TIME frame=5750
+    ENEMY x=268 y=-16 id=4
+    TIME frame=5790
+    ENEMY x=318 y=-16 id=4
+    TIME frame=5830
+    ENEMY x=368 y=-16 id=4
+    TIME frame=5870
+    ENEMY x=418 y=-16 id=4
+    TIME frame=5910
+    ENEMY x=468 y=-16 id=4
+    TIME frame=6110
+    ENEMY x=96 y=120 id=9
+    TIME frame=6118
+    ENEMY x=96 y=120 id=9
+    TIME frame=6126
+    ENEMY x=96 y=120 id=9
+    TIME frame=6134
+    ENEMY x=96 y=120 id=9
+    TIME frame=6142
+    ENEMY x=96 y=120 id=9
+    TIME frame=6150
+    ENEMY x=96 y=120 id=9
+    TIME frame=6158
+    ENEMY x=96 y=120 id=9
+    TIME frame=6166
+    ENEMY x=96 y=120 id=9
+    TIME frame=6174
+    ENEMY x=96 y=120 id=9
+    TIME frame=6182
+    ENEMY x=96 y=120 id=9
+    TIME frame=6214
+    ENEMY x=543 y=90 id=9
+    TIME frame=6222
+    ENEMY x=543 y=90 id=9
+    TIME frame=6230
+    ENEMY x=543 y=90 id=9
+    TIME frame=6238
+    ENEMY x=543 y=90 id=9
+    TIME frame=6246
+    ENEMY x=543 y=90 id=9
+    TIME frame=6254
+    ENEMY x=543 y=90 id=9
+    TIME frame=6262
+    ENEMY x=543 y=90 id=9
+    TIME frame=6270
+    ENEMY x=543 y=90 id=9
+    TIME frame=6278
+    ENEMY x=543 y=90 id=9
+    TIME frame=6286
+    ENEMY x=543 y=90 id=9
+    TIME frame=6326
+    ENEMY x=68 y=-180 id=1
+    TIME frame=6346
+    ENEMY x=471 y=-16 id=4
+    ENEMY x=8 y=-120 id=1
+    TIME frame=6366
+    ENEMY x=-52 y=-60 id=1
+    TIME frame=6386
+    ENEMY x=421 y=-16 id=4
+    TIME frame=6426
+    ENEMY x=371 y=-16 id=4
+    TIME frame=6466
+    ENEMY x=321 y=-16 id=4
+    TIME frame=6506
+    ENEMY x=271 y=-16 id=4
+    TIME frame=6546
+    ENEMY x=221 y=-16 id=4
+    TIME frame=6586
+    ENEMY x=171 y=-16 id=4
+    TIME frame=6786
+    ENEMY x=481 y=-190 id=0
+    TIME frame=6796
+    ENEMY x=406 y=-190 id=0
+    TIME frame=6806
+    ENEMY x=331 y=-190 id=0
+    TIME frame=6816
+    ENEMY x=256 y=-190 id=0
+    TIME frame=6826
+    ENEMY x=181 y=-190 id=0
+    TIME frame=6886
+    ENEMY x=148 y=-190 id=0
+    TIME frame=6896
+    ENEMY x=223 y=-190 id=0
+    TIME frame=6906
+    ENEMY x=298 y=-190 id=0
+    TIME frame=6916
+    ENEMY x=373 y=-190 id=0
+    TIME frame=6926
+    ENEMY x=448 y=-190 id=0
+    TIME frame=7000
+    EFC type=WARN
+    TIME frame=7220
+    EFC type=WARNSTOP
+    EFC type=MUSICFADE
+    MWOPEN
+    FACE id=0
+    TIME frame=7240
+    MSG "[VIVIT]"
+    MSG "  \xC4\xE3\xBE\xCD\xCA\xC7\xA3\xAC\xD5\xE2\xB4\xCE\xB5\xC4\xA1\xAD\xA1\xAD\xA3\xBF"
+    TIME frame=7360
+    NPG
+    FACE id=12
+    TIME frame=7380
+    MSG "[\xB8\xC7\xB4\xC4]"
+    MSG "  \xBE\xB9\xC8\xBB\xB6\xD4\xCE\xD2\xCF\xC2\xB4\xEF\xC1\xCB\xB3\xF6\xBB\xF7\xC3\xFC\xC1\xEE\xA3\xAC"
+    MSG "  \xCB\xF9\xD2\xD4\xBB\xB3\xD7\xC5\xC6\xDA\xB4\xFD\xC0\xB4\xBF\xB4\xD2\xBB\xD1\xDB\xA1\xAD\xA1\xAD"
+    MSG "  \xC4\xE3\xD5\xE2\xBC\xD2\xBB\xEF\xCA\xC7\xCA\xB2\xC3\xB4\xD1\xBD\xA3\xA1\xA3\xBF"
+    TIME frame=7500
+    NPG
+    FACE id=3
+    TIME frame=7520
+    MSG "[VIVIT]"
+    MSG "  \xBE\xB9\xC8\xBB\xCB\xB5\xC4\xE3\xD5\xE2\xBC\xD2\xBB\xEF\xA1\xAD\xA1\xAD\xC4\xE3\xBA\xC3\xCA\xA7\xC0\xF1\xB0\xA1\xA3\xA1"
+    MSG "  \xCE\xD2\xC9\xFA\xC6\xF8\xC1\xCB\xA3\xA1"
+    TIME frame=7640
+    NPG
+    FACE id=12
+    TIME frame=7660
+    MSG "[\xB8\xC7\xB4\xC4]"
+    MSG "  \xB7\xC5\xC2\xED\xB9\xFD\xC0\xB4\xB0\xC9\xA3\xAC\xD0\xA1\xB9\xC3\xC4\xEF\xA1\xA3"
+    MSG "  \xCE\xD2\xD6\xBB\xC8\xCF\xCD\xAC\xC7\xBF\xB4\xF3\xB5\xC4\xC8\xCB\xA3\xAC"
+    MSG "  \xC8\xC3\xCE\xD2\xBC\xFB\xCA\xB6\xD2\xBB\xCF\xC2\xC4\xE3\xB5\xC4\xCA\xB5\xC1\xA6\xA3\xA1"
+    TIME frame=7780
+    NPG
+    FACE id=3
+    TIME frame=7800
+    MSG "[VIVIT]"
+    MSG "  \xBA\xC3\xB0\xC9\xA3\xAC\xC4\xC7\xBE\xCD\xB0\xD1\xCE\xD2\xB5\xC4\xC1\xA6\xC1\xBF\xA3\xAC"
+    MSG "  \xBA\xC3\xBA\xC3\xD5\xB9\xCF\xD6\xB8\xF8\xC4\xE3\xA3\xA1\xA3\xA1"
+    TIME frame=7920
+    NPG
+    FACE id=12
+    TIME frame=7940
+    MSG "[\xB8\xC7\xB4\xC4]"
+    MSG "  \xCE\xD2\xBA\xDC\xC6\xDA\xB4\xFD\xC5\xB6\xA1\xA3"
+    TIME frame=8060
+    EFC type=CFADEOUT
+    MWCLOSE
+    TIME frame=8110
+    MUSIC id=6
+    BOSS x=319 y=-80 id=12
+    TIME frame=8140
+    MAPPALETTE
+    EFC type=STG3BOSS
+    EFC type=CFADEIN
+    WAITEX cond=0 opt=0
+    TIME frame=8190
+    MWOPEN
+    FACE id=1
+    TIME frame=8210
+    MSG "[VIVIT]"
+    MSG "  \xB4\xF3\xCA\xE5\xA3\xAC\xBA\xC3\xBA\xC3\xCF\xEB\xCF\xEB\xA1\xAD\xA1\xAD"
+    MSG "  \xD7\xD4\xBC\xBA\xB5\xC4\xCA\xB5\xC1\xA6\xB0\xC9\xA1\xAB"
+    TIME frame=8330
+    NPG
+    FACE id=13
+    TIME frame=8350
+    MSG "[\xB8\xC7\xB4\xC4]"
+    MSG "  \xCA\xE4\xC1\xCB\xA1\xAD\xA1\xAD"
+    MSG "  \xCE\xD2\xBE\xB9\xC8\xBB\xBB\xE1\xCA\xE4\xB8\xF8\xC4\xC7\xD1\xF9\xB5\xC4\xA1\xAD\xA1\xAD"
+    TIME frame=8470
+    NPG
+    FACE id=1
+    TIME frame=8490
+    MSG "[VIVIT]"
+    MSG "  \xD5\xE6\xCA\xC7\xB5\xC4\xA3\xAC\xBD\xD0\xB8\xC7\xB4\xC4\xB5\xC4\xA3\xAC"
+    MSG "  \xC3\xBB\xBC\xB8\xB8\xF6\xBA\xC3\xB6\xAB\xCE\xF7\xC4\xD8\xA1\xAB"
+    TIME frame=8610
+    NPG
+    FACE id=6
+    TIME frame=8630
+    MSG "[\xD6\xF7\xC8\xCB]"
+    MSG "  \xA3\xD6\xA3\xC9\xA3\xD6\xA1\xAD"
+    MSG "  \xCE\xA3\xCF\xD5\xB7\xA2\xD1\xD4\xA1\xAB"
+    TIME frame=8750
+    NPG
+    FACE id=1
+    TIME frame=8770
+    MSG "[VIVIT]"
+    MSG "  \xB0\xA1\xB9\xFE\xA3\xA1"
+    TIME frame=9010
+    MWCLOSE
+    EFC type=MUSICFADE
+    EFC type=CFADEOUT
+    TIME frame=9310
+    STAGECLEAR
+    END
