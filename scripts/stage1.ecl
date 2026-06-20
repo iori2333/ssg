@@ -234,7 +234,7 @@
 @script_7:
     SETUP hp=9150 score=1000000
     STI jmp=@label_032D vector=HP val=7350
-    STI jmp=@label_0324 vector=TIMER val=1800
+    STI jmp=@label_0324 vector=TIMER val=2700
     ANM pattern=5 speed=0
     ANMEX pattern=7
     SPDA speed=64
