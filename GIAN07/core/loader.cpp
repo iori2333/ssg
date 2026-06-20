@@ -239,8 +239,7 @@ bool LoadSound(const PACKFILE_READ &in);
 namespace DAT {
 enum class PACK_ID : uint8_t {
   MAP,
-  GRAPH,
-  GRAPH2,
+  IMAGES,
   MUSIC,
   SOUND,
   COUNT,
@@ -248,8 +247,7 @@ enum class PACK_ID : uint8_t {
 
 constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
     "MAP.PAK",
-    "GRAPH.DAT",
-    "GRAPH2.DAT",
+    "IMAGES.PAK",
     "MUSIC.PAK",
     "SOUND.DAT",
 }};
@@ -485,7 +483,6 @@ std::array<MenuItem, (DAT::BASENAMES.size() + 6)> Info = {{
     {},
     {},
     {},
-    {},
     {"Must be provided from an original game copy.", "", CENTER},
     {},
     {"Recheck", "", FnRecheck, CENTER},
@@ -567,7 +564,7 @@ static int LoadedStage = 0;
 bool LoadGraph(int stage) {
   //	bIsBombPalette = FALSE;
   LoadedStage = stage;
-  const auto &graph = DAT::Packfile(DAT::PACK_ID::GRAPH);
+  const auto &graph = DAT::Packfile(DAT::PACK_ID::IMAGES);
 
   // For music room //
   if (stage == GRAPH_ID_MUSICROOM) {
@@ -599,13 +596,13 @@ bool LoadGraph(int stage) {
   }
   // Load all ending images (including palette) //
   if (stage == GRAPH_ID_ENDING) {
-    const auto &in = DAT::Packfile(DAT::PACK_ID::GRAPH2);
+    const auto &in = DAT::Packfile(DAT::PACK_ID::IMAGES);
 
-    if (!GrpBMPLoadP(in, 0, SURFACE_ID::ENDING_CREDITS)) {
+    if (!GrpBMPLoadP(in, 32, SURFACE_ID::ENDING_CREDITS)) {
       return false;
     }
     for (auto i = 0; i < ENDING_PIC_MAX; i++) {
-      if (!GrpBMPLoadP(in, (1 + i), (SURFACE_ID::ENDING_PIC + i))) {
+      if (!GrpBMPLoadP(in, (33 + i), (SURFACE_ID::ENDING_PIC + i))) {
         return false;
       }
       GrpBackend_PaletteGet(ending_pic[i].pal);
@@ -686,7 +683,7 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
   if (FaceID >= FACE_MAX) {
     return false;
   }
-  const auto &graph = DAT::Packfile(DAT::PACK_ID::GRAPH);
+  const auto &graph = DAT::Packfile(DAT::PACK_ID::IMAGES);
   if (!GrpBMPLoadP(graph, (13 + FileNo), (SURFACE_ID::FACE + FaceID))) {
     return false;
   }

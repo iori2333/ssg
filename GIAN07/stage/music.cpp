@@ -131,7 +131,7 @@ bool MusicRoomInit() {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_MUSICROOM)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
 

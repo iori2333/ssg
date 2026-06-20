@@ -67,6 +67,7 @@ Original BGM stored in `MUSIC.PAK` (PBG format, unified entries):
 
 Legacy comments previously in `ENEMY.DAT` entries 027–046 have been migrated
 to `MUSIC.PAK`. The remaining map/demo data has been repacked as `MAP.PAK`.
+`GRAPH.DAT` and `GRAPH2.DAT` have been merged into `IMAGES.PAK`.
 Convert original GBK-encoded data with `pack_tool extract-music` → `pack_tool pack-music`.
 
 ## Generated headers

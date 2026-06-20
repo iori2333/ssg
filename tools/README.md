@@ -62,6 +62,16 @@ MAP.PAK 包含 13 个条目（编号 000–012），由旧 48 条目 ENEMY.DAT �
 | 018–023 | 006–011 | Stage 1–6 Demo |
 | 026 | 012 | Extra Stage 地图 |
 
+### IMAGES.PAK（合并图像包）
+
+由 `GRAPH.DAT` 和 `GRAPH2.DAT` 合并而成，共 39 个条目（编号 000–038）。
+
+| 条目 | 来源 | 用途 |
+|------|------|------|
+| 000–031 | GRAPH.DAT（原索引不变） | 系统界面、敌人精灵、地图 tiles、脸部、UI |
+| 032 | GRAPH2.DAT 条目 0 | Ending staff roll 背景 |
+| 033–038 | GRAPH2.DAT 条目 1–6 | Ending CG 图 ×6 |
+
 ### MUSIC.PAK（统一音乐包）
 
 每个条目载荷 = `[title_len:u32LE][title:UTF-8][comment_len:u32LE][comment:UTF-8\n分隔][midi_data:原始SMF]`
