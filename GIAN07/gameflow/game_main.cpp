@@ -805,8 +805,6 @@ void SProjectProc(bool & /*unused*/) {
       gp->SetColor({0, 0, 0});
       gp->DrawBoxA(logo.left, logo.top, logo.right, logo.bottom);
       gp->Unlock();
-    } else {
-      GrpBackend_PaletteSet(SProjectPalette.Fade(palette_tone));
     }
   };
 

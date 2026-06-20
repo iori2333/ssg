@@ -59,6 +59,7 @@ void RankManager::Add(int n) {
     break;
 
   case GameLevel::HARD:
+  case GameLevel::EXTRA:
     if (state.Rank < 32 * 256) {
       state.Rank = 32 * 256;
     } else if (state.Rank > 48 * 256) {
@@ -105,6 +106,7 @@ void RankManager::Reset() {
     state.Rank = 32 * 256;
     break;
   case GameLevel::HARD:
+  case GameLevel::EXTRA:
     state.Rank = 44 * 256;
     break;
   case GameLevel::LUNATIC:

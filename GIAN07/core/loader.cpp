@@ -465,10 +465,7 @@ void Init() {
                                   return (CWinItemExtent(info.Title).w + 8);
                                 })));
 
-  Grp_PaletteSetDefault();
-
   Window.Init(w);
-  Window.OpenCentered(w, (Info.size() - 2));
   GameFlow.game_main = Proc;
   GameFlow.current_state = GameState::External;
 }
@@ -645,9 +642,6 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
 
 // Set enemy palette
 void LoadPaletteFromEnemy() {
-  if (GrpBackend_PixelFormat().IsPalettized()) {
-    GrpBackend_PaletteSet(EnemyPalette);
-  }
 }
 
 // Load ECL & SCL data into memory //

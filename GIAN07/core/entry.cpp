@@ -166,8 +166,6 @@ void XGrpTry(const GRAPHICS_PARAMS &prev, GRAPHICS_PARAMS &params) {
     if (result.reload_surfaces) {
       ReloadGraph();
     }
-
-    GrpSurface_PaletteApplyToBackend(SURFACE_ID::TITLE);
   }
 }
 

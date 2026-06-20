@@ -104,10 +104,6 @@ struct RGB216 {
   }
 };
 
-// Sets a default palette covering 216 equally distributed RGB colors. Useful
-// for showing some text before loading any of the game's images that would
-// otherwise define a palette.
-void Grp_PaletteSetDefault(void);
 // ----------------- //
 
 // Screenshots
