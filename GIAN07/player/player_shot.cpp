@@ -244,6 +244,5 @@ void Player::SetMLaser(uint16_t time) {
 
   if (Players.lay_time_ == 0) {
     Players.lay_time_ = time;
-    Snd_SEPlay(SOUND_ID_SBLASER, Players.X());
   }
 }

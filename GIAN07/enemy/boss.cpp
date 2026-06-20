@@ -10,11 +10,13 @@
 #include "bomb_efc.h" // Explosion effect processing
 #include "boss_manager.h"
 #include "enemy_ex_ctrl.h"
+#include "font_uty.h"
 #include "game/cast.h"
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "geometry.h"
 #include "gian.h"
+#include "loader.h"
 #include "platform/graphics_backend.h"
 #include <utility>
 
@@ -162,7 +164,8 @@ void BossManager::Move() {
 
       // Cactus hit check //
       if (HITCHK(e->x, Players.X(), e->g_width) &&
-          HITCHK(e->y, Players.Y(), e->g_height) && Players.IsInvincible() == 0) {
+          HITCHK(e->y, Players.Y(), e->g_height) &&
+          Players.IsInvincible() == 0) {
         // Might be interesting to deal damage to the enemy around here? //
         if ((e->flag & EF_HITSB) != 0) {
           Players.OnHit();
@@ -181,6 +184,22 @@ void BossManager::Move() {
       Enemies.UpdateAnimation(e);
 
       e->count++;
+    }
+  }
+
+  hpg.PhaseThresholdHp = -1;
+  hpg.TimerMax = -1;
+  hpg.TimerNow = 0;
+  for (const auto &it : bosses) {
+    if (it.IsUsed) {
+      const auto &ve = it.Edat;
+      if (hpg.PhaseThresholdHp < 0 && ve.Vect[ECLVECT_HP].vect != 0) {
+        hpg.PhaseThresholdHp = static_cast<int32_t>(ve.Vect[ECLVECT_HP].value);
+      }
+      if (hpg.TimerMax < 0 && ve.Vect[ECLVECT_TIMER].vect != 0) {
+        hpg.TimerMax = static_cast<int32_t>(ve.Vect[ECLVECT_TIMER].value);
+        hpg.TimerNow = static_cast<int32_t>(ve.IntTimer);
+      }
     }
   }
 
@@ -448,6 +467,31 @@ void BossManager::DrawHPG() {
     // Draw frame //
     src = {0, 104, BOSSHPG_WIDTH, 128};
     GrpSurface_Blit({BOSSHPG_END_X, 16}, SURFACE_ID::SYSTEM, src);
+
+    if (hpg.PhaseThresholdHp > 0 && hpg.Max > 0) {
+      const auto sep_x =
+          left +
+          static_cast<int32_t>(
+              (static_cast<uint64_t>(hpg.PhaseThresholdHp) * 30 * 8) / hpg.Max);
+      if (sep_x > left && sep_x < (left + 30 * 8)) {
+        GrpGeom->Lock();
+        GrpGeom->SetAlphaNorm(224);
+        GrpGeom->SetColor({5, 5, 5});
+        GrpGeom->DrawBoxA(sep_x, top, (sep_x + 3), bottom);
+        GrpGeom->Unlock();
+      }
+    }
+
+    if (hpg.TimerMax > 0) {
+      const int remain = std::min((hpg.TimerMax - hpg.TimerNow) / 60, 99);
+      if (remain >= 0) {
+        if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
+          Snd_SEPlay(SOUND_ID_SBLASER);
+        }
+        hpg.PrevTimerSeconds = remain;
+        GrpPut16(476, 0, std::format("{:>2}", remain).c_str());
+      }
+    }
   } break;
 
   case BHPG_DEAD:
