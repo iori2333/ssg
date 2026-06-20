@@ -55,7 +55,6 @@ void ItemManager::Move() {
   int l = 0;
 
   // Auto-collect items when player is above this height
-  constexpr int AUTO_COLLECT_Y = (120 * 64);
 
   // point = 100+(Players.GrazeCount())*100;
   const uint32_t point =
@@ -64,8 +63,8 @@ void ItemManager::Move() {
   for (uint16_t i = 0; i < count; i++) {
     auto *ip = &entities[indices[i]];
     if (!Players.IsBombActive()) {
-      if (Players.Y() < AUTO_COLLECT_Y ||
-          (Players.GrazeCount() > 100 && Players.GrazeWaitTime() > 128) ||
+      if (Players.Y() < STAR_COLLECT_LINE ||
+          Players.GrazeWaitTime() > STAR_COLLECT_EVADETIME ||
           ip->auto_collect) {
         // Player above collect line or auto-collect already active
         ip->auto_collect = true;

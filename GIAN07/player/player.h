@@ -43,9 +43,11 @@ inline constexpr auto MAID_TAMA_START = 18;
 inline constexpr auto MAID_MAIN_SHOT = 6;
 inline constexpr auto MAID_SUB_SHOT = 9;
 
-inline constexpr auto STAR_THRESHOLD_INIT = 300;
+inline constexpr auto STAR_THRESHOLD_INIT = 150;
 inline constexpr auto STAR_THRESHOLD_INCR = 150;
 inline constexpr auto STAR_EXTEND_LOOP = 3;
+inline constexpr auto STAR_COLLECT_LINE = 120 * 64;
+inline constexpr auto STAR_COLLECT_EVADETIME = 128;
 
 inline constexpr auto BOMB_RANK_DECR = 25;
 inline constexpr auto DEATH_RANK_DECR = 100;
