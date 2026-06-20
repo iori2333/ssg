@@ -190,3 +190,17 @@ set_target_properties(pack_tool PROPERTIES
 if(MSVC)
     target_compile_options(pack_tool PRIVATE /MP)
 endif()
+
+# ============================================================
+# Script tool (ECL/SCL disassembler/assembler)
+# ============================================================
+add_executable(script_tool
+    tools/script_tool.cpp
+)
+target_include_directories(script_tool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(script_tool PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+if(MSVC)
+    target_compile_options(script_tool PRIVATE /MP)
+endif()
