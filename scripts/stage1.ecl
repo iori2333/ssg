@@ -7,8 +7,8 @@
 .offset 5 0x01F6
 .offset 6 0x0226
 .offset 7 0x0277
-.offset 8 0x049A
-.offset 9 0x063B
+.offset 8 0x04B8
+.offset 9 0x0659
 
 .org 0x002C
 @script_0:
@@ -233,7 +233,8 @@
 .org 0x0277
 @script_7:
     SETUP hp=9150 score=1000000
-    STI jmp=@label_0323 vector=HP val=7350
+    STI jmp=@label_032D vector=HP val=7350
+    STI jmp=@label_0324 vector=TIMER val=1800
     ANM pattern=5 speed=0
     ANMEX pattern=7
     SPDA speed=64
@@ -243,7 +244,7 @@
     DAMAGE_ON
     MOVC dst=7 val=4
     SPDA speed=160
-.org 0x02AB
+.org 0x02B5
 @label_02AB:
     CALL jmp=@label_04A9
     NOP count=10
@@ -253,7 +254,7 @@
     DEGA angle=96
     TDEGA angle=48 dw=16
     CALL jmp=@script_8
-.org 0x02CC
+.org 0x02D6
 @label_02CC:
     TDEGR angle=4 dw=0
     ROL deg=2 count=32
@@ -267,7 +268,7 @@
     DEGA angle=32
     TDEGA angle=80 dw=16
     CALL jmp=@script_8
-.org 0x02FD
+.org 0x0307
 @label_02FD:
     TDEGR angle=-4 dw=0
     ROL deg=-2 count=32
@@ -275,16 +276,17 @@
     TAUTO interval=0
     DEC reg=7
     CMPC reg=7 val=0
-    JL jmp=@label_02AB
+    JMP jmp=@label_02AB
+@label_0324:
     SETUP hp=7350 score=1000000
-.org 0x0323
-@label_0323:
-    STI jmp=@label_0429 vector=HP val=1275
+@label_032D:
+    STI jmp=@label_043D vector=HP val=1275
+    STI jmp=@label_0434 vector=TIMER val=3600
     TAUTO interval=0
     TCLR
     MOVC dst=7 val=2
     MXYA x=319 y=110 count=60
-.org 0x033D
+.org 0x0351
 @label_033D:
     MXYA x=319 y=110 count=10
     CALL jmp=@label_04E3
@@ -334,11 +336,12 @@
     WAVX vx=128 amp=40 vd=3 count=42
     DEC reg=7
     CMPC reg=7 val=0
-    JL jmp=@label_033D
+    JMP jmp=@label_033D
+@label_0434:
     SETUP hp=1275 score=1000000
-.org 0x0429
-@label_0429:
+@label_043D:
     CLI vector=HP
+    STI jmp=@label_0488 vector=TIMER val=1800
     TAUTO interval=0
     TCLR
     MXYA x=319 y=80 count=60
@@ -347,7 +350,7 @@
     MOVC dst=2 val=16
     MOVC dst=4 val=50
     MOVC dst=7 val=5
-.org 0x0452
+.org 0x0470
 @label_0452:
     TDEGR angle=2 dw=0
     MOVR dst=0 src=4
@@ -366,14 +369,15 @@
     TNUMR n=1 ns=0
     DEC reg=7
     CMPC reg=7 val=0
-    JL jmp=@label_0452
+    JMP jmp=@label_0452
+@label_0488:
     SETUP hp=0 score=0  ; death marker
     TCLR
-.org 0x0492
+.org 0x04B0
 @label_0492:
     NOP count=100
     JMP jmp=@label_0492
-.org 0x049A
+.org 0x04B8
 @script_8:
     TCMD cmd=0
     TNUMA n=8 ns=1
@@ -382,14 +386,14 @@
     TCOL color=3
     TAUTO interval=10
     RET
-.org 0x04A9
+.org 0x04C7
 @label_04A9:
     TCMD cmd=1
     TNUMA n=12 ns=1
     TSPDA v=12 a=0
     TTYPE type=0
     TCOL color=17
-.org 0x04B5
+.org 0x04D3
 @label_04B5:
     PSE id=4
     TAMA
@@ -397,14 +401,14 @@
     NOP count=3
     LOOP jmp=@label_04B5 count=14
     RET
-.org 0x04C6
+.org 0x04E4
 @label_04C6:
     TCMD cmd=1
     TNUMA n=12 ns=1
     TSPDA v=12 a=0
     TTYPE type=0
     TCOL color=17
-.org 0x04D2
+.org 0x04F0
 @label_04D2:
     PSE id=4
     TAMA
@@ -412,14 +416,14 @@
     NOP count=3
     LOOP jmp=@label_04D2 count=14
     RET
-.org 0x04E3
+.org 0x0501
 @label_04E3:
     TCMD cmd=1
     TNUMA n=14 ns=1
     TSPDA v=20 a=-4
     TTYPE type=1
     TREP rep=55
-.org 0x04EF
+.org 0x050D
 @label_04EF:
     TCOL color=17
     TAMA
@@ -432,7 +436,7 @@
     TDEGR angle=-1 dw=0
     NOP count=5
     LOOP jmp=@label_04EF count=4
-.org 0x050C
+.org 0x052A
 @label_050C:
     TCOL color=17
     TAMA
@@ -446,14 +450,14 @@
     NOP count=5
     LOOP jmp=@label_050C count=4
     RET
-.org 0x052A
+.org 0x0548
 @label_052A:
     TCMD cmd=1
     TNUMA n=14 ns=1
     TSPDA v=20 a=-4
     TTYPE type=1
     TREP rep=55
-.org 0x0536
+.org 0x0554
 @label_0536:
     TCOL color=17
     TAMA
@@ -466,7 +470,7 @@
     TDEGR angle=1 dw=0
     NOP count=5
     LOOP jmp=@label_0536 count=4
-.org 0x0553
+.org 0x0571
 @label_0553:
     TCOL color=17
     TAMA
@@ -480,7 +484,7 @@
     NOP count=5
     LOOP jmp=@label_0553 count=4
     RET
-.org 0x0571
+.org 0x058F
 @label_0571:
     TCMD cmd=2
     TNUMA n=10 ns=1
@@ -490,7 +494,7 @@
     TCOL color=19
     TAUTO interval=6
     RET
-.org 0x0583
+.org 0x05A1
 @label_0583:
     TCMD cmd=10
     TDEGA angle=64 dw=80
@@ -498,7 +502,7 @@
     TSPDA v=206 a=0
     TTYPE type=0
     RET
-.org 0x0591
+.org 0x05AF
 @label_0591:
     DEGS
     LCMD cmd=0
@@ -516,7 +520,7 @@
     ADD dst=0 src=2
     ADD dst=1 src=2
     MOVC dst=2 val=5
-.org 0x05C8
+.org 0x05E6
 @label_05C8:
     MOVR dst=128 src=0
     LASER
@@ -528,7 +532,7 @@
     NOP count=1
     LOOP jmp=@label_05C8 count=16
     RET
-.org 0x05E3
+.org 0x0601
 @label_05E3:
     DEGS
     LCMD cmd=0
@@ -539,7 +543,7 @@
     LCOL color=0
     LTYPE type=0
     LWA w=192
-.org 0x05FE
+.org 0x061C
 @label_05FE:
     LASER
     PSE id=3
@@ -547,7 +551,7 @@
     NOP count=2
     LOOP jmp=@label_05FE count=20
     RET
-.org 0x060F
+.org 0x062D
 @label_060F:
     DEGS
     LCMD cmd=0
@@ -558,7 +562,7 @@
     LCOL color=0
     LTYPE type=0
     LWA w=192
-.org 0x062A
+.org 0x0648
 @label_062A:
     LASER
     PSE id=3
@@ -566,13 +570,13 @@
     NOP count=2
     LOOP jmp=@label_062A count=20
     RET
-.org 0x063B
+.org 0x0659
 @script_9:
     MOVC dst=0 val=98
     MOVC dst=2 val=4294967294
     CALL jmp=@label_0583
     SPDA speed=128
-.org 0x0651
+.org 0x066F
 @label_0651:
     TCOL color=1
     MOVC dst=1 val=64
@@ -589,7 +593,7 @@
     NOP count=1
     LOOP jmp=@label_0651 count=8
     NOP count=64
-.org 0x0686
+.org 0x06A4
 @label_0686:
     TCOL color=17
     MOVC dst=1 val=64

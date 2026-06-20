@@ -31,6 +31,9 @@ struct BossManager {
   void ClearCmd();
   void DrawHPG();
 
+  // Timer
+  void SetSCLTimeout(int32_t timeout_end);
+
   // HP
   void KillAll();
   uint32_t GetHPSum();

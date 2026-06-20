@@ -981,6 +981,62 @@ static bool cmd_asm_ecl(const char *in_file, const char *out_file) {
     std::vector<uint32_t> entry_offsets;
     std::vector<uint8_t> out;
     uint32_t current_pos = 0;
+    std::unordered_map<std::string, uint32_t> label_map;
+
+    // Prepass: collect all label positions from .org directives
+    {
+        uint32_t pp_pos = 0;
+        std::ifstream pp_ifs(in_file);
+        if (!pp_ifs) {
+            std::println(stderr, "Error: cannot open '{}' for prepass", in_file);
+            return false;
+        }
+        std::string pp_line;
+        int pp_lineno = 0;
+        while (std::getline(pp_ifs, pp_line)) {
+            pp_lineno++;
+            auto pp_tokens = tokenize_line(pp_line, pp_lineno);
+            if (pp_tokens.empty()) continue;
+            if (pp_tokens[0].kind == TokenKind::COMMENT) continue;
+            if (pp_tokens[0].kind == TokenKind::DIRECTIVE) {
+                if (pp_tokens[0].text == "org" && pp_tokens.size() >= 2 &&
+                    pp_tokens[1].kind == TokenKind::NUMBER) {
+                    pp_pos = static_cast<uint32_t>(pp_tokens[1].numval);
+                }
+                continue;
+            }
+            if (pp_tokens[0].kind == TokenKind::LABEL) {
+                label_map[pp_tokens[0].text] = pp_pos;
+                pp_tokens.erase(pp_tokens.begin());
+                // Estimate position after this line's instruction
+                if (!pp_tokens.empty() && pp_tokens[0].kind == TokenKind::MNEMONIC) {
+                    auto pp_it = mnem_to_op.find(pp_tokens[0].text);
+                    if (pp_it != mnem_to_op.end()) {
+                        auto *pp_inf = ecl_op_info(pp_it->second);
+                        if (pp_inf) pp_pos += pp_inf->length;
+                    }
+                }
+                continue;
+            }
+            if (pp_tokens[0].kind == TokenKind::MNEMONIC) {
+                auto pp_it = mnem_to_op.find(pp_tokens[0].text);
+                if (pp_it != mnem_to_op.end()) {
+                    auto *pp_inf = ecl_op_info(pp_it->second);
+                    if (pp_inf) pp_pos += pp_inf->length;
+                    else pp_pos++;
+                } else if (pp_tokens[0].text == ".byte") {
+                    for (size_t tbi = 1; tbi < pp_tokens.size(); tbi++)
+                        if (pp_tokens[tbi].kind == TokenKind::NUMBER) pp_pos++;
+                } else {
+                    pp_pos++;
+                }
+            }
+        }
+    }
+
+    // Rewind input for main pass
+    ifs.clear();
+    ifs.seekg(0);
 
     std::string raw_line;
     int lineno = 0;
@@ -1022,8 +1078,9 @@ static bool cmd_asm_ecl(const char *in_file, const char *out_file) {
             continue;
         }
 
-        // Skip labels
+        // Record labels
         if (tokens[0].kind == TokenKind::LABEL) {
+            label_map[tokens[0].text] = current_pos;
             tokens.erase(tokens.begin());
             if (tokens.empty() || tokens[0].kind == TokenKind::COMMENT) continue;
         }
@@ -1081,7 +1138,10 @@ static bool cmd_asm_ecl(const char *in_file, const char *out_file) {
                     auto lit = arg_labels.find(arg.name);
                     if (lit != arg_labels.end()) {
                         std::string lname = lit->second;
-                        if (lname.starts_with("label_")) {
+                        auto mit = label_map.find(lname);
+                        if (mit != label_map.end()) {
+                            v = mit->second;
+                        } else if (lname.starts_with("label_")) {
                             v = std::strtoul(lname.c_str() + 6, nullptr, 16);
                         } else if (lname.starts_with("script_")) {
                             int si = std::atoi(lname.c_str() + 7);
