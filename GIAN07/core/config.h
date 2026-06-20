@@ -52,6 +52,10 @@ constexpr const auto PRACTICE_OFF = 0;
 constexpr const auto PRACTICE_AUTOBOMB = 1;
 constexpr const auto PRACTICE_INVINCIBLE = 2;
 
+// AutoPlay
+constexpr const auto AUTOPLAY_OFF = 0;
+constexpr const auto AUTOPLAY_ON = 1;
+
 bool ValidateAlways(auto v) { return true; };
 template <typename T, T Max> constexpr bool ValidateBelow(T v) {
   return (v <= Max);
@@ -112,6 +116,9 @@ struct CONFIG_DATA {
 
   // Practice mode: OFF/AUTOBOMB/INVINCIBLE
   OPTION<uint8_t> PracticeMode = {PRACTICE_OFF, U8Below<PRACTICE_INVINCIBLE>};
+
+  // AutoPlay: OFF/ON
+  OPTION<uint8_t> AutoPlay = {AUTOPLAY_OFF, U8Below<AUTOPLAY_ON>};
 
   // Graphics settings
   OPTION<uint8_t> DeviceID = {0}; // Device index

@@ -25,6 +25,7 @@ private:
   static void FnBombStock(MenuController &, int_fast8_t);
   static void FnDifficulty(MenuController &, int_fast8_t);
   static void FnPracticeMode(MenuController &, int_fast8_t);
+  static void FnAutoPlay(MenuController &, int_fast8_t);
 #ifdef PBG_DEBUG
   static void FnMsgDisplay(MenuController &, int_fast8_t);
   static void FnStgSelect(MenuController &, int_fast8_t);
@@ -32,7 +33,7 @@ private:
   static void FnDemo(MenuController &, int_fast8_t);
 #endif
 
-  std::array<MenuText, 8> titles_;
+  std::array<MenuText, 9> titles_;
   std::vector<MenuItem> items_;
   MenuDef menu_;
 };

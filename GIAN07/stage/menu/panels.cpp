@@ -56,19 +56,20 @@ static MenuItem HRuleItem = {"-------------------"};
 // ---------------------------------------------------------------------------
 
 DifficultyPanel::DifficultyPanel() {
-  items_.reserve(13);
+  items_.reserve(14);
   items_.emplace_back(titles_[0].Lit(), "残り人数?を設定します", FnPlayerStock);
   items_.emplace_back(titles_[1].Lit(), "ボムの数を設定します", FnBombStock);
   items_.emplace_back(titles_[2].Lit(), "難易度を設定します", FnDifficulty);
   items_.emplace_back(titles_[3].Lit(), "练习模式を設定します", FnPracticeMode);
+  items_.emplace_back(titles_[4].Lit(), "オートプレイを設定します", FnAutoPlay);
 #ifdef PBG_DEBUG
   items_.emplace_back(HRuleItem);
-  items_.emplace_back(titles_[4].Lit(), "[DebugMode] 画面に情報を表示するか",
+  items_.emplace_back(titles_[5].Lit(), "[DebugMode] 画面に情報を表示するか",
                       FnMsgDisplay);
-  items_.emplace_back(titles_[5].Lit(), "[DebugMode] ステージセレクト",
+  items_.emplace_back(titles_[6].Lit(), "[DebugMode] ステージセレクト",
                       FnStgSelect);
-  items_.emplace_back(titles_[6].Lit(), "[DebugMode] 当たり判定", FnHit);
-  items_.emplace_back(titles_[7].Lit(), "[DebugMode] デモプレイセーブ", FnDemo);
+  items_.emplace_back(titles_[7].Lit(), "[DebugMode] 当たり判定", FnHit);
+  items_.emplace_back(titles_[8].Lit(), "[DebugMode] デモプレイセーブ", FnDemo);
 #endif
   items_.emplace_back(SubmenuExitItem);
   menu_ = MenuDef(std::span(items_),
@@ -91,6 +92,10 @@ void DifficultyPanel::FnPracticeMode(MenuController &, int_fast8_t delta) {
   RingStep(ConfigDat.PracticeMode.v, delta, PRACTICE_OFF, PRACTICE_INVINCIBLE);
 }
 
+void DifficultyPanel::FnAutoPlay(MenuController &, int_fast8_t delta) {
+  RingStep(ConfigDat.AutoPlay.v, delta, AUTOPLAY_OFF, AUTOPLAY_ON);
+}
+
 #ifdef PBG_DEBUG
 void DifficultyPanel::FnMsgDisplay(MenuController &, int_fast8_t) {
   DebugDat.MsgDisplay = !DebugDat.MsgDisplay;
@@ -111,16 +116,19 @@ void DifficultyPanel::Refresh(MenuController &, bool) {
                                                "Lunatic"};
   static constexpr const char *const practice[3] = {" Off ", "AutoB", "Invin"};
 
+  static constexpr const char *const autoplay_str[2] = {" Off ", " On  "};
+
   titles_[0].Format("PlayerStock [ {} ]", ConfigDat.PlayerStock.v + 1);
   titles_[1].Format("BombStock   [ {} ]", ConfigDat.BombStock.v);
   titles_[2].Format("Difficulty[{}]", dif[ConfigDat.GameLevel.v]);
   titles_[3].Format("PracticeMode[{}]", practice[ConfigDat.PracticeMode.v]);
+  titles_[4].Format("AutoPlay    [{}]", autoplay_str[ConfigDat.AutoPlay.v]);
 
 #ifdef PBG_DEBUG
-  titles_[4].Format("DebugOut  {}", CHOICE_OFF_ON[DebugDat.MsgDisplay]);
-  titles_[5].Format("StgSelect [  {}  ]", DebugDat.StgSelect);
-  titles_[6].Format("Hit       {}", CHOICE_OFF_ON[DebugDat.Hit]);
-  titles_[7].Format("DemoSave  {}", CHOICE_OFF_ON[DebugDat.DemoSave]);
+  titles_[5].Format("DebugOut  {}", CHOICE_OFF_ON[DebugDat.MsgDisplay]);
+  titles_[6].Format("StgSelect [  {}  ]", DebugDat.StgSelect);
+  titles_[7].Format("Hit       {}", CHOICE_OFF_ON[DebugDat.Hit]);
+  titles_[8].Format("DemoSave  {}", CHOICE_OFF_ON[DebugDat.DemoSave]);
 #endif
 
   for (size_t i = 0; i < items_.size() - 1; i++) {
