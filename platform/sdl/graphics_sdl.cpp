@@ -924,6 +924,10 @@ void GrpSurface_BlitOpaque(WINDOW_POINT topleft, SURFACE_ID sid,
   SDL_SetTextureBlendMode(tex, prev);
 }
 
+void GrpSurface_SetColorMod(SURFACE_ID sid, uint8_t r, uint8_t g, uint8_t b) {
+  SDL_SetTextureColorMod(Textures[sid], r, g, b);
+}
+
 #ifdef WIN32
 // Win32 GDI text rendering bridge
 // -------------------------------
