@@ -216,7 +216,6 @@ MID_FLAGS Mid_SetFlags(MID_FLAGS flags_new) {
   return Mid_Flags;
 }
 
-#ifdef SUPPORT_MIDI_BACKEND
 void Mid_Play(void) {
   if (!MidBackend_DeviceName() || Mid_Seq.tracks.empty() ||
       (Mid_Dev.state == MID_BACKEND_STATE::PLAY)) {
@@ -297,7 +296,6 @@ void Mid_Resume(void) {
   MidBackend_StartTimer();
   Mid_Dev.state = MID_BACKEND_STATE::PLAY;
 }
-#endif
 
 // Initialize various tables
 void Mid_TableInit(void) {
@@ -503,11 +501,9 @@ VOLUME MID_DEVICE::VolumeFor(decltype(MIDI_CHANNELS) ch) const {
 }
 
 void MID_DEVICE::ApplyVolume(void) const {
-#ifdef SUPPORT_MIDI_BACKEND
   for (auto ch = decltype(MIDI_CHANNELS){0}; ch < MIDI_CHANNELS; ch++) {
     MidBackend_Out((0xb0 + ch), 0x07, VolumeFor(ch));
   }
-#endif
 }
 
 void MID_DEVICE::FadeIO(MID_REALTIME delta) {
@@ -612,7 +608,6 @@ void Mid_Proc(MID_REALTIME delta) {
 }
 
 void MID_EVENT::Send(void) const {
-#ifdef SUPPORT_MIDI_BACKEND
   switch (kind) {
   case MID_EVENT_KIND::SYSEX: { // SysEx
     auto *msg = static_cast<uint8_t *>(_malloca(extra_data.size() + 1));
@@ -684,7 +679,6 @@ void MID_EVENT::Send(void) const {
     MidBackend_Out(status, extra_data[0]);
     break;
   }
-#endif
 }
 
 void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {

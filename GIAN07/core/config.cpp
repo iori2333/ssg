@@ -130,6 +130,7 @@ static bool TOMLLoad(const char *fn) {
     LoadToml(*sec, "se_volume", ConfigDat.se_volume, ValidVolume);
     LoadToml(*sec, "bgm_volume", ConfigDat.bgm_volume, ValidVolume);
     LoadToml(*sec, "bgm_pack", ConfigDat.bgm_pack);
+    LoadToml(*sec, "soundfont", ConfigDat.soundfont);
     bool midi_fix = false;
     LoadToml(*sec, "midi_fix_sysex_bugs", midi_fix);
     if (midi_fix) {
@@ -202,6 +203,7 @@ static void TOMLSave(const char *fn) {
     sec.emplace("se_volume", ConfigDat.se_volume);
     sec.emplace("bgm_volume", ConfigDat.bgm_volume);
     sec.emplace("bgm_pack", ConfigDat.bgm_pack);
+    sec.emplace("soundfont", ConfigDat.soundfont);
     sec.emplace("midi_fix_sysex_bugs",
                 (ConfigDat.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS) !=
                     MID_FLAGS::NONE);

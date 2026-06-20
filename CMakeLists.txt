@@ -33,7 +33,7 @@ if(WIN32)
         # Windows system libraries
         set(WIN32_SYSTEM_LIBS
             advapi32 imm32 gdi32 kernel32 ole32 oleaut32
-            setupapi user32 uuid version winmm shell32
+            setupapi user32 uuid version shell32
         )
     endif()
 elseif(UNIX)
