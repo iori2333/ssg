@@ -113,6 +113,9 @@ bool GrpSurface_Blit(WINDOW_POINT topleft, SURFACE_ID sid,
 void GrpSurface_BlitOpaque(WINDOW_POINT topleft, SURFACE_ID sid,
                            const PIXEL_LTRB &src);
 
+// Temporarily tint all subsequent blits from [sid].
+void GrpSurface_SetColorMod(SURFACE_ID sid, uint8_t r, uint8_t g, uint8_t b);
+
 #ifdef WIN32
 // Win32 GDI text rendering bridge
 // -------------------------------

@@ -489,7 +489,13 @@ void BossManager::DrawHPG() {
           Snd_SEPlay(SOUND_ID_SBLASER);
         }
         hpg.PrevTimerSeconds = remain;
+        if (remain < 10) {
+          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 64, 64);
+        }
         GrpPut16(476, 0, std::format("{:>2}", remain).c_str());
+        if (remain < 10) {
+          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 255, 255);
+        }
       }
     }
   } break;
