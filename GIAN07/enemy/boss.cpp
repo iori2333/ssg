@@ -300,6 +300,7 @@ void BossManager::HPG_Open(uint32_t max) {
 
   hpg.State = BHPG_OPEN1;
   hpg.Count = 0;
+  hpg.SCLTimerEnd = -1;
 
   // Specify initial X for display (uses random but...)
   for (i = 0; i < BOSSHPG_HEIGHT; i++) {
@@ -484,6 +485,25 @@ void BossManager::DrawHPG() {
 
     if (hpg.TimerMax > 0) {
       const int remain = std::min((hpg.TimerMax - hpg.TimerNow) / 60, 99);
+      if (remain >= 0) {
+        if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
+          Snd_SEPlay(SOUND_ID_SBLASER);
+        }
+        hpg.PrevTimerSeconds = remain;
+        if (remain < 10) {
+          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 64, 64);
+        }
+        GrpPut16(476, 0, std::format("{:>2}", remain).c_str());
+        if (remain < 10) {
+          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 255, 255);
+        }
+      }
+    } else if (hpg.SCLTimerEnd > 0) {
+      const int remain =
+          std::min((hpg.SCLTimerEnd -
+                    static_cast<int32_t>(GameState.game_count)) /
+                       60,
+                   99);
       if (remain >= 0) {
         if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
           Snd_SEPlay(SOUND_ID_SBLASER);
@@ -864,6 +884,11 @@ void BossManager::BitCommand(EnemyData *e, uint8_t Cmd, int Param) {
   }
 
   BitSendCommand(Cmd, Param);
+}
+
+// Set the SCL-level timeout for countdown fallback
+void BossManager::SetSCLTimeout(int32_t timeout_end) {
+  hpg.SCLTimerEnd = timeout_end;
 }
 
 // Return remaining bit count

@@ -45,14 +45,15 @@ cp bin/ENEMY.DAT bin/ENEMY_ORIG.DAT
 
 ENEMY.DAT 包含 48 个条目，每个条目经 LZSS 压缩：
 
-| 条目 | 用途 |
-|------|------|
-| 000–005 | Stage 1–6 ECL（敌方脚本） |
-| 006–011 | Stage 1–6 SCL（关卡脚本） |
-| 012–017 | Stage 1–6 地图数据 |
-| 018–023 | Stage 1–6 名称 ECL |
-| 024–026 | Extra Stage（ECL/SCL/地图） |
-| 047 | Ending SCL |
+| 条目 | 类型 | 用途 | 加载位置 (LOADER.cpp) |
+|------|------|------|----------------------|
+| 000–005 | ECL | Stage 1–6 敌方脚本 | `stage + 0 - 1` (行 684) |
+| 006–011 | SCL | Stage 1–6 关卡脚本 | `stage + 6 - 1` (行 689) |
+| 012–017 | Map | Stage 1–6 地图数据 | `stage + 12 - 1` (行 694) |
+| 018–023 | Demo | Stage 1–6 Demo 回放（录制的玩家输入帧） | `stage - 1 + 18` (行 1286) |
+| 024–026 | ECL/SCL/Map | Extra Stage | 固定 24/25/26 (行 656–666) |
+| 027–046 | Text | 音乐室评论（20 首曲目，Shift-JIS） | `27 + no` (行 1282) |
+| 047 | SCL | Ending 脚本 | 固定 47 (行 671) |
 
 ---
 
@@ -209,4 +210,81 @@ rm -rf work/
 恢复原始数据：
 ```sh
 cp bin/ENEMY_ORIG.DAT bin/ENEMY.DAT
+```
+
+---
+
+## script_tool — ECL/SCL 反编译 / 编译器
+
+将二进制 ECL/SCL 脚本转换为可读的类汇编文本，并可重新编译回二进制。完整往返——反编译后重新编译的二进制与原文件逐字节一致。
+
+### 构建
+
+包含在标准 CMake 构建中。输出 `build/bin/script_tool(.exe)`。
+
+### 用法
+
+```sh
+script_tool disasm-scl <in_binary> <out_text>
+script_tool asm-scl   <in_text> <out_binary>
+script_tool disasm-ecl <in_binary> <out_text>
+script_tool asm-ecl   <in_text> <out_binary>
+```
+
+### SCL 文本格式
+
+命名操作数，每个指令一行：
+
+```
+TIME frame=1800
+ENEMY x=100 y=200 id=5
+EFC type=WARN
+MSG "Hello World"
+MWOPEN
+KEY
+BOSSDEAD
+STAGECLEAR
+END
+```
+
+非 ASCII 字节使用 `\xNN` 转义。EFC 类型使用符号名（WARN、STG2BOSS 等）。
+
+### ECL 文本格式
+
+使用 `.header`、`.offset`、`.org` 指令保留精确的二进制布局。`@label_XXXX` 引用跳转目标：
+
+```
+.header 10
+.offset 0 0x002C
+.offset 1 0x00FC
+
+.org 0x002C
+@script_0:
+    SETUP hp=8000 score=5000
+    STI jmp=@label_00DC vector=HP val=150
+    ANM pattern=0 speed=16
+    JMP jmp=@script_1
+```
+
+STI vector 类型：`BOSSLEFT`（剩余 Boss 数量）、`HP`（血量阈值）、`TIMER`（帧数）、`BITLEFT`。
+
+### 完整工作流示例
+
+```sh
+# 1. 解包 ENEMY.DAT
+pack_tool extract bin/ENEMY.DAT work/
+
+# 2. 反编译所有脚本
+script_tool disasm-scl work/006.bin work/006.scl
+script_tool disasm-ecl work/000.bin work/000.ecl
+
+# 3. 编辑文本文件...
+vim work/006.scl work/000.ecl
+
+# 4. 编译回二进制
+script_tool asm-scl work/006.scl work/006.bin
+script_tool asm-ecl work/000.ecl work/000.bin
+
+# 5. 打包回 ENEMY.DAT
+pack_tool pack work/ bin/ENEMY.DAT
 ```

@@ -1,0 +1,83 @@
+    TIME frame=0
+    TIME frame=60
+    MUSIC id=18
+    TIME frame=300
+    NPG
+    MSG "就这样，ＶＩＶＩＴ的“差事”结束了……"
+    MSG "本以为是敌人，"
+    MSG "原来是主人为了测试我的性能派出的刺客。"
+    TIME frame=660
+    FACE id=2
+    NPG
+    MSG "盖茨先生挺看好我的，"
+    MSG "对我说“加入到我的部队来吧”。"
+    TIME frame=920
+    FACE id=1
+    NPG
+    MSG "小梅和小冥，实际上是很好的孩子。"
+    MSG "今天也约好了要一起去买东西。"
+    TIME frame=1200
+    FACE id=3
+    NPG
+    MSG "对了对了，玛莉小姐，果真是个虐待狂啊。"
+    MSG "自那时起已经来了4回了……"
+    TIME frame=1470
+    NPG
+    STAFF id=134
+    TIME frame=1770
+    EFC type=WARN
+    TIME frame=1820
+    STAFF id=128
+    STAFF id=0
+    FACE id=4
+    NPG
+    MSG "而我……ＶＩＶＩＴ。"
+    TIME frame=2350
+    NPG
+    MSG "我的能力得到了很高的评价。"
+    MSG "不过，在下一轮的新机体生产线上，是不会有我的廉价版出现的。"
+    STAFF id=130
+    STAFF id=2
+    STAFF id=1
+    STAFF id=0
+    STAFF id=5
+    STAFF id=4
+    MSG "应该是因为我和大小姐一模一样，主人不愿意看到我被作为商品而出售吧。"
+    TIME frame=2860
+    STAFF id=129
+    STAFF id=1
+    FACE id=0
+    NPG
+    MSG "大小姐……"
+    MSG "和我一模一样的……"
+    MSG "非常温柔的大小姐……"
+    TIME frame=3380
+    STAFF id=131
+    STAFF id=2
+    STAFF id=0
+    TIME frame=3880
+    STAFF id=132
+    STAFF id=3
+    STAFF id=4
+    FACE id=5
+    NPG
+    MSG "难怪主人竭尽所能也要救出大小姐。"
+    TIME frame=4370
+    NPG
+    MSG "我现在，以女仆机器人的身份，为主人尽忠效力。"
+    MSG "带着对生父的感激之情……"
+    TIME frame=4790
+    NPG
+    MSG "“喂——Viv——”啊，主人在叫我。"
+    TIME frame=5030
+    NPG
+    MSG "“有什么事啊～？”"
+    TIME frame=5158
+    MSG "“是这样的，我有事想拜托你……”"
+    TIME frame=5398
+    NPG
+    MSG "“诶，又有差事了吗？”"
+    MSG "　　　　- Dancing Shadow Workshop 舞影工作室 2010年4月汉化 -"
+    MSG "程序：258921／翻译：programme、夜雲命、humanxx／数据写入：洛城东华"
+    TIME frame=5698
+    END

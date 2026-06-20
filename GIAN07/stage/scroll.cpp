@@ -217,6 +217,50 @@ static void enemy_set() {
       const auto id = cmd[1 + 2 + 2];      // Boss ID
       Bosses.Set(x, y, id);
       Enemies.scl_now += (1 + 2 + 2 + 1); // cmd+x+y+id
+
+      // Scan SCL ahead for timeout target
+      const auto *scl_end =
+          Enemies.scl_head.data() + Enemies.scl_head.size();
+      const uint8_t *scan = Enemies.scl_now;
+      int32_t scl_timeout = -1;
+      while (scan < scl_end) {
+        const uint8_t op = scan[0];
+        if (op == SCL_BOSSDEAD || op == SCL_WAITEX ||
+            op == SCL_STAGECLEAR || op == SCL_GAMECLEAR ||
+            op == SCL_END) {
+          break;
+        }
+        if (op == SCL_TIME) {
+          scl_timeout = static_cast<int32_t>(U32LEAt(&scan[1]));
+          scan += 5;
+        } else if (op == SCL_ENEMY || op == SCL_BOSS) {
+          scan += 6;
+        } else if (op == SCL_SSP) {
+          scan += 3;
+        } else if (op == SCL_EFC) {
+          scan += 2;
+        } else if (op == SCL_MSG) {
+          scan++;
+          while (scan < scl_end && *scan != 0)
+            scan++;
+          if (scan < scl_end)
+            scan++;
+        } else if (op == SCL_MUSIC || op == SCL_FACE) {
+          scan += 2;
+        } else if (op == SCL_LOADFACE) {
+          scan += 3;
+        } else if (op == SCL_STAFF) {
+          scan += 2;
+        } else {
+          scan++; // MWOPEN, MWCLOSE, NPG, KEY, MAPPALETTE,
+                  // DELENEMY, ENEMYPALETTE, EXTRACLEAR,
+                  // STAGECLEAR/GAMECLEAR/BOSSDEAD/END(handled above),
+                  // unknown
+        }
+      }
+      if (scl_timeout > 0) {
+        Bosses.SetSCLTimeout(scl_timeout);
+      }
     } break;
 
     case SCL_BOSSDEAD: // Force destroy boss (Level2 command only)

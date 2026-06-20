@@ -1,0 +1,432 @@
+    TIME frame=0
+    LOADFACE surf=0 file=0
+    LOADFACE surf=1 file=1
+    LOADFACE surf=2 file=7
+    EFC type=STG6RASTER
+    TIME frame=50
+    MWOPEN
+    NPG
+    FACE id=6
+    TIME frame=70
+    MSG "[主人]"
+    MSG "  数十年前，"
+    MSG "  我和女儿在对仙人掌能源进行"
+    MSG "  研究的时候，"
+    TIME frame=190
+    NPG
+    TIME frame=210
+    MSG "[主人]"
+    MSG "  能量暴走了，"
+    MSG "  女儿她…"
+    MSG "  被关在了这个异空间里。"
+    TIME frame=330
+    NPG
+    FACE id=0
+    TIME frame=350
+    MSG "[VIVIT]"
+    MSG "  什么啊…这里是。"
+    TIME frame=470
+    NPG
+    TIME frame=490
+    MSG "[VIVIT]"
+    MSG "  又冷……又可怕。"
+    TIME frame=610
+    NPG
+    TIME frame=630
+    MSG "[VIVIT]"
+    MSG "  但是……"
+    TIME frame=750
+    MWCLOSE
+    MUSIC id=11
+    TIME frame=840
+    TIME frame=890
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=940
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=990
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1040
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1090
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1140
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1190
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1240
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1290
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1340
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1350
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1360
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1370
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1380
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1390
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1400
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1410
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1420
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1430
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1440
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1450
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1460
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1510
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1560
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1610
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1620
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1630
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1640
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1650
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1660
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1670
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1680
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1690
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1700
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1710
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1760
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1810
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1860
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=1870
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1880
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1890
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1900
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1910
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1920
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1930
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1940
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1950
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1960
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1970
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=1980
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2030
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2080
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2130
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2140
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2150
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2160
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2170
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2180
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2190
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2200
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2210
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2220
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2230
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2240
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2250
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2300
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2350
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2400
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2410
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2420
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2430
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2440
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2450
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2460
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2470
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2480
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2490
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2500
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2550
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2600
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2650
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2660
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2670
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2680
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2690
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2700
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2710
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2720
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2730
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2740
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2750
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2760
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2770
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2820
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2870
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2920
+    ENEMY x=-30000 y=-10 id=18
+    TIME frame=2930
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2940
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2950
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2960
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2970
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2980
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=2990
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3000
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3010
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3020
+    ENEMY x=-30000 y=-10 id=20
+    TIME frame=3140
+    ENEMY x=319 y=-10 id=19
+    TIME frame=3360
+    EFC type=WARN
+    TIME frame=3580
+    EFC type=WARNSTOP
+    TIME frame=3630
+    MWOPEN
+    FACE id=12
+    TIME frame=3650
+    MSG "[VIVIT-captured-]"
+    MSG "  ……"
+    TIME frame=3770
+    NPG
+    FACE id=3
+    TIME frame=3790
+    MSG "[VIVIT]"
+    MSG "  什么呀……这个。"
+    MSG "  到底是怎么回事？"
+    MSG "  主人！！！！　"
+    TIME frame=3910
+    NPG
+    FACE id=6
+    TIME frame=3930
+    MSG "[主人]"
+    MSG "  ……"
+    MSG "  ……"
+    MSG "  就是这样。"
+    TIME frame=4050
+    TIME frame=4070
+    MSG "  那就是我的女儿……"
+    MSG "  被能量所侵蚀，"
+    MSG "  失去自我的存在……"
+    TIME frame=4190
+    NPG
+    FACE id=13
+    TIME frame=4210
+    MSG "[VIVIT-captured-]"
+    MSG "  救救…我……"
+    TIME frame=4330
+    NPG
+    FACE id=0
+    TIME frame=4350
+    MSG "[VIVIT]"
+    MSG "  我已经一头雾水了！"
+    MSG "  为什么，和我一摸一样啊！？"
+    TIME frame=4470
+    NPG
+    FACE id=6
+    TIME frame=4490
+    MSG "[主人]"
+    MSG "  ＶＩＶ……"
+    MSG "  请实现我的梦想！"
+    MSG "  拯救我的女儿！！"
+    TIME frame=4610
+    NPG
+    FACE id=12
+    TIME frame=4630
+    MSG "[VIVIT-captured-]"
+    MSG "  ……"
+    MSG "  ……"
+    MSG "  ……"
+    TIME frame=4750
+    NPG
+    FACE id=0
+    TIME frame=4770
+    MSG "[VIVIT]"
+    MSG "  我明白了。"
+    MSG "  我会拯救她的。"
+    TIME frame=4890
+    NPG
+    FACE id=12
+    TIME frame=4910
+    MSG "[VIVIT-captured-]"
+    MSG "  ……"
+    MSG "  解放吧，人类！！"
+    TIME frame=5030
+    MWCLOSE
+    MUSIC id=12
+    BOSS x=319 y=-200 id=0
+    WAITEX cond=0 opt=0
+    TIME frame=5080
+    MWOPEN
+    FACE id=13
+    TIME frame=5100
+    MSG "[VIVIT-captured-]"
+    MSG "  呀啊啊啊啊啊啊啊啊！"
+    TIME frame=5220
+    NPG
+    FACE id=0
+    TIME frame=5240
+    MSG "[VIVIT]"
+    MSG "  啊啊，主人。"
+    MSG "  大小姐她……很痛苦。"
+    TIME frame=5360
+    MWCLOSE
+    EFC type=WHITEIN
+    TIME frame=5392
+    EFC type=WHITEOUT
+    EFC type=STG6CUBE
+    MUSIC id=13
+    BOSS x=319 y=-200 id=9
+    WAITEX cond=0 opt=0
+    TIME frame=5442
+    MWOPEN
+    FACE id=12
+    TIME frame=5462
+    MSG "[VIVIT-captured-]"
+    MSG "  名为人类者……"
+    MSG "  所创造之物啊。"
+    TIME frame=5582
+    NPG
+    MSG "[VIVIT-captured-]"
+    MSG "  解放吧。"
+    TIME frame=5702
+    MWCLOSE
+    EFC type=WHITEIN
+    TIME frame=5734
+    EFC type=WHITEOUT
+    EFC type=STG6RNDECL
+    MUSIC id=14
+    BOSS x=319 y=-200 id=16
+    WAITEX cond=0 opt=0
+    TIME frame=5784
+    MWOPEN
+    FACE id=13
+    TIME frame=5804
+    MSG "[VIVIT-captured-]"
+    MSG "  嗷噢噢噢噢噢噢——"
+    TIME frame=5924
+    NPG
+    FACE id=6
+    TIME frame=5944
+    MSG "[主人]"
+    MSG "  ＶＩＶＩＴ啊。"
+    MSG "  谢谢你。"
+    TIME frame=6064
+    NPG
+    FACE id=0
+    TIME frame=6084
+    MSG "[VIVIT]"
+    MSG "  主人……"
+    MSG "  不过，大小姐她……"
+    MSG "  大小姐她没事么？"
+    TIME frame=6204
+    NPG
+    FACE id=14
+    TIME frame=6224
+    MSG "[VIVIT-captured-]"
+    MSG "  呜，唔…"
+    TIME frame=6344
+    NPG
+    FACE id=0
+    TIME frame=6364
+    MSG "[VIVIT]"
+    MSG "  啊啊！"
+    MSG "  主人！主人！"
+    MSG "  她没事，大小姐她没事！"
+    TIME frame=6484
+    NPG
+    FACE id=6
+    TIME frame=6504
+    MSG "[主人]"
+    MSG "  我的女儿被拯救出来了。"
+    MSG "  谢谢你，ＶＩＶ。"
+    MSG "  来，回家吧。"
+    TIME frame=6624
+    NPG
+    FACE id=1
+    TIME frame=6644
+    MSG "[VIVIT]"
+    MSG "  是！！"
+    TIME frame=6764
+    MWCLOSE
+    EFC type=MUSICFADE
+    EFC type=CFADEOUT
+    TIME frame=6964
+    GAMECLEAR
+    END

@@ -1,0 +1,278 @@
+    TIME frame=0
+    LOADFACE surf=0 file=0
+    LOADFACE surf=1 file=1
+    LOADFACE surf=2 file=6
+    TIME frame=50
+    MWOPEN
+    FACE id=0
+    TIME frame=70
+    MSG "[VIVIT]"
+    MSG "  这里是？"
+    MSG "  在静止卫星轨道上有这种东西……"
+    MSG "  什么时候建成的啊……？"
+    TIME frame=190
+    MWCLOSE
+    TIME frame=240
+    MWOPEN
+    FACE id=6
+    TIME frame=260
+    MSG "[主人]"
+    MSG "  啊啊，太好了……太好了。"
+    MSG "  能够来到这一步。"
+    MSG "  来吧，再最后努力一把！"
+    TIME frame=380
+    NPG
+    FACE id=2
+    TIME frame=400
+    MSG "[VIVIT]"
+    MSG "  哎？"
+    TIME frame=520
+    NPG
+    FACE id=6
+    TIME frame=540
+    MSG "[主人]"
+    MSG "  放心吧。"
+    MSG "  在这里面有你，还有我"
+    MSG "  所追寻的东西在。"
+    TIME frame=660
+    NPG
+    FACE id=0
+    TIME frame=680
+    MSG "[VIVIT]"
+    MSG "  主人，这不是……"
+    MSG "  这不是简单的……跑腿啊！"
+    TIME frame=800
+    NPG
+    FACE id=6
+    TIME frame=820
+    MSG "[主人]"
+    MSG "  来吧！"
+    MSG "  将你！和我的！希望！"
+    MSG "  收入手中！！"
+    TIME frame=940
+    MWCLOSE
+    TIME frame=980
+    MUSIC id=9
+    TIME frame=1080
+    ENEMY x=419 y=0 id=3
+    TIME frame=1120
+    ENEMY x=128 y=139 id=5
+    TIME frame=1130
+    ENEMY x=128 y=139 id=5
+    TIME frame=1140
+    ENEMY x=128 y=139 id=5
+    TIME frame=1150
+    ENEMY x=128 y=139 id=5
+    TIME frame=1160
+    ENEMY x=128 y=139 id=5
+    TIME frame=1170
+    ENEMY x=128 y=139 id=5
+    TIME frame=1180
+    ENEMY x=128 y=139 id=5
+    TIME frame=1190
+    ENEMY x=128 y=139 id=5
+    TIME frame=1200
+    ENEMY x=128 y=139 id=5
+    TIME frame=1210
+    ENEMY x=128 y=139 id=5
+    TIME frame=1220
+    ENEMY x=128 y=139 id=5
+    TIME frame=1230
+    ENEMY x=128 y=139 id=5
+    TIME frame=1240
+    ENEMY x=128 y=139 id=5
+    TIME frame=1250
+    ENEMY x=128 y=139 id=5
+    TIME frame=1260
+    ENEMY x=128 y=139 id=5
+    TIME frame=1270
+    ENEMY x=128 y=139 id=5
+    TIME frame=1350
+    ENEMY x=319 y=32 id=0
+    TIME frame=1380
+    ENEMY x=349 y=32 id=0
+    ENEMY x=289 y=32 id=0
+    TIME frame=1410
+    ENEMY x=379 y=32 id=0
+    ENEMY x=259 y=32 id=0
+    TIME frame=1440
+    ENEMY x=409 y=32 id=0
+    ENEMY x=229 y=32 id=0
+    TIME frame=1470
+    ENEMY x=439 y=32 id=0
+    ENEMY x=199 y=32 id=0
+    TIME frame=1500
+    ENEMY x=469 y=32 id=0
+    ENEMY x=169 y=32 id=0
+    TIME frame=1530
+    ENEMY x=499 y=32 id=0
+    ENEMY x=139 y=32 id=0
+    TIME frame=1560
+    ENEMY x=529 y=32 id=0
+    ENEMY x=109 y=32 id=0
+    TIME frame=1660
+    ENEMY x=219 y=0 id=3
+    ENEMY x=419 y=0 id=3
+    TIME frame=1740
+    ENEMY x=160 y=209 id=0
+    ENEMY x=479 y=209 id=0
+    TIME frame=1770
+    ENEMY x=160 y=179 id=0
+    ENEMY x=479 y=179 id=0
+    TIME frame=1800
+    ENEMY x=160 y=149 id=0
+    ENEMY x=479 y=149 id=0
+    TIME frame=1830
+    ENEMY x=160 y=119 id=0
+    ENEMY x=479 y=119 id=0
+    TIME frame=1860
+    ENEMY x=160 y=89 id=0
+    ENEMY x=479 y=89 id=0
+    TIME frame=1890
+    ENEMY x=160 y=59 id=0
+    ENEMY x=479 y=59 id=0
+    TIME frame=1920
+    ENEMY x=160 y=29 id=0
+    ENEMY x=479 y=29 id=0
+    TIME frame=1950
+    ENEMY x=160 y=-1 id=0
+    ENEMY x=479 y=-1 id=0
+    TIME frame=1980
+    ENEMY x=160 y=-31 id=0
+    ENEMY x=479 y=-31 id=0
+    TIME frame=2080
+    ENEMY x=239 y=139 id=4
+    ENEMY x=399 y=139 id=4
+    TIME frame=2096
+    ENEMY x=239 y=139 id=4
+    ENEMY x=399 y=139 id=4
+    TIME frame=2112
+    ENEMY x=239 y=139 id=4
+    ENEMY x=399 y=139 id=4
+    TIME frame=2128
+    ENEMY x=239 y=139 id=4
+    ENEMY x=399 y=139 id=4
+    TIME frame=2528
+    BOSS x=319 y=-36 id=8
+    WAITEX cond=0 opt=0
+    TIME frame=2728
+    EFC type=WARN
+    TIME frame=2948
+    EFC type=WARNSTOP
+    TIME frame=2998
+    MWOPEN
+    FACE id=2
+    TIME frame=3018
+    MSG "[VIVIT]"
+    MSG "  怎么回事……这种气氛？"
+    MSG "  是从没有体验过的……"
+    MSG "  ……恐怖。"
+    TIME frame=3138
+    NPG
+    FACE id=12
+    TIME frame=3158
+    MSG "[艾利西]"
+    MSG "  ＶＩＶ、我来告诉你一切吧。"
+    MSG "  是的，一切都是我的剧本。"
+    MSG "  我的……  "
+    TIME frame=3278
+    NPG
+    FACE id=2
+    TIME frame=3298
+    MSG "[VIVIT]"
+    MSG "  你是？"
+    TIME frame=3418
+    NPG
+    FACE id=12
+    TIME frame=3438
+    MSG "[艾利西]"
+    MSG "  还不明白么？"
+    MSG "  应该对我的声音有印象吧？"
+    TIME frame=3558
+    NPG
+    FACE id=0
+    TIME frame=3578
+    MSG "[VIVIT]"
+    MSG "  你…你是……！！"
+    MSG "  主人！！"
+    TIME frame=3698
+    NPG
+    FACE id=12
+    TIME frame=3718
+    MSG "[艾利西]"
+    MSG "  ＶＩＶ……"
+    MSG "  将我……超越吧！"
+    TIME frame=3838
+    MWCLOSE
+    MUSIC id=10
+    BOSS x=319 y=-130 id=20
+    WAITEX cond=0 opt=0
+    TIME frame=3888
+    MWOPEN
+    NPG
+    FACE id=0
+    TIME frame=3908
+    MSG "[VIVIT]"
+    MSG "  主人……"
+    MSG "  这是怎么回事？"
+    TIME frame=4028
+    NPG
+    FACE id=12
+    TIME frame=4048
+    MSG "[艾利西]"
+    MSG "  我有一个女儿。"
+    MSG "  数十年前因为一场意外，"
+    MSG "  被关在异空间里了。"
+    TIME frame=4168
+    NPG
+    FACE id=0
+    TIME frame=4188
+    MSG "[VIVIT]"
+    MSG "  ……"
+    TIME frame=4308
+    NPG
+    FACE id=12
+    TIME frame=4328
+    MSG "[艾利西]"
+    MSG "  能够将女儿拯救出来的，"
+    MSG "  ＶＩＶ，只有你……"
+    TIME frame=4448
+    NPG
+    MSG "[艾利西]"
+    MSG "  将米莉亚……冥和舞……"
+    MSG "  盖茨、玛丽……"
+    TIME frame=4568
+    NPG
+    MSG "[艾利西]"
+    MSG "还有我都击败了的你，"
+    MSG "一定可以救出我女儿的……"
+    TIME frame=4688
+    NPG
+    FACE id=2
+    TIME frame=4708
+    MSG "[VIVIT]"
+    MSG "  主…人？？"
+    MSG "  主人！！"
+    TIME frame=4828
+    NPG
+    FACE id=12
+    TIME frame=4848
+    MSG "[艾利西]"
+    MSG "  现在只要往前进！！"
+    MSG "  因为一切都在前方！"
+    TIME frame=4968
+    NPG
+    FACE id=0
+    TIME frame=4988
+    MSG "[VIVIT]"
+    MSG "  啊……"
+    MSG "  是！！！"
+    TIME frame=5048
+    MSG "  我明白了，主人！"
+    TIME frame=5168
+    MWCLOSE
+    EFC type=MUSICFADE
+    EFC type=CFADEOUT
+    TIME frame=5468
+    STAGECLEAR
+    END

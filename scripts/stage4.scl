@@ -1,0 +1,668 @@
+    TIME frame=0
+    LOADFACE surf=0 file=0
+    LOADFACE surf=1 file=1
+    LOADFACE surf=2 file=5
+    TIME frame=50
+    MWOPEN
+    FACE id=12
+    MSG "[玛丽]"
+    MSG "  通报各机，"
+    TIME frame=90
+    NPG
+    MSG "[玛丽]"
+    MSG "  通报各机，目标接近中！"
+    TIME frame=130
+    MSG "  散开后，呈半包围态势！"
+    TIME frame=170
+    MSG "  拼了命也要打下来！！  "
+    TIME frame=290
+    MWCLOSE
+    EFC type=CFADEOUT
+    TIME frame=370
+    EFC type=CFADEIN
+    TIME frame=420
+    MWOPEN
+    FACE id=2
+    MSG "[VIVIT]"
+    MSG "  呜呜，不会吧……"
+    MSG "  没想到竟然能够"
+    MSG "  单独突破大气圈。"
+    TIME frame=540
+    NPG
+    FACE id=0
+    TIME frame=560
+    MSG "[VIVIT]"
+    MSG "  有一点……"
+    MSG "  活动困难啊？"
+    MSG "  算了，加油吧——！"
+    TIME frame=680
+    NPG
+    FACE id=6
+    TIME frame=700
+    MSG "[主人]"
+    MSG "  只剩下一点了，ＶＩＶＩＴ。"
+    MSG "  将这里挺过的话……"
+    MSG "  就有我们的所追寻的东西了。"
+    TIME frame=820
+    NPG
+    FACE id=1
+    TIME frame=840
+    MSG "[VIVIT]"
+    MSG "  是！"
+    TIME frame=960
+    MWCLOSE
+    TIME frame=1000
+    MUSIC id=7
+    MAPPALETTE
+    EFC type=STG4ROCK
+    TIME frame=1060
+    ENEMY x=379 y=-220 id=0
+    ENEMY x=259 y=-220 id=0
+    ENEMY x=379 y=-180 id=0
+    ENEMY x=259 y=-180 id=0
+    ENEMY x=379 y=-140 id=0
+    ENEMY x=259 y=-140 id=0
+    ENEMY x=379 y=-100 id=0
+    ENEMY x=259 y=-100 id=0
+    ENEMY x=379 y=-60 id=0
+    ENEMY x=259 y=-60 id=0
+    TIME frame=1180
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1190
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1200
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1210
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1220
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1230
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1240
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1250
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1260
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=1300
+    ENEMY x=199 y=-16 id=6
+    TIME frame=1420
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1440
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1460
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1480
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1500
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1520
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1540
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1560
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1580
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=1660
+    ENEMY x=479 y=-16 id=3
+    ENEMY x=219 y=-32 id=4
+    TIME frame=1740
+    ENEMY x=447 y=-16 id=3
+    ENEMY x=419 y=-32 id=4
+    TIME frame=1820
+    ENEMY x=415 y=-16 id=3
+    ENEMY x=269 y=-32 id=4
+    TIME frame=1900
+    ENEMY x=383 y=-16 id=3
+    ENEMY x=369 y=-32 id=4
+    TIME frame=1980
+    ENEMY x=351 y=-16 id=3
+    ENEMY x=169 y=-32 id=4
+    TIME frame=2060
+    ENEMY x=319 y=-16 id=3
+    ENEMY x=469 y=-32 id=4
+    TIME frame=2140
+    ENEMY x=287 y=-16 id=3
+    ENEMY x=219 y=-32 id=4
+    TIME frame=2220
+    ENEMY x=255 y=-16 id=3
+    ENEMY x=419 y=-32 id=4
+    TIME frame=2300
+    ENEMY x=223 y=-16 id=3
+    TIME frame=2380
+    ENEMY x=191 y=-16 id=3
+    TIME frame=2480
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2490
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2500
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2510
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2520
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2530
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2540
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2550
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2560
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2620
+    ENEMY x=359 y=-16 id=6
+    ENEMY x=279 y=-16 id=7
+    TIME frame=2860
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2870
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2880
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2890
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2900
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2910
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2920
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2930
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2940
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=2950
+    ENEMY x=449 y=-220 id=0
+    ENEMY x=189 y=-220 id=0
+    ENEMY x=449 y=-180 id=0
+    ENEMY x=189 y=-180 id=0
+    ENEMY x=449 y=-140 id=0
+    ENEMY x=189 y=-140 id=0
+    ENEMY x=449 y=-100 id=0
+    ENEMY x=189 y=-100 id=0
+    ENEMY x=449 y=-60 id=0
+    ENEMY x=189 y=-60 id=0
+    TIME frame=3050
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3060
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3070
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3080
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3090
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3100
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3110
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3120
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3130
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3140
+    ENEMY x=399 y=-220 id=0
+    ENEMY x=239 y=-220 id=0
+    ENEMY x=399 y=-180 id=0
+    ENEMY x=239 y=-180 id=0
+    ENEMY x=399 y=-140 id=0
+    ENEMY x=239 y=-140 id=0
+    ENEMY x=399 y=-100 id=0
+    ENEMY x=239 y=-100 id=0
+    ENEMY x=399 y=-60 id=0
+    ENEMY x=239 y=-60 id=0
+    TIME frame=3240
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3250
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3260
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3270
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3280
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3290
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3300
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3310
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3320
+    ENEMY x=-30000 y=-32 id=1
+    ENEMY x=-30000 y=-32 id=1
+    TIME frame=3330
+    ENEMY x=349 y=-220 id=0
+    ENEMY x=289 y=-220 id=0
+    ENEMY x=349 y=-180 id=0
+    ENEMY x=289 y=-180 id=0
+    ENEMY x=349 y=-140 id=0
+    ENEMY x=289 y=-140 id=0
+    ENEMY x=349 y=-100 id=0
+    ENEMY x=289 y=-100 id=0
+    ENEMY x=349 y=-60 id=0
+    ENEMY x=289 y=-60 id=0
+    TIME frame=3450
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=3470
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=3490
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    TIME frame=3510
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    ENEMY x=-30000 y=-12 id=5
+    EFC type=STG4LEAVE
+    TIME frame=3610
+    ENEMY x=178 y=-32 id=3
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3640
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3670
+    ENEMY x=228 y=-32 id=3
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3700
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3730
+    ENEMY x=278 y=-32 id=3
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3760
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3790
+    ENEMY x=328 y=-32 id=3
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3820
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3850
+    ENEMY x=378 y=-32 id=3
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=3970
+    ENEMY x=319 y=-32 id=4
+    TIME frame=3980
+    ENEMY x=279 y=-32 id=4
+    ENEMY x=359 y=-32 id=4
+    TIME frame=3990
+    ENEMY x=239 y=-32 id=4
+    ENEMY x=399 y=-32 id=4
+    TIME frame=4000
+    ENEMY x=199 y=-32 id=4
+    ENEMY x=439 y=-32 id=4
+    TIME frame=4010
+    ENEMY x=159 y=-32 id=4
+    ENEMY x=479 y=-32 id=4
+    TIME frame=4270
+    ENEMY x=148 y=-32 id=3
+    ENEMY x=491 y=-32 id=3
+    TIME frame=4320
+    ENEMY x=188 y=-32 id=3
+    ENEMY x=451 y=-32 id=3
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4370
+    ENEMY x=228 y=-32 id=3
+    ENEMY x=411 y=-32 id=3
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4420
+    ENEMY x=268 y=-32 id=3
+    ENEMY x=371 y=-32 id=3
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4470
+    ENEMY x=308 y=-32 id=3
+    ENEMY x=331 y=-32 id=3
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4520
+    ENEMY x=348 y=-32 id=3
+    ENEMY x=291 y=-32 id=3
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4540
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4560
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4580
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4600
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4650
+    ENEMY x=308 y=-32 id=2
+    ENEMY x=331 y=-32 id=2
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4700
+    ENEMY x=268 y=-32 id=2
+    ENEMY x=371 y=-32 id=2
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4750
+    ENEMY x=228 y=-32 id=2
+    ENEMY x=411 y=-32 id=2
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4800
+    ENEMY x=188 y=-32 id=2
+    ENEMY x=451 y=-32 id=2
+    ENEMY x=178 y=-12 id=5
+    ENEMY x=208 y=-12 id=5
+    ENEMY x=238 y=-12 id=5
+    ENEMY x=461 y=-12 id=5
+    ENEMY x=431 y=-12 id=5
+    ENEMY x=401 y=-12 id=5
+    TIME frame=4920
+    ENEMY x=379 y=-220 id=0
+    ENEMY x=259 y=-220 id=0
+    ENEMY x=389 y=-180 id=0
+    ENEMY x=249 y=-180 id=0
+    ENEMY x=399 y=-140 id=0
+    ENEMY x=239 y=-140 id=0
+    ENEMY x=409 y=-100 id=0
+    ENEMY x=229 y=-100 id=0
+    ENEMY x=419 y=-60 id=0
+    ENEMY x=219 y=-60 id=0
+    ENEMY x=429 y=-20 id=0
+    ENEMY x=209 y=-20 id=0
+    TIME frame=4970
+    ENEMY x=429 y=-220 id=0
+    ENEMY x=209 y=-220 id=0
+    ENEMY x=419 y=-180 id=0
+    ENEMY x=219 y=-180 id=0
+    ENEMY x=409 y=-140 id=0
+    ENEMY x=229 y=-140 id=0
+    ENEMY x=399 y=-100 id=0
+    ENEMY x=239 y=-100 id=0
+    ENEMY x=389 y=-60 id=0
+    ENEMY x=249 y=-60 id=0
+    ENEMY x=379 y=-20 id=0
+    ENEMY x=259 y=-20 id=0
+    TIME frame=5090
+    ENEMY x=319 y=-32 id=4
+    TIME frame=5100
+    ENEMY x=279 y=-32 id=4
+    ENEMY x=359 y=-32 id=4
+    TIME frame=5110
+    ENEMY x=239 y=-32 id=4
+    ENEMY x=399 y=-32 id=4
+    TIME frame=5120
+    ENEMY x=199 y=-32 id=4
+    ENEMY x=439 y=-32 id=4
+    TIME frame=5130
+    ENEMY x=159 y=-32 id=4
+    ENEMY x=479 y=-32 id=4
+    TIME frame=5250
+    ENEMY x=199 y=-16 id=6
+    TIME frame=5330
+    ENEMY x=439 y=-16 id=6
+    TIME frame=5410
+    ENEMY x=239 y=-16 id=7
+    TIME frame=5490
+    ENEMY x=399 y=-16 id=7
+    EFC type=WARN
+    TIME frame=5710
+    EFC type=WARNSTOP
+    EFC type=MUSICFADE
+    MWOPEN
+    FACE id=2
+    TIME frame=5730
+    MSG "[VIVIT]"
+    MSG "  和上一个似的……"
+    MSG "  大得毫无意义啊。"
+    TIME frame=5850
+    NPG
+    FACE id=12
+    TIME frame=5870
+    MSG "[玛丽]"
+    MSG "  啊呀啊呀。"
+    MSG "  虽然听说拥有很强的战斗力，"
+    MSG "  但是……"
+    TIME frame=5990
+    MSG "  可爱的女孩子啊……"
+    MSG "  赤红的长发，雪白的肌肤……"
+    MSG "  好想蹂躏你啊！  "
+    TIME frame=6110
+    NPG
+    FACE id=4
+    TIME frame=6130
+    MSG "[VIVIT]"
+    MSG "  哎？哎哎？哎哎哎？"
+    MSG "  我可没有那种兴趣！  "
+    TIME frame=6250
+    MWCLOSE
+    TIME frame=6370
+    MUSIC id=8
+    BOSS x=319 y=-100 id=9
+    TIME frame=6450
+    MAPPALETTE
+    EFC type=STG4ROCK
+    WAITEX cond=0 opt=0
+    TIME frame=6500
+    MWOPEN
+    FACE id=2
+    TIME frame=6520
+    MSG "[VIVIT]"
+    MSG "  呜呜呜呜。"
+    MSG "  好可怕啊！"
+    TIME frame=6640
+    NPG
+    FACE id=12
+    TIME frame=6660
+    MSG "[玛丽]"
+    MSG "  不敢相信，我竟然输了。"
+    MSG "  快点走吧！"
+    MSG "  若想体会更恐怖的事情的话……"
+    TIME frame=6780
+    NPG
+    FACE id=4
+    TIME frame=6800
+    MSG "[VIVIT]"
+    MSG "  好，好的……"
+    TIME frame=6920
+    NPG
+    FACE id=12
+    TIME frame=6940
+    MSG "[玛丽]"
+    MSG "  前进就行了。"
+    MSG "  因为真正的“恐怖”"
+    MSG "  在那里啊……  "
+    TIME frame=7060
+    MWCLOSE
+    EFC type=MUSICFADE
+    EFC type=CFADEOUT
+    TIME frame=7360
+    STAGECLEAR
+    END

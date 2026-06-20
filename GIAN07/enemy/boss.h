@@ -47,6 +47,7 @@ struct BossHpgInfo {
   int32_t TimerMax = -1;         // Vect[ECLVECT_TIMER].value (-1 = no timer)
   int32_t TimerNow = 0;          // Current IntTimer from first boss
   int32_t PrevTimerSeconds = -1; // For detecting second changes
+  int32_t SCLTimerEnd = -1;      // SCL TIME target game_count for fallback countdown
 };
 
 // [ Functions ]
