@@ -18,7 +18,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "GIAN07/core/ENTRY.h"
+#include "GIAN07/core/entry.h"
 #include "game/guard.h"
 #include "platform/sdl/log_sdl.h"
 #include "platform/window_backend.h"

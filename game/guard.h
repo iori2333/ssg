@@ -10,7 +10,7 @@ struct Nil {};
 template <typename T, typename F>
 class Guard {
     T value_;
-    [[no_unique_address]] F deleter_;
+    F deleter_;
     bool engaged_ = true;
 
     static constexpr bool has_value = std::is_invocable_v<F, T>;
