@@ -24,15 +24,15 @@
 // Screenshots
 // -----------
 
-const uint8_t &Grp_ScreenshotEffort = ConfigDat.ScreenshotEffort.v;
+const uint8_t &Grp_ScreenshotEffort = ConfigDat.screenshot_effort;
 // -----------
 
 // Volume controls
 // ---------------
 
-const VOLUME &Mid_Volume = ConfigDat.BGMVolume.v;
-const VOLUME &Snd_VolumeBGM = ConfigDat.BGMVolume.v;
-const VOLUME &Snd_VolumeSE = ConfigDat.SEVolume.v;
+const VOLUME &Mid_Volume = ConfigDat.bgm_volume;
+const VOLUME &Snd_VolumeBGM = ConfigDat.bgm_volume;
+const VOLUME &Snd_VolumeSE = ConfigDat.se_volume;
 // ---------------
 
 // MUSIC.DAT loaders
@@ -47,10 +47,10 @@ bool (*const BGM_MidLoadByHash)(const HASH &hash) = LoadMusicByHash;
 // ------------
 
 static constexpr std::array<INPUT_PAD_BINDING, 4> PadBindings = {{
-    {ConfigDat.PadTama.v, KEY_TAMA},
-    {ConfigDat.PadBomb.v, KEY_BOMB},
-    {ConfigDat.PadShift.v, KEY_SHIFT},
-    {ConfigDat.PadCancel.v, KEY_ESC},
+    {ConfigDat.pad_tama, KEY_TAMA},
+    {ConfigDat.pad_bomb, KEY_BOMB},
+    {ConfigDat.pad_shift, KEY_SHIFT},
+    {ConfigDat.pad_cancel, KEY_ESC},
 }};
 std::span<const INPUT_PAD_BINDING> Key_PadBindings = PadBindings;
 // ------------
@@ -101,9 +101,9 @@ bool XInit() {
   DebugSetup();
 
   // Load config
-  ConfigLoad();
-  Grp_FPSDivisor = ConfigDat.FPSDivisor.v;
-  ConfigDat.MidFlags.v = Mid_SetFlags(ConfigDat.MidFlags.v);
+  ConfigDat.Load();
+  Grp_FPSDivisor = ConfigDat.fps_divisor;
+  ConfigDat.midi_flags = Mid_SetFlags(ConfigDat.midi_flags);
 
   // Config-dependent initialization
   if (!GrpBackend_Enum()) {
@@ -122,13 +122,13 @@ bool XInit() {
   Key_Start();
 
   // Initialize BGM
-  if ((ConfigDat.SoundFlags.v & SNDF_BGM_ENABLE) != 0) {
+  if (ConfigDat.bgm_enabled) {
     BGM_Init();
   }
-  if (!BGM_PackSet(ConfigDat.BGMPack)) {
-    ConfigDat.BGMPack.clear();
+  if (!BGM_PackSet(ConfigDat.bgm_pack)) {
+    ConfigDat.bgm_pack.clear();
   }
-  BGM_SetGainApply((ConfigDat.SoundFlags.v & SNDF_BGM_NOT_VOL_NORM) == 0);
+  BGM_SetGainApply(ConfigDat.bgm_vol_norm);
   Grp_ScreenshotSetPrefix("screenshots/");
   LoaderInit();
   return true;
@@ -136,7 +136,7 @@ bool XInit() {
 
 void XCleanup() {
   LoaderCleanup();
-  ConfigSave();
+  ConfigDat.Save();
   TextBackend_Cleanup();
   GrpBackend_Cleanup();
   BGM_Cleanup();
@@ -223,9 +223,9 @@ bool GameFrame() {
         ((Grp_FPSDivisor != 0) ? Grp_FPSDivisor : 1);
     if (Grp_FPSDivisor != 0) {
       fps_divisor_prev = Grp_FPSDivisor;
-      ConfigDat.FPSDivisor.v = Grp_FPSDivisor = 0;
+      ConfigDat.fps_divisor = Grp_FPSDivisor = 0;
     } else {
-      ConfigDat.FPSDivisor.v = Grp_FPSDivisor = fps_divisor_prev;
+      ConfigDat.fps_divisor = Grp_FPSDivisor = fps_divisor_prev;
     }
   }
 #ifdef SUPPORT_GRP_API

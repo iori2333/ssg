@@ -28,3 +28,6 @@
 	path = libs/libwebp
 	url = https://github.com/webmproject/libwebp
 	shallow = true
+[submodule "libs/tomlplusplus"]
+	path = libs/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git

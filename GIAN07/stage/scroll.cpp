@@ -269,7 +269,7 @@ static void enemy_set() {
       break;
 
     case SCL_MWOPEN: // Open message window
-      if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
+      if (!ConfigDat.msg_disable) {
         UI.Msg().Open();
       }
       Scroller.scene.MsgFlag = true;
@@ -277,7 +277,7 @@ static void enemy_set() {
       break;
 
     case SCL_MWCLOSE: // Close message window
-      if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
+      if (!ConfigDat.msg_disable) {
         UI.Msg().Close();
       }
       Scroller.scene.MsgFlag = false;
@@ -454,17 +454,17 @@ static void enemy_set() {
       if (GameState.game_level != GAME_EASY) {
         switch (Players.Weapon()) {
         case 0:
-          ConfigDat.ExtraStgFlags.v |= 1;
+          ConfigDat.extra_stg_flags |= 1;
           break;
         case 1:
-          ConfigDat.ExtraStgFlags.v |= 2;
+          ConfigDat.extra_stg_flags |= 2;
           break;
         case 2:
-          ConfigDat.ExtraStgFlags.v |= 4;
+          ConfigDat.extra_stg_flags |= 4;
           break;
         }
       }
-      ConfigSave();
+      ConfigDat.Save();
       Ending.Init();
       return;
 

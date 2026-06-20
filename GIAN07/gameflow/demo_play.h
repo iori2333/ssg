@@ -8,16 +8,16 @@
 #include <string>
 #include <vector>
 
-struct CONFIG_DATA;
+struct ConfigData;
 
 // [Constants]
 inline constexpr auto DEMOBUF_MAX = (60 * 60 * 30); // Can store 30 minutes of data
 static constexpr auto REPLAY_STAGE_MAX = 6;
 
 // Replay-specific config option subset
-// The original code simply reused CONFIG_DATA, which we can't do in this fork
+// The original code simply reused ConfigData, which we can't do in this fork
 // due to the additional fields we add to the structure.
-struct DEMOPLAY_CONFIG_DATA {
+struct DEMOPLAY_ConfigData {
   uint8_t GameLevel;
   uint8_t PlayerStock;
   uint8_t BombStock;
@@ -25,13 +25,13 @@ struct DEMOPLAY_CONFIG_DATA {
   uint8_t InputFlags;
   uint8_t Padding2[15] = {0};
 };
-static_assert(sizeof(DEMOPLAY_CONFIG_DATA) == 24);
+static_assert(sizeof(DEMOPLAY_ConfigData) == 24);
 
 // [Structs]
 struct DemoPlayState {
   uint32_t RndSeed;            // Random seed
   uint32_t FrameCount;         // Not data size! Including the terminating ESC.
-  DEMOPLAY_CONFIG_DATA CfgDat; // Config data (partially referenced on Load)
+  DEMOPLAY_ConfigData CfgDat; // Config data (partially referenced on Load)
   uint8_t Exp;                 // Initial power-up
   uint8_t Weapon;              // Initial weapon
 };
@@ -41,7 +41,7 @@ struct DemoPlayState {
 struct MULTI_REPLAY_INFO {
   uint32_t RndSeed;
   uint8_t StageCount;          // Number of stages recorded (1-6)
-  DEMOPLAY_CONFIG_DATA CfgDat; // 24 bytes
+  DEMOPLAY_ConfigData CfgDat; // 24 bytes
   uint8_t Exp;
   uint8_t Weapon;
   uint8_t Stages[REPLAY_STAGE_MAX];       // Stage numbers

@@ -42,8 +42,8 @@ void DemoManager::Init() {
   demo_info.Weapon = Players.Weapon();
   demo_info.CfgDat.GameLevel = GameState.game_level;
   demo_info.CfgDat.PlayerStock = Players.Lives();
-  demo_info.CfgDat.BombStock = ConfigDat.BombStock.v;
-  demo_info.CfgDat.InputFlags = ConfigDat.InputFlags.v;
+  demo_info.CfgDat.BombStock = ConfigDat.bomb_stock;
+  demo_info.CfgDat.InputFlags = ConfigDat.PackInputFlags();
 
   demo_frame_cur = 0;
   save_all_enable = true;
@@ -83,19 +83,19 @@ bool DemoManager::LoadSetup() {
 
   // Initialize config
   // Preserve current config
-  config_temp.PlayerStock = ConfigDat.PlayerStock.v;
-  config_temp.BombStock = ConfigDat.BombStock.v;
-  config_temp.InputFlags = ConfigDat.InputFlags.v;
+  config_temp.PlayerStock = ConfigDat.player_stock;
+  config_temp.BombStock = ConfigDat.bomb_stock;
+  config_temp.InputFlags = ConfigDat.PackInputFlags();
 
   // Transfer recorded config
-  ConfigDat.BombStock.v = demo_info.CfgDat.BombStock;
-  ConfigDat.PlayerStock.v = demo_info.CfgDat.PlayerStock;
-  ConfigDat.InputFlags.v = demo_info.CfgDat.InputFlags;
+  ConfigDat.bomb_stock = demo_info.CfgDat.BombStock;
+  ConfigDat.player_stock = demo_info.CfgDat.PlayerStock;
+  ConfigDat.UnpackInputFlags(demo_info.CfgDat.InputFlags);
   GameState.game_level = demo_info.CfgDat.GameLevel;
 
   // Restore player stats
   Players.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
-                           ConfigDat.PlayerStock.v, ConfigDat.BombStock.v);
+                            ConfigDat.player_stock, ConfigDat.bomb_stock);
 
   // Initialize random number
   // Sync random seed last
@@ -177,9 +177,9 @@ INPUT_BITS DemoManager::Move() {
 }
 
 void DemoManager::Cleanup() {
-  ConfigDat.PlayerStock.v = config_temp.PlayerStock;
-  ConfigDat.BombStock.v = config_temp.BombStock;
-  ConfigDat.InputFlags.v = config_temp.InputFlags;
+  ConfigDat.player_stock = config_temp.PlayerStock;
+  ConfigDat.bomb_stock = config_temp.BombStock;
+  ConfigDat.UnpackInputFlags(config_temp.InputFlags);
 
   load_enable = false;
   load_all_enable = false;

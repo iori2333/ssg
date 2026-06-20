@@ -76,19 +76,19 @@ DifficultyPanel::DifficultyPanel() {
 }
 
 void DifficultyPanel::FnPlayerStock(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.PlayerStock.v, delta, 0, STOCK_PLAYER_MAX);
+  RingStep(ConfigDat.player_stock, delta, 0, STOCK_PLAYER_MAX);
 }
 
 void DifficultyPanel::FnBombStock(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.BombStock.v, delta, 0, STOCK_BOMB_MAX);
+  RingStep(ConfigDat.bomb_stock, delta, 0, STOCK_BOMB_MAX);
 }
 
 void DifficultyPanel::FnDifficulty(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.GameLevel.v, delta, GAME_EASY, GAME_LUNATIC);
+  RingStep(ConfigDat.game_level, delta, GAME_EASY, GAME_LUNATIC);
 }
 
 void DifficultyPanel::FnPracticeMode(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.PracticeMode.v, delta, PRACTICE_OFF, PRACTICE_INVINCIBLE);
+  RingStep(ConfigDat.practice_mode, delta, PRACTICE_OFF, PRACTICE_INVINCIBLE);
 }
 
 #ifdef PBG_DEBUG
@@ -111,10 +111,10 @@ void DifficultyPanel::Refresh(MenuController &, bool) {
                                                "Lunatic"};
   static constexpr const char *const practice[3] = {" Off ", "AutoB", "Invin"};
 
-  titles_[0].Format("PlayerStock [ {} ]", ConfigDat.PlayerStock.v + 1);
-  titles_[1].Format("BombStock   [ {} ]", ConfigDat.BombStock.v);
-  titles_[2].Format("Difficulty[{}]", dif[ConfigDat.GameLevel.v]);
-  titles_[3].Format("PracticeMode[{}]", practice[ConfigDat.PracticeMode.v]);
+  titles_[0].Format("PlayerStock [ {} ]", ConfigDat.player_stock + 1);
+  titles_[1].Format("BombStock   [ {} ]", ConfigDat.bomb_stock);
+  titles_[2].Format("Difficulty[{}]", dif[ConfigDat.game_level]);
+  titles_[3].Format("PracticeMode[{}]", practice[ConfigDat.practice_mode]);
 
 #ifdef PBG_DEBUG
   titles_[4].Format("DebugOut  {}", CHOICE_OFF_ON[DebugDat.MsgDisplay]);
@@ -147,7 +147,7 @@ ScreenshotPanel::ScreenshotPanel() {
 }
 
 void ScreenshotPanel::FnFormat(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.ScreenshotEffort.v, delta, 0, GRP_SCREENSHOT_EFFORT_MAX);
+  RingStep(ConfigDat.screenshot_effort, delta, 0, GRP_SCREENSHOT_EFFORT_MAX);
 }
 
 void ScreenshotPanel::RefreshActive(MenuController &ctrl) {
@@ -155,7 +155,7 @@ void ScreenshotPanel::RefreshActive(MenuController &ctrl) {
 }
 
 void ScreenshotPanel::Refresh(MenuController &ctrl, bool) {
-  const auto effort = ConfigDat.ScreenshotEffort.v;
+  const auto effort = ConfigDat.screenshot_effort;
   enum class ALIGN { LEFT, CENTER };
   const auto format_for = [](uint8_t e, ALIGN align) -> std::string {
     if (e == 0) {
@@ -201,17 +201,17 @@ void ScreenshotPanel::Refresh(MenuController &ctrl, bool) {
       title_perf_[i].Format("{}[{:5}.{:02}ms]", fmt, t_int, t_frac);
       if (hovered) {
         constexpr auto target_ms = decltype(0ms)(FRAME_TIME_TARGET);
-        if (time > (target_ms * ConfigDat.FPSDivisor.v)) {
+        if (time > (target_ms * ConfigDat.fps_divisor)) {
           const auto [fps_int, fps_frac] = split_into_fraction(
               std::chrono::milliseconds(1000).count() / time.count());
           help_perf_.Format("Frame rate will drop to ~{}.{:02} FPS", fps_int,
                             fps_frac);
         } else {
           static constexpr const char *FPS[3] = {"62.5", "30", "20"};
-          assert(ConfigDat.FPSDivisor.v > 0);
-          assert((ConfigDat.FPSDivisor.v - 1) < std::size(FPS));
+          assert(ConfigDat.fps_divisor > 0);
+          assert((ConfigDat.fps_divisor - 1) < std::size(FPS));
           help_perf_.Format("Frame rate will stay at {} FPS",
-                            FPS[ConfigDat.FPSDivisor.v - 1]);
+                            FPS[ConfigDat.fps_divisor - 1]);
         }
       }
     }
@@ -256,7 +256,7 @@ void ApiPanel::Init() {
 }
 
 void ApiPanel::Refresh(MenuController &, bool) {
-  const bool is_def_api = ConfigDat.GraphicsAPI.empty();
+  const bool is_def_api = ConfigDat.graphics_api.empty();
   std::string_view api_active = GrpBackend_APILabel(GrpBackend_APIString());
 
   item_def_.SetActive(!is_def_api);
@@ -341,23 +341,25 @@ void GraphicsPanel::FnScMode(MenuController &, int_fast8_t) {
 }
 
 void GraphicsPanel::FnSkip(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.FPSDivisor.v, delta, 0, FPS_DIVISOR_MAX);
-  Grp_FPSDivisor = ConfigDat.FPSDivisor.v;
+  RingStep(ConfigDat.fps_divisor, delta, 0, FPS_DIVISOR_MAX);
+  Grp_FPSDivisor = ConfigDat.fps_divisor;
 }
 
 void GraphicsPanel::FnWinLocate(MenuController &, int_fast8_t delta) {
-  static constexpr uint8_t flags[3] = {0, GRPF_WINDOW_UPPER, GRPF_MSG_DISABLE};
-  const auto *it = std::ranges::find_if(flags, [](auto f) {
-    return ((ConfigDat.GraphFlags.v & GRPF_ORIG_MASK) == f);
-  });
-  const auto i = ((it != std::end(flags)) ? std::distance(flags, it) : 0);
-
-  ConfigDat.GraphFlags.v &= ~GRPF_ORIG_MASK;
-  if (delta < 0) {
-    ConfigDat.GraphFlags.v |= flags[(i + 2) % std::size(flags)];
+  // Cycle through 3 states: bottom → top → hidden → bottom
+  uint8_t state;
+  if (ConfigDat.msg_disable) {
+    state = 2;
+  } else if (ConfigDat.window_upper) {
+    state = 1;
   } else {
-    ConfigDat.GraphFlags.v |= flags[(i + 1) % std::size(flags)];
+    state = 0;
   }
+
+  state = (delta < 0) ? ((state + 2) % 3) : ((state + 1) % 3);
+
+  ConfigDat.window_upper = (state == 1);
+  ConfigDat.msg_disable = (state == 2);
 }
 
 void GraphicsPanel::Refresh(MenuController &, bool) {
@@ -375,10 +377,10 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
                                                  "20Fps"};
 
   const auto u_or_d =
-      (((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) != 0)
+      (ConfigDat.msg_disable
            ? 2
-           : (((ConfigDat.GraphFlags.v & GRPF_WINDOW_UPPER) != 0) ? 0 : 1));
-  const auto dev = GrpBackend_DeviceLabel(ConfigDat.DeviceID.v);
+           : (ConfigDat.window_upper ? 0 : 1));
+  const auto dev = GrpBackend_DeviceLabel(ConfigDat.device_id);
   const auto fs = params.FullscreenFlags();
   const auto in_borderless_fullscreen = (fs.fullscreen && !fs.exclusive);
 
@@ -428,7 +430,7 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
   EnumFlagSet(item_ptrs_[SC_MODE_IDX]->Flags, MenuFlags::DISABLED,
               static_cast<std::underlying_type_t<MenuFlags>>(sc_mode_disabled));
 #endif
-  title_skip_.Format("FrameRate[ {} ]", FRate[ConfigDat.FPSDivisor.v]);
+  title_skip_.Format("FrameRate[ {} ]", FRate[ConfigDat.fps_divisor]);
   title_msg_.Format("MsgWindow[{}]", UorD[u_or_d]);
 
   // Help strings
@@ -517,8 +519,8 @@ void MidiPanel::FnDev(MenuController &, int_fast8_t delta) {
 }
 
 void MidiPanel::FnFixes(MenuController &, int_fast8_t) {
-  const auto flags = (ConfigDat.MidFlags.v ^ MID_FLAGS::FIX_SYSEX_BUGS);
-  ConfigDat.MidFlags.v = Mid_SetFlags(flags);
+  const auto flags = (ConfigDat.midi_flags ^ MID_FLAGS::FIX_SYSEX_BUGS);
+  ConfigDat.midi_flags = Mid_SetFlags(flags);
 }
 
 void MidiPanel::Refresh(MenuController &, bool tick) {
@@ -545,7 +547,7 @@ void MidiPanel::Refresh(MenuController &, bool tick) {
   EnumFlagSet(items_[0].Flags, MenuFlags::DISABLED,
               static_cast<std::underlying_type_t<MenuFlags>>(!maybe_dev));
 
-  const auto fixes = !!(ConfigDat.MidFlags.v & MID_FLAGS::FIX_SYSEX_BUGS);
+  const auto fixes = !!(ConfigDat.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS);
   title_fixes_.Format("SC88ProFXCompat{}", CHOICE_OFF_ON_NARROW[fixes]);
   items_[1].Title = title_fixes_.Lit();
 }
@@ -576,11 +578,11 @@ SoundPanel::SoundPanel() {
 }
 
 void SoundPanel::FnSE(MenuController &, int_fast8_t) {
-  if ((ConfigDat.SoundFlags.v & SNDF_SE_ENABLE) != 0) {
-    ConfigDat.SoundFlags.v &= (~SNDF_SE_ENABLE);
+  if (ConfigDat.se_enabled) {
+    ConfigDat.se_enabled = false;
     Snd_SECleanup();
   } else {
-    ConfigDat.SoundFlags.v |= SNDF_SE_ENABLE;
+    ConfigDat.se_enabled = true;
     LoadSound();
   }
 }
@@ -596,14 +598,14 @@ void SoundPanel::FnBGM(MenuController &, int_fast8_t) {
 }
 
 void SoundPanel::FnSEVol(MenuController &, int_fast8_t delta) {
-  ConfigDat.SEVolume.v =
-      std::clamp((ConfigDat.SEVolume.v + delta), 0, int{VOLUME_MAX});
+  ConfigDat.se_volume =
+      std::clamp((ConfigDat.se_volume + delta), 0, int{VOLUME_MAX});
   Snd_UpdateVolumes();
 }
 
 void SoundPanel::FnBGMVol(MenuController &, int_fast8_t delta) {
-  ConfigDat.BGMVolume.v =
-      std::clamp((ConfigDat.BGMVolume.v + delta), 0, int{VOLUME_MAX});
+  ConfigDat.bgm_volume =
+      std::clamp((ConfigDat.bgm_volume + delta), 0, int{VOLUME_MAX});
   BGM_UpdateVolume();
 }
 
@@ -620,7 +622,7 @@ void SoundPanel::FnBGMGain(MenuController &, int_fast8_t) {
 }
 
 void SoundPanel::Refresh(MenuController &ctrl, bool) {
-  const auto sound_active = (ConfigDat.SoundFlags.v & SNDF_SE_ENABLE);
+  const auto sound_active = ConfigDat.se_enabled;
   const auto bgm_active = BGM_Enabled();
 
   if ((!ctrl.Active()) || (ctrl.LastKey() == KEY_UP) ||
@@ -635,14 +637,14 @@ void SoundPanel::Refresh(MenuController &ctrl, bool) {
 
   title_se_.Format("Sound  [{}]", CHOICE_USE[sound_active == 0]);
   title_bgm_.Format("BGM    [{}]", CHOICE_USE[!bgm_active]);
-  title_se_vol_.Format("SoundVolume [ {:3} ]", ConfigDat.SEVolume.v);
-  title_bgm_vol_.Format("BGMVolume   [ {:3} ]", ConfigDat.BGMVolume.v);
+  title_se_vol_.Format("SoundVolume [ {:3} ]", ConfigDat.se_volume);
+  title_bgm_vol_.Format("BGMVolume   [ {:3} ]", ConfigDat.bgm_volume);
   title_bgm_gain_.Format("BGMVolNormalize{}", norm_choice);
 
   if (!BGM_PacksAvailable()) {
     title_bgm_pack_.Set("BGMPack[ Download ]");
     items_[5].Help = "収録のサントラをダウンロードします";
-  } else if (ConfigDat.BGMPack.empty()) {
+  } else if (ConfigDat.bgm_pack.empty()) {
     title_bgm_pack_.Format("BGMPack[{}]", CHOICE_USE[1]);
     items_[5].Help = "BGMパックのメニューを開きます";
   } else {
@@ -665,10 +667,10 @@ void SoundPanel::Refresh(MenuController &ctrl, bool) {
 PadPanel::PadPanel() {
   static constexpr const char *HELP = "パッド上のボタンを押すと変更";
   items_.reserve(5);
-  items_.emplace_back(titles_[0].Lit(), HELP, Fn<ConfigDat.PadTama.v>);
-  items_.emplace_back(titles_[1].Lit(), HELP, Fn<ConfigDat.PadBomb.v>);
-  items_.emplace_back(titles_[2].Lit(), HELP, Fn<ConfigDat.PadShift.v>);
-  items_.emplace_back(titles_[3].Lit(), HELP, Fn<ConfigDat.PadCancel.v>);
+  items_.emplace_back(titles_[0].Lit(), HELP, Fn<ConfigDat.pad_tama>);
+  items_.emplace_back(titles_[1].Lit(), HELP, Fn<ConfigDat.pad_bomb>);
+  items_.emplace_back(titles_[2].Lit(), HELP, Fn<ConfigDat.pad_shift>);
+  items_.emplace_back(titles_[3].Lit(), HELP, Fn<ConfigDat.pad_cancel>);
   items_.emplace_back(SubmenuExitItem);
   menu_ = MenuDef(std::span(items_),
                   [this](MenuController &c, bool t) { Refresh(c, t); });
@@ -701,10 +703,10 @@ void PadPanel::Refresh(MenuController &, bool) {
     }
   };
 
-  set(titles_[0], labels[0], ConfigDat.PadTama.v);
-  set(titles_[1], labels[1], ConfigDat.PadBomb.v);
-  set(titles_[2], labels[2], ConfigDat.PadShift.v);
-  set(titles_[3], labels[3], ConfigDat.PadCancel.v);
+  set(titles_[0], labels[0], ConfigDat.pad_tama);
+  set(titles_[1], labels[1], ConfigDat.pad_bomb);
+  set(titles_[2], labels[2], ConfigDat.pad_shift);
+  set(titles_[3], labels[3], ConfigDat.pad_cancel);
 
   for (size_t i = 0; i < 4; i++) {
     items_[i].Title = titles_[i].Lit();
@@ -728,16 +730,16 @@ InputPanel::InputPanel() {
 }
 
 void InputPanel::FnMsgSkip(MenuController &, int_fast8_t) {
-  ConfigDat.InputFlags.v ^= INPF_Z_MSKIP_ENABLE;
+  ConfigDat.z_msg_skip_enabled = !ConfigDat.z_msg_skip_enabled;
 }
 
 void InputPanel::FnZSpeedDown(MenuController &, int_fast8_t) {
-  ConfigDat.InputFlags.v ^= INPF_Z_SPDDOWN_ENABLE;
+  ConfigDat.z_spd_down_enabled = !ConfigDat.z_spd_down_enabled;
 }
 
 void InputPanel::Refresh(MenuController &, bool) {
-  const auto skip = ((ConfigDat.InputFlags.v & INPF_Z_MSKIP_ENABLE) != 0);
-  const auto down = ((ConfigDat.InputFlags.v & INPF_Z_SPDDOWN_ENABLE) != 0);
+  const auto skip = ConfigDat.z_msg_skip_enabled;
+  const auto down = ConfigDat.z_spd_down_enabled;
 
   titles_[0].Format("Z-MessageSkip[{}]", (skip ? "ＯＫ" : "禁止"));
   titles_[1].Format("Z-SpeedDown  [{}]", (down ? "ＯＫ" : "禁止"));
@@ -793,7 +795,7 @@ bool MainMenuPanel::FnGameStart(MenuController &, INPUT_BITS key) {
 
 bool MainMenuPanel::FnExStart(MenuController &, INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    if (ConfigDat.ExtraStgFlags.v != 0U) {
+    if (ConfigDat.extra_stg_flags != 0U) {
       GameFlow.WeaponSelectInit(true);
     }
   }

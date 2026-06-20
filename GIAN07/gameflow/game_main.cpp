@@ -584,7 +584,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameState.game_level = (ExStg ? EXTRA_LEVEL : ConfigDat.GameLevel.v);
+  GameState.game_level = (ExStg ? EXTRA_LEVEL : ConfigDat.game_level);
 
   GameSTD_Init();
   Ranking.Reset();
@@ -616,9 +616,9 @@ bool GameInit(std::function<void(bool &)> next_proc) {
     // Replays don't show dialog, so this is the only place where we need
     // to do this.
     const auto flags = MsgWindowFlags::WITH_FACE;
-    if ((ConfigDat.GraphFlags.v & GRPF_WINDOW_UPPER) != 0) {
+    if (ConfigDat.window_upper) {
       UI.Msg().Init({128, 16, (640 - 128), 96}, flags);
-    } else if ((ConfigDat.GraphFlags.v & GRPF_MSG_DISABLE) == 0) {
+    } else if (!ConfigDat.msg_disable) {
       UI.Msg().Init({128, 400, (640 - 128), 480}, flags);
     }
 
@@ -1185,7 +1185,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       break;
     }
     if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
-      if (((1 << Players.Weapon()) & ConfigDat.ExtraStgFlags.v) == 0) {
+      if (((1 << Players.Weapon()) & ConfigDat.extra_stg_flags) == 0) {
         break;
       }
     }
@@ -1214,8 +1214,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
         if (GameState.game_stage >= 3) {
           Players.SetPower(255);
         }
-      } else if (ConfigDat.StageSelect.v != 0U) {
-        GameState.game_stage = ConfigDat.StageSelect.v;
+      } else if (ConfigDat.stage_select != 0U) {
+        GameState.game_stage = ConfigDat.stage_select;
         if (GameState.game_stage == 2) {
           Players.SetPower(160);
         }
@@ -1286,7 +1286,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
       if ((GameState.game_stage != GRAPH_ID_EXSTAGE) ||
-          (((1 << i) & ConfigDat.ExtraStgFlags.v) != 0)) {
+          (((1 << i) & ConfigDat.extra_stg_flags) != 0)) {
         continue;
       }
 

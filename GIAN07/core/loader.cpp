@@ -1207,8 +1207,8 @@ bool LoadMIDIBuffer(BYTE_BUFFER_OWNED buf) {
 bool LoadSound(const PACKFILE_READ &in) {
   // Initialize sound //
   // Disable if unavailable for any reason //
-  if (((ConfigDat.SoundFlags.v & SNDF_SE_ENABLE) == 0) || !Snd_SEInit()) {
-    ConfigDat.SoundFlags.v &= (~SNDF_SE_ENABLE);
+  if ((!ConfigDat.se_enabled) || !Snd_SEInit()) {
+    ConfigDat.se_enabled = false;
     return false;
   }
 
@@ -1282,7 +1282,7 @@ bool LoadSound(const PACKFILE_READ &in) {
     return true;
   }
 
-  ConfigDat.SoundFlags.v &= (~SNDF_SE_ENABLE);
+  ConfigDat.se_enabled = false;
   Snd_SECleanup();
   return false;
 }
