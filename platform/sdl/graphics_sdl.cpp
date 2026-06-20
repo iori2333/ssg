@@ -548,9 +548,7 @@ std::optional<GRAPHICS_INIT_RESULT> PrimaryInitFull(GRAPHICS_PARAMS params) {
       static_cast<size_t>(formats_end - formats_start),
   };
 
-  // Determine the preferred texture format. We don't overwrite
-  // [params.bitdepth] here to allow frictionless switching between the old
-  // DirectDraw/Direct3D backend and this one.
+  // Determine the preferred texture format.
   // SDL_GetWindowPixelFormat() is *not* a shortcut we could use for software
   // rendering mode. On my system, it always returns the 24-bit RGB888, which
   // we don't support.

@@ -184,8 +184,6 @@ struct GRAPHICS_PARAMS {
   int16_t left;
   int16_t top;
 
-  BITDEPTH bitdepth;
-
   std::strong_ordering operator<=>(const GRAPHICS_PARAMS &) const = default;
 
   GRAPHICS_FULLSCREEN_FLAGS FullscreenFlags(void) const;

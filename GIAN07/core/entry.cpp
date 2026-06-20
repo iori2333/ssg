@@ -167,10 +167,6 @@ void XGrpTry(const GRAPHICS_PARAMS &prev, GRAPHICS_PARAMS &params) {
       ReloadGraph();
     }
 
-    // TODO: Assumes that 8-bit mode only ever calls this function within
-    // the main menu. If we ever add hotkeys to toggle between 8-bit and
-    // 16-bit modes (https://github.com/nmlgc/ssg/issues/72), this has to
-    // be solved more cleanly as part of the backend.
     GrpSurface_PaletteApplyToBackend(SURFACE_ID::TITLE);
   }
 }

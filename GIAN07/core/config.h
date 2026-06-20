@@ -36,7 +36,6 @@ struct ConfigData {
   uint8_t window_scale_4x = 0;
   int16_t window_left = GRAPHICS_TOPLEFT_UNDEFINED;
   int16_t window_top = GRAPHICS_TOPLEFT_UNDEFINED;
-  BITDEPTH bit_depth; // Bit depth
 
   uint8_t fps_divisor = 1;
 
