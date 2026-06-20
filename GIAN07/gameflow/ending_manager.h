@@ -90,11 +90,6 @@ struct EndingManager {
 
 private:
   // Internal helpers
-  static void SetFixedColors(PALETTE &pal);
-  static void FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src, uint8_t a);
-  static void FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src, uint8_t a);
-  static void FlashPaletteGrp(PALETTE &dest, const PALETTE &pal, uint16_t a);
-
   void UpdateGrpInfo();
   void UpdateStfInfo();
   void DrawGrpInfo();

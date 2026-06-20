@@ -71,10 +71,6 @@ void StdStatusOutput() {
       std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
 
 #ifdef PBG_DEBUG
-#ifdef SUPPORT_GRP_BITDEPTH
-  GrpPut16(0, 32,
-           std::format("{:2}BppMode", ConfigDat.bit_depth.value()).c_str());
-#endif
   // sprintf(buf,"%s",DItems.entities[ConfigDat.GameState.game_level.v]);
   // GrpPut16(0,50,buf);
 

@@ -19,7 +19,7 @@ std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {
 
   // Since the surface pitch can be different than its with, [Table] will
   // still contain byte offsets, regardless of our main pixel format.
-  const auto BitWeight = GrpBackend_PixelFormat().PixelByteSize();
+  const auto BitWeight = sizeof(uint32_t);
 
   assert(r > 0); // Invalid radius
   assert(r > m); // Bulge must be smaller than radius!

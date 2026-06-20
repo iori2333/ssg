@@ -39,20 +39,6 @@ PALETTE PALETTE::Fade(uint8_t alpha, uint8_t first, uint8_t last) const {
   }
   return ret;
 }
-
-void Grp_PaletteSetDefault(void) {
-  if (GrpBackend_PixelFormat().IsChanneled()) {
-    return;
-  }
-  PALETTE palette = {0};
-  RGB216::ForEach([&](const RGB216 &col) {
-    const auto index = col.PaletteIndex();
-    palette[index].r = (col.r * (255 / RGB216::MAX));
-    palette[index].g = (col.g * (255 / RGB216::MAX));
-    palette[index].b = (col.b * (255 / RGB216::MAX));
-  });
-  GrpBackend_PaletteSet(palette);
-}
 // ----------------- //
 
 // Screenshots

@@ -482,8 +482,6 @@ static void enemy_set() {
 
     case SCL_MAPPALETTE: // Palette from map parts Surface
       // Use 40 surrounding colors as map parts palette
-      // Bit depth check delegated to function
-      GrpSurface_PaletteApplyToBackend(SURFACE_ID::MAPCHIP);
       Enemies.scl_now++;
       break;
 

@@ -110,11 +110,6 @@ static bool TOMLLoad(const char *fn) {
                  [](auto) { return true; });
     LoadToml(*sec, "window_left", ConfigDat.window_left);
     LoadToml(*sec, "window_top", ConfigDat.window_top);
-    if (auto bpp = (*sec)["bit_depth"].template value<uint8_t>()) {
-      ConfigDat.bit_depth = BITDEPTHS::find_if([&](uint8_t v) {
-        return v == *bpp;
-      });
-    }
     LoadToml(*sec, "fps_divisor", ConfigDat.fps_divisor, ValidFPSDivisor);
     LoadToml(*sec, "window_upper", ConfigDat.window_upper);
     LoadToml(*sec, "msg_disable", ConfigDat.msg_disable);
@@ -189,7 +184,6 @@ static void TOMLSave(const char *fn) {
     sec.emplace("window_scale_4x", ConfigDat.window_scale_4x);
     sec.emplace("window_left", ConfigDat.window_left);
     sec.emplace("window_top", ConfigDat.window_top);
-    sec.emplace("bit_depth", ConfigDat.bit_depth.value());
     sec.emplace("fps_divisor", ConfigDat.fps_divisor);
     sec.emplace("window_upper", ConfigDat.window_upper);
     sec.emplace("msg_disable", ConfigDat.msg_disable);
@@ -260,7 +254,6 @@ GRAPHICS_PARAMS ConfigData::GraphicsParams() const {
       .window_scale_4x = window_scale_4x,
       .left = window_left,
       .top = window_top,
-      .bitdepth = bit_depth,
   };
 }
 
@@ -273,7 +266,6 @@ void ConfigData::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
   window_scale_4x = params.window_scale_4x;
   window_left = params.left;
   window_top = params.top;
-  bit_depth = params.bitdepth;
 }
 
 uint8_t ConfigData::PackInputFlags() const {

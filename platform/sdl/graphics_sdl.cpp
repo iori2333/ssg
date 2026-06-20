@@ -26,7 +26,6 @@ static constexpr auto LOG_CAT = SDL_LOG_CATEGORY_RENDER;
 /// State
 /// -----
 
-std::optional<PIXELFORMAT> PreferredPixelFormat;
 SDL_ScaleMode TextureScaleMode = SDL_SCALEMODE_NEAREST;
 
 // Primary renderer
@@ -111,32 +110,6 @@ constinit const ENUMARRAY<std::span<const INDEX_TYPE>, TRIANGLE_PRIMITIVE>
 
 // Helpers
 // -------
-
-std::optional<PIXELFORMAT> HelpPixelFormatFrom(SDL_PixelFormat format) {
-  switch (format) {
-  case SDL_PIXELFORMAT_ABGR8888:
-    return std::make_optional<PIXELFORMAT>(PIXELFORMAT::RGBA8888);
-  case SDL_PIXELFORMAT_ARGB8888:
-    return std::make_optional<PIXELFORMAT>(PIXELFORMAT::BGRA8888);
-  case SDL_PIXELFORMAT_XRGB8888:
-    return std::make_optional<PIXELFORMAT>(PIXELFORMAT::BGRX8888);
-  default:
-    return std::nullopt;
-  }
-}
-
-SDL_PixelFormat HelpPixelFormatFrom(PIXELFORMAT format) {
-  switch (format.format) {
-  case PIXELFORMAT::RGBA8888:
-    return SDL_PIXELFORMAT_ABGR8888;
-  case PIXELFORMAT::BGRA8888:
-    return SDL_PIXELFORMAT_ARGB8888;
-  case PIXELFORMAT::BGRX8888:
-    return SDL_PIXELFORMAT_XRGB8888;
-  default:
-    return SDL_PIXELFORMAT_UNKNOWN;
-  }
-}
 
 template <typename Rect> Rect HelpRectTo(const PIXEL_LTWH &o) noexcept {
   return Rect{
@@ -548,32 +521,13 @@ std::optional<GRAPHICS_INIT_RESULT> PrimaryInitFull(GRAPHICS_PARAMS params) {
       static_cast<size_t>(formats_end - formats_start),
   };
 
-  // Determine the preferred texture format. We don't overwrite
-  // [params.bitdepth] here to allow frictionless switching between the old
-  // DirectDraw/Direct3D backend and this one.
-  // SDL_GetWindowPixelFormat() is *not* a shortcut we could use for software
-  // rendering mode. On my system, it always returns the 24-bit RGB888, which
-  // we don't support.
-  SDL_PixelFormat sdl_format = SDL_PIXELFORMAT_UNKNOWN;
-  for (const auto format : PrimaryFormats) {
-    const auto maybe_pixel_format = HelpPixelFormatFrom(format);
-    if (!maybe_pixel_format) {
-      continue;
-    }
-    const auto pixel_format = maybe_pixel_format.value();
-    PreferredPixelFormat = pixel_format;
-    sdl_format = format;
-
-    // Both libwebp and BMP highly favor in-memory BGRA order.
-    if (pixel_format.format == PIXELFORMAT::BGRA8888) {
-      break;
-    }
-  }
-  if (!PreferredPixelFormat || (sdl_format == SDL_PIXELFORMAT_UNKNOWN)) {
+  // Verify the renderer supports BGRA8888 (SDL ARGB8888).
+  constexpr auto sdl_format = SDL_PIXELFORMAT_ARGB8888;
+  if (!std::ranges::contains(PrimaryFormats, sdl_format)) {
     const auto label = GrpBackend_APILabel(driver_str);
     SDL_LogCritical(LOG_CAT,
-                    "The \"%s\" renderer does not support any of the game's "
-                    "supported software rendering pixel formats.",
+                    "The \"%s\" renderer does not support the BGRA8888 pixel "
+                    "format required for software rendering.",
                     label.data());
     return PrimaryCleanup();
   }
@@ -728,16 +682,7 @@ std::string_view GrpBackend_APIString(void) {
   return SDL_GetStringProperty(props, SDL_PROP_RENDERER_NAME_STRING, nullptr);
 }
 
-PIXELFORMAT GrpBackend_PixelFormat(void) {
-  if (!PreferredPixelFormat) {
-    assert(!"The pixel format should always be valid here");
-    std::unreachable();
-  }
-  return PreferredPixelFormat.value();
-}
-
 void GrpBackend_PaletteGet(PALETTE &pal) {}
-bool GrpBackend_PaletteSet(const PALETTE &pal) { return false; }
 
 void TakeScreenshot(void) {
   // The rendering itself should not impact screenshot timing.
@@ -831,9 +776,8 @@ bool CreateTextureWithFormat(SURFACE_ID sid, SDL_PixelFormat fmt,
   return true;
 }
 
-bool GrpSurface_CreateUninitialized(SURFACE_ID sid, const PIXEL_SIZE &size,
-                                    PIXELFORMAT format) {
-  return CreateTextureWithFormat(sid, HelpPixelFormatFrom(format), size);
+bool GrpSurface_CreateUninitialized(SURFACE_ID sid, const PIXEL_SIZE &size) {
+  return CreateTextureWithFormat(sid, SDL_PIXELFORMAT_ARGB8888, size);
 }
 
 bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp) {
@@ -865,8 +809,6 @@ bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp) {
   TexturePostInit(*tex, *Renderer);
   return true;
 }
-
-bool GrpSurface_PaletteApplyToBackend(SURFACE_ID) { return true; }
 
 bool GrpSurface_Update(SURFACE_ID sid, const PIXEL_LTWH *subrect,
                        std::tuple<const std::byte *, size_t> pixels) noexcept {

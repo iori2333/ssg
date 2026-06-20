@@ -87,7 +87,6 @@ void MsgWindow::Tick() {
     if (face_time == 0) {
       face_state = MFACE_OPEN;
       face_id = next_face;
-      GrpBackend_PaletteSet(face_data[face_id / FACE_NUMX].pal);
     }
     break;
 
@@ -272,7 +271,6 @@ void MsgWindow::Face(uint8_t faceID) {
   if (face_state == MFACE_NONE) {
     face_state = MFACE_OPEN;
     face_id = faceID;
-    GrpBackend_PaletteSet(face_data[faceID / FACE_NUMX].pal);
   } else {
     face_state = MFACE_NEXT;
     next_face = faceID;

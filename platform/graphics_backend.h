@@ -66,14 +66,8 @@ void GrpBackend_SetClip(const WINDOW_LTRB &rect);
 // Returns the currently active rendering API.
 std::string_view GrpBackend_APIString(void);
 
-// Returns the current pixel format of the backbuffer.
-PIXELFORMAT GrpBackend_PixelFormat(void);
-
-// Retrieves the current backbuffer palette. Does nothing in channeled mode.
+// Retrieves the current backbuffer palette.
 void GrpBackend_PaletteGet(PALETTE &pal);
-
-// Sets the current backbuffer palette. Does nothing in channeled mode.
-bool GrpBackend_PaletteSet(const PALETTE &pal);
 
 struct FILE_STREAM_WRITE;
 void GrpBackend_Flip(bool take_screenshot);
@@ -83,16 +77,13 @@ void GrpBackend_Flip(bool take_screenshot);
 /// --------
 struct BMP_OWNED;
 
-// (Re-)creates the texture in the given surface slot with the given size and
-// format, and with undefined initial contents.
-bool GrpSurface_CreateUninitialized(SURFACE_ID sid, const PIXEL_SIZE &size,
-                                    PIXELFORMAT format);
+// (Re-)creates the texture in the given surface slot with the given size
+// and with undefined initial contents.
+bool GrpSurface_CreateUninitialized(SURFACE_ID sid, const PIXEL_SIZE &size);
 
 // Consumes the given .BMP file and sets the given surface to its contents,
 // re-creating it in the correct size if necessary.
 bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp);
-
-bool GrpSurface_PaletteApplyToBackend(SURFACE_ID sid);
 
 // Uploads [pixels] (consisting of a pointer and a row pitch) to a [subrect] of
 // [sid]. [subrect] can be a `nullptr` to overwrite the entire texture. The
@@ -265,7 +256,7 @@ bool GrpBackend_PixelAccessEnd(void);
 // Locks the backbuffer, returning a pointer to its pixels and the row pitch.
 // Should return a pitch of 0 on failure.
 // On success, the returned buffer has a size of [GRP_RES.h] times the returned
-// pitch, and uses the pixel format returned by GrpBackend_PixelFormat().
+// pitch, and always uses a 32-bit BGRA pixel format.
 std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock(void);
 
 // Unlocks the backbuffer.
@@ -277,17 +268,7 @@ void GrpBackend_PixelAccessEdit(auto func) {
   if (pitch == 0) {
     return;
   }
-  switch (GrpBackend_PixelFormat().PixelSize()) {
-  case PIXELFORMAT::SIZE8:
-    func.template operator()<uint8_t>(pixels, pitch);
-    break;
-  case PIXELFORMAT::SIZE16:
-    func.template operator()<uint16_t>(pixels, pitch);
-    break;
-  case PIXELFORMAT::SIZE32:
-    func.template operator()<uint32_t>(pixels, pitch);
-    break;
-  }
+  func.template operator()<uint32_t>(pixels, pitch);
   GrpBackend_PixelAccessUnlock();
 }
 /// ------------------------------------

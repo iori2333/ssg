@@ -104,10 +104,6 @@ struct RGB216 {
   }
 };
 
-// Sets a default palette covering 216 equally distributed RGB colors. Useful
-// for showing some text before loading any of the game's images that would
-// otherwise define a palette.
-void Grp_PaletteSetDefault(void);
 // ----------------- //
 
 // Screenshots
@@ -183,8 +179,6 @@ struct GRAPHICS_PARAMS {
   // the window backend should pick a reasonable default position.
   int16_t left;
   int16_t top;
-
-  BITDEPTH bitdepth;
 
   std::strong_ordering operator<=>(const GRAPHICS_PARAMS &) const = default;
 

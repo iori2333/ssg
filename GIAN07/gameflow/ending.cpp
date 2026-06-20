@@ -15,16 +15,8 @@
 
 // File-static variables moved to EndingManager in ending_manager.h
 
-void EndingManager::SetFixedColors(PALETTE &pal) {
-  pal[255] = {.r = 0x00, .g = 0x00, .b = 0x00};
-  pal[199] = {.r = 0xFF, .g = 0xFF, .b = 0xFF};
-  pal[198] = {.r = 0x80, .g = 0x80, .b = 0x80};
-}
-
 // Ending initialization
 bool EndingManager::Init() {
-  PALETTE pal;
-
   GrpBackend_SetClip(GRP_RES_RECT);
   GrpBackend_Clear();
   Grp_Flip();
@@ -34,10 +26,6 @@ bool EndingManager::Init() {
     return false;
   }
   BGM_Stop();
-
-  GrpBackend_PaletteGet(pal);
-  SetFixedColors(pal);
-  GrpBackend_PaletteSet(pal);
 
   GameFlow.game_main = EndingProc;
   GameFlow.current_state = GameState::Ending;
@@ -87,21 +75,7 @@ void EndingManager::Draw() {
   Grp_Flip();
 }
 
-// Graphic fadeout function
-void EndingManager::FadeoutPaletteGrp(PALETTE &Dest, const PALETTE &Src,
-                                      uint8_t a) {
-  Dest = Src.Fade(a, 0, 199);
-  EndingManager::SetFixedColors(Dest);
-}
-
 // Staff name fadeout function
-void EndingManager::FadeoutPaletteStf(PALETTE &Dest, const PALETTE &Src,
-                                      uint8_t a) {
-  Dest = Src.Fade(a, 200, 255);
-  EndingManager::SetFixedColors(Dest);
-}
-
-// Graphic update (internal data)
 void EndingManager::UpdateGrpInfo() {
   grp_info.timer++;
   if (grp_info.timer > grp_info.fadeout) {
@@ -201,37 +175,8 @@ void EndingManager::Text::Render(WINDOW_POINT topleft) {
   });
 }
 
-void EndingManager::FlashPaletteGrp(PALETTE &dest, const PALETTE &pal,
-                                    uint16_t a) {
-  const uint16_t a16 = ((a > 256) ? (a - 256) : a);
-  for (int i = 0; i < dest.size(); i++) {
-    dest[i].r = (std::min)(256, ((256 * (256 - a)) + (pal[i].r * a16)) / 256);
-    dest[i].g = (std::min)(256, ((256 * (256 - a)) + (pal[i].g * a16)) / 256);
-    dest[i].b = (std::min)(256, ((256 * (256 - a)) + (pal[i].b * a16)) / 256);
-  }
-}
-
 // Apply fade I/O info
 void EndingManager::DrawFadeInfo() {
-  PALETTE temp_pal;
-
-  // Fadeout related
-  if (GrpGeom_FB() != nullptr) {
-    if (flash_state != 0U) {
-      FlashPaletteGrp(temp_pal, grp_info.target->pal, flash_state);
-      GrpBackend_PaletteSet(temp_pal);
-    } else if (grp_info.target != nullptr) {
-      FadeoutPaletteGrp(temp_pal, grp_info.target->pal,
-                        Cast::down_sign<uint8_t>(grp_info.alpha));
-      FadeoutPaletteStf(temp_pal, temp_pal,
-                        Cast::down_sign<uint8_t>(stf_task.alpha));
-      GrpBackend_PaletteSet(temp_pal);
-    } else {
-      temp_pal = {0};
-      SetFixedColors(temp_pal);
-      GrpBackend_PaletteSet(temp_pal);
-    }
-  } else {
     GrpGeom->Lock();
 
     if (grp_info.bWantDisp) {
@@ -258,7 +203,6 @@ void EndingManager::DrawFadeInfo() {
     }
 
     GrpGeom->Unlock();
-  }
 }
 
 // Ending SCL decode
