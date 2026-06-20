@@ -518,7 +518,7 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
 
 MidiPanel::MidiPanel() {
   items_.reserve(3);
-  items_.emplace_back(title_port_.Lit(), "MIDI Port (保存はされません)", FnDev);
+  items_.emplace_back(title_port_.Lit(), "SoundFont", FnDev);
   items_.emplace_back(title_fixes_.Lit(),
                       "Retain SC-88Pro echo on other Roland synths", FnFixes);
   items_.emplace_back(SubmenuExitItem);
@@ -582,10 +582,8 @@ SoundPanel::SoundPanel() {
                       "毎に曲から音量の違うことが外します", FnBGMGain);
   items_.emplace_back(title_bgm_pack_.Lit(),
                       "収録のサントラをダウンロードします", FnBGMPack);
-#ifdef SUPPORT_MIDI_BACKEND
   items_.emplace_back("MIDI", "Change MIDI playback options",
                       midi_panel_.Menu());
-#endif
   items_.emplace_back(SubmenuExitItem);
   menu_ = MenuDef(std::span(items_),
                   [this](MenuController &c, bool t) { Refresh(c, t); });

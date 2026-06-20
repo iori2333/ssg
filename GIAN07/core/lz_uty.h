@@ -92,7 +92,7 @@ struct PACKFILE_WRITE {
   std::vector<BYTE_BUFFER_BORROWED> files;
 
   bool Write(const char *s,
-             std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps = nullptr) const;
+             std::optional<FILE_TIMESTAMPS> maybe_timestamps = std::nullopt) const;
 };
 
 BIT_FILE_READ BitFilCreateR(const char *s);

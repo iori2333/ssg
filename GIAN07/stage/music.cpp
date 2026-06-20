@@ -61,7 +61,6 @@ void MUSICROOM_TEXT::RenderVersion(WINDOW_POINT topleft) const {
 }
 
 void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
-#ifdef SUPPORT_MIDI_BACKEND
   const auto maybe_dev_full = MidBackend_DeviceName();
   if (!maybe_dev_full) {
     return;
@@ -73,7 +72,6 @@ void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
     s.SetColor(ColorDefault);
     s.Put({.x = 0, .y = 0}, dev);
   });
-#endif
 }
 
 void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
@@ -491,11 +489,9 @@ void MusicRoomProc(bool & /*unused*/) {
     // TextOut(hdc,561,112+2,buf,strlen(buf));
     // SetTextColor(hdc,RGB(255*5/5,255*2/5,255*1/5));
 
-#ifdef SUPPORT_MIDI_BACKEND
     if (playing == BGM_PLAYING::MIDI) {
       text.RenderMidDev({(540 + 2), (96 - 3)});
     }
-#endif
     text.RenderTitle({400, (144 + 2)});
     text.RenderComment({(400 - 40), (144 + 30)});
     text.RenderVersion({(200 - 50), 460});

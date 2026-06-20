@@ -51,6 +51,7 @@ struct ConfigData {
   bool se_enabled = true;   // Sound effects enabled
   bool bgm_vol_norm = true; // BGM volume normalization enabled
   MID_FLAGS midi_flags = MID_FLAGS::FIX_SYSEX_BUGS;
+  std::string soundfont;
   VOLUME se_volume = ((VOLUME_MAX * 4) / 10);
   VOLUME bgm_volume = ((VOLUME_MAX * 4) / 10);
   std::string bgm_pack;

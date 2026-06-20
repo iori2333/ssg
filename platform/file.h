@@ -4,21 +4,22 @@
 
 #pragma once
 
+#include <filesystem>
+#include <optional>
+
 #include <SDL3/SDL_iostream.h>
 
 #include "platform/buffer.h"
 
 struct SDL_IOStream;
-struct FILE_TIMESTAMPS {};
 
-// Retrieves the system-specific timestamps of the given file if it exists, or
-// a `nullptr` otherwise.
-std::unique_ptr<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn);
+using FILE_TIMESTAMPS = std::filesystem::file_time_type;
 
-// Closes [context] and applies the given timestamps to the on-disk file if
-// they are a valid pointer.
+std::optional<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn);
+
 bool File_CloseWithTimestamps(
-    SDL_IOStream *&&context, std::unique_ptr<FILE_TIMESTAMPS> maybe_timestamps);
+    SDL_IOStream *&&context, const char *path,
+    std::optional<FILE_TIMESTAMPS> maybe_time);
 
 // SDL wrappers
 // ------------

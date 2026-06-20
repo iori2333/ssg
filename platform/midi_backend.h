@@ -4,16 +4,10 @@
 
 #pragma once
 
-#ifdef WIN32
-#define SUPPORT_MIDI_BACKEND
-#endif
-
-#ifdef SUPPORT_MIDI_BACKEND
-
 #include <cstdint>
-#include <string_view>
 #include <optional>
 #include <span>
+#include <string_view>
 
 // Initializes the backend with a default output device.
 bool MidBackend_Init(void); // MIDI-related initialization
@@ -42,5 +36,3 @@ void MidBackend_Out(std::span<uint8_t> event);
 
 // Stops all currently playing notes.
 void MidBackend_Panic(void);
-
-#endif

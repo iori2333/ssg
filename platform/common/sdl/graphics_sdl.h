@@ -6,20 +6,17 @@
 
 #include "platform/graphics_backend.h"
 
-class GRAPHICS_GEOMETRY_SDL : public GRAPHICS_GEOMETRY {
+class GRAPHICS_GEOMETRY_SDL {
 public:
-  // Generic methods
-  // ---------------
-
-  void Lock(void) final;
-  void Unlock(void) final;
-  void SetColor(RGB216 col) final;
-  void SetAlphaNorm(uint8_t a) final;
-  void SetAlphaOne(void) final;
-  void DrawLine(int x1, int y1, int x2, int y2) final;
-  void DrawBox(int x1, int y1, int x2, int y2) final;
-  void DrawBoxA(int x1, int y1, int x2, int y2) final;
-  void DrawTriangleFan(VERTEX_XY_SPAN<>) final;
+  void Lock(void);
+  void Unlock(void);
+  void SetColor(RGB216 col);
+  void SetAlphaNorm(uint8_t a);
+  void SetAlphaOne(void);
+  void DrawLine(int x1, int y1, int x2, int y2);
+  void DrawBox(int x1, int y1, int x2, int y2);
+  void DrawBoxA(int x1, int y1, int x2, int y2);
+  void DrawTriangleFan(VERTEX_XY_SPAN<>);
   // ----------
 
   // Poly methods

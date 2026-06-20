@@ -107,24 +107,6 @@ void GrpSurface_BlitOpaque(WINDOW_POINT topleft, SURFACE_ID sid,
 // Temporarily tint all subsequent blits from [sid].
 void GrpSurface_SetColorMod(SURFACE_ID sid, uint8_t r, uint8_t g, uint8_t b);
 
-#ifdef WIN32
-// Win32 GDI text rendering bridge
-// -------------------------------
-class SURFACE_GDI;
-
-// Returns a reference to the backend's designated GDI text surface.
-SURFACE_GDI &GrpSurface_GDIText_Surface(void) noexcept;
-
-// (Re-)creates the backend's designated GDI text surface with the given size
-// and undefined initial contents. [w] and [h] have already been validated to
-// fit into the positive range of a signed 32-bit integer. After filling it
-// with the intended pixels, call GrpSurface_GDIText_Update() to upload them to
-// the backend.
-bool GrpSurface_GDIText_Create(int32_t w, int32_t h, RGB colorkey);
-
-bool GrpSurface_GDIText_Update(const PIXEL_LTWH &r) noexcept;
-// -------------------------------
-#endif
 /// --------
 
 /// Geometry
@@ -158,58 +140,9 @@ using VERTEX_RGBA_SPAN = std::span<const VERTEX_RGBA, N>;
 enum class TRIANGLE_PRIMITIVE : uint8_t { FAN, STRIP, COUNT };
 // ------------
 
-// Base interface for geometry draw calls that can be implemented differently
-// for channeled and palettized pixel modes. Implementations can decide whether
-// to use this interface
-// • polymorphically and have [GrpGeom] be a GRAPHICS_GEOMETRY* that points to
-//   the channeled or palettized subclass, or
-// • just as a concept to constrain a single shared renderer subclass, and then
-//   have [GrpGeom] be an instance of that single subclass.
-class GRAPHICS_GEOMETRY {
-public:
-  // Rendering state
-  // ---------------
-  // SetColor() should only affect Draw*() calls, and SetAlpha() should only
-  // affect Draw*A() calls. Backends with equally stateful handling of alpha
-  // blending must implement this as follows:
-  //
-  // • Leave alpha blending deactivated for all non-*A() calls. If the
-  //   backend requires RGBA color values for vertices of those calls as
-  //   well, set their alpha component to 0xFF.
-  // • Selectively activate alpha blending only during *A() calls and
-  //   immediately disable it before returning.
-
-  virtual void Lock(void) = 0;   // Prepare geometry drawing
-  virtual void Unlock(void) = 0; // Complete geometry drawing
-
-  virtual void SetColor(RGB216 col) = 0; // Set color
-
-  // Enables regular alpha blending.
-  // dstRGB = (srcRGB * [a]) + (dstRGB * (1 - [a]))
-  virtual void SetAlphaNorm(uint8_t a) = 0;
-
-  // Enables additive blending with a fixed alpha factor of 1.
-  // dstRGB = (srcRGB * 1) + dstRGB
-  virtual void SetAlphaOne(void) = 0;
-  // ---------------
-
-  // Draw calls
-  // ----------
-
-  // Line
-  virtual void DrawLine(int x1, int y1, int x2, int y2) = 0;
-
-  // Rectangle
-  virtual void DrawBox(int x1, int y1, int x2, int y2) = 0;
-
-  // Alpha rectangle
-  virtual void DrawBoxA(int x1, int y1, int x2, int y2) = 0;
-
-  virtual void DrawTriangleFan(VERTEX_XY_SPAN<>) = 0;
-  // ----------
-
-  virtual ~GRAPHICS_GEOMETRY() {}
-};
+// [GrpGeom] is a GRAPHICS_GEOMETRY_SDL* that points to the current geometry
+// renderer instance.
+class GRAPHICS_GEOMETRY_SDL;
 
 // Interface for geometry draw calls that require true-color polygon rendering.
 // The [colors] span either must be either
@@ -273,4 +206,4 @@ void GrpBackend_PixelAccessEdit(auto func) {
 }
 /// ------------------------------------
 
-#include "platform/sdl/graphics_sdl.h"
+#include "platform/common/sdl/graphics_sdl.h"

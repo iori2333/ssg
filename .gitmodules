@@ -31,3 +31,6 @@
 [submodule "libs/tomlplusplus"]
 	path = libs/tomlplusplus
 	url = https://github.com/marzer/tomlplusplus.git
+[submodule "libs/tinysoundfont"]
+	path = libs/tinysoundfont
+	url = https://github.com/schellingb/TinySoundFont.git

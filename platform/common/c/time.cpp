@@ -2,8 +2,11 @@
 /// Time interface (std::chrono implementation)
 ///
 
+#include <chrono>
+#include <ctime>
+#include <cassert>
+
 #include "platform/time.h"
-#include <assert.h>
 
 uint32_t Time_SteadyTicksMS() {
   const auto now = (std::chrono::steady_clock::now().time_since_epoch());
@@ -12,9 +15,13 @@ uint32_t Time_SteadyTicksMS() {
 
 TIME_OF_DAY Time_NowLocal() {
   const auto ctime = std::time(nullptr);
-  const auto &tm = *std::localtime(&ctime);
+  std::tm tm{};
+#ifdef _MSC_VER
+  localtime_s(&tm, &ctime);
+#else
+  tm = *std::localtime(&ctime);
+#endif
 
-  // Signed integers! Yay!
   assert(tm.tm_year >= 0);
   assert(tm.tm_mon >= 0);
   assert(tm.tm_mday >= 0);
