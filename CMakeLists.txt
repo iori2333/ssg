@@ -16,8 +16,6 @@ foreach(VARNAME APP_ID PATH_SKELETON)
         string(APPEND PLATFORM_CONSTANTS_DEFINES "#undef ${VARNAME}\n")
     endif()
 endforeach()
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/obj/platform_constants.h.in
-               ${CMAKE_CURRENT_BINARY_DIR}/obj/platform_constants.h @ONLY)
 
 # ============================================================
 # Platform-specific settings

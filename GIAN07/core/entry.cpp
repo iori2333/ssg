@@ -12,7 +12,6 @@
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "loader.h"
-#include "obj/platform_constants.h"
 #include "platform/graphics_backend.h"
 #include "platform/input.h"
 #include "platform/path.h"
