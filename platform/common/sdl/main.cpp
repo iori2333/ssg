@@ -20,7 +20,7 @@
 
 #include "GIAN07/core/entry.h"
 #include "game/guard.h"
-#include "platform/sdl/log_sdl.h"
+#include "platform/common/sdl/log_sdl.h"
 #include "platform/window_backend.h"
 #include "GIAN07/core/constants.h"
 

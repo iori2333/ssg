@@ -16,9 +16,9 @@ using SDL_COLOR = SDL_FColor;
 #include "game/guard.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
-#include "platform/sdl/graphics_sdl.h"
-#include "platform/sdl/log_sdl.h"
-#include "platform/sdl/window_sdl.h"
+#include "platform/common/sdl/graphics_sdl.h"
+#include "platform/common/sdl/log_sdl.h"
+#include "platform/common/sdl/window_sdl.h"
 #include "platform/text_backend.h"
 #include "platform/window_backend.h"
 

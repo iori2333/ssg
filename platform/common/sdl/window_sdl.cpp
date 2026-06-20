@@ -17,8 +17,8 @@
 #include "game/graphics.h"
 #include "platform/graphics_backend.h"
 #include "platform/input.h"
-#include "platform/sdl/log_sdl.h"
-#include "platform/sdl/window_sdl.h"
+#include "platform/common/sdl/log_sdl.h"
+#include "platform/common/sdl/window_sdl.h"
 #include "platform/snd_backend.h"
 #include "platform/window_backend.h"
 

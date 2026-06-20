@@ -5,7 +5,7 @@
 #include <SDL3/SDL_audio.h>
 #include <ranges>
 
-#include "platform/miniaudio/flags.h"
+#include "platform/common/miniaudio/flags.h"
 #include <libs/miniaudio/miniaudio.h>
 
 #include "game/bgm_track.h"

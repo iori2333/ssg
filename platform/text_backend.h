@@ -27,7 +27,7 @@ bool GrpSurface_GDIText_Update(const PIXEL_LTWH &r) noexcept;
 
 #include "platform/windows/text_gdi.h"
 #elif defined(LINUX)
-#include "platform/pangocairo/text_pangocairo.h"
+#include "platform/linux/pangocairo/text_pangocairo.h"
 #endif
 
 static_assert(

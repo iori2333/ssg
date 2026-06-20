@@ -206,4 +206,4 @@ void GrpBackend_PixelAccessEdit(auto func) {
 }
 /// ------------------------------------
 
-#include "platform/sdl/graphics_sdl.h"
+#include "platform/common/sdl/graphics_sdl.h"

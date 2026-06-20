@@ -74,14 +74,20 @@ file(GLOB GAME_SRC CONFIGURE_DEPENDS
     "game/codecs/*.cpp"
 )
 
-# --- SDL3 platform backend (all platforms) ---
-file(GLOB PLATFORM_SDL_SRC CONFIGURE_DEPENDS
-    "platform/sdl/*.cpp"
+# --- Platform backends shared by all platforms ---
+file(GLOB PLATFORM_COMMON_SRC CONFIGURE_DEPENDS
+    "platform/common/*/*.cpp"
+    "platform/common/*/*.c"
 )
 
-# --- miniaudio sound backend ---
-file(GLOB PLATFORM_MINIAUDIO_SRC CONFIGURE_DEPENDS
-    "platform/miniaudio/*.cpp"
+# --- Windows-specific backends ---
+file(GLOB PLATFORM_WINDOWS_SRC CONFIGURE_DEPENDS
+    "platform/windows/*.cpp"
+)
+
+# --- Linux-specific backends ---
+file(GLOB PLATFORM_LINUX_SRC CONFIGURE_DEPENDS
+    "platform/linux/*/*.cpp"
 )
 
 # ============================================================
@@ -90,30 +96,18 @@ file(GLOB PLATFORM_MINIAUDIO_SRC CONFIGURE_DEPENDS
 add_executable(GIAN07
     ${PBG_SRC}
     ${GAME_SRC}
-    ${PLATFORM_SDL_SRC}
-    ${PLATFORM_MINIAUDIO_SRC}
-    platform/c/file.cpp
-    platform/c/time.cpp
+    ${PLATFORM_COMMON_SRC}
 )
 
 if(WIN32)
-    target_sources(GIAN07 PRIVATE
-        platform/windows/midi_backend_winmm.cpp
-        platform/windows/surface_gdi.cpp
-        platform/windows/text_gdi.cpp
-        platform/miniaudio/miniaudio.c
-    )
+    target_sources(GIAN07 PRIVATE ${PLATFORM_WINDOWS_SRC})
 
-    # Windows resource file
     target_sources(GIAN07 PRIVATE GIAN07/GIAN07.rc)
 
     target_compile_definitions(GIAN07 PRIVATE WIN32)
     target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})
 elseif(UNIX)
-    target_sources(GIAN07 PRIVATE
-        platform/pangocairo/text_pangocairo.cpp
-        platform/miniaudio/miniaudio.c
-    )
+    target_sources(GIAN07 PRIVATE ${PLATFORM_LINUX_SRC})
     target_compile_definitions(GIAN07 PRIVATE LINUX SDL3=1)
     target_link_libraries(GIAN07 PRIVATE
         PkgConfig::PANGO
@@ -166,15 +160,13 @@ endif()
 add_executable(pack_tool
     tools/pack_tool.cpp
     GIAN07/core/lz_uty.cpp
-    platform/sdl/buffer_sdl.cpp
-    platform/sdl/file_sdl.cpp
+    platform/common/sdl/buffer_sdl.cpp
+    platform/common/sdl/file_sdl.cpp
+    platform/common/c/file.cpp
 )
 if(WIN32)
-    target_sources(pack_tool PRIVATE platform/c/file.cpp)
     target_compile_definitions(pack_tool PRIVATE WIN32)
     target_link_libraries(pack_tool PRIVATE ${WIN32_SYSTEM_LIBS})
-elseif(UNIX)
-    target_sources(pack_tool PRIVATE platform/c/file.cpp)
 endif()
 target_include_directories(pack_tool PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
