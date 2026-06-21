@@ -9,7 +9,7 @@
 #include "util/cast.h"
 #include "util/endian.h"
 #include "core/gian.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 #include "stage/scene.h" // SCL definition file
 #include <utility>
 

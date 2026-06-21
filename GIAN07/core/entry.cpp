@@ -15,7 +15,7 @@
 #include "gfx/graphics_backend.h"
 #include "sys/input.h"
 #include "sys/path.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 #include "gfx/window_backend.h"
 #include <SDL3/SDL_filesystem.h>
 #include <chrono>

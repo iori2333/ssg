@@ -7,7 +7,7 @@
 #include "gfx/coords.h"
 #include "gfx/text.h"
 #include "gfx/graphics_backend.h"
-#include "windows/text_gdi.h"
+#include "platform/windows/text_gdi.h"
 
 // Draw menu label (title / item)
 void MenuDrawLabel(TEXTRENDER_SESSION &s, const MenuLabel &label,

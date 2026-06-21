@@ -9,7 +9,7 @@
 #include "audio/snd.h"
 #include "core/loader.h"
 #include "menu/menu_renderer.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 #include <utility>
 
 // [MenuDef / MenuItem methods]

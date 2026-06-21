@@ -21,7 +21,7 @@
 #include "core/loader.h"
 #include "music.h"
 #include "audio/midi_backend.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 
 // Constants
 // ---------

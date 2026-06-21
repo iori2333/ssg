@@ -2,7 +2,7 @@
 /// 2D surfaces via GDI bitmaps
 ///
 
-#include "windows/surface_gdi.h"
+#include "platform/windows/surface_gdi.h"
 #include "gfx/format_bmp.h"
 #include "sys/file.h"
 #include <array>

@@ -77,15 +77,16 @@ file(GLOB_RECURSE PBG_SRC CONFIGURE_DEPENDS
 file(GLOB_RECURSE GAME_SRC CONFIGURE_DEPENDS
     "game/*.cpp"
 )
+list(FILTER GAME_SRC EXCLUDE REGEX "game/platform/")
 
 # --- Windows-specific backends ---
 file(GLOB PLATFORM_WINDOWS_SRC CONFIGURE_DEPENDS
-    "platform/windows/*.cpp"
+    "game/platform/windows/*.cpp"
 )
 
 # --- Linux-specific backends ---
 file(GLOB PLATFORM_LINUX_SRC CONFIGURE_DEPENDS
-    "platform/linux/*/*.cpp"
+    "game/platform/linux/*/*.cpp"
 )
 
 # ============================================================
@@ -119,7 +120,6 @@ endif()
 target_include_directories(GIAN07 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
-    ${CMAKE_CURRENT_SOURCE_DIR}/platform
 )
 
 # Include generated version header

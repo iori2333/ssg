@@ -17,7 +17,7 @@
 #include "effect/lens.h"
 #include "core/level.h"
 #include "stage/music.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 #include "util/time.h"
 #include "score.h"
 #include "stage/ui_manager.h"

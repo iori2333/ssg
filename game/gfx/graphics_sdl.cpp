@@ -19,7 +19,7 @@ using SDL_COLOR = SDL_FColor;
 #include "gfx/graphics_sdl.h"
 #include "sys/log.h"
 #include "gfx/window_sdl.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 #include "gfx/window_backend.h"
 
 static constexpr auto LOG_CAT = SDL_LOG_CATEGORY_RENDER;
@@ -875,7 +875,7 @@ void GrpSurface_SetColorMod(SURFACE_ID sid, uint8_t r, uint8_t g, uint8_t b) {
 // Win32 GDI text rendering bridge
 // -------------------------------
 
-#include "windows/surface_gdi.h"
+#include "platform/windows/surface_gdi.h"
 
 // SDL textures only support transparency via alpha blending, and the only
 // alpha-blended formats available on any SDL_Renderer backend in a Windows

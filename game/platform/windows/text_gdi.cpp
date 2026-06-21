@@ -2,8 +2,8 @@
 /// Text rendering via GDI
 ///
 
-#include "text_backend.h"
-#include "windows/surface_gdi.h"
+#include "platform/text_backend.h"
+#include "platform/windows/surface_gdi.h"
 #include <vector>
 #include <windows.h>
 

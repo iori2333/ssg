@@ -8,7 +8,7 @@
 #include <pango/pangocairo.h>
 
 #include "util/guard.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 
 constexpr auto FORMAT = CAIRO_FORMAT_ARGB32;
 extern const ENUMARRAY<const char *, FONT_ID> FontSpecs;

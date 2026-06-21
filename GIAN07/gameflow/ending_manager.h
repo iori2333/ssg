@@ -8,7 +8,7 @@
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "core/loader.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 #include <array>
 #include <cstdint>
 #include <string>

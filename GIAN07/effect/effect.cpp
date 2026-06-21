@@ -10,7 +10,7 @@
 #include "util/ut_math.h"
 #include "geometry.h"
 #include "core/gian.h"
-#include "text_backend.h"
+#include "platform/text_backend.h"
 #include <algorithm>
 
 // string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect,
