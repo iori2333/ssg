@@ -15,7 +15,7 @@
 #include <miniaudio.h>
 #include <tsf.h>
 
-#include "config.h"
+#include "core/config.h"
 #include "audio/midi.h"
 #include "sys/path.h"
 

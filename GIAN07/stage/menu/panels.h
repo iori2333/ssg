@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "menu/menu_text.h"
+#include "stage/menu/menu_text.h"
 #include "gfx/graphics_sdl.h" // SUPPORT_GRP_*, GRP_SCREENSHOT_*
-#include "window_sys.h"
+#include "stage/window_sys.h"
 
 #include <array>
 #include <vector>

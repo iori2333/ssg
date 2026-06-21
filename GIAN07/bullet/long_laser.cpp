@@ -5,10 +5,10 @@
 #include "long_laser.h"
 #include "audio/snd.h"
 #include "util/ut_math.h"
-#include "geometry.h"
+#include "effect/geometry.h"
 #include "laser_manager.h"
 #include "gfx/graphics_backend.h"
-#include "player.h"
+#include "player/player.h"
 
 // Laser variables 2 moved to laser_manager.cpp
 // long_lasers[], LLaserCmd defined in laser_manager.cpp

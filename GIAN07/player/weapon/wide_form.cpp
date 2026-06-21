@@ -6,8 +6,8 @@
 
 #include "util/cast.h"
 #include "util/ut_math.h"
-#include "gian.h"
-#include "player.h"
+#include "core/gian.h"
+#include "player/player.h"
 
 // --- WideForm (base: spread shot) ---
 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "window_sys.h" // MenuLabel, PIXEL_*
+#include "stage/window_sys.h" // MenuLabel, PIXEL_*
 
 struct TEXTRENDER_SESSION;
 

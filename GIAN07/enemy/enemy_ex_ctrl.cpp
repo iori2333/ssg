@@ -13,11 +13,11 @@
 #include "util/cast.h"
 #include "audio/snd.h"
 #include "util/ut_math.h"
-#include "laser_manager.h"
-#include "loader.h"
-#include "long_laser.h"
+#include "bullet/laser_manager.h"
+#include "core/loader.h"
+#include "bullet/long_laser.h"
 #include "gfx/graphics_backend.h"
-#include "player.h"
+#include "player/player.h"
 #include <utility>
 
 static constexpr auto BIT_VIRTUAL_HP = 990000; // Bit virtual HP

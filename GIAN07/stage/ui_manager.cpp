@@ -7,10 +7,10 @@
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_misc.h>
 
-#include "config.h"
-#include "demo_play.h"
+#include "core/config.h"
+#include "gameflow/demo_play.h"
 #include "audio/bgm.h"
-#include "game_main.h"
+#include "gameflow/game_main.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/gameflow_manager.h"
 

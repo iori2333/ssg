@@ -3,7 +3,7 @@
 ///
 #pragma once
 
-#include "constants.h"
+#include "core/constants.h"
 #include "gfx/coords.h"
 #include "util/enum_array.h"
 #include "gfx/graphics.h"

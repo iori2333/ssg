@@ -5,7 +5,7 @@
 #include "effect3d.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
-#include "gian.h"
+#include "core/gian.h"
 #include "gfx/graphics_backend.h"
 
 // CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h

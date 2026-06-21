@@ -4,8 +4,8 @@
 
 #include "scroll.h"
 
-#include "config.h"
-#include "demo_play.h"
+#include "core/config.h"
+#include "gameflow/demo_play.h"
 #include "audio/bgm.h"
 #include "util/cast.h"
 #include "util/debug.h"
@@ -13,8 +13,8 @@
 #include "sys/input.h"
 #include "audio/snd.h"
 #include "util/ut_math.h"
-#include "gian.h"
-#include "level.h"
+#include "core/gian.h"
+#include "core/level.h"
 #include "gfx/graphics_backend.h"
 #include "scene.h" // SCL definition file
 #include "ui_manager.h"

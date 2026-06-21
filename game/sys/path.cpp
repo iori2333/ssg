@@ -5,7 +5,7 @@
 // SDL headers must come first to avoid import→#include bugs on Clang 19.
 #include <SDL3/SDL_filesystem.h>
 
-#include "constants.h"
+#include "core/constants.h"
 #include "sys/path.h"
 
 #ifndef WIN32

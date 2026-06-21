@@ -12,8 +12,8 @@
 #include "util/endian.h"
 #include "audio/snd.h"
 #include "util/ut_math.h"
-#include "gian.h"
-#include "level.h"
+#include "core/gian.h"
+#include "core/level.h"
 #include "gfx/graphics_backend.h"
 #include <utility>
 

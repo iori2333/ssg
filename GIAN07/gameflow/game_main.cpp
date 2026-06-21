@@ -2,26 +2,26 @@
 /// GameMain - Window system switching and other processing
 ///
 #include "game_main.h"
-#include "bomb_efc.h" // Explosion effect processing
-#include "config.h"
+#include "effect/bomb_efc.h" // Explosion effect processing
+#include "core/config.h"
 #include "demo_manager.h"
 #include "demo_play.h"
-#include "font_uty.h"
+#include "effect/font_uty.h"
 #include "audio/bgm.h"
 #include "util/debug.h"
 #include "sys/input.h"
 #include "audio/snd.h"
 #include "util/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
-#include "lens.h"
-#include "level.h"
-#include "music.h"
-#include "platform/text_backend.h"
+#include "effect/geometry.h"
+#include "core/gian.h"
+#include "effect/lens.h"
+#include "core/level.h"
+#include "stage/music.h"
+#include "text_backend.h"
 #include "util/time.h"
 #include "score.h"
-#include "ui_manager.h"
-#include "window_sys.h"
+#include "stage/ui_manager.h"
+#include "stage/window_sys.h"
 #include <algorithm>
 #include <chrono>
 #include <format>

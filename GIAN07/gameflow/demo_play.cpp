@@ -3,13 +3,13 @@
 ///
 
 #include "demo_play.h"
-#include "config.h"
+#include "core/config.h"
 #include "demo_manager.h"
 #include "util/guard.h"
 #include "sys/input.h"
 #include "util/ut_math.h"
-#include "gian.h"
-#include "lz_uty.h"
+#include "core/gian.h"
+#include "core/lz_uty.h"
 #include "sys/file.h"
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>

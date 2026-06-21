@@ -7,14 +7,14 @@
 #include <format>
 #include <utility>
 
-#include "config.h"
-#include "font_uty.h"
+#include "core/config.h"
+#include "effect/font_uty.h"
 #include "sys/input.h"
 #include "audio/snd.h"
-#include "geometry.h"
-#include "gian.h"
+#include "effect/geometry.h"
+#include "core/gian.h"
 #include "player.h"
-#include "level.h"
+#include "core/level.h"
 #include "weapon/homing_form.h"
 #include "weapon/laser_form.h"
 #include "weapon/wide_form.h"

@@ -5,7 +5,7 @@
 #pragma once
 
 #include "gfx/text.h"
-#include "window_sys.h" // MSG_HEIGHT, WINDOW_LTRB, FONT_ID, MenuController
+#include "stage/window_sys.h" // MSG_HEIGHT, WINDOW_LTRB, FONT_ID, MenuController
 #include <optional>
 #include <string>
 

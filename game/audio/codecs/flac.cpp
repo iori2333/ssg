@@ -8,7 +8,7 @@
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
 #include <SDL3/SDL_iostream.h>
-#include <libs/dr_libs/dr_flac.h>
+#include <dr_flac.h>
 
 #include "audio/bgm_track.h"
 

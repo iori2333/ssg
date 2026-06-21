@@ -99,7 +99,7 @@ add_executable(GIAN07
 if(WIN32)
     target_sources(GIAN07 PRIVATE ${PLATFORM_WINDOWS_SRC})
 
-    target_sources(GIAN07 PRIVATE GIAN07/GIAN07.rc)
+    target_sources(GIAN07 PRIVATE game/GIAN07.rc)
 
     target_compile_definitions(GIAN07 PRIVATE WIN32)
     target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})
@@ -117,16 +117,9 @@ endif()
 # Include directories
 # ============================================================
 target_include_directories(GIAN07 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/gameflow
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/player
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/enemy
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/bullet
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/effect
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/stage
+    ${CMAKE_CURRENT_SOURCE_DIR}/platform
 )
 
 # Include generated version header
@@ -167,9 +160,8 @@ if(WIN32)
     target_link_libraries(pack_tool PRIVATE ${WIN32_SYSTEM_LIBS})
 endif()
 target_include_directories(pack_tool PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/game
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
 )
 target_link_libraries(pack_tool PRIVATE SDL3::SDL3-static)
 set_target_properties(pack_tool PROPERTIES
@@ -186,7 +178,6 @@ add_executable(script_tool
     tools/script_tool.cpp
 )
 target_include_directories(script_tool PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/game
 )
 set_target_properties(script_tool PROPERTIES

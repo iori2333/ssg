@@ -3,8 +3,8 @@
 ///
 
 #include "play_rank.h"
-#include "gian.h"
-#include "level.h"
+#include "core/gian.h"
+#include "core/level.h"
 
 // PlayRank moved to rank_manager.cpp
 

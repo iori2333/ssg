@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "window_sys.h" // MenuItem, MenuDef, MenuLabel, MenuController
+#include "stage/window_sys.h" // MenuItem, MenuDef, MenuLabel, MenuController
 
 #include <array>
 #include <cstddef>

@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "level.h"
+#include "core/level.h"
 
 // [Struct]
 struct PlayRankState {

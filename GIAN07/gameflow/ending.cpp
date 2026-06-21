@@ -8,9 +8,9 @@
 #include "audio/bgm.h"
 #include "util/cast.h"
 #include "util/endian.h"
-#include "gian.h"
-#include "platform/text_backend.h"
-#include "scene.h" // SCL definition file
+#include "core/gian.h"
+#include "text_backend.h"
+#include "stage/scene.h" // SCL definition file
 #include <utility>
 
 // File-static variables moved to EndingManager in ending_manager.h

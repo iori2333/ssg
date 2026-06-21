@@ -6,11 +6,11 @@
 
 #include "audio/snd.h"
 #include "util/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
+#include "effect/geometry.h"
+#include "core/gian.h"
 #include "laser_manager.h"
 #include "gfx/graphics_backend.h"
-#include "player.h"
+#include "player/player.h"
 #include <utility>
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);

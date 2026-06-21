@@ -7,9 +7,9 @@
 #include "util/enum_flags.h"
 #include "sys/input.h"
 #include "audio/snd.h"
-#include "loader.h"
+#include "core/loader.h"
 #include "menu/menu_renderer.h"
-#include "platform/text_backend.h"
+#include "text_backend.h"
 #include <utility>
 
 // [MenuDef / MenuItem methods]

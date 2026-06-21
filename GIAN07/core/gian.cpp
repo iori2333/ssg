@@ -7,7 +7,7 @@
 #include "bullet/laser_manager.h"
 #include "config.h"
 #include "enemy/enemy_manager.h"
-#include "font_uty.h"
+#include "effect/font_uty.h"
 #include "gameflow/rank_manager.h"
 #include "level.h"
 #include "util/time.h"

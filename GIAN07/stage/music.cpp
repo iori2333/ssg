@@ -8,20 +8,20 @@
 
 #include <format>
 
-#include "effect.h"
-#include "font_uty.h"
+#include "effect/effect.h"
+#include "effect/font_uty.h"
 #include "audio/bgm.h"
 #include "util/debug.h"
 #include "sys/input.h"
 #include "audio/midi.h"
 #include "gfx/text.h"
 #include "util/ut_math.h"
-#include "game_main.h"
+#include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
-#include "loader.h"
+#include "core/loader.h"
 #include "music.h"
 #include "audio/midi_backend.h"
-#include "platform/text_backend.h"
+#include "text_backend.h"
 
 // Constants
 // ---------

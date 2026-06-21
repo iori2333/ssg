@@ -6,13 +6,13 @@
 
 #include "core/entity.h"
 #include "util/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
+#include "effect/geometry.h"
+#include "core/gian.h"
 #include "laser_manager.h"
-#include "level.h"
+#include "core/level.h"
 #include "long_laser.h"
 #include "gfx/graphics_backend.h"
-#include "play_rank.h"
+#include "gameflow/play_rank.h"
 #include <utility>
 
 // Laser coordinate management uses the following structure:

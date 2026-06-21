@@ -11,7 +11,7 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
 
-#include "constants.h"
+#include "core/constants.h"
 #include "audio/bgm.h"
 #include "gfx/frame.h"
 #include "gfx/graphics.h"

@@ -5,10 +5,10 @@
 #include "msg_window.h"
 
 #include "util/ut_math.h"
-#include "loader.h"
-#include "menu/menu_renderer.h"
-#include "platform/text_backend.h"
-#include "window_sys.h" // face_data, FACE_*, SURFACE_ID, MenuController, etc.
+#include "core/loader.h"
+#include "stage/menu/menu_renderer.h"
+#include "text_backend.h"
+#include "stage/window_sys.h" // face_data, FACE_*, SURFACE_ID, MenuController, etc.
 
 #include <utility>
 

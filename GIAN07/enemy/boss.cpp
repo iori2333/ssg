@@ -7,16 +7,16 @@
 #include <algorithm>
 #include <format>
 
-#include "bomb_efc.h" // Explosion effect processing
+#include "effect/bomb_efc.h" // Explosion effect processing
 #include "boss_manager.h"
 #include "enemy_ex_ctrl.h"
-#include "font_uty.h"
+#include "effect/font_uty.h"
 #include "util/cast.h"
 #include "audio/snd.h"
 #include "util/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
-#include "loader.h"
+#include "effect/geometry.h"
+#include "core/gian.h"
+#include "core/loader.h"
 #include "gfx/graphics_backend.h"
 #include <utility>
 

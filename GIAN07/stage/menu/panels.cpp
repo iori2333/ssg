@@ -4,22 +4,22 @@
 
 #include "panels.h"
 
-#include "config.h"
-#include "demo_play.h"
-#include "entry.h"
+#include "core/config.h"
+#include "gameflow/demo_play.h"
+#include "core/entry.h"
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/snd.h"
-#include "game_main.h"
+#include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
-#include "level.h"
-#include "loader.h"
-#include "music.h"
+#include "core/level.h"
+#include "core/loader.h"
+#include "stage/music.h"
 #include "gfx/graphics_backend.h"
 #include "sys/input.h"
 #include "audio/midi_backend.h"
-#include "ui_manager.h"
-#include "window_sys.h"
+#include "stage/ui_manager.h"
+#include "stage/window_sys.h"
 
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_misc.h>

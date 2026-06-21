@@ -3,20 +3,20 @@
 ///
 
 #include "config.h"
-#include "enemy.h"
+#include "enemy/enemy.h"
 #include "util/enum_array.h"
 #include "gfx/format_bmp.h"
 #include "gfx/graphics.h"
 #include "util/hash.h"
 #include "audio/midi.h"
 #include "audio/snd.h"
-#include "gian.h"
+#include "core/gian.h"
 #include "lz_uty.h"
-#include "music.h"
+#include "stage/music.h"
 #include "gfx/graphics_backend.h"
 #include "sys/path.h"
 #include "sys/thread.h"
-#include "window_sys.h"
+#include "stage/window_sys.h"
 #include <cassert>
 
 #include <utility>

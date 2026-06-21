@@ -4,7 +4,7 @@
 #include "bomb_efc.h"
 #include "effect_manager.h"
 #include "util/ut_math.h"
-#include "loader.h"
+#include "core/loader.h"
 #include "gfx/graphics_backend.h"
 #include <algorithm>
 #include <array>

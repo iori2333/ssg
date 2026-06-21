@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "level.h"
-#include "lz_uty.h"
+#include "core/level.h"
+#include "core/lz_uty.h"
 #include "score.h"
 #include <array>
 #include <cstdint>
