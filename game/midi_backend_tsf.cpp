@@ -2,7 +2,7 @@
 /// MIDI output via TinySoundFont + miniaudio
 ///
 
-#include "platform/midi_backend.h"
+#include "game/midi_backend.h"
 
 #include <SDL3/SDL_timer.h>
 #include <algorithm>
@@ -17,7 +17,7 @@
 
 #include "config.h"
 #include "game/midi.h"
-#include "platform/path.h"
+#include "game/path.h"
 
 static tsf *TsSoundFont = nullptr;
 static ma_device TsDevice;

@@ -10,7 +10,7 @@
 #include "game/ut_math.h"
 #include "gian.h"
 #include "lz_uty.h"
-#include "platform/file.h"
+#include "game/file.h"
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
 #include <algorithm>

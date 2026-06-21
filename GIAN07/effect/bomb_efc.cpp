@@ -5,7 +5,7 @@
 #include "effect_manager.h"
 #include "game/ut_math.h"
 #include "loader.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include <algorithm>
 #include <array>
 #include <ranges>

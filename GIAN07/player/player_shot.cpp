@@ -14,7 +14,7 @@
 #include "game/snd.h"
 #include "game/ut_math.h"
 #include "gian.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include "player.h"
 #include "weapon/weapon_form.h"
 #include <utility>

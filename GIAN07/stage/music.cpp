@@ -20,7 +20,7 @@
 #include "gameflow/gameflow_manager.h"
 #include "loader.h"
 #include "music.h"
-#include "platform/midi_backend.h"
+#include "game/midi_backend.h"
 #include "platform/text_backend.h"
 
 // Constants

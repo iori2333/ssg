@@ -13,7 +13,7 @@
 
 #include "game/volume.h"
 #include <string_view>
-#include "platform/buffer.h"
+#include "game/buffer.h"
 #include <chrono>
 
 enum class MID_FLAGS : uint8_t {

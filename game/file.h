@@ -9,7 +9,7 @@
 
 #include <SDL3/SDL_iostream.h>
 
-#include "platform/buffer.h"
+#include "game/buffer.h"
 
 struct SDL_IOStream;
 

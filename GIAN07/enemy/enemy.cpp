@@ -14,7 +14,7 @@
 #include "game/ut_math.h"
 #include "gian.h"
 #include "level.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include <utility>
 
 // ECL debug macro

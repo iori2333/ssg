@@ -7,7 +7,7 @@
 #include "game/coords.h"
 #include "game/endian.h"
 #include "game/pixelformat.h"
-#include "platform/file.h"
+#include "game/file.h"
 
 // Platform-independent .BMP header types
 // --------------------------------------

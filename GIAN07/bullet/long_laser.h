@@ -10,7 +10,7 @@
 //            : the laser being fired by that enemy
 
 #include "enemy/enemy.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 
 // Laser constants 2
 inline constexpr auto LLASER_MAX = 20;

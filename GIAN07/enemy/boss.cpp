@@ -17,7 +17,7 @@
 #include "geometry.h"
 #include "gian.h"
 #include "loader.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include <utility>
 
 ///// [ Constants ] /////

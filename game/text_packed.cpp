@@ -3,7 +3,7 @@
 ///
 
 #include "game/text_packed.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include <assert.h>
 
 struct created_splits {

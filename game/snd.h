@@ -7,7 +7,7 @@
 #include "constants.h"
 #include "game/enum_flags.h"
 #include "game/volume.h"
-#include "platform/buffer.h"
+#include "game/buffer.h"
 
 // Constants & macros
 using SND_INSTANCE_ID = uint8_t;

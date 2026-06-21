@@ -6,7 +6,7 @@
 #include <ctime>
 #include <cassert>
 
-#include "platform/time.h"
+#include "game/time.h"
 
 uint32_t Time_SteadyTicksMS() {
   const auto now = (std::chrono::steady_clock::now().time_since_epoch());

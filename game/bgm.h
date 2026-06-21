@@ -4,7 +4,7 @@
 #pragma once
 
 #include "game/hash.h"
-#include "platform/buffer.h"
+#include "game/buffer.h"
 #include <chrono>
 #include <cstdint>
 #include <functional>

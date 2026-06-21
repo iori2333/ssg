@@ -7,7 +7,7 @@
 #include "game/ut_math.h"
 #include "geometry.h"
 #include "laser_manager.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include "player.h"
 
 // Laser variables 2 moved to laser_manager.cpp

@@ -46,17 +46,13 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | Directory | Purpose |
 | --- | --- |
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
-| `game/` | Modern platform-independent layer (graphics/audio/input abstractions) |
-| `platform/` | Platform backend interfaces. Game code should include headers from `platform/` itself, not from subdirectories. |
-| `platform/common/sdl/` | SDL3 backend (used on both Windows and Linux) |
-| `platform/common/c/` | Standard-library fallback implementations |
-| `platform/common/miniaudio/` | Audio backend; `miniaudio.c` compiles the submodule single-file implementation |
+| `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
+| `platform/` | Platform-specific backends with no cross-platform equivalent (text rendering only) |
 | `platform/windows/` | Win32-native backends: GDI text |
-| `platform/common/tsf/` | TinySoundFont MIDI backend (cross-platform) |
-| `platform/linux/pangocairo/` | Linux text rendering |
+| `platform/linux/pangocairo/` | Linux text rendering via PangoCairo |
 | `tools/` | Build tools: pack_tool (DAT pack manipulation + music data migration), script_tool (ECL/SCL disasm/asm) |
 
-Entry point: `platform/common/sdl/main.cpp`.
+Entry point: `game/main.cpp`.
 
 ### Music data format
 

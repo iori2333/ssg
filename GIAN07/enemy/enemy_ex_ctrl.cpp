@@ -16,7 +16,7 @@
 #include "laser_manager.h"
 #include "loader.h"
 #include "long_laser.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include "player.h"
 #include <utility>
 

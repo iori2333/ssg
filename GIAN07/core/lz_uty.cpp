@@ -4,7 +4,7 @@
 
 #include "lz_uty.h"
 #include "game/guard.h"
-#include "platform/file.h"
+#include "game/file.h"
 #include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <array>

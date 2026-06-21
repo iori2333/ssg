@@ -9,7 +9,7 @@
 #include "geometry.h"
 #include "gian.h"
 #include "laser_manager.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include "player.h"
 #include <utility>
 

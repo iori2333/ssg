@@ -5,7 +5,7 @@
 #pragma once
 
 #include "menu/menu_text.h"
-#include "platform/common/sdl/graphics_sdl.h" // SUPPORT_GRP_*, GRP_SCREENSHOT_*
+#include "game/graphics_sdl.h" // SUPPORT_GRP_*, GRP_SCREENSHOT_*
 #include "window_sys.h"
 
 #include <array>

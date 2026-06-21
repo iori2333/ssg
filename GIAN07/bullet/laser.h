@@ -5,7 +5,7 @@
 #pragma once
 
 #include "game/coords.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include <cstdint>
 
 // [Change history]

@@ -7,7 +7,7 @@
 #include "game/guard.h"
 #include "game/enum_flags.h"
 #include "game/snd.h"
-#include "platform/snd_backend.h"
+#include "game/snd_backend.h"
 #include <assert.h>
 
 float Snd_BGMGainFactor = 1.0f;

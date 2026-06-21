@@ -5,7 +5,7 @@
 #pragma once
 
 #include "enemy.h"
-#include "platform/buffer.h"
+#include "game/buffer.h"
 #include <array>
 #include <cstdint>
 

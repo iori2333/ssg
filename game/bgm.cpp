@@ -11,10 +11,10 @@
 #include "game/midi.h"
 #include "game/snd.h"
 #include "game/volume.h"
-#include "platform/file.h"
-#include "platform/midi_backend.h"
-#include "platform/path.h"
-#include "platform/snd_backend.h"
+#include "game/file.h"
+#include "game/midi_backend.h"
+#include "game/path.h"
+#include "game/snd_backend.h"
 
 using namespace std::chrono_literals;
 

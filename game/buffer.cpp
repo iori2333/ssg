@@ -4,7 +4,7 @@
 
 #include <SDL3/SDL_stdinc.h>
 
-#include "platform/buffer.h"
+#include "game/buffer.h"
 
 void *SDL_malloc_wrap(size_t size) { return SDL_malloc(size); }
 

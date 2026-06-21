@@ -18,7 +18,7 @@
 #include "level.h"
 #include "music.h"
 #include "platform/text_backend.h"
-#include "platform/time.h"
+#include "game/time.h"
 #include "score.h"
 #include "ui_manager.h"
 #include "window_sys.h"

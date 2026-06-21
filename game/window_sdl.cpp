@@ -15,12 +15,12 @@
 #include "game/bgm.h"
 #include "game/frame.h"
 #include "game/graphics.h"
-#include "platform/graphics_backend.h"
-#include "platform/input.h"
-#include "platform/common/sdl/log_sdl.h"
-#include "platform/common/sdl/window_sdl.h"
-#include "platform/snd_backend.h"
-#include "platform/window_backend.h"
+#include "game/graphics_backend.h"
+#include "game/input.h"
+#include "game/log_sdl.h"
+#include "game/window_sdl.h"
+#include "game/snd_backend.h"
+#include "game/window_backend.h"
 
 constexpr auto LOG_CAT = SDL_LOG_CATEGORY_VIDEO;
 

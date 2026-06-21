@@ -5,7 +5,7 @@
 #pragma once
 
 #include "game/coords.h"
-#include "platform/buffer.h"
+#include "game/buffer.h"
 #include <array>
 
 // [Change history]

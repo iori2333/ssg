@@ -12,7 +12,7 @@
 #include "game/enum_flags.h"
 #include "game/midi.h"
 #include "game/volume.h"
-#include "platform/midi_backend.h"
+#include "game/midi_backend.h"
 #pragma message(PBGWIN_PBGMIDI_H)
 
 using namespace std::chrono_literals;

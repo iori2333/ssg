@@ -7,10 +7,9 @@
 
 #include <miniaudio.h>
 
-#include "flags.h"
 #include "game/bgm_track.h"
 #include "game/guard.h"
-#include "platform/snd_backend.h"
+#include "game/snd_backend.h"
 
 // Helpers
 // -------

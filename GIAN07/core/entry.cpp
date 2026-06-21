@@ -12,11 +12,11 @@
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "loader.h"
-#include "platform/graphics_backend.h"
-#include "platform/input.h"
-#include "platform/path.h"
+#include "game/graphics_backend.h"
+#include "game/input.h"
+#include "game/path.h"
 #include "platform/text_backend.h"
-#include "platform/window_backend.h"
+#include "game/window_backend.h"
 #include <SDL3/SDL_filesystem.h>
 #include <chrono>
 #include <filesystem>

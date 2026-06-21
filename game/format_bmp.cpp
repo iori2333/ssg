@@ -5,7 +5,7 @@
 #include <SDL3/SDL_pixels.h>
 
 #include "game/format_bmp.h"
-#include "platform/file.h"
+#include "game/file.h"
 #include <assert.h>
 
 uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {

@@ -15,9 +15,9 @@
 #include "level.h"
 #include "loader.h"
 #include "music.h"
-#include "platform/graphics_backend.h"
-#include "platform/input.h"
-#include "platform/midi_backend.h"
+#include "game/graphics_backend.h"
+#include "game/input.h"
+#include "game/midi_backend.h"
 #include "ui_manager.h"
 #include "window_sys.h"
 

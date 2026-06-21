@@ -7,8 +7,8 @@
 #include <format>
 
 #include "game/debug.h"
-#include "platform/file.h"
-#include "platform/time.h"
+#include "game/file.h"
+#include "game/time.h"
 // Global variables
 constexpr auto ErrorOut = "ErrLOG_UTF8.TXT";
 static bool ErrorActive = false;

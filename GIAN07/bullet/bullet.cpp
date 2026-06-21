@@ -10,7 +10,7 @@
 #include "game/ut_math.h"
 #include "gian.h"
 #include "level.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include <utility>
 
 //// Global variables → moved to BulletManager in bullet_manager.cpp

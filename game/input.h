@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <utility>
 
@@ -71,3 +72,17 @@ extern INPUT_SYSTEM_BITS SystemKey_Data;
 
 // Initialized by game code.
 extern std::span<const INPUT_PAD_BINDING> Key_PadBindings;
+
+///
+/// Input backend interface
+///
+
+bool Key_Start(void);
+void Key_End(void);
+void Key_Read(void);
+
+// Returns:
+// - >= 1: ID of the single gamepad button that is being pressed
+// -  0: More than one gamepad button is being pressed
+// - std::nullopt: No gamepad button is being pressed
+std::optional<INPUT_PAD_BUTTON> Key_PadSingle(void);

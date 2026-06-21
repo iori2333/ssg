@@ -9,7 +9,7 @@
 #include "game/ut_math.h"
 #include "gian.h"
 #include "item_manager.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include "player.h"
 #include <utility>
 

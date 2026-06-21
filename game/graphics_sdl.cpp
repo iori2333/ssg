@@ -16,11 +16,11 @@ using SDL_COLOR = SDL_FColor;
 #include "game/guard.h"
 #include "game/enum_array.h"
 #include "game/format_bmp.h"
-#include "platform/common/sdl/graphics_sdl.h"
-#include "platform/common/sdl/log_sdl.h"
-#include "platform/common/sdl/window_sdl.h"
+#include "game/graphics_sdl.h"
+#include "game/log_sdl.h"
+#include "game/window_sdl.h"
 #include "platform/text_backend.h"
-#include "platform/window_backend.h"
+#include "game/window_backend.h"
 
 static constexpr auto LOG_CAT = SDL_LOG_CATEGORY_RENDER;
 

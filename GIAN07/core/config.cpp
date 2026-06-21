@@ -7,8 +7,8 @@
 #include "config.h"
 #include "game/bgm.h"
 #include "game/guard.h"
-#include "platform/file.h"
-#include "platform/window_backend.h"
+#include "game/file.h"
+#include "game/window_backend.h"
 #include <toml++/toml.hpp>
 
 ///// Constants /////

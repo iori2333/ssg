@@ -5,7 +5,7 @@
 
 #include <string_view>
 #include <bit>
-#include "platform/buffer.h"
+#include "game/buffer.h"
 #include <algorithm>
 #include <array>
 #include <concepts>

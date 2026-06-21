@@ -11,7 +11,7 @@
 #include "laser_manager.h"
 #include "level.h"
 #include "long_laser.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include "play_rank.h"
 #include <utility>
 

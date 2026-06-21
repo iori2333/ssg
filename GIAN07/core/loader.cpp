@@ -13,9 +13,9 @@
 #include "gian.h"
 #include "lz_uty.h"
 #include "music.h"
-#include "platform/graphics_backend.h"
-#include "platform/path.h"
-#include "platform/thread.h"
+#include "game/graphics_backend.h"
+#include "game/path.h"
+#include "game/thread.h"
 #include "window_sys.h"
 #include <cassert>
 

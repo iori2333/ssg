@@ -14,7 +14,7 @@
 #include "bullet/bullet.h"
 #include "bullet/laser.h"
 #include "ecl.h"
-#include "platform/buffer.h"
+#include "game/buffer.h"
 
 // Enemy constants
 inline constexpr uint16_t ENEMY_MAX = 50; // Maximum number of enemies

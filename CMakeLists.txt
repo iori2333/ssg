@@ -79,12 +79,6 @@ file(GLOB GAME_SRC CONFIGURE_DEPENDS
     "game/codecs/*.cpp"
 )
 
-# --- Platform backends shared by all platforms ---
-file(GLOB PLATFORM_COMMON_SRC CONFIGURE_DEPENDS
-    "platform/common/*/*.cpp"
-    "platform/common/*/*.c"
-)
-
 # --- Windows-specific backends ---
 file(GLOB PLATFORM_WINDOWS_SRC CONFIGURE_DEPENDS
     "platform/windows/*.cpp"
@@ -101,7 +95,6 @@ file(GLOB PLATFORM_LINUX_SRC CONFIGURE_DEPENDS
 add_executable(GIAN07
     ${PBG_SRC}
     ${GAME_SRC}
-    ${PLATFORM_COMMON_SRC}
 )
 
 if(WIN32)
@@ -166,9 +159,8 @@ endif()
 add_executable(pack_tool
     tools/pack_tool.cpp
     GIAN07/core/lz_uty.cpp
-    platform/common/sdl/buffer_sdl.cpp
-    platform/common/sdl/file_sdl.cpp
-    platform/common/c/file.cpp
+    game/buffer.cpp
+    game/file.cpp
 )
 if(WIN32)
     target_compile_definitions(pack_tool PRIVATE WIN32)

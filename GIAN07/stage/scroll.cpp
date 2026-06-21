@@ -15,7 +15,7 @@
 #include "game/ut_math.h"
 #include "gian.h"
 #include "level.h"
-#include "platform/graphics_backend.h"
+#include "game/graphics_backend.h"
 #include "scene.h" // SCL definition file
 #include "ui_manager.h"
 #include "window_sys.h"

@@ -15,9 +15,9 @@
 #include "game/format_bmp.h"
 #include "game/graphics.h"
 #include "game/input.h"
-#include "platform/file.h"
-#include "platform/graphics_backend.h"
-#include "platform/path.h"
+#include "game/file.h"
+#include "game/graphics_backend.h"
+#include "game/path.h"
 
 uint8_t Grp_FPSDivisor = 0;
 std::chrono::steady_clock::duration
