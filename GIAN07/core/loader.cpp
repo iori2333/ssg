@@ -249,7 +249,7 @@ constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
     "MAP.PAK",
     "IMAGES.PAK",
     "MUSIC.PAK",
-    "SOUND.DAT",
+    "SOUND.PAK",
 }};
 
 constexpr std::string_view NOT_FOUND = "\xe2\x98\x90 ";
