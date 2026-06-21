@@ -20,6 +20,10 @@ extern bool (*const BGM_MidLoadBuffer)(BYTE_BUFFER_OWNED);
 // Loads the source MIDI via its hash from the game's original BGM data source.
 extern bool (*const BGM_MidLoadByHash)(const HASH &hash);
 
+// Returns the track title for the given 0-based [id] from the game's original
+// BGM data source, or an empty string view if not available.
+extern std::string_view (*const BGM_GetTrackTitle)(unsigned int id);
+
 bool BGM_Init(void);
 void BGM_Cleanup(void);
 

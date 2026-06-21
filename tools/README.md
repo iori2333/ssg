@@ -1,6 +1,6 @@
-# pack_tool — GIAN07 ENEMY.DAT 修改工具
+# pack_tool — GIAN07 pack file 修改工具
 
-对 `bin/ENEMY.DAT` 压缩包文件进行解包、分析和精确修改。
+对 PBG 压缩包文件（`*.DAT`, `*.PAK`）进行解包、分析和修改。
 
 ## 构建
 
@@ -43,17 +43,86 @@ cp bin/ENEMY.DAT bin/ENEMY_ORIG.DAT
 
 ## 数据文件结构
 
-ENEMY.DAT 包含 48 个条目，每个条目经 LZSS 压缩：
+### MAP.PAK（地图/回放包）
+
+MAP.PAK 包含 13 个条目（编号 000–012），由旧 48 条目 ENEMY.DAT 精简而来。
+脚本条目已在编译期嵌入二进制，音乐室评论已迁移至 MUSIC.PAK。
 
 | 条目 | 类型 | 用途 | 加载位置 (LOADER.cpp) |
 |------|------|------|----------------------|
-| 000–005 | ECL | Stage 1–6 敌方脚本 | `stage + 0 - 1` (行 684) |
-| 006–011 | SCL | Stage 1–6 关卡脚本 | `stage + 6 - 1` (行 689) |
-| 012–017 | Map | Stage 1–6 地图数据 | `stage + 12 - 1` (行 694) |
-| 018–023 | Demo | Stage 1–6 Demo 回放（录制的玩家输入帧） | `stage - 1 + 18` (行 1286) |
-| 024–026 | ECL/SCL/Map | Extra Stage | 固定 24/25/26 (行 656–666) |
-| 027–046 | Text | 音乐室评论（20 首曲目，Shift-JIS） | `27 + no` (行 1282) |
-| 047 | SCL | Ending 脚本 | 固定 47 (行 671) |
+| 000–005 | Map | Stage 1–6 地图数据 | `stage - 1` |
+| 006–011 | Demo | Stage 1–6 Demo 回放 | `stage - 1 + 6` |
+| 012 | Map | Extra Stage 地图数据 | 固定 12 |
+
+### 旧 ENEMY.DAT → MAP.PAK 转换对照
+
+| 旧条目 | → 新条目 | 内容 |
+|--------|---------|------|
+| 012–017 | 000–005 | Stage 1–6 地图 |
+| 018–023 | 006–011 | Stage 1–6 Demo |
+| 026 | 012 | Extra Stage 地图 |
+
+### IMAGES.PAK（合并图像包）
+
+由 `GRAPH.DAT` 和 `GRAPH2.DAT` 合并而成，共 39 个条目（编号 000–038）。
+
+| 条目 | 来源 | 用途 |
+|------|------|------|
+| 000–031 | GRAPH.DAT（原索引不变） | 系统界面、敌人精灵、地图 tiles、脸部、UI |
+| 032 | GRAPH2.DAT 条目 0 | Ending staff roll 背景 |
+| 033–038 | GRAPH2.DAT 条目 1–6 | Ending CG 图 ×6 |
+
+### MUSIC.PAK（统一音乐包）
+
+每个条目载荷 = `[title_len:u32LE][title:UTF-8][comment_len:u32LE][comment:UTF-8\n分隔][midi_data:原始SMF]`
+
+由 `pack_tool extract-music` / `pack_tool pack-music` 工具链生成。
+
+---
+
+## 音乐数据迁移（GBK → UTF-8）
+
+将原始 GBK 编码的曲名和评论转换为统一 UTF-8 格式的 `MUSIC.PAK`：
+
+```sh
+# 1. 从 MUSIC.DAT + 旧 ENEMY.DAT 提取并转换
+pack_tool extract-music bin/ music_work/
+
+# 输出 music_work/track_00/ ~ track_19/，每目录包含：
+#   midi.mid    原始 SMF MIDI 文件
+#   title.txt   曲名（UTF-8）
+#   comment.txt 评论（UTF-8，多行 \n 分隔）
+
+# 2. 打包为统一格式
+pack_tool pack-music music_work/ bin/MUSIC.PAK
+
+# 3. 旧 ENEMY.DAT → MAP.PAK（提取 013.bin→000.bin 等，重打包）
+pack_tool extract bin/ENEMY.DAT /tmp/mapwork/
+cp /tmp/mapwork/012.bin /tmp/mapwork/000.bin  # ... 自动或手动映射
+pack_tool pack /tmp/mapwork/ bin/MAP.PAK
+```
+
+### 一键迁移流程
+
+```sh
+# 音乐
+pack_tool extract-music bin/ music_work/
+pack_tool pack-music music_work/ bin/MUSIC.PAK
+
+# 地图/回放（旧 ENEMY.DAT → MAP.PAK）
+pack_tool extract bin/ENEMY.DAT /tmp/mapwork/
+for i in 0 1 2 3 4 5; do cp /tmp/mapwork/$(printf "%03d" $((i+12))).bin /tmp/mapwork/$(printf "%03d" $i).bin; done
+for i in 0 1 2 3 4 5; do cp /tmp/mapwork/$(printf "%03d" $((i+18))).bin /tmp/mapwork/$(printf "%03d" $((i+6))).bin; done
+cp /tmp/mapwork/026.bin /tmp/mapwork/012.bin
+rm /tmp/mapwork/000.bin /tmp/mapwork/001.bin /tmp/mapwork/002.bin /tmp/mapwork/003.bin /tmp/mapwork/004.bin /tmp/mapwork/005.bin
+rm /tmp/mapwork/00{6,7,8,9,10,11}.bin
+rm /tmp/mapwork/01{3,4,5,6,7}.bin /tmp/mapwork/01{8,9}.bin /tmp/mapwork/02{0,1,2,3}.bin
+rm /tmp/mapwork/02{4,5}.bin /tmp/mapwork/027.bin /tmp/mapwork/028.bin
+rm /tmp/mapwork/02{9,7,8,9}.bin /tmp/mapwork/03{0,1,2,3,4,5,6,7,8,9,9,9}.bin 2>/dev/null
+rm /tmp/mapwork/04{0,1,2,3,4,5,6,7}.bin
+pack_tool pack /tmp/mapwork/000.bin /tmp/mapwork/001.bin /tmp/mapwork/002.bin /tmp/mapwork/003.bin /tmp/mapwork/004.bin /tmp/mapwork/005.bin /tmp/mapwork/006.bin /tmp/mapwork/007.bin /tmp/mapwork/008.bin /tmp/mapwork/009.bin /tmp/mapwork/010.bin /tmp/mapwork/011.bin /tmp/mapwork/012.bin
+# (上面手动列出所有 13 个文件，pack_tool pack 需要目录或文件列表)
+```
 
 ---
 
@@ -175,11 +244,11 @@ pack_tool patch4 work/000.bin 0x278 9150 work/000.bin
 目标：所有敌人 HP ×1.5，关底 BOSS 阶段切换血量 ×1.5，阶段时限 ×2.0。
 
 ```sh
-# 1. 备份
-cp bin/ENEMY.DAT bin/ENEMY_ORIG.DAT
+# 1. 备份（旧 ENEMY.DAT 或已迁移的 MAP.PAK）
+cp bin/MAP.PAK bin/MAP_ORIG.PAK
 
 # 2. 解包
-pack_tool extract bin/ENEMY.DAT work/
+pack_tool extract bin/MAP.PAK work/
 
 # 3. 全脚本 SETUP HP ×1.5
 pack_tool ecl work/000.bin 1.5 work/000.bin  # Stage 1
@@ -201,7 +270,7 @@ pack_tool ecl-boss work/005.bin 7  1.5 2.0 work/005.bin  # Stage 6 #2
 pack_tool ecl-boss work/005.bin 16 1.5 2.0 work/005.bin  # Stage 6 #3
 
 # 5. 打包并替换
-pack_tool pack work/ bin/ENEMY.DAT
+pack_tool pack work/ bin/MAP.PAK
 
 # 6. 清理
 rm -rf work/
@@ -209,7 +278,7 @@ rm -rf work/
 
 恢复原始数据：
 ```sh
-cp bin/ENEMY_ORIG.DAT bin/ENEMY.DAT
+cp bin/MAP_ORIG.PAK bin/MAP.PAK
 ```
 
 ---
@@ -270,21 +339,19 @@ STI vector 类型：`BOSSLEFT`（剩余 Boss 数量）、`HP`（血量阈值）�
 
 ### 完整工作流示例
 
+脚本已从 pack 文件中移出并嵌入二进制（`scripts/` → 编译期 `embedded_scripts[]`）。反编译/编辑的源文件在 `scripts/*.ecl` 和 `scripts/*.scl`，修改后重新构建即可。
+
 ```sh
-# 1. 解包 ENEMY.DAT
-pack_tool extract bin/ENEMY.DAT work/
+# 1. 反编译嵌在源码中的脚本
+script_tool disasm-scl scripts/stage1.scl work/stage1.txt
+script_tool disasm-ecl scripts/stage1.ecl work/stage1.txt
 
-# 2. 反编译所有脚本
-script_tool disasm-scl work/006.bin work/006.scl
-script_tool disasm-ecl work/000.bin work/000.ecl
+# 2. 编辑文本文件...
+vim work/stage1.txt
 
-# 3. 编辑文本文件...
-vim work/006.scl work/000.ecl
+# 3. 编译回二进制
+script_tool asm-scl work/stage1.txt scripts/stage1.scl
 
-# 4. 编译回二进制
-script_tool asm-scl work/006.scl work/006.bin
-script_tool asm-ecl work/000.ecl work/000.bin
-
-# 5. 打包回 ENEMY.DAT
-pack_tool pack work/ bin/ENEMY.DAT
+# 4. 重新构建游戏
+./build_windows.bat
 ```

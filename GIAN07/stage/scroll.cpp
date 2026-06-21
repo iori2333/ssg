@@ -486,7 +486,7 @@ static void enemy_set() {
       break;
 
     case SCL_ENEMYPALETTE:
-      LoadPaletteFromEnemy(); // Bit depth check delegated to function
+      LoadPaletteFromMAP(); // Bit depth check delegated to function
       Enemies.scl_now++;
       break;
 

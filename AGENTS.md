@@ -48,13 +48,27 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
 | `game/` | Modern platform-independent layer (graphics/audio/input abstractions) |
 | `platform/` | Platform backend interfaces. Game code should include headers from `platform/` itself, not from subdirectories. |
-| `platform/sdl/` | SDL3 backend (used on both Windows and Linux) |
-| `platform/windows/` | Win32-native backends: GDI text, WinMM MIDI, file I/O |
-| `platform/c/` | Standard-library fallback implementations |
-| `platform/miniaudio/` | Audio backend; `miniaudio.c` compiles the submodule single-file implementation |
-| `platform/pangocairo/` | Linux text rendering |
+| `platform/common/sdl/` | SDL3 backend (used on both Windows and Linux) |
+| `platform/common/c/` | Standard-library fallback implementations |
+| `platform/common/miniaudio/` | Audio backend; `miniaudio.c` compiles the submodule single-file implementation |
+| `platform/windows/` | Win32-native backends: GDI text |
+| `platform/common/tsf/` | TinySoundFont MIDI backend (cross-platform) |
+| `platform/linux/pangocairo/` | Linux text rendering |
+| `tools/` | Build tools: pack_tool (DAT pack manipulation + music data migration), script_tool (ECL/SCL disasm/asm) |
 
-Entry point: `platform/sdl/main.cpp`.
+Entry point: `platform/common/sdl/main.cpp`.
+
+### Music data format
+
+Original BGM stored in `MUSIC.PAK` (PBG format, unified entries):
+```
+[title_len:u32LE][title:UTF-8][comment_len:u32LE][comment:UTF-8\n][midi:raw SMF]
+```
+
+Legacy comments previously in `ENEMY.DAT` entries 027–046 have been migrated
+to `MUSIC.PAK`. The remaining map/demo data has been repacked as `MAP.PAK`.
+`GRAPH.DAT` and `GRAPH2.DAT` have been merged into `IMAGES.PAK`.
+Convert original GBK-encoded data with `pack_tool extract-music` → `pack_tool pack-music`.
 
 ## Generated headers
 

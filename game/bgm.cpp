@@ -85,45 +85,13 @@ std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void) {
 }
 
 std::string_view BGM_Title(void) {
-  auto ret = ((Waveform && !Waveform->metadata.title.empty())
-                  ? std::string_view{Waveform->metadata.title}
-                  : Mid_GetTitle());
-
-  // pbg bug: Four of the original track titles start with leading fullwidth
-  // spaces:
-  //
-  // 	#04: "　　　幻想帝都"
-  // 	#07: "　　天空アーミー"
-  // 	#11: "　魔法少女十字軍"
-  // 	#16: "　　シルクロードアリス"
-  //
-  // This looks like it was done on purpose to center the titles within the
-  // 216 maximum pixels that the original code designated for the in-game
-  // animation. However:
-  //
-  // • None of those actually has the correct amount of spaces that would
-  //   have been required for exact centering.
-  // • If pbg intended to center all the tracks, there should have been
-  //   leading whitespace in 14 of the track titles, and not just in 4.
-  //
-  // Since the in-game animation code does clearly intend these titles to be
-  // right-aligned, it makes more sense to just remove all leading
-  // whitespace. Doing this here will also benefit the Music Room.
-  const auto trim_leading = [](auto &str, std::string_view prefix) {
-    const auto ret = str.starts_with(prefix);
-    if (ret) {
-      str.remove_prefix(prefix.size());
-    }
-    return ret;
-  };
-  while (trim_leading(ret, " ") || trim_leading(ret, "\x81\x40")) {
-  };
-
-  // The original MIDI sequence titles also come with lots of *trailing*
-  // whitespace. Adding 1 also turns `npos` to 0.
-  ret = ret.substr(0, (ret.find_last_not_of(" ") + 1));
-
-  return ret;
+  if (Waveform && !Waveform->metadata.title.empty()) {
+    return Waveform->metadata.title;
+  }
+  if (BGM_GetTrackTitle && (LoadedNum > 0)) {
+    return BGM_GetTrackTitle(LoadedNum - 1);
+  }
+  return {};
 }
 
 bool BGM_ChangeMIDIDevice(int8_t direction) {

@@ -1,15 +1,19 @@
 ///
-/// pack_tool - GIAN07 ENEMY.DAT pack file modification tool
+/// pack_tool - GIAN07 pack file modification tool
 ///
 /// Usage:
 ///   pack_tool extract <packfile> <out_dir>
 ///   pack_tool pack <in_dir> <packfile>
 ///   pack_tool strip <in_packfile> <out_packfile>
+///   pack_tool extract-music <data_dir> <out_dir>
+///   pack_tool pack-music <in_dir> <out_packfile>
 ///   pack_tool scl <in_file> <multiplier> <out_file>
 ///   pack_tool ecl <in_file> <multiplier> <out_file>
 ///   pack_tool ecl-time <in_file> <script_id> <multiplier> <out_file>
+///   pack_tool ecl-boss <in_file> <script_id> <hp_mult> <timer_mult> <out_file>
 ///   pack_tool dump-scl <in_file>
 ///   pack_tool dump-ecl <in_file> [script_id]
+///   pack_tool patch4 <in_file> <offset_hex> <value_hex> <out_file>
 ///
 
 #include <algorithm>
@@ -25,6 +29,17 @@
 #include <string_view>
 #include <unordered_set>
 #include <vector>
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
+#include <cerrno>
+#include <iconv.h>
+#endif
 
 #include "GIAN07/core/lz_uty.h"
 #include "game/endian.h"
@@ -225,7 +240,7 @@ static const uint8_t ecl_cmd_len[256] = {
 // ============================================================================
 
 static void print_usage() {
-  std::println(stderr, R"(pack_tool - GIAN07 ENEMY.DAT pack file tool
+  std::println(stderr, R"(pack_tool - GIAN07 pack file tool
 
 Usage:
   pack_tool extract <packfile> <out_dir>
@@ -235,8 +250,15 @@ Usage:
       Repack all NNN.bin files from in_dir into a PBG pack file
 
   pack_tool strip <in_packfile> <out_packfile>
-      Strip ECL/SCL script entries (embedded in binary), keeping only
-      non-script data (maps, demos, music room comments)
+      Strip ECL/SCL script and music room comment entries from an old
+      48-entry ENEMY.DAT, keeping only map + demo data (13 entries)
+
+  pack_tool extract-music <data_dir> <out_dir>
+      Extract MIDI tracks, titles (GBK→UTF-8), and comments (GBK→UTF-8)
+      from MUSIC.DAT + legacy ENEMY.DAT into out_dir/track_NN/
+
+  pack_tool pack-music <in_dir> <out_packfile>
+      Pack unified MUSIC.PAK from track_NN/ directories
 
   pack_tool scl <in_file> <multiplier> <out_file>
       Multiply the end-boss SCL_TIME frame value by multiplier
@@ -303,6 +325,255 @@ static bool write_file(const char *path, const uint8_t *data, size_t size) {
   }
   std::fclose(fp);
   return true;
+}
+
+// ============================================================================
+// GBK → UTF-8 conversion
+// ============================================================================
+
+#ifdef WIN32
+static std::string gbk_to_utf8(std::string_view gbk) {
+  if (gbk.empty()) {
+    return {};
+  }
+  const int wide_len = MultiByteToWideChar(936, MB_ERR_INVALID_CHARS,
+                                           gbk.data(), (int)gbk.size(),
+                                           nullptr, 0);
+  if (wide_len <= 0) {
+    std::println(stderr, "Warning: GBK → UTF-8 conversion failed for input");
+    return std::string(gbk);
+  }
+  std::vector<wchar_t> wide(wide_len);
+  MultiByteToWideChar(936, MB_ERR_INVALID_CHARS,
+                      gbk.data(), (int)gbk.size(), wide.data(), wide_len);
+  const int utf8_len = WideCharToMultiByte(CP_UTF8, 0,
+                                           wide.data(), wide_len,
+                                           nullptr, 0, nullptr, nullptr);
+  if (utf8_len <= 0) {
+    return std::string(gbk);
+  }
+  std::string utf8(utf8_len, '\0');
+  WideCharToMultiByte(CP_UTF8, 0,
+                      wide.data(), wide_len,
+                      utf8.data(), utf8_len, nullptr, nullptr);
+  return utf8;
+}
+#else
+static std::string gbk_to_utf8(std::string_view gbk) {
+  if (gbk.empty()) {
+    return {};
+  }
+  iconv_t cd = iconv_open("UTF-8", "GBK");
+  if (cd == (iconv_t)-1) {
+    std::println(stderr, "Warning: iconv_open(UTF-8, GBK) failed");
+    return std::string(gbk);
+  }
+
+  auto cleanup = [&] { iconv_close(cd); };
+  std::string out;
+  out.resize(gbk.size() * 3 / 2 + 4);
+
+  char *inbuf = const_cast<char *>(gbk.data());
+  size_t inbytes = gbk.size();
+  char *outbuf = out.data();
+  size_t outbytes = out.size();
+
+  while (inbytes > 0) {
+    size_t ret = iconv(cd, &inbuf, &inbytes, &outbuf, &outbytes);
+    if (ret == (size_t)-1) {
+      if (errno == E2BIG) {
+        const auto written = outbuf - out.data();
+        out.resize(out.size() * 2);
+        outbuf = out.data() + written;
+        outbytes = out.size() - written;
+        continue;
+      }
+      break;
+    }
+  }
+
+  out.resize(outbuf - out.data());
+  cleanup();
+  return out;
+}
+#endif
+
+// ============================================================================
+// SMF (Standard MIDI File) title extractor
+// ============================================================================
+
+static uint32_t read_vlq(const uint8_t *&pos, const uint8_t *end) {
+  uint32_t val = 0;
+  int bytes = 0;
+  while ((pos < end) && (bytes < 4)) {
+    const uint8_t b = *pos++;
+    bytes++;
+    val = (val << 7) | (b & 0x7F);
+    if (!(b & 0x80)) {
+      return val;
+    }
+  }
+  return val;
+}
+
+static int midi_status_data_len(uint8_t status) {
+  switch (status & 0xF0) {
+  case 0x80:
+  case 0x90:
+  case 0xA0:
+  case 0xB0:
+  case 0xE0:
+    return 2;
+  case 0xC0:
+  case 0xD0:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+static std::string extract_smf_title(const std::vector<uint8_t> &data) {
+  auto end = data.data() + data.size();
+  auto pos = data.data();
+
+  if ((end - pos) < 14)
+    return {};
+  if (std::memcmp(pos, "MThd", 4) != 0)
+    return {};
+  pos += 4;
+  const uint32_t hdr_len =
+      ((uint32_t)((uint8_t)pos[0]) << 24) |
+      ((uint32_t)((uint8_t)pos[1]) << 16) |
+      ((uint32_t)((uint8_t)pos[2]) << 8) |
+      ((uint32_t)((uint8_t)pos[3]));
+  pos += 4;
+  pos += hdr_len;
+
+  std::string fallback_title;
+
+  while (end - pos >= 8) {
+    if (std::memcmp(pos, "MTrk", 4) != 0) {
+      pos++;
+      continue;
+    }
+    pos += 4;
+    const uint32_t trk_len =
+        ((uint32_t)((uint8_t)pos[0]) << 24) |
+        ((uint32_t)((uint8_t)pos[1]) << 16) |
+        ((uint32_t)((uint8_t)pos[2]) << 8) |
+        ((uint32_t)((uint8_t)pos[3]));
+    pos += 4;
+
+    const auto *trk_end = pos + trk_len;
+    if (trk_end > end)
+      trk_end = end;
+
+    uint8_t running_status = 0;
+
+    while (pos < trk_end) {
+      read_vlq(pos, trk_end);
+      if (pos >= trk_end)
+        break;
+
+      uint8_t byte = *pos++;
+
+      if (byte == 0xFF) {
+        if (pos >= trk_end)
+          break;
+        const uint8_t meta = *pos++;
+        const uint32_t len = read_vlq(pos, trk_end);
+
+        if (meta == 0x03) {
+          if (pos + len <= trk_end) {
+            return std::string(reinterpret_cast<const char *>(pos), len);
+          }
+          return {};
+        }
+        if (meta == 0x01 && fallback_title.empty()) {
+          if (pos + len <= trk_end) {
+            fallback_title =
+                std::string(reinterpret_cast<const char *>(pos), len);
+          }
+        }
+        pos += std::min(len, (uint32_t)(trk_end - pos));
+      } else if ((byte & 0xF0) == 0xF0) {
+        if (byte == 0xFF) {
+          if (pos >= trk_end)
+            break;
+          pos++;
+        }
+        const uint32_t len = read_vlq(pos, trk_end);
+        pos += std::min(len, (uint32_t)(trk_end - pos));
+      } else {
+        if (!(byte & 0x80)) {
+          pos--;
+          byte = running_status;
+        } else {
+          running_status = byte;
+        }
+        const int data_len = midi_status_data_len(byte);
+        if (pos + data_len <= trk_end) {
+          pos += data_len;
+        } else {
+          pos = trk_end;
+        }
+      }
+    }
+  }
+
+  return fallback_title;
+}
+
+// ============================================================================
+// Music comment parser (fixed 38-byte GBK lines → UTF-8, \n-separated)
+// ============================================================================
+
+static std::string parse_music_comment(const std::vector<uint8_t> &data) {
+  static constexpr size_t LINE_BYTES = 38;
+  std::string result;
+  bool first = true;
+
+  for (size_t offset = 0; offset + LINE_BYTES <= data.size();
+       offset += LINE_BYTES) {
+    const auto *line = data.data() + offset;
+    const size_t len = strnlen(reinterpret_cast<const char *>(line),
+                                LINE_BYTES);
+    if (len == 0)
+      break;
+
+    if (first) {
+      first = false;
+      continue;
+    }
+
+    auto utf8 = gbk_to_utf8(
+        std::string_view(reinterpret_cast<const char *>(line), len));
+    if (utf8.empty()) {
+      utf8 =
+          std::string(reinterpret_cast<const char *>(line), std::min(len, 1UZ));
+    }
+    result += utf8;
+    result += '\n';
+  }
+
+  while (!result.empty() && result.back() == '\n') {
+    result.pop_back();
+  }
+  return result;
+}
+
+// ============================================================================
+// String file I/O
+// ============================================================================
+
+static std::string read_text_file(const fs::path &path) {
+  auto bytes = read_file(path.string().c_str());
+  return {reinterpret_cast<const char *>(bytes.data()), bytes.size()};
+}
+
+static bool write_text_file(const fs::path &path, std::string_view text) {
+  return write_file(path.string().c_str(),
+                    reinterpret_cast<const uint8_t *>(text.data()), text.size());
 }
 
 // ============================================================================
@@ -979,9 +1250,174 @@ static bool cmd_ecl_boss(const char *in_file, int script_id, float hp_mult,
 }
 
 // ============================================================================
-// Strip mode — remove ECL/SCL script entries from the pack file.
-// Script entries are now embedded in the binary; the stripped pack file
-// keeps only non-script data (maps, demos, music room comments).
+// Extract-music mode — extract MIDI + title + comment from MUSIC.DAT/ENEMY.DAT
+// ============================================================================
+
+static bool cmd_extract_music(const char *data_dir, const char *out_dir) {
+  namespace fs = std::filesystem;
+
+  const auto music_path = fs::path(data_dir) / "MUSIC.DAT";
+  const auto enemy_path = fs::path(data_dir) / "ENEMY.DAT";
+
+  auto music_reader = FilStartR(music_path.string().c_str());
+  if (!music_reader) {
+    std::println(stderr, "Error: Cannot open '{}'", music_path.string());
+    return false;
+  }
+
+  auto enemy_reader = FilStartR(enemy_path.string().c_str());
+  if (!enemy_reader) {
+    std::println(stderr, "Error: Cannot open '{}'", enemy_path.string());
+    return false;
+  }
+
+  const auto music_count = static_cast<int>(music_reader.info.size());
+  std::println("Extracting {} music tracks from '{}' to '{}'...", music_count,
+               data_dir, out_dir);
+
+  std::error_code ec;
+  for (int i = 0; i < music_count; i++) {
+    const auto track_dir =
+        fs::path(out_dir) / std::format("track_{:02}", i);
+    fs::create_directories(track_dir, ec);
+    if (ec) {
+      std::println(stderr, "Error: Cannot create '{}'", track_dir.string());
+      return false;
+    }
+
+    auto midi_data = music_reader.MemExpand(i);
+    if (!midi_data) {
+      std::println(stderr, "Error: Failed to extract MIDI entry {}", i);
+      return false;
+    }
+
+    const std::vector<uint8_t> midi_vec(midi_data.get(),
+                                        midi_data.get() + midi_data.size());
+    if (!write_file((track_dir / "midi.mid").string().c_str(), midi_vec)) {
+      return false;
+    }
+
+    const auto title_raw = extract_smf_title(midi_vec);
+    const auto title_utf8 = gbk_to_utf8(title_raw);
+    std::string_view title_trimmed = title_utf8;
+    while (!title_trimmed.empty()) {
+      if (title_trimmed.starts_with(" ")) {
+        title_trimmed.remove_prefix(1);
+      } else if (title_trimmed.starts_with("\u3000")) {
+        title_trimmed.remove_prefix(3);
+      } else {
+        break;
+      }
+    }
+    title_trimmed =
+        title_trimmed.substr(0, title_trimmed.find_last_not_of(" ") + 1);
+    if (!write_text_file(track_dir / "title.txt", title_trimmed)) {
+      return false;
+    }
+
+    const int comment_index = 27 + i;
+    if (comment_index < static_cast<int>(enemy_reader.info.size())) {
+      auto comment_data = enemy_reader.MemExpand(comment_index);
+      if (comment_data) {
+        const std::vector<uint8_t> comment_vec(
+            comment_data.get(), comment_data.get() + comment_data.size());
+        auto comment_utf8 = parse_music_comment(comment_vec);
+        if (!write_text_file(track_dir / "comment.txt", comment_utf8)) {
+          return false;
+        }
+      }
+    }
+
+    std::println("  track_{:02}  MIDI {} bytes  title=[{}]", i, midi_data.size(),
+                 title_trimmed);
+  }
+
+  std::println("Done.");
+  return true;
+}
+
+// ============================================================================
+// Pack-music mode — pack unified MUSIC.PAK from extracted track directories
+// ============================================================================
+
+static bool cmd_pack_music(const char *in_dir, const char *out_packfile) {
+  namespace fs = std::filesystem;
+
+  std::error_code ec;
+  if (!fs::is_directory(in_dir, ec)) {
+    std::println(stderr, "Error: '{}' is not a directory", in_dir);
+    return false;
+  }
+
+  std::vector<fs::path> track_dirs;
+  for (const auto &entry : fs::directory_iterator(in_dir)) {
+    if (entry.is_directory() &&
+        entry.path().filename().string().starts_with("track_")) {
+      track_dirs.push_back(entry.path());
+    }
+  }
+  std::sort(track_dirs.begin(), track_dirs.end());
+
+  if (track_dirs.empty()) {
+    std::println(stderr, "Error: No track_* directories found in '{}'", in_dir);
+    return false;
+  }
+
+  std::println("Packing {} tracks to '{}'...", track_dirs.size(),
+               out_packfile);
+
+  PACKFILE_WRITE writer;
+  std::vector<std::vector<uint8_t>> buffers;
+  buffers.reserve(track_dirs.size());
+
+  for (const auto &track_dir : track_dirs) {
+    const auto title = read_text_file(track_dir / "title.txt");
+    const auto comment = read_text_file(track_dir / "comment.txt");
+    auto midi = read_file((track_dir / "midi.mid").string().c_str());
+    if (midi.empty()) {
+      std::println(stderr, "Error: Missing midi.mid in '{}'",
+                   track_dir.string());
+      return false;
+    }
+
+    std::vector<uint8_t> entry;
+    const auto push_u32_le = [&](uint32_t val) {
+      entry.push_back(static_cast<uint8_t>(val));
+      entry.push_back(static_cast<uint8_t>(val >> 8));
+      entry.push_back(static_cast<uint8_t>(val >> 16));
+      entry.push_back(static_cast<uint8_t>(val >> 24));
+    };
+
+    push_u32_le(static_cast<uint32_t>(title.size()));
+    entry.insert(entry.end(), title.begin(), title.end());
+    push_u32_le(static_cast<uint32_t>(comment.size()));
+    entry.insert(entry.end(), comment.begin(), comment.end());
+    entry.insert(entry.end(), midi.begin(), midi.end());
+
+    std::println("  {}  title=[{}]  comment={} B  MIDI={} B",
+                 track_dir.filename().string(), title, comment.size(),
+                 midi.size());
+
+    buffers.emplace_back(std::move(entry));
+  }
+
+  for (auto &buf : buffers) {
+    writer.files.emplace_back(buf.data(), buf.size());
+  }
+
+  if (!writer.Write(out_packfile)) {
+    std::println(stderr, "Error: Failed to write pack file '{}'", out_packfile);
+    return false;
+  }
+
+  std::println("Done.");
+  return true;
+}
+
+// ============================================================================
+// Strip mode — remove legacy script and comment entries from an old
+// 48-entry ENEMY.DAT. After conversion to 13-entry MAP.PAK, no entries
+// need stripping.
 // ============================================================================
 
 static bool cmd_strip(const char *in_packfile, const char *out_packfile) {
@@ -991,19 +1427,24 @@ static bool cmd_strip(const char *in_packfile, const char *out_packfile) {
     return false;
   }
 
-  // Script entry indices to replace with placeholders
-  const std::unordered_set<int> script_entries = {
-      0, 1, 2, 3, 4, 5,    // Stage 1-6 ECL
-      6, 7, 8, 9, 10, 11,  // Stage 1-6 SCL
-      24,                   // Extra stage ECL
-      25,                   // Extra stage SCL
-      47                    // Ending SCL
-  };
+  // Entry indices to replace with placeholders (only valid for old 48-entry ENEMY.DAT)
+  const std::unordered_set<int> strip_entries = [] {
+    std::unordered_set<int> s = {
+        0, 1, 2, 3, 4, 5,    // Stage 1-6 ECL (embedded)
+        6, 7, 8, 9, 10, 11,  // Stage 1-6 SCL (embedded)
+        24,                   // Extra stage ECL (embedded)
+        25,                   // Extra stage SCL (embedded)
+        47                    // Ending SCL (embedded)
+    };
+    for (int i = 27; i <= 46; i++)
+      s.insert(i); // Music room comments (migrated to MUSIC.PAK)
+    return s;
+  }();
 
   const auto n = static_cast<int>(reader.info.size());
-  std::println("Stripping script entries from '{}'...", in_packfile);
-  std::println("  {} total entries, {} script entries will be stripped", n,
-               script_entries.size());
+  std::println("Stripping entries from '{}'...", in_packfile);
+  std::println("  {} total entries, {} entries will be stripped", n,
+               strip_entries.size());
 
   // Storage for entry data (writer holds non-owning views)
   std::vector<std::vector<uint8_t>> storage;
@@ -1019,7 +1460,7 @@ static bool cmd_strip(const char *in_packfile, const char *out_packfile) {
       return false;
     }
 
-    if (script_entries.count(i)) {
+    if (strip_entries.count(i)) {
       skipped_bytes += data.size();
       // Replace with zero-byte placeholder
       storage.push_back({});
@@ -1038,7 +1479,7 @@ static bool cmd_strip(const char *in_packfile, const char *out_packfile) {
     return false;
   }
 
-  std::println("Done. {} bytes of script data stripped.", skipped_bytes);
+  std::println("Done. {} bytes of data stripped.", skipped_bytes);
   return true;
 }
 
@@ -1077,6 +1518,24 @@ int main(int argc, char **argv) {
       return 1;
     }
     return cmd_strip(argv[2], argv[3]) ? 0 : 1;
+  }
+
+  if (mode == "extract-music") {
+    if (argc != 4) {
+      std::println(stderr,
+                   "Usage: pack_tool extract-music <data_dir> <out_dir>");
+      return 1;
+    }
+    return cmd_extract_music(argv[2], argv[3]) ? 0 : 1;
+  }
+
+  if (mode == "pack-music") {
+    if (argc != 4) {
+      std::println(stderr,
+                   "Usage: pack_tool pack-music <in_dir> <out_packfile>");
+      return 1;
+    }
+    return cmd_pack_music(argv[2], argv[3]) ? 0 : 1;
   }
 
   if (mode == "scl") {

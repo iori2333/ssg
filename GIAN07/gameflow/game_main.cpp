@@ -116,7 +116,7 @@ bool ScoreNameInit() {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_NAMEREGIST)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
 
@@ -532,7 +532,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_NAMEREGIST)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
 
@@ -652,11 +652,11 @@ bool GameNextStage() {
   Players.PrepareNextStage();
 
   if (!LoadGraph(GameState.game_stage)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut("ENEMY.DAT が破壊されています");
+    DebugOut("MAP.PAK が破壊されています");
     return false;
   }
 
@@ -680,13 +680,13 @@ bool GameReplayInitAll(const char *fn) {
   GameSTD_Init();
 
   if (!LoadGraph(GameState.game_stage)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut("ENEMY.DAT が破壊されています");
+    DebugOut("MAP.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
@@ -776,11 +776,11 @@ bool DemoInit() {
   Ranking.Reset();
 
   if (!LoadGraph(GameState.game_stage)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
   if (!LoadStageData(GameState.game_stage)) {
-    DebugOut("ENEMY.DAT が破壊されています");
+    DebugOut("MAP.PAK が破壊されています");
     return false;
   }
 
@@ -847,7 +847,7 @@ bool SProjectInit() {
   GrpBackend_PixelAccessStart();
 
   if (!LoadGraph(GRAPH_ID_SPROJECT)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
 
@@ -877,7 +877,7 @@ bool GameExit(bool bNeedChgMusic) {
   Grp_Flip();
 
   if (!LoadGraph(GRAPH_ID_TITLE)) {
-    DebugOut("GRAPH.DAT が破壊されています");
+    DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
   GrpBackend_SetClip(GRP_RES_RECT);
@@ -1237,11 +1237,11 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     Demos.Init();
 
     if (!LoadGraph(GameState.game_stage)) {
-      DebugOut("GRAPH.DAT が破壊されています");
+      DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
     if (!LoadStageData(GameState.game_stage)) {
-      DebugOut("ENEMY.DAT が破壊されています");
+      DebugOut("MAP.PAK が破壊されています");
       return;
     }
 

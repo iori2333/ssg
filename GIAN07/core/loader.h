@@ -102,9 +102,13 @@ bool LoadSound(); // Load all sound data
 // Load Music Room comment
 BYTE_BUFFER_OWNED LoadMusicRoomComment(int no);
 
+// Access unified music metadata (title/comment cached from MUSIC.PAK)
+[[nodiscard]] std::string_view MusicTitle(unsigned int index);
+[[nodiscard]] std::string_view MusicComment(unsigned int index);
+
 BYTE_BUFFER_OWNED LoadDemo(int stage);
 
-void LoadPaletteFromEnemy(); // Load enemy palette
+void LoadPaletteFromMAP(); // Load map palette
 
 // Reloads the last stage loaded with LoadGraph().
 void ReloadGraph();

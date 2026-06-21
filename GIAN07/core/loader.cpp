@@ -238,20 +238,18 @@ bool LoadSound(const PACKFILE_READ &in);
 
 namespace DAT {
 enum class PACK_ID : uint8_t {
-  ENEMY,
-  GRAPH,
-  GRAPH2,
+  MAP,
+  IMAGES,
   MUSIC,
   SOUND,
   COUNT,
 };
 
 constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
-    "ENEMY.DAT",
-    "GRAPH.DAT",
-    "GRAPH2.DAT",
-    "MUSIC.DAT",
-    "SOUND.DAT",
+    "MAP.PAK",
+    "IMAGES.PAK",
+    "MUSIC.PAK",
+    "SOUND.PAK",
 }};
 
 constexpr std::string_view NOT_FOUND = "\xe2\x98\x90 ";
@@ -307,9 +305,15 @@ public:
 };
 ENUMARRAY<PACK, PACK_ID> Packs;
 
-// For MUSIC.DAT, we want to start asynchronously calculating all hashes
+// For MUSIC.PAK, we want to start asynchronously calculating all hashes
 // once the process starts.
 std::vector<HASH> MusicHashes;
+
+struct MusicMeta {
+  std::string title;   // UTF-8
+  std::string comment; // UTF-8, \n-separated
+};
+std::vector<MusicMeta> MusicMetas;
 
 const PACKFILE_READ &Packfile(PACK_ID id) {
   return Packs[id].BlockUntilLoaded();
@@ -318,6 +322,7 @@ const PACKFILE_READ &Packfile(PACK_ID id) {
 void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
   MusicNum = in.info.size();
   MusicHashes.reserve(MusicNum);
+  MusicMetas.resize(MusicNum);
 
   for (auto i = 0; std::cmp_less(i, MusicNum); i++) {
     if (st) {
@@ -327,7 +332,35 @@ void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
       if (st) {
         break;
       }
-      MusicHashes.emplace_back(Hash({file.get(), file.size()}));
+      auto cursor = file.cursor();
+
+      std::string_view title, comment;
+      if (const auto title_len_val =
+              cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+        const auto title_len = title_len_val.value()[0];
+        if (cursor.cursor + title_len <= cursor.size()) {
+          title = {reinterpret_cast<const char *>(&cursor[cursor.cursor]),
+                   title_len};
+          cursor.next<uint8_t>(title_len);
+        }
+      }
+      if (const auto comment_len_val =
+              cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+        const auto comment_len = comment_len_val.value()[0];
+        if (cursor.cursor + comment_len <= cursor.size()) {
+          comment = {reinterpret_cast<const char *>(&cursor[cursor.cursor]),
+                     comment_len};
+          cursor.next<uint8_t>(comment_len);
+        }
+      }
+
+      MusicMetas[i].title = title;
+      MusicMetas[i].comment = comment;
+
+      // Hash only the MIDI portion for loop point matching
+      const auto *midi_data = file.get() + cursor.cursor;
+      const auto midi_size = file.size() - cursor.cursor;
+      MusicHashes.emplace_back(Hash({midi_data, midi_size}));
     } else {
       assert(!"Failure extracting BGM file?");
     }
@@ -386,7 +419,29 @@ bool LoadMusic(fil_no_t filno) {
   if (filno >= MusicHashes.size()) {
     return false;
   }
-  return LoadMIDIWithPotentialLoop(music.MemExpand(filno), MusicHashes[filno]);
+
+  auto raw = music.MemExpand(filno);
+  if (!raw) {
+    return false;
+  }
+
+  auto cursor = raw.cursor();
+  if (const auto title_len_val = cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+    const auto title_len = title_len_val.value()[0];
+    cursor.next<uint8_t>(title_len);
+  }
+  if (const auto comment_len_val = cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+    const auto comment_len = comment_len_val.value()[0];
+    cursor.next<uint8_t>(comment_len);
+  }
+
+  const auto midi_size = raw.size() - cursor.cursor;
+  BYTE_BUFFER_OWNED midi_buf(midi_size);
+  if (midi_buf) {
+    std::memcpy(midi_buf.get(), raw.get() + cursor.cursor, midi_size);
+  }
+
+  return LoadMIDIWithPotentialLoop(std::move(midi_buf), MusicHashes[filno]);
 }
 
 bool LoadMusicByHash(const HASH &hash) {
@@ -422,7 +477,6 @@ bool FnRecheck(MenuController & /*ctrl*/, INPUT_BITS key) {
 constexpr auto CENTER = MenuFlags::CENTER;
 MenuLabel Title = {TITLE.data(), CENTER};
 std::array<MenuItem, (DAT::BASENAMES.size() + 6)> Info = {{
-    {},
     {},
     {},
     {},
@@ -510,7 +564,7 @@ static int LoadedStage = 0;
 bool LoadGraph(int stage) {
   //	bIsBombPalette = FALSE;
   LoadedStage = stage;
-  const auto &graph = DAT::Packfile(DAT::PACK_ID::GRAPH);
+  const auto &graph = DAT::Packfile(DAT::PACK_ID::IMAGES);
 
   // For music room //
   if (stage == GRAPH_ID_MUSICROOM) {
@@ -542,13 +596,13 @@ bool LoadGraph(int stage) {
   }
   // Load all ending images (including palette) //
   if (stage == GRAPH_ID_ENDING) {
-    const auto &in = DAT::Packfile(DAT::PACK_ID::GRAPH2);
+    const auto &in = DAT::Packfile(DAT::PACK_ID::IMAGES);
 
-    if (!GrpBMPLoadP(in, 0, SURFACE_ID::ENDING_CREDITS)) {
+    if (!GrpBMPLoadP(in, 32, SURFACE_ID::ENDING_CREDITS)) {
       return false;
     }
     for (auto i = 0; i < ENDING_PIC_MAX; i++) {
-      if (!GrpBMPLoadP(in, (1 + i), (SURFACE_ID::ENDING_PIC + i))) {
+      if (!GrpBMPLoadP(in, (33 + i), (SURFACE_ID::ENDING_PIC + i))) {
         return false;
       }
       GrpBackend_PaletteGet(ending_pic[i].pal);
@@ -629,7 +683,7 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
   if (FaceID >= FACE_MAX) {
     return false;
   }
-  const auto &graph = DAT::Packfile(DAT::PACK_ID::GRAPH);
+  const auto &graph = DAT::Packfile(DAT::PACK_ID::IMAGES);
   if (!GrpBMPLoadP(graph, (13 + FileNo), (SURFACE_ID::FACE + FaceID))) {
     return false;
   }
@@ -640,8 +694,8 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
   return true;
 }
 
-// Set enemy palette
-void LoadPaletteFromEnemy() {
+// Set map palette
+void LoadPaletteFromMAP() {
 }
 
 // Load ECL & SCL data into memory //
@@ -654,7 +708,7 @@ bool LoadStageData(uint8_t stage) {
   Enemies.scl_head = {};
   Scroller.scroll.DataHead = nullptr;
 
-  const auto &enemy = DAT::Packfile(DAT::PACK_ID::ENEMY);
+  const auto &map_pack = DAT::Packfile(DAT::PACK_ID::MAP);
 
   // For extra stage system //
   if (stage == GRAPH_ID_EXSTAGE) {
@@ -669,7 +723,7 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // MapData Load
-    if ((Scroller.scroll.DataHead = enemy.MemExpand(26)) == nullptr) {
+    if ((Scroller.scroll.DataHead = map_pack.MemExpand(12)) == nullptr) {
       return false;
     }
   } else if (stage == GRAPH_ID_ENDING) {
@@ -699,7 +753,7 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // MapData Load
-    if ((Scroller.scroll.DataHead = enemy.MemExpand(stage + 12 - 1)) ==
+    if ((Scroller.scroll.DataHead = map_pack.MemExpand(stage - 1)) ==
         nullptr) {
       return false;
     }
@@ -1284,12 +1338,31 @@ bool LoadSound(const PACKFILE_READ &in) {
 bool LoadSound() { return LoadSound(DAT::Packfile(DAT::PACK_ID::SOUND)); }
 
 BYTE_BUFFER_OWNED LoadMusicRoomComment(int no) {
-  if ((no < 0) || (no > 19)) {
+  if ((no < 0) || (no >= static_cast<int>(DAT::MusicMetas.size()))) {
     return nullptr;
   }
-  return DAT::Packfile(DAT::PACK_ID::ENEMY).MemExpand(27 + no);
+  const auto &comment = DAT::MusicMetas[no].comment;
+  BYTE_BUFFER_OWNED buf(comment.size());
+  if (buf) {
+    std::memcpy(buf.get(), comment.data(), comment.size());
+  }
+  return buf;
+}
+
+std::string_view MusicTitle(unsigned int index) {
+  if (index < DAT::MusicMetas.size()) {
+    return DAT::MusicMetas[index].title;
+  }
+  return {};
+}
+
+std::string_view MusicComment(unsigned int index) {
+  if (index < DAT::MusicMetas.size()) {
+    return DAT::MusicMetas[index].comment;
+  }
+  return {};
 }
 
 BYTE_BUFFER_OWNED LoadDemo(int stage) {
-  return DAT::Packfile(DAT::PACK_ID::ENEMY).MemExpand(stage - 1 + 18);
+  return DAT::Packfile(DAT::PACK_ID::MAP).MemExpand(stage - 1 + 6);
 }
