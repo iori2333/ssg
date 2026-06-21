@@ -8,18 +8,16 @@
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
-#include <ranges>
 #include <string>
 #include <vector>
 
 #define TSF_IMPLEMENTATION
-#include "libs/tinysoundfont/tsf.h"
+#include <miniaudio.h>
+#include <tsf.h>
 
 #include "config.h"
 #include "game/midi.h"
 #include "platform/path.h"
-#include "platform/common/miniaudio/flags.h"
-#include <libs/miniaudio/miniaudio.h>
 
 static tsf *TsSoundFont = nullptr;
 static ma_device TsDevice;
@@ -163,8 +161,7 @@ bool MidBackend_DeviceChange(int8_t direction) {
   if (direction > 0) {
     TsSf2Index = (TsSf2Index + 1) % TsSf2Paths.size();
   } else {
-    TsSf2Index =
-        (TsSf2Index + TsSf2Paths.size() - 1) % TsSf2Paths.size();
+    TsSf2Index = (TsSf2Index + TsSf2Paths.size() - 1) % TsSf2Paths.size();
   }
 
   TsCleanupAudio();

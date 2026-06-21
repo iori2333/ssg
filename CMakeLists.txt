@@ -56,8 +56,13 @@ add_subdirectory(libs/BLAKE3/c EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libogg EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libvorbis EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libwebp EXCLUDE_FROM_ALL)
+add_subdirectory(libs/miniaudio EXCLUDE_FROM_ALL)
+add_subdirectory(libs/tomlplusplus EXCLUDE_FROM_ALL)
+
 add_library(dr_libs INTERFACE)
 target_include_directories(dr_libs INTERFACE libs/dr_libs)
+add_library(tinysoundfont INTERFACE)
+target_include_directories(tinysoundfont INTERFACE libs/tinysoundfont)
 
 # ============================================================
 # Main executable sources
@@ -129,7 +134,6 @@ target_include_directories(GIAN07 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/bullet
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/effect
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/stage
-    ${CMAKE_CURRENT_SOURCE_DIR}/libs/tomlplusplus/include
 )
 
 # Include generated version header
@@ -139,7 +143,9 @@ target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 # Link libraries
 # ============================================================
 target_link_libraries(GIAN07 PRIVATE
-    vorbis vorbisfile webp dr_libs BLAKE3::blake3 SDL3::SDL3-static
+    vorbis vorbisfile miniaudio dr_libs tinysoundfont
+    BLAKE3::blake3 SDL3::SDL3-static webp
+    tomlplusplus::tomlplusplus
 )
 
 # ============================================================
