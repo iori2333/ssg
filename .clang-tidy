@@ -22,6 +22,8 @@ Checks: >
   readability-*,
   -readability-magic-numbers,
   -readability-identifier-length,
+  -readability-function-cognitive-complexity,
+  misc-*,
 
 HeaderFilterRegex: '.*\.(h|hpp)$'
 ImplementationFileExtensions:
