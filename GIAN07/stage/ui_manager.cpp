@@ -9,7 +9,7 @@
 
 #include "config.h"
 #include "demo_play.h"
-#include "game/bgm.h"
+#include "audio/bgm.h"
 #include "game_main.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/gameflow_manager.h"

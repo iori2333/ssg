@@ -9,7 +9,7 @@
 // 2000/07/22 : Partial rewrite for font additions
 // 2000/02/19 : Began development of font handling
 
-#include "game/text.h"
+#include "gfx/text.h"
 
 // [Functions]
 void GrpPut16(int x, int y,

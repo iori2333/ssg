@@ -4,9 +4,9 @@
 
 #include "lens.h"
 #include "constants.h"
-#include "game/cast.h"
-#include "game/ut_math.h"
-#include "game/graphics_backend.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
+#include "gfx/graphics_backend.h"
 #include <cassert>
 
 #include <utility>

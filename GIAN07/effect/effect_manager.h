@@ -8,7 +8,7 @@
 #include "effect.h"
 #include "effect3d.h"
 #include "fragment.h"
-#include "game/text.h"
+#include "gfx/text.h"
 #include <array>
 #include <cstdint>
 #include <string_view>

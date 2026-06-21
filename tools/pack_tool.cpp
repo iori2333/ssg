@@ -42,7 +42,7 @@
 #endif
 
 #include "GIAN07/core/lz_uty.h"
-#include "game/endian.h"
+#include "util/endian.h"
 
 namespace fs = std::filesystem;
 

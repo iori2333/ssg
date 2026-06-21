@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "game/surface.h"
+#include "gfx/surface.h"
 
 // Only required for the HBITMAP type, which is basically void*.
 #define WIN32_LEAN_AND_MEAN

@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "game/coords.h"
-#include "game/buffer.h"
+#include "gfx/coords.h"
+#include "sys/buffer.h"
 #include <array>
 
 // [Change history]

@@ -5,8 +5,8 @@
 #pragma once
 
 #include "ending.h"
-#include "game/coords.h"
-#include "game/graphics.h"
+#include "gfx/coords.h"
+#include "gfx/graphics.h"
 #include "loader.h"
 #include "platform/text_backend.h"
 #include <array>

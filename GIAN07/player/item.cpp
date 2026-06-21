@@ -5,11 +5,11 @@
 #include "item.h"
 
 #include "core/entity.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
+#include "audio/snd.h"
+#include "util/ut_math.h"
 #include "gian.h"
 #include "item_manager.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include "player.h"
 #include <utility>
 

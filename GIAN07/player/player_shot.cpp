@@ -9,12 +9,12 @@
 
 #include "player_shot.h"
 
-#include "game/cast.h"
-#include "game/input.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
+#include "util/cast.h"
+#include "sys/input.h"
+#include "audio/snd.h"
+#include "util/ut_math.h"
 #include "gian.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include "player.h"
 #include "weapon/weapon_form.h"
 #include <utility>

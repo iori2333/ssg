@@ -3,8 +3,8 @@
 ///
 
 #include "platform/windows/surface_gdi.h"
-#include "game/format_bmp.h"
-#include "game/file.h"
+#include "gfx/format_bmp.h"
+#include "sys/file.h"
 #include <array>
 #include <assert.h>
 #include <stddef.h> // for offsetof()

@@ -8,7 +8,7 @@
 // 2000/05/31 : Development started
 
 // [Header files]
-#include "game/coords.h"
+#include "gfx/coords.h"
 #include <cstdint>
 #include <span>
 

@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "game/endian.h"
-#include "game/file.h"
+#include "util/endian.h"
+#include "sys/file.h"
 #include <array>
 
 // Format

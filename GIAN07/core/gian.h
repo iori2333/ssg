@@ -41,7 +41,7 @@
 #include "stage/scroll.h"           // Background scrolling & SCL management
 #include "stage/scroll_manager.h"   // ScrollManager + backward-compat wrappers
 
-#include "game/ut_math.h" // for rnd()
+#include "util/ut_math.h" // for rnd()
 #include "game_manager.h" // GameCount, GameStage, GameLevel, IsDemoplay
 #include "player/item.h"  // Item processing
 

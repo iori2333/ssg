@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "game/coords.h"
+#include "gfx/coords.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>

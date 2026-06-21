@@ -10,7 +10,7 @@
 #include "font_uty.h"
 #include "gameflow/rank_manager.h"
 #include "level.h"
-#include "game/time.h"
+#include "util/time.h"
 #include "player/item_manager.h"
 #include "player/player.h"
 #include "stage/scroll_manager.h"

@@ -5,9 +5,9 @@
 #include "ending.h"
 
 #include "ending_manager.h"
-#include "game/bgm.h"
-#include "game/cast.h"
-#include "game/endian.h"
+#include "audio/bgm.h"
+#include "util/cast.h"
+#include "util/endian.h"
 #include "gian.h"
 #include "platform/text_backend.h"
 #include "scene.h" // SCL definition file

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "game/text.h"
+#include "gfx/text.h"
 #include "window_sys.h" // MSG_HEIGHT, WINDOW_LTRB, FONT_ID, MenuController
 #include <optional>
 #include <string>

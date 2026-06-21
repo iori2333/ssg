@@ -7,9 +7,9 @@
 #include <functional>
 #include <utility>
 
-#include "game/enum_flags.h"
-#include "game/input.h"
-#include "game/text.h"
+#include "util/enum_flags.h"
+#include "sys/input.h"
+#include "gfx/text.h"
 
 // [Revision history]
 // 2000/07/26 : Improved operability

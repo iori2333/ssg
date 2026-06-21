@@ -74,9 +74,8 @@ file(GLOB_RECURSE PBG_SRC CONFIGURE_DEPENDS
 )
 
 # --- Modern game layer ---
-file(GLOB GAME_SRC CONFIGURE_DEPENDS
+file(GLOB_RECURSE GAME_SRC CONFIGURE_DEPENDS
     "game/*.cpp"
-    "game/codecs/*.cpp"
 )
 
 # --- Windows-specific backends ---
@@ -119,6 +118,7 @@ endif()
 # ============================================================
 target_include_directories(GIAN07 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/gameflow
@@ -159,8 +159,8 @@ endif()
 add_executable(pack_tool
     tools/pack_tool.cpp
     GIAN07/core/lz_uty.cpp
-    game/buffer.cpp
-    game/file.cpp
+    game/sys/buffer.cpp
+    game/sys/file.cpp
 )
 if(WIN32)
     target_compile_definitions(pack_tool PRIVATE WIN32)
@@ -168,6 +168,7 @@ if(WIN32)
 endif()
 target_include_directories(pack_tool PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
 )
 target_link_libraries(pack_tool PRIVATE SDL3::SDL3-static)
@@ -184,7 +185,10 @@ endif()
 add_executable(script_tool
     tools/script_tool.cpp
 )
-target_include_directories(script_tool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(script_tool PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+)
 set_target_properties(script_tool PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

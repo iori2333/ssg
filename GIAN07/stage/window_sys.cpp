@@ -4,9 +4,9 @@
 
 #include "window_sys.h"
 
-#include "game/enum_flags.h"
-#include "game/input.h"
-#include "game/snd.h"
+#include "util/enum_flags.h"
+#include "sys/input.h"
+#include "audio/snd.h"
 #include "loader.h"
 #include "menu/menu_renderer.h"
 #include "platform/text_backend.h"

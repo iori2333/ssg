@@ -5,10 +5,10 @@
 #include <SDL3/SDL_iostream.h>
 
 #include "config.h"
-#include "game/bgm.h"
-#include "game/guard.h"
-#include "game/file.h"
-#include "game/window_backend.h"
+#include "audio/bgm.h"
+#include "util/guard.h"
+#include "sys/file.h"
+#include "gfx/window_backend.h"
 #include <toml++/toml.hpp>
 
 ///// Constants /////

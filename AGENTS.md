@@ -47,6 +47,10 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | --- | --- |
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
 | `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
+| `game/sys/` | System wrappers – buffer, file, path, thread, log, input |
+| `game/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |
+| `game/audio/` | Audio layer – sound effects, MIDI, BGM, codecs, volume, audio backends |
+| `game/util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
 | `platform/` | Platform-specific backends with no cross-platform equivalent (text rendering only) |
 | `platform/windows/` | Win32-native backends: GDI text |
 | `platform/linux/pangocairo/` | Linux text rendering via PangoCairo |

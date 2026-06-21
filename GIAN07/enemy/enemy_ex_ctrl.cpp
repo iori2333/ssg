@@ -10,13 +10,13 @@
 
 #include "boss_manager.h"
 #include "enemy_manager.h"
-#include "game/cast.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
+#include "util/cast.h"
+#include "audio/snd.h"
+#include "util/ut_math.h"
 #include "laser_manager.h"
 #include "loader.h"
 #include "long_laser.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include "player.h"
 #include <utility>
 

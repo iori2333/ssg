@@ -19,9 +19,9 @@
 #include <SDL3/SDL_main.h>
 
 #include "GIAN07/core/entry.h"
-#include "game/guard.h"
-#include "game/log_sdl.h"
-#include "game/window_backend.h"
+#include "util/guard.h"
+#include "sys/log.h"
+#include "gfx/window_backend.h"
 #include "GIAN07/core/constants.h"
 
 int main(int argc, char **args) {

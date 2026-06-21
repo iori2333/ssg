@@ -5,9 +5,9 @@
 #pragma once
 
 #include "constants.h"
-#include "game/coords.h"
-#include "game/graphics.h"
-#include "game/hash.h"
+#include "gfx/coords.h"
+#include "gfx/graphics.h"
+#include "util/hash.h"
 
 struct SURFACE_DDRAW;
 

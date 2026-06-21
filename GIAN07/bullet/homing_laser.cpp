@@ -4,12 +4,12 @@
 
 #include "homing_laser.h"
 
-#include "game/snd.h"
-#include "game/ut_math.h"
+#include "audio/snd.h"
+#include "util/ut_math.h"
 #include "geometry.h"
 #include "gian.h"
 #include "laser_manager.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include "player.h"
 #include <utility>
 

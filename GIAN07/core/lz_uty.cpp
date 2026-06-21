@@ -3,8 +3,8 @@
 ///
 
 #include "lz_uty.h"
-#include "game/guard.h"
-#include "game/file.h"
+#include "util/guard.h"
+#include "sys/file.h"
 #include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <array>

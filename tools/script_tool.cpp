@@ -27,7 +27,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "game/endian.h"
+#include "util/endian.h"
 
 // ============================================================================
 // ECL command length table (from ECL_LEN.h)

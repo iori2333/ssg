@@ -9,8 +9,8 @@
 
 #include "config.h"
 #include "font_uty.h"
-#include "game/input.h"
-#include "game/snd.h"
+#include "sys/input.h"
+#include "audio/snd.h"
 #include "geometry.h"
 #include "gian.h"
 #include "player.h"

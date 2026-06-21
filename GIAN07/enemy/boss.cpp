@@ -11,13 +11,13 @@
 #include "boss_manager.h"
 #include "enemy_ex_ctrl.h"
 #include "font_uty.h"
-#include "game/cast.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
+#include "util/cast.h"
+#include "audio/snd.h"
+#include "util/ut_math.h"
 #include "geometry.h"
 #include "gian.h"
 #include "loader.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include <utility>
 
 ///// [ Constants ] /////

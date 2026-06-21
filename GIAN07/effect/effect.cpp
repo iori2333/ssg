@@ -5,9 +5,9 @@
 #include "effect.h"
 
 #include "font_uty.h"
-#include "game/cast.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
+#include "util/cast.h"
+#include "audio/snd.h"
+#include "util/ut_math.h"
 #include "geometry.h"
 #include "gian.h"
 #include "platform/text_backend.h"

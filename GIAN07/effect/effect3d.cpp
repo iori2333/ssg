@@ -3,10 +3,10 @@
 ///
 
 #include "effect3d.h"
-#include "game/cast.h"
-#include "game/ut_math.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
 #include "gian.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 
 // CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h
 // circles[], cubes[], stars[], rocks[], wf_line, fake_ecl_strs[] → effect_manager.cpp

@@ -3,9 +3,9 @@
 ///
 #include "bomb_efc.h"
 #include "effect_manager.h"
-#include "game/ut_math.h"
+#include "util/ut_math.h"
 #include "loader.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include <algorithm>
 #include <array>
 #include <ranges>

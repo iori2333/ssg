@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "game/graphics.h"
+#include "gfx/graphics.h"
 
 // Concept for pixel access within a text rendering session. Offers access
 // using both RGB colors and the raw underlying format.

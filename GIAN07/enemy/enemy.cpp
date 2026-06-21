@@ -7,14 +7,14 @@
 #include "core/entity.h"
 #include "ecl_len.h"
 #include "enemy_manager.h"
-#include "game/cast.h"
-#include "game/debug.h"
-#include "game/endian.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
+#include "util/cast.h"
+#include "util/debug.h"
+#include "util/endian.h"
+#include "audio/snd.h"
+#include "util/ut_math.h"
 #include "gian.h"
 #include "level.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include <utility>
 
 // ECL debug macro

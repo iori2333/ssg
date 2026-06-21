@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "game/input.h"
+#include "sys/input.h"
 #include <string>
 #include <vector>
 

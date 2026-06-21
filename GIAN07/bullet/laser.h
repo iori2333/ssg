@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "game/coords.h"
-#include "game/graphics_backend.h"
+#include "gfx/coords.h"
+#include "gfx/graphics_backend.h"
 #include <cstdint>
 
 // [Change history]

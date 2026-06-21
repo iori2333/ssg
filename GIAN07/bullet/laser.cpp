@@ -5,13 +5,13 @@
 #include "laser.h"
 
 #include "core/entity.h"
-#include "game/ut_math.h"
+#include "util/ut_math.h"
 #include "geometry.h"
 #include "gian.h"
 #include "laser_manager.h"
 #include "level.h"
 #include "long_laser.h"
-#include "game/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 #include "play_rank.h"
 #include <utility>
 

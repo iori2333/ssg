@@ -4,7 +4,7 @@
 
 #include "msg_window.h"
 
-#include "game/ut_math.h"
+#include "util/ut_math.h"
 #include "loader.h"
 #include "menu/menu_renderer.h"
 #include "platform/text_backend.h"

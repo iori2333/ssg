@@ -5,7 +5,7 @@
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
 #include "score.h"
-#include "game/guard.h"
+#include "util/guard.h"
 #include "level.h"
 #include "lz_uty.h"
 #include "score_manager.h"

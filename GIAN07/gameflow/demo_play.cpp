@@ -5,12 +5,12 @@
 #include "demo_play.h"
 #include "config.h"
 #include "demo_manager.h"
-#include "game/guard.h"
-#include "game/input.h"
-#include "game/ut_math.h"
+#include "util/guard.h"
+#include "sys/input.h"
+#include "util/ut_math.h"
 #include "gian.h"
 #include "lz_uty.h"
-#include "game/file.h"
+#include "sys/file.h"
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
 #include <algorithm>
