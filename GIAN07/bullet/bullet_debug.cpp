@@ -1,19 +1,27 @@
 ///
 /// BulletDebug - Debug bullet hitbox overlay rendering
 ///
-#include "bullet_debug.h"
+#include <cmath>
+#include <span>
 
 #include "bullet.h"
+#include "bullet_debug.h"
 #include "bullet_manager.h"
 
 #include "core/gian.h"
+#include "effect/geometry.h"
 #include "gfx/graphics_sdl.h"
 
 void BulletDebug_DrawHitboxes(int mode) {
+  const RGB216 kBlack{0, 0, 0};
   constexpr uint8_t kAlpha = 204;
 
-  GrpGeom->SetColor({0, 0, 0});
-  GrpGeom->SetAlphaNorm(kAlpha);
+  auto *gp = GrpGeom_Poly();
+  if (gp == nullptr) {
+    return;
+  }
+  gp->SetColor(kBlack);
+  gp->SetAlphaNorm(kAlpha);
 
   for (const auto i : std::views::iota(0U, Bullets.count_small)) {
     auto *t = &Bullets.bullets[Bullets.indices_small[i]];
@@ -25,18 +33,14 @@ void BulletDebug_DrawHitboxes(int mode) {
     const int cy = (t->y >> 6);
 
     if (mode >= 2) {
-      const int gx1 = cx - (TAMA_EVX_SMALL >> 6);
-      const int gy1 = cy - (TAMA_EVY_SMALL >> 6);
-      const int gx2 = cx + (TAMA_EVX_SMALL >> 6);
-      const int gy2 = cy + (TAMA_EVY_SMALL >> 6);
-      GrpGeom->DrawBoxA(gx1, gy1, gx2 + 1, gy2 + 1);
+      Geometry::CircleF_Approximated(*gp, {cx, cy},
+                                     TAMA_EVADE_RADIUS_SMALL >> 6, true);
     }
 
-    const int hx1 = cx - (TAMA_HITX >> 6);
-    const int hy1 = cy - (TAMA_HITY >> 6);
-    const int hx2 = cx + (TAMA_HITX >> 6);
-    const int hy2 = cy + (TAMA_HITY >> 6);
-    GrpGeom->DrawBoxA(hx1, hy1, hx2 + 1, hy2 + 1);
+    const int r_px = GetBulletHitRadius(t->c) >> 6;
+    if (r_px > 0) {
+      Geometry::CircleF_Approximated(*gp, {cx, cy}, r_px, true);
+    }
   }
 
   for (const auto i : std::views::iota(0U, Bullets.count_large)) {
@@ -49,17 +53,13 @@ void BulletDebug_DrawHitboxes(int mode) {
     const int cy = (t->y >> 6);
 
     if (mode >= 2) {
-      const int gx1 = cx - (TAMA_EVX_LARGE >> 6);
-      const int gy1 = cy - (TAMA_EVY_LARGE >> 6);
-      const int gx2 = cx + (TAMA_EVX_LARGE >> 6);
-      const int gy2 = cy + (TAMA_EVY_LARGE >> 6);
-      GrpGeom->DrawBoxA(gx1, gy1, gx2 + 1, gy2 + 1);
+      Geometry::CircleF_Approximated(*gp, {cx, cy},
+                                     TAMA_EVADE_RADIUS_LARGE >> 6, true);
     }
 
-    const int hx1 = cx - (TAMA_HITX >> 6);
-    const int hy1 = cy - (TAMA_HITY >> 6);
-    const int hx2 = cx + (TAMA_HITX >> 6);
-    const int hy2 = cy + (TAMA_HITY >> 6);
-    GrpGeom->DrawBoxA(hx1, hy1, hx2 + 1, hy2 + 1);
+    const int r_px = GetBulletHitRadius(t->c) >> 6;
+    if (r_px > 0) {
+      Geometry::CircleF_Approximated(*gp, {cx, cy}, r_px, true);
+    }
   }
 }

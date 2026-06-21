@@ -24,6 +24,29 @@
 // Private methods are declared in bullet_manager.h
 void TamaEffectDraw(const Bullet *t); // Draw bullet as effect?
 
+int GetBulletHitRadius(uint8_t c) {
+  switch (c & 0xF0) {
+  case TAMA_SMALL:
+    return TAMA_HIT_S;
+  case TAMA_LARGE:
+  case TAMA_EXTRA2:
+    return TAMA_HIT_M;
+  case TAMA_ANGLE:
+    return (c == 0x25) ? TAMA_HIT_M : TAMA_HIT_S;
+  case TAMA_EXTRA: {
+    constexpr int radii[4] = {TAMA_HIT_XL, TAMA_HIT_L, TAMA_HIT_M, TAMA_HIT_S};
+    return radii[c & 3];
+  }
+  default:
+    return TAMA_HIT_M;
+  }
+}
+
+int GetBulletEvadeRadius(uint8_t c) {
+  return ((c & 0xF0) == TAMA_SMALL) ? TAMA_EVADE_RADIUS_SMALL
+                                    : TAMA_EVADE_RADIUS_LARGE;
+}
+
 void TamaEvadeAdd(Bullet *t) {
   if (t->flag & TF_EVADE)
     Players.AddEvadeEx(t->x, t->y, 0);
@@ -291,19 +314,24 @@ void BulletManager::Move() {
       if (Players.IsInvincible() != 0U) {
         continue;
       }
-      if (HITCHK(t->x, Players.X(), TAMA_EVX_SMALL) &&
-          HITCHK(t->y, Players.Y(), TAMA_EVY_SMALL)) {
-        TamaEvadeAdd(t);
-      }
-      if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
-          HITCHK(t->y, Players.Y(), TAMA_HITY)) {
-#ifdef PBG_DEBUG
-        if (ConfigDat.bullet_gallery_active) {
-          continue;
+      {
+        const int64_t dx = static_cast<int64_t>(t->x) - Players.X();
+        const int64_t dy = static_cast<int64_t>(t->y) - Players.Y();
+        const int64_t dist_sq = dx * dx + dy * dy;
+        const int ev_r = GetBulletEvadeRadius(t->c);
+        if (dist_sq < (static_cast<int64_t>(ev_r) * ev_r)) {
+          TamaEvadeAdd(t);
         }
+        const int r = GetBulletHitRadius(t->c);
+        if (dist_sq < (static_cast<int64_t>(r) * r)) {
+#ifdef PBG_DEBUG
+          if (ConfigDat.bullet_gallery_active) {
+            continue;
+          }
 #endif
-        t->flag = TF_DELETE;
-        Players.OnHit();
+          t->flag = TF_DELETE;
+          Players.OnHit();
+        }
       }
     } else {
       MoveByEffect(t);
@@ -328,19 +356,24 @@ void BulletManager::Move() {
       if (Players.IsInvincible() != 0U) {
         continue;
       }
-      if (HITCHK(t->x, Players.X(), TAMA_EVX_LARGE) &&
-          HITCHK(t->y, Players.Y(), TAMA_EVY_LARGE)) {
-        TamaEvadeAdd(t);
-      }
-      if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
-          HITCHK(t->y, Players.Y(), TAMA_HITY)) {
-#ifdef PBG_DEBUG
-        if (ConfigDat.bullet_gallery_active) {
-          continue;
+      {
+        const int64_t dx = static_cast<int64_t>(t->x) - Players.X();
+        const int64_t dy = static_cast<int64_t>(t->y) - Players.Y();
+        const int64_t dist_sq = dx * dx + dy * dy;
+        const int ev_r = GetBulletEvadeRadius(t->c);
+        if (dist_sq < (static_cast<int64_t>(ev_r) * ev_r)) {
+          TamaEvadeAdd(t);
         }
+        const int r = GetBulletHitRadius(t->c);
+        if (dist_sq < (static_cast<int64_t>(r) * r)) {
+#ifdef PBG_DEBUG
+          if (ConfigDat.bullet_gallery_active) {
+            continue;
+          }
 #endif
-        t->flag = TF_DELETE;
-        Players.OnHit();
+          t->flag = TF_DELETE;
+          Players.OnHit();
+        }
       }
     } else {
       MoveByEffect(t);

@@ -25,16 +25,8 @@ inline constexpr auto TAMA_EVADE = 1;       // Bullet graze value
 inline constexpr auto TAMA1_POINT = 10000; // Bullet score
 inline constexpr auto TAMA2_POINT = 15000; // Bullet score
 
-inline constexpr auto TAMA_HITX = (2 * 64); // Bullet hitbox
-inline constexpr auto TAMA_HITY = (4 * 64); // Bullet hitbox
-inline constexpr auto TAMA_EVX_SMALL =
-    ((8 + 8) * 64); // Small bullet graze detection (X)
-inline constexpr auto TAMA_EVY_SMALL =
-    ((16 + 8) * 64); // Small bullet graze detection (Y)
-inline constexpr auto TAMA_EVX_LARGE =
-    ((8 + 16) * 64); // Large bullet graze detection (X)
-inline constexpr auto TAMA_EVY_LARGE =
-    ((16 + 16) * 64); // Large bullet graze detection (Y)
+inline constexpr auto TAMA_EVADE_RADIUS_SMALL = 24 * 64;
+inline constexpr auto TAMA_EVADE_RADIUS_LARGE = 32 * 64;
 
 inline constexpr auto TAMA_SMALL =
     0x00; // Upper 4 bits when bullet is small type
@@ -53,7 +45,14 @@ inline constexpr auto TAMASP_RND1 = 0x40; // Speed random??
 inline constexpr auto TAMASP_RND2 = 0x80; // Speed random??
 inline constexpr auto TAMASP_RND3 = 0xc0; // Speed random??
 
-////Bullet type constants (upper 4 bits currently unused)////
+inline constexpr auto TAMA_HIT_S = 3 * 64;
+inline constexpr auto TAMA_HIT_M = 5 * 64;
+inline constexpr auto TAMA_HIT_L = 7 * 64;
+inline constexpr auto TAMA_HIT_XL = 10 * 64;
+
+int GetBulletHitRadius(uint8_t c);
+int GetBulletEvadeRadius(uint8_t c);
+
 inline constexpr auto T_NORM = 0x00;   // Normal bullet: moves with (vx, vy)
 inline constexpr auto T_NORM_A = 0x01; // Accelerating: rep acceleration count?
 inline constexpr auto T_HOMING =
