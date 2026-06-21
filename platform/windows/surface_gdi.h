@@ -4,7 +4,11 @@
 
 #pragma once
 
-#include "gfx/surface.h"
+#include "gfx/coords.h"
+
+struct SURFACE {
+  PIXEL_SIZE size = {0, 0};
+};
 
 // Only required for the HBITMAP type, which is basically void*.
 #define WIN32_LEAN_AND_MEAN

@@ -4,11 +4,35 @@
 #pragma once
 
 #include "util/hash.h"
-#include "audio/pcm.h"
 #include "sys/file.h"
+#include <compare>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <optional>
+#include <utility>
+
+// PCM sample format
+// -----------------
+
+enum class PCM_SAMPLE_FORMAT : uint8_t {
+  S16 = 2,
+  S32 = 4,
+};
+
+struct PCM_FORMAT {
+  const uint32_t samplingrate;
+  const uint16_t channels;
+  const PCM_SAMPLE_FORMAT format;
+
+  std::strong_ordering operator<=>(const PCM_FORMAT &other) const = default;
+
+  size_t SampleSize() const {
+    const auto byte_depth = std::to_underlying(format);
+    return (channels * byte_depth);
+  }
+};
+// -----------------
 
 struct SDL_IOStream;
 
