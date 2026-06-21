@@ -46,9 +46,9 @@ inline constexpr auto TAMASP_RND2 = 0x80; // Speed random??
 inline constexpr auto TAMASP_RND3 = 0xc0; // Speed random??
 
 inline constexpr auto TAMA_HIT_S = 3 * 64;
-inline constexpr auto TAMA_HIT_M = 5 * 64;
-inline constexpr auto TAMA_HIT_L = 7 * 64;
-inline constexpr auto TAMA_HIT_XL = 10 * 64;
+inline constexpr auto TAMA_HIT_M = 6 * 64;
+inline constexpr auto TAMA_HIT_L = 9 * 64;
+inline constexpr auto TAMA_HIT_XL = 12 * 64;
 
 int GetBulletHitRadius(uint8_t c);
 int GetBulletEvadeRadius(uint8_t c);
