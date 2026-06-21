@@ -8,6 +8,7 @@
 #include "bullet_manager.h"
 
 #include "audio/snd.h"
+#include "core/config.h"
 #include "core/gian.h"
 #include "core/level.h"
 #include "gfx/graphics_backend.h"
@@ -296,6 +297,11 @@ void BulletManager::Move() {
       }
       if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
           HITCHK(t->y, Players.Y(), TAMA_HITY)) {
+#ifdef PBG_DEBUG
+        if (ConfigDat.bullet_gallery_active) {
+          continue;
+        }
+#endif
         t->flag = TF_DELETE;
         Players.OnHit();
       }
@@ -328,6 +334,11 @@ void BulletManager::Move() {
       }
       if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
           HITCHK(t->y, Players.Y(), TAMA_HITY)) {
+#ifdef PBG_DEBUG
+        if (ConfigDat.bullet_gallery_active) {
+          continue;
+        }
+#endif
         t->flag = TF_DELETE;
         Players.OnHit();
       }

@@ -678,6 +678,51 @@ void ReloadGraph() {
   LoadGraph(LoadedStage);
 }
 
+bool LoadEnemySurface(uint8_t image_no) {
+  const auto &graph = DAT::Packfile(DAT::PACK_ID::IMAGES);
+  return GrpBMPLoadP(graph, image_no, SURFACE_ID::ENEMY);
+}
+
+bool LoadGalleryEnemySurfaces() {
+  const auto &graph = DAT::Packfile(DAT::PACK_ID::IMAGES);
+
+  auto bmp29 = BMPLoad(graph.MemExpand(29));
+  auto bmp30 = BMPLoad(graph.MemExpand(30));
+  if (!bmp29 || !bmp30) {
+    return false;
+  }
+
+  auto &b29 = bmp29.value();
+  auto &b30 = bmp30.value();
+
+  const int src_stride = static_cast<int>(b30.info.Stride());
+  const int dst_stride = static_cast<int>(b29.info.Stride());
+  const auto src_w = b30.info.biWidth;
+  const auto src_h = b30.info.biHeight;
+  const auto dst_w = b29.info.biWidth;
+  const auto dst_h = b29.info.biHeight;
+
+  const int copy_y = 320;
+  const int copy_h = 64;
+  const int copy_w = std::min<int>(src_w, dst_w);
+
+  for (int y = 0; y < copy_h; y++) {
+    const int src_y = src_h - 1 - (copy_y + y);
+    const int dst_y = dst_h - 1 - (copy_y + y);
+    if (src_y < 0 || src_y >= src_h || dst_y < 0 || dst_y >= dst_h) {
+      continue;
+    }
+    for (int x = 0; x < copy_w; x++) {
+      const auto pixel = b30.pixels[src_y * src_stride + x];
+      if (pixel != std::byte{0}) {
+        b29.pixels[dst_y * dst_stride + x] = pixel;
+      }
+    }
+  }
+
+  return GrpSurface_Load(SURFACE_ID::ENEMY, std::move(b29));
+}
+
 bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
   if (FaceID >= FACE_MAX) {
     return false;

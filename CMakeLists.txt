@@ -97,6 +97,10 @@ add_executable(GIAN07
     ${GAME_SRC}
 )
 
+target_compile_definitions(GIAN07 PRIVATE
+    $<$<CONFIG:Debug>:PBG_DEBUG>
+)
+
 if(WIN32)
     target_sources(GIAN07 PRIVATE ${PLATFORM_WINDOWS_SRC})
 

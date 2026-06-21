@@ -619,10 +619,6 @@ void Player::PrepareNextStage() {
 }
 
 void Player::OnHit() {
-#ifdef PBG_DEBUG
-  if (!DebugDat.Hit)
-    return;
-#endif
   if (muteki_ != 0)
     return;
   if (deathbomb_time_ != 0)
@@ -654,11 +650,6 @@ void Player::OnHit() {
 
 void Player::OnDeath(bool play_se) {
   int i = 0;
-
-#ifdef PBG_DEBUG
-  if (!DebugDat.Hit)
-    return;
-#endif
 
   if (ConfigDat.practice_mode == PracticeMode::INVINCIBLE) {
     Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);

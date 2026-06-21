@@ -12,6 +12,7 @@
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
+#include "bullet/bullet_debug.h"
 #include "core/config.h"
 #include "core/gian.h"
 #include "core/level.h"
@@ -639,10 +640,6 @@ bool GameInit(std::function<void(bool &)> next_proc) {
 
 // Transition to next stage
 bool GameNextStage() {
-#ifdef PBG_DEBUG
-  Demos.SaveDemo();
-#endif
-
   Games.game_stage++;
 
   // Transition to ending
@@ -943,13 +940,7 @@ void GameContinue() {
 
 void GameProc(bool & /*unused*/) {
   // Record current input (always-on multi-stage or legacy single-stage)
-  const auto replay_over = Demos.Record(Key_Data);
-
-#ifdef PBG_DEBUG
-  if (DebugDat.DemoSave && replay_over) {
-    Demos.SaveDemo();
-  }
-#endif
+  Demos.Record(Key_Data);
 
   if ((Key_Data & KEY_ESC) != 0) {
     // Show exit dialog
@@ -1199,16 +1190,6 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     Snd_SEPlay(SOUND_ID_SELECT);
     if (Games.game_stage != GRAPH_ID_EXSTAGE) {
-#ifdef PBG_DEBUG
-      if (forceStage)
-        Games.game_stage = forceStage;
-      else
-        Games.game_stage = DebugDat.StgSelect;
-      if (Games.game_stage == 2)
-        Players.SetPower(160);
-      if (Games.game_stage >= 3)
-        Players.SetPower(255);
-#else
       if (forceStage != 0) {
         Games.game_stage = forceStage;
         if (Games.game_stage == 2) {
@@ -1228,7 +1209,6 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       } else {
         Games.game_stage = 1;
       }
-#endif
     } else {
       Players.SetCredits(0);
       Players.SetLives(2);
@@ -1529,6 +1509,12 @@ void GameDraw() {
   Lasers.Draw();
   Bullets.Draw();
 
+#ifdef PBG_DEBUG
+  if (ConfigDat.hitbox_display != 0) {
+    BulletDebug_DrawHitboxes(ConfigDat.hitbox_display);
+  }
+#endif
+
   // static uint8_t test = 0;
 
   // if((Key_Data&KEY_UP  ) && test<64) test++;
@@ -1561,3 +1547,166 @@ bool GameFlowManager::IsDraw() {
 
   return true;
 }
+
+#ifdef PBG_DEBUG
+static void GalleryUpdateAngles() {
+  for (uint16_t i = 0; i < Bullets.count_small; i++) {
+    auto *t = &Bullets.bullets[Bullets.indices_small[i]];
+    if ((t->c & 0xF0) == TAMA_ANGLE) {
+      t->d += 4;
+    }
+  }
+  for (uint16_t i = 0; i < Bullets.count_large; i++) {
+    auto *t = &Bullets.bullets[Bullets.indices_large[i]];
+    const auto cat = t->c & 0xF0;
+    if (cat == TAMA_ANGLE || cat == TAMA_EXTRA2) {
+      t->d += 4;
+    }
+  }
+}
+
+static void GalleryDrawLabels() {
+  static constexpr int x0 = 160;
+  static constexpr int y0 = 50;
+  static constexpr int dx = 64;
+  static constexpr int dy = 80;
+  static constexpr uint8_t c_grid[5][6] = {
+      {0x00, 0x01, 0x02, 0x03, 0x04, 0x05},
+      {0x10, 0x11, 0x12, 0x13, 0x14, 0x15},
+      {0x20, 0x21, 0x22, 0x23, 0x24, 0x25},
+      {0x30, 0x31, 0x32, 0x33, 0xFF, 0xFF},
+      {0x40, 0x41, 0x42, 0x43, 0xFF, 0xFF},
+  };
+  for (int row = 0; row < 5; row++) {
+    for (int col = 0; col < 6; col++) {
+      const auto c = c_grid[row][col];
+      if (c == 0xFF) {
+        continue;
+      }
+      const auto label = std::format("{:02X}", c);
+      const auto px = x0 + col * dx - 4;
+      const auto py = y0 + row * dy + 16;
+      GrpPut16(px, py, label.c_str());
+    }
+  }
+}
+
+static void SpawnGalleryBullets() {
+  static constexpr uint8_t c_grid[5][6] = {
+      {0x00, 0x01, 0x02, 0x03, 0x04, 0x05},
+      {0x10, 0x11, 0x12, 0x13, 0x14, 0x15},
+      {0x20, 0x21, 0x22, 0x23, 0x24, 0x25},
+      {0x30, 0x31, 0x32, 0x33, 0xFF, 0xFF},
+      {0x40, 0x41, 0x42, 0x43, 0xFF, 0xFF},
+  };
+  static constexpr int x0 = 160;
+  static constexpr int y0 = 50;
+  static constexpr int dx = 64;
+  static constexpr int dy = 80;
+
+  for (int row = 0; row < 5; row++) {
+    for (int col = 0; col < 6; col++) {
+      const uint8_t c = c_grid[row][col];
+      if (c == 0xFF) {
+        continue;
+      }
+      const int wx = (x0 + col * dx) * 64;
+      const int wy = (y0 + row * dy) * 64;
+
+      if ((c & 0xF0) == TAMA_SMALL) {
+        const auto idx = Bullets.count_small;
+        auto *t = &Bullets.bullets[Bullets.indices_small[idx]];
+        Bullets.count_small++;
+        t->x = wx;
+        t->y = wy;
+        t->vx = 0;
+        t->vy = 0;
+        t->v = 0;
+        t->v0 = 0;
+        t->c = c;
+        t->d = 0;
+        t->d16 = 0;
+        t->effect = 0;
+        t->flag = 0;
+        t->type = T_NORM;
+        t->rep = 0;
+        t->option = 0;
+        t->a = 0;
+        t->vd = 0;
+        t->count = 0;
+        t->tx = 0;
+        t->ty = 0;
+      } else {
+        const auto idx = Bullets.count_large;
+        auto *t = &Bullets.bullets[Bullets.indices_large[idx]];
+        Bullets.count_large++;
+        t->x = wx;
+        t->y = wy;
+        t->vx = 0;
+        t->vy = 0;
+        t->v = 0;
+        t->v0 = 0;
+        t->c = c;
+        t->d = 0;
+        t->d16 = 0;
+        t->effect = 0;
+        t->flag = 0;
+        t->type = T_NORM;
+        t->rep = 0;
+        t->option = 0;
+        t->a = 0;
+        t->vd = 0;
+        t->count = 0;
+        t->tx = 0;
+        t->ty = 0;
+      }
+    }
+  }
+}
+
+static void BulletGalleryProc(bool & /*quit*/) {
+  if ((Key_Data & KEY_ESC) != 0U) {
+    ConfigDat.bullet_gallery_active = false;
+    Bullets.Clear();
+    (void)LoadGraph(GRAPH_ID_TITLE);
+    GrpBackend_SetClip(GRP_RES_RECT);
+    GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
+    GameFlow.current_state = GameState::Title;
+    return;
+  }
+
+  GalleryUpdateAngles();
+
+  if (!GameFlow.IsDraw()) {
+    return;
+  }
+
+  GrpBackend_Clear();
+  Bullets.Draw();
+
+  if (ConfigDat.hitbox_display != 0) {
+    BulletDebug_DrawHitboxes(ConfigDat.hitbox_display);
+  }
+
+  GalleryDrawLabels();
+
+  GrpBackend_SetClip(GRP_RES_RECT);
+  GrpPut16(140, 460, "Bullet Gallery  |  ESC to exit");
+  GrpBackend_SetClip({X_MIN, Y_MIN, (X_MAX + 1), (Y_MAX + 1)});
+
+  Grp_Flip();
+}
+
+void BulletGalleryInit() {
+  if (!LoadGraph(1)) {
+    return;
+  }
+  (void)LoadGalleryEnemySurfaces();
+  Bullets.SetIndices(400 + 200);
+  Bullets.Clear();
+  SpawnGalleryBullets();
+  ConfigDat.bullet_gallery_active = true;
+  GameFlow.game_main = BulletGalleryProc;
+  GameFlow.current_state = GameState::BulletGallery;
+}
+#endif

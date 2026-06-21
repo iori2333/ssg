@@ -28,6 +28,9 @@ enum class GameState {
   ReplayAll,
   MusicRoom,
   External, // External specification via GameInit(), etc.
+#ifdef PBG_DEBUG
+  BulletGallery, // Debug bullet gallery
+#endif
 };
 
 struct GameFlowManager {

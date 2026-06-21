@@ -2,6 +2,7 @@
 /// Gian - Game-wide management
 ///
 
+#include <algorithm>
 #include <format>
 
 #include "config.h"
@@ -35,11 +36,6 @@ void StdStatusOutput() {
   // extern InputConfig			IConfig;
   const char *const DItem[4] = {"Easy", "Norm", "Hard", "Luna"};
 
-#ifdef PBG_DEBUG
-  if (!DebugDat.MsgDisplay)
-    return;
-#endif
-
   const auto now = Time_SteadyTicksMS();
   if ((now - prev) <= 1000) {
     count++;
@@ -70,10 +66,6 @@ void StdStatusOutput() {
   GrpPut16(0, 162,
            std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
 
-#ifdef PBG_DEBUG
-  // sprintf(buf,"%s",DItems.entities[ConfigDat.Games.game_level.v]);
-  // GrpPut16(0,50,buf);
-
   GrpPut16(0, 96 + 40, std::format("Enemy {:3}", Enemies.count).c_str());
 
   GrpPut16(0, 128 + 40, std::format("Tama1 {:3}", Bullets.count_small).c_str());
@@ -91,16 +83,18 @@ void StdStatusOutput() {
   GrpPut16(0, 320 + 40,
            std::format("SSPD  {:3}", Scroller.scroll.ScrollSpeed).c_str());
 
+  static constexpr const char *kHitboxLabels[3] = {"Off", "Hit", "All"};
+  GrpPut16(0, 356 + 40,
+           std::format("Hitbox {}",
+                       kHitboxLabels[std::clamp(ConfigDat.hitbox_display, 0, 2)])
+               .c_str());
+
   GrpPut16(0, 440, "Gian07");
   GrpPut16(0, 460, "DebugMode");
 
   GrpPut16(column2_left, 100, "SCL Count");
   GrpPut16(column2_left, 120,
            std::format(" {:5}", Games.game_count).c_str());
-#else
-  // GrpPut16(0,440,"G07");
-  // GrpPut16(0,460,"12/5 Ver");
-#endif
 
   const auto tm = Time_NowLocal();
 
@@ -114,10 +108,8 @@ void StdStatusOutput() {
       column2_left, 70,
       std::format("{:02}:{:02}:{:02}", tm.hour, tm.minute, tm.second).c_str());
 
-#ifndef PBG_DEBUG // pbg quirk
   GrpPut16(column2_left, 400,
            std::format("Bomb   {}", Players.Bombs()).c_str());
-#endif
 
   GrpPut16(column2_left, 440,
            std::format("Left   {}", Players.Lives()).c_str());

@@ -68,20 +68,11 @@ static MenuItem HRuleItem = {"-------------------"};
 // ---------------------------------------------------------------------------
 
 DifficultyPanel::DifficultyPanel() {
-  items_.reserve(13);
+  items_.reserve(5);
   items_.emplace_back(titles_[0].Lit(), "残り人数?を設定します", FnPlayerStock);
   items_.emplace_back(titles_[1].Lit(), "ボムの数を設定します", FnBombStock);
   items_.emplace_back(titles_[2].Lit(), "難易度を設定します", FnDifficulty);
   items_.emplace_back(titles_[3].Lit(), "练习模式を設定します", FnPracticeMode);
-#ifdef PBG_DEBUG
-  items_.emplace_back(HRuleItem);
-  items_.emplace_back(titles_[4].Lit(), "[DebugMode] 画面に情報を表示するか",
-                      FnMsgDisplay);
-  items_.emplace_back(titles_[5].Lit(), "[DebugMode] ステージセレクト",
-                      FnStgSelect);
-  items_.emplace_back(titles_[6].Lit(), "[DebugMode] 当たり判定", FnHit);
-  items_.emplace_back(titles_[7].Lit(), "[DebugMode] デモプレイセーブ", FnDemo);
-#endif
   items_.emplace_back(SubmenuExitItem);
   menu_ = MenuDef(std::span(items_),
                   [this](MenuController &c, bool t) { Refresh(c, t); });
@@ -104,21 +95,6 @@ void DifficultyPanel::FnPracticeMode(MenuController &, int_fast8_t delta) {
            PracticeMode::INVINCIBLE);
 }
 
-#ifdef PBG_DEBUG
-void DifficultyPanel::FnMsgDisplay(MenuController &, int_fast8_t) {
-  DebugDat.MsgDisplay = !DebugDat.MsgDisplay;
-}
-void DifficultyPanel::FnStgSelect(MenuController &, int_fast8_t delta) {
-  RingStep(DebugDat.StgSelect, delta, 1, STAGE_MAX);
-}
-void DifficultyPanel::FnHit(MenuController &, int_fast8_t) {
-  DebugDat.Hit = !DebugDat.Hit;
-}
-void DifficultyPanel::FnDemo(MenuController &, int_fast8_t) {
-  DebugDat.DemoSave = !DebugDat.DemoSave;
-}
-#endif
-
 void DifficultyPanel::Refresh(MenuController &, bool) {
   static constexpr const char *const dif[4] = {" Easy  ", " Normal", " Hard  ",
                                                "Lunatic"};
@@ -130,13 +106,6 @@ void DifficultyPanel::Refresh(MenuController &, bool) {
                     dif[std::to_underlying(ConfigDat.game_level)]);
   titles_[3].Format("PracticeMode[{}]",
                     practice[std::to_underlying(ConfigDat.practice_mode)]);
-
-#ifdef PBG_DEBUG
-  titles_[4].Format("DebugOut  {}", CHOICE_OFF_ON[DebugDat.MsgDisplay]);
-  titles_[5].Format("StgSelect [  {}  ]", DebugDat.StgSelect);
-  titles_[6].Format("Hit       {}", CHOICE_OFF_ON[DebugDat.Hit]);
-  titles_[7].Format("DemoSave  {}", CHOICE_OFF_ON[DebugDat.DemoSave]);
-#endif
 
   for (size_t i = 0; i < items_.size() - 1; i++) {
     items_[i].Title = titles_[i].Lit();
@@ -760,6 +729,48 @@ void InputPanel::Refresh(MenuController &, bool) {
 }
 
 // ---------------------------------------------------------------------------
+// DebugPanel
+// ---------------------------------------------------------------------------
+
+#ifdef PBG_DEBUG
+DebugPanel::DebugPanel() {
+  items_.reserve(4);
+  items_.emplace_back(titles_[0].Lit(), "[DebugMode] 弾幕判定エリア表示",
+                      FnHitboxDisplay);
+  items_.emplace_back(titles_[1].Lit(), "Debug bullet type gallery",
+                      FnBulletGallery);
+  items_.emplace_back(SubmenuExitItem);
+  menu_ = MenuDef(std::span(items_),
+                  [this](MenuController &c, bool t) { Refresh(c, t); });
+}
+
+void DebugPanel::FnHitboxDisplay(MenuController &, int_fast8_t delta) {
+  int32_t v = ConfigDat.hitbox_display;
+  v = (delta < 0) ? ((v <= 0) ? 2 : (v - 1)) : ((v >= 2) ? 0 : (v + 1));
+  ConfigDat.hitbox_display = v;
+}
+
+bool DebugPanel::FnBulletGallery(MenuController &, INPUT_BITS key) {
+  if (Input_IsOK(key)) {
+    BulletGalleryInit();
+  }
+  return true;
+}
+
+void DebugPanel::Refresh(MenuController &, bool) {
+  static constexpr const char *kHitboxLabels[3] = {"Off", "Hit ", "All "};
+  titles_[0].Format("Hitbox          [{}]",
+                    kHitboxLabels[std::clamp(ConfigDat.hitbox_display, 0, 2)]);
+  titles_[1].Format("Bullet Gallery");
+
+  for (size_t i = 0; i < items_.size() - 1; i++) {
+    items_[i].Title = titles_[i].Lit();
+  }
+  items_.back().Title = "Exit";
+}
+#endif
+
+// ---------------------------------------------------------------------------
 // ConfigPanel
 // ---------------------------------------------------------------------------
 
@@ -781,7 +792,7 @@ void ConfigPanel::Init() { graphics_.Init(); }
 // ---------------------------------------------------------------------------
 
 MainMenuPanel::MainMenuPanel() : title_("     Main Menu") {
-  items_.reserve(7);
+  items_.reserve(8);
   items_.emplace_back("   Game  Start", "ゲームを開始します", FnGameStart);
   items_.emplace_back("   Extra Start", "ゲームを開始します(Extra)", FnExStart);
   items_.emplace_back("   Replay Files", "リプレイファイルの管理",
@@ -789,6 +800,9 @@ MainMenuPanel::MainMenuPanel() : title_("     Main Menu") {
   items_.emplace_back("   Config", "各種設定を変更します", config_.Menu());
   items_.emplace_back("   Score", "スコアの表示をします", FnScore);
   items_.emplace_back("   Music", "音楽室に入ります", FnMusic);
+#ifdef PBG_DEBUG
+  items_.emplace_back("   Debug", "デバッグ設定", debug_.Menu());
+#endif
   items_.emplace_back("   Exit", "ゲームを終了します", CWinExitFn);
   menu_ = MenuDef(
       std::span(items_), [this](MenuController &c, bool t) { Refresh(c, t); },
