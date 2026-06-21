@@ -13,6 +13,16 @@
 #include "gfx/graphics_backend.h"
 #include "util/ut_math.h"
 
+int GetItemHitRadius(uint8_t type) {
+  switch (type) {
+  case ITEM_BOMB:
+  case ITEM_EXTEND:
+    return ITEM_HIT_RADIUS_LARGE;
+  default:
+    return ITEM_HIT_RADIUS;
+  }
+}
+
 // entities[], indices[], count moved to item_manager.cpp
 
 // Spawn an item
@@ -89,49 +99,53 @@ void ItemManager::Move() {
       ip->vy += ITEM_GRAVITY;
     }
     ip->count++;
-    if (HITCHK(ip->x, Players.X(), ITEM_HITX) &&
-        HITCHK(ip->y, Players.Y(), ITEM_HITY)) {
-      switch (ip->type) {
-      case ITEM_SCORE: {
-        Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        // Ranking.Add((SY_MAX-Players.Y())>>10);	// Item pickup no longer
-        // increases Rank
-        Players.AddScore(point);
-        Effects.SpawnPointEffect(ip->x, ip->y, point);
-        if (Players.GrazeCount() != 0U) {
-          Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
-          Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
+    {
+      const int64_t dx = static_cast<int64_t>(ip->x) - Players.X();
+      const int64_t dy = static_cast<int64_t>(ip->y) - Players.Y();
+      const int r = GetItemHitRadius(ip->type);
+      if ((dx * dx + dy * dy) < (static_cast<int64_t>(r) * r)) {
+        switch (ip->type) {
+        case ITEM_SCORE: {
+          Snd_SEPlay(SOUND_ID_SELECT, ip->x);
+          // Ranking.Add((SY_MAX-Players.Y())>>10);	// Item pickup no longer
+          // increases Rank
+          Players.AddScore(point);
+          Effects.SpawnPointEffect(ip->x, ip->y, point);
+          if (Players.GrazeCount() != 0U) {
+            Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
+            Effects.SpawnFragment(ip->x, ip->y, FRG_STAR3);
+          }
+
+          const uint32_t star_amt = (Players.GrazeCount() != 0U) ? 2 : 1;
+          const auto reward = Players.AddStar(star_amt);
+          switch (reward) {
+          case PlayerReward::EXTEND:
+            Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
+            break;
+          case PlayerReward::BOMB:
+            Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
+            break;
+          case PlayerReward::NONE:
+            break;
+          }
+
+          break;
         }
 
-        const uint32_t star_amt = (Players.GrazeCount() != 0U) ? 2 : 1;
-        const auto reward = Players.AddStar(star_amt);
-        switch (reward) {
-        case PlayerReward::EXTEND:
+        case ITEM_EXTEND:
+          Snd_SEPlay(SOUND_ID_SELECT, ip->x);
           Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
+          Players.PickupExtend();
           break;
-        case PlayerReward::BOMB:
+
+        case ITEM_BOMB:
+          Snd_SEPlay(SOUND_ID_SELECT, ip->x);
           Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
-          break;
-        case PlayerReward::NONE:
+          Players.PickupBomb();
           break;
         }
-
-        break;
+        ip->type = ITEM_DELETE;
       }
-
-      case ITEM_EXTEND:
-        Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
-        Players.PickupExtend();
-        break;
-
-      case ITEM_BOMB:
-        Snd_SEPlay(SOUND_ID_SELECT, ip->x);
-        Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
-        Players.PickupBomb();
-        break;
-      }
-      ip->type = ITEM_DELETE;
     }
 
     // Do not delete upward
