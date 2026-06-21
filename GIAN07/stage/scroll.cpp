@@ -180,7 +180,7 @@ static void enemy_set() {
         if (((Key_Data & KEY_TAMA) != 0) || ((Key_Data & KEY_RETURN) != 0) ||
             ((Key_Data & KEY_BOMB) != 0)) {
           if (!Scroller.scene.ReturnFlag) {
-            GameState.game_count = temp;
+            Games.game_count = temp;
             Scroller.scene.ReturnFlag = true;
           }
         } else {
@@ -190,14 +190,14 @@ static void enemy_set() {
       //
       // if((Key_Data & KEY_SKIP) &&
       // Scroller.scene.MsgFlag)
-      // GameState.game_count+=(temp-GameState.game_count)/3; else if((Key_Data
-      // & KEY_RETURN) && !Scroller.scene.ReturnFlag){ GameState.game_count  =
+      // Games.game_count+=(temp-Games.game_count)/3; else if((Key_Data
+      // & KEY_RETURN) && !Scroller.scene.ReturnFlag){ Games.game_count  =
       // temp; Scroller.scene.ReturnFlag = true;
       // }
       // if(!(Key_Data & KEY_RETURN) &&
       // Scroller.scene.ReturnFlag) { Scroller.scene.ReturnFlag = false;
       // }
-      if (temp > GameState.game_count) {
+      if (temp > Games.game_count) {
         bFlag = false;
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)
@@ -322,7 +322,7 @@ static void enemy_set() {
     case SCL_MUSIC:
       //				if(!(// DemoplaySaveEnable||//
       //Demos.load_enable)){
-      if (!GameState.is_demoplay) {
+      if (!Games.is_demoplay) {
         BGM_Stop();
         if (BGM_Switch(cmd[1])) {
           BGM_Play();
@@ -343,10 +343,10 @@ static void enemy_set() {
     case SCL_EFC:
       switch (cmd[1]) {
       case SEFC_WARN:
-        // effect_set(0,0,EFC_WARNBOSS,GameState.game_stage);
+        // effect_set(0,0,EFC_WARNBOSS,Games.game_stage);
         Snd_SEPlay(8, GX_MID, true);
         Effects.SetWarningEffect();
-        // StringEffect3(GameState.game_stage);
+        // StringEffect3(Games.game_stage);
         break;
 
       case SEFC_WARNSTOP:
@@ -430,7 +430,7 @@ static void enemy_set() {
         return;
       }
       if (Demos.load_all_enable) {
-        if (GameState.game_stage < Demos.playback_max_stage) {
+        if (Games.game_stage < Demos.playback_max_stage) {
           GameNextStage();
         }
         return;
@@ -449,10 +449,10 @@ static void enemy_set() {
         return;
       }
 
-      if (GameState.game_stage == STAGE_MAX) {
-        GameState.game_stage = 7;
+      if (Games.game_stage == STAGE_MAX) {
+        Games.game_stage = 7;
       }
-      if (GameState.game_level != GameLevel::EASY) {
+      if (Games.game_level != GameLevel::EASY) {
         switch (Players.Weapon()) {
         case 0:
           ConfigDat.extra_stg_flags |= 1;
@@ -501,13 +501,13 @@ static void enemy_set() {
     }
   }
 
-  GameState.game_count++;
+  Games.game_count++;
 
-  if ((GameState.game_count & 0x3f) == 0) {
-    if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
+  if ((Games.game_count & 0x3f) == 0) {
+    if (Games.game_stage == GRAPH_ID_EXSTAGE) {
       Ranking.Add(1);
     } else {
-      Ranking.Add(1 + (GameState.game_stage / 3));
+      Ranking.Add(1 + (Games.game_stage / 3));
     }
   }
 }

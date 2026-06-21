@@ -641,7 +641,7 @@ void Player::OnHit() {
     const auto window =
         DEATHBOMB_WINDOW +
         (static_cast<int>(GameLevel::LUNATIC) -
-         static_cast<int>(std::to_underlying(GameState.game_level))) *
+         static_cast<int>(std::to_underlying(Games.game_level))) *
             2;
     deathbomb_time_ = static_cast<uint16_t>(window);
     muteki_ = static_cast<uint16_t>(window);

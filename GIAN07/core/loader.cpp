@@ -730,7 +730,7 @@ bool LoadStageData(uint8_t stage) {
       return false;
     }
     Enemies.scl_now = Enemies.scl_head.data();
-    GameState.game_count = 0;
+    Games.game_count = 0;
     return true;
   } else {
     // Load each data //
@@ -763,7 +763,7 @@ bool LoadStageData(uint8_t stage) {
 
   // Initialize variables //
   Enemies.scl_now = Enemies.scl_head.data();
-  GameState.game_count = 0;
+  Games.game_count = 0;
 
   // Prepare animations //
   switch (stage) {

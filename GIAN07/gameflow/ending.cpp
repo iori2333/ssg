@@ -215,7 +215,7 @@ void EndingManager::SCLDecode() {
     switch (cmd[0]) {
     case SCL_TIME: {
       const auto temp = I32LEAt(&cmd[1]);
-      if (std::cmp_greater(temp, GameState.game_count)) {
+      if (std::cmp_greater(temp, Games.game_count)) {
         bFlag = false;
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)
@@ -352,5 +352,5 @@ void EndingManager::SCLDecode() {
     }
   }
 
-  GameState.game_count++;
+  Games.game_count++;
 }

@@ -500,7 +500,7 @@ void BossManager::DrawHPG() {
       }
     } else if (hpg.SCLTimerEnd > 0) {
       const int remain = std::min(
-          (hpg.SCLTimerEnd - static_cast<int32_t>(GameState.game_count)) / 60,
+          (hpg.SCLTimerEnd - static_cast<int32_t>(Games.game_count)) / 60,
           99);
       if (remain >= 0) {
         if (remain <= 10 && remain != hpg.PrevTimerSeconds) {

@@ -17,7 +17,7 @@ void RankManager::Add(int n) {
   // Lunatic        40 .. 64
 
   // Change difficulty
-  if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
+  if (Games.game_stage == GRAPH_ID_EXSTAGE) {
     if (n > 0) {
       state.Rank += (std::max)(+1, (n / 4));
     } else if (n < 0) {
@@ -28,7 +28,7 @@ void RankManager::Add(int n) {
   }
 
   // This branch is based on config values
-  switch (GameState.game_level) {
+  switch (Games.game_level) {
   case GameLevel::EASY:
     if (state.Rank < 0) {
       state.Rank = 0;
@@ -97,9 +97,9 @@ void RankManager::Add(int n) {
 
 // Initialize play rank based on current difficulty
 void RankManager::Reset() {
-  state.GameLevel = GameState.game_level;
+  state.GameLevel = Games.game_level;
 
-  switch (GameState.game_level) {
+  switch (Games.game_level) {
   case GameLevel::EASY:
     state.Rank = 16 * 256;
     break;

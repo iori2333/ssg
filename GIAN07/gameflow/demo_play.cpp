@@ -43,7 +43,7 @@ void DemoManager::Init() {
 
   demo_info.Exp = Players.Power();
   demo_info.Weapon = Players.Weapon();
-  demo_info.CfgDat.GameLevel = std::to_underlying(GameState.game_level);
+  demo_info.CfgDat.GameLevel = std::to_underlying(Games.game_level);
   demo_info.CfgDat.PlayerStock = Players.Lives();
   demo_info.CfgDat.BombStock = ConfigDat.bomb_stock;
   demo_info.CfgDat.InputFlags = ConfigDat.PackInputFlags();
@@ -67,7 +67,7 @@ void DemoManager::FlushStage() {
   }
 
   if (multi_stage_count < REPLAY_STAGE_MAX) {
-    multi_stage_nums[multi_stage_count] = GameState.game_stage;
+    multi_stage_nums[multi_stage_count] = Games.game_stage;
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
 
     std::vector<INPUT_BITS> stage_data(demo_buffer.data(),
@@ -94,7 +94,7 @@ bool DemoManager::LoadSetup() {
   ConfigDat.bomb_stock = demo_info.CfgDat.BombStock;
   ConfigDat.player_stock = demo_info.CfgDat.PlayerStock;
   ConfigDat.UnpackInputFlags(demo_info.CfgDat.InputFlags);
-  GameState.game_level = static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
+  Games.game_level = static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
 
   // Restore player stats
   Players.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
@@ -131,7 +131,7 @@ void DemoManager::SaveDemo() {
   demo_info.FrameCount = (demo_frame_cur + 1);
 
   char fn[] = "STG_Demo.DAT";
-  fn[3] = ('0' + GameState.game_stage);
+  fn[3] = ('0' + Games.game_stage);
 
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f != nullptr) {
@@ -195,7 +195,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
 
   // Flush current stage data if any (not yet flushed by stage clear)
   if (demo_frame_cur > 0 && multi_stage_count < REPLAY_STAGE_MAX) {
-    multi_stage_nums[multi_stage_count] = GameState.game_stage;
+    multi_stage_nums[multi_stage_count] = Games.game_stage;
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
     stage_record_bufs.emplace_back(demo_buffer.data(),
                                    demo_buffer.data() + demo_frame_cur);
