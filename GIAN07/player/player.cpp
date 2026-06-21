@@ -7,6 +7,9 @@
 #include <utility>
 
 #include "player.h"
+#include "weapon/homing_form.h"
+#include "weapon/laser_form.h"
+#include "weapon/wide_form.h"
 
 #include "audio/snd.h"
 #include "core/config.h"
@@ -15,14 +18,11 @@
 #include "effect/font_uty.h"
 #include "effect/geometry.h"
 #include "sys/input.h"
-#include "weapon/homing_form.h"
-#include "weapon/laser_form.h"
-#include "weapon/wide_form.h"
 
 // --- Player method implementations ---
 
 // Constructor: create weapon_ form strategy objects.
-Player::Player() {
+Player::Player() noexcept {
   forms_[0] = std::make_unique<WideForm>(*this);
   forms_[1] = std::make_unique<WideFocusForm>(*this);
   forms_[2] = std::make_unique<HomingForm>(*this);
@@ -31,59 +31,7 @@ Player::Player() {
   forms_[5] = std::make_unique<LaserFocusForm>(*this);
 }
 
-Player::~Player() = default;
-
-// Copy operations: duplicate player state but keep our own weapon_ forms
-// (forms hold a reference to *this and must not be shared).
-Player::Player(const Player &other) : Player() { *this = other; }
-
-Player &Player::operator=(const Player &other) {
-  if (this == &other) {
-    return *this;
-  }
-  x_ = other.x_;
-  y_ = other.y_;
-  vx_ = other.vx_;
-  vy_ = other.vy_;
-  opx_ = other.opx_;
-  opy_ = other.opy_;
-  score_ = other.score_;
-  dscore_ = other.dscore_;
-  evade_sum_ = other.evade_sum_;
-  evadesc_ = other.evadesc_;
-  evade_ = other.evade_;
-  evade_c_ = other.evade_c_;
-  star_counter_ = other.star_counter_;
-  star_threshold_ = other.star_threshold_;
-  star_extend_count_ = other.star_extend_count_;
-  v_ = other.v_;
-  weapon_ = other.weapon_;
-  exp_ = other.exp_;
-  bomb_ = other.bomb_;
-  left_ = other.left_;
-  credit_ = other.credit_;
-  miss_count_ = other.miss_count_;
-  bomb_used_ = other.bomb_used_;
-  deathbomb_count_ = other.deathbomb_count_;
-  grp_id_ = other.grp_id_;
-  bomb_time_ = other.bomb_time_;
-  exp2_ = other.exp2_;
-  muteki_ = other.muteki_;
-  deathbomb_time_ = other.deathbomb_time_;
-  lay_time_ = other.lay_time_;
-  lay_grp_ = other.lay_grp_;
-  toge_time_ = other.toge_time_;
-  toge_ex_ = other.toge_ex_;
-  shift_counter_ = other.shift_counter_;
-  game_over_ = other.game_over_;
-  buzz_sound_ = other.buzz_sound_;
-  // maid_tama_ / maid_tama_ind_ / maid_tama_now_ are not copied: the shot
-  // pool belongs to the live Player instance, not a state snapshot.
-  // forms_ is intentionally preserved (not copied).
-  return *this;
-}
-
-WeaponForm *Player::BaseForm_() const { return forms_[weapon_ * 2].get(); }
+WeaponForm *Player::BaseForm_() const { return forms_[2 * weapon_].get(); }
 
 WeaponForm *Player::ActiveForm_() const {
   const bool focus = (Key_Data & KEY_SHIFT) != 0;
@@ -100,7 +48,7 @@ bool Player::IsSubShotFrame_(uint16_t t) const {
 }
 
 void Player::SpawnShot_() {
-  for (decltype(Bullets.command.n) i = 0; i < Bullets.command.n; i++) {
+  for (uint8_t i = 0; i < Bullets.command.n; i++) {
     if (maid_tama_now_ + 1 >= MAIDTAMA_MAX) {
       return;
     }

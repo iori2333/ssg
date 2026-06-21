@@ -299,9 +299,7 @@ void BulletManager::Move() {
   // Hit check after cactus death determination because alive //
   // time is longer than dead time...                         //
 
-  // Small bullet processing //
-  for (const auto i : std::views::iota(0U, count_small)) {
-    auto *t = &bullets[indices_small[i]];
+  auto process_bullet = [this](Bullet *t) {
     if (t->effect == TE_NONE) {
       MoveByType(t);
       MoveByOption(t);
@@ -311,32 +309,32 @@ void BulletManager::Move() {
         t->flag = TF_DELETE;
       }
       t->count++;
-      if (Players.IsInvincible() != 0U) {
-        continue;
+      if (Players.IsInvincible()) {
+        return;
       }
-      {
-        const int64_t dx = static_cast<int64_t>(t->x) - Players.X();
-        const int64_t dy = static_cast<int64_t>(t->y) - Players.Y();
-        const int64_t dist_sq = dx * dx + dy * dy;
-        const int ev_r = GetBulletEvadeRadius(t->c);
-        if (dist_sq < (static_cast<int64_t>(ev_r) * ev_r)) {
-          TamaEvadeAdd(t);
-        }
-        const int r = GetBulletHitRadius(t->c);
-        if (dist_sq < (static_cast<int64_t>(r) * r)) {
-#ifdef PBG_DEBUG
-          if (ConfigDat.bullet_gallery_active) {
-            continue;
-          }
-#endif
-          t->flag = TF_DELETE;
-          Players.OnHit();
-        }
+
+      const int ev_r = GetBulletEvadeRadius(t->c);
+      const auto evade = Players.HitCheck(t->x, t->y, ev_r);
+      if (evade) {
+        TamaEvadeAdd(t);
+      }
+
+      const int r = GetBulletHitRadius(t->c);
+      const auto hit = Players.HitCheck(t->x, t->y, r);
+      if (hit) {
+        t->flag = TF_DELETE;
+        Players.OnHit();
       }
     } else {
       MoveByEffect(t);
       t->count++;
     }
+  };
+
+  // Small bullet processing //
+  for (const auto i : std::views::iota(0U, count_small)) {
+    auto *t = &bullets[indices_small[i]];
+    process_bullet(t);
   }
   Indsort(indices_small, count_small, bullets,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
@@ -344,41 +342,7 @@ void BulletManager::Move() {
   // Large bullet & special bullet processing //
   for (const auto i : std::views::iota(0U, count_large)) {
     auto *t = &bullets[indices_large[i]];
-    if (t->effect == TE_NONE) {
-      MoveByType(t);
-      MoveByOption(t);
-      if (((t->flag & TF_CLIP) == 0) &&
-          ((t->x) < GX_MIN - (8 * 64) || (t->x) > GX_MAX + (8 * 64) ||
-           (t->y) < GY_MIN - (8 * 64) || (t->y) > GY_MAX + (8 * 64))) {
-        t->flag = TF_DELETE;
-      }
-      t->count++;
-      if (Players.IsInvincible() != 0U) {
-        continue;
-      }
-      {
-        const int64_t dx = static_cast<int64_t>(t->x) - Players.X();
-        const int64_t dy = static_cast<int64_t>(t->y) - Players.Y();
-        const int64_t dist_sq = dx * dx + dy * dy;
-        const int ev_r = GetBulletEvadeRadius(t->c);
-        if (dist_sq < (static_cast<int64_t>(ev_r) * ev_r)) {
-          TamaEvadeAdd(t);
-        }
-        const int r = GetBulletHitRadius(t->c);
-        if (dist_sq < (static_cast<int64_t>(r) * r)) {
-#ifdef PBG_DEBUG
-          if (ConfigDat.bullet_gallery_active) {
-            continue;
-          }
-#endif
-          t->flag = TF_DELETE;
-          Players.OnHit();
-        }
-      }
-    } else {
-      MoveByEffect(t);
-      t->count++;
-    }
+    process_bullet(t);
   }
   Indsort(indices_large, count_large, bullets,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });

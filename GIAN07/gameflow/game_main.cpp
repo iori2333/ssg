@@ -1338,9 +1338,6 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     //	TextOut(hdc,0,0,buf,strlen(buf));
     //	DxObj.Back->ReleaseDC(hdc);
     //
-    // #ifdef PBG_DEBUG
-    //		StdStatusOutput();
-    // #endif
     Grp_Flip();
   }
 }
@@ -1418,9 +1415,6 @@ void GameFlowManager::TitleProc(bool &quit) {
     // Placing this here avoids flickering with the Vulkan backend if any
     // of the above windows had to re-render text?!
     Version::Render(438);
-#ifdef PBG_DEBUG
-    StdStatusOutput();
-#endif
 
     Grp_Flip();
   }

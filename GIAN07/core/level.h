@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 enum class GameLevel : uint8_t {
@@ -12,4 +13,8 @@ enum class GameLevel : uint8_t {
   HARD = 2,
   LUNATIC = 3,
   EXTRA = 4,
+};
+
+inline constexpr std::array LevelName = {
+    "Easy", "Normal", "Hard", "Lunatic", "Extra",
 };

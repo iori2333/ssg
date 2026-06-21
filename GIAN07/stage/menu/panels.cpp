@@ -758,8 +758,8 @@ bool DebugPanel::FnBulletGallery(MenuController &, INPUT_BITS key) {
 }
 
 void DebugPanel::Refresh(MenuController &, bool) {
-  static constexpr const char *kHitboxLabels[3] = {"Off", "Hit ", "All "};
-  titles_[0].Format("Hitbox          [{}]",
+  static constexpr const char *kHitboxLabels[3] = {"Off ", "Hit ", "All "};
+  titles_[0].Format("Hitbox     [ {} ]",
                     kHitboxLabels[std::clamp(ConfigDat.hitbox_display, 0, 2)]);
   titles_[1].Format("Bullet Gallery");
 

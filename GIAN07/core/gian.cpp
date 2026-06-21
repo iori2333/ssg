@@ -4,29 +4,17 @@
 
 #include <algorithm>
 #include <format>
+#include <utility>
 
 #include "config.h"
 #include "gian.h"
 #include "level.h"
 
-#include "bullet/bullet_manager.h"
-#include "bullet/laser_manager.h"
 #include "effect/font_uty.h"
-#include "enemy/enemy_manager.h"
 #include "gameflow/rank_manager.h"
-#include "player/item_manager.h"
 #include "player/player.h"
-#include "stage/scroll_manager.h"
 #include "util/time.h"
 
-// [Global variables]
-// HIGH_SCORE		*HighScore;
-// char			ScoreTable[8][80];
-// Games.game_count, Games.game_stage, Games.game_level →
-// Moved to GameManager in game_manager.cpp; Viv moved to
-// PlayerManager in player_manager.cpp (declared as Player& in MAID.h)
-
-// [Functions (private)]
 void StdStatusOutput() {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
 
@@ -45,59 +33,25 @@ void StdStatusOutput() {
     prev = now;
   }
 
-  GrpPut16(0, 0, std::format("{:03} FPS", fps).c_str());
+  GrpPut16(0, 0, std::format("FPS   {:3}", fps).c_str());
 
-  // ---- RANK display ----
-  const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
-                                   "Extra"};
-  const auto lv = (Games.game_stage == GRAPH_ID_EXSTAGE)
-                      ? std::to_underlying(GameLevel::EXTRA)
-                      : std::to_underlying(Games.game_level);
+  // ---- RANK  display ----
+  GrpPut16(0, 40, std::format("R {:7}", Ranking.state.Rank).c_str());
+  // ---- LEVEL display ----
+  auto lv = std::to_underlying(Games.game_level);
+  GrpPut16(0, 60,
+           std::format("L {:>7}", lv < 5 ? LevelName[lv] : "Unknown").c_str());
 
-  GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
-  GrpPut16(0, 50,
-           std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
-  GrpPut16(0, 82, std::format("Miss{:5}", Players.MissCount()).c_str());
-  GrpPut16(0, 98, std::format("Bomb{:5}", Players.BombUsed()).c_str());
-  GrpPut16(0, 114, std::format("DthB{:5}", Players.DeathbombCount()).c_str());
-  GrpPut16(0, 146, "Stars");
+  GrpPut16(0, 100, std::format("Miss {:4}", Players.MissCount()).c_str());
+  GrpPut16(0, 120, std::format("Bomb {:4}", Players.BombUsed()).c_str());
+  GrpPut16(0, 140, std::format("DthB {:4}", Players.DeathbombCount()).c_str());
 
-  const auto capped = std::min(Players.StarCounter(), 9999U);
-  GrpPut16(0, 162,
-           std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
-
-  GrpPut16(0, 96 + 40, std::format("Enemy {:3}", Enemies.count).c_str());
-
-  GrpPut16(0, 128 + 40, std::format("Tama1 {:3}", Bullets.count_small).c_str());
-  GrpPut16(0, 148 + 40, std::format("Tama2 {:3}", Bullets.count_large).c_str());
-  GrpPut16(0, 176 + 40, std::format("Laser {:3}", Lasers.count).c_str());
-  GrpPut16(0, 196 + 40,
-           std::format("HLaser {:2}", Lasers.homing_count).c_str());
-
-  GrpPut16(0, 224 + 40, std::format("MTama {:3}", Players.ShotCount()).c_str());
-
-  GrpPut16(0, 252 + 40, std::format("Item  {:3}", Items.count).c_str());
-
-  GrpPut16(0, 290 + 40, std::format("Pow   {:3}", Players.Power()).c_str());
-
-  GrpPut16(0, 320 + 40,
-           std::format("SSPD  {:3}", Scroller.scroll.ScrollSpeed).c_str());
-
-  static constexpr const char *kHitboxLabels[3] = {"Off", "Hit", "All"};
-  GrpPut16(0, 356 + 40,
-           std::format("Hitbox {}",
-                       kHitboxLabels[std::clamp(ConfigDat.hitbox_display, 0, 2)])
-               .c_str());
-
-  GrpPut16(0, 440, "Gian07");
-  GrpPut16(0, 460, "DebugMode");
-
-  GrpPut16(column2_left, 100, "SCL Count");
-  GrpPut16(column2_left, 120,
-           std::format(" {:5}", Games.game_count).c_str());
+  GrpPut16(0, 180, "Stars");
+  auto stars = std::min(Players.StarCounter(), 9999U);
+  auto threshold = std::min(Players.StarThreshold(), 9999U);
+  GrpPut16(0, 200, std::format("{:4}/{:4}", stars, threshold).c_str());
 
   const auto tm = Time_NowLocal();
-
   GrpPut16(column2_left, 0, "Date");
   GrpPut16(column2_left, 20,
            std::format("{:02}/{:02}/{:02}", tm.month, tm.day, (tm.year % 100U))
@@ -108,11 +62,20 @@ void StdStatusOutput() {
       column2_left, 70,
       std::format("{:02}:{:02}:{:02}", tm.hour, tm.minute, tm.second).c_str());
 
-  GrpPut16(column2_left, 400,
-           std::format("Bomb   {}", Players.Bombs()).c_str());
+#ifdef PBG_DEBUG
+  GrpPut16(column2_left, 360, "Debug  ON");
+#endif
 
+  if (ConfigDat.practice_mode == PracticeMode::AUTOBOMB) {
+    GrpPut16(column2_left, 380, "Prac AUTO");
+  } else if (ConfigDat.practice_mode == PracticeMode::INVINCIBLE) {
+    GrpPut16(column2_left, 380, "Prac  INV");
+  }
+
+  GrpPut16(column2_left, 420,
+           std::format("Bomb {:4}", Players.Bombs()).c_str());
   GrpPut16(column2_left, 440,
-           std::format("Left   {}", Players.Lives()).c_str());
+           std::format("Left {:4}", Players.Lives()).c_str());
   GrpPut16(column2_left, 460,
-           std::format("Credit {}", Players.Credits()).c_str()); // Beware of -1
+           std::format("Credit {:2}", Players.Credits()).c_str());
 }
