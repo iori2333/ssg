@@ -2,14 +2,17 @@
 /// LzUty - Packfiles and compression
 ///
 
-#include "lz_uty.h"
-#include "game/guard.h"
-#include "platform/file.h"
-#include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <array>
 #include <numeric>
 #include <optional>
+
+#include <SDL3/SDL_iostream.h>
+
+#include "lz_uty.h"
+
+#include "sys/file.h"
+#include "util/guard.h"
 
 constexpr auto LZSS_DICT_BITS = 13;
 constexpr auto LZSS_SEQ_BITS = 4;
@@ -212,7 +215,9 @@ bool PACKFILE_WRITE::Write(
   if (stream == nullptr) {
     return false;
   }
-  auto close_guard = make_guard([&] { File_CloseWithTimestamps(std::move(stream), s, std::move(maybe_timestamps)); });
+  auto close_guard = make_guard([&] {
+    File_CloseWithTimestamps(std::move(stream), s, std::move(maybe_timestamps));
+  });
 
   // Write temporary header
   if (!write_header(stream)) {

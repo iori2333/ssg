@@ -4,10 +4,11 @@
 
 #include "fragment.h"
 #include "effect_manager.h"
-#include "game/ut_math.h"
 #include "geometry.h"
-#include "loader.h"
-#include "platform/graphics_backend.h"
+
+#include "core/loader.h"
+#include "gfx/graphics_backend.h"
+#include "util/ut_math.h"
 
 // fragments[], fragment_ptr moved to EffectManager in effect_manager.cpp
 

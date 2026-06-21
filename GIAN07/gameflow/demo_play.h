@@ -4,14 +4,16 @@
 
 #pragma once
 
-#include "game/input.h"
 #include <string>
 #include <vector>
+
+#include "sys/input.h"
 
 struct ConfigData;
 
 // [Constants]
-inline constexpr auto DEMOBUF_MAX = (60 * 60 * 30); // Can store 30 minutes of data
+inline constexpr auto DEMOBUF_MAX =
+    (60 * 60 * 30); // Can store 30 minutes of data
 static constexpr auto REPLAY_STAGE_MAX = 6;
 
 // Replay-specific config option subset
@@ -29,18 +31,18 @@ static_assert(sizeof(DEMOPLAY_ConfigData) == 24);
 
 // [Structs]
 struct DemoPlayState {
-  uint32_t RndSeed;            // Random seed
-  uint32_t FrameCount;         // Not data size! Including the terminating ESC.
+  uint32_t RndSeed;           // Random seed
+  uint32_t FrameCount;        // Not data size! Including the terminating ESC.
   DEMOPLAY_ConfigData CfgDat; // Config data (partially referenced on Load)
-  uint8_t Exp;                 // Initial power-up
-  uint8_t Weapon;              // Initial weapon
+  uint8_t Exp;                // Initial power-up
+  uint8_t Weapon;             // Initial weapon
 };
 // (DEMOPLAY_INFO alias removed — use DemoPlayState directly)
 
 // Multi-stage replay header
 struct MULTI_REPLAY_INFO {
   uint32_t RndSeed;
-  uint8_t StageCount;          // Number of stages recorded (1-6)
+  uint8_t StageCount;         // Number of stages recorded (1-6)
   DEMOPLAY_ConfigData CfgDat; // 24 bytes
   uint8_t Exp;
   uint8_t Weapon;

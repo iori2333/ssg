@@ -4,14 +4,16 @@
 
 #pragma once
 
+#include <array>
+#include <cstdint>
+#include <string_view>
+
 #include "bomb_efc.h"
 #include "effect.h"
 #include "effect3d.h"
 #include "fragment.h"
-#include "game/text.h"
-#include <array>
-#include <cstdint>
-#include <string_view>
+
+#include "gfx/text.h"
 
 // EFFECT3D constants (moved from EFFECT3D.cpp)
 inline constexpr auto CIRCLE_MAX = 40;

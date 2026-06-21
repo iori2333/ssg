@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "enemy.h"
 #include <array>
 #include <cstdint>
+
+#include "enemy.h"
 
 // [ Structs ]
 
@@ -43,11 +44,12 @@ struct BossHpgInfo {
   std::array<int, BOSSHPG_HEIGHT> XTemp; // HP gauge effect temp
   uint8_t State;                         // State
 
-  int32_t PhaseThresholdHp = -1; // Next HP threshold from first boss (-1 = none)
-  int32_t TimerMax = -1;         // Vect[ECLVECT_TIMER].value (-1 = no timer)
-  int32_t TimerNow = 0;          // Current IntTimer from first boss
+  int32_t PhaseThresholdHp =
+      -1;                // Next HP threshold from first boss (-1 = none)
+  int32_t TimerMax = -1; // Vect[ECLVECT_TIMER].value (-1 = no timer)
+  int32_t TimerNow = 0;  // Current IntTimer from first boss
   int32_t PrevTimerSeconds = -1; // For detecting second changes
-  int32_t SCLTimerEnd = -1;      // SCL TIME target game_count for fallback countdown
+  int32_t SCLTimerEnd = -1; // SCL TIME target game_count for fallback countdown
 };
 
 // [ Functions ]

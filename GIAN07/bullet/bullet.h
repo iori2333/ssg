@@ -36,26 +36,26 @@ inline constexpr auto TAMA_EVX_LARGE =
 inline constexpr auto TAMA_EVY_LARGE =
     ((16 + 16) * 64); // Large bullet graze detection (Y)
 
-inline constexpr auto TAMA_SMALL = 0x00; // Upper 4 bits when bullet is small type
-inline constexpr auto TAMA_LARGE = 0x10; // Upper 4 bits when bullet is large type
+inline constexpr auto TAMA_SMALL =
+    0x00; // Upper 4 bits when bullet is small type
+inline constexpr auto TAMA_LARGE =
+    0x10; // Upper 4 bits when bullet is large type
 inline constexpr auto TAMA_ANGLE =
     0x20; // Upper 4 bits when bullet is direction-specified type
 inline constexpr auto TAMA_EXTRA =
     0x30; // Upper 4 bits when bullet is extra type
 inline constexpr auto TAMA_EXTRA2 =
-    0x40;                              // Upper 4 bits when bullet is "ofuda" type
-inline constexpr auto TAMA_REN = 0x04; // Bullet rapid-fire attribute
-inline constexpr auto TAMA_ZSET = 0x08;   // Bullet cactus (player) set attribute
+    0x40; // Upper 4 bits when bullet is "ofuda" type
+inline constexpr auto TAMA_REN = 0x04;  // Bullet rapid-fire attribute
+inline constexpr auto TAMA_ZSET = 0x08; // Bullet cactus (player) set attribute
 inline constexpr auto TAMASP_RND0 = 0x00; // No speed random
 inline constexpr auto TAMASP_RND1 = 0x40; // Speed random??
 inline constexpr auto TAMASP_RND2 = 0x80; // Speed random??
 inline constexpr auto TAMASP_RND3 = 0xc0; // Speed random??
 
 ////Bullet type constants (upper 4 bits currently unused)////
-inline constexpr auto T_NORM =
-    0x00; // Normal bullet: moves with (vx, vy)
-inline constexpr auto T_NORM_A =
-    0x01; // Accelerating: rep acceleration count?
+inline constexpr auto T_NORM = 0x00;   // Normal bullet: moves with (vx, vy)
+inline constexpr auto T_NORM_A = 0x01; // Accelerating: rep acceleration count?
 inline constexpr auto T_HOMING =
     0x02; // N-homing: rep homing count / a acceleration
 inline constexpr auto T_HOMING_M =
@@ -84,18 +84,21 @@ inline constexpr auto TOP_DIV = 0x70;   // Split: bullet command on split
 inline constexpr auto TOP_BOMB = 0x80;  // Bomb???: explosion radius
 
 ////Bullet command constants////
-inline constexpr auto TC_WAY = 0x00;   // Fan-shaped fire
-inline constexpr auto TC_ALL = 0x01;   // All-direction fire
-inline constexpr auto TC_RND = 0x02;   // Random with base angle set
-inline constexpr auto TC_WAYS = 0x04;  // Fan-shaped fire & rapid fire
-inline constexpr auto TC_ALLS = 0x05;  // All-direction fire & rapid fire
-inline constexpr auto TC_RNDS = 0x06;  // Random with base angle set & rapid fire
-inline constexpr auto TC_WAYZ = 0x08;  // Fan-shaped fire & cactus set
-inline constexpr auto TC_ALLZ = 0x09;  // All-direction fire & cactus set
-inline constexpr auto TC_RNDZ = 0x0a;  // Random cactus set with base angle
-inline constexpr auto TC_WAYSZ = 0x0c; // Fan-shaped fire & rapid fire & cactus set
-inline constexpr auto TC_ALLSZ = 0x0d; // All-direction fire & rapid fire & cactus set
-inline constexpr auto TC_RNDSZ = 0x0e; // Random cactus set with base angle & rapid fire
+inline constexpr auto TC_WAY = 0x00;  // Fan-shaped fire
+inline constexpr auto TC_ALL = 0x01;  // All-direction fire
+inline constexpr auto TC_RND = 0x02;  // Random with base angle set
+inline constexpr auto TC_WAYS = 0x04; // Fan-shaped fire & rapid fire
+inline constexpr auto TC_ALLS = 0x05; // All-direction fire & rapid fire
+inline constexpr auto TC_RNDS = 0x06; // Random with base angle set & rapid fire
+inline constexpr auto TC_WAYZ = 0x08; // Fan-shaped fire & cactus set
+inline constexpr auto TC_ALLZ = 0x09; // All-direction fire & cactus set
+inline constexpr auto TC_RNDZ = 0x0a; // Random cactus set with base angle
+inline constexpr auto TC_WAYSZ =
+    0x0c; // Fan-shaped fire & rapid fire & cactus set
+inline constexpr auto TC_ALLSZ =
+    0x0d; // All-direction fire & rapid fire & cactus set
+inline constexpr auto TC_RNDSZ =
+    0x0e; // Random cactus set with base angle & rapid fire
 
 ////Bullet effect constants (lower 4 bits usage currently being designed!!)////
 inline constexpr auto TE_NONE = 0x00;    // No effect
@@ -150,7 +153,8 @@ struct Bullet {
   uint8_t c; // Bullet color & shape
 
   uint8_t rep;    // Number of times to perform control by type
-  uint8_t type;   // Bullet type (normal, accelerating, homing 2, rolling 3, gravity, change)
+  uint8_t type;   // Bullet type (normal, accelerating, homing 2, rolling 3,
+                  // gravity, change)
   uint8_t option; // Bullet attribute (vibration, reflection, burst, bomb)
   uint8_t effect; // Current effect (none, lock, ring, delete)
 
@@ -163,8 +167,8 @@ struct Bullet {
 // (TAMA_DATA alias removed — use Bullet directly)
 
 ////Various bullet variables////
-// Access directly via Bullets.bullets, Bullets.command, Bullets.indices_small/large,
-// Bullets.count_small/large
+// Access directly via Bullets.bullets, Bullets.command,
+// Bullets.indices_small/large, Bullets.count_small/large
 
 ////Bullet functions////
 // Implementation moved to BulletManager methods

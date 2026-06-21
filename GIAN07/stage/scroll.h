@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "game/coords.h"
-#include "platform/buffer.h"
 #include <array>
+
+#include "gfx/coords.h"
+#include "sys/buffer.h"
 
 // [Change history]
 // 2000/04/01 : Added scroll command (STAGE2_BOSS)
@@ -35,12 +36,13 @@ inline constexpr auto SCMD_RASTER_ON = 0x03;  // Raster scroll start
 inline constexpr auto SCMD_RASTER_OFF = 0x04; // Raster scroll end
 inline constexpr auto SCMD_STG3BOSS =
     0x05; // Change background clouds to gates mode (?)
-inline constexpr auto SCMD_STG3RESET = 0x06; // Return stage 3 background to normal mode
-inline constexpr auto SCMD_STG6CUBE = 0x07;  // Stage 6 boss 3D cube mode
+inline constexpr auto SCMD_STG3RESET =
+    0x06; // Return stage 3 background to normal mode
+inline constexpr auto SCMD_STG6CUBE = 0x07; // Stage 6 boss 3D cube mode
 inline constexpr auto SCMD_STG6RNDECL =
-    0x08;                                    // Stage 6 boss random fake ECL column arrangement
-inline constexpr auto SCMD_STG4ROCK = 0x09;  // Stage 4 rock
-inline constexpr auto SCMD_STG4LEAVE = 0x0a; // Eject stage 4 rocks off screen
+    0x08; // Stage 6 boss random fake ECL column arrangement
+inline constexpr auto SCMD_STG4ROCK = 0x09;   // Stage 4 rock
+inline constexpr auto SCMD_STG4LEAVE = 0x0a;  // Eject stage 4 rocks off screen
 inline constexpr auto SCMD_STG6RASTER = 0x0b; // Stage 6 raster
 inline constexpr auto SCMD_STG3STAR = 0x0c;   // Stage 3 high-speed stars
 
@@ -53,8 +55,8 @@ using PBGMAP = uint16_t; // Type for map parts storage
 
 // Scroll management structure
 struct ScrollState {
-//	GRP		lpMapOffs;					//
-// Map parts data (Graphic) storage destination
+  //	GRP		lpMapOffs;					//
+  // Map parts data (Graphic) storage destination
 
   BYTE_BUFFER_OWNED DataHead; // Map data header
 

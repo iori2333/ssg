@@ -1,3 +1,10 @@
-Core game functionality, independent of any platform. Sits next to the [`platform` subdirectory](../platform/) in the layer hierarchy, and can `#include` code from the top level of `platform/`.
+Core game functionality and all cross-platform backend code.
 
-Must not contain anything that is implemented in terms of system calls, but *can* contain platform-independent base classes for platform-specific functionality.
+| Directory | Purpose |
+| --- | --- |
+| `main.cpp` | SDL entry point |
+| `sys/` | System wrappers – buffer, file, path, thread, log, input |
+| `gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |
+| `audio/` | Audio layer – sound, MIDI, BGM, codecs, volume, audio backends |
+| `util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
+

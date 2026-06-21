@@ -41,8 +41,8 @@
 #include <iconv.h>
 #endif
 
-#include "GIAN07/core/lz_uty.h"
-#include "game/endian.h"
+#include "core/lz_uty.h"
+#include "util/endian.h"
 
 namespace fs = std::filesystem;
 

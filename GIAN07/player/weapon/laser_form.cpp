@@ -5,8 +5,8 @@
 
 #include "laser_form.h"
 
-#include "gian.h"
-#include "player.h"
+#include "core/gian.h"
+#include "player/player.h"
 
 // --- LaserForm (base: wider spread) ---
 

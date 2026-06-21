@@ -2,24 +2,26 @@
 /// Gian - Game-wide management
 ///
 
+#include <format>
+
+#include "config.h"
 #include "gian.h"
+#include "level.h"
+
 #include "bullet/bullet_manager.h"
 #include "bullet/laser_manager.h"
-#include "config.h"
+#include "effect/font_uty.h"
 #include "enemy/enemy_manager.h"
-#include "font_uty.h"
 #include "gameflow/rank_manager.h"
-#include "level.h"
-#include "platform/time.h"
 #include "player/item_manager.h"
 #include "player/player.h"
 #include "stage/scroll_manager.h"
-#include <format>
+#include "util/time.h"
 
 // [Global variables]
 // HIGH_SCORE		*HighScore;
 // char			ScoreTable[8][80];
-// GameState.game_count, GameState.game_stage, GameState.game_level →
+// Games.game_count, Games.game_stage, Games.game_level →
 // Moved to GameManager in game_manager.cpp; Viv moved to
 // PlayerManager in player_manager.cpp (declared as Player& in MAID.h)
 
@@ -52,26 +54,24 @@ void StdStatusOutput() {
   // ---- RANK display ----
   const char *const DiffName[5] = {"Easy", "Normal", "Hard", "Lunatic",
                                    "Extra"};
-  const auto lv = (GameState.game_stage == GRAPH_ID_EXSTAGE)
+  const auto lv = (Games.game_stage == GRAPH_ID_EXSTAGE)
                       ? std::to_underlying(GameLevel::EXTRA)
-                      : std::to_underlying(GameState.game_level);
+                      : std::to_underlying(Games.game_level);
 
   GrpPut16(0, 34, std::format("RK  {:5}", Ranking.state.Rank).c_str());
   GrpPut16(0, 50,
            std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
   GrpPut16(0, 82, std::format("Miss{:5}", Players.MissCount()).c_str());
   GrpPut16(0, 98, std::format("Bomb{:5}", Players.BombUsed()).c_str());
-  GrpPut16(0, 114,
-           std::format("DthB{:5}", Players.DeathbombCount()).c_str());
+  GrpPut16(0, 114, std::format("DthB{:5}", Players.DeathbombCount()).c_str());
   GrpPut16(0, 146, "Stars");
 
   const auto capped = std::min(Players.StarCounter(), 9999U);
-  GrpPut16(
-      0, 162,
-      std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
+  GrpPut16(0, 162,
+           std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
 
 #ifdef PBG_DEBUG
-  // sprintf(buf,"%s",DItems.entities[ConfigDat.GameState.game_level.v]);
+  // sprintf(buf,"%s",DItems.entities[ConfigDat.Games.game_level.v]);
   // GrpPut16(0,50,buf);
 
   GrpPut16(0, 96 + 40, std::format("Enemy {:3}", Enemies.count).c_str());
@@ -82,8 +82,7 @@ void StdStatusOutput() {
   GrpPut16(0, 196 + 40,
            std::format("HLaser {:2}", Lasers.homing_count).c_str());
 
-  GrpPut16(0, 224 + 40,
-           std::format("MTama {:3}", Players.ShotCount()).c_str());
+  GrpPut16(0, 224 + 40, std::format("MTama {:3}", Players.ShotCount()).c_str());
 
   GrpPut16(0, 252 + 40, std::format("Item  {:3}", Items.count).c_str());
 
@@ -97,7 +96,7 @@ void StdStatusOutput() {
 
   GrpPut16(column2_left, 100, "SCL Count");
   GrpPut16(column2_left, 120,
-           std::format(" {:5}", GameState.game_count).c_str());
+           std::format(" {:5}", Games.game_count).c_str());
 #else
   // GrpPut16(0,440,"G07");
   // GrpPut16(0,460,"12/5 Ver");
@@ -122,7 +121,6 @@ void StdStatusOutput() {
 
   GrpPut16(column2_left, 440,
            std::format("Left   {}", Players.Lives()).c_str());
-  GrpPut16(
-      column2_left, 460,
-      std::format("Credit {}", Players.Credits()).c_str()); // Beware of -1
+  GrpPut16(column2_left, 460,
+           std::format("Credit {}", Players.Credits()).c_str()); // Beware of -1
 }

@@ -1,14 +1,15 @@
 ///
-/// Constants - Game-specific compile-time constants and types shared with platform layers
+/// Constants - Game-specific compile-time constants and types shared with
+/// platform layers
 ///
 
 #pragma once
 
-#include "game/coords.h"
-
-#include <assert.h>
+#include <cassert>
 #include <cstdint>
 #include <utility>
+
+#include "gfx/coords.h"
 
 // The game's native resolution.
 constexpr WINDOW_SIZE GRP_RES = {.w = 640, .h = 480};

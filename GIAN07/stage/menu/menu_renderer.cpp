@@ -4,9 +4,9 @@
 
 #include "menu_renderer.h"
 
-#include "game/coords.h"
-#include "game/text.h"
-#include "platform/graphics_backend.h"
+#include "gfx/coords.h"
+#include "gfx/graphics_backend.h"
+#include "gfx/text.h"
 #include "platform/windows/text_gdi.h"
 
 // Draw menu label (title / item)

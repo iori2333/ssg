@@ -13,7 +13,7 @@
 class Player;
 
 class WeaponForm {
- public:
+public:
   virtual ~WeaponForm() = default;
 
   // Main-shot fire, called on IsMainShotFrame frames.
@@ -38,7 +38,7 @@ class WeaponForm {
   // (laser).  Called from MoveMaidShot after bullet hit detection.
   virtual void OnCollisionTick() {}
 
- protected:
-  explicit WeaponForm(Player& player) : player_(player) {}
-  Player& player_;
+protected:
+  explicit WeaponForm(Player &player) : player_(player) {}
+  Player &player_;
 };

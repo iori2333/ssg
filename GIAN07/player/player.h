@@ -8,12 +8,14 @@
 
 #pragma once
 
-#include "game/cast.h"
-#include "player_shot.h"
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
+
+#include "player_shot.h"
+
+#include "util/cast.h"
 
 // [ Constants ]
 

@@ -5,4 +5,4 @@
 #include "game_manager.h"
 
 // --- Global instance ---
-GameManager GameState;
+GameManager Games;

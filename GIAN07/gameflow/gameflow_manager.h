@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include "game_main.h"
-#include "score.h"
 #include <array>
 #include <cstdint>
 #include <functional>
+
+#include "game_main.h"
+#include "score.h"
 
 ///// [ Game state enum ] /////
 enum class GameState {

@@ -8,9 +8,10 @@
 // 2000/05/31 : Development started
 
 // [Header files]
-#include "game/coords.h"
 #include <cstdint>
 #include <span>
+
+#include "gfx/coords.h"
 
 // [Constants]
 inline constexpr auto STG4ROCK_STDMOVE = 0;  // Normal scrolling

@@ -3,12 +3,13 @@
 ///
 
 #include "long_laser.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "geometry.h"
 #include "laser_manager.h"
-#include "platform/graphics_backend.h"
-#include "player.h"
+
+#include "audio/snd.h"
+#include "effect/geometry.h"
+#include "gfx/graphics_backend.h"
+#include "player/player.h"
+#include "util/ut_math.h"
 
 // Laser variables 2 moved to laser_manager.cpp
 // long_lasers[], LLaserCmd defined in laser_manager.cpp
@@ -164,7 +165,8 @@ void LaserManager::ForceCloseLong(const EnemyData *e) {
   for (auto &it : long_lasers) {
     auto *lp = &it;
 
-    // (Note) LLaserClose() will not cause issues even if already in closed state
+    // (Note) LLaserClose() will not cause issues even if already in closed
+    // state
     if (lp->e == e) {
       lp->flag = LLF_CLOSE;
       Snd_SEStop(2);
@@ -448,20 +450,20 @@ void LaserManager::HitCheckLong(const LongLaserData *lp) {
   width = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
 
   // Calculation note: use x64 for coordinate calculation
-          // Using sinm(),cosm() so /256 correction is needed
-          // tx = ((lp->x)-(Players.X()));	ty = ((lp->y)-(Players.Y()));
-          // length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
-          // tx <<= 8;	ty <<= 8;
-          //
-          // if(cosm(lp->d)==0)
-          //         w1 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
-          // else if(sinm(lp->d)==0)
-          //         w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
-          // else{
-          //         w2 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
-          //         w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
-          //         w1 = (w1+w2)/2;	// Improved accuracy
-          // }
+  // Using sinm(),cosm() so /256 correction is needed
+  // tx = ((lp->x)-(Players.X()));	ty = ((lp->y)-(Players.Y()));
+  // length = -((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8);
+  // tx <<= 8;	ty <<= 8;
+  //
+  // if(cosm(lp->d)==0)
+  //         w1 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
+  // else if(sinm(lp->d)==0)
+  //         w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
+  // else{
+  //         w2 = abs((length*cosm(lp->d)+tx)/(-sinm(lp->d)));
+  //         w1 = abs((length*sinm(lp->d)+ty)/( cosm(lp->d)));
+  //         w1 = (w1+w2)/2;	// Improved accuracy
+  // }
   // */
   if (length > 0 && width <= (lp->w + (64 * 15))) {
     Players.AddEvade(LLASER_EVADE);

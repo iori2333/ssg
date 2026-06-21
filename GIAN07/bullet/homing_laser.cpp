@@ -2,16 +2,17 @@
 /// HomingLaser - Long laser processing
 ///
 
-#include "homing_laser.h"
-
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
-#include "laser_manager.h"
-#include "platform/graphics_backend.h"
-#include "player.h"
 #include <utility>
+
+#include "homing_laser.h"
+#include "laser_manager.h"
+
+#include "audio/snd.h"
+#include "core/gian.h"
+#include "effect/geometry.h"
+#include "gfx/graphics_backend.h"
+#include "player/player.h"
+#include "util/ut_math.h"
 
 static constexpr auto HOMINGL_WIDTH = (8 * 64);
 

@@ -3,18 +3,18 @@
 ///
 
 #include <algorithm>
-
 #include <format>
 #include <utility>
 
-#include "config.h"
-#include "font_uty.h"
-#include "game/input.h"
-#include "game/snd.h"
-#include "geometry.h"
-#include "gian.h"
 #include "player.h"
-#include "level.h"
+
+#include "audio/snd.h"
+#include "core/config.h"
+#include "core/gian.h"
+#include "core/level.h"
+#include "effect/font_uty.h"
+#include "effect/geometry.h"
+#include "sys/input.h"
 #include "weapon/homing_form.h"
 #include "weapon/laser_form.h"
 #include "weapon/wide_form.h"
@@ -641,7 +641,8 @@ void Player::OnHit() {
     const auto window =
         DEATHBOMB_WINDOW +
         (static_cast<int>(GameLevel::LUNATIC) -
-         static_cast<int>(std::to_underlying(GameState.game_level))) * 2;
+         static_cast<int>(std::to_underlying(Games.game_level))) *
+            2;
     deathbomb_time_ = static_cast<uint16_t>(window);
     muteki_ = static_cast<uint16_t>(window);
     return;

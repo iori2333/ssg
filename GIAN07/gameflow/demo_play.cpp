@@ -2,22 +2,25 @@
 /// DemoPlay - Demo playback processing
 ///
 
-#include "demo_play.h"
-#include "config.h"
-#include "demo_manager.h"
-#include "game/guard.h"
-#include "game/input.h"
-#include "game/ut_math.h"
-#include "gian.h"
-#include "lz_uty.h"
-#include "platform/file.h"
-#include <SDL3/SDL_filesystem.h>
-#include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <format>
 #include <utility>
+
+#include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_iostream.h>
+
+#include "demo_manager.h"
+#include "demo_play.h"
+
+#include "core/config.h"
+#include "core/gian.h"
+#include "core/lz_uty.h"
+#include "sys/file.h"
+#include "sys/input.h"
+#include "util/guard.h"
+#include "util/ut_math.h"
 
 // File-static variables moved to DemoManager struct in demo_manager.h
 
@@ -40,7 +43,7 @@ void DemoManager::Init() {
 
   demo_info.Exp = Players.Power();
   demo_info.Weapon = Players.Weapon();
-  demo_info.CfgDat.GameLevel = std::to_underlying(GameState.game_level);
+  demo_info.CfgDat.GameLevel = std::to_underlying(Games.game_level);
   demo_info.CfgDat.PlayerStock = Players.Lives();
   demo_info.CfgDat.BombStock = ConfigDat.bomb_stock;
   demo_info.CfgDat.InputFlags = ConfigDat.PackInputFlags();
@@ -64,7 +67,7 @@ void DemoManager::FlushStage() {
   }
 
   if (multi_stage_count < REPLAY_STAGE_MAX) {
-    multi_stage_nums[multi_stage_count] = GameState.game_stage;
+    multi_stage_nums[multi_stage_count] = Games.game_stage;
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
 
     std::vector<INPUT_BITS> stage_data(demo_buffer.data(),
@@ -91,11 +94,11 @@ bool DemoManager::LoadSetup() {
   ConfigDat.bomb_stock = demo_info.CfgDat.BombStock;
   ConfigDat.player_stock = demo_info.CfgDat.PlayerStock;
   ConfigDat.UnpackInputFlags(demo_info.CfgDat.InputFlags);
-  GameState.game_level = static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
+  Games.game_level = static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
 
   // Restore player stats
   Players.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
-                            ConfigDat.player_stock, ConfigDat.bomb_stock);
+                           ConfigDat.player_stock, ConfigDat.bomb_stock);
 
   // Initialize random number
   // Sync random seed last
@@ -128,7 +131,7 @@ void DemoManager::SaveDemo() {
   demo_info.FrameCount = (demo_frame_cur + 1);
 
   char fn[] = "STG_Demo.DAT";
-  fn[3] = ('0' + GameState.game_stage);
+  fn[3] = ('0' + Games.game_stage);
 
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f != nullptr) {
@@ -192,7 +195,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
 
   // Flush current stage data if any (not yet flushed by stage clear)
   if (demo_frame_cur > 0 && multi_stage_count < REPLAY_STAGE_MAX) {
-    multi_stage_nums[multi_stage_count] = GameState.game_stage;
+    multi_stage_nums[multi_stage_count] = Games.game_stage;
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
     stage_record_bufs.emplace_back(demo_buffer.data(),
                                    demo_buffer.data() + demo_frame_cur);

@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "bullet.h"
 #include <array>
 #include <cstdint>
+
+#include "bullet.h"
 
 struct BulletManager {
   // --- Bullet data ---
@@ -50,7 +51,8 @@ private:
 
 extern BulletManager Bullets;
 
-//// Bullet command macros (moved from TAMA.h -- reference Bullets.command directly) ////
+//// Bullet command macros (moved from TAMA.h -- reference Bullets.command
+///directly) ////
 
 inline void TamaSetForm(uint8_t cmd, uint8_t option, uint8_t type, uint8_t c) {
   Bullets.command.cmd = cmd;

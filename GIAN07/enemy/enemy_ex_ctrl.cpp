@@ -2,22 +2,22 @@
 /// EnemyExCtrl.cpp   Extra enemy (boss) control
 ///
 
-#include "enemy_ex_ctrl.h"
-
 #include <algorithm>
-
 #include <cstddef>
+
+#include "enemy_ex_ctrl.h"
 
 #include "boss_manager.h"
 #include "enemy_manager.h"
-#include "game/cast.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "laser_manager.h"
-#include "loader.h"
-#include "long_laser.h"
-#include "platform/graphics_backend.h"
-#include "player.h"
+
+#include "audio/snd.h"
+#include "bullet/laser_manager.h"
+#include "bullet/long_laser.h"
+#include "core/loader.h"
+#include "gfx/graphics_backend.h"
+#include "player/player.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
 #include <utility>
 
 static constexpr auto BIT_VIRTUAL_HP = 990000; // Bit virtual HP

@@ -1,30 +1,32 @@
 ///
 /// GameMain - Window system switching and other processing
 ///
-#include "game_main.h"
-#include "bomb_efc.h" // Explosion effect processing
-#include "config.h"
-#include "demo_manager.h"
-#include "demo_play.h"
-#include "font_uty.h"
-#include "game/bgm.h"
-#include "game/debug.h"
-#include "game/input.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
-#include "lens.h"
-#include "level.h"
-#include "music.h"
-#include "platform/text_backend.h"
-#include "platform/time.h"
-#include "score.h"
-#include "ui_manager.h"
-#include "window_sys.h"
 #include <algorithm>
 #include <chrono>
 #include <format>
+
+#include "demo_manager.h"
+#include "demo_play.h"
+#include "game_main.h"
+#include "score.h"
+
+#include "audio/bgm.h"
+#include "audio/snd.h"
+#include "core/config.h"
+#include "core/gian.h"
+#include "core/level.h"
+#include "effect/bomb_efc.h"
+#include "effect/font_uty.h"
+#include "effect/geometry.h"
+#include "effect/lens.h"
+#include "platform/text_backend.h"
+#include "stage/music.h"
+#include "stage/ui_manager.h"
+#include "stage/window_sys.h"
+#include "sys/input.h"
+#include "util/debug.h"
+#include "util/time.h"
+#include "util/ut_math.h"
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
 
@@ -67,7 +69,7 @@ void Render(PIXEL_COORD top) {
 }; // namespace Version
 
 // GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
-// current_name, current_rank, current_dif, GameState.is_demoplay,
+// current_name, current_rank, current_dif, Games.is_demoplay,
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
 
 // Converted functions -> inline wrappers provided in gameflow_manager.h
@@ -94,8 +96,8 @@ void GameMove();
 // game_main initial values set in gameflow_manager.cpp
 
 GameLevel CurrentLevel() {
-  return ((GameState.game_stage == GRAPH_ID_EXSTAGE) ? GameLevel::EXTRA
-                                                     : GameState.game_level);
+  return ((Games.game_stage == GRAPH_ID_EXSTAGE) ? GameLevel::EXTRA
+                                                     : Games.game_level);
 }
 
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
@@ -104,9 +106,8 @@ GameLevel CurrentLevel() {
 bool ScoreNameInit() {
   GameFlow.current_dif = std::to_underlying(CurrentLevel());
 
-  GameFlow.current_rank =
-      Scores.SetScoreString(nullptr,
-                            static_cast<GameLevel>(GameFlow.current_dif));
+  GameFlow.current_rank = Scores.SetScoreString(
+      nullptr, static_cast<GameLevel>(GameFlow.current_dif));
   if (GameFlow.current_rank == 0) {
     return GameExit();
   }
@@ -153,8 +154,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 4) % 5;
-    current_rank = Scores.SetScoreString(
-        nullptr, static_cast<GameLevel>(current_dif));
+    current_rank =
+        Scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case KEY_DOWN:
@@ -511,10 +512,10 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_name.Score = Players.Score();
   current_name.Evade = Players.GrazeSum();
   current_name.Weapon = Players.Weapon();
-  if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
+  if (Games.game_stage == GRAPH_ID_EXSTAGE) {
     current_name.Stage = 1;
   } else {
-    current_name.Stage = GameState.game_stage;
+    current_name.Stage = Games.game_stage;
   }
 
   // For debugging...
@@ -588,7 +589,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameState.game_level = (ExStg ? GameLevel::HARD : ConfigDat.game_level);
+  Games.game_level = (ExStg ? GameLevel::HARD : ConfigDat.game_level);
 
   GameSTD_Init();
   Ranking.Reset();
@@ -602,7 +603,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
-    GameState.game_stage = GRAPH_ID_EXSTAGE;
+    Games.game_stage = GRAPH_ID_EXSTAGE;
   }
 
   return true;
@@ -642,20 +643,20 @@ bool GameNextStage() {
   Demos.SaveDemo();
 #endif
 
-  GameState.game_stage++;
+  Games.game_stage++;
 
   // Transition to ending
-  GameState.game_stage =
-      std::min<int>(GameState.game_stage, STAGE_MAX); // To be changed later
+  Games.game_stage =
+      std::min<int>(Games.game_stage, STAGE_MAX); // To be changed later
 
   GameSTD_Init();
   Players.PrepareNextStage();
 
-  if (!LoadGraph(GameState.game_stage)) {
+  if (!LoadGraph(Games.game_stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!LoadStageData(GameState.game_stage)) {
+  if (!LoadStageData(Games.game_stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -671,7 +672,7 @@ bool GameReplayInitAll(const char *fn) {
     return false;
   }
 
-  GameState.game_stage = Demos.multi_play_info.Stages[0];
+  Games.game_stage = Demos.multi_play_info.Stages[0];
 
   Ranking.Reset();
 
@@ -679,20 +680,20 @@ bool GameReplayInitAll(const char *fn) {
   Grp_Flip();
   GameSTD_Init();
 
-  if (!LoadGraph(GameState.game_stage)) {
+  if (!LoadGraph(Games.game_stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
-  if (!LoadStageData(GameState.game_stage)) {
+  if (!LoadStageData(Games.game_stage)) {
     DebugOut("MAP.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
 
-  if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
+  if (Games.game_stage == GRAPH_ID_EXSTAGE) {
     Players.SetCredits(0);
   }
 
@@ -766,20 +767,20 @@ bool DemoInit() {
   Players.Initialize();
 
   rnd_seed_set(Time_SteadyTicksMS());
-  GameState.game_stage = (rnd() % STAGE_MAX) + 1;
+  Games.game_stage = (rnd() % STAGE_MAX) + 1;
 
-  if (!Demos.LoadDemo(GameState.game_stage)) {
+  if (!Demos.LoadDemo(Games.game_stage)) {
     // DebugOut("Demo play data does not exist");
     return false;
   }
 
   Ranking.Reset();
 
-  if (!LoadGraph(GameState.game_stage)) {
+  if (!LoadGraph(Games.game_stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!LoadStageData(GameState.game_stage)) {
+  if (!LoadStageData(Games.game_stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -893,7 +894,7 @@ bool GameExit(bool bNeedChgMusic) {
 
   GameFlow.demo_timer = 0;
 
-  GameState.game_stage = 0;
+  Games.game_stage = 0;
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
@@ -982,7 +983,7 @@ void GameProc(bool & /*unused*/) {
   }
 }
 
-  // For game over appearance
+// For game over appearance
 void GameFlowManager::GameOverProc0(bool & /*unused*/) {
   switch (game_over_timer) {
   default:
@@ -1075,12 +1076,12 @@ void DemoProc(bool & /*unused*/) {
     Key_Data = Demos.Move();
   }
 
-  GameState.is_demoplay = true;
+  Games.is_demoplay = true;
 
   // Exit immediately if ESC is pressed
   if ((Key_Data & KEY_ESC) != 0) {
     Demos.Cleanup();
-    GameState.is_demoplay = false;
+    Games.is_demoplay = false;
     GameExit();
     return;
   }
@@ -1089,7 +1090,7 @@ void DemoProc(bool & /*unused*/) {
 
   if (GameFlow.current_state != GameState::Demo) {
     Demos.Cleanup(); // Cleanup
-    GameState.is_demoplay = false;
+    Games.is_demoplay = false;
     GameExit(); // Force exit (game over countermeasure)
     return;
   }
@@ -1186,7 +1187,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     if (spd != 0) {
       break;
     }
-    if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
+    if (Games.game_stage == GRAPH_ID_EXSTAGE) {
       if (((1 << Players.Weapon()) & ConfigDat.extra_stg_flags) == 0) {
         break;
       }
@@ -1197,50 +1198,50 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     count = 0;
 
     Snd_SEPlay(SOUND_ID_SELECT);
-    if (GameState.game_stage != GRAPH_ID_EXSTAGE) {
+    if (Games.game_stage != GRAPH_ID_EXSTAGE) {
 #ifdef PBG_DEBUG
       if (forceStage)
-        GameState.game_stage = forceStage;
+        Games.game_stage = forceStage;
       else
-        GameState.game_stage = DebugDat.StgSelect;
-      if (GameState.game_stage == 2)
+        Games.game_stage = DebugDat.StgSelect;
+      if (Games.game_stage == 2)
         Players.SetPower(160);
-      if (GameState.game_stage >= 3)
+      if (Games.game_stage >= 3)
         Players.SetPower(255);
 #else
       if (forceStage != 0) {
-        GameState.game_stage = forceStage;
-        if (GameState.game_stage == 2) {
+        Games.game_stage = forceStage;
+        if (Games.game_stage == 2) {
           Players.SetPower(160);
         }
-        if (GameState.game_stage >= 3) {
+        if (Games.game_stage >= 3) {
           Players.SetPower(255);
         }
       } else if (ConfigDat.stage_select != 0U) {
-        GameState.game_stage = ConfigDat.stage_select;
-        if (GameState.game_stage == 2) {
+        Games.game_stage = ConfigDat.stage_select;
+        if (Games.game_stage == 2) {
           Players.SetPower(160);
         }
-        if (GameState.game_stage >= 3) {
+        if (Games.game_stage >= 3) {
           Players.SetPower(255);
         }
       } else {
-        GameState.game_stage = 1;
+        Games.game_stage = 1;
       }
 #endif
     } else {
-    Players.SetCredits(0);
+      Players.SetCredits(0);
       Players.SetLives(2);
       Players.SetPower(255);
     }
 
     Demos.Init();
 
-    if (!LoadGraph(GameState.game_stage)) {
+    if (!LoadGraph(Games.game_stage)) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!LoadStageData(GameState.game_stage)) {
+    if (!LoadStageData(Games.game_stage)) {
       DebugOut("MAP.PAK が破壊されています");
       return;
     }
@@ -1287,7 +1288,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpGeom->SetColor({0, 0, 1});
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
-      if ((GameState.game_stage != GRAPH_ID_EXSTAGE) ||
+      if ((Games.game_stage != GRAPH_ID_EXSTAGE) ||
           (((1 << i) & ConfigDat.extra_stg_flags) != 0)) {
         continue;
       }
@@ -1357,9 +1358,9 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     //	TextOut(hdc,0,0,buf,strlen(buf));
     //	DxObj.Back->ReleaseDC(hdc);
     //
-    //#ifdef PBG_DEBUG
+    // #ifdef PBG_DEBUG
     //		StdStatusOutput();
-    //#endif
+    // #endif
     Grp_Flip();
   }
 }
@@ -1462,10 +1463,10 @@ void PauseProc(bool & /*unused*/) {
   }
 }
 
-//inline XAdd(DWORD old,int id)
+// inline XAdd(DWORD old,int id)
 //{
 //	RndBuf[id] += (random_ref-old);
-//}
+// }
 
 void GameMove() {
   UI.MsgTick();

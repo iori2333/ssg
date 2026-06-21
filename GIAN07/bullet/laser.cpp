@@ -2,18 +2,19 @@
 /// Laser - Laser processing (infinite distance, reflection, short)
 ///
 
+#include <utility>
+
 #include "laser.h"
+#include "laser_manager.h"
+#include "long_laser.h"
 
 #include "core/entity.h"
-#include "game/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
-#include "laser_manager.h"
-#include "level.h"
-#include "long_laser.h"
-#include "platform/graphics_backend.h"
-#include "play_rank.h"
-#include <utility>
+#include "core/gian.h"
+#include "core/level.h"
+#include "effect/geometry.h"
+#include "gameflow/play_rank.h"
+#include "gfx/graphics_backend.h"
+#include "util/ut_math.h"
 
 // Laser coordinate management uses the following structure:
 //
@@ -61,15 +62,17 @@ static constexpr auto LC_RNDZ = 0x0a; // Random with base angle cactus set
 static constexpr auto LF_NONE = 0x00;  // No flag state
 static constexpr auto LF_CLEAR = 0x01; // Laser is disappearing
 
-static constexpr auto LF_SHOT = 0x02;  // Laser firing
-static constexpr auto LF_HIT = 0x04;   // Laser hitting (against REF_OBJECT)
-static constexpr auto LF_NMOVE = 0x06; // Laser length unchanged (LF_SHOT|LF_HIT)
+static constexpr auto LF_SHOT = 0x02; // Laser firing
+static constexpr auto LF_HIT = 0x04;  // Laser hitting (against REF_OBJECT)
+static constexpr auto LF_NMOVE =
+    0x06; // Laser length unchanged (LF_SHOT|LF_HIT)
 
 // LASER_DATA, LF_DELETE moved to laser.h
 
 // Global variables
-// LaserCmd, count, lasers[], laser_indices[] moved to LaserManager in laser_manager.cpp
-// REFLECTOR		Reflector[RT_MAX]; // Reflector structure
+// LaserCmd, count, lasers[], laser_indices[] moved to LaserManager in
+// laser_manager.cpp REFLECTOR		Reflector[RT_MAX]; // Reflector
+// structure
 //  uint16_t	ReflectorNow;		// Number of reflectors
 
 // private methods declared in laser_manager.h
@@ -166,7 +169,8 @@ void LaserManager::Move() {
       lp->flag = LF_DELETE;
     }
 
-    if (Players.IsInvincible() == 0 && ((lp->flag & (LF_CLEAR | LF_DELETE)) == 0)) {
+    if (Players.IsInvincible() == 0 &&
+        ((lp->flag & (LF_CLEAR | LF_DELETE)) == 0)) {
       HitCheck(lp);
     }
   }
@@ -189,17 +193,17 @@ void LaserManager::Draw() {
       break;
 
       // Infinite distance laser & Y_positive_infinite laser
-      //case(LS_LONG):case(LS_LONGY):
+      // case(LS_LONG):case(LS_LONGY):
       //        Ldraw(lp);
-      //break;
+      // break;
     }
   }
 
-  //for(i=0;i<count;i++){
-  //        auto* lp = &lasers[laser_indices[i]];
-  //        if(lp->type==LS_REF || lp->type==LS_SHORT)
-  //                DrawShort(lp);
-  //}
+  // for(i=0;i<count;i++){
+  //         auto* lp = &lasers[laser_indices[i]];
+  //         if(lp->type==LS_REF || lp->type==LS_SHORT)
+  //                 DrawShort(lp);
+  // }
 
   GrpGeom->Unlock();
 }
@@ -427,10 +431,10 @@ void LaserManager::MoveLaser(LASER_DATA *lp) {
     MoveReflect(lp); // Too long, extract to function!
     return;
 
-    //case(LS_LONG):	// Infinite distance laser
-    //case(LS_LONGY):	// Y positive direction infinite laser
-    //        LONGL_move(lp);
-    //return;
+    // case(LS_LONG):	// Infinite distance laser
+    // case(LS_LONGY):	// Y positive direction infinite laser
+    //         LONGL_move(lp);
+    // return;
   }
 }
 
@@ -450,18 +454,18 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     ty = Players.Y() - lp->y;
     length = cosl(lp->d, tx) + sinl(lp->d, ty);
     w1 = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
-    //tx = ((lp->x)-(Players.X()));	ty =
+    // tx = ((lp->x)-(Players.X()));	ty =
     //((lp->y)-(Players.Y())); length =
     //-((cosm(lp->d)*tx+sinm(lp->d)*ty)>>8); tx <<= 8;	ty <<= 8;
     //
-    //                    if(cosm(lp->d)==0)
-    //                            w1 =
-    //abs((length*cosm(lp->d)+tx)/(-sinm(lp->d))); else if(sinm(lp->d)==0) w1 =
-    //abs((length*sinm(lp->d)+ty)/( cosm(lp->d))); else{ w2 =
-    //abs((length*cosm(lp->d)+tx)/(-sinm(lp->d))); w1 =
-    //abs((length*sinm(lp->d)+ty)/( cosm(lp->d))); w1 = (w1+w2)/2;	//
-    // Improved precision
-    //                    }
+    //                     if(cosm(lp->d)==0)
+    //                             w1 =
+    // abs((length*cosm(lp->d)+tx)/(-sinm(lp->d))); else if(sinm(lp->d)==0) w1 =
+    // abs((length*sinm(lp->d)+ty)/( cosm(lp->d))); else{ w2 =
+    // abs((length*cosm(lp->d)+tx)/(-sinm(lp->d))); w1 =
+    // abs((length*sinm(lp->d)+ty)/( cosm(lp->d))); w1 = (w1+w2)/2;	//
+    //  Improved precision
+    //                     }
     if (length > 0 && length <= (lp->l) && w1 <= (lp->w)) {
       Players.OnHit();
     } else if (length > 0 && length <= (lp->l) &&
@@ -477,11 +481,11 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     }
     break;
 
-    //case(LS_LONG):
-    //break;
+    // case(LS_LONG):
+    // break;
 
-    //case(LS_LONGY):
-    //break;
+    // case(LS_LONGY):
+    // break;
   }
 }
 
@@ -581,11 +585,12 @@ int LaserManager::HitReflect(const LASER_DATA *lp) {
       cmd.y = ly;
       cmd.v = lp->v;
       cmd.d = -(lp->d) + ((ll->d) << 1);
-      cmd.w = lp->w;     //
-      cmd.l = lp->lmax;  // Pretty important (to make it look like the same laser)
-      cmd.l2 = 0;        // lp->v;
-      cmd.n = 1;         // Splitting would be scary...
-      cmd.c = lp->c;     // Same color
+      cmd.w = lp->w; //
+      cmd.l =
+          lp->lmax;  // Pretty important (to make it look like the same laser)
+      cmd.l2 = 0;    // lp->v;
+      cmd.n = 1;     // Splitting would be scary...
+      cmd.c = lp->c; // Same color
       cmd.cmd = LC_WAY;  //
       cmd.type = LS_REF; // Allow two or more reflections
       cmd.notr = i;      // Do not reflect against self

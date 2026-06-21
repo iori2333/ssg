@@ -2,16 +2,17 @@
 /// Ending - Ending processing
 ///
 
-#include "ending.h"
-
-#include "ending_manager.h"
-#include "game/bgm.h"
-#include "game/cast.h"
-#include "game/endian.h"
-#include "gian.h"
-#include "platform/text_backend.h"
-#include "scene.h" // SCL definition file
 #include <utility>
+
+#include "ending.h"
+#include "ending_manager.h"
+
+#include "audio/bgm.h"
+#include "core/gian.h"
+#include "platform/text_backend.h"
+#include "stage/scene.h"
+#include "util/cast.h"
+#include "util/endian.h"
 
 // File-static variables moved to EndingManager in ending_manager.h
 
@@ -177,32 +178,32 @@ void EndingManager::Text::Render(WINDOW_POINT topleft) {
 
 // Apply fade I/O info
 void EndingManager::DrawFadeInfo() {
-    GrpGeom->Lock();
+  GrpGeom->Lock();
 
-    if (grp_info.bWantDisp) {
-      GrpGeom->SetAlphaNorm(255 - grp_info.alpha);
-      GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->DrawBoxA(grp_info.x, grp_info.y, (grp_info.x + 320),
-                        (grp_info.y + 240));
-    }
-    if (stf_task.bWantDisp) {
-      GrpGeom->SetAlphaNorm(255 - stf_task.alpha);
-      GrpGeom->SetColor({0, 0, 0});
-      if (stf_task.ox == 320) {
-        GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
-      } else if (stf_task.ox > 320) {
-        GrpGeom->DrawBoxA(320, 0, GRP_RES.w, 300);
-      } else {
-        GrpGeom->DrawBoxA(0, 0, (320 - 50), 300);
-      }
-    }
-    if (flash_state != 0U) {
-      GrpGeom->SetAlphaNorm(255 - flash_state);
-      GrpGeom->SetColor({5, 5, 5});
+  if (grp_info.bWantDisp) {
+    GrpGeom->SetAlphaNorm(255 - grp_info.alpha);
+    GrpGeom->SetColor({0, 0, 0});
+    GrpGeom->DrawBoxA(grp_info.x, grp_info.y, (grp_info.x + 320),
+                      (grp_info.y + 240));
+  }
+  if (stf_task.bWantDisp) {
+    GrpGeom->SetAlphaNorm(255 - stf_task.alpha);
+    GrpGeom->SetColor({0, 0, 0});
+    if (stf_task.ox == 320) {
       GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
+    } else if (stf_task.ox > 320) {
+      GrpGeom->DrawBoxA(320, 0, GRP_RES.w, 300);
+    } else {
+      GrpGeom->DrawBoxA(0, 0, (320 - 50), 300);
     }
+  }
+  if (flash_state != 0U) {
+    GrpGeom->SetAlphaNorm(255 - flash_state);
+    GrpGeom->SetColor({5, 5, 5});
+    GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
+  }
 
-    GrpGeom->Unlock();
+  GrpGeom->Unlock();
 }
 
 // Ending SCL decode
@@ -214,7 +215,7 @@ void EndingManager::SCLDecode() {
     switch (cmd[0]) {
     case SCL_TIME: {
       const auto temp = I32LEAt(&cmd[1]);
-      if (std::cmp_greater(temp, GameState.game_count)) {
+      if (std::cmp_greater(temp, Games.game_count)) {
         bFlag = false;
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)
@@ -351,5 +352,5 @@ void EndingManager::SCLDecode() {
     }
   }
 
-  GameState.game_count++;
+  Games.game_count++;
 }

@@ -56,8 +56,13 @@ add_subdirectory(libs/BLAKE3/c EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libogg EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libvorbis EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libwebp EXCLUDE_FROM_ALL)
+add_subdirectory(libs/miniaudio EXCLUDE_FROM_ALL)
+add_subdirectory(libs/tomlplusplus EXCLUDE_FROM_ALL)
+
 add_library(dr_libs INTERFACE)
 target_include_directories(dr_libs INTERFACE libs/dr_libs)
+add_library(tinysoundfont INTERFACE)
+target_include_directories(tinysoundfont INTERFACE libs/tinysoundfont)
 
 # ============================================================
 # Main executable sources
@@ -69,25 +74,19 @@ file(GLOB_RECURSE PBG_SRC CONFIGURE_DEPENDS
 )
 
 # --- Modern game layer ---
-file(GLOB GAME_SRC CONFIGURE_DEPENDS
+file(GLOB_RECURSE GAME_SRC CONFIGURE_DEPENDS
     "game/*.cpp"
-    "game/codecs/*.cpp"
 )
-
-# --- Platform backends shared by all platforms ---
-file(GLOB PLATFORM_COMMON_SRC CONFIGURE_DEPENDS
-    "platform/common/*/*.cpp"
-    "platform/common/*/*.c"
-)
+list(FILTER GAME_SRC EXCLUDE REGEX "game/platform/")
 
 # --- Windows-specific backends ---
 file(GLOB PLATFORM_WINDOWS_SRC CONFIGURE_DEPENDS
-    "platform/windows/*.cpp"
+    "game/platform/windows/*.cpp"
 )
 
 # --- Linux-specific backends ---
 file(GLOB PLATFORM_LINUX_SRC CONFIGURE_DEPENDS
-    "platform/linux/*/*.cpp"
+    "game/platform/linux/*/*.cpp"
 )
 
 # ============================================================
@@ -96,13 +95,12 @@ file(GLOB PLATFORM_LINUX_SRC CONFIGURE_DEPENDS
 add_executable(GIAN07
     ${PBG_SRC}
     ${GAME_SRC}
-    ${PLATFORM_COMMON_SRC}
 )
 
 if(WIN32)
     target_sources(GIAN07 PRIVATE ${PLATFORM_WINDOWS_SRC})
 
-    target_sources(GIAN07 PRIVATE GIAN07/GIAN07.rc)
+    target_sources(GIAN07 PRIVATE game/GIAN07.rc)
 
     target_compile_definitions(GIAN07 PRIVATE WIN32)
     target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})
@@ -120,16 +118,8 @@ endif()
 # Include directories
 # ============================================================
 target_include_directories(GIAN07 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/gameflow
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/player
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/enemy
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/bullet
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/effect
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/stage
-    ${CMAKE_CURRENT_SOURCE_DIR}/libs/tomlplusplus/include
 )
 
 # Include generated version header
@@ -139,7 +129,9 @@ target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 # Link libraries
 # ============================================================
 target_link_libraries(GIAN07 PRIVATE
-    vorbis vorbisfile webp dr_libs BLAKE3::blake3 SDL3::SDL3-static
+    vorbis vorbisfile miniaudio dr_libs tinysoundfont
+    BLAKE3::blake3 SDL3::SDL3-static webp
+    tomlplusplus::tomlplusplus
 )
 
 # ============================================================
@@ -160,17 +152,16 @@ endif()
 add_executable(pack_tool
     tools/pack_tool.cpp
     GIAN07/core/lz_uty.cpp
-    platform/common/sdl/buffer_sdl.cpp
-    platform/common/sdl/file_sdl.cpp
-    platform/common/c/file.cpp
+    game/sys/buffer.cpp
+    game/sys/file.cpp
 )
 if(WIN32)
     target_compile_definitions(pack_tool PRIVATE WIN32)
     target_link_libraries(pack_tool PRIVATE ${WIN32_SYSTEM_LIBS})
 endif()
 target_include_directories(pack_tool PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
 )
 target_link_libraries(pack_tool PRIVATE SDL3::SDL3-static)
 set_target_properties(pack_tool PROPERTIES
@@ -186,7 +177,9 @@ endif()
 add_executable(script_tool
     tools/script_tool.cpp
 )
-target_include_directories(script_tool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(script_tool PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+)
 set_target_properties(script_tool PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

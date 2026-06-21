@@ -7,16 +7,17 @@
 #include <functional>
 #include <utility>
 
-#include "game/enum_flags.h"
-#include "game/input.h"
-#include "game/text.h"
+#include "gfx/text.h"
+#include "sys/input.h"
+#include "util/enum_flags.h"
 
 // [Revision history]
 // 2000/07/26 : Improved operability
 //
 // 2000/02/28 : Faster semi-transparent message window
 // 2000/02/10 : PWINDOW -> WINDOWSYS
-//            : In WINDOWSYS, the command window holds selection state on a stack.
+//            : In WINDOWSYS, the command window holds selection state on a
+//            stack.
 // TODO: Moving windows and adding frames (deferred)
 //
 // 2000/01/31 : Development started

@@ -2,15 +2,15 @@
 /// MsgWindow - Message window processing
 ///
 
+#include <utility>
+
 #include "msg_window.h"
 
-#include "game/ut_math.h"
-#include "loader.h"
-#include "menu/menu_renderer.h"
+#include "core/loader.h"
 #include "platform/text_backend.h"
-#include "window_sys.h" // face_data, FACE_*, SURFACE_ID, MenuController, etc.
-
-#include <utility>
+#include "stage/menu/menu_renderer.h"
+#include "stage/window_sys.h"
+#include "util/ut_math.h"
 
 // [Global variables]
 
@@ -294,7 +294,7 @@ void MsgWindow::Cmd(uint8_t cmd) {
   case MWCMD_SMALLFONT: // Use small font
     Ysize += 14;
     temp = max_size.bottom - max_size.top - 16;
-    max_line = temp / Ysize;                                 // Max displayable lines
+    max_line = temp / Ysize; // Max displayable lines
     font_dy = ((temp % Ysize) / (temp / Ysize)) + Ysize + 1; // Y increment
     font_id = Cast::down_enum<FONT_ID>(cmd);                 // Font to use
     [[fallthrough]];

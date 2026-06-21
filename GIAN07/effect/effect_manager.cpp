@@ -7,4 +7,5 @@
 // --- Global instance ---
 EffectManager Effects;
 
-// All backward-compatibility reference wrappers removed -- each .cpp uses Effects.xxx directly
+// All backward-compatibility reference wrappers removed -- each .cpp uses
+// Effects.xxx directly

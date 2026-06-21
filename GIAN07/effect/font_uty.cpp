@@ -2,11 +2,13 @@
 /// FontUty - Font utility functions
 ///
 
-#include "font_uty.h"
-#include "loader.h"
-#include "platform/graphics_backend.h"
-#include "platform/text_backend.h"
 #include <format>
+
+#include "font_uty.h"
+
+#include "core/loader.h"
+#include "gfx/graphics_backend.h"
+#include "platform/text_backend.h"
 
 #ifdef WIN32
 #include <windows.h>

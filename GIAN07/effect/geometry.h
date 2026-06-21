@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "platform/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 
 namespace Geometry {
 

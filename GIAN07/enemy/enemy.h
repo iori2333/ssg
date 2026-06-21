@@ -6,15 +6,16 @@
 
 // [Revision history]
 
-// 2000/10/17 : Fixed referencing wrong variable for play rank (was referencing ConfigDat)
-// 2000/03/22 : Added LLaser processing (actual firing done by direct assignment to struct)
-// 2000/02/25 : Added enemy hit-check function enemy_damage()
-// 2000/02/22 : Changed enemy clipping range.
+// 2000/10/17 : Fixed referencing wrong variable for play rank (was referencing
+// ConfigDat) 2000/03/22 : Added LLaser processing (actual firing done by direct
+// assignment to struct) 2000/02/25 : Added enemy hit-check function
+// enemy_damage() 2000/02/22 : Changed enemy clipping range.
+
+#include "ecl.h"
 
 #include "bullet/bullet.h"
 #include "bullet/laser.h"
-#include "ecl.h"
-#include "platform/buffer.h"
+#include "sys/buffer.h"
 
 // Enemy constants
 inline constexpr uint16_t ENEMY_MAX = 50; // Maximum number of enemies
@@ -24,15 +25,15 @@ inline constexpr uint8_t EF_DRAW = 0x01;   // Whether to draw the enemy
 inline constexpr uint8_t EF_CLIP = 0x02;   // Whether to delete when off-screen
 inline constexpr uint8_t EF_DAMAGE = 0x04; // Whether the enemy can take damage
 inline constexpr uint8_t EF_HITSB = 0x08;  // Whether enemy collides with player
-inline constexpr uint8_t EF_RLCHG = 0x10;  // Whether to enable ECL horizontal flip
+inline constexpr uint8_t EF_RLCHG =
+    0x10; // Whether to enable ECL horizontal flip
 inline constexpr uint8_t EF_BOMB = 0x20;   // Enemy is exploding
 inline constexpr uint8_t EF_DELETE = 0x40; // Delete enemy this frame
 
 inline constexpr int ENEMY_BOMB_SPD = 4;
 
 // Homing constants
-inline constexpr int HOMING_DUMMY =
-    (500 * 64); // Dummy value when not homing
+inline constexpr int HOMING_DUMMY = (500 * 64); // Dummy value when not homing
 
 // Animation constants
 inline constexpr uint8_t ANIME_MAX = 50;    // Number of animation types
@@ -54,9 +55,9 @@ struct EnemyData {
 
   int v; // Velocity component (x64)
 
-  uint32_t hp;        // Remaining HP (too large?)
-  uint32_t item;      // Used for items etc.?
-  uint32_t cmd;       // ECL command absolute address (major change from DOS version)
+  uint32_t hp;   // Remaining HP (too large?)
+  uint32_t item; // Used for items etc.?
+  uint32_t cmd;  // ECL command absolute address (major change from DOS version)
   uint32_t count;     // Multipurpose frame counter
   uint32_t call_addr; // Address to jump to after RET execution
 
@@ -131,7 +132,8 @@ struct ANIME_DATA {
 };
 
 // Enemy variables
-// Access directly via Enemies.entities, Enemies.indices, Enemies.count, Enemies.anime
+// Access directly via Enemies.entities, Enemies.indices, Enemies.count,
+// Enemies.anime
 
 // Enemy control functions
 // Backward-compatible inline wrapper moved to enemy_manager.h

@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "window_sys.h" // MenuItem, MenuDef, MenuLabel, MenuController
-
 #include <array>
 #include <cstddef>
 #include <functional>
+
+#include "stage/window_sys.h"
 
 class ScrollMenu {
 public:

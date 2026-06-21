@@ -2,20 +2,21 @@
 /// ENEMY.C - Enemy management and spawn control
 ///
 
-#include "enemy.h"
-
-#include "core/entity.h"
-#include "ecl_len.h"
-#include "enemy_manager.h"
-#include "game/cast.h"
-#include "game/debug.h"
-#include "game/endian.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "gian.h"
-#include "level.h"
-#include "platform/graphics_backend.h"
 #include <utility>
+
+#include "ecl_len.h"
+#include "enemy.h"
+#include "enemy_manager.h"
+
+#include "audio/snd.h"
+#include "core/entity.h"
+#include "core/gian.h"
+#include "core/level.h"
+#include "gfx/graphics_backend.h"
+#include "util/cast.h"
+#include "util/debug.h"
+#include "util/endian.h"
+#include "util/ut_math.h"
 
 // ECL debug macro
 static void ECL_DEBUG(const char *s, auto param) {
@@ -25,8 +26,8 @@ static void ECL_DEBUG(const char *s, auto param) {
   if (size <= 0) {
     return;
   }
-  DebugLog({_ECL_Debug,
-            static_cast<size_t>(std::min(size, (int)(sizeof(_ECL_Debug) - 1)))});
+  DebugLog({_ECL_Debug, static_cast<size_t>(
+                            std::min(size, (int)(sizeof(_ECL_Debug) - 1)))});
 #endif
 }
 
@@ -125,7 +126,8 @@ void EnemyManager::Move() {
 
       // Cactus hit check
       if (HITCHK(e->x, Players.X(), e->g_width) &&
-          HITCHK(e->y, Players.Y(), e->g_height) && Players.IsInvincible() == 0) {
+          HITCHK(e->y, Players.Y(), e->g_height) &&
+          Players.IsInvincible() == 0) {
         // Might be interesting to damage the enemy around here?
         if ((e->flag & EF_HITSB) != 0) {
           Players.OnHit();
@@ -235,7 +237,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   if (std::cmp_less_equal(e.hp, damage)) {
     Snd_SEPlay(SOUND_ID_BOMB, e.x);
     if (e.LLaserRef != 0U) {
-        Lasers.ForceCloseLong(&e); // Force close laser
+      Lasers.ForceCloseLong(&e); // Force close laser
     }
     Players.PowerUp(static_cast<uint8_t>(e.hp)); // Power up
     e.hp = 0;
@@ -362,7 +364,7 @@ void EnemyManager::InitDataX64(EnemyData *e, int x, int y, uint32_t EclID) {
   e->IsDamaged = 0;
 
   e->tama_c = Cast::down<uint8_t>(rnd()); // & 0xff;
-  e->t_rep = 0;                           // Bullet fire interval (0: no auto-fire)
+  e->t_rep = 0; // Bullet fire interval (0: no auto-fire)
   e->g_width = 0;
   e->g_height = 0;
 
@@ -471,7 +473,8 @@ static void EnemyDrawBomb(int x, int y, uint32_t count) {
 }
 
 void EnemyManager::Execute(EnemyData *e) {
-  // Lambda for left-right reversal (formerly macros ABS_DEGRL/ABS_VXRL/REL_DEGRL)
+  // Lambda for left-right reversal (formerly macros
+  // ABS_DEGRL/ABS_VXRL/REL_DEGRL)
   auto AbsDegRL = [e](uint8_t d) -> uint8_t {
     return (e->flag & EF_RLCHG) ? (128 - d) : d;
   };

@@ -7,8 +7,8 @@
 #include "weapon_form.h"
 
 class LaserForm : public WeaponForm {
- public:
-  explicit LaserForm(Player& p) : WeaponForm(p) {}
+public:
+  explicit LaserForm(Player &p) : WeaponForm(p) {}
   void FireMain(uint8_t tier) override;
   void FireSub(uint8_t tier) override {}
   void FireBomb() override;
@@ -18,8 +18,8 @@ class LaserForm : public WeaponForm {
 };
 
 class LaserFocusForm : public WeaponForm {
- public:
-  explicit LaserFocusForm(Player& p) : WeaponForm(p) {}
+public:
+  explicit LaserFocusForm(Player &p) : WeaponForm(p) {}
   void FireMain(uint8_t tier) override;
   void FireSub(uint8_t tier) override {}
   void OnFireTick() override;

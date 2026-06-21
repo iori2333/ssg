@@ -2,24 +2,25 @@
 /// Scroll - Scrolling and map data processing
 ///
 
-#include "scroll.h"
+#include <utility>
 
-#include "config.h"
-#include "demo_play.h"
-#include "game/bgm.h"
-#include "game/cast.h"
-#include "game/debug.h"
-#include "game/endian.h"
-#include "game/input.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "gian.h"
-#include "level.h"
-#include "platform/graphics_backend.h"
-#include "scene.h" // SCL definition file
+#include "scene.h"
+#include "scroll.h"
 #include "ui_manager.h"
 #include "window_sys.h"
-#include <utility>
+
+#include "audio/bgm.h"
+#include "audio/snd.h"
+#include "core/config.h"
+#include "core/gian.h"
+#include "core/level.h"
+#include "gameflow/demo_play.h"
+#include "gfx/graphics_backend.h"
+#include "sys/input.h"
+#include "util/cast.h"
+#include "util/debug.h"
+#include "util/endian.h"
+#include "util/ut_math.h"
 
 // Map data save header
 struct ScrollSaveHeader {
@@ -31,9 +32,10 @@ struct ScrollSaveHeader {
 // ScrollInfo, SclInfo, Scroller.map_chip_rects[] moved to
 // ScrollManager in scroll_manager.cpp
 
-static void enemy_set();                // Set enemies
-static void PutEnemy(const uint8_t *p); // p: Enemy placement data after SCL_ENEMY
-static void InitMapChipRect();          // Initialize scroll-related information
+static void enemy_set(); // Set enemies
+static void
+PutEnemy(const uint8_t *p);    // p: Enemy placement data after SCL_ENEMY
+static void InitMapChipRect(); // Initialize scroll-related information
 
 static PBGMAP *ScNextLine(PBGMAP *p);   // Go to next line!!
 static PBGMAP *ScBeforeLine(PBGMAP *p); // Go to previous line!!
@@ -178,7 +180,7 @@ static void enemy_set() {
         if (((Key_Data & KEY_TAMA) != 0) || ((Key_Data & KEY_RETURN) != 0) ||
             ((Key_Data & KEY_BOMB) != 0)) {
           if (!Scroller.scene.ReturnFlag) {
-            GameState.game_count = temp;
+            Games.game_count = temp;
             Scroller.scene.ReturnFlag = true;
           }
         } else {
@@ -186,16 +188,16 @@ static void enemy_set() {
         }
       }
       //
-                                      // if((Key_Data & KEY_SKIP) &&
-         // Scroller.scene.MsgFlag)
-         // GameState.game_count+=(temp-GameState.game_count)/3; else if((Key_Data
-         // & KEY_RETURN) && !Scroller.scene.ReturnFlag){ GameState.game_count  =
-         // temp; Scroller.scene.ReturnFlag = true;
-                                      // }
-                                      // if(!(Key_Data & KEY_RETURN) &&
-         // Scroller.scene.ReturnFlag) { Scroller.scene.ReturnFlag = false;
-                                      // }
-      if (temp > GameState.game_count) {
+      // if((Key_Data & KEY_SKIP) &&
+      // Scroller.scene.MsgFlag)
+      // Games.game_count+=(temp-Games.game_count)/3; else if((Key_Data
+      // & KEY_RETURN) && !Scroller.scene.ReturnFlag){ Games.game_count  =
+      // temp; Scroller.scene.ReturnFlag = true;
+      // }
+      // if(!(Key_Data & KEY_RETURN) &&
+      // Scroller.scene.ReturnFlag) { Scroller.scene.ReturnFlag = false;
+      // }
+      if (temp > Games.game_count) {
         bFlag = false;
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)
@@ -211,7 +213,7 @@ static void enemy_set() {
       SCL_DEBUG("--- SCL_ENEMY ---");
       break;
 
-    case SCL_BOSS: { // Set boss (X(16),Y(16),ID(8))
+    case SCL_BOSS: {                       // Set boss (X(16),Y(16),ID(8))
       const auto x = I16LEAt(&cmd[1 + 0]); // Boss initial X
       const auto y = I16LEAt(&cmd[1 + 2]); // Boss initial Y
       const auto id = cmd[1 + 2 + 2];      // Boss ID
@@ -219,15 +221,13 @@ static void enemy_set() {
       Enemies.scl_now += (1 + 2 + 2 + 1); // cmd+x+y+id
 
       // Scan SCL ahead for timeout target
-      const auto *scl_end =
-          Enemies.scl_head.data() + Enemies.scl_head.size();
+      const auto *scl_end = Enemies.scl_head.data() + Enemies.scl_head.size();
       const uint8_t *scan = Enemies.scl_now;
       int32_t scl_timeout = -1;
       while (scan < scl_end) {
         const uint8_t op = scan[0];
-        if (op == SCL_BOSSDEAD || op == SCL_WAITEX ||
-            op == SCL_STAGECLEAR || op == SCL_GAMECLEAR ||
-            op == SCL_END) {
+        if (op == SCL_BOSSDEAD || op == SCL_WAITEX || op == SCL_STAGECLEAR ||
+            op == SCL_GAMECLEAR || op == SCL_END) {
           break;
         }
         if (op == SCL_TIME) {
@@ -320,8 +320,9 @@ static void enemy_set() {
       break;
 
     case SCL_MUSIC:
-      //				if(!(// DemoplaySaveEnable||// Demos.load_enable)){
-      if (!GameState.is_demoplay) {
+      //				if(!(// DemoplaySaveEnable||//
+      //Demos.load_enable)){
+      if (!Games.is_demoplay) {
         BGM_Stop();
         if (BGM_Switch(cmd[1])) {
           BGM_Play();
@@ -342,10 +343,10 @@ static void enemy_set() {
     case SCL_EFC:
       switch (cmd[1]) {
       case SEFC_WARN:
-        // effect_set(0,0,EFC_WARNBOSS,GameState.game_stage);
+        // effect_set(0,0,EFC_WARNBOSS,Games.game_stage);
         Snd_SEPlay(8, GX_MID, true);
         Effects.SetWarningEffect();
-        // StringEffect3(GameState.game_stage);
+        // StringEffect3(Games.game_stage);
         break;
 
       case SEFC_WARNSTOP:
@@ -429,7 +430,7 @@ static void enemy_set() {
         return;
       }
       if (Demos.load_all_enable) {
-        if (GameState.game_stage < Demos.playback_max_stage) {
+        if (Games.game_stage < Demos.playback_max_stage) {
           GameNextStage();
         }
         return;
@@ -448,10 +449,10 @@ static void enemy_set() {
         return;
       }
 
-      if (GameState.game_stage == STAGE_MAX) {
-        GameState.game_stage = 7;
+      if (Games.game_stage == STAGE_MAX) {
+        Games.game_stage = 7;
       }
-      if (GameState.game_level != GameLevel::EASY) {
+      if (Games.game_level != GameLevel::EASY) {
         switch (Players.Weapon()) {
         case 0:
           ConfigDat.extra_stg_flags |= 1;
@@ -500,13 +501,13 @@ static void enemy_set() {
     }
   }
 
-  GameState.game_count++;
+  Games.game_count++;
 
-  if ((GameState.game_count & 0x3f) == 0) {
-    if (GameState.game_stage == GRAPH_ID_EXSTAGE) {
+  if ((Games.game_count & 0x3f) == 0) {
+    if (Games.game_stage == GRAPH_ID_EXSTAGE) {
       Ranking.Add(1);
     } else {
-      Ranking.Add(1 + (GameState.game_stage / 3));
+      Ranking.Add(1 + (Games.game_stage / 3));
     }
   }
 }
@@ -533,62 +534,62 @@ static void PutEnemy(const uint8_t *p) {
   Enemies.InitDataSTD(e, x, y, n);
 
   //
-          // e->x   = I16LEAt(&p[0]);	// PixelToWorld(I16LEAt(&p[0]));
-          // e->y   = I16LEAt(&p[2]);	// PixelToWorld(I16LEAt(&p[2]));
-          //
-          // e->x = (e->x==X_RNDV) ? GX_RND() : (e->x<<6);
-          // e->y = (e->y==Y_RNDV) ? GY_RND() : (e->y<<6);
-          // e->cmd = U32LEAt(&Enemies.ecl_head[n]);
-          //
-          // e->call_addr = e->cmd;
-          //
-          // e->hp       = 0xffffffff;
-          // e->amp      = 0;
-          // e->anm_ptn  = 0;
-          // e->anm_sp   = 0;
-          // e->anm_c    = 0;
-          // e->count    = 0;
-          // e->evscore  = 0;
-          // e->d        = 64;
-          // e->flag     = EF_DAMAGE|EF_DRAW|EF_HITSB;
-          //
-          // e->tama_c   = rnd();//&0xff;
-          // e->t_rep    = 0;			//
-      // Bullet fire interval (0: no auto-fire) e->g_width  = 0; e->g_height = 0;
-          //
-          // e->item     = 0;
-          //
-          // e->rep_c    = 0;
-          // e->cmd_c    = 0;
-          // e->v        = 64;
-          // e->vd       = 0;
-          // e->vx       = cosl(e->d,e->v);
-          // e->vy       = sinl(e->d,e->v);
-          //
-          // e->LLaserRef = 0;
-          //
-          // e->t_cmd.c      = 0;
-          // e->t_cmd.cmd    = TC_WAY;
-          // e->t_cmd.d      = 64;
-          // e->t_cmd.n      = 1;
-          // e->t_cmd.option = TE_NONE;
-          // e->t_cmd.type   = T_NORM;
-          // e->t_cmd.v      = 3;
-          // e->t_cmd.x      = 0;
-          // e->t_cmd.y      = 0;
-          //
-          // e->t_cmd.dw     = 16;
-          // e->t_cmd.ns     = 1;
-          // e->t_cmd.rep    = 0;
-          // e->t_cmd.vd     = 0;
-          //
-          //
-          // // Initialize variable registers //
-          // e->GR[0] = e->GR[1] = e->GR[2] = e->GR[3] = 0;
-          // e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
-          //
-          // // Initialize interrupt vectors //
-          // Enemies.InitInterrupts(e);
+  // e->x   = I16LEAt(&p[0]);	// PixelToWorld(I16LEAt(&p[0]));
+  // e->y   = I16LEAt(&p[2]);	// PixelToWorld(I16LEAt(&p[2]));
+  //
+  // e->x = (e->x==X_RNDV) ? GX_RND() : (e->x<<6);
+  // e->y = (e->y==Y_RNDV) ? GY_RND() : (e->y<<6);
+  // e->cmd = U32LEAt(&Enemies.ecl_head[n]);
+  //
+  // e->call_addr = e->cmd;
+  //
+  // e->hp       = 0xffffffff;
+  // e->amp      = 0;
+  // e->anm_ptn  = 0;
+  // e->anm_sp   = 0;
+  // e->anm_c    = 0;
+  // e->count    = 0;
+  // e->evscore  = 0;
+  // e->d        = 64;
+  // e->flag     = EF_DAMAGE|EF_DRAW|EF_HITSB;
+  //
+  // e->tama_c   = rnd();//&0xff;
+  // e->t_rep    = 0;			//
+  // Bullet fire interval (0: no auto-fire) e->g_width  = 0; e->g_height = 0;
+  //
+  // e->item     = 0;
+  //
+  // e->rep_c    = 0;
+  // e->cmd_c    = 0;
+  // e->v        = 64;
+  // e->vd       = 0;
+  // e->vx       = cosl(e->d,e->v);
+  // e->vy       = sinl(e->d,e->v);
+  //
+  // e->LLaserRef = 0;
+  //
+  // e->t_cmd.c      = 0;
+  // e->t_cmd.cmd    = TC_WAY;
+  // e->t_cmd.d      = 64;
+  // e->t_cmd.n      = 1;
+  // e->t_cmd.option = TE_NONE;
+  // e->t_cmd.type   = T_NORM;
+  // e->t_cmd.v      = 3;
+  // e->t_cmd.x      = 0;
+  // e->t_cmd.y      = 0;
+  //
+  // e->t_cmd.dw     = 16;
+  // e->t_cmd.ns     = 1;
+  // e->t_cmd.rep    = 0;
+  // e->t_cmd.vd     = 0;
+  //
+  //
+  // // Initialize variable registers //
+  // e->GR[0] = e->GR[1] = e->GR[2] = e->GR[3] = 0;
+  // e->GR[4] = e->GR[5] = e->GR[6] = e->GR[7] = 0;
+  //
+  // // Initialize interrupt vectors //
+  // Enemies.InitInterrupts(e);
 }
 
 //
@@ -717,9 +718,9 @@ void ScrollManager::Draw() {
     Effects.DrawStg4Rocks();
   }
   //
-          // if(scroll.ExCmd==ScrollCmdStg2Boss){
-          //         ExDraw();
-          // }
+  // if(scroll.ExCmd==ScrollCmdStg2Boss){
+  //         ExDraw();
+  // }
 }
 
 // Change scroll speed (arg: (1) scroll speed)
@@ -812,13 +813,14 @@ static void ScrollCmdDummy() {
 // Stage 2 boss scroll
 static void ScrollCmdStg2Boss() {
   //
-  //         SSP	-810	TR	10			SSP	-630	TR
-      // 10 SSP	-450	TR	10			SSP	-270	TR
-      // 10 SSP	-180	TR	10			SSP	-90
-      // TR	10 SSP	0		TR	10			SSP	90
-      // TR	10 SSP	180		TR	10			SSP	450
-      // TR	10 SSP	630		TR	10			SSP	810
-      // TR	300
+  //         SSP	-810	TR	10			SSP	-630
+  //         TR
+  // 10 SSP	-450	TR	10			SSP	-270	TR
+  // 10 SSP	-180	TR	10			SSP	-90
+  // TR	10 SSP	0		TR	10			SSP	90
+  // TR	10 SSP	180		TR	10			SSP	450
+  // TR	10 SSP	630		TR	10			SSP	810
+  // TR	300
   //
   // Branch by special timer
   switch (Scroller.scroll.ExCount) {
@@ -1002,27 +1004,27 @@ bool ScrollManager::Init() {
   }
 
   //
-          // Prepare loading
-          // auto in = FilStartR("GIAN_MAP.DAT");
-          // if(!in) {
-          //         return false;
-          // }
-          //
-          // Free memory if already loaded
-          // if(scroll.DataHead != nullptr) {
-          //         LocalFree(scroll.DataHead);
-          //         scroll.DataHead = nullptr;
-          // }
-          // Otherwise, initialize scroll info
-          // else if(!InitScrollInfo()) {
-          //         return false;
-          // }
-          //
-          // Decompress (TODO: change to stage-aware version)
-          // scroll.DataHead = in->MemExpand(0);
-          // if(!scroll.DataHead) {
-          //         return false;
-          // }
+  // Prepare loading
+  // auto in = FilStartR("GIAN_MAP.DAT");
+  // if(!in) {
+  //         return false;
+  // }
+  //
+  // Free memory if already loaded
+  // if(scroll.DataHead != nullptr) {
+  //         LocalFree(scroll.DataHead);
+  //         scroll.DataHead = nullptr;
+  // }
+  // Otherwise, initialize scroll info
+  // else if(!InitScrollInfo()) {
+  //         return false;
+  // }
+  //
+  // Decompress (TODO: change to stage-aware version)
+  // scroll.DataHead = in->MemExpand(0);
+  // if(!scroll.DataHead) {
+  //         return false;
+  // }
   // Standard scroll speed (same as map editor)
   auto *head = scroll.DataHead.get();
   scroll.ScrollSpeed = TIME_PER_FRAME; // Standard scroll speed

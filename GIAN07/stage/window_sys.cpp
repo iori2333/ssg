@@ -2,15 +2,16 @@
 /// WindowSys - Command window processing
 ///
 
+#include <utility>
+
 #include "window_sys.h"
 
-#include "game/enum_flags.h"
-#include "game/input.h"
-#include "game/snd.h"
-#include "loader.h"
+#include "audio/snd.h"
+#include "core/loader.h"
 #include "menu/menu_renderer.h"
 #include "platform/text_backend.h"
-#include <utility>
+#include "sys/input.h"
+#include "util/enum_flags.h"
 
 // [MenuDef / MenuItem methods]
 

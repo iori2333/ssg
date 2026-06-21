@@ -10,7 +10,7 @@
 //            : the laser being fired by that enemy
 
 #include "enemy/enemy.h"
-#include "platform/graphics_backend.h"
+#include "gfx/graphics_backend.h"
 
 // Laser constants 2
 inline constexpr auto LLASER_MAX = 20;
@@ -48,8 +48,7 @@ struct LongLaserCommand {
 
 // Laser struct 2
 struct LongLaserData {
-  EnemyData
-      *e; // Pointer to enemy data (boss or minion can fire)
+  EnemyData *e; // Pointer to enemy data (boss or minion can fire)
 
   int x, y;       // Current display coordinates
   int dx, dy;     // Offset from enemy data (x64)

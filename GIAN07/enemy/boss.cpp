@@ -2,23 +2,23 @@
 /// Boss.cpp   Boss processing (including mid-bosses)
 ///
 
-#include "boss.h"
-
 #include <algorithm>
 #include <format>
+#include <utility>
 
-#include "bomb_efc.h" // Explosion effect processing
+#include "boss.h"
 #include "boss_manager.h"
 #include "enemy_ex_ctrl.h"
-#include "font_uty.h"
-#include "game/cast.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
-#include "loader.h"
-#include "platform/graphics_backend.h"
-#include <utility>
+
+#include "audio/snd.h"
+#include "core/gian.h"
+#include "core/loader.h"
+#include "effect/bomb_efc.h"
+#include "effect/font_uty.h"
+#include "effect/geometry.h"
+#include "gfx/graphics_backend.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
 
 ///// [ Constants ] /////
 
@@ -499,11 +499,9 @@ void BossManager::DrawHPG() {
         }
       }
     } else if (hpg.SCLTimerEnd > 0) {
-      const int remain =
-          std::min((hpg.SCLTimerEnd -
-                    static_cast<int32_t>(GameState.game_count)) /
-                       60,
-                   99);
+      const int remain = std::min(
+          (hpg.SCLTimerEnd - static_cast<int32_t>(Games.game_count)) / 60,
+          99);
       if (remain >= 0) {
         if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
           Snd_SEPlay(SOUND_ID_SBLASER);

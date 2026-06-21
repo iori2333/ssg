@@ -16,4 +16,4 @@ struct GameManager {
   bool is_demoplay = false;
 };
 
-extern GameManager GameState;
+extern GameManager Games;

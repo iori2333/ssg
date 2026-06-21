@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include "demo_play.h"
 #include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
+
+#include "demo_play.h"
 
 struct DemoManager {
   bool load_enable = false;

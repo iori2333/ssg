@@ -2,16 +2,17 @@
 /// Effect - Effect management
 ///
 
-#include "effect.h"
-
-#include "font_uty.h"
-#include "game/cast.h"
-#include "game/snd.h"
-#include "game/ut_math.h"
-#include "geometry.h"
-#include "gian.h"
-#include "platform/text_backend.h"
 #include <algorithm>
+
+#include "effect.h"
+#include "font_uty.h"
+#include "geometry.h"
+
+#include "audio/snd.h"
+#include "core/gian.h"
+#include "platform/text_backend.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
 
 // string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect,
 // mtitle_strs[] moved to EffectManager in effect_manager.cpp

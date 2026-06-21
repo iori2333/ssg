@@ -4,10 +4,11 @@
 
 #pragma once
 
-#include "boss.h"
-#include "enemy_ex_ctrl.h"
 #include <array>
 #include <cstdint>
+
+#include "boss.h"
+#include "enemy_ex_ctrl.h"
 
 struct BossManager {
   std::array<BossData, BOSS_MAX> bosses; // Boss[]

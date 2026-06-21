@@ -2,19 +2,19 @@
 /// UIManager - UI manager
 ///
 
-#include "ui_manager.h"
+#include <algorithm>
 
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_misc.h>
 
-#include "config.h"
-#include "demo_play.h"
-#include "game/bgm.h"
-#include "game_main.h"
-#include "gameflow/demo_manager.h"
-#include "gameflow/gameflow_manager.h"
+#include "ui_manager.h"
 
-#include <algorithm>
+#include "audio/bgm.h"
+#include "core/config.h"
+#include "gameflow/demo_manager.h"
+#include "gameflow/demo_play.h"
+#include "gameflow/game_main.h"
+#include "gameflow/gameflow_manager.h"
 
 // Only global instance
 UIManager UI;

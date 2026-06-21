@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "game/endian.h"
-#include "platform/file.h"
 #include <array>
+
+#include "sys/file.h"
+#include "util/endian.h"
 
 // Format
 // ------
@@ -91,8 +92,9 @@ struct PACKFILE_READ {
 struct PACKFILE_WRITE {
   std::vector<BYTE_BUFFER_BORROWED> files;
 
-  bool Write(const char *s,
-             std::optional<FILE_TIMESTAMPS> maybe_timestamps = std::nullopt) const;
+  bool
+  Write(const char *s,
+        std::optional<FILE_TIMESTAMPS> maybe_timestamps = std::nullopt) const;
 };
 
 BIT_FILE_READ BitFilCreateR(const char *s);
