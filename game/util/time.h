@@ -1,6 +1,7 @@
 ///
 /// Platform-specific time interface
 ///
+#pragma once
 
 #include <cstdint>
 

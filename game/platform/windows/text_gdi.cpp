@@ -2,23 +2,25 @@
 /// Text rendering via GDI
 ///
 
-#include "platform/text_backend.h"
-#include "platform/windows/surface_gdi.h"
 #include <vector>
+
 #include <windows.h>
+
+#include "surface_gdi.h"
+
+#include "platform/text_backend.h"
 
 extern const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs;
 
-template <typename F>
-auto WithWideUTF8(std::string_view str, F &&func) {
-  const int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-                                      str.data(), (int)str.size(), nullptr, 0);
+template <typename F> auto WithWideUTF8(std::string_view str, F &&func) {
+  const int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str.data(),
+                                      (int)str.size(), nullptr, 0);
   if (len <= 0) {
     return decltype(func(std::wstring_view{})){};
   }
   std::vector<wchar_t> buf(len);
-  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-                      str.data(), (int)str.size(), buf.data(), len);
+  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str.data(),
+                      (int)str.size(), buf.data(), len);
   return func(std::wstring_view{buf.data(), buf.size()});
 }
 
@@ -51,14 +53,13 @@ public:
 PIXEL_SIZE TextGDIExtent(std::optional<HFONT> font, std::string_view str) {
   const auto hdc = GrpSurface_GDIText_Surface().dc;
   const auto font_prev = (font ? SelectObject(hdc, font.value()) : nullptr);
-  const auto ret =
-      WithWideUTF8(str, [&](const std::wstring_view str_w) {
-        SIZE ret = {0, 0};
-        if (!GetTextExtentPoint32W(hdc, str_w.data(), str_w.size(), &ret)) {
-          return PIXEL_SIZE{0, 0};
-        }
-        return PIXEL_SIZE{ret.cx, ret.cy};
-      });
+  const auto ret = WithWideUTF8(str, [&](const std::wstring_view str_w) {
+    SIZE ret = {0, 0};
+    if (!GetTextExtentPoint32W(hdc, str_w.data(), str_w.size(), &ret)) {
+      return PIXEL_SIZE{0, 0};
+    }
+    return PIXEL_SIZE{ret.cx, ret.cy};
+  });
   if (font && font_prev) {
     SelectObject(hdc, font_prev);
   }
@@ -138,8 +139,7 @@ PIXEL_SIZE TEXTRENDER_SESSION::Extent(std::string_view str) {
 }
 
 void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
-                             std::string_view str,
-                             std::optional<RGB> color) {
+                             std::string_view str, std::optional<RGB> color) {
   WithWideUTF8(str, [&](const std::wstring_view str_w) {
     const auto hdc = GrpSurface_GDIText_Surface().dc;
     if (color) {

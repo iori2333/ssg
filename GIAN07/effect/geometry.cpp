@@ -3,6 +3,7 @@
 ///
 
 #include "geometry.h"
+
 #include "util/ut_math.h"
 
 namespace Geometry {

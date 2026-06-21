@@ -2,14 +2,15 @@
 /// Lens - Lens effect
 ///
 
+#include <cassert>
+#include <utility>
+
 #include "lens.h"
+
 #include "core/constants.h"
+#include "gfx/graphics_backend.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
-#include "gfx/graphics_backend.h"
-#include <cassert>
-
-#include <utility>
 
 // Create a lens with radius:r and bulge:m
 std::optional<LensInfo> GrpCreateLensBall(uint16_t r, uint16_t m) {

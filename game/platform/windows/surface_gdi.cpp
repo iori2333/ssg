@@ -2,12 +2,16 @@
 /// 2D surfaces via GDI bitmaps
 ///
 
-#include "platform/windows/surface_gdi.h"
+#include <array>
+#include <cassert>
+#include <cstddef>
+
+#include <windows.h>
+
+#include "surface_gdi.h"
+
 #include "gfx/format_bmp.h"
 #include "sys/file.h"
-#include <array>
-#include <assert.h>
-#include <stddef.h> // for offsetof()
 
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")

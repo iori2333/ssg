@@ -2,10 +2,10 @@
 /// Integer-only math functions (modernized floating-point implementation)
 ///
 
-#include "ut_math.h"
-
 #include <cmath>
 #include <type_traits>
+
+#include "ut_math.h"
 
 static ut_math_detail::Rng g_rng; // Global random number instance
 

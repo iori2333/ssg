@@ -2,7 +2,6 @@
 /// SDL window creation
 ///
 
-// SDL headers must come first to avoid import→#include bugs on Clang 19.
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_hints.h>
 #include <SDL3/SDL_mouse.h>
@@ -11,16 +10,17 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
 
-#include "core/constants.h"
+#include "frame.h"
+#include "graphics.h"
+#include "graphics_backend.h"
+#include "window_backend.h"
+#include "window_sdl.h"
+
 #include "audio/bgm.h"
-#include "gfx/frame.h"
-#include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
+#include "audio/snd_backend.h"
+#include "core/constants.h"
 #include "sys/input.h"
 #include "sys/log.h"
-#include "gfx/window_sdl.h"
-#include "audio/snd_backend.h"
-#include "gfx/window_backend.h"
 
 constexpr auto LOG_CAT = SDL_LOG_CATEGORY_VIDEO;
 

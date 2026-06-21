@@ -2,24 +2,25 @@
 /// Loader - Resource loading and MIDI loop point references
 ///
 
+#include <cassert>
+#include <utility>
+
 #include "config.h"
-#include "enemy/enemy.h"
-#include "util/enum_array.h"
-#include "gfx/format_bmp.h"
-#include "gfx/graphics.h"
-#include "util/hash.h"
+#include "lz_uty.h"
+
 #include "audio/midi.h"
 #include "audio/snd.h"
 #include "core/gian.h"
-#include "lz_uty.h"
-#include "stage/music.h"
+#include "enemy/enemy.h"
+#include "gfx/format_bmp.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
+#include "stage/music.h"
+#include "stage/window_sys.h"
 #include "sys/path.h"
 #include "sys/thread.h"
-#include "stage/window_sys.h"
-#include <cassert>
-
-#include <utility>
+#include "util/enum_array.h"
+#include "util/hash.h"
 
 #include "scripts_data.h"
 
@@ -27,7 +28,7 @@ static BYTE_BUFFER_BORROWED LoadEmbeddedScript(int filno) {
   for (size_t i = 0; i < embedded_script_count; i++) {
     if (embedded_scripts[i].index == filno) {
       return BYTE_BUFFER_BORROWED(embedded_scripts[i].data,
-                                   embedded_scripts[i].size);
+                                  embedded_scripts[i].size);
     }
   }
   return {};
@@ -335,8 +336,7 @@ void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
       auto cursor = file.cursor();
 
       std::string_view title, comment;
-      if (const auto title_len_val =
-              cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+      if (const auto title_len_val = cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
         const auto title_len = title_len_val.value()[0];
         if (cursor.cursor + title_len <= cursor.size()) {
           title = {reinterpret_cast<const char *>(&cursor[cursor.cursor]),
@@ -344,8 +344,7 @@ void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
           cursor.next<uint8_t>(title_len);
         }
       }
-      if (const auto comment_len_val =
-              cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
+      if (const auto comment_len_val = cursor.next<ENDIAN_LITTLE<uint32_t>>()) {
         const auto comment_len = comment_len_val.value()[0];
         if (cursor.cursor + comment_len <= cursor.size()) {
           comment = {reinterpret_cast<const char *>(&cursor[cursor.cursor]),
@@ -695,8 +694,7 @@ bool LoadFace(uint8_t FaceID, uint8_t FileNo) {
 }
 
 // Set map palette
-void LoadPaletteFromMAP() {
-}
+void LoadPaletteFromMAP() {}
 
 // Load ECL & SCL data into memory //
 bool LoadStageData(uint8_t stage) {
@@ -741,20 +739,19 @@ bool LoadStageData(uint8_t stage) {
     }
 
     // ECL Load
-    if ((Enemies.ecl_head =
-             LoadEmbeddedScript(stage + 0 - 1)).data() == nullptr) {
+    if ((Enemies.ecl_head = LoadEmbeddedScript(stage + 0 - 1)).data() ==
+        nullptr) {
       return false;
     }
 
     // SCL Load
-    if ((Enemies.scl_head =
-             LoadEmbeddedScript(stage + 6 - 1)).data() == nullptr) {
+    if ((Enemies.scl_head = LoadEmbeddedScript(stage + 6 - 1)).data() ==
+        nullptr) {
       return false;
     }
 
     // MapData Load
-    if ((Scroller.scroll.DataHead = map_pack.MemExpand(stage - 1)) ==
-        nullptr) {
+    if ((Scroller.scroll.DataHead = map_pack.MemExpand(stage - 1)) == nullptr) {
       return false;
     }
   }
@@ -994,25 +991,29 @@ bool LoadStageData(uint8_t stage) {
     //                            Enemies.anime[10].size = { 104, 72 };
     //                            Enemies.anime[10].n      = 1;
     //                            Enemies.anime[10].mode   = ANM_NORM;
-    //                            Enemies.anime[10].ptn[0] = { 184, 208, 288, 280 };
+    //                            Enemies.anime[10].ptn[0] = { 184, 208, 288,
+    //                            280 };
     //
     //                            // Winged Right-I //
     //                            Enemies.anime[11].size = { 104, 72 };
     //                            Enemies.anime[11].n      = 1;
     //                            Enemies.anime[11].mode   = ANM_NORM;
-    //                            Enemies.anime[11].ptn[0] = { 288, 208, 392, 280 };
+    //                            Enemies.anime[11].ptn[0] = { 288, 208, 392,
+    //                            280 };
     //
     //                            // Winged Left-0 //
     //                            Enemies.anime[12].size = { 88, 80 };
     //                            Enemies.anime[12].n      = 1;
     //                            Enemies.anime[12].mode   = ANM_NORM;
-    //                            Enemies.anime[12].ptn[0] = { 200, 280, 288, 360 };
+    //                            Enemies.anime[12].ptn[0] = { 200, 280, 288,
+    //                            360 };
     //
     //                            // Winged Right-0 //
     //                            Enemies.anime[13].size = { 88, 80 };
     //                            Enemies.anime[13].n      = 1;
     //                            Enemies.anime[13].mode   = ANM_NORM;
-    //                            Enemies.anime[13].ptn[0] = { 288, 280, 376, 360 };
+    //                            Enemies.anime[13].ptn[0] = { 288, 280, 376,
+    //                            360 };
     SetAnimeRect2(Enemies.anime + 14, 0, 288, 159, 479);   // Clouds
     SetAnimeRect2(Enemies.anime + 15, 160, 384, 271, 479); //
     SetAnimeRect2(Enemies.anime + 16, 272, 368, 390, 478); //
@@ -1073,7 +1074,8 @@ bool LoadStageData(uint8_t stage) {
     //	Enemies.anime[9].size = { (11 * 16), ((5 *16) + 8) };
     //            Enemies.anime[9].n      = 1;
     //            Enemies.anime[9].mode   = ANM_NORM;
-    //            Enemies.anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 * 16),
+    //            Enemies.anime[9].ptn[0] = PIXEL_LTWH{ 464, (392 - 88), (11 *
+    //            16),
     //       ((5 * 16)
     //       + 8) };
     break;
@@ -1100,11 +1102,12 @@ bool LoadStageData(uint8_t stage) {
     Enemies.anime[7].ptn[0] = {0, 296, 304, 480};
     break;
 
-  case 5:                                                // Master's stage
-    Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});  // Red one
-    Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32}); // Red one appearance effect
-    Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64}); // Blue one
-    Enemies.anime[3].SetSheetDeg<32>({.x = 0, .y = 96}); // Green one
+  case 5:                                               // Master's stage
+    Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0}); // Red one
+    Enemies.anime[1].SetSheetDeg<32>(
+        {.x = 0, .y = 32}); // Red one appearance effect
+    Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64});  // Blue one
+    Enemies.anime[3].SetSheetDeg<32>({.x = 0, .y = 96});  // Green one
     Enemies.anime[4].SetSheetDeg<32>({.x = 0, .y = 128}); // Orange one
     Enemies.anime[5].SetSheet<4, 32>({.x = 512, .y = 0},
                                      ANM_NORM); // Reactor-equipped bit

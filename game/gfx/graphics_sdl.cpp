@@ -2,25 +2,25 @@
 /// Graphics via SDL_Renderer
 ///
 
-// SDL headers must come first to avoid import→#include bugs on Clang 19.
+#include <format>
+#include <string>
+
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_render.h>
 
-#include <format>
-#include <string>
-
 using SDL_COLOR = SDL_FColor;
 
+#include "format_bmp.h"
+#include "graphics_sdl.h"
+#include "window_backend.h"
+#include "window_sdl.h"
+
 #include "core/constants.h"
-#include "util/guard.h"
-#include "util/enum_array.h"
-#include "gfx/format_bmp.h"
-#include "gfx/graphics_sdl.h"
-#include "sys/log.h"
-#include "gfx/window_sdl.h"
 #include "platform/text_backend.h"
-#include "gfx/window_backend.h"
+#include "sys/log.h"
+#include "util/enum_array.h"
+#include "util/guard.h"
 
 static constexpr auto LOG_CAT = SDL_LOG_CATEGORY_RENDER;
 

@@ -3,9 +3,10 @@
 ///
 #pragma once
 
-#include "gfx/text.h"
 #include <string>
 #include <string_view>
+
+#include "text.h"
 
 class TEXTRENDER_PACKED {
 protected:

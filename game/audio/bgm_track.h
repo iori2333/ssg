@@ -3,14 +3,15 @@
 ///
 #pragma once
 
-#include "util/hash.h"
-#include "sys/file.h"
-#include <compare>
 #include <chrono>
+#include <compare>
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <utility>
+
+#include "sys/file.h"
+#include "util/hash.h"
 
 // PCM sample format
 // -----------------

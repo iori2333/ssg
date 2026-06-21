@@ -5,8 +5,8 @@
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
 
-#include "sys/buffer.h"
-#include "sys/file.h"
+#include "buffer.h"
+#include "file.h"
 
 std::optional<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn) {
   std::error_code ec;
@@ -17,9 +17,8 @@ std::optional<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn) {
   return time;
 }
 
-bool File_CloseWithTimestamps(
-    SDL_IOStream *&&context, const char *path,
-    std::optional<FILE_TIMESTAMPS> maybe_time) {
+bool File_CloseWithTimestamps(SDL_IOStream *&&context, const char *path,
+                              std::optional<FILE_TIMESTAMPS> maybe_time) {
   const bool ret = SDL_CloseIO(context);
   if (maybe_time) {
     std::error_code ec;

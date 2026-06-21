@@ -2,21 +2,22 @@
 /// Bullet - Bullet firing and management
 ///
 
-#include "bullet.h"
+#include <utility>
 
+#include "bullet.h"
 #include "bullet_manager.h"
-#include "util/cast.h"
+
 #include "audio/snd.h"
-#include "util/ut_math.h"
 #include "core/gian.h"
 #include "core/level.h"
 #include "gfx/graphics_backend.h"
-#include <utility>
+#include "util/cast.h"
+#include "util/ut_math.h"
 
 //// Global variables → moved to BulletManager in bullet_manager.cpp
-// command, bullets, count_small, count_large → referenced from bullet_manager.cpp
-// (cross-module) indices_small, indices_large, max_small, max_large, speed
-// → accessed directly via bullet_manager.h
+// command, bullets, count_small, count_large → referenced from
+// bullet_manager.cpp (cross-module) indices_small, indices_large, max_small,
+// max_large, speed → accessed directly via bullet_manager.h
 
 //// Local functions ////
 // Private methods are declared in bullet_manager.h
@@ -34,8 +35,8 @@ void TamaEvadeAdd(Bullet *t) {
 void BulletManager::Spawn() {
   int v = 0;
 
-  // Do not change for NORMAL (in-game difficulty adjustment was planned but not implemented) //
-  // Probably should be written inside the switch... //
+  // Do not change for NORMAL (in-game difficulty adjustment was planned but not
+  // implemented) // Probably should be written inside the switch... //
   switch (Ranking.state.GameLevel) {
   case GameLevel::EASY:
     SetEasy();
@@ -813,9 +814,8 @@ uint8_t BulletManager::Dir(uint16_t i) const {
 }
 
 int BulletManager::NewSpeed(uint16_t i) const {
-  int temp = 0; // For setting random element
-  const int vret =
-      speed; // SPEEDM(command.v);	// Set base speed value (GIAN.H)
+  int temp = 0;           // For setting random element
+  const int vret = speed; // SPEEDM(command.v);	// Set base speed value (GIAN.H)
 
   // Speed randomness should maybe be n% of base value, but... //
   switch (command.v & 0xc0) {
@@ -937,8 +937,7 @@ void BulletManager::MoveByType(Bullet *t) {
   case T_HOMING_M: // N% homing (missile type?)
     // Not optimized... //
     if ((t->count > 19) && (t->count % 2 == 0)) {
-      deg_t =
-          atan8((Players.X()) - (t->x), (Players.Y()) - (t->y)) - (t->d);
+      deg_t = atan8((Players.X()) - (t->x), (Players.Y()) - (t->y)) - (t->d);
       if (deg_t < -128) {
         deg_t += 256;
       }
@@ -970,7 +969,8 @@ void BulletManager::MoveByType(Bullet *t) {
     }
     return;
 
-  case T_ROLL_A: // Rolling bullet (accelerating) initial acceleration must be "negative"!
+  case T_ROLL_A: // Rolling bullet (accelerating) initial acceleration must be
+                 // "negative"!
     t->v += t->a;
     if (t->a > 0) {
       t->d += Cast::sign<uint8_t>(t->vd);
@@ -991,7 +991,8 @@ void BulletManager::MoveByType(Bullet *t) {
     }
     return;
 
-  case T_ROLL_R: // Rolling bullet (reversing) same as above, watch acceleration!
+  case T_ROLL_R: // Rolling bullet (reversing) same as above, watch
+                 // acceleration!
     t->v += t->a;
     t->d += Cast::sign<uint8_t>(t->vd);
     t->tx += cosl(t->d, t->v);
@@ -1230,8 +1231,8 @@ void BulletManager::MoveByOption(Bullet *t) {
 }
 
 void BulletManager::MoveByEffect(Bullet *t) {
-  // TE_NONE: no effect, never comes to this function so writing here is meaningless //
-  // TE_DELETE: don't forget to set the delete request flag! //
+  // TE_NONE: no effect, never comes to this function so writing here is
+  // meaningless // TE_DELETE: don't forget to set the delete request flag! //
   switch (t->effect & 0xf0) {
   case TE_ROLL1:
     return;

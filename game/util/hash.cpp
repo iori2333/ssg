@@ -6,7 +6,7 @@
 // max_align_t'` if this appears after a module import.
 #include <blake3.h>
 
-#include "util/hash.h"
+#include "hash.h"
 
 static_assert(
     (sizeof(HASH) == BLAKE3_OUT_LEN),

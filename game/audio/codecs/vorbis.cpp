@@ -2,15 +2,15 @@
 /// Vorbis streaming support (adapted from thcrap's bgmmod module)
 ///
 
+#include <cassert>
+
 // GCC 15 throws an internal compiler error if this appears after a module
 // import.
 #define OV_EXCLUDE_STATIC_CALLBACKS
+#include <SDL3/SDL_iostream.h>
 #include <vorbis/vorbisfile.h>
 
-#include <SDL3/SDL_iostream.h>
-
 #include "audio/bgm_track.h"
-#include <assert.h>
 
 namespace BGM {
 
@@ -103,12 +103,10 @@ Vorbis_Open(SDL_IOStream &stream,
         if (vc->comment_lengths[i] < 2) {
           continue;
         }
-        BGM::OnVorbisComment(
-            *metadata_cb,
-            {
-                vc->user_comments[i],
-                static_cast<size_t>(len),
-            });
+        BGM::OnVorbisComment(*metadata_cb, {
+                                               vc->user_comments[i],
+                                               static_cast<size_t>(len),
+                                           });
       }
     }
   }

@@ -4,24 +4,24 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include <cinttypes> // for PRId64
-
+#include <cinttypes>
 #include <format>
 
+#include "music.h"
+
+#include "audio/bgm.h"
+#include "audio/midi.h"
+#include "audio/midi_backend.h"
+#include "core/loader.h"
 #include "effect/effect.h"
 #include "effect/font_uty.h"
-#include "audio/bgm.h"
-#include "util/debug.h"
-#include "sys/input.h"
-#include "audio/midi.h"
-#include "gfx/text.h"
-#include "util/ut_math.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
-#include "core/loader.h"
-#include "music.h"
-#include "audio/midi_backend.h"
+#include "gfx/text.h"
 #include "platform/text_backend.h"
+#include "sys/input.h"
+#include "util/debug.h"
+#include "util/ut_math.h"
 
 // Constants
 // ---------
@@ -104,25 +104,25 @@ void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
       reinterpret_cast<const char *>(comment_buf.get()), comment_buf.size()};
 
   TextObj.Render(topleft, comment, comment_str,
-                  [&comment_str](TEXTRENDER_SESSION &s) {
-                    int y = 0;
-                    s.SetFont(FONT_ID::SMALL);
-                    s.SetColor(ColorDefault);
+                 [&comment_str](TEXTRENDER_SESSION &s) {
+                   int y = 0;
+                   s.SetFont(FONT_ID::SMALL);
+                   s.SetColor(ColorDefault);
 
-                    size_t pos = 0;
-                    while (pos < comment_str.size()) {
-                      const auto nl = comment_str.find('\n', pos);
-                      const auto line = comment_str.substr(pos, nl - pos);
-                      if (!line.empty() || nl != std::string_view::npos) {
-                        s.Put({.x = 0, .y = y}, line);
-                        y += 16;
-                      }
-                      if (nl == std::string_view::npos) {
-                        break;
-                      }
-                      pos = nl + 1;
-                    }
-                  });
+                   size_t pos = 0;
+                   while (pos < comment_str.size()) {
+                     const auto nl = comment_str.find('\n', pos);
+                     const auto line = comment_str.substr(pos, nl - pos);
+                     if (!line.empty() || nl != std::string_view::npos) {
+                       s.Put({.x = 0, .y = y}, line);
+                       y += 16;
+                     }
+                     if (nl == std::string_view::npos) {
+                       break;
+                     }
+                     pos = nl + 1;
+                   }
+                 });
 }
 
 bool MusicRoomInit() {

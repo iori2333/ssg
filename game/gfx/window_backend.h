@@ -23,8 +23,6 @@ SDL_Window *WndBackend_SDL(void);
 // running. Fails if the window already exists.
 std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS);
 
-
-
 void WndBackend_Cleanup(void);
 // --------------
 

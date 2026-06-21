@@ -5,14 +5,17 @@
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
 #include <algorithm>
-#include <malloc.h>
 #include <thread>
+
+#include <malloc.h>
+
+#include "midi.h"
+#include "midi_backend.h"
+#include "volume.h"
 
 #include "util/endian.h"
 #include "util/enum_flags.h"
-#include "audio/midi.h"
-#include "audio/volume.h"
-#include "audio/midi_backend.h"
+
 #pragma message(PBGWIN_PBGMIDI_H)
 
 using namespace std::chrono_literals;
@@ -226,7 +229,8 @@ void Mid_Play(void) {
   Mid_Dev.FadeNowVolume = VOLUME_MAX;
 
   // Master Volume: F0 7F 7F 04 01 VolumeLowByte VolumeHighByte F7
-  // Lower byte is apparently treated as 00 on the Roland SC-88ST Pro (per the manual)
+  // Lower byte is apparently treated as 00 on the Roland SC-88ST Pro (per the
+  // manual)
   //
   // On both the Microsoft GS Wavetable Synth and all Yamaha XG synths I
   // tested on, sending a MIDI Universal Realtime Master Volume message right
@@ -683,7 +687,8 @@ void MID_EVENT::Send(void) const {
 
 void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
   switch (event.kind) {
-  case MID_EVENT_KIND::META: // Meta events (only those without output are processed)
+  case MID_EVENT_KIND::META: // Meta events (only those without output are
+                             // processed)
     switch (event.meta) {
     case 0x2f: // End of Track
       if (track.loop_it) {

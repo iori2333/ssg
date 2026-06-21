@@ -4,23 +4,24 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
-#include <cstdint>
 
 // [Change history]
 
-// 2000/02/17 : Started migration to new system. Completely separated from infinite laser
+// 2000/02/17 : Started migration to new system. Completely separated from
+// infinite laser
 
 //-> A bit old from here (1999..)
 // (4/3)  10:36 Development started
-// (4/6)  12:00 Polygon & clipping function finally completed. When will rendering be done?
-// (4/7)  12:02 Decided to handle all lasers with the same structure
-// (4/8)   7:23 Infinite laser creation
-// (4/9)   2:01 Finished implementing reflect laser
-// (4/9)   2:59 Reflect laser complete
-// (4/11) 14:05 Short & reflect laser collision detection complete
-// (4/11) 15:17 Enhanced reflector hit check (bug fixed but slower)
+// (4/6)  12:00 Polygon & clipping function finally completed. When will
+// rendering be done? (4/7)  12:02 Decided to handle all lasers with the same
+// structure (4/8)   7:23 Infinite laser creation (4/9)   2:01 Finished
+// implementing reflect laser (4/9)   2:59 Reflect laser complete (4/11) 14:05
+// Short & reflect laser collision detection complete (4/11) 15:17 Enhanced
+// reflector hit check (bug fixed but slower)
 //
 // (9/23) 16:18 Line drawing, ECL support, etc. completed
 
@@ -81,6 +82,7 @@ struct LASER_DATA {
 // Implementation migrated to LaserManager methods
 
 // Laser various variables
-// Access directly via Lasers.cmd, Lasers.count, Lasers.lasers, Lasers.laser_indices
-// extern REFLECTOR	Reflector[RT_MAX];		// Reflector structure
-// extern uint16_t	ReflectorNow;	// Reflector count
+// Access directly via Lasers.cmd, Lasers.count, Lasers.lasers,
+// Lasers.laser_indices extern REFLECTOR	Reflector[RT_MAX];
+// // Reflector structure extern uint16_t	ReflectorNow;	// Reflector
+// count

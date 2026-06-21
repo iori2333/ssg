@@ -4,13 +4,13 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "menu/panels.h"
 #include "menu/scroll_menu.h"
 #include "msg_window/msg_window.h"
 #include "window_sys.h"
-
-#include <string>
-#include <vector>
 
 class UIManager {
 public:
@@ -54,8 +54,7 @@ private:
   // Replay Files scroll menu callback
   size_t ReplayFilesListSize();
   void ReplayFilesGenerate(MenuItem &ret, size_t generated, size_t selected);
-  bool ReplayFilesHandle(MenuController &ctrl, INPUT_BITS key,
-                         size_t selected);
+  bool ReplayFilesHandle(MenuController &ctrl, INPUT_BITS key, size_t selected);
 
   // --- Message window ---
   MsgWindow msg_window_;

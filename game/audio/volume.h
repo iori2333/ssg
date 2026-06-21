@@ -3,10 +3,11 @@
 ///
 #pragma once
 
-#include "util/cast.h"
-#include <assert.h>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
+
+#include "util/cast.h"
 
 // Discrete volume values for MIDI and the UI.
 using VOLUME = uint8_t;

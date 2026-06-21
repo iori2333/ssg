@@ -11,13 +11,14 @@
 
 #include <format>
 
-#include "util/guard.h"
-#include "gfx/format_bmp.h"
-#include "gfx/graphics.h"
-#include "sys/input.h"
+#include "format_bmp.h"
+#include "graphics.h"
+#include "graphics_backend.h"
+
 #include "sys/file.h"
-#include "gfx/graphics_backend.h"
+#include "sys/input.h"
 #include "sys/path.h"
+#include "util/guard.h"
 
 uint8_t Grp_FPSDivisor = 0;
 std::chrono::steady_clock::duration

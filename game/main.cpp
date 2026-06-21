@@ -18,11 +18,11 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "core/entry.h"
-#include "util/guard.h"
-#include "sys/log.h"
-#include "gfx/window_backend.h"
 #include "core/constants.h"
+#include "core/entry.h"
+#include "gfx/window_backend.h"
+#include "sys/log.h"
+#include "util/guard.h"
 
 int main(int argc, char **args) {
   Log_Init(GAME_TITLE);

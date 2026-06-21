@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include "gfx/graphics.h"
-#include "sys/input.h"
+#include "level.h"
+
 #include "audio/midi.h"
 #include "audio/volume.h"
-#include "level.h"
+#include "gfx/graphics.h"
+#include "sys/input.h"
 
 // Limits
 constexpr auto STOCK_PLAYER_MAX = 6;

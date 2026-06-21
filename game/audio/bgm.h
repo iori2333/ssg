@@ -3,12 +3,13 @@
 ///
 #pragma once
 
-#include "util/hash.h"
-#include "sys/buffer.h"
 #include <chrono>
 #include <cstdint>
 #include <functional>
 #include <string_view>
+
+#include "sys/buffer.h"
+#include "util/hash.h"
 
 // Loads the BGM with the given 0-based [id] from the game's original BGM data
 // source.

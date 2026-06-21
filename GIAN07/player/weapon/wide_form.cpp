@@ -4,10 +4,10 @@
 
 #include "wide_form.h"
 
-#include "util/cast.h"
-#include "util/ut_math.h"
 #include "core/gian.h"
 #include "player/player.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
 
 // --- WideForm (base: spread shot) ---
 

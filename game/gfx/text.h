@@ -3,11 +3,13 @@
 ///
 #pragma once
 
-#include "core/constants.h"
-#include "gfx/coords.h"
-#include "util/enum_array.h"
-#include "gfx/graphics.h"
 #include <string_view>
+
+#include "coords.h"
+#include "graphics.h"
+
+#include "core/constants.h"
+#include "util/enum_array.h"
 
 using TEXTRENDER_RECT_ID = unsigned int;
 
@@ -27,8 +29,8 @@ concept TEXTRENDER_SESSION_BASE =
        // current font.
        { t.Extent(str) } -> std::same_as<PIXEL_SIZE>;
 
-        // Text display with the current color and font. [str] can be either
-        // UTF-8 or GBK.
+       // Text display with the current color and font. [str] can be either
+       // UTF-8 or GBK.
        t.Put(topleft_rel, str);
 
        // Convenience overload to change the color before rendering the text.

@@ -2,11 +2,13 @@
 /// .BMP file format
 ///
 
+#include <cassert>
+
 #include <SDL3/SDL_pixels.h>
 
-#include "gfx/format_bmp.h"
+#include "format_bmp.h"
+
 #include "sys/file.h"
-#include <assert.h>
 
 uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {
   const auto ret = [bpp]() -> uint16_t {

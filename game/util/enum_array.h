@@ -4,7 +4,7 @@
 #pragma once
 
 #include <array>
-#include <assert.h>
+#include <cassert>
 #include <type_traits>
 #include <utility>
 

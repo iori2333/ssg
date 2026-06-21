@@ -2,9 +2,10 @@
 /// Rectangle packing for text rendering (adapted from rectpack2D)
 ///
 
-#include "gfx/text_packed.h"
-#include "gfx/graphics_backend.h"
-#include <assert.h>
+#include <cassert>
+
+#include "graphics_backend.h"
+#include "text_packed.h"
 
 struct created_splits {
   int count = 0;

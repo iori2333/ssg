@@ -4,10 +4,11 @@
 
 #pragma once
 
-#include "gfx/coords.h"
-#include "util/endian.h"
-#include "gfx/pixelformat.h"
+#include "coords.h"
+#include "pixelformat.h"
+
 #include "sys/file.h"
+#include "util/endian.h"
 
 // Platform-independent .BMP header types
 // --------------------------------------

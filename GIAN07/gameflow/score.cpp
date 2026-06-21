@@ -4,16 +4,18 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
-#include "score.h"
-#include "util/guard.h"
-#include "core/level.h"
-#include "core/lz_uty.h"
-#include "score_manager.h"
 #include <array>
-#include <cinttypes> // for PRId64
+#include <cinttypes>
 #include <format>
 #include <ranges>
 #include <utility>
+
+#include "score.h"
+#include "score_manager.h"
+
+#include "core/level.h"
+#include "core/lz_uty.h"
+#include "util/guard.h"
 
 // Type aliases moved to private in score_manager.h
 // ScoreData moved to Scores.score_cache
@@ -59,7 +61,7 @@ uint8_t ScoreManager::SetScoreString(NrNameData *NData, GameLevel Dif) {
       p[i] = p[i - 1]; // struct assignment
     }
 
-  // Insert new data
+    // Insert new data
     p[rank - 1] = *NData;
   }
 
@@ -97,7 +99,7 @@ uint8_t ScoreManager::IsHighScore(const NrNameData *NData, GameLevel Dif) {
   }
   auto score_guard = make_guard([this] { ReleaseScoreData(); });
 
-// Assign pointer by difficulty
+  // Assign pointer by difficulty
   const auto maybe_temp = GetNList(Dif);
   if (!maybe_temp) {
     return 0;

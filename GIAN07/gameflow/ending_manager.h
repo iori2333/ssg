@@ -4,15 +4,17 @@
 
 #pragma once
 
-#include "ending.h"
-#include "gfx/coords.h"
-#include "gfx/graphics.h"
-#include "core/loader.h"
-#include "platform/text_backend.h"
 #include <array>
 #include <cstdint>
 #include <string>
 #include <string_view>
+
+#include "ending.h"
+
+#include "core/loader.h"
+#include "gfx/coords.h"
+#include "gfx/graphics.h"
+#include "platform/text_backend.h"
 
 struct EndingManager {
   // === Nested types (formerly static types in ENDING.cpp) ===
@@ -100,7 +102,8 @@ private:
 
 extern EndingManager Ending;
 
-// === Backward-compatible inline wrapper (GameMain state machine entry point, must be kept) ===
+// === Backward-compatible inline wrapper (GameMain state machine entry point,
+// must be kept) ===
 inline bool EndingInit() { return Ending.Init(); }
 inline void EndingProc(bool &q) { Ending.Proc(q); }
 inline void EndingDraw() { Ending.Draw(); }

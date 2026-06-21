@@ -4,10 +4,11 @@
 
 #pragma once
 
-#include "gfx/text.h"
-#include "stage/window_sys.h" // MSG_HEIGHT, WINDOW_LTRB, FONT_ID, MenuController
 #include <optional>
 #include <string>
+
+#include "gfx/text.h"
+#include "stage/window_sys.h"
 
 // Message window flags
 enum class MsgWindowFlags : uint8_t {
@@ -24,15 +25,15 @@ enum class MsgWindowFlags : uint8_t {
 class MsgWindow {
 public:
   void Init(const WINDOW_LTRB &rc, MsgWindowFlags flags = MsgWindowFlags::NONE);
-  void Open();                       // Open the message window
-  void Close();                      // Close the message window
-  void ForceClose();                 // Force close the message window
-  void Tick();                       // Run message window logic
-  void Draw();                       // Draw the message window
+  void Open();                    // Open the message window
+  void Close();                   // Close the message window
+  void ForceClose();              // Force close the message window
+  void Tick();                    // Run message window logic
+  void Draw();                    // Draw the message window
   void Msg(std::string_view str); // Send a message string
-  void Face(uint8_t faceID);         // Set the face portrait
-  void Cmd(uint8_t cmd);             // Send a command
-  void Help(MenuController *ws);     // Send help text to the message window
+  void Face(uint8_t faceID);      // Set the face portrait
+  void Cmd(uint8_t cmd);          // Send a command
+  void Help(MenuController *ws);  // Send help text to the message window
 
 private:
   void MsgBlank(); // Clear strings and reset to first line

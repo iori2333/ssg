@@ -4,9 +4,11 @@
 
 #pragma once
 
-#include "core/constants.h"
-#include "gfx/graphics.h"
 #include <string_view>
+
+#include "graphics.h"
+
+#include "core/constants.h"
 
 /// Enumeration and pre-initialization queries
 /// ------------------------------------------
@@ -206,4 +208,4 @@ void GrpBackend_PixelAccessEdit(auto func) {
 }
 /// ------------------------------------
 
-#include "gfx/graphics_sdl.h"
+#include "graphics_sdl.h"

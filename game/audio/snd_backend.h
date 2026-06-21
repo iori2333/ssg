@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "audio/snd.h"
 #include <chrono>
+
+#include "snd.h"
 struct SDL_AudioSpec;
 
 bool SndBackend_Init(void);

@@ -2,13 +2,15 @@
 /// Sound interface
 ///
 
+#include <cassert>
+
 #include <SDL3/SDL_audio.h>
 
-#include "util/guard.h"
+#include "snd.h"
+#include "snd_backend.h"
+
 #include "util/enum_flags.h"
-#include "audio/snd.h"
-#include "audio/snd_backend.h"
-#include <assert.h>
+#include "util/guard.h"
 
 float Snd_BGMGainFactor = 1.0f;
 

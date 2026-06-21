@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "gfx/text_packed.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/text_packed.h"
 
 class TEXTRENDER_SESSION {
 protected:

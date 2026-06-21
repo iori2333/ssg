@@ -3,13 +3,9 @@
 ///
 #pragma once
 
-#include "util/cast.h"
-#include "gfx/coords.h"
-#include "util/enum_flags.h"
-#include "gfx/pixelformat.h"
 #include <algorithm>
 #include <array>
-#include <assert.h>
+#include <cassert>
 #include <chrono>
 #include <compare>
 #include <concepts>
@@ -20,6 +16,12 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+
+#include "coords.h"
+#include "pixelformat.h"
+
+#include "util/cast.h"
+#include "util/enum_flags.h"
 
 // The backend will target a frame rate of
 //

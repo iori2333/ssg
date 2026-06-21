@@ -11,10 +11,12 @@
 //            : If there are MIDI backends that cannot keep up,
 //            : the message sending may need to be improved.
 
-#include "audio/volume.h"
-#include <string_view>
-#include "sys/buffer.h"
 #include <chrono>
+#include <string_view>
+
+#include "volume.h"
+
+#include "sys/buffer.h"
 
 enum class MID_FLAGS : uint8_t {
   HAS_BITFLAG_OPERATORS,

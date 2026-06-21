@@ -2,14 +2,15 @@
 /// Sound via miniaudio
 ///
 
-#include <SDL3/SDL_audio.h>
 #include <ranges>
 
+#include <SDL3/SDL_audio.h>
 #include <miniaudio.h>
 
-#include "audio/bgm_track.h"
+#include "bgm_track.h"
+#include "snd_backend.h"
+
 #include "util/guard.h"
-#include "audio/snd_backend.h"
 
 // Helpers
 // -------

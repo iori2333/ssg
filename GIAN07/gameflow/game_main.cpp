@@ -1,30 +1,32 @@
 ///
 /// GameMain - Window system switching and other processing
 ///
-#include "game_main.h"
-#include "effect/bomb_efc.h" // Explosion effect processing
-#include "core/config.h"
-#include "demo_manager.h"
-#include "demo_play.h"
-#include "effect/font_uty.h"
-#include "audio/bgm.h"
-#include "util/debug.h"
-#include "sys/input.h"
-#include "audio/snd.h"
-#include "util/ut_math.h"
-#include "effect/geometry.h"
-#include "core/gian.h"
-#include "effect/lens.h"
-#include "core/level.h"
-#include "stage/music.h"
-#include "platform/text_backend.h"
-#include "util/time.h"
-#include "score.h"
-#include "stage/ui_manager.h"
-#include "stage/window_sys.h"
 #include <algorithm>
 #include <chrono>
 #include <format>
+
+#include "demo_manager.h"
+#include "demo_play.h"
+#include "game_main.h"
+#include "score.h"
+
+#include "audio/bgm.h"
+#include "audio/snd.h"
+#include "core/config.h"
+#include "core/gian.h"
+#include "core/level.h"
+#include "effect/bomb_efc.h"
+#include "effect/font_uty.h"
+#include "effect/geometry.h"
+#include "effect/lens.h"
+#include "platform/text_backend.h"
+#include "stage/music.h"
+#include "stage/ui_manager.h"
+#include "stage/window_sys.h"
+#include "sys/input.h"
+#include "util/debug.h"
+#include "util/time.h"
+#include "util/ut_math.h"
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
 
@@ -104,9 +106,8 @@ GameLevel CurrentLevel() {
 bool ScoreNameInit() {
   GameFlow.current_dif = std::to_underlying(CurrentLevel());
 
-  GameFlow.current_rank =
-      Scores.SetScoreString(nullptr,
-                            static_cast<GameLevel>(GameFlow.current_dif));
+  GameFlow.current_rank = Scores.SetScoreString(
+      nullptr, static_cast<GameLevel>(GameFlow.current_dif));
   if (GameFlow.current_rank == 0) {
     return GameExit();
   }
@@ -153,8 +154,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SOUND_ID_SELECT);
     current_dif = (current_dif + 4) % 5;
-    current_rank = Scores.SetScoreString(
-        nullptr, static_cast<GameLevel>(current_dif));
+    current_rank =
+        Scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case KEY_DOWN:
@@ -982,7 +983,7 @@ void GameProc(bool & /*unused*/) {
   }
 }
 
-  // For game over appearance
+// For game over appearance
 void GameFlowManager::GameOverProc0(bool & /*unused*/) {
   switch (game_over_timer) {
   default:
@@ -1229,7 +1230,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       }
 #endif
     } else {
-    Players.SetCredits(0);
+      Players.SetCredits(0);
       Players.SetLives(2);
       Players.SetPower(255);
     }
@@ -1357,9 +1358,9 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     //	TextOut(hdc,0,0,buf,strlen(buf));
     //	DxObj.Back->ReleaseDC(hdc);
     //
-    //#ifdef PBG_DEBUG
+    // #ifdef PBG_DEBUG
     //		StdStatusOutput();
-    //#endif
+    // #endif
     Grp_Flip();
   }
 }
@@ -1462,10 +1463,10 @@ void PauseProc(bool & /*unused*/) {
   }
 }
 
-//inline XAdd(DWORD old,int id)
+// inline XAdd(DWORD old,int id)
 //{
 //	RndBuf[id] += (random_ref-old);
-//}
+// }
 
 void GameMove() {
   UI.MsgTick();

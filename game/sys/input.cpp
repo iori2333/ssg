@@ -2,19 +2,20 @@
 /// Cross-platform input
 ///
 
-// SDL headers must come first to avoid import->#include bugs on Clang 19.
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_joystick.h>
+#include <cassert>
 #include <limits>
 #include <optional>
 #include <ranges>
 #include <tuple>
 #include <vector>
 
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_joystick.h>
+
+#include "input.h"
+
 #include "util/enum_flags.h"
 #include "util/guard.h"
-#include "sys/input.h"
-#include <assert.h>
 
 // Global variable (Public) definitions
 INPUT_BITS Key_Data = 0;

@@ -26,4 +26,3 @@ struct BGRA {
   constexpr bool operator==(const BGRA &other) const = default;
 };
 static_assert(sizeof(BGRA) == 4);
-

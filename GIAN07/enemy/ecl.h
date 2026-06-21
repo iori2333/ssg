@@ -11,8 +11,8 @@
 // 2000/09/05 : Added HLASER
 // 2000/04/26 : Added LASER2
 // 2000/03/22 : Added LLaser instruction
-// 2000/03/15 : Added many instructions (interrupts, bullet clearing, register comparison)
-// 2000/02/18 : Started system update
+// 2000/03/15 : Added many instructions (interrupts, bullet clearing, register
+// comparison) 2000/02/18 : Started system update
 
 // [Constants]
 
@@ -21,21 +21,20 @@ inline constexpr auto ECL_CMD0 = 14;
 inline constexpr auto ECL_SETUP = 0x00; // Initialize enemy data
 inline constexpr auto ECL_END = 0x01;   // Force enemy elimination
 inline constexpr auto ECL_JMP = 0x02;   // Force jump
-inline constexpr auto ECL_LOOP =
-    0x03; // Loop (cannot nest, CX is not used...)
-inline constexpr auto ECL_CALL = 0x04; // Call subroutine
-inline constexpr auto ECL_RET = 0x05;  // Return from subroutine
-inline constexpr auto ECL_JHPL = 0x06; // Jump if HP is greater than specified value
-inline constexpr auto ECL_JHPS = 0x07; // Jump if HP is less than specified value
+inline constexpr auto ECL_LOOP = 0x03;  // Loop (cannot nest, CX is not used...)
+inline constexpr auto ECL_CALL = 0x04;  // Call subroutine
+inline constexpr auto ECL_RET = 0x05;   // Return from subroutine
+inline constexpr auto ECL_JHPL =
+    0x06; // Jump if HP is greater than specified value
+inline constexpr auto ECL_JHPS =
+    0x07; // Jump if HP is less than specified value
 inline constexpr auto ECL_JDIF = 0x08; // Switch by difficulty
 inline constexpr auto ECL_JDSB =
     0x09; // Jump if direction matches player (within ±4 error)
 inline constexpr auto ECL_JFCL = 0x0A; // Jump if frame counter is greater
 inline constexpr auto ECL_JFCS = 0x0B; // Jump if frame counter is smaller
-inline constexpr auto ECL_STI =
-    0x0C; // Set interrupt vector
-inline constexpr auto ECL_CLI =
-    0x0D; // Clear interrupt vector
+inline constexpr auto ECL_STI = 0x0C;  // Set interrupt vector
+inline constexpr auto ECL_CLI = 0x0D;  // Clear interrupt vector
 
 // 0x1? : Movement commands
 inline constexpr auto ECL_CMD1 = 16;
@@ -73,32 +72,35 @@ inline constexpr auto ECL_DEGEX = 0x2A; // Special angle set (use with EXDEGD)
 inline constexpr auto ECL_XYS = 0x2B;   // Player coordinate set
 inline constexpr auto ECL_DEGX2 = 0x2C; // Bounded random angle
 inline constexpr auto ECL_XYRND = 0x2D; // Bounded random coordinates
-inline constexpr auto ECL_XYL = 0x2E;   // Length-based relative coordinate (polar coordinates)
+inline constexpr auto ECL_XYL =
+    0x2E; // Length-based relative coordinate (polar coordinates)
 
 // 0x4? : Bullet fire commands
 inline constexpr auto ECL_CMD45 = 22;
 inline constexpr auto ECL_TAMA = 0x40; // Fire bullet
 inline constexpr auto ECL_TAUTO =
     0x41; // Set bullet fire interval (0: no auto-fire)
-inline constexpr auto ECL_TXYR = 0x42;   // Bullet fire position relative offset
-inline constexpr auto ECL_TCMD = 0x43;   // Bullet command
-inline constexpr auto ECL_TDEGA = 0x44;  // Bullet fire angle absolute set
-inline constexpr auto ECL_TDEGR = 0x45;  // Bullet fire angle relative set
-inline constexpr auto ECL_TNUMA = 0x46;  // Bullet count absolute set
-inline constexpr auto ECL_TNUMR = 0x47;  // Bullet count relative set
-inline constexpr auto ECL_TSPDA = 0x48;  // Bullet initial speed absolute set
-inline constexpr auto ECL_TSPDR = 0x49;  // Bullet initial speed relative set
-inline constexpr auto ECL_TOPT = 0x4a;   // Bullet option set
-inline constexpr auto ECL_TTYPE = 0x4b;  // Bullet type set
-inline constexpr auto ECL_TCOL = 0x4c;   // Bullet color/shape set
-inline constexpr auto ECL_TVDEG = 0x4d;  // Bullet angular velocity set
-inline constexpr auto ECL_TREP = 0x4e;   // Bullet repeat set
-inline constexpr auto ECL_TDEGS = 0x4f;  // Bullet fire angle player-set
-inline constexpr auto ECL_TDEGE = 0x50;  // Set bullet fire angle to own direction
-inline constexpr auto ECL_TAMA2 = 0x51;  // Fire bullet (no difficulty scaling)
-inline constexpr auto ECL_TCLR = 0x52;   // Clear all bullets
-inline constexpr auto ECL_TAMAL = 0x53;  // Fire bullets in a line
-inline constexpr auto ECL_T2ITEM = 0x54; // Convert percentage of bullets to items
+inline constexpr auto ECL_TXYR = 0x42;  // Bullet fire position relative offset
+inline constexpr auto ECL_TCMD = 0x43;  // Bullet command
+inline constexpr auto ECL_TDEGA = 0x44; // Bullet fire angle absolute set
+inline constexpr auto ECL_TDEGR = 0x45; // Bullet fire angle relative set
+inline constexpr auto ECL_TNUMA = 0x46; // Bullet count absolute set
+inline constexpr auto ECL_TNUMR = 0x47; // Bullet count relative set
+inline constexpr auto ECL_TSPDA = 0x48; // Bullet initial speed absolute set
+inline constexpr auto ECL_TSPDR = 0x49; // Bullet initial speed relative set
+inline constexpr auto ECL_TOPT = 0x4a;  // Bullet option set
+inline constexpr auto ECL_TTYPE = 0x4b; // Bullet type set
+inline constexpr auto ECL_TCOL = 0x4c;  // Bullet color/shape set
+inline constexpr auto ECL_TVDEG = 0x4d; // Bullet angular velocity set
+inline constexpr auto ECL_TREP = 0x4e;  // Bullet repeat set
+inline constexpr auto ECL_TDEGS = 0x4f; // Bullet fire angle player-set
+inline constexpr auto ECL_TDEGE =
+    0x50; // Set bullet fire angle to own direction
+inline constexpr auto ECL_TAMA2 = 0x51; // Fire bullet (no difficulty scaling)
+inline constexpr auto ECL_TCLR = 0x52;  // Clear all bullets
+inline constexpr auto ECL_TAMAL = 0x53; // Fire bullets in a line
+inline constexpr auto ECL_T2ITEM =
+    0x54; // Convert percentage of bullets to items
 inline constexpr auto ECL_TAMAEX = 0x55; // Extra boss bullet hell command
 
 // 0x6? : Laser fire commands
@@ -123,7 +125,8 @@ inline constexpr auto ECL_LXY =
     0x70; // Laser fire coordinate set (for thick laser?)
 inline constexpr auto ECL_LASER2 = 0x71; // Fire laser
 
-// 0x8? : Thick laser & homing laser commands (use above commands for struct set)
+// 0x8? : Thick laser & homing laser commands (use above commands for struct
+// set)
 inline constexpr auto ECL_CMD8 = 6;
 inline constexpr auto ECL_LLSET = 0x80;  // Thick laser set
 inline constexpr auto ECL_LLOPEN = 0x81; // Thick laser open
@@ -148,16 +151,17 @@ inline constexpr auto ECL_RLCHG_OFF = 0x99;  // Disable horizontal flip
 
 // 0xA? : Special commands
 inline constexpr auto ECL_CMDA = 16;
-inline constexpr auto ECL_ANM = 0xA0;       // Change animation
-inline constexpr auto ECL_PSE = 0xA1;       // Play sound effect
-inline constexpr auto ECL_INT = 0xA2;       // Generate boss interrupt...
-inline constexpr auto ECL_EXDEGD = 0xA3;    // Special angle set initialization
-inline constexpr auto ECL_ENEMYSET = 0xA4;  // Set enemy as minion
-inline constexpr auto ECL_ENEMYSETD = 0xA5; // Set enemy (with angle specification)
-inline constexpr auto ECL_HITXY = 0xA6;     // Change enemy hitbox
-inline constexpr auto ECL_ITEM = 0xA7;      // Set item type
-inline constexpr auto ECL_STG4EFC = 0xA8;   // Stage 4 boss sync effect management
-inline constexpr auto ECL_ANMEX = 0xA9;     // Set animation during damage
+inline constexpr auto ECL_ANM = 0xA0;      // Change animation
+inline constexpr auto ECL_PSE = 0xA1;      // Play sound effect
+inline constexpr auto ECL_INT = 0xA2;      // Generate boss interrupt...
+inline constexpr auto ECL_EXDEGD = 0xA3;   // Special angle set initialization
+inline constexpr auto ECL_ENEMYSET = 0xA4; // Set enemy as minion
+inline constexpr auto ECL_ENEMYSETD =
+    0xA5;                               // Set enemy (with angle specification)
+inline constexpr auto ECL_HITXY = 0xA6; // Change enemy hitbox
+inline constexpr auto ECL_ITEM = 0xA7;  // Set item type
+inline constexpr auto ECL_STG4EFC = 0xA8; // Stage 4 boss sync effect management
+inline constexpr auto ECL_ANMEX = 0xA9;   // Set animation during damage
 inline constexpr auto ECL_BITLASER = 0xAA;  // Bit laser command set
 inline constexpr auto ECL_BITATTACK = 0xAB; // Bit attack set
 inline constexpr auto ECL_BITCMD = 0xAC;    // Bit command send
@@ -167,8 +171,10 @@ inline constexpr auto ECL_STG3EFC = 0xAF;   // Stage 3 star effect activation
 
 // 0xB? : Register commands (x86 instruction-like)
 inline constexpr auto ECL_CMDB = 15;
-inline constexpr auto ECL_MOVR = 0xB0; // Register <-> struct variable assignment
-inline constexpr auto ECL_MOVC = 0xB1; // Register <- constant (immediate) assignment
+inline constexpr auto ECL_MOVR =
+    0xB0; // Register <-> struct variable assignment
+inline constexpr auto ECL_MOVC =
+    0xB1; // Register <- constant (immediate) assignment
 inline constexpr auto ECL_ADD = 0xB2;  // Add instruction
 inline constexpr auto ECL_SUB = 0xB3;  // Subtract instruction
 inline constexpr auto ECL_SINL = 0xB4; // sinl(Gr0,Gr1)
@@ -188,7 +194,8 @@ inline constexpr auto ECL_JEQ = 0xBE;  // Jump if comparison result is =
 // Lower interrupt vector numbers have higher priority
 inline constexpr auto ECLVECT_MAX = 4;         // Maximum interrupt vectors
 inline constexpr auto ECLVECT_BOSSLEFT = 0x00; // Boss remaining count interrupt
-inline constexpr auto ECLVECT_HP = 0x01; // Interrupt when HP is less than specified value
+inline constexpr auto ECLVECT_HP =
+    0x01; // Interrupt when HP is less than specified value
 inline constexpr auto ECLVECT_TIMER = 0x02;   // Timer interrupt
 inline constexpr auto ECLVECT_BITLEFT = 0x03; // Remaining bit count interrupt
 
@@ -202,29 +209,33 @@ inline constexpr auto ECLCST_GR5 = 5; // Register 5
 inline constexpr auto ECLCST_GR6 = 6; // Register 6
 inline constexpr auto ECLCST_GR7 = 7; // Register 7
 
-inline constexpr auto ECLCST_LCMD_D = (128 + 0);  // Laser command (angle)
-inline constexpr auto ECLCST_LCMD_DW = (128 + 1); // Laser command (angle difference)
-inline constexpr auto ECLCST_LCMD_N = (128 + 2);  // Laser command (count)
-inline constexpr auto ECLCST_LCMD_C = (128 + 3);  // Laser command (color)
-inline constexpr auto ECLCST_LCMD_L = (128 + 4);  // Laser command (length)
-inline constexpr auto ECLCST_LCMD_V = (128 + 5);  // Laser command (speed)
+inline constexpr auto ECLCST_LCMD_D = (128 + 0); // Laser command (angle)
+inline constexpr auto ECLCST_LCMD_DW =
+    (128 + 1); // Laser command (angle difference)
+inline constexpr auto ECLCST_LCMD_N = (128 + 2); // Laser command (count)
+inline constexpr auto ECLCST_LCMD_C = (128 + 3); // Laser command (color)
+inline constexpr auto ECLCST_LCMD_L = (128 + 4); // Laser command (length)
+inline constexpr auto ECLCST_LCMD_V = (128 + 5); // Laser command (speed)
 
-inline constexpr auto ECLCST_TCMD_D = (128 + 6);    // Bullet command (angle)
-inline constexpr auto ECLCST_TCMD_DW = (128 + 7);   // Bullet command (angle difference)
-inline constexpr auto ECLCST_TCMD_N = (128 + 8);    // Bullet command (count)
-inline constexpr auto ECLCST_TCMD_NS = (128 + 9);   // Bullet command (rapid fire count)
-inline constexpr auto ECLCST_TCMD_V = (128 + 10);   // Bullet command (speed)
-inline constexpr auto ECLCST_TCMD_C = (128 + 11);   // Bullet command (color)
-inline constexpr auto ECLCST_TCMD_A = (128 + 12);   // Bullet command (acceleration)
+inline constexpr auto ECLCST_TCMD_D = (128 + 6); // Bullet command (angle)
+inline constexpr auto ECLCST_TCMD_DW =
+    (128 + 7); // Bullet command (angle difference)
+inline constexpr auto ECLCST_TCMD_N = (128 + 8); // Bullet command (count)
+inline constexpr auto ECLCST_TCMD_NS =
+    (128 + 9); // Bullet command (rapid fire count)
+inline constexpr auto ECLCST_TCMD_V = (128 + 10); // Bullet command (speed)
+inline constexpr auto ECLCST_TCMD_C = (128 + 11); // Bullet command (color)
+inline constexpr auto ECLCST_TCMD_A =
+    (128 + 12); // Bullet command (acceleration)
 inline constexpr auto ECLCST_TCMD_REP = (128 + 13); // Bullet command (repeat)
-inline constexpr auto ECLCST_TCMD_VD = (128 + 14);  // Bullet command (angular velocity)
+inline constexpr auto ECLCST_TCMD_VD =
+    (128 + 14); // Bullet command (angular velocity)
 
 inline constexpr auto ECLCST_ENEMY_X = (128 + 15); // Enemy X coordinate
 inline constexpr auto ECLCST_ENEMY_Y = (128 + 16); // Enemy Y coordinate
 inline constexpr auto ECLCST_ENEMY_D = (128 + 17); // Enemy angle
 
-inline constexpr auto ECLCST_LLASERALL =
-    0xff; // Value to apply to all lasers
+inline constexpr auto ECLCST_LLASERALL = 0xff; // Value to apply to all lasers
 
 inline constexpr auto ECLINT_SNAKEON = 0x00;  // Snake type set
 inline constexpr auto ECLINT_LBWING01 = 0x01; // Final boss butterfly wing mode

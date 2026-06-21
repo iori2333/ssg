@@ -9,13 +9,13 @@
 
 #include "player_shot.h"
 
-#include "util/cast.h"
-#include "sys/input.h"
 #include "audio/snd.h"
-#include "util/ut_math.h"
 #include "core/gian.h"
 #include "gfx/graphics_backend.h"
 #include "player.h"
+#include "sys/input.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
 #include "weapon/weapon_form.h"
 #include <utility>
 
@@ -47,8 +47,8 @@ void Player::SetMaidShot() {
 
   // Activate bomb_ if conditions are met.
   if (((Key_Data & KEY_BOMB) != 0) && (bomb_time_ == 0) &&
-      (muteki_ == 0 || deathbomb_time_ != 0) &&
-      (bomb_ != 0U) && (!Scroller.scene.MsgFlag)) {
+      (muteki_ == 0 || deathbomb_time_ != 0) && (bomb_ != 0U) &&
+      (!Scroller.scene.MsgFlag)) {
     bomb_time_ = BaseForm_()->BombDuration();
     muteki_ = BOMBMUTEKI_VAL;
     bomb_--;
@@ -102,7 +102,7 @@ void Player::MoveMaidShot() {
       Bullets.MoveByOption(t);
       t->count++;
       if (((t->flag & TF_CLIP) == 0) && ((t->x) < GX_MIN || (t->x) > GX_MAX ||
-                                          (t->y) < GY_MIN || (t->y) > GY_MAX)) {
+                                         (t->y) < GY_MIN || (t->y) > GY_MAX)) {
         t->flag = TF_DELETE;
       }
 
@@ -197,8 +197,7 @@ void Player::DrawMaidShot() {
   // Laser drawing
   if (weapon_ == 2 && (lay_grp_ != 0U)) {
     // Focus (low-speed) form: pull the two beams closer together.
-    const int loff =
-        ((Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
+    const int loff = ((Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
     ltemp = PIXEL_LTWH{(384 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
 
     x = (opx_ >> 6) + 4 - 8 + loff;
@@ -235,8 +234,7 @@ void Player::SetMaidShotIndices() {
 // --- Laser fire trigger ---
 
 void Player::SetMLaser(uint16_t time) {
-  if ((Players.bomb_time_ != 0U) ||
-      Players.muteki_ > MAID_MOVE_DISABLE_TIME) {
+  if ((Players.bomb_time_ != 0U) || Players.muteki_ > MAID_MOVE_DISABLE_TIME) {
     Players.lay_time_ = 0;
     Players.lay_grp_ = 0;
     return;

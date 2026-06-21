@@ -2,19 +2,19 @@
 /// Format-independent background music interface
 ///
 
-#include <SDL3/SDL_filesystem.h>
-
 #include <format>
+
+#include <SDL3/SDL_filesystem.h>
 
 #include "audio/bgm.h"
 #include "audio/bgm_track.h"
 #include "audio/midi.h"
+#include "audio/midi_backend.h"
 #include "audio/snd.h"
+#include "audio/snd_backend.h"
 #include "audio/volume.h"
 #include "sys/file.h"
-#include "audio/midi_backend.h"
 #include "sys/path.h"
-#include "audio/snd_backend.h"
 
 using namespace std::chrono_literals;
 

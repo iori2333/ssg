@@ -4,10 +4,11 @@
 
 #pragma once
 
-#include "enemy.h"
-#include "sys/buffer.h"
 #include <array>
 #include <cstdint>
+
+#include "enemy.h"
+#include "sys/buffer.h"
 
 struct EnemyManager {
   // --- Enemy data ---
@@ -16,8 +17,8 @@ struct EnemyManager {
   uint16_t count = 0;                        // EnemyNow
 
   // --- ECL/SCL data ---
-  BYTE_BUFFER_BORROWED ecl_head; // ECL_Head
-  BYTE_BUFFER_BORROWED scl_head; // SCL_Head
+  BYTE_BUFFER_BORROWED ecl_head;    // ECL_Head
+  BYTE_BUFFER_BORROWED scl_head;    // SCL_Head
   const uint8_t *scl_now = nullptr; // SCL_Now
 
   // --- Animation ---

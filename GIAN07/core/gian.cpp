@@ -2,19 +2,21 @@
 /// Gian - Game-wide management
 ///
 
+#include <format>
+
+#include "config.h"
 #include "gian.h"
+#include "level.h"
+
 #include "bullet/bullet_manager.h"
 #include "bullet/laser_manager.h"
-#include "config.h"
-#include "enemy/enemy_manager.h"
 #include "effect/font_uty.h"
+#include "enemy/enemy_manager.h"
 #include "gameflow/rank_manager.h"
-#include "level.h"
-#include "util/time.h"
 #include "player/item_manager.h"
 #include "player/player.h"
 #include "stage/scroll_manager.h"
-#include <format>
+#include "util/time.h"
 
 // [Global variables]
 // HIGH_SCORE		*HighScore;
@@ -61,14 +63,12 @@ void StdStatusOutput() {
            std::format("LV{:>7}", (lv < 5) ? DiffName[lv] : "????").c_str());
   GrpPut16(0, 82, std::format("Miss{:5}", Players.MissCount()).c_str());
   GrpPut16(0, 98, std::format("Bomb{:5}", Players.BombUsed()).c_str());
-  GrpPut16(0, 114,
-           std::format("DthB{:5}", Players.DeathbombCount()).c_str());
+  GrpPut16(0, 114, std::format("DthB{:5}", Players.DeathbombCount()).c_str());
   GrpPut16(0, 146, "Stars");
 
   const auto capped = std::min(Players.StarCounter(), 9999U);
-  GrpPut16(
-      0, 162,
-      std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
+  GrpPut16(0, 162,
+           std::format("{:4}/{:4}", capped, Players.StarThreshold()).c_str());
 
 #ifdef PBG_DEBUG
   // sprintf(buf,"%s",DItems.entities[ConfigDat.GameState.game_level.v]);
@@ -82,8 +82,7 @@ void StdStatusOutput() {
   GrpPut16(0, 196 + 40,
            std::format("HLaser {:2}", Lasers.homing_count).c_str());
 
-  GrpPut16(0, 224 + 40,
-           std::format("MTama {:3}", Players.ShotCount()).c_str());
+  GrpPut16(0, 224 + 40, std::format("MTama {:3}", Players.ShotCount()).c_str());
 
   GrpPut16(0, 252 + 40, std::format("Item  {:3}", Items.count).c_str());
 
@@ -122,7 +121,6 @@ void StdStatusOutput() {
 
   GrpPut16(column2_left, 440,
            std::format("Left   {}", Players.Lives()).c_str());
-  GrpPut16(
-      column2_left, 460,
-      std::format("Credit {}", Players.Credits()).c_str()); // Beware of -1
+  GrpPut16(column2_left, 460,
+           std::format("Credit {}", Players.Credits()).c_str()); // Beware of -1
 }

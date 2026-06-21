@@ -91,4 +91,5 @@ void GrpDrawSpect(int x, int y); // Spectrum analyzer draw (MUSIC.cpp)
 void GrpDrawNote();              // Display pressed keys (MUSIC.cpp)
 
 // [Variables]
-// All effect variables -> access directly via Effects.xxx (see effect_manager.h)
+// All effect variables -> access directly via Effects.xxx (see
+// effect_manager.h)

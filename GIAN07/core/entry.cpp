@@ -2,24 +2,26 @@
 /// Entry - Generic, cross-platform subsystem initialization and cleanup
 ///
 
-#include "entry.h"
+#include <chrono>
+#include <filesystem>
+
+#include <SDL3/SDL_filesystem.h>
+
 #include "config.h"
+#include "entry.h"
+#include "loader.h"
+
 #include "audio/bgm.h"
-#include "util/debug.h"
-#include "gfx/frame.h"
-#include "sys/input.h"
 #include "audio/snd.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
-#include "loader.h"
+#include "gfx/frame.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/window_backend.h"
+#include "platform/text_backend.h"
 #include "sys/input.h"
 #include "sys/path.h"
-#include "platform/text_backend.h"
-#include "gfx/window_backend.h"
-#include <SDL3/SDL_filesystem.h>
-#include <chrono>
-#include <filesystem>
+#include "util/debug.h"
 
 // Screenshots
 // -----------

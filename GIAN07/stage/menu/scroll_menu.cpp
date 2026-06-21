@@ -2,11 +2,11 @@
 /// ScrollMenu - Vertical scroll menu
 ///
 
-#include "scroll_menu.h"
-
 #include <algorithm>
 #include <cassert>
 #include <utility>
+
+#include "scroll_menu.h"
 
 ScrollMenu::ScrollMenu(MenuLabel &title, ListSizeFn list_size,
                        GenerateFn generate, HandleFn handle, size_t max_visible)

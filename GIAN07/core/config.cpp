@@ -3,13 +3,14 @@
 ///
 
 #include <SDL3/SDL_iostream.h>
+#include <toml++/toml.hpp>
 
 #include "config.h"
+
 #include "audio/bgm.h"
-#include "util/guard.h"
-#include "sys/file.h"
 #include "gfx/window_backend.h"
-#include <toml++/toml.hpp>
+#include "sys/file.h"
+#include "util/guard.h"
 
 ///// Constants /////
 static constexpr auto CFG_FN = "SSG.TOML";
@@ -93,21 +94,17 @@ static bool TOMLLoad(const char *fn) {
   // [difficulty]
   if (auto *sec = tbl["difficulty"].as_table()) {
     LoadToml(*sec, "game_level", ConfigDat.game_level, ValidGameLevel);
-    LoadToml(*sec, "player_stock", ConfigDat.player_stock,
-                 ValidPlayerStock);
+    LoadToml(*sec, "player_stock", ConfigDat.player_stock, ValidPlayerStock);
     LoadToml(*sec, "bomb_stock", ConfigDat.bomb_stock, ValidBombStock);
-    LoadToml(*sec, "practice_mode", ConfigDat.practice_mode,
-                 ValidPracticeMode);
+    LoadToml(*sec, "practice_mode", ConfigDat.practice_mode, ValidPracticeMode);
   }
 
   // [graphics]
   if (auto *sec = tbl["graphics"].as_table()) {
-    LoadToml(*sec, "device_id", ConfigDat.device_id, [](auto) {
-      return true;
-    });
+    LoadToml(*sec, "device_id", ConfigDat.device_id, [](auto) { return true; });
     LoadToml(*sec, "api", ConfigDat.graphics_api);
     LoadToml(*sec, "window_scale_4x", ConfigDat.window_scale_4x,
-                 [](auto) { return true; });
+             [](auto) { return true; });
     LoadToml(*sec, "window_left", ConfigDat.window_left);
     LoadToml(*sec, "window_top", ConfigDat.window_top);
     LoadToml(*sec, "fps_divisor", ConfigDat.fps_divisor, ValidFPSDivisor);
@@ -119,7 +116,7 @@ static bool TOMLLoad(const char *fn) {
                        ~std::to_underlying(GRAPHICS_PARAM_FLAGS::MASK)) == 0;
              });
     LoadToml(*sec, "screenshot_effort", ConfigDat.screenshot_effort,
-                 ValidScreenshotEffort);
+             ValidScreenshotEffort);
   }
 
   // [sound]
@@ -154,9 +151,8 @@ static bool TOMLLoad(const char *fn) {
   // [progress]
   if (auto *sec = tbl["progress"].as_table()) {
     LoadToml(*sec, "extra_stg_flags", ConfigDat.extra_stg_flags,
-                 [](auto) { return true; });
-    LoadToml(*sec, "stage_select", ConfigDat.stage_select,
-                 ValidStageSelect);
+             [](auto) { return true; });
+    LoadToml(*sec, "stage_select", ConfigDat.stage_select, ValidStageSelect);
   }
 
   return true;
@@ -168,12 +164,10 @@ static void TOMLSave(const char *fn) {
   // [difficulty]
   {
     toml::table sec;
-    sec.emplace("game_level",
-                std::to_underlying(ConfigDat.game_level));
+    sec.emplace("game_level", std::to_underlying(ConfigDat.game_level));
     sec.emplace("player_stock", ConfigDat.player_stock);
     sec.emplace("bomb_stock", ConfigDat.bomb_stock);
-    sec.emplace("practice_mode",
-                std::to_underlying(ConfigDat.practice_mode));
+    sec.emplace("practice_mode", std::to_underlying(ConfigDat.practice_mode));
     tbl.emplace("difficulty", std::move(sec));
   }
 

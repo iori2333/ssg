@@ -2,10 +2,9 @@
 /// Internal logging helpers for the SDL platform
 ///
 
-// SDL headers must come first to avoid import→#include bugs on Clang 19.
 #include <SDL3/SDL_messagebox.h>
 
-#include "sys/log.h"
+#include "log.h"
 
 const char *log_title = nullptr;
 SDL_LogOutputFunction log_default_func;

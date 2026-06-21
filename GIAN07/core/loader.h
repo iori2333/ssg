@@ -5,6 +5,7 @@
 #pragma once
 
 #include "constants.h"
+
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "util/hash.h"
@@ -20,14 +21,11 @@ inline constexpr auto GRAPH_ID_MUSICROOM =
 inline constexpr auto GRAPH_ID_TITLE = (128 + 1); // Title screen BMP ID
 inline constexpr auto GRAPH_ID_NAMEREGIST =
     (128 + 2); // Name registration screen BMP ID
-inline constexpr auto GRAPH_ID_EXSTAGE =
-    (128 + 3); // Extra stage system
-inline constexpr auto GRAPH_ID_EXBOSS1 =
-    (128 + 4); // Extra stage boss 1
-inline constexpr auto GRAPH_ID_EXBOSS2 =
-    (128 + 5); // Extra stage boss 2
+inline constexpr auto GRAPH_ID_EXSTAGE = (128 + 3);  // Extra stage system
+inline constexpr auto GRAPH_ID_EXBOSS1 = (128 + 4);  // Extra stage boss 1
+inline constexpr auto GRAPH_ID_EXBOSS2 = (128 + 5);  // Extra stage boss 2
 inline constexpr auto GRAPH_ID_SPROJECT = (128 + 6); // Seihou Project display
-inline constexpr auto GRAPH_ID_ENDING = (128 + 7); // Load ending graphics
+inline constexpr auto GRAPH_ID_ENDING = (128 + 7);   // Load ending graphics
 
 // Sound effects
 inline constexpr auto SOUND_ID_KEBARI = 0x00;
@@ -89,9 +87,8 @@ struct EndingGrp {
 void LoaderInit();
 void LoaderCleanup();
 [[nodiscard]] bool
-LoadStageData(uint8_t stage); // Load ECL & SCL data to memory
-[[nodiscard]] bool
-LoadGraph(int stage); // Load stage graphics
+LoadStageData(uint8_t stage);            // Load ECL & SCL data to memory
+[[nodiscard]] bool LoadGraph(int stage); // Load stage graphics
 [[nodiscard]] bool LoadFace(uint8_t FaceID,
                             uint8_t FileNo);   // Load face graphic
 [[nodiscard]] bool LoadMusic(unsigned int no); // Load nth music track

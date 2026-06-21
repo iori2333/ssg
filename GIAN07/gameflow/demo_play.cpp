@@ -2,22 +2,25 @@
 /// DemoPlay - Demo playback processing
 ///
 
-#include "demo_play.h"
-#include "core/config.h"
-#include "demo_manager.h"
-#include "util/guard.h"
-#include "sys/input.h"
-#include "util/ut_math.h"
-#include "core/gian.h"
-#include "core/lz_uty.h"
-#include "sys/file.h"
-#include <SDL3/SDL_filesystem.h>
-#include <SDL3/SDL_iostream.h>
 #include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <format>
 #include <utility>
+
+#include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_iostream.h>
+
+#include "demo_manager.h"
+#include "demo_play.h"
+
+#include "core/config.h"
+#include "core/gian.h"
+#include "core/lz_uty.h"
+#include "sys/file.h"
+#include "sys/input.h"
+#include "util/guard.h"
+#include "util/ut_math.h"
 
 // File-static variables moved to DemoManager struct in demo_manager.h
 
@@ -95,7 +98,7 @@ bool DemoManager::LoadSetup() {
 
   // Restore player stats
   Players.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
-                            ConfigDat.player_stock, ConfigDat.bomb_stock);
+                           ConfigDat.player_stock, ConfigDat.bomb_stock);
 
   // Initialize random number
   // Sync random seed last

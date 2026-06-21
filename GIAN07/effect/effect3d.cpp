@@ -3,13 +3,15 @@
 ///
 
 #include "effect3d.h"
-#include "util/cast.h"
-#include "util/ut_math.h"
+
 #include "core/gian.h"
 #include "gfx/graphics_backend.h"
+#include "util/cast.h"
+#include "util/ut_math.h"
 
 // CIRCLE_MAX, CUBE_MAX, STAR_MAX, ROCK_MAX, FAKE_ECLSTR_MAX → effect_manager.h
-// circles[], cubes[], stars[], rocks[], wf_line, fake_ecl_strs[] → effect_manager.cpp
+// circles[], cubes[], stars[], rocks[], wf_line, fake_ecl_strs[] →
+// effect_manager.cpp
 
 #define _ PIXEL_POINT
 
@@ -89,7 +91,8 @@ WORLD_POINT PList_G[17] = {
 // LineList3D	LList_A1 = {96,39,PList_A1,8,PWork_A1};
 // LineList3D	LList_W = {32,39,PList_W,11,PWork_W};
 
-// Warning[8] moved to EffectManager::warning_lines — initialized in InitWarningText()
+// Warning[8] moved to EffectManager::warning_lines — initialized in
+// InitWarningText()
 
 static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz);
 static void Draw3DCube(const Cube3D *c); // General 3D cube drawing
@@ -508,81 +511,83 @@ void EffectManager::DrawFakeECL() {
 // {
 //         Cloud2D		*p;		//Cloud[CLOUD_MAX];
 //         int			i;
-// 
+//
 //         p = Cloud;
-// 
+//
 //         for(i=0; i<CLOUD_MAX; i++, p++){
 //                 if(rnd()&1) p->x = 128*64+(rnd()>>1)%(100*64);
 //                 else        p->x = 512*64-(rnd()>>1)%(100*64);
 //                 p->y    = ((i*680*64)/CLOUD_MAX)-200*64;	//GY_RND;
-// 
+//
 //                 p->type = (rnd()>>2)%5;
 //                 if(p->type == 2) p->type = 5;
-// 
+//
 //                 p->vy   = rnd()%(64 * 6) + 64 * 11;
 //         }
 // }
-// 
-// 
+//
+//
 // Stage 3 cloud movement
 // void MoveStg3Cloud(void)
 // {
 //         Cloud2D		*p;		//Cloud[CLOUD_MAX];
 //         int			i;
-// 
+//
 //         p = Cloud;
-// 
+//
 //         for(i=0; i<CLOUD_MAX; i++, p++){
 //                 p->y += p->vy;
-// 
+//
 //                 if(p->y > (480+200)*64){
 //                         if(rnd()&1) p->x = 128*64+(rnd()>>1)%(100*64);
 //                         else        p->x = 512*64-(rnd()>>1)%(100*64);
 //                         p->y    = -200*64;
-// 
+//
 //                         p->type = (rnd()>>2)%5;
 //                         if(p->type == 2) p->type = 5;
-// 
+//
 //                         p->vy   = rnd()%(64 * 6) + 64 * 11;
 //                 }
 //         }
 // }
-// 
-// 
+//
+//
 // Stage 3 cloud draw
 // void DrawStg3Cloud(void)
 // {
-// constexpr auto RsetMacro(int x, int y, int w, int h) -> PIXEL_LTRB { return {x,
-// y, x + w, y + h}; } static PIXEL_LTRB Data[6] = { RsetMacro(  0, 288, 144, 160),
+// constexpr auto RsetMacro(int x, int y, int w, int h) -> PIXEL_LTRB { return
+// {x, y, x + w, y + h}; } static PIXEL_LTRB Data[6] = { RsetMacro(  0, 288,
+// 144, 160),
 // // Large_1 RsetMacro(144, 288, 144, 112),			// Large_2
-//                 RsetMacro(288, 288, 144, 176),			// Large_3
-// 
+//                 RsetMacro(288, 288, 144, 176),			//
+//                 Large_3
+//
 //                 //RsetMacro(480, 288,  32,  48),			//
 // Small_1 RsetMacro(144, 400,  32,  48),			// Small_2
-//                 RsetMacro(176, 400,  48,  32),			// Small_3
-//                 RsetMacro(224, 400,  48,  48),			// Small_4
+//                 RsetMacro(176, 400,  48,  32),			//
+//                 Small_3 RsetMacro(224, 400,  48,  48), // Small_4
 //         };
 // #undef _RsetMacro
-// 
+//
 //         static PIXEL_LTRB	Size[6] = {
 //                 144/2, 160/2, 144/2, 112/2, 144/2, 176/2,		// Large
 //                  //32,  48,
 //                  32/2,  48/2,  48/2,  32/2,  48/2,  48/2		// Small
 //         };
-// 
+//
 //         PIXEL_LTRB	src;
 //         Cloud2D		*p;		//Cloud[CLOUD_MAX];
 //         int			i, j;
 //         int			x, y;
-// 
+//
 //         p = Cloud;
-// 
+//
 //         for(i=0; i<CLOUD_MAX; i++, p++){
 //                 j   = p->type;
 //                 x   = (p->x >> 6) - Size[j].x;
 //                 y   = (p->y >> 6) - Size[j].y;
 //                 src = Data[j];
-// 
+//
 //                 GrpSurface_Blit({ x, y }, SURFACE_ID::ENEMY, src);
 //         }
 // }
@@ -599,7 +604,7 @@ void EffectManager::InitStg4Rocks() {
     //((380*64/16) * (i%(ROCK_MAX/16+1))) + rnd()%(380*64/16);
 
     rocks[i].x = ((rnd() % (500 * 64)) - (250 * 64));
-    rocks[i].y = (-250 * 64) - y;                     // Up above
+    rocks[i].y = (-250 * 64) - y; // Up above
     rocks[i].z = ((rnd() % (500 * 64)) - (250 * 64));
 
     if (i == ROCK_MAX * 5 / 8) {
@@ -687,7 +692,7 @@ void EffectManager::MoveStg4Rocks() {
       //			p->v += p->a;
       //                         p->x += cosl(p->d, p->v);
       //                         p->y += (p->vy + sinl(p->d, p->v));
-      // 
+      //
       //                         if(p->count > 60){
       //                                 if(p->y > (250+40)*64 || p->y <
       //    (-250-40)*64){
@@ -695,18 +700,20 @@ void EffectManager::MoveStg4Rocks() {
       //    (rnd()%(500*64)-250*64); y = (i%4)*dy + (rnd()%dy2); p->x =
       //    (rnd()%(500*64)-250*64);		// p->y = -250*64-y;
       //    // Upper part
-      // 
-      //                                         p->vy    = ((4 - p->GrpID) * 32 *
+      //
+      //                                         p->vy    = ((4 - p->GrpID) * 32
+      //                                         *
       //    3); p->v     = p->vy; p->a     = 0; p->State = STG4ROCK_ACCMOVE1;
       //                                 }
       //                                 else{
-      //                                         p->v = p->vy = ((4 - p->GrpID) *
+      //                                         p->v = p->vy = ((4 - p->GrpID)
+      //                                         *
       //    32 * 3); p->a = 0; p->State = STG4ROCK_ACCMOVE1;
       //                                 }
-      // 
+      //
       //                                 break;
       //                         }
-      // 
+      //
       //                         if(p->y > (250+40)*64 || p->y < (-250-40)*64){
       //                                 p->x     = (rnd()%(700*64)-350*64);
       //                                 p->y     = (250+40)*64;

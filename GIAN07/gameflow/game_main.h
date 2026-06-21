@@ -9,8 +9,9 @@
 // 2000/02/03 : Development started
 
 // [Include Files]
-#include "ending.h"
 #include <functional>
+
+#include "ending.h"
 
 // [Constants]
 // [Macros]

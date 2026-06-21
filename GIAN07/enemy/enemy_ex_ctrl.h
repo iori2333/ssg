@@ -23,19 +23,19 @@ inline constexpr auto BITCMD_STDMOVE = 0x00;   // Normal movement
 inline constexpr auto BITCMD_CHGSPD = 0x01;    // Change rotation speed
 inline constexpr auto BITCMD_SELECTATK = 0x02; // Change attack command
 inline constexpr auto BITCMD_CHGRADIUS = 0x03; // Change radius
-inline constexpr auto BITCMD_MOVTARGET =
-    0x04; // Boomerang toward target
-inline constexpr auto BITCMD_DISABLE = 0xff; // Bit not in use
+inline constexpr auto BITCMD_MOVTARGET = 0x04; // Boomerang toward target
+inline constexpr auto BITCMD_DISABLE = 0xff;   // Bit not in use
 
-inline constexpr auto BLASERCMD_OPEN = 0x00; // Open laser
-inline constexpr auto BLASERCMD_CLOSE =
-    0x01; // Close bit laser
+inline constexpr auto BLASERCMD_OPEN = 0x00;   // Open laser
+inline constexpr auto BLASERCMD_CLOSE = 0x01;  // Close bit laser
 inline constexpr auto BLASERCMD_CLOSEL = 0x02; // Transition to line state
 
-inline constexpr auto BLASERCMD_TYPE_A = 0x03; // Emit unidirectional fixed-angle laser
+inline constexpr auto BLASERCMD_TYPE_A =
+    0x03; // Emit unidirectional fixed-angle laser
 inline constexpr auto BLASERCMD_TYPE_B =
     0x04; // Emit bidirectional synchronous angle-change laser
-inline constexpr auto BLASERCMD_TYPE_C = 0x05;  // Synchronous angle n-point star laser
+inline constexpr auto BLASERCMD_TYPE_C =
+    0x05; // Synchronous angle n-point star laser
 inline constexpr auto BLASERCMD_DISABLE = 0xff; // Nothing active
 
 ///// [Structs] /////

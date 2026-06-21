@@ -48,8 +48,7 @@ struct LongLaserCommand {
 
 // Laser struct 2
 struct LongLaserData {
-  EnemyData
-      *e; // Pointer to enemy data (boss or minion can fire)
+  EnemyData *e; // Pointer to enemy data (boss or minion can fire)
 
   int x, y;       // Current display coordinates
   int dx, dy;     // Offset from enemy data (x64)

@@ -2,21 +2,22 @@
 /// MIDI output via TinySoundFont + miniaudio
 ///
 
-#include "audio/midi_backend.h"
-
-#include <SDL3/SDL_timer.h>
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <string>
 #include <vector>
 
+#include <SDL3/SDL_timer.h>
+
 #define TSF_IMPLEMENTATION
 #include <miniaudio.h>
 #include <tsf.h>
 
+#include "midi.h"
+#include "midi_backend.h"
+
 #include "core/config.h"
-#include "audio/midi.h"
 #include "sys/path.h"
 
 static tsf *TsSoundFont = nullptr;

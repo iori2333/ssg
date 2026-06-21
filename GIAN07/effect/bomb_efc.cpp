@@ -1,14 +1,16 @@
 ///
 /// BombEfc - Explosion effects
 ///
-#include "bomb_efc.h"
-#include "effect_manager.h"
-#include "util/ut_math.h"
-#include "core/loader.h"
-#include "gfx/graphics_backend.h"
 #include <algorithm>
 #include <array>
 #include <ranges>
+
+#include "bomb_efc.h"
+#include "effect_manager.h"
+
+#include "core/loader.h"
+#include "gfx/graphics_backend.h"
+#include "util/ut_math.h"
 
 // BombEfc[] moved to EffectManager in effect_manager.cpp
 

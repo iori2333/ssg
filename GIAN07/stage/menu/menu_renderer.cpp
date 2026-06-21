@@ -5,8 +5,8 @@
 #include "menu_renderer.h"
 
 #include "gfx/coords.h"
-#include "gfx/text.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/text.h"
 #include "platform/windows/text_gdi.h"
 
 // Draw menu label (title / item)

@@ -2,30 +2,31 @@
 /// Panels - Menu panel class implementation
 ///
 
-#include "panels.h"
-
-#include "core/config.h"
-#include "gameflow/demo_play.h"
-#include "core/entry.h"
-#include "audio/bgm.h"
-#include "audio/midi.h"
-#include "audio/snd.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
-#include "core/level.h"
-#include "core/loader.h"
-#include "stage/music.h"
-#include "gfx/graphics_backend.h"
-#include "sys/input.h"
-#include "audio/midi_backend.h"
-#include "stage/ui_manager.h"
-#include "stage/window_sys.h"
-
-#include <SDL3/SDL_filesystem.h>
-#include <SDL3/SDL_misc.h>
 #include <algorithm>
 #include <chrono>
 #include <numeric>
+
+#include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_misc.h>
+
+#include "panels.h"
+
+#include "audio/bgm.h"
+#include "audio/midi.h"
+#include "audio/midi_backend.h"
+#include "audio/snd.h"
+#include "core/config.h"
+#include "core/entry.h"
+#include "core/level.h"
+#include "core/loader.h"
+#include "gameflow/demo_play.h"
+#include "gameflow/game_main.h"
+#include "gameflow/gameflow_manager.h"
+#include "gfx/graphics_backend.h"
+#include "stage/music.h"
+#include "stage/ui_manager.h"
+#include "stage/window_sys.h"
+#include "sys/input.h"
 
 using namespace std::chrono_literals;
 
@@ -126,9 +127,9 @@ void DifficultyPanel::Refresh(MenuController &, bool) {
   titles_[0].Format("PlayerStock [ {} ]", ConfigDat.player_stock + 1);
   titles_[1].Format("BombStock   [ {} ]", ConfigDat.bomb_stock);
   titles_[2].Format("Difficulty[{}]",
-                     dif[std::to_underlying(ConfigDat.game_level)]);
+                    dif[std::to_underlying(ConfigDat.game_level)]);
   titles_[3].Format("PracticeMode[{}]",
-                     practice[std::to_underlying(ConfigDat.practice_mode)]);
+                    practice[std::to_underlying(ConfigDat.practice_mode)]);
 
 #ifdef PBG_DEBUG
   titles_[4].Format("DebugOut  {}", CHOICE_OFF_ON[DebugDat.MsgDisplay]);
@@ -391,9 +392,7 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
                                                  "20Fps"};
 
   const auto u_or_d =
-      (ConfigDat.msg_disable
-           ? 2
-           : (ConfigDat.window_upper ? 0 : 1));
+      (ConfigDat.msg_disable ? 2 : (ConfigDat.window_upper ? 0 : 1));
   const auto dev = GrpBackend_DeviceLabel(ConfigDat.device_id);
   const auto fs = params.FullscreenFlags();
   const auto in_borderless_fullscreen = (fs.fullscreen && !fs.exclusive);

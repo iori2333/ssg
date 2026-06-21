@@ -4,9 +4,10 @@
 
 #pragma once
 
+#include <array>
+
 #include "gfx/coords.h"
 #include "scroll.h"
-#include <array>
 
 struct ScrollManager {
   ScrollState scroll;                          // ScrollInfo

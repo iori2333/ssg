@@ -2,13 +2,14 @@
 /// Debug output functions
 ///
 
-#include <SDL3/SDL_iostream.h>
-
 #include <format>
 
-#include "util/debug.h"
+#include <SDL3/SDL_iostream.h>
+
+#include "debug.h"
+#include "time.h"
+
 #include "sys/file.h"
-#include "util/time.h"
 // Global variables
 constexpr auto ErrorOut = "ErrLOG_UTF8.TXT";
 static bool ErrorActive = false;
@@ -29,8 +30,9 @@ void DebugLog(std::string_view prefix, std::string_view s) {
 
 extern void DebugSetup() {
   const auto tm = Time_NowLocal();
-  auto str = std::format("[{:02}/{:02}/{:02}][{:02}:{:02}:{:02}]", tm.month,
-                         tm.day, (tm.year % 100), tm.hour, tm.minute, tm.second);
+  auto str =
+      std::format("[{:02}/{:02}/{:02}][{:02}:{:02}:{:02}]", tm.month, tm.day,
+                  (tm.year % 100), tm.hour, tm.minute, tm.second);
   ErrorActive = true;
   DebugLog("", str);
 }

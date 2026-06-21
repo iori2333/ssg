@@ -2,16 +2,16 @@
 /// Item - Item processing
 ///
 
-#include "item.h"
-
-#include "core/entity.h"
-#include "audio/snd.h"
-#include "util/ut_math.h"
-#include "core/gian.h"
-#include "item_manager.h"
-#include "gfx/graphics_backend.h"
-#include "player.h"
 #include <utility>
+
+#include "item.h"
+#include "item_manager.h"
+
+#include "audio/snd.h"
+#include "core/entity.h"
+#include "core/gian.h"
+#include "gfx/graphics_backend.h"
+#include "util/ut_math.h"
 
 // entities[], indices[], count moved to item_manager.cpp
 

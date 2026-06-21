@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <windows.h>
+
 #include "gfx/coords.h"
 
 struct SURFACE {

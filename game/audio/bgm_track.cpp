@@ -1,20 +1,22 @@
 ///
-/// BGM tracks rendered as PCM and output via the Snd subsystem (adapted from thcrap's bgmmod module)
+/// BGM tracks rendered as PCM and output via the Snd subsystem (adapted from
+/// thcrap's bgmmod module)
 ///
-
-#include <SDL3/SDL_iostream.h>
 
 // GCC 15 throws `error: redefinition of 'void std::__terminate()'` if this
 // appears after a module import.
 #if (__cpp_lib_to_chars < 201611L)
-#include <locale.h>
-#include <stdlib.h>
+#include <clocale>
+#include <cstdlib>
 #endif
 
-#include "audio/bgm_track.h"
-#include "audio/volume.h"
-#include <assert.h>
-#include <version> // need the library feature test macros...
+#include <cassert>
+#include <version>
+
+#include <SDL3/SDL_iostream.h>
+
+#include "bgm_track.h"
+#include "volume.h"
 
 namespace BGM {
 

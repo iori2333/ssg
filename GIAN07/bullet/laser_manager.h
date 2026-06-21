@@ -4,11 +4,12 @@
 
 #pragma once
 
+#include <array>
+#include <cstdint>
+
 #include "homing_laser.h"
 #include "laser.h"
 #include "long_laser.h"
-#include <array>
-#include <cstdint>
 
 struct LaserManager {
   // --- Reflective laser ---

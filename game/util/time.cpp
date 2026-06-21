@@ -2,11 +2,11 @@
 /// Time interface (std::chrono implementation)
 ///
 
+#include <cassert>
 #include <chrono>
 #include <ctime>
-#include <cassert>
 
-#include "util/time.h"
+#include "time.h"
 
 uint32_t Time_SteadyTicksMS() {
   const auto now = (std::chrono::steady_clock::now().time_since_epoch());

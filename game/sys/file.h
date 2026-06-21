@@ -9,7 +9,7 @@
 
 #include <SDL3/SDL_iostream.h>
 
-#include "sys/buffer.h"
+#include "buffer.h"
 
 struct SDL_IOStream;
 
@@ -17,9 +17,8 @@ using FILE_TIMESTAMPS = std::filesystem::file_time_type;
 
 std::optional<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn);
 
-bool File_CloseWithTimestamps(
-    SDL_IOStream *&&context, const char *path,
-    std::optional<FILE_TIMESTAMPS> maybe_time);
+bool File_CloseWithTimestamps(SDL_IOStream *&&context, const char *path,
+                              std::optional<FILE_TIMESTAMPS> maybe_time);
 
 // SDL wrappers
 // ------------

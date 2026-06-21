@@ -4,15 +4,17 @@
 
 #pragma once
 
-#include "core/level.h"
-#include "core/lz_uty.h"
-#include "score.h"
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
+
+#include "score.h"
+
+#include "core/level.h"
+#include "core/lz_uty.h"
 
 struct ScoreManager {
   // Score display strings

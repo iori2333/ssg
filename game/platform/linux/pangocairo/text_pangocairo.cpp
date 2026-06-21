@@ -7,8 +7,8 @@
 #include <fontconfig/fontconfig.h>
 #include <pango/pangocairo.h>
 
-#include "util/guard.h"
 #include "platform/text_backend.h"
+#include "util/guard.h"
 
 constexpr auto FORMAT = CAIRO_FORMAT_ARGB32;
 extern const ENUMARRAY<const char *, FONT_ID> FontSpecs;
@@ -280,8 +280,7 @@ PIXEL_SIZE TEXTRENDER_SESSION::Extent(std::string_view str) {
 }
 
 void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
-                             std::string_view str,
-                             std::optional<RGB> color) {
+                             std::string_view str, std::optional<RGB> color) {
   if (color) {
     SetColor(color.value());
   }

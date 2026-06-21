@@ -4,7 +4,7 @@
 
 #include <SDL3/SDL_thread.h>
 
-#include "sys/thread.h"
+#include "thread.h"
 
 THREAD::THREAD(SDL_Thread *sdl_thread, std::unique_ptr<THREAD_STOP> st)
     : sdl_thread(sdl_thread), st(std::move(st)) {}

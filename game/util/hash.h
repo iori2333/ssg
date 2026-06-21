@@ -3,14 +3,15 @@
 ///
 #pragma once
 
-#include <string_view>
-#include <bit>
-#include "sys/buffer.h"
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <concepts>
 #include <cstddef>
 #include <optional>
+#include <string_view>
+
+#include "sys/buffer.h"
 
 using HASH = std::array<std::byte, 32>;
 

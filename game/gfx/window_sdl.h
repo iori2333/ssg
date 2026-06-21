@@ -6,7 +6,7 @@
 
 #include <SDL3/SDL_video.h>
 
-#include "gfx/graphics.h"
+#include "graphics.h"
 
 // We can't retrieve the original window position in fullscreen mode via
 // SDL_GetWindowPosition(), so let's back it up before we go fullscreen.

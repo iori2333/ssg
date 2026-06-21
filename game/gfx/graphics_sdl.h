@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "gfx/graphics_backend.h"
+#include "graphics_backend.h"
 
 class GRAPHICS_GEOMETRY_SDL {
 public:

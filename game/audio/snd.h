@@ -3,11 +3,11 @@
 ///
 #pragma once
 
-// Header files
+#include "volume.h"
+
 #include "core/constants.h"
-#include "util/enum_flags.h"
-#include "audio/volume.h"
 #include "sys/buffer.h"
+#include "util/enum_flags.h"
 
 // Constants & macros
 using SND_INSTANCE_ID = uint8_t;

@@ -38,11 +38,11 @@ struct NrScoreString {
   int x, y;         // Drawing coordinates
   bool bMoveEnable; // Movable?
 
-  char Name[NR_NAME_LEN];          // Name
-  std::string Score;                // Score
-  std::string Evade;                // Graze
-  std::string Stage;                // Stage
-  uint8_t Weapon;                   // Equipment
+  char Name[NR_NAME_LEN]; // Name
+  std::string Score;      // Score
+  std::string Evade;      // Graze
+  std::string Stage;      // Stage
+  uint8_t Weapon;         // Equipment
 };
 // (NR_SCORE_STRING alias removed — use NrScoreString directly)
 

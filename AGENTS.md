@@ -86,6 +86,30 @@ Do not edit the generated file directly.
 - **Linter:** `.clang-tidy` is configured; see the file for enabled/disabled checks.
 - **No tests or CI** are currently wired up.
 
+## Include guidelines
+
+All `#include` directives in `.cpp` / `.h` files must be grouped into
+**four blocks**, separated by a blank line between blocks.  No blank lines
+inside a block.  Within each block, includes are sorted alphabetically.
+
+| Block | Contents |
+| --- | --- |
+| 1 | System / standard library headers (`<cstdint>`, `<vector>`, `<format>`, …) |
+| 2 | Third‑party library headers (`<SDL3/…>`, `<toml++/toml.hpp>`, `<miniaudio.h>`, `<windows.h>`, …) |
+| 3 | Project headers from the **same directory or a subdirectory** of the source file — quoted, relative path (e.g. `"graphics.h"` instead of `"gfx/graphics.h"`) |
+| 4 | Other project headers (from any other include‑root directory) — quoted, full path from the root (e.g. `"gfx/graphics.h"`, `"sys/file.h"`) |
+
+### C‑style → C++ headers
+
+In C++ files, replace C standard‑library headers with their C++ counterparts
+(e.g. `<assert.h>` → `<cassert>`, `<stddef.h>` → `<cstddef>`).
+
+### Conditional includes
+
+An `#include` guarded by `#if` / `#ifdef` / `#elif` / `#ifndef` must keep its
+guard.  Treat the whole guarded block as a single include unit — it stays
+where the guard logic requires it.
+
 ## Known gotchas
 
 - `CMakeLists.txt` references `GIAN07/GIAN07.rc`, but the actual file is `GIAN07/gian07.rc` (lowercase). This will break on case-sensitive filesystems until reconciled.

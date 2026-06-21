@@ -2,11 +2,11 @@
 /// Common paths and path manipulation via SDL
 ///
 
-// SDL headers must come first to avoid import→#include bugs on Clang 19.
 #include <SDL3/SDL_filesystem.h>
 
+#include "path.h"
+
 #include "core/constants.h"
-#include "sys/path.h"
 
 #ifndef WIN32
 constexpr auto SDL_free_deleter = [](auto *p) { SDL_free(p); };
