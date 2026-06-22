@@ -14,8 +14,7 @@
 #include <optional>
 
 #include "player_shot.h"
-
-#include "util/cast.h"
+#include "weapon/weapon_form.h"
 
 // [ Constants ]
 
@@ -68,10 +67,12 @@ enum class PlayerReward : uint8_t { NONE, BOMB, EXTEND };
 
 class Player {
 public:
-  Player();
-  ~Player();
-  Player(const Player &other);
-  Player &operator=(const Player &other);
+  Player() noexcept;
+  ~Player() = default;
+  Player(const Player &other) = delete;
+  Player(Player &&other) = delete;
+  Player &operator=(const Player &other) = delete;
+  Player &operator=(Player &&other) = delete;
 
   // --- Lifecycle ---
   void Draw();
@@ -149,6 +150,11 @@ public:
   [[nodiscard]] PlayerReward AddStar(uint32_t n);
   void ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
                         uint8_t bombs);
+  [[nodiscard]] bool HitCheck(int x, int y, int r) const {
+    auto dx = x - x_;
+    auto dy = y - y_;
+    return dx * dx + dy * dy <= r * r;
+  }
 
   // --- Weapon select preview ---
   // Saves a snapshot of the current state and resets weapon to 0.

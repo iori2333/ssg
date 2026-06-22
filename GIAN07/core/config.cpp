@@ -15,10 +15,6 @@
 ///// Constants /////
 static constexpr auto CFG_FN = "SSG.TOML";
 
-#ifdef PBG_DEBUG
-static constexpr auto DBG_FN = "秋霜DBG.DAT";
-#endif
-
 // Validation helpers
 
 static constexpr bool ValidGameLevel(GameLevel v) {
@@ -283,32 +279,9 @@ void ConfigData::UnpackInputFlags(uint8_t v) {
 
 ///// [Global variables] /////
 ConfigData ConfigDat;
-#ifdef PBG_DEBUG
-DebugData DebugDat;
-#endif
-
-#ifdef PBG_DEBUG
-static void DebugInit(void) {
-  auto *f = SDL_IOFromFile(DBG_FN, "rb");
-  if (!f) {
-    return;
-  }
-  auto f_guard = make_guard(f, SDL_CloseIO);
-  if (!SDL_MustReadIO(f, &DebugDat, sizeof(DebugDat))) {
-    DebugDat.Hit = true;
-    DebugDat.MsgDisplay = true;
-    DebugDat.DemoSave = false;
-    DebugDat.StgSelect = 1;
-  }
-}
-#endif
 
 // Initialize config contents
 void ConfigData::Load() {
-#ifdef PBG_DEBUG
-  DebugInit();
-#endif
-
   TOMLLoad(CFG_FN);
 }
 
@@ -325,8 +298,4 @@ void ConfigData::Save() {
   }
 
   TOMLSave(CFG_FN);
-
-#ifdef PBG_DEBUG
-  SDL_SaveFile(DBG_FN, &DebugDat, sizeof(DebugDat));
-#endif
 }

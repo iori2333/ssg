@@ -72,6 +72,11 @@ struct ConfigData {
   // Placed here intentionally (outside checksum range)
   uint8_t stage_select = 0;
 
+#ifdef PBG_DEBUG
+  int32_t hitbox_display = 0;     // Bullet hitbox overlay: 0=Off, 1=Hit, 2=All
+  bool bullet_gallery_active = false; // Bullet gallery: skip hit delete + perma-invincible
+#endif
+
   [[nodiscard]] GRAPHICS_PARAMS GraphicsParams() const;
   void GraphicsParamsApply(const GRAPHICS_PARAMS &params);
 
@@ -83,15 +88,3 @@ struct ConfigData {
 };
 
 extern ConfigData ConfigDat;
-
-#ifdef PBG_DEBUG
-struct DebugData {
-  int32_t MsgDisplay; // Show debug info
-  int32_t Hit;        // Hit detection on/off
-  int32_t DemoSave;   // Save demo replay
-
-  uint8_t StgSelect; // Stage select (starting stage)
-};
-
-extern DebugData DebugDat;
-#endif

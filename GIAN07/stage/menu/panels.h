@@ -25,14 +25,8 @@ private:
   static void FnBombStock(MenuController &, int_fast8_t);
   static void FnDifficulty(MenuController &, int_fast8_t);
   static void FnPracticeMode(MenuController &, int_fast8_t);
-#ifdef PBG_DEBUG
-  static void FnMsgDisplay(MenuController &, int_fast8_t);
-  static void FnStgSelect(MenuController &, int_fast8_t);
-  static void FnHit(MenuController &, int_fast8_t);
-  static void FnDemo(MenuController &, int_fast8_t);
-#endif
 
-  std::array<MenuText, 8> titles_;
+  std::array<MenuText, 4> titles_;
   std::vector<MenuItem> items_;
   MenuDef menu_;
 };
@@ -241,6 +235,26 @@ private:
 };
 
 // ---------------------------------------------------------------------------
+// Debug settings panel (PBG_DEBUG only)
+// ---------------------------------------------------------------------------
+#ifdef PBG_DEBUG
+class DebugPanel {
+public:
+  DebugPanel();
+  MenuDef &Menu() { return menu_; }
+
+private:
+  void Refresh(MenuController &ctrl, bool tick);
+  static void FnHitboxDisplay(MenuController &, int_fast8_t);
+  static bool FnBulletGallery(MenuController &, INPUT_BITS);
+
+  std::array<MenuText, 2> titles_;
+  std::vector<MenuItem> items_;
+  MenuDef menu_;
+};
+#endif
+
+// ---------------------------------------------------------------------------
 // Main menu panel
 // ---------------------------------------------------------------------------
 class MainMenuPanel {
@@ -265,6 +279,9 @@ private:
 
   MenuLabel title_;
   ConfigPanel config_;
+#ifdef PBG_DEBUG
+  DebugPanel debug_;
+#endif
   std::vector<MenuItem> items_;
   MenuDef menu_;
 };

@@ -95,7 +95,11 @@ void LaserManager::Spawn() {
     SetEasy();
     break;
 
+  case GameLevel::NORMAL:
+    break;
+
   case GameLevel::HARD:
+  case GameLevel::EXTRA:
     SetHard();
     break;
 

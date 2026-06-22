@@ -8,6 +8,7 @@
 #include "bullet_manager.h"
 
 #include "audio/snd.h"
+#include "core/config.h"
 #include "core/gian.h"
 #include "core/level.h"
 #include "gfx/graphics_backend.h"
@@ -22,6 +23,29 @@
 //// Local functions ////
 // Private methods are declared in bullet_manager.h
 void TamaEffectDraw(const Bullet *t); // Draw bullet as effect?
+
+int GetBulletHitRadius(uint8_t c) {
+  switch (c & 0xF0) {
+  case TAMA_SMALL:
+    return TAMA_HIT_S;
+  case TAMA_LARGE:
+  case TAMA_EXTRA2:
+    return TAMA_HIT_M;
+  case TAMA_ANGLE:
+    return (c == 0x25) ? TAMA_HIT_M : TAMA_HIT_S;
+  case TAMA_EXTRA: {
+    constexpr int radii[4] = {TAMA_HIT_XL, TAMA_HIT_L, TAMA_HIT_M, TAMA_HIT_S};
+    return radii[c & 3];
+  }
+  default:
+    return TAMA_HIT_M;
+  }
+}
+
+int GetBulletEvadeRadius(uint8_t c) {
+  return ((c & 0xF0) == TAMA_SMALL) ? TAMA_EVADE_RADIUS_SMALL
+                                    : TAMA_EVADE_RADIUS_LARGE;
+}
 
 void TamaEvadeAdd(Bullet *t) {
   if (t->flag & TF_EVADE)
@@ -42,7 +66,11 @@ void BulletManager::Spawn() {
     SetEasy();
     break;
 
+  case GameLevel::NORMAL:
+    break;
+
   case GameLevel::HARD:
+  case GameLevel::EXTRA:
     SetHard();
     break;
 
@@ -275,9 +303,7 @@ void BulletManager::Move() {
   // Hit check after cactus death determination because alive //
   // time is longer than dead time...                         //
 
-  // Small bullet processing //
-  for (const auto i : std::views::iota(0U, count_small)) {
-    auto *t = &bullets[indices_small[i]];
+  auto process_bullet = [this](Bullet *t) {
     if (t->effect == TE_NONE) {
       MoveByType(t);
       MoveByOption(t);
@@ -287,15 +313,19 @@ void BulletManager::Move() {
         t->flag = TF_DELETE;
       }
       t->count++;
-      if (Players.IsInvincible() != 0U) {
-        continue;
+      if (Players.IsInvincible()) {
+        return;
       }
-      if (HITCHK(t->x, Players.X(), TAMA_EVX_SMALL) &&
-          HITCHK(t->y, Players.Y(), TAMA_EVY_SMALL)) {
+
+      const int ev_r = GetBulletEvadeRadius(t->c);
+      const auto evade = Players.HitCheck(t->x, t->y, ev_r);
+      if (evade) {
         TamaEvadeAdd(t);
       }
-      if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
-          HITCHK(t->y, Players.Y(), TAMA_HITY)) {
+
+      const int r = GetBulletHitRadius(t->c);
+      const auto hit = Players.HitCheck(t->x, t->y, r);
+      if (hit) {
         t->flag = TF_DELETE;
         Players.OnHit();
       }
@@ -303,6 +333,12 @@ void BulletManager::Move() {
       MoveByEffect(t);
       t->count++;
     }
+  };
+
+  // Small bullet processing //
+  for (const auto i : std::views::iota(0U, count_small)) {
+    auto *t = &bullets[indices_small[i]];
+    process_bullet(t);
   }
   Indsort(indices_small, count_small, bullets,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });
@@ -310,31 +346,7 @@ void BulletManager::Move() {
   // Large bullet & special bullet processing //
   for (const auto i : std::views::iota(0U, count_large)) {
     auto *t = &bullets[indices_large[i]];
-    if (t->effect == TE_NONE) {
-      MoveByType(t);
-      MoveByOption(t);
-      if (((t->flag & TF_CLIP) == 0) &&
-          ((t->x) < GX_MIN - (8 * 64) || (t->x) > GX_MAX + (8 * 64) ||
-           (t->y) < GY_MIN - (8 * 64) || (t->y) > GY_MAX + (8 * 64))) {
-        t->flag = TF_DELETE;
-      }
-      t->count++;
-      if (Players.IsInvincible() != 0U) {
-        continue;
-      }
-      if (HITCHK(t->x, Players.X(), TAMA_EVX_LARGE) &&
-          HITCHK(t->y, Players.Y(), TAMA_EVY_LARGE)) {
-        TamaEvadeAdd(t);
-      }
-      if (HITCHK(t->x, Players.X(), TAMA_HITX) &&
-          HITCHK(t->y, Players.Y(), TAMA_HITY)) {
-        t->flag = TF_DELETE;
-        Players.OnHit();
-      }
-    } else {
-      MoveByEffect(t);
-      t->count++;
-    }
+    process_bullet(t);
   }
   Indsort(indices_large, count_large, bullets,
           [](const Bullet &t) { return (t.flag & TF_DELETE); });

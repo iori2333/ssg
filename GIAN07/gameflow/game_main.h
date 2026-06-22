@@ -44,3 +44,7 @@ GameReplayInitAll(const char *fn); // Initialize for multi-stage replay
 [[nodiscard]] bool ScoreNameInit(); // Name registration screen
 
 [[nodiscard]] bool GameNextStage(); // Move to next stage
+
+#ifdef PBG_DEBUG
+void BulletGalleryInit();
+#endif

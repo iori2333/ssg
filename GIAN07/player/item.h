@@ -19,9 +19,11 @@ inline constexpr auto ITEM_EXTEND = 0x02; // remaining maid count up
 inline constexpr auto ITEM_BOMB = 0x03;   // bomb
 
 // Other
-inline constexpr auto ITEM_GRAVITY = 3;          // Y acceleration for items
-inline constexpr auto ITEM_HITX = (8 + 8) * 64;  // item X collision
-inline constexpr auto ITEM_HITY = (16 + 8) * 64; // item Y collision
+inline constexpr auto ITEM_GRAVITY = 3; // Y acceleration for items
+inline constexpr auto ITEM_HIT_RADIUS = 16 * 64;
+inline constexpr auto ITEM_HIT_RADIUS_LARGE = 28 * 64;
+
+int GetItemHitRadius(uint8_t type);
 
 // [ Struct ]
 struct ItemData {

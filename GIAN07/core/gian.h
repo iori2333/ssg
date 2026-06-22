@@ -9,10 +9,9 @@
 // 2000/02/23 : Achieved performance equivalent to GIAN06
 // 2000/02/09 : Major changes
 
-// #define PBG_DEBUG		// Define to enable debug mode
-
 // [Include Files]
 #include "constants.h"
+#include "game_manager.h"
 
 #include "bullet/bullet_manager.h"
 #include "bullet/homing_laser.h"
@@ -41,8 +40,6 @@
 #include "stage/scroll.h"
 #include "stage/scroll_manager.h"
 #include "util/ut_math.h"
-
-#include "game_manager.h"
 
 // [Constants]
 
@@ -119,13 +116,5 @@ inline int GY_RND() { return (Y_MIN + (rnd() % (Y_MAX - Y_MIN))) << 6; }
 
 // Hit check: nonzero if hit
 inline bool HITCHK(int a, int b, int h) { return std::abs(a - b) < h; }
-
-// [Structures]
-
-// [Global variables]
-// extern HIGH_SCORE	*HighScore;
-// extern char			ScoreTable[8][80];
-// GameCount, GameStage, GameLevel, IsDemoplay declared as references in
-// game_manager.h
 
 void StdStatusOutput();
