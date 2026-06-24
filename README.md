@@ -46,17 +46,22 @@ cmake --build build --config Debug
 
 | Directory | Purpose |
 | --- | --- |
-| `GIAN07/` | Original pbg game code |
-| `game/` | Modern platform-independent layer (graphics, audio, input abstractions) |
-| `platform/` | Platform backend interfaces |
-| `platform/sdl/` | SDL3 backend (Windows and Linux) |
-| `platform/windows/` | Win32-native backends (GDI text, WinMM MIDI, file I/O) |
-| `platform/c/` | Standard-library fallback implementations |
-| `platform/miniaudio/` | Audio backend |
-| `platform/pangocairo/` | Linux text rendering |
-| `libs/` | Vendored Git submodules (SDL3, miniaudio, BLAKE3, dr_libs, libogg, libvorbis, libwebp) |
+| `GIAN07/` | Game logic layer – derived from pbg's original source, refactored to C++23 with modern STL usage |
+| `game/` | Cross-platform layer: SDL3 graphics, miniaudio + TinySoundFont audio, sys/util helpers, Windows resources, and the `main.cpp` entry point |
+| `game/sys/` | System wrappers – buffer, file, path, thread, log, input |
+| `game/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, SDL3 window/render backends |
+| `game/audio/` | Audio layer – sound, MIDI, BGM, codecs, volume, miniaudio/TSF backends |
+| `game/util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
+| `game/art/` | Windows resource icons |
+| `game/platform/` | Platform-specific code with no cross-platform equivalent (text rendering only) |
+| `game/platform/windows/` | Win32 GDI text rendering |
+| `game/platform/linux/pangocairo/` | PangoCairo text rendering on Linux |
+| `cmake/` | CMake helper modules – `bin2h.cmake` (binary→C array) and `generate_scripts_data.cmake` (ECL/SCL embed pipeline) |
+| `scripts/` | ECL/SCL script source files – assembled by `script_tool` at build time and embedded as C arrays via `scripts_data.cpp` |
+| `tools/` | Build tools – `pack_tool` (DAT/PAK pack manipulation + music data migration) and `script_tool` (ECL/SCL disasm/asm) |
+| `libs/` | Vendored Git submodules: SDL3, miniaudio, BLAKE3, dr_libs, libogg, libvorbis, libwebp, tomlplusplus, tinysoundfont |
 
-Entry point: `platform/sdl/main.cpp`.
+Entry point: `game/main.cpp`.
 
 ## Tooling
 
@@ -66,7 +71,17 @@ Entry point: `platform/sdl/main.cpp`.
 
 ## Resources
 
-This repository contains source code only. Image, music, sound effect, and script resources are not included.
+The game loads its runtime data from the `bin/` directory at startup:
+
+- `IMAGES.PAK` — bitmap atlas merged from the original `GRAPH.DAT` and `GRAPH2.DAT`
+- `MAP.PAK` — stage maps and demo replays repacked from the original 48-entry `ENEMY.DAT`
+- `MUSIC.PAK` — BGM tracks with UTF-8 titles/comments (migrated from GBK-encoded `MUSIC.DAT` + `ENEMY.DAT` entries 027–046)
+- `SOUND.PAK` — sound effects
+- `SSG.TOML` — runtime configuration
+- `bgm/`, `soundfonts/` — additional music metadata and soundfont files
+
+PAK files are produced from the original GBK-era assets via `pack_tool` (see
+`tools/README.md`).
 
 ## License
 
