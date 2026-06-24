@@ -6,52 +6,49 @@
 #include "homing_form.h"
 
 #include "core/gian.h"
+#include "core/world.h"
 #include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
-
-// --- HomingForm (base: tracking sub-shots) ---
 
 void HomingForm::FireMain(uint8_t tier) {
   switch (tier) {
   case 0: {
     player_.toge_ex_ += 32;
     const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex_, 4));
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64 + dd, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_HOMING_MAIN)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64 + dd, 0)
+                                      .spd(54, 0)
+                                      .num(1, 0));
     break;
   }
-  case 1:
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 1: {
+    auto cmd = bullets::BulletCommand::way(TID_HOMING_MAIN)
+                   .xy(player_.X() - (6 * 64), player_.Y())
+                   .deg(-64, 0)
+                   .spd(54, 0)
+                   .num(1, 0);
+    player_.Bullets().SpawnPlayer(cmd);
+    cmd.x += (12 * 64);
+    player_.Bullets().SpawnPlayer(cmd);
     break;
+  }
   case 2:
   case 3:
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_HOMING_MAIN)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 7)
+                                      .spd(54, 0)
+                                      .num(3, 0));
     break;
   default:
     // tier 4-8: 5-way
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_HOMING_MAIN)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 7)
+                                      .spd(54, 0)
+                                      .num(5, 0));
     break;
   }
 }
@@ -61,44 +58,36 @@ void HomingForm::FireSub(uint8_t tier) {
     return;
   }
 
-  TamaSTDForm(TID_HOMING_SUB);
-  Bullets.command.type = T_SBHOMING;
-  Bullets.command.rep = 64;
-  Bullets.command.vd = 5;
-
   // Right option
-  TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
-  TamaSetSpd(28, 4);
-  if (tier < 8) {
-    TamaSetDeg(64 - 5, 0);
-    TamaSetNum(1, 0);
-  } else {
-    TamaSetDeg(64 - 22, 30);
-    TamaSetNum(2, 0);
-  }
-  player_.SpawnShot_();
+  player_.Bullets().SpawnPlayer(
+      bullets::BulletCommand::way(TID_HOMING_SUB)
+          .xy(player_.OpX() + (SBOPT_DX * 64), player_.OpY())
+          .spd(28, 4)
+          .vel_type(T_SBHOMING)
+          .homing(64, 5)
+          .deg((tier < 8) ? (64 - 5) : (64 - 22), (tier < 8) ? 0 : 30)
+          .num(1, 0));
 
   // Left option
-  TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
-  if (tier < 8) {
-    TamaSetDeg(64 + 5, 0);
-  } else {
-    TamaSetDeg(64 + 22, 30);
-  }
-  player_.SpawnShot_();
+  player_.Bullets().SpawnPlayer(
+      bullets::BulletCommand::way(TID_HOMING_SUB)
+          .xy(player_.OpX() - (SBOPT_DX * 64), player_.OpY())
+          .spd(28, 4)
+          .vel_type(T_SBHOMING)
+          .homing(64, 5)
+          .deg((tier < 8) ? (64 + 5) : (64 + 22), (tier < 8) ? 0 : 30)
+          .num(1, 0));
 }
 
 void HomingForm::FireBomb() {
   if (player_.bomb_time_ % 30 == 1) {
-    TamaSTDForm(TID_HOMING_BOMB_A);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64, 16);
-    TamaSetNum(8, 1);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_HOMING_BOMB_A)
+                                      .xy(player_.X(), player_.Y())
+                                      .spd(28, 4)
+                                      .vel_type(T_SBHOMING)
+                                      .homing(64, 5)
+                                      .deg(64, 16)
+                                      .num(8, 1));
   }
 }
 
@@ -110,14 +99,14 @@ void HomingFocusForm::FireMain(uint8_t tier) {
   const int count = (tier <= 0) ? 1 : (tier <= 2) ? 2 : (tier <= 4) ? 3 : 4;
   const int spread = (count - 1) * (12 * 64);
 
-  TamaSTDForm(TID_HOMING_FOCUS_MAIN);
-  TamaSetDeg(-64, 0);
-  TamaSetSpd(54, 0);
-  TamaSetNum(1, 0);
-  TamaSetXY(player_.X() - spread / 2, player_.Y());
+  auto cmd = bullets::BulletCommand::way(TID_HOMING_FOCUS_MAIN)
+                 .deg(-64, 0)
+                 .spd(54, 0)
+                 .num(1, 0)
+                 .xy(player_.X() - spread / 2, player_.Y());
   for (int i = 0; i < count; i++) {
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
+    player_.Bullets().SpawnPlayer(cmd);
+    cmd.x += (12 * 64);
   }
 }
 
@@ -126,16 +115,16 @@ void HomingFocusForm::FireSub(uint8_t tier) {
     return;
   }
 
-  TamaSTDForm(TID_HOMING_FOCUS_SUB);
-  TamaSetDeg(-64, 0);
-  TamaSetSpd(54, 0);
-  TamaSetNum(1, 0);
+  auto cmd = bullets::BulletCommand::way(TID_HOMING_FOCUS_SUB)
+                 .deg(-64, 0)
+                 .spd(54, 0)
+                 .num(1, 0);
 
   // Right option
-  TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
-  player_.SpawnShot_();
+  cmd.xy(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
+  player_.Bullets().SpawnPlayer(cmd);
 
   // Left option
-  TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
-  player_.SpawnShot_();
+  cmd.xy(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
+  player_.Bullets().SpawnPlayer(cmd);
 }

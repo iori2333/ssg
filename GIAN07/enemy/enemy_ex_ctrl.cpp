@@ -11,9 +11,9 @@
 #include "enemy_manager.h"
 
 #include "audio/snd.h"
-#include "bullet/laser_manager.h"
 #include "bullet/long_laser.h"
 #include "core/loader.h"
+#include "core/world.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/cast.h"
@@ -123,7 +123,7 @@ void BossManager::SnakyDelete(const BossData *b) {
 
     // Snd_SEPlay(SOUND_ID_BOMB, e->x);
     if (e->LLaserRef != 0U) {
-      Lasers.ForceCloseLong(e); // Force close laser
+      gWorld().projectiles.Long().ForceCloseLong(e); // Force close laser
     }
     // PowerUp(e->hp);			// Power up
     e->hp = 0;
@@ -292,7 +292,7 @@ void BossManager::BitMove() {
 
       // Send deletion request to enemy associated with bit array
       if (e->LLaserRef != 0U) {
-        Lasers.ForceCloseLong(e);
+        gWorld().projectiles.Long().ForceCloseLong(e);
       }
       e->hp = 0;
       e->count = 0; // For explosion animation set
@@ -483,8 +483,8 @@ void BossManager::BitSTDRoll() {
         break;
       }
       LaserDeg = 64 + (256 / bit_data.NumBits);
-      Lasers.RotateLongAbs(e, e->d + LaserDeg, 0);
-      Lasers.RotateLongAbs(e, e->d - LaserDeg, 1);
+      gWorld().projectiles.Long().RotateLongAbs(e, e->d + LaserDeg, 0);
+      gWorld().projectiles.Long().RotateLongAbs(e, e->d - LaserDeg, 1);
       break;
     }
   }
@@ -507,7 +507,7 @@ void BossManager::BitDelete() {
     }
 
     if (e->LLaserRef != 0U) {
-      Lasers.ForceCloseLong(e);
+      gWorld().projectiles.Long().ForceCloseLong(e);
     }
     e->hp = 0;
     e->count = 0;
@@ -584,10 +584,11 @@ void BossManager::BitLaserCommand(uint8_t Command) {
   EnemyData *e = nullptr;
   uint8_t delta = 0;
 
-  Lasers.long_cmd.dx = 0;
-  Lasers.long_cmd.dy = 0;
-  Lasers.long_cmd.v = 64;
-  Lasers.long_cmd.w = 64 * 8;
+  bullets::LongLaserCommand lcmd{};
+  lcmd.dx = 0;
+  lcmd.dy = 0;
+  lcmd.v = 64;
+  lcmd.w = 64 * 8;
 
   bit_data.bIsLaserEnable = true;
 
@@ -597,60 +598,60 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       continue;
     }
 
-    Lasers.long_cmd.e = e;
-    Lasers.long_cmd.d = e->d;
+    lcmd.e = e;
+    lcmd.d = e->d;
 
     switch (Command) {
     case BLASERCMD_TYPE_A: // Emit unidirectional fixed-angle laser
-      Lasers.long_cmd.type = LLS_LONG;
-      Lasers.long_cmd.c = 2;
-      if (Lasers.SpawnLongLaser(e->LLaserRef)) {
+      lcmd.type = LLS_LONG;
+      lcmd.c = 2;
+      if (gWorld().projectiles.Long().SpawnLongLaser(lcmd, e->LLaserRef)) {
         e->LLaserRef++;
       }
       break;
 
     case BLASERCMD_TYPE_B: // Emit bidirectional fixed-angle laser
-      Lasers.long_cmd.d += 64;
-      Lasers.long_cmd.type = LLS_LONG;
-      Lasers.long_cmd.c = 1;
-      if (Lasers.SpawnLongLaser(e->LLaserRef)) {
+      lcmd.d += 64;
+      lcmd.type = LLS_LONG;
+      lcmd.c = 1;
+      if (gWorld().projectiles.Long().SpawnLongLaser(lcmd, e->LLaserRef)) {
         e->LLaserRef++;
       }
 
-      Lasers.long_cmd.d += 128;
-      if (Lasers.SpawnLongLaser(e->LLaserRef)) {
+      lcmd.d += 128;
+      if (gWorld().projectiles.Long().SpawnLongLaser(lcmd, e->LLaserRef)) {
         e->LLaserRef++;
       }
       break;
 
     case BLASERCMD_TYPE_C: // Angle-synchronized n-point star laser
-      Lasers.long_cmd.type = LLS_LONG;
-      Lasers.long_cmd.c = 0;
+      lcmd.type = LLS_LONG;
+      lcmd.c = 0;
 
       delta = 64 + (256 / bit_data.NumBits);
 
-      Lasers.long_cmd.d = e->d + delta;
-      if (Lasers.SpawnLongLaser(e->LLaserRef)) {
+      lcmd.d = e->d + delta;
+      if (gWorld().projectiles.Long().SpawnLongLaser(lcmd, e->LLaserRef)) {
         e->LLaserRef++;
       }
-      Lasers.long_cmd.d = e->d - delta;
-      if (Lasers.SpawnLongLaser(e->LLaserRef)) {
+      lcmd.d = e->d - delta;
+      if (gWorld().projectiles.Long().SpawnLongLaser(lcmd, e->LLaserRef)) {
         e->LLaserRef++;
       }
       break;
 
     case BLASERCMD_OPEN:
-      Lasers.OpenLong(e, ECLCST_LLASERALL);
+      gWorld().projectiles.Long().OpenLong(e, ECLCST_LLASERALL);
       continue;
 
     case BLASERCMD_CLOSE:
-      Lasers.CloseLong(e, ECLCST_LLASERALL);
+      gWorld().projectiles.Long().CloseLong(e, ECLCST_LLASERALL);
       e->LLaserRef = 0;
       bit_data.bIsLaserEnable = false;
       continue;
 
     case BLASERCMD_CLOSEL:
-      Lasers.LineLong(e, ECLCST_LLASERALL);
+      gWorld().projectiles.Long().LineLong(e, ECLCST_LLASERALL);
       continue;
     }
 

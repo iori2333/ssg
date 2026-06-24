@@ -15,6 +15,7 @@
 #include "core/config.h"
 #include "core/gian.h"
 #include "core/level.h"
+#include "core/world.h"
 #include "effect/font_uty.h"
 #include "effect/geometry.h"
 #include "sys/input.h"
@@ -45,37 +46,6 @@ bool Player::IsMainShotFrame_(uint16_t t) const {
 
 bool Player::IsSubShotFrame_(uint16_t t) const {
   return (t == 0 || t == MAID_SUB_SHOT) && bomb_time_ == 0;
-}
-
-void Player::SpawnShot_() {
-  for (uint8_t i = 0; i < Bullets.command.n; i++) {
-    if (maid_tama_now_ + 1 >= MAIDTAMA_MAX) {
-      return;
-    }
-
-    auto *t = &maid_tama_[maid_tama_ind_[maid_tama_now_++]];
-
-    t->x = t->tx = Bullets.command.x;
-    t->y = t->ty = Bullets.command.y;
-
-    t->v = t->v0 = Bullets.Speed(i);
-    t->a = Bullets.command.a;
-
-    t->d = Bullets.Dir(i);
-    t->d16 = (t->d << 8);
-
-    t->vx = cosl(t->d, t->v);
-    t->vy = sinl(t->d, t->v);
-
-    t->vd = Bullets.command.vd;
-    t->c = Bullets.command.c;
-    t->rep = Bullets.command.rep;
-    t->type = Bullets.command.type;
-    t->option = Bullets.command.option;
-    t->effect = 0;
-    t->count = 0;
-    t->flag = Bullets.Flag();
-  }
 }
 
 void Player::DrawWideBomb() const {
@@ -500,8 +470,8 @@ void Player::Update() {
   SetMaidShot();
 
   if (bomb_time_ != 0U) {
-    Bullets.Clear();
-    Lasers.Clear();
+    gWorld().projectiles.Bullets().Clear();
+    gWorld().projectiles.Reflect().Clear();
   }
 
   buzz_sound_ = false;
@@ -627,8 +597,8 @@ void Player::OnDeath(bool play_se) {
     bomb_--;
     bomb_used_++;
     Ranking.Add(-BOMB_RANK_DECR); // auto bomb_ decreases rank
-    Bullets.Clear();
-    Lasers.Clear();
+    gWorld().projectiles.Bullets().Clear();
+    gWorld().projectiles.Reflect().Clear();
     return;
   }
 
@@ -663,8 +633,8 @@ void Player::OnDeath(bool play_se) {
     GameOverInit();
   }
 
-  Bullets.Clear();
-  Lasers.Clear();
+  gWorld().projectiles.Bullets().Clear();
+  gWorld().projectiles.Reflect().Clear();
 }
 
 void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }

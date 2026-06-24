@@ -16,6 +16,7 @@
 #include "core/config.h"
 #include "core/gian.h"
 #include "core/level.h"
+#include "core/world.h"
 #include "effect/bomb_efc.h"
 #include "effect/font_uty.h"
 #include "effect/geometry.h"
@@ -98,7 +99,7 @@ void GameMove();
 
 GameLevel CurrentLevel() {
   return ((Games.game_stage == GRAPH_ID_EXSTAGE) ? GameLevel::EXTRA
-                                                     : Games.game_level);
+                                                 : Games.game_level);
 }
 
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
@@ -563,10 +564,9 @@ void GameSTD_Init() {
   // Players.Initialize();
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
-  Bullets.SetIndices(400 + 200); // 400 for small bullets
-  Lasers.SetIndices();
-  Lasers.SetupLong();
-  Lasers.InitHoming();
+  gWorld().projectiles.Reset(); // Inits enemy bullet pools, reflect / long
+                                // / homing laser sub-pools, and player
+                                // shot indices.
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
   Effects.InitLockOn();
@@ -880,8 +880,8 @@ bool GameExit(bool bNeedChgMusic) {
   }
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  Lasers.SetupLong(); // Stop sound
-  Snd_SEStop(8);      // Stop warning sound
+  gWorld().projectiles.Long().Setup(); // Stop sound
+  Snd_SEStop(8);                       // Stop warning sound
 
   const auto flags = MsgWindowFlags::CENTER;
   UI.MsgForceClose();
@@ -1450,10 +1450,7 @@ void GameMove() {
   Bosses.Move();
   Enemies.Move();
   Items.Move();
-  Bullets.Move();
-  Lasers.Move();
-  Lasers.MoveLong();
-  Lasers.MoveHoming();
+  gWorld().projectiles.Move();
   Effects.MoveFragments();
   Effects.MoveStringEffects();
   Effects.MoveCircleEffects();
@@ -1486,8 +1483,13 @@ void GameDraw() {
 
   Players.Draw();
 
+  // Long lasers are drawn in two backend-gated passes inside
+  // ProjectileSystem::Draw(), but historically GameDraw split them
+  // so that fragments / long lasers would interleave between the two
+  // passes.  We preserve that original ordering here by manually
+  // calling only the long-laser pass between fragments.
   if (GrpGeom_FB() != nullptr) {
-    Lasers.DrawLong();
+    gWorld().projectiles.Long().DrawLong();
   }
 
   Effects.DrawLockOn();
@@ -1496,12 +1498,14 @@ void GameDraw() {
   Items.Draw();
 
   if (GrpGeom_Poly() != nullptr) {
-    Lasers.DrawLong();
+    gWorld().projectiles.Long().DrawLong();
   }
 
-  Lasers.DrawHoming();
-  Lasers.Draw();
-  Bullets.Draw();
+  // Short/reflect lasers & homing lasers & enemy bullets.
+  // (DrawLong was already issued above; just the remaining three.)
+  gWorld().projectiles.Homing().DrawHoming();
+  gWorld().projectiles.Reflect().Draw();
+  gWorld().projectiles.Bullets().Draw();
 
 #ifdef PBG_DEBUG
   if (ConfigDat.hitbox_display != 0) {
@@ -1544,16 +1548,17 @@ bool GameFlowManager::IsDraw() {
 
 #ifdef PBG_DEBUG
 static void GalleryUpdateAngles() {
-  for (uint16_t i = 0; i < Bullets.count_small; i++) {
-    auto *t = &Bullets.bullets[Bullets.indices_small[i]];
-    if ((t->c & 0xF0) == TAMA_ANGLE) {
+  auto &bullets_sub = gWorld().projectiles.Bullets();
+  for (const auto idx : bullets_sub.EnemySmallIndices()) {
+    auto *t = &bullets_sub.AllEnemySmallUnsafe()[idx];
+    if ((t->c & 0xF0) == bullets::TAMA_ANGLE) {
       t->d += 4;
     }
   }
-  for (uint16_t i = 0; i < Bullets.count_large; i++) {
-    auto *t = &Bullets.bullets[Bullets.indices_large[i]];
+  for (const auto idx : bullets_sub.EnemyLargeIndices()) {
+    auto *t = &bullets_sub.AllEnemyLargeUnsafe()[idx];
     const auto cat = t->c & 0xF0;
-    if (cat == TAMA_ANGLE || cat == TAMA_EXTRA2) {
+    if (cat == bullets::TAMA_ANGLE || cat == bullets::TAMA_EXTRA2) {
       t->d += 4;
     }
   }
@@ -1598,70 +1603,60 @@ static void SpawnGalleryBullets() {
   static constexpr int dx = 64;
   static constexpr int dy = 80;
 
+  auto &bullets_sub = gWorld().projectiles.Bullets();
+  auto small_all = bullets_sub.AllEnemySmallUnsafe();
+  auto large_all = bullets_sub.AllEnemyLargeUnsafe();
+  auto small_idx = bullets_sub.EnemySmallIndicesUnsafe();
+  auto large_idx = bullets_sub.EnemyLargeIndicesUnsafe();
+  uint16_t small_count = 0;
+  uint16_t large_count = 0;
+
+  auto fill = [&](uint8_t c, int wx, int wy) {
+    bullets::Bullet *t;
+    if ((c & 0xF0) == bullets::TAMA_SMALL) {
+      t = &small_all[small_idx[small_count]];
+      small_count++;
+    } else {
+      t = &large_all[large_idx[large_count]];
+      large_count++;
+    }
+    t->x = wx;
+    t->y = wy;
+    t->vx = 0;
+    t->vy = 0;
+    t->v = 0;
+    t->v0 = 0;
+    t->c = c;
+    t->d = 0;
+    t->d16 = 0;
+    t->effect = 0;
+    t->flag = 0;
+    t->type = bullets::T_NORM;
+    t->rep = 0;
+    t->option = 0;
+    t->a = 0;
+    t->vd = 0;
+    t->count = 0;
+    t->tx = 0;
+    t->ty = 0;
+  };
+
   for (int row = 0; row < 5; row++) {
     for (int col = 0; col < 6; col++) {
       const uint8_t c = c_grid[row][col];
-      if (c == 0xFF) {
+      if (c == 0xFF)
         continue;
-      }
-      const int wx = (x0 + col * dx) * 64;
-      const int wy = (y0 + row * dy) * 64;
-
-      if ((c & 0xF0) == TAMA_SMALL) {
-        const auto idx = Bullets.count_small;
-        auto *t = &Bullets.bullets[Bullets.indices_small[idx]];
-        Bullets.count_small++;
-        t->x = wx;
-        t->y = wy;
-        t->vx = 0;
-        t->vy = 0;
-        t->v = 0;
-        t->v0 = 0;
-        t->c = c;
-        t->d = 0;
-        t->d16 = 0;
-        t->effect = 0;
-        t->flag = 0;
-        t->type = T_NORM;
-        t->rep = 0;
-        t->option = 0;
-        t->a = 0;
-        t->vd = 0;
-        t->count = 0;
-        t->tx = 0;
-        t->ty = 0;
-      } else {
-        const auto idx = Bullets.count_large;
-        auto *t = &Bullets.bullets[Bullets.indices_large[idx]];
-        Bullets.count_large++;
-        t->x = wx;
-        t->y = wy;
-        t->vx = 0;
-        t->vy = 0;
-        t->v = 0;
-        t->v0 = 0;
-        t->c = c;
-        t->d = 0;
-        t->d16 = 0;
-        t->effect = 0;
-        t->flag = 0;
-        t->type = T_NORM;
-        t->rep = 0;
-        t->option = 0;
-        t->a = 0;
-        t->vd = 0;
-        t->count = 0;
-        t->tx = 0;
-        t->ty = 0;
-      }
+      fill(c, (x0 + col * dx) * 64, (y0 + row * dy) * 64);
     }
   }
+  bullets_sub.SetEnemySmallNow(small_count);
+  bullets_sub.SetEnemyLargeNow(large_count);
 }
 
 static void BulletGalleryProc(bool & /*quit*/) {
   if ((Key_Data & KEY_ESC) != 0U) {
     ConfigDat.bullet_gallery_active = false;
-    Bullets.Clear();
+    gWorld().projectiles.Bullets().Clear();
     (void)LoadGraph(GRAPH_ID_TITLE);
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
@@ -1676,7 +1671,7 @@ static void BulletGalleryProc(bool & /*quit*/) {
   }
 
   GrpBackend_Clear();
-  Bullets.Draw();
+  gWorld().projectiles.Bullets().Draw();
 
   if (ConfigDat.hitbox_display != 0) {
     BulletDebug_DrawHitboxes(ConfigDat.hitbox_display);
@@ -1696,8 +1691,8 @@ void BulletGalleryInit() {
     return;
   }
   (void)LoadGalleryEnemySurfaces();
-  Bullets.SetIndices(400 + 200);
-  Bullets.Clear();
+  gWorld().projectiles.Bullets().ResetEnemyIndices();
+  gWorld().projectiles.Bullets().Clear();
   SpawnGalleryBullets();
   ConfigDat.bullet_gallery_active = true;
   GameFlow.game_main = BulletGalleryProc;

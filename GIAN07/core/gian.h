@@ -13,10 +13,9 @@
 #include "constants.h"
 #include "game_manager.h"
 
-#include "bullet/bullet_manager.h"
+#include "bullet/bullet.h"
 #include "bullet/homing_laser.h"
 #include "bullet/laser.h"
-#include "bullet/laser_manager.h"
 #include "bullet/long_laser.h"
 #include "effect/effect.h"
 #include "effect/effect3d.h"

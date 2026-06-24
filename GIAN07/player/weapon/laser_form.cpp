@@ -6,6 +6,7 @@
 #include "laser_form.h"
 
 #include "core/gian.h"
+#include "core/world.h"
 #include "player/player.h"
 
 // --- LaserForm (base: wider spread) ---
@@ -13,57 +14,56 @@
 void LaserForm::FireMain(uint8_t tier) {
   switch (tier) {
   case 0:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_LASER_SUB)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 0)
+                                      .spd(54, 0)
+                                      .num(1, 0));
     break;
   case 1:
-  case 2:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 2: {
+    auto cmd = bullets::BulletCommand::way(TID_LASER_SUB)
+                   .xy(player_.X() - (6 * 64), player_.Y())
+                   .deg(-64, 0)
+                   .spd(54, 0)
+                   .num(1, 0);
+    player_.Bullets().SpawnPlayer(cmd);
+    cmd.x += (12 * 64);
+    player_.Bullets().SpawnPlayer(cmd);
     Player::SetMLaser(64 + 50);
     break;
+  }
   case 3:
   case 4:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 6);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_LASER_SUB)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 6)
+                                      .spd(54, 0)
+                                      .num(3, 0));
     Player::SetMLaser(64 + 100);
     break;
   case 5:
   case 6:
-  case 7:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetSpd(54, 0);
-    TamaSetDeg(-64 - 5, 10);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetNum(2, 0);
-    player_.SpawnShot_();
-    TamaSetDeg(-64 + 5, 10);
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 7: {
+    auto cmd = bullets::BulletCommand::way(TID_LASER_SUB)
+                   .spd(54, 0)
+                   .deg(-64 - 5, 10)
+                   .xy(player_.X() - (6 * 64), player_.Y())
+                   .num(2, 0);
+    player_.Bullets().SpawnPlayer(cmd);
+    cmd.deg(-64 + 5, 10);
+    cmd.x += (12 * 64);
+    player_.Bullets().SpawnPlayer(cmd);
     Player::SetMLaser(64 + 150);
     break;
+  }
   default:
     // tier 8
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 6);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_LASER_SUB)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 6)
+                                      .spd(54, 0)
+                                      .num(5, 0));
     Player::SetMLaser(64 + 200);
     break;
   }
@@ -119,57 +119,56 @@ void LaserForm::OnCollisionTick() {
 void LaserFocusForm::FireMain(uint8_t tier) {
   switch (tier) {
   case 0:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_LASER_SUB)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 0)
+                                      .spd(54, 0)
+                                      .num(1, 0));
     break;
   case 1:
-  case 2:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 2: {
+    auto cmd = bullets::BulletCommand::way(TID_LASER_SUB)
+                   .xy(player_.X() - (6 * 64), player_.Y())
+                   .deg(-64, 0)
+                   .spd(54, 0)
+                   .num(1, 0);
+    player_.Bullets().SpawnPlayer(cmd);
+    cmd.x += (12 * 64);
+    player_.Bullets().SpawnPlayer(cmd);
     Player::SetMLaser(64 + 50);
     break;
+  }
   case 3:
   case 4:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 2);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_LASER_SUB)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 2)
+                                      .spd(54, 0)
+                                      .num(3, 0));
     Player::SetMLaser(64 + 100);
     break;
   case 5:
   case 6:
-  case 7:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetSpd(54, 0);
-    TamaSetDeg(-64 - 2, 4);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetNum(2, 0);
-    player_.SpawnShot_();
-    TamaSetDeg(-64 + 2, 4);
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 7: {
+    auto cmd = bullets::BulletCommand::way(TID_LASER_SUB)
+                   .spd(54, 0)
+                   .deg(-64 - 2, 4)
+                   .xy(player_.X() - (6 * 64), player_.Y())
+                   .num(2, 0);
+    player_.Bullets().SpawnPlayer(cmd);
+    cmd.deg(-64 + 2, 4);
+    cmd.x += (12 * 64);
+    player_.Bullets().SpawnPlayer(cmd);
     Player::SetMLaser(64 + 150);
     break;
+  }
   default:
     // tier 8: 4-way narrow spread
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 2);
-    TamaSetSpd(54, 0);
-    TamaSetNum(4, 0);
-    player_.SpawnShot_();
+    player_.Bullets().SpawnPlayer(bullets::BulletCommand::way(TID_LASER_SUB)
+                                      .xy(player_.X(), player_.Y())
+                                      .deg(-64, 2)
+                                      .spd(54, 0)
+                                      .num(4, 0));
     Player::SetMLaser(64 + 200);
     break;
   }

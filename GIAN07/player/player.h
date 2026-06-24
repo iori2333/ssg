@@ -16,6 +16,12 @@
 #include "player_shot.h"
 #include "weapon/weapon_form.h"
 
+namespace bullets {
+class BulletSubsystem;
+}
+struct GameWorld;
+GameWorld &gWorld();
+
 // [ Constants ]
 
 inline constexpr int VIVDEAD_VAL = 300;   // Viv death time
@@ -97,6 +103,10 @@ public:
   void SetMaidShotIndices();
   static void SetMLaser(uint16_t time);
 
+  // --- Projectile system access (used by WeaponForm subclasses) ---
+  // Returns the BulletSubsystem owning the player shot pool.
+  bullets::BulletSubsystem &Bullets();
+
   // --- Laser angle ---
   [[nodiscard]] uint8_t GetLaserDeg() const;
   static uint8_t GetRightLaserDeg(uint8_t LaserDeg, int i);
@@ -124,7 +134,7 @@ public:
   bool IsInvincible() const { return muteki_ != 0; }
   bool IsBombActive() const { return bomb_time_ != 0; }
   bool IsGameOver() const { return game_over_; }
-  uint16_t ShotCount() const { return maid_tama_now_; }
+  uint16_t ShotCount() const;
 
   // --- Setters / action methods ---
   void SetWeapon(uint8_t w) { weapon_ = w; }
@@ -162,9 +172,6 @@ public:
   // Commits the currently-previewed weapon into the snapshot and
   // restores the saved state.  No-op if no preview is active.
   void CommitWeaponSelection();
-
-  // --- Shot pool helper (used by WeaponForm subclasses) ---
-  void SpawnShot_();
 
 private:
   friend class WeaponForm;
@@ -233,11 +240,6 @@ private:
 
   bool game_over_ = false;
   bool buzz_sound_ = false;
-
-  // --- Shot pool ---
-  std::array<Bullet, MAIDTAMA_MAX> maid_tama_{};
-  std::array<uint16_t, MAIDTAMA_MAX> maid_tama_ind_{};
-  uint16_t maid_tama_now_ = 0;
 
   // --- Weapon-select preview snapshot ---
   // Lightweight state save/restore for the weapon select screen.

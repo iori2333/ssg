@@ -13,6 +13,7 @@
 #include "audio/snd.h"
 #include "core/gian.h"
 #include "core/loader.h"
+#include "core/world.h"
 #include "effect/bomb_efc.h"
 #include "effect/font_uty.h"
 #include "effect/geometry.h"
@@ -500,8 +501,7 @@ void BossManager::DrawHPG() {
       }
     } else if (hpg.SCLTimerEnd > 0) {
       const int remain = std::min(
-          (hpg.SCLTimerEnd - static_cast<int32_t>(Games.game_count)) / 60,
-          99);
+          (hpg.SCLTimerEnd - static_cast<int32_t>(Games.game_count)) / 60, 99);
       if (remain >= 0) {
         if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
           Snd_SEPlay(SOUND_ID_SBLASER);
@@ -541,7 +541,7 @@ void BossManager::KillAll() {
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
       if (e->LLaserRef != 0U) {
-        Lasers.ForceCloseLong(e); // Force close laser
+        gWorld().projectiles.Long().ForceCloseLong(e); // Force close laser
       }
       e->hp = 0;
       e->count = 0;
@@ -565,7 +565,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SOUND_ID_BOSSBOMB, e.x);
     if (e.LLaserRef != 0U) {
-      Lasers.ForceCloseLong(&e); // Force close laser
+      gWorld().projectiles.Long().ForceCloseLong(&e); // Force close laser
     }
     Players.PowerUp(Cast::down<uint8_t>(e.hp));
     e.hp = 0;
@@ -574,7 +574,9 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
 
     // If it was the last one //
     if (count == 1) {
-      const auto temp = Bullets.ScoreToItems(); // Bullet -> score effect
+      const auto temp =
+          gWorld().projectiles.Bullets().ScoreToItems(); // Bullet -> score
+                                                         // effect
       // sprintf(buf, "%3d Evade  %5dPts", Players.GrazeCount(),
       // Players.evadesc);
       Effects.SpawnStringEffect(
@@ -586,7 +588,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
       Items.Spawn(e.x, e.y, e.item);
     }
     Players.AddScore(e.score);
-    Lasers.Clear();
+    gWorld().projectiles.Reflect().Clear();
     b.IsUsed = false;
     count--; // Uses boss reference count?
   } else {
@@ -777,10 +779,10 @@ void BossManager::STDMove(BossData *b) {
   if (e->t_rep != 0U) {
     e->tama_c = (e->tama_c + 1) % (e->t_rep);
     if (e->tama_c == 0) {
-      Bullets.command = e->t_cmd;
-      Bullets.command.x += e->x;
-      Bullets.command.y += e->y;
-      Bullets.Spawn();
+      bullets::BulletCommand cmd = e->t_cmd;
+      cmd.x += e->x;
+      cmd.y += e->y;
+      gWorld().projectiles.Bullets().Spawn(cmd);
     }
   }
 
