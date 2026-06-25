@@ -131,6 +131,8 @@ public:
   uint16_t GrazeWaitTime() const { return evade_c_; }
   uint32_t StarCounter() const { return star_counter_; }
   uint32_t StarThreshold() const { return star_threshold_; }
+  // LASER-form continuous-beam visual intensity tier (0..4).
+  uint8_t LayGrp() const { return lay_grp_; }
   bool IsInvincible() const { return muteki_ != 0; }
   bool IsBombActive() const { return bomb_time_ != 0; }
   bool IsGameOver() const { return game_over_; }

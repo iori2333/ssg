@@ -7,7 +7,47 @@
 
 #include "core/gian.h"
 #include "core/world.h"
+#include "gfx/graphics_backend.h"
 #include "player/player.h"
+
+namespace {
+
+// Draws the infinite vertical continuous laser beam from `player`'s two
+// option positions.  `loff` is the horizontal spacing between the two
+// beams, in pixel units (base = `SBOPT_DX`, focus = `SBOPT_DX / 2`).
+// The beam's visual intensity is selected by `lay_grp_`.
+void DrawContinuousBeam(Player &player, int loff) {
+  if (const auto grp = player.LayGrp(); grp == 0U) {
+    return;
+  } else {
+    PIXEL_LTRB ltemp;
+    int x = 0;
+    int y = 0;
+
+    // Beam heads near the options.
+    ltemp = PIXEL_LTWH{(384 + ((grp - 1) << 4)), 240, 8, 16};
+    x = (player.OpX() >> 6) + 4 - 8 + loff;
+    y = (player.OpY() >> 6) - 20;
+    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
+
+    x = (player.OpX() >> 6) + 4 - 8 - loff;
+    y = (player.OpY() >> 6) - 20;
+    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
+
+    // Beam tails continuously blitted above the heads.
+    ltemp = PIXEL_LTWH{(384 + 8 + ((grp - 1) << 4)), 240, 8, 16};
+    for (int i = (player.OpY() >> 6) - 36; i > -16; i -= 16) {
+      x = (player.OpX() >> 6) + 4 - 8 + loff;
+      GrpSurface_Blit({x, i}, SURFACE_ID::SYSTEM, ltemp);
+    }
+    for (int i = (player.OpY() >> 6) - 36; i > -16; i -= 16) {
+      x = (player.OpX() >> 6) + 4 - 8 - loff;
+      GrpSurface_Blit({x, i}, SURFACE_ID::SYSTEM, ltemp);
+    }
+  }
+}
+
+} // namespace
 
 // --- LaserForm (base: wider spread) ---
 
@@ -199,4 +239,16 @@ void LaserFocusForm::OnCollisionTick() {
     Enemies.DamageAt2(player_.opx_ + (loff << 6), player_.opy_, ldmg);
     Enemies.DamageAt2(player_.opx_ - (loff << 6), player_.opy_, ldmg);
   }
+}
+
+// --- Continuous beam rendering ---
+
+void LaserForm::DrawBeam() {
+  // Base form: full beam spacing.
+  DrawContinuousBeam(player_, SBOPT_DX);
+}
+
+void LaserFocusForm::DrawBeam() {
+  // Focus form: beams pulled together.
+  DrawContinuousBeam(player_, SBOPT_DX / 2);
 }

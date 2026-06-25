@@ -38,6 +38,11 @@ public:
   // (laser).  Called from MoveMaidShot after bullet hit detection.
   virtual void OnCollisionTick() {}
 
+  // Draw the weapon-specific continuous beam overlay (currently only
+  // the LASER form).  Called from DrawMaidShot after the shot pool draw.
+  // Default is a no-op so non-laser forms skip rendering.
+  virtual void DrawBeam() {}
+
 protected:
   explicit WeaponForm(Player &player) : player_(player) {}
   Player &player_;

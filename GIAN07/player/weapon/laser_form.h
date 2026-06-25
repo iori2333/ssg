@@ -15,6 +15,7 @@ public:
   uint16_t BombDuration() const override;
   void OnFireTick() override;
   void OnCollisionTick() override;
+  void DrawBeam() override;
 };
 
 class LaserFocusForm : public WeaponForm {
@@ -24,4 +25,5 @@ public:
   void FireSub(uint8_t tier) override {}
   void OnFireTick() override;
   void OnCollisionTick() override;
+  void DrawBeam() override;
 };
