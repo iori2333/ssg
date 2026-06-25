@@ -78,8 +78,15 @@ public:
   void ResetEnemyIndices();
 
   // --- Capacity info ---
-  static constexpr size_t kEnemySmallMax = 400;
-  static constexpr size_t kEnemyLargeMax = (TAMA_MAX - 400);
+  // Enemy bullet pool capacities.  Match the legacy split produced by
+  // `Bullets.SetIndices(400 + 200)` — that call passed `600` as the
+  // small-bullet cap, so `max_small = 600`, `max_large = TAMA_MAX-600`.
+  // The "400" comment in game_main.cpp was misleading; the actual
+  // runtime capacity was 600 small slots.  Shrinking it to 400 caused
+  // high-density/fast small-bullet patterns to overflow `AllocEnemy`
+  // and silently drop spawns (visible as missing bullet sprites).
+  static constexpr size_t kEnemySmallMax = 600;
+  static constexpr size_t kEnemyLargeMax = (TAMA_MAX - 600);
   static constexpr size_t kPlayerMax = MAIDTAMA_MAX;
 
 private:
