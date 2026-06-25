@@ -72,7 +72,41 @@ void Player::MoveMaidShot() {
   ActiveForm_()->OnCollisionTick();
 }
 
-void Player::DrawMaidShot() { gWorld().projectiles.Bullets().DrawPlayer(); }
+void Player::DrawMaidShot() {
+  gWorld().projectiles.Bullets().DrawPlayer();
+
+  // Continuous laser beam drawing — owned by the player rather than the
+  // shared shot pool, as it draws an infinite vertical beam directly from
+  // the option positions and depends on player input/state (weapon_, shift).
+  if (weapon_ == 2 && (lay_grp_ != 0U)) {
+    PIXEL_LTRB ltemp;
+    int x = 0, y = 0;
+
+    // Focus (low-speed) form: pull the two beams closer together.
+    const int loff = ((Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
+
+    // Beam heads near the options.
+    ltemp = PIXEL_LTWH{(384 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
+    x = (opx_ >> 6) + 4 - 8 + loff;
+    y = (opy_ >> 6) - 20;
+    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
+
+    x = (opx_ >> 6) + 4 - 8 - loff;
+    y = (opy_ >> 6) - 20;
+    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
+
+    // Beam tails continuously blitted above the heads.
+    ltemp = PIXEL_LTWH{(384 + 8 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
+    for (int i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+      x = (opx_ >> 6) + 4 - 8 + loff;
+      GrpSurface_Blit({x, i}, SURFACE_ID::SYSTEM, ltemp);
+    }
+    for (int i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+      x = (opx_ >> 6) + 4 - 8 - loff;
+      GrpSurface_Blit({x, i}, SURFACE_ID::SYSTEM, ltemp);
+    }
+  }
+}
 
 void Player::SetMaidShotIndices() {
   gWorld().projectiles.Bullets().ResetPlayerIndices();
