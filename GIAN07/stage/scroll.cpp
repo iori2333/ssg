@@ -164,7 +164,8 @@ static void enemy_set() {
     const auto *cmd = Enemies.scl_now;
     switch (cmd[0]) {
     case SCL_KEY: // Wait for key input
-      if (((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) != 0) ||
+      if (Games.is_demoplay ||
+          ((Key_Data & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) != 0) ||
           ++Scroller.key_wait_count >= 180) {
         Enemies.scl_now++;
         Scroller.key_wait_count = 0;
@@ -177,7 +178,11 @@ static void enemy_set() {
       const auto temp = U32LEAt(&cmd[1]);
       // If message window is open
       if (Scroller.scene.MsgFlag) {
-        if (((Key_Data & KEY_TAMA) != 0) || ((Key_Data & KEY_RETURN) != 0) ||
+        if (Games.is_demoplay) {
+          // Demoplay shows no dialog — skip the conversation wait
+          // instantly rather than waiting on playback input.
+          Games.game_count = temp;
+        } else if (((Key_Data & KEY_TAMA) != 0) || ((Key_Data & KEY_RETURN) != 0) ||
             ((Key_Data & KEY_BOMB) != 0)) {
           if (!Scroller.scene.ReturnFlag) {
             Games.game_count = temp;
@@ -269,7 +274,9 @@ static void enemy_set() {
       break;
 
     case SCL_MWOPEN: // Open message window
-      if (!ConfigDat.msg_disable) {
+      // Demoplay shows no dialog (skip Open), but still raise MsgFlag so
+      // the SCL_TIME dialog branch can skip the conversation wait.
+      if (!Games.is_demoplay && !ConfigDat.msg_disable) {
         UI.Msg().Open();
       }
       Scroller.scene.MsgFlag = true;
@@ -277,7 +284,7 @@ static void enemy_set() {
       break;
 
     case SCL_MWCLOSE: // Close message window
-      if (!ConfigDat.msg_disable) {
+      if (!Games.is_demoplay && !ConfigDat.msg_disable) {
         UI.Msg().Close();
       }
       Scroller.scene.MsgFlag = false;
@@ -285,13 +292,16 @@ static void enemy_set() {
       break;
 
     case SCL_MSG: // Output message
-      // UI.Msg().Cmd(MWCMD_SMALLFONT);
-      UI.Msg().Msg(reinterpret_cast<const char *>(cmd + 1));
+      if (!Games.is_demoplay) {
+        UI.Msg().Msg(reinterpret_cast<const char *>(cmd + 1));
+      }
       Enemies.scl_now += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
       break;
 
     case SCL_FACE: // Display face
-      UI.Msg().Face(cmd[1]);
+      if (!Games.is_demoplay) {
+        UI.Msg().Face(cmd[1]);
+      }
       Enemies.scl_now += 2;
       break;
 
@@ -301,7 +311,9 @@ static void enemy_set() {
       break;
 
     case SCL_NPG: // Change to new page
-      UI.Msg().Cmd(MWCMD_NEWPAGE);
+      if (!Games.is_demoplay) {
+        UI.Msg().Cmd(MWCMD_NEWPAGE);
+      }
       Enemies.scl_now++;
       break;
 
