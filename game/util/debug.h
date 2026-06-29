@@ -17,4 +17,8 @@ extern void DebugCleanup(void); // Close the error output file
 extern void DebugLog(std::string_view s);
 extern void DebugOut(std::string_view s); // Output debug message
 
+// Install a DEBUG-only crash handler that dumps a std::stacktrace to the
+// error log + stderr on abort / SEH / terminate.  No-op in release builds.
+extern void DebugInstallCrashHandler(void);
+
 #endif
