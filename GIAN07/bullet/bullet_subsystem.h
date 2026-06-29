@@ -54,12 +54,13 @@ public:
   std::span<const Bullet> AllPlayer() const { return player_bullets_; }
   std::span<Bullet> AllEnemySmallUnsafe() { return enemy_small_bullets_; }
   std::span<Bullet> AllEnemyLargeUnsafe() { return enemy_large_bullets_; }
-  std::span<uint16_t> EnemySmallIndicesUnsafe() {
-    return {enemy_small_idx_.data(), enemy_small_now_};
-  }
-  std::span<uint16_t> EnemyLargeIndicesUnsafe() {
-    return {enemy_large_idx_.data(), enemy_large_now_};
-  }
+  // Full backing index arrays (length = capacity, NOT the live `now`
+  // count).  The bullet-gallery debug mode rebuilds these as an identity
+  // map via `ResetEnemyIndices()` (which also zeroes `now`) and then
+  // writes slots by raw position, so it needs unbounded access.  Use the
+  // const `EnemySmall/LargeIndices()` views below to walk only live slots.
+  std::span<uint16_t> EnemySmallIndicesUnsafe() { return enemy_small_idx_; }
+  std::span<uint16_t> EnemyLargeIndicesUnsafe() { return enemy_large_idx_; }
   std::span<const uint16_t> EnemySmallIndices() const {
     return {enemy_small_idx_.data(), enemy_small_now_};
   }
