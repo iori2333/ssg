@@ -34,16 +34,17 @@ bool LongLaserSubsystem::SpawnLongLaser(const LongLaserCommand &cmd,
   lp->lx = lp->ly = lp->wx = lp->wy = 0;
   lp->w = 0;
   lp->wmax = cmd.w;
-  lp->d = cmd.d;
+  lp->d = ut_math_detail::deg256_to_rad(cmd.d);
 
   if (cmd.type == LLS_LONGZ) {
-    lp->d += atan8(world_.players.X() - lp->x, world_.players.Y() - lp->y);
+    lp->d += ut_math_detail::deg256_to_rad(
+        atan8(world_.players.X() - lp->x, world_.players.Y() - lp->y));
     lp->type = LLS_LONG;
   } else {
     lp->type = cmd.type;
   }
-  lp->infx = cosl(lp->d, 800);
-  lp->infy = sinl(lp->d, 800);
+  lp->infx = cos_len(lp->d, 800);
+  lp->infy = sin_len(lp->d, 800);
   lp->count = 0;
   SetLongPoint(&*lp);
   lp->flag = LLF_LINE;
@@ -96,13 +97,13 @@ void LongLaserSubsystem::RotateLongAbs(const EnemyData *e, uint8_t d,
   for (auto &it : long_lasers_) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
-      lp->d = d;
-      lp->lx = cosl(lp->d, lp->w >> 6);
-      lp->ly = sinl(lp->d, lp->w >> 6);
+      lp->d = ut_math_detail::deg256_to_rad(d);
+      lp->lx = cos_len(lp->d, lp->w >> 6);
+      lp->ly = sin_len(lp->d, lp->w >> 6);
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
-      lp->infx = cosl(lp->d, 800);
-      lp->infy = sinl(lp->d, 800);
+      lp->infx = cos_len(lp->d, 800);
+      lp->infy = sin_len(lp->d, 800);
       SetLongPoint(lp);
     }
   }
@@ -112,13 +113,13 @@ void LongLaserSubsystem::RotateLongRel(const EnemyData *e, char d, uint8_t id) {
   for (auto &it : long_lasers_) {
     auto *lp = &it;
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL)) {
-      lp->d += d;
-      lp->lx = cosl(lp->d, lp->w >> 6);
-      lp->ly = sinl(lp->d, lp->w >> 6);
+      lp->d += d * ut_math_detail::DEG256_TO_RAD;
+      lp->lx = cos_len(lp->d, lp->w >> 6);
+      lp->ly = sin_len(lp->d, lp->w >> 6);
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
-      lp->infx = cosl(lp->d, 800);
-      lp->infy = sinl(lp->d, 800);
+      lp->infx = cos_len(lp->d, 800);
+      lp->infy = sin_len(lp->d, 800);
       SetLongPoint(lp);
     }
   }
@@ -138,14 +139,15 @@ void LongLaserSubsystem::MoveLong() {
   for (int i = 0; i < LLASER_MAX; ++i) {
     auto *lp = &long_lasers_[i];
 
-    if (lp->type == LLS_SETDEG && (lp->e != nullptr) && lp->d != lp->e->d) {
-      lp->d = lp->e->d;
-      lp->lx = cosl(lp->d, lp->w >> 6);
-      lp->ly = sinl(lp->d, lp->w >> 6);
+    if (lp->type == LLS_SETDEG && (lp->e != nullptr) &&
+        lp->d != ut_math_detail::deg256_to_rad(lp->e->d)) {
+      lp->d = ut_math_detail::deg256_to_rad(lp->e->d);
+      lp->lx = cos_len(lp->d, lp->w >> 6);
+      lp->ly = sin_len(lp->d, lp->w >> 6);
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
-      lp->infx = cosl(lp->d, 800);
-      lp->infy = sinl(lp->d, 800);
+      lp->infx = cos_len(lp->d, 800);
+      lp->infy = sin_len(lp->d, 800);
       SetLongPoint(lp);
     }
 
@@ -157,8 +159,8 @@ void LongLaserSubsystem::MoveLong() {
         lp->w = lp->wmax;
         lp->flag = LLF_NORM;
       }
-      lp->lx = cosl(lp->d, lp->w >> 6);
-      lp->ly = sinl(lp->d, lp->w >> 6);
+      lp->lx = cos_len(lp->d, lp->w >> 6);
+      lp->ly = sin_len(lp->d, lp->w >> 6);
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
       SetLongPoint(lp);
@@ -177,8 +179,8 @@ void LongLaserSubsystem::MoveLong() {
           lp->flag = LLF_LINE;
         }
       }
-      lp->lx = cosl(lp->d, lp->w >> 6);
-      lp->ly = sinl(lp->d, lp->w >> 6);
+      lp->lx = cos_len(lp->d, lp->w >> 6);
+      lp->ly = sin_len(lp->d, lp->w >> 6);
       lp->wx = -(lp->ly);
       lp->wy = lp->lx;
       SetLongPoint(lp);
@@ -249,8 +251,10 @@ void LongLaserSubsystem::DrawLong() {
           p2[VERTEX_COUNT - 1].x = lp->p[3].x;
           p2[VERTEX_COUNT - 1].y = lp->p[3].y;
           for (auto n = 2; n < (VERTEX_COUNT - 1); ++n) {
-            p2[n].x = p2[0].x + cosl(lp->d + 64 + (128 * (n - 1) / 32), len);
-            p2[n].y = p2[0].y + sinl(lp->d + 64 + (128 * (n - 1) / 32), len);
+            const double dang =
+                lp->d + ut_math_detail::deg256_to_rad(64 + (128 * (n - 1) / 32));
+            p2[n].x = p2[0].x + cos_len(dang, len);
+            p2[n].y = p2[0].y + sin_len(dang, len);
           }
           gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, p2, vcs);
           break;
@@ -341,8 +345,8 @@ void LongLaserSubsystem::HitCheckLong(const LongLaserData *lp, world::Refs w) {
 
   int tx = w.players.X() - lp->x;
   int ty = w.players.Y() - lp->y;
-  int length = cosl(lp->d, tx) + sinl(lp->d, ty);
-  int width = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
+  int length = cos_len(lp->d, tx) + sin_len(lp->d, ty);
+  int width = abs(-sin_len(lp->d, tx) + cos_len(lp->d, ty));
 
   if (length > 0 && width <= (lp->w + (64 * 15)))
     w.players.AddEvade(LLASER_EVADE);

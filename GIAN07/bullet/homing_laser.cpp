@@ -27,11 +27,11 @@ constexpr int HLASER_GETPREV(int current, int n) {
 }
 
 void CircleA16(GRAPHICS_GEOMETRY_POLY auto &gp, int x, int y, int r,
-               uint8_t d) {
+               double d) {
   VERTEX_XY src[9 + 1];
   for (int j = 0, i = -64; j <= 8; ++j, i += 16) {
-    src[j].x = (x + cosl(d + i, r)) >> 6;
-    src[j].y = (y + sinl(d + i, r)) >> 6;
+    src[j].x = (x + cos_len(d + ut_math_detail::deg256_to_rad(i), r)) >> 6;
+    src[j].y = (y + sin_len(d + ut_math_detail::deg256_to_rad(i), r)) >> 6;
   }
   src[9] = src[0];
   gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
@@ -80,13 +80,14 @@ void HomingLaserSubsystem::SpawnHoming(const HomingLaserInfo &hinfo) {
     for (int j = 0; j < HLASER_LEN * HLASER_SECTION; ++j) {
       p->p[j].x = hinfo.x;
       p->p[j].y = hinfo.y;
-      p->p[j].d = deg;
+      p->p[j].d = ut_math_detail::deg256_to_rad(deg);
     }
   }
 }
 
 void HomingLaserSubsystem::MoveHoming() {
-  int x, y, i, j, deg, deg2;
+  int x, y, i, j;
+  double deg, deg2;
   HomingLaserData *hl, *temp;
 
   for (hl = active_.Next; hl != nullptr; hl = hl->Next) {
@@ -99,34 +100,35 @@ void HomingLaserSubsystem::MoveHoming() {
 
     switch (hl->Type) {
     case HL_TYPE1:
-      deg2 = -deg + atan8(world_.players.X() - x, world_.players.Y() - y);
-      if (deg2 < -128)
-        deg2 += 256;
-      else if (deg2 > 128)
-        deg2 -= 256;
+      deg2 = wrap_pi(atan2_rad(world_.players.Y() - y, world_.players.X() - x) -
+                     deg);
 
-      if (abs(deg2) < 8) {
+      if (std::abs(deg2) < 8.0 * ut_math_detail::DEG256_TO_RAD) {
         hl->Type = HL_NONE;
         Snd_SEPlay(17, hl->p[hl->Current].x);
       } else {
         if (hl->v > 2 * 64)
           hl->v -= hl->a;
         i = 1 + ((hl->Count) / 32);
-        i = (deg2 * i) / 32;
-        deg = (i != 0) ? (deg + i) : (deg + deg2);
+        // Snap to the full remaining angle once the scaled per-frame turn
+        // would have truncated to zero in the legacy deg256 integer math.
+        if (std::abs(deg2 * i) < 32.0 * ut_math_detail::DEG256_TO_RAD)
+          deg += deg2;
+        else
+          deg += (deg2 * i) / 32.0;
       }
       if (hl->Count > 120)
         hl->Type = HL_NONE;
 
       hl->p[hl->Current].d = deg;
-      hl->p[hl->Current].x = x + cosl(deg, hl->v);
-      hl->p[hl->Current].y = y + sinl(deg, hl->v);
+      hl->p[hl->Current].x = x + cos_len(deg, hl->v);
+      hl->p[hl->Current].y = y + sin_len(deg, hl->v);
       break;
     case HL_NONE:
       hl->v += hl->a * 2;
       hl->p[hl->Current].d = deg;
-      hl->p[hl->Current].x = x + cosl(deg, hl->v);
-      hl->p[hl->Current].y = y + sinl(deg, hl->v);
+      hl->p[hl->Current].x = x + cos_len(deg, hl->v);
+      hl->p[hl->Current].y = y + sin_len(deg, hl->v);
       break;
     default:
       break;
@@ -175,6 +177,8 @@ void HomingLaserSubsystem::MoveHoming() {
 
 void HomingLaserSubsystem::DrawHoming() const {
   VERTEX_XY src[4];
+  // Perpendicular offset (64 deg256 = 90°) for the laser ribbon width.
+  constexpr double kPerp = ut_math_detail::deg256_to_rad(64);
   auto *gp = GrpGeom_Poly();
   auto *gf = GrpGeom_FB();
   const auto AlphaPolygon = [gp, gf](VERTEX_XY_SPAN<> p) {
@@ -200,10 +204,10 @@ void HomingLaserSubsystem::DrawHoming() const {
     w = HOMINGL_WIDTH;
     current = hl->Current;
     p = &(hl->p[current]);
-    src[0].x = (p->x + cosl(p->d - 64, w)) >> 6;
-    src[0].y = (p->y + sinl(p->d - 64, w)) >> 6;
-    src[1].x = (p->x - cosl(p->d - 64, w)) >> 6;
-    src[1].y = (p->y - sinl(p->d - 64, w)) >> 6;
+    src[0].x = (p->x + cos_len(p->d - kPerp, w)) >> 6;
+    src[0].y = (p->y + sin_len(p->d - kPerp, w)) >> 6;
+    src[1].x = (p->x - cos_len(p->d - kPerp, w)) >> 6;
+    src[1].y = (p->y - sin_len(p->d - kPerp, w)) >> 6;
 
     if (gp != nullptr)
       CircleA16(*gp, p->x, p->y, w, p->d);
@@ -213,10 +217,10 @@ void HomingLaserSubsystem::DrawHoming() const {
     for (i = 0; i < HLASER_LEN - 1; ++i) {
       current = HLASER_GETPREV(current, HLASER_SECTION);
       p = &(hl->p[current]);
-      src[2].x = (p->x - cosl(p->d - 64, w)) >> 6;
-      src[2].y = (p->y - sinl(p->d - 64, w)) >> 6;
-      src[3].x = (p->x + cosl(p->d - 64, w)) >> 6;
-      src[3].y = (p->y + sinl(p->d - 64, w)) >> 6;
+      src[2].x = (p->x - cos_len(p->d - kPerp, w)) >> 6;
+      src[2].y = (p->y - sin_len(p->d - kPerp, w)) >> 6;
+      src[3].x = (p->x + cos_len(p->d - kPerp, w)) >> 6;
+      src[3].y = (p->y + sin_len(p->d - kPerp, w)) >> 6;
       AlphaPolygon(src);
       src[0] = src[3];
       src[1] = src[2];
@@ -234,10 +238,10 @@ void HomingLaserSubsystem::DrawHoming() const {
     w = HOMINGL_WIDTH / 2;
     current = hl->Current;
     p = &(hl->p[current]);
-    src[0].x = (p->x + cosl(p->d - 64, w)) >> 6;
-    src[0].y = (p->y + sinl(p->d - 64, w)) >> 6;
-    src[1].x = (p->x - cosl(p->d - 64, w)) >> 6;
-    src[1].y = (p->y - sinl(p->d - 64, w)) >> 6;
+    src[0].x = (p->x + cos_len(p->d - kPerp, w)) >> 6;
+    src[0].y = (p->y + sin_len(p->d - kPerp, w)) >> 6;
+    src[1].x = (p->x - cos_len(p->d - kPerp, w)) >> 6;
+    src[1].y = (p->y - sin_len(p->d - kPerp, w)) >> 6;
 
     if (gp != nullptr)
       CircleA16(*gp, p->x, p->y, w, p->d);
@@ -247,10 +251,10 @@ void HomingLaserSubsystem::DrawHoming() const {
     for (i = 0; i < HLASER_LEN - 1; ++i) {
       current = HLASER_GETPREV(current, HLASER_SECTION);
       p = &(hl->p[current]);
-      src[2].x = (p->x - cosl(p->d - 64, w)) >> 6;
-      src[2].y = (p->y - sinl(p->d - 64, w)) >> 6;
-      src[3].x = (p->x + cosl(p->d - 64, w)) >> 6;
-      src[3].y = (p->y + sinl(p->d - 64, w)) >> 6;
+      src[2].x = (p->x - cos_len(p->d - kPerp, w)) >> 6;
+      src[2].y = (p->y - sin_len(p->d - kPerp, w)) >> 6;
+      src[3].x = (p->x + cos_len(p->d - kPerp, w)) >> 6;
+      src[3].y = (p->y + sin_len(p->d - kPerp, w)) >> 6;
       AlphaPolygon(src);
       src[0] = src[3];
       src[1] = src[2];

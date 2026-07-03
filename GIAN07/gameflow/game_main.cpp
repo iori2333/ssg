@@ -1552,14 +1552,14 @@ static void GalleryUpdateAngles() {
   for (const auto idx : bullets_sub.EnemySmallIndices()) {
     auto *t = &bullets_sub.AllEnemySmallUnsafe()[idx];
     if ((t->c & 0xF0) == bullets::TAMA_ANGLE) {
-      t->d += 4;
+      t->d += 4 * ut_math_detail::DEG256_TO_RAD;
     }
   }
   for (const auto idx : bullets_sub.EnemyLargeIndices()) {
     auto *t = &bullets_sub.AllEnemyLargeUnsafe()[idx];
     const auto cat = t->c & 0xF0;
     if (cat == bullets::TAMA_ANGLE || cat == bullets::TAMA_EXTRA2) {
-      t->d += 4;
+      t->d += 4 * ut_math_detail::DEG256_TO_RAD;
     }
   }
 }
@@ -1628,7 +1628,6 @@ static void SpawnGalleryBullets() {
     t->v0 = 0;
     t->c = c;
     t->d = 0;
-    t->d16 = 0;
     t->effect = 0;
     t->flag = 0;
     t->type = bullets::T_NORM;

@@ -19,17 +19,6 @@ int cosl(uint8_t deg, int length) {
   return static_cast<int>(std::round(std::cos(rad) * length));
 }
 
-// length*256/(SIN(deg)>0 ? SIN(deg) : 256) //
-// A small epsilon is used because floating-point trig values are rarely
-// exactly zero at the quadrants, but the caller expects a safe fallback.
-int sinDiv(uint8_t deg, int length) {
-  double s = std::sin(ut_math_detail::deg256_to_rad(deg));
-  if (s <= 1e-12) {
-    return length;
-  }
-  return static_cast<int>(std::round(static_cast<double>(length) / s));
-}
-
 // length*256/(COS(deg)>0 ? COS(deg) : 256) //
 int cosDiv(uint8_t deg, int length) {
   double c = std::cos(ut_math_detail::deg256_to_rad(deg));

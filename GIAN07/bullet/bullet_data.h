@@ -170,8 +170,7 @@ struct Bullet {
   int v;          // Velocity
   int v0;         // Initial velocity
   char a;         // Acceleration
-  uint8_t d;      // Direction angle
-  uint16_t d16;   // Direction angle (fixed-point x256) — n% homing only
+  double d;       // Direction angle (radians)
   int8_t vd;      // Angular velocity
   uint8_t c;      // Bullet color & shape
   uint8_t rep;    // Remaining control count
@@ -214,7 +213,7 @@ struct LASER_DATA {
   int v;
   VERTEX_XY p[4];
   char a;
-  uint8_t d;
+  double d;   // Direction angle (radians)
   int w, wmax;
   int l, lmax;
   int ltemp;
@@ -266,7 +265,7 @@ struct LongLaserData {
   int v;
   uint32_t count;
   VERTEX_XY p[4];
-  uint8_t d;
+  double d;   // Direction angle (radians)
   uint8_t c;
   uint8_t flag;
   uint8_t type;

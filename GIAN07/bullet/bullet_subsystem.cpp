@@ -169,11 +169,11 @@ void BulletSubsystem::SpawnLine(const BulletCommand &cmd_in) {
     t->x = t->tx = cmd.x;
     t->y = t->ty = cmd.y;
     t->a = cmd.a;
-    t->d = Dir(i, cmd);
-    t->d16 = (t->d << 8);
+    const uint8_t deg = Dir(i, cmd);
+    t->d = ut_math_detail::deg256_to_rad(deg);
     t->v = t->v0 = LineCmdNewSpeed(i, cmd);
-    t->vx = cosl(t->d, t->v);
-    t->vy = sinl(t->d, t->v);
+    t->vx = cos_len(t->d, t->v);
+    t->vy = sin_len(t->d, t->v);
     t->vd = cmd.vd;
     t->c = cmd.c;
     t->rep = cmd.rep;
@@ -198,11 +198,11 @@ void BulletSubsystem::SpawnExtra01(const BulletCommand &cmd_in) {
     t->x = t->tx = cmd.x;
     t->y = t->ty = cmd.y;
     t->a = cmd.a;
-    t->d = Dir(i, cmd);
-    t->d16 = (t->d << 8);
-    t->v = t->v0 = SpeedEx(t->d, cmd);
-    t->vx = cosl(t->d, t->v);
-    t->vy = sinl(t->d, t->v);
+    const uint8_t deg = Dir(i, cmd);
+    t->d = ut_math_detail::deg256_to_rad(deg);
+    t->v = t->v0 = SpeedEx(deg, cmd);
+    t->vx = cos_len(t->d, t->v);
+    t->vy = sin_len(t->d, t->v);
     t->vd = cmd.vd;
     t->c = cmd.c;
     t->rep = cmd.rep;
@@ -225,10 +225,10 @@ void BulletSubsystem::TamaSetMain(const BulletCommand &cmd) {
     t->y = t->ty = cmd.y;
     t->v = t->v0 = NewSpeed(i, cmd);
     t->a = cmd.a;
-    t->d = Dir(i, cmd);
-    t->d16 = (t->d << 8);
-    t->vx = cosl(t->d, t->v);
-    t->vy = sinl(t->d, t->v);
+    const uint8_t deg = Dir(i, cmd);
+    t->d = ut_math_detail::deg256_to_rad(deg);
+    t->vx = cos_len(t->d, t->v);
+    t->vy = sin_len(t->d, t->v);
     t->vd = cmd.vd;
     t->c = cmd.c;
     t->rep = cmd.rep;
@@ -511,7 +511,7 @@ void BulletSubsystem::Draw() {
     }
       continue;
     case TAMA_EXTRA2: {
-      const auto d = (Cast::down_sign<uint8_t>(t->d + 4) / 8);
+      const auto d = (Cast::down_sign<uint8_t>(ut_math_detail::rad_to_deg256(t->d) + 4) / 8);
       src.top = 320 + ((t->c & 3) << 4);
       src.left = d * 16;
       src.bottom = src.top + 16;
@@ -522,11 +522,11 @@ void BulletSubsystem::Draw() {
     case TAMA_ANGLE:
       if (t->c != 32 + 5) {
         src.top = 24 + ((t->c & 0x0f) << 4);
-        src.left = ((t->d + 8) & 0xf0) + 384;
+        src.left = ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0) + 384;
         src.bottom = src.top + 16;
         src.right = src.left + 16;
       } else {
-        const auto d = (Cast::down_sign<uint8_t>(t->d + 4) / 8);
+        const auto d = (Cast::down_sign<uint8_t>(ut_math_detail::rad_to_deg256(t->d) + 4) / 8);
         dx = (d % 8) * 32;
         dy = (d / 8) * 32;
         src.top = 304 + dy;
@@ -567,7 +567,7 @@ void BulletSubsystem::Draw() {
       src.right = src.left + 8;
     } else {
       src.top = 24 + ((t->c & 0x0f) << 4);
-      src.left = ((t->d + 8) & 0xf0) + 384;
+      src.left = ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0) + 384;
       src.bottom = src.top + 16;
       src.right = src.left + 16;
     }
@@ -686,10 +686,10 @@ void BulletSubsystem::SpawnPlayer(const BulletCommand &cmd) {
     t->y = t->ty = cmd.y;
     t->v = t->v0 = SpeedFromCmd(i, cmd);
     t->a = cmd.a;
-    t->d = Dir(i, cmd);
-    t->d16 = (t->d << 8);
-    t->vx = cosl(t->d, t->v);
-    t->vy = sinl(t->d, t->v);
+    const uint8_t deg = Dir(i, cmd);
+    t->d = ut_math_detail::deg256_to_rad(deg);
+    t->vx = cos_len(t->d, t->v);
+    t->vy = sin_len(t->d, t->v);
     t->vd = cmd.vd;
     t->c = cmd.c;
     t->rep = cmd.rep;
@@ -765,25 +765,25 @@ void BulletSubsystem::DrawPlayer() {
     switch (t->c) {
     case TID_WIDE_MAIN:
     case TID_WIDE_FOCUS_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 176, 16, 16};
+      src = PIXEL_LTWH{(384 + ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0)), 176, 16, 16};
       break;
     case TID_WIDE_SUB:
     case TID_WIDE_FOCUS_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 192, 16, 16};
+      src = PIXEL_LTWH{(384 + ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0)), 192, 16, 16};
       break;
     case TID_HOMING_MAIN:
     case TID_HOMING_FOCUS_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 208, 16, 16};
+      src = PIXEL_LTWH{(384 + ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0)), 208, 16, 16};
       break;
     case TID_HOMING_SUB:
     case TID_HOMING_FOCUS_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 224, 16, 16};
+      src = PIXEL_LTWH{(384 + ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0)), 224, 16, 16};
       break;
     case TID_HOMING_BOMB_A:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 288, 16, 16};
+      src = PIXEL_LTWH{(384 + ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0)), 288, 16, 16};
       break;
     case TID_LASER_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 256, 16, 16};
+      src = PIXEL_LTWH{(384 + ((ut_math_detail::rad_to_deg256(t->d) + 8) & 0xf0)), 256, 16, 16};
       break;
     case TID_HOMING_BOMB_B:
       src = HomingBomb[(t->count / 4) % 5];
@@ -800,7 +800,7 @@ void BulletSubsystem::DrawPlayer() {
 //  ByEffect)
 // ============================================================
 void BulletSubsystem::MoveByType(Bullet *t, world::Refs w) {
-  short deg_t = 0;
+  double deg_t = 0.0; // homing angle delta (radians)
   switch (t->type & 0x0f) {
   case T_NORM:
     t->tx += t->vx;
@@ -808,69 +808,66 @@ void BulletSubsystem::MoveByType(Bullet *t, world::Refs w) {
     return;
   case T_NORM_A:
     t->v += t->a;
-    t->tx += cosl(t->d, t->v);
-    t->ty += sinl(t->d, t->v);
+    t->tx += cos_len(t->d, t->v);
+    t->ty += sin_len(t->d, t->v);
     if (t->rep == t->count) {
       t->type = (t->type & 0xf0) | T_NORM;
-      t->vx = cosl(t->d, t->v);
-      t->vy = sinl(t->d, t->v);
+      t->vx = cos_len(t->d, t->v);
+      t->vy = sin_len(t->d, t->v);
     }
     return;
   case T_HOMING:
     t->v += t->a;
-    t->tx += cosl(t->d, t->v);
-    t->ty += sinl(t->d, t->v);
+    t->tx += cos_len(t->d, t->v);
+    t->ty += sin_len(t->d, t->v);
     if ((t->a > 0) && (t->v >= t->v0)) {
       t->a = -(t->a);
       if (--(t->rep) == 0) {
         t->type = (t->type & 0xf0) | T_NORM;
         t->flag &= (~TF_CLIP);
-        t->vx = cosl(t->d, t->v);
-        t->vy = sinl(t->d, t->v);
+        t->vx = cos_len(t->d, t->v);
+        t->vy = sin_len(t->d, t->v);
       }
     }
     if ((t->a < 0) && (t->v <= 0)) {
       t->a = -(t->a);
-      t->d = atan8((w.players.X()) - (t->x), (w.players.Y()) - (t->y));
+      t->d = atan2_rad((w.players.Y()) - (t->y), (w.players.X()) - (t->x));
     }
     return;
   case T_HOMING_M:
     if ((t->count > 19) && (t->count % 2 == 0)) {
-      deg_t =
-          atan8((w.players.X()) - (t->x), (w.players.Y()) - (t->y)) - (t->d);
-      if (deg_t < -128)
-        deg_t += 256;
-      if (deg_t > 128)
-        deg_t -= 256;
-      t->d = t->d + (deg_t * (t->vd) / 255);
+      deg_t = wrap_pi(atan2_rad((w.players.Y()) - (t->y),
+                                (w.players.X()) - (t->x)) -
+                      t->d);
+      t->d = t->d + (deg_t * (t->vd) / 255.0);
     }
     t->v += t->a;
-    t->tx += cosl(t->d, t->v);
-    t->ty += sinl(t->d, t->v);
+    t->tx += cos_len(t->d, t->v);
+    t->ty += sin_len(t->d, t->v);
     if (t->rep == t->count) {
       t->type = (t->type & 0xf0) | T_NORM;
       t->flag &= (~TF_CLIP);
-      t->vx = cosl(t->d, t->v);
-      t->vy = sinl(t->d, t->v);
+      t->vx = cos_len(t->d, t->v);
+      t->vy = sin_len(t->d, t->v);
     }
     return;
   case T_ROLL:
-    t->d += Cast::sign<uint8_t>(t->vd);
-    t->tx += cosl(t->d, t->v);
-    t->ty += sinl(t->d, t->v);
+    t->d += t->vd * ut_math_detail::DEG256_TO_RAD;
+    t->tx += cos_len(t->d, t->v);
+    t->ty += sin_len(t->d, t->v);
     if (t->rep == t->count) {
       t->type = (t->type & 0xf0) | T_NORM;
       t->flag &= (~TF_CLIP);
-      t->vx = cosl(t->d, t->v);
-      t->vy = sinl(t->d, t->v);
+      t->vx = cos_len(t->d, t->v);
+      t->vy = sin_len(t->d, t->v);
     }
     return;
   case T_ROLL_A:
     t->v += t->a;
     if (t->a > 0)
-      t->d += Cast::sign<uint8_t>(t->vd);
-    t->tx += cosl(t->d, t->v);
-    t->ty += sinl(t->d, t->v);
+      t->d += t->vd * ut_math_detail::DEG256_TO_RAD;
+    t->tx += cos_len(t->d, t->v);
+    t->ty += sin_len(t->d, t->v);
     if ((t->a < 0) && (t->v <= 0))
       t->a = -(t->a);
     if ((t->a > 0) && (t->v >= t->v0)) {
@@ -878,18 +875,18 @@ void BulletSubsystem::MoveByType(Bullet *t, world::Refs w) {
       if (--(t->rep) == 0) {
         t->type = (t->type & 0xf0) | T_NORM;
         t->flag &= (~TF_CLIP);
-        t->vx = cosl(t->d, t->v);
-        t->vy = sinl(t->d, t->v);
+        t->vx = cos_len(t->d, t->v);
+        t->vy = sin_len(t->d, t->v);
       }
     }
     return;
   case T_ROLL_R:
     t->v += t->a;
-    t->d += Cast::sign<uint8_t>(t->vd);
-    t->tx += cosl(t->d, t->v);
-    t->ty += sinl(t->d, t->v);
+    t->d += t->vd * ut_math_detail::DEG256_TO_RAD;
+    t->tx += cos_len(t->d, t->v);
+    t->ty += sin_len(t->d, t->v);
     if ((t->a < 0) && (t->v <= 0)) {
-      t->d += 128;
+      t->d += ut_math_detail::PI;
       t->a = -(t->a);
     }
     if ((t->a > 0) && (t->v >= t->v0)) {
@@ -897,8 +894,8 @@ void BulletSubsystem::MoveByType(Bullet *t, world::Refs w) {
       if (--(t->rep) == 0) {
         t->type = (t->type & 0xf0) | T_NORM;
         t->flag &= (~TF_CLIP);
-        t->vx = cosl(t->d, t->v);
-        t->vy = sinl(t->d, t->v);
+        t->vx = cos_len(t->d, t->v);
+        t->vy = sin_len(t->d, t->v);
       }
     }
     return;
@@ -912,9 +909,9 @@ void BulletSubsystem::MoveByType(Bullet *t, world::Refs w) {
     t->ty += t->vy;
     if (t->rep == t->count) {
       t->type = (t->type & 0xf0) | T_NORM;
-      t->d = Cast::sign<uint8_t>(t->vd);
-      t->vx = cosl(t->d, t->v);
-      t->vy = sinl(t->d, t->v);
+      t->d = t->vd * ut_math_detail::DEG256_TO_RAD;
+      t->vx = cos_len(t->d, t->v);
+      t->vy = sin_len(t->d, t->v);
     }
     return;
   case T_SBHOMING:
@@ -924,19 +921,19 @@ void BulletSubsystem::MoveByType(Bullet *t, world::Refs w) {
     t->tx += t->vx;
     t->ty += t->vy;
     if ((t->count < 130 - 60) && w.enemies.homing_flag != HOMING_DUMMY) {
-      deg_t = atan8(w.enemies.homing_x - (t->x), w.enemies.homing_y - (t->y)) -
-              (t->d);
+      deg_t = wrap_pi(atan2_rad(w.enemies.homing_y - (t->y),
+                                w.enemies.homing_x - (t->x)) -
+                      t->d);
     } else if (t->count < 130 - 60) {
-      deg_t = atan8(0, (-20 * 64) - (t->y)) - (t->d);
+      deg_t = wrap_pi(atan2_rad((-20 * 64) - (t->y), 0) - t->d);
     } else {
       t->flag = TF_NONE;
       deg_t = 0;
     }
-    if (deg_t < -128)
-      deg_t += 256;
-    if (deg_t > 128)
-      deg_t -= 256;
-    if (deg_t == 0) {
+    // "On target" — the legacy deg256 math treated the aim as aligned once the
+    // delta rounded to a 0 bucket (|delta| < 0.5 deg256). Keep that threshold
+    // so the decelerate/steer branches still fire.
+    if (std::abs(deg_t) < ut_math_detail::DEG256_TO_RAD / 2.0) {
       if (t->vd != 0)
         t->vd--;
       t->v += t->a;
@@ -944,9 +941,9 @@ void BulletSubsystem::MoveByType(Bullet *t, world::Refs w) {
       t->vd++;
       t->v -= t->a;
     }
-    t->d += (deg_t * (Cast::sign<uint8_t>(t->vd)) / 255);
-    t->vx = cosl(t->d, t->v);
-    t->vy = sinl(t->d, t->v);
+    t->d += (deg_t * (Cast::sign<uint8_t>(t->vd)) / 255.0);
+    t->vx = cos_len(t->d, t->v);
+    t->vy = sin_len(t->d, t->v);
     return;
   case T_SBHBOMB:
     if (t->count >= 49)
@@ -965,24 +962,25 @@ void BulletSubsystem::MoveByOption(Bullet *t) {
   case TOP_WAVE:
     op_temp = sinl(Cast::down_sign<uint8_t>(t->count << 2),
                    ((t->option & 0x0f) << 7));
-    t->x = t->tx - sinl(t->d, op_temp);
-    t->y = t->ty + cosl(t->d, op_temp);
+    t->x = t->tx - sin_len(t->d, op_temp);
+    t->y = t->ty + cos_len(t->d, op_temp);
     return;
   case TOP_ROLL: {
-    const auto angle = Cast::down_sign<uint8_t>(t->d + (t->count << 1));
+    const double angle =
+        t->d + static_cast<double>(t->count << 1) * ut_math_detail::DEG256_TO_RAD;
     op_temp = (t->option & 0x0f) << 8;
-    t->x = (t->tx + cosl(angle, op_temp));
-    t->y = (t->ty + sinl(angle, op_temp));
+    t->x = (t->tx + cos_len(angle, op_temp));
+    t->y = (t->ty + sin_len(angle, op_temp));
   }
     return;
   case TOP_PURU:
     return;
   case TOP_REFX:
     if ((t->tx) < GX_MIN || (t->tx) > GX_MAX) {
-      t->d = 128 - t->d;
+      t->d = ut_math_detail::PI - t->d;
       t->vx = -(t->vx);
-      t->x = t->tx + cosl(t->d, t->v);
-      t->y = t->ty + sinl(t->d, t->v);
+      t->x = t->tx + cos_len(t->d, t->v);
+      t->y = t->ty + sin_len(t->d, t->v);
       op_temp = (t->option & 0x0f);
       t->option = (op_temp == 0) ? TOP_NONE : (TOP_REFX | (op_temp - 1));
     } else {
@@ -994,8 +992,8 @@ void BulletSubsystem::MoveByOption(Bullet *t) {
     if ((t->ty) < GY_MIN) {
       t->d = -t->d;
       t->vy = -(t->vy);
-      t->x = t->tx + cosl(t->d, t->v);
-      t->y = t->ty + sinl(t->d, t->v);
+      t->x = t->tx + cos_len(t->d, t->v);
+      t->y = t->ty + sin_len(t->d, t->v);
       op_temp = (t->option & 0x0f);
       t->option = (op_temp == 0) ? TOP_NONE : (TOP_REFY | (op_temp - 1));
     } else {
@@ -1005,17 +1003,17 @@ void BulletSubsystem::MoveByOption(Bullet *t) {
     return;
   case TOP_REFXY:
     if ((t->tx) < GX_MIN || (t->tx) > GX_MAX) {
-      t->d = 128 - t->d;
+      t->d = ut_math_detail::PI - t->d;
       t->vx = -(t->vx);
-      t->x = t->tx + cosl(t->d, t->v);
-      t->y = t->ty + sinl(t->d, t->v);
+      t->x = t->tx + cos_len(t->d, t->v);
+      t->y = t->ty + sin_len(t->d, t->v);
       op_temp = (t->option & 0x0f);
       t->option = (op_temp == 0) ? TOP_NONE : (TOP_REFXY | (op_temp - 1));
     } else if ((t->ty) < GY_MIN) {
       t->d = -t->d;
       t->vy = -(t->vy);
-      t->x = t->tx + cosl(t->d, t->v);
-      t->y = t->ty + sinl(t->d, t->v);
+      t->x = t->tx + cos_len(t->d, t->v);
+      t->y = t->ty + sin_len(t->d, t->v);
       op_temp = (t->option & 0x0f);
       t->option = (op_temp == 0) ? TOP_NONE : (TOP_REFXY | (op_temp - 1));
     } else {
@@ -1030,7 +1028,7 @@ void BulletSubsystem::MoveByOption(Bullet *t) {
       op_temp = 1;
       // Recursive self-spawn: build a new command from current state.
       BulletCommand cmd{};
-      cmd.d = 128 - (t->d);
+      cmd.d = ut_math_detail::rad_to_deg256(ut_math_detail::PI - t->d);
       // (Spawn path clobbers command.x/y, so build directly)
       cmd.x = t->tx + cosl(cmd.d, t->v);
       cmd.y = t->ty + sinl(cmd.d, t->v);

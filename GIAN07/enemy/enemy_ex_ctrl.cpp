@@ -56,7 +56,7 @@ void BossManager::SnakySet(BossData *b, int len, uint32_t TailID) {
   for (auto &point : s->PointBuffer) {
     point.x = b->Edat.x;
     point.y = b->Edat.y;
-    point.d = b->Edat.d;
+    point.d = ut_math_detail::deg256_to_rad(b->Edat.d);
   }
 
   const auto n = (4 + (TailID << 2));
@@ -98,13 +98,13 @@ void BossManager::SnakyMove() {
 
       e->x = s->PointBuffer[ptr].x;
       e->y = s->PointBuffer[ptr].y;
-      e->d = s->PointBuffer[ptr].d;
+      e->d = ut_math_detail::rad_to_deg256(s->PointBuffer[ptr].d);
     }
 
     s->Head = ((s->Head + 1) % points);
     s->PointBuffer[s->Head].x = s->Parent->Edat.x;
     s->PointBuffer[s->Head].y = s->Parent->Edat.y;
-    s->PointBuffer[s->Head].d = s->Parent->Edat.d;
+    s->PointBuffer[s->Head].d = ut_math_detail::deg256_to_rad(s->Parent->Edat.d);
   }
 }
 

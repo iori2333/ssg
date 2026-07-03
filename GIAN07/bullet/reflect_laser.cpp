@@ -82,21 +82,21 @@ void ReflectLaserSubsystem::SpawnEX(const LaserCommand &cmd) {
 
     lp->v = cmd.v;
     lp->a = cmd.a;
-    lp->d = CalcDir(i, cmd);
+    lp->d = ut_math_detail::deg256_to_rad(CalcDir(i, cmd));
     if (cmd.l2 != 0) {
-      lp->x = cmd.x + cosl(lp->d, cmd.l2);
-      lp->y = cmd.y + sinl(lp->d, cmd.l2);
+      lp->x = cmd.x + cos_len(lp->d, cmd.l2);
+      lp->y = cmd.y + sin_len(lp->d, cmd.l2);
     } else {
       lp->x = cmd.x;
       lp->y = cmd.y;
     }
-    lp->vx = cosl(lp->d, lp->v);
-    lp->vy = sinl(lp->d, lp->v);
+    lp->vx = cos_len(lp->d, lp->v);
+    lp->vy = sin_len(lp->d, lp->v);
     lp->w = cmd.w;
     lp->lmax = cmd.l;
     lp->lx = lp->ly = 0;
-    lp->wx = -sinl(lp->d, lp->w >> 6);
-    lp->wy = cosl(lp->d, lp->w >> 6);
+    lp->wx = -sin_len(lp->d, lp->w >> 6);
+    lp->wy = cos_len(lp->d, lp->w >> 6);
     lp->l = lp->count = 0;
     lp->c = cmd.c;
     lp->type = cmd.type;
@@ -269,8 +269,8 @@ void ReflectLaserSubsystem::MoveLaser(LASER_DATA *lp) {
     if (lp->l < lp->lmax) {
       lp->l += lp->v;
       lp->w += 16;
-      lp->lx = cosl(lp->d, lp->l >> 6);
-      lp->ly = sinl(lp->d, lp->l >> 6);
+      lp->lx = cos_len(lp->d, lp->l >> 6);
+      lp->ly = sin_len(lp->d, lp->l >> 6);
       lp->p[1].x = lp->p[0].x + lp->lx;
       lp->p[1].y = lp->p[0].y + lp->ly;
       lp->p[2].x = lp->p[3].x + lp->lx;
@@ -278,8 +278,8 @@ void ReflectLaserSubsystem::MoveLaser(LASER_DATA *lp) {
     } else {
       lp->w += 64;
     }
-    lp->wx = -sinl(lp->d, lp->w >> 6);
-    lp->wy = cosl(lp->d, lp->w >> 6);
+    lp->wx = -sin_len(lp->d, lp->w >> 6);
+    lp->wy = cos_len(lp->d, lp->w >> 6);
     SetupShort(lp);
     if (lp->count > 30)
       lp->flag = LF_DELETE;
@@ -290,8 +290,8 @@ void ReflectLaserSubsystem::MoveLaser(LASER_DATA *lp) {
   case LS_SHORT:
     if ((lp->l) < (lp->lmax)) {
       lp->l += lp->v;
-      lp->lx = cosl(lp->d, lp->l >> 6);
-      lp->ly = sinl(lp->d, lp->l >> 6);
+      lp->lx = cos_len(lp->d, lp->l >> 6);
+      lp->ly = sin_len(lp->d, lp->l >> 6);
       lp->p[1].x = lp->p[0].x + lp->lx;
       lp->p[1].y = lp->p[0].y + lp->ly;
       lp->p[2].x = lp->p[3].x + lp->lx;
@@ -317,8 +317,8 @@ void ReflectLaserSubsystem::HitCheck(LASER_DATA *lp, world::Refs w) {
   case LS_REF:
     tx = w.players.X() - lp->x;
     ty = w.players.Y() - lp->y;
-    length = cosl(lp->d, tx) + sinl(lp->d, ty);
-    w1 = abs(-sinl(lp->d, tx) + cosl(lp->d, ty));
+    length = cos_len(lp->d, tx) + sin_len(lp->d, ty);
+    w1 = abs(-sin_len(lp->d, tx) + cos_len(lp->d, ty));
     if (length > 0 && length <= (lp->l) && w1 <= (lp->w)) {
       w.players.OnHit();
     } else if (length > 0 && length <= (lp->l) &&
@@ -347,8 +347,8 @@ void ReflectLaserSubsystem::MoveReflect(LASER_DATA *lp) {
     return;
   case LF_SHOT:
     lp->l += lp->v;
-    lp->lx = cosl(lp->d, lp->l >> 6);
-    lp->ly = sinl(lp->d, lp->l >> 6);
+    lp->lx = cos_len(lp->d, lp->l >> 6);
+    lp->ly = sin_len(lp->d, lp->l >> 6);
     lp->p[1].x = lp->p[0].x + lp->lx;
     lp->p[1].y = lp->p[0].y + lp->ly;
     lp->p[2].x = lp->p[3].x + lp->lx;
@@ -368,8 +368,8 @@ void ReflectLaserSubsystem::MoveReflect(LASER_DATA *lp) {
     }
     lp->x += lp->vx;
     lp->y += lp->vy;
-    lp->lx = cosl(lp->d, lp->l >> 6);
-    lp->ly = sinl(lp->d, lp->l >> 6);
+    lp->lx = cos_len(lp->d, lp->l >> 6);
+    lp->ly = sin_len(lp->d, lp->l >> 6);
     lp->p[0].x = lp->p[1].x - lp->lx;
     lp->p[0].y = lp->p[1].y - lp->ly;
     lp->p[3].x = lp->p[2].x - lp->lx;
@@ -385,8 +385,8 @@ void ReflectLaserSubsystem::MoveReflect(LASER_DATA *lp) {
 
 int ReflectLaserSubsystem::HitReflect(const LASER_DATA *lp) {
   LongLaserData *ll = nullptr;
-  const long lx = (lp->x + cosl(lp->d, lp->l));
-  const long ly = (lp->y + sinl(lp->d, lp->l));
+  const long lx = (lp->x + cos_len(lp->d, lp->l));
+  const long ly = (lp->y + sin_len(lp->d, lp->l));
   long tx = 0, ty = 0, length = 0, width = 0;
 
   for (int i = 0; i < LLASER_MAX; ++i) {
@@ -398,15 +398,15 @@ int ReflectLaserSubsystem::HitReflect(const LASER_DATA *lp) {
 
     tx = lx - ll->x;
     ty = ly - ll->y;
-    length = cosl(ll->d, tx) + sinl(ll->d, ty);
-    width = abs(-sinl(ll->d, tx) + cosl(ll->d, ty));
+    length = cos_len(ll->d, tx) + sin_len(ll->d, ty);
+    width = abs(-sin_len(ll->d, tx) + cos_len(ll->d, ty));
 
     if (length > 0 && width <= ll->w) {
       LaserCommand cmd{};
       cmd.x = lx;
       cmd.y = ly;
       cmd.v = lp->v;
-      cmd.d = -(lp->d) + ((ll->d) << 1);
+      cmd.d = ut_math_detail::rad_to_deg256(2.0 * ll->d - lp->d);
       cmd.w = lp->w;
       cmd.l = lp->lmax;
       cmd.l2 = 0;
