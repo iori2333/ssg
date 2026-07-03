@@ -25,6 +25,7 @@ static ma_device TsDevice;
 static bool TsAudioRunning = false;
 
 static std::vector<std::string> TsSf2Paths;
+static std::vector<MID_BACKEND_DEVICE_SOURCE> TsSf2Sources;
 static size_t TsSf2Index = 0;
 
 static constexpr int SAMPLE_RATE = 44100;
@@ -44,6 +45,7 @@ static std::string_view Basename(std::string_view path) {
 
 static void ScanSoundFonts(std::string_view data_path) {
   TsSf2Paths.clear();
+  TsSf2Sources.clear();
   const std::string sf_dir =
       std::string{data_path.data(), data_path.size()} + "soundfonts";
 
@@ -55,6 +57,7 @@ static void ScanSoundFonts(std::string_view data_path) {
   for (const auto &entry : std::filesystem::directory_iterator(sf_dir, ec)) {
     if (entry.is_regular_file() && entry.path().extension() == ".sf2") {
       TsSf2Paths.push_back(entry.path().string());
+      TsSf2Sources.push_back(MID_BACKEND_DEVICE_SOURCE::LOCAL);
     }
   }
 
@@ -151,6 +154,62 @@ std::optional<std::string_view> MidBackend_DeviceName(void) {
   static thread_local std::string cached;
   cached = name;
   return cached;
+}
+
+size_t MidBackend_DeviceCount(void) { return TsSf2Paths.size(); }
+
+std::optional<std::string_view>
+MidBackend_DeviceNameAt(size_t index) {
+  if (index >= TsSf2Paths.size()) {
+    return std::nullopt;
+  }
+  const auto name = Basename(TsSf2Paths[index]);
+  static thread_local std::string cached;
+  cached = name;
+  return cached;
+}
+
+std::optional<MID_BACKEND_DEVICE_SOURCE>
+MidBackend_DeviceSource(size_t index) {
+  if (index >= TsSf2Sources.size()) {
+    return std::nullopt;
+  }
+  return TsSf2Sources[index];
+}
+
+bool MidBackend_DeviceSelect(size_t index) {
+  if (index >= TsSf2Paths.size() || index == TsSf2Index) {
+    return (index < TsSf2Paths.size());
+  }
+
+  const auto old_index = TsSf2Index;
+  TsSf2Index = index;
+
+  TsCleanupAudio();
+  tsf_close(TsSoundFont);
+  TsSoundFont = nullptr;
+
+  TsSoundFont = tsf_load_filename(TsSf2Paths[TsSf2Index].c_str());
+  if (!TsSoundFont) {
+    TsSf2Index = old_index;
+    TsSoundFont = tsf_load_filename(TsSf2Paths[TsSf2Index].c_str());
+  }
+
+  tsf_set_output(TsSoundFont, TSF_STEREO_INTERLEAVED, SAMPLE_RATE, 0.0f);
+
+  if (!TsInitAudio()) {
+    TsCleanupAudio();
+    tsf_close(TsSoundFont);
+    TsSoundFont = nullptr;
+    TsSf2Index = old_index;
+    TsSoundFont = tsf_load_filename(TsSf2Paths[TsSf2Index].c_str());
+    tsf_set_output(TsSoundFont, TSF_STEREO_INTERLEAVED, SAMPLE_RATE, 0.0f);
+    TsInitAudio();
+    return false;
+  }
+
+  TsSaveCurrent();
+  return true;
 }
 
 bool MidBackend_DeviceChange(int8_t direction) {

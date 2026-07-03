@@ -494,10 +494,20 @@ MidiPanel::MidiPanel() {
                   [this](MenuController &c, bool t) { Refresh(c, t); });
 }
 
-void MidiPanel::FnDev(MenuController &, int_fast8_t delta) {
-  if (BGM_Enabled()) {
-    BGM_ChangeMIDIDevice(delta);
+bool MidiPanel::FnDev(MenuController &, INPUT_BITS key) {
+  if (Input_IsOK(key)) {
+    UI.OpenSoundFont();
+    return true;
   }
+  // LEFT/RIGHT still work for quick cycling without opening the scroll menu.
+  const auto delta = Input_OptionKeyDelta(key);
+  if (delta != 0) {
+    if (BGM_Enabled()) {
+      BGM_ChangeMIDIDevice(delta);
+    }
+    return true;
+  }
+  return true;
 }
 
 void MidiPanel::FnFixes(MenuController &, int_fast8_t) {

@@ -24,6 +24,7 @@ static fluid_audio_driver_t *FsAudioDriver = nullptr;
 static int FsFontId = -1;
 
 static std::vector<std::string> FsFontPaths;
+static std::vector<MID_BACKEND_DEVICE_SOURCE> FsFontSources;
 static size_t FsFontIndex = 0;
 
 static constexpr int SAMPLE_RATE = 44100;
@@ -36,9 +37,12 @@ static std::string_view Basename(std::string_view path) {
 // File extensions that FluidSynth can load natively.
 static constexpr std::string_view FontExts[] = {".sf2", ".sf3", ".dls"};
 
-// Collects font files from [dir] into [paths], skipping duplicates.
+// Collects font files from [dir] into [paths] + [sources] with the given
+// [source] tag. Skips duplicates.
 static void ScanDir(const std::string &dir,
-                    std::vector<std::string> &paths) {
+                    std::vector<std::string> &paths,
+                    std::vector<MID_BACKEND_DEVICE_SOURCE> &sources,
+                    MID_BACKEND_DEVICE_SOURCE source) {
   std::error_code ec;
   if (!std::filesystem::is_directory(dir, ec)) {
     return;
@@ -51,6 +55,7 @@ static void ScanDir(const std::string &dir,
     for (const auto &valid : FontExts) {
       if (ext == valid) {
         paths.push_back(entry.path().string());
+        sources.push_back(source);
         break;
       }
     }
@@ -59,30 +64,63 @@ static void ScanDir(const std::string &dir,
 
 static void ScanSoundFonts(std::string_view data_path) {
   FsFontPaths.clear();
+  FsFontSources.clear();
 
   // 1. System-level paths (higher priority — scanned first so they appear
   //    earlier in the device list).
 #ifdef WIN32
-  ScanDir("C:/Windows/system32/drivers", FsFontPaths); // gm.dls
+  ScanDir("C:/Windows/system32/drivers", FsFontPaths, FsFontSources,
+          MID_BACKEND_DEVICE_SOURCE::SYSTEM); // gm.dls
 #else
   // Common Linux SoundFont locations
-  ScanDir("/usr/share/sounds/sf2", FsFontPaths);
-  ScanDir("/usr/share/soundfonts", FsFontPaths);
+  ScanDir("/usr/share/sounds/sf2", FsFontPaths, FsFontSources,
+          MID_BACKEND_DEVICE_SOURCE::SYSTEM);
+  ScanDir("/usr/share/soundfonts", FsFontPaths, FsFontSources,
+          MID_BACKEND_DEVICE_SOURCE::SYSTEM);
 #endif
-  // Environment variable override (e.g. DEFAULT_SOUNDFONT=/path/to/ font.sf2)
+  // Environment variable override (e.g. DEFAULT_SOUNDFONT=/path/to/font.sf2)
   if (const char *env = SDL_getenv("DEFAULT_SOUNDFONT")) {
     FsFontPaths.push_back(env);
+    FsFontSources.push_back(MID_BACKEND_DEVICE_SOURCE::ENV);
   }
 
   // 2. Local project soundfonts/ directory.
   const std::string sf_dir =
       std::string{data_path.data(), data_path.size()} + "soundfonts";
-  ScanDir(sf_dir, FsFontPaths);
+  ScanDir(sf_dir, FsFontPaths, FsFontSources, MID_BACKEND_DEVICE_SOURCE::LOCAL);
 
-  // Deduplicate and sort.
-  std::ranges::sort(FsFontPaths);
-  const auto [first, last] = std::ranges::unique(FsFontPaths);
-  FsFontPaths.erase(first, last);
+  // Deduplicate and sort. Must keep paths and sources in sync.
+  {
+    struct Indexed {
+      const std::string *path;
+      MID_BACKEND_DEVICE_SOURCE source;
+      size_t original_index;
+    };
+    std::vector<Indexed> indexed;
+    indexed.reserve(FsFontPaths.size());
+    for (size_t i = 0; i < FsFontPaths.size(); i++) {
+      indexed.push_back({&FsFontPaths[i], FsFontSources[i], i});
+    }
+    std::ranges::sort(indexed,
+                      [](const Indexed &a, const Indexed &b) {
+                        return *a.path < *b.path;
+                      });
+    const auto [first, last] = std::ranges::unique(
+        indexed, std::ranges::equal_to{},
+        [](const Indexed &x) { return *x.path; });
+    indexed.erase(first, last);
+
+    std::vector<std::string> new_paths;
+    std::vector<MID_BACKEND_DEVICE_SOURCE> new_sources;
+    new_paths.reserve(indexed.size());
+    new_sources.reserve(indexed.size());
+    for (const auto &entry : indexed) {
+      new_paths.push_back(std::move(const_cast<std::string &>(*entry.path)));
+      new_sources.push_back(entry.source);
+    }
+    FsFontPaths = std::move(new_paths);
+    FsFontSources = std::move(new_sources);
+  }
 }
 
 static size_t FindSoundFont(std::string_view name) {
@@ -106,6 +144,8 @@ static bool FsInitAudio(void) {
   fluid_settings_setnum(FsSettings, "synth.sample-rate",
                         static_cast<double>(SAMPLE_RATE));
   fluid_settings_setint(FsSettings, "synth.audio-channels", 2);
+  // Match TSF's default output level (0 dB global gain).
+  fluid_settings_setnum(FsSettings, "synth.gain", 1.0);
 
   FsSynth = new_fluid_synth(FsSettings);
   if (!FsSynth) {
@@ -190,6 +230,69 @@ std::optional<std::string_view> MidBackend_DeviceName(void) {
   static thread_local std::string cached;
   cached = name;
   return cached;
+}
+
+size_t MidBackend_DeviceCount(void) { return FsFontPaths.size(); }
+
+std::optional<std::string_view>
+MidBackend_DeviceNameAt(size_t index) {
+  if (index >= FsFontPaths.size()) {
+    return std::nullopt;
+  }
+  const auto name = Basename(FsFontPaths[index]);
+  static thread_local std::string cached;
+  cached = name;
+  return cached;
+}
+
+std::optional<MID_BACKEND_DEVICE_SOURCE>
+MidBackend_DeviceSource(size_t index) {
+  if (index >= FsFontSources.size()) {
+    return std::nullopt;
+  }
+  return FsFontSources[index];
+}
+
+bool MidBackend_DeviceSelect(size_t index) {
+  if (index >= FsFontPaths.size()) {
+    return false;
+  }
+  if (index == FsFontIndex) {
+    return true;
+  }
+
+  const auto old_index = FsFontIndex;
+  FsFontIndex = index;
+
+  // Tear down audio and unload current font.
+  if (FsAudioDriver) {
+    delete_fluid_audio_driver(FsAudioDriver);
+    FsAudioDriver = nullptr;
+  }
+  fluid_synth_sfunload(FsSynth, FsFontId, 1);
+  FsFontId = -1;
+
+  FsFontId = fluid_synth_sfload(FsSynth, FsFontPaths[FsFontIndex].c_str(), 1);
+  if (FsFontId == FLUID_FAILED) {
+    FsFontIndex = old_index;
+    FsFontId =
+        fluid_synth_sfload(FsSynth, FsFontPaths[FsFontIndex].c_str(), 1);
+  }
+
+  FsAudioDriver = new_fluid_audio_driver(FsSettings, FsSynth);
+  if (!FsAudioDriver) {
+    FsCleanupAudio();
+    FsFontIndex = old_index;
+    if (FsInitAudio()) {
+      FsFontId =
+          fluid_synth_sfload(FsSynth, FsFontPaths[FsFontIndex].c_str(), 1);
+      FsAudioDriver = new_fluid_audio_driver(FsSettings, FsSynth);
+    }
+    return false;
+  }
+
+  FsSaveCurrent();
+  return true;
 }
 
 bool MidBackend_DeviceChange(int8_t direction) {

@@ -9,6 +9,13 @@
 #include <span>
 #include <string_view>
 
+// Describes the source of a SoundFont file for display purposes.
+enum class MID_BACKEND_DEVICE_SOURCE : uint8_t {
+  LOCAL,  // Project-local soundfonts/ directory
+  SYSTEM, // System path (gm.dls, /usr/share/soundfonts, etc.)
+  ENV,    // DEFAULT_SOUNDFONT environment variable
+};
+
 // Initializes the backend with a default output device.
 bool MidBackend_Init(void); // MIDI-related initialization
 
@@ -19,9 +26,25 @@ void MidBackend_Cleanup(void); // MIDI-related cleanup
 // is not initialized. Can also be used for general initialization checks.
 std::optional<std::string_view> MidBackend_DeviceName(void);
 
+// Returns the number of available devices (SoundFont files).
+size_t MidBackend_DeviceCount(void);
+
+// Returns the name of the device at the given zero-based [index], or
+// std::nullopt if [index] is out of range or the backend is not initialized.
+std::optional<std::string_view> MidBackend_DeviceNameAt(size_t index);
+
+// Returns the source of the device at the given zero-based [index], or
+// std::nullopt if [index] is out of range or the backend is not initialized.
+std::optional<MID_BACKEND_DEVICE_SOURCE>
+MidBackend_DeviceSource(size_t index);
+
 // Switches to the next working output device in the given positive or negative
 // [direction].
 bool MidBackend_DeviceChange(int8_t direction); // Change output device
+
+// Switches to the device at the given zero-based [index]. Returns false if
+// [index] is out of range.
+bool MidBackend_DeviceSelect(size_t index); // Select device by index
 
 // Starts a timer that periodically calls Mid_Proc().
 void MidBackend_StartTimer(void);

@@ -10,6 +10,8 @@
 #include "ui_manager.h"
 
 #include "audio/bgm.h"
+#include "audio/midi.h"
+#include "audio/midi_backend.h"
 #include "core/config.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/demo_play.h"
@@ -136,6 +138,18 @@ UIManager::UIManager()
           20),
       bgm_pack_window_(bgm_pack_scroll_menu_.Menu()),
 
+      sf_title_item_(""),
+      sf_scroll_menu_(
+          sf_title_item_, [this]() { return SoundFontListSize(); },
+          [this](MenuItem &ret, size_t g, size_t s) {
+            SoundFontGenerate(ret, g, s);
+          },
+          [this](MenuController &c, INPUT_BITS k, size_t s) {
+            return SoundFontHandle(c, k, s);
+          },
+          20),
+      sf_window_(sf_scroll_menu_.Menu()),
+
       replay_title_item_(""),
       replay_files_scroll_menu_(
           replay_title_item_, [this]() { return ReplayFilesListSize(); },
@@ -174,6 +188,9 @@ MenuController *UIManager::ActiveMenu() {
   }
   if (bgm_pack_window_.Active()) {
     return &bgm_pack_window_;
+  }
+  if (sf_window_.Active()) {
+    return &sf_window_;
   }
   return &main_window_;
 }
@@ -265,6 +282,101 @@ void UIManager::OpenBGMPack() {
   bgm_pack_scroll_menu_.Init(bgm_pack_window_, bgm_sel_at_open_, &main_window_);
   bgm_pack_window_.Init(w);
   bgm_pack_window_.OpenCentered(w, bgm_pack_window_.SelectionAt(0));
+}
+
+// ---------------------------------------------------------------------------
+// SoundFont scroll menu
+// ---------------------------------------------------------------------------
+
+static constexpr std::string_view SoundFontTitle = " SoundFont";
+static constexpr std::string_view SoundFontTitleFmt = " SoundFont ({}/{})";
+static constexpr const char *SoundFontSourceLabel[] = {"local", "system",
+                                                       "env"};
+
+size_t UIManager::SoundFontListSize() { return MidBackend_DeviceCount(); }
+
+void UIManager::SoundFontGenerate(MenuItem &ret, size_t generated,
+                                   size_t selected) {
+  if (generated >= sf_labels_.size()) {
+    ret.Title = "";
+    ret.Help = "";
+    return;
+  }
+  ret.Title = sf_labels_[generated].c_str();
+  ret.Help = "";
+
+  // Highlight the currently active SoundFont.
+  const auto cur_name = MidBackend_DeviceName();
+  const auto maybe_name = MidBackend_DeviceNameAt(generated);
+  ret.Flags = (maybe_name && cur_name && maybe_name.value() == cur_name.value())
+                  ? MenuFlags::HIGHLIGHT
+                  : MenuFlags::NONE;
+
+  if (generated == selected) {
+    sf_title_text_.Format(SoundFontTitleFmt, selected + 1,
+                          MidBackend_DeviceCount());
+    sf_title_item_.Title = sf_title_text_.Lit();
+  }
+}
+
+bool UIManager::SoundFontHandle(MenuController &ctrl, INPUT_BITS key,
+                                 size_t selected) {
+  if (Input_IsOK(key)) {
+    if (BGM_Enabled()) {
+      Mid_Stop();
+      MidBackend_DeviceSelect(selected);
+      if (BGM_Playing() == BGM_PLAYING::MIDI) {
+        Mid_Play();
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
+void UIManager::OpenSoundFont() {
+  sf_title_text_.Set(SoundFontTitle);
+  sf_title_item_.Title = sf_title_text_.Lit();
+
+  // Pre-build all entry labels so each MenuItem::Title points to stable storage.
+  const auto count = MidBackend_DeviceCount();
+  sf_labels_.clear();
+  sf_labels_.reserve(count);
+  PIXEL_COORD w = CWinItemExtent(SoundFontTitle).w;
+  for (size_t i = 0; i < count; i++) {
+    const auto maybe_name = MidBackend_DeviceNameAt(i);
+    const auto maybe_source = MidBackend_DeviceSource(i);
+    if (!maybe_name) {
+      sf_labels_.emplace_back();
+      continue;
+    }
+    const auto source =
+        maybe_source.value_or(MID_BACKEND_DEVICE_SOURCE::LOCAL);
+    const auto source_str =
+        SoundFontSourceLabel[static_cast<uint8_t>(source)];
+    sf_labels_.emplace_back(
+        std::format("{} ({})", maybe_name.value(), source_str));
+    w = (std::max)(w,
+                   CWinItemExtent(std::string_view{
+                       sf_labels_.back().c_str(), sf_labels_.back().size()})
+                       .w);
+  }
+  w = (std::min)(w, GRP_RES.w);
+
+  // Find the current device index for initial selection.
+  size_t cur_sel = 0;
+  const auto cur_name = MidBackend_DeviceName();
+  for (size_t i = 0; i < count; i++) {
+    const auto name = MidBackend_DeviceNameAt(i);
+    if (name && cur_name && name.value() == cur_name.value()) {
+      cur_sel = i;
+      break;
+    }
+  }
+
+  sf_scroll_menu_.Init(sf_window_, cur_sel, &main_window_);
+  sf_window_.Init(w);
+  sf_window_.OpenCentered(w, sf_window_.SelectionAt(0));
 }
 
 // ---------------------------------------------------------------------------
