@@ -16,8 +16,6 @@
 #include "window_backend.h"
 #include "window_sdl.h"
 
-#include "audio/bgm.h"
-#include "audio/snd_backend.h"
 #include "core/constants.h"
 #include "sys/input.h"
 #include "sys/log.h"
@@ -286,7 +284,6 @@ std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void) {
 
 int WndBackend_Run(void) {
   bool quit = false;
-  bool active = true;
   uint64_t ticks_last = 0;
 
   while (!quit) {
@@ -297,46 +294,26 @@ int WndBackend_Run(void) {
     SDL_Event event;
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_EVENT_FIRST,
                           SDL_EVENT_LAST) == 1) {
-      switch (event.type) {
-      case SDL_EVENT_QUIT:
+      if (event.type == SDL_EVENT_QUIT) {
         return 0;
-
-      case SDL_EVENT_WINDOW_FOCUS_LOST:
-        BGM_Pause();
-        SndBackend_PauseAll();
-        active = false;
-        break;
-
-      case SDL_EVENT_WINDOW_FOCUS_GAINED:
-        BGM_Resume();
-        SndBackend_ResumeAll();
-        active = true;
-        break;
-
-      default:
-        break;
       }
     }
 
-    if (active) {
-      const auto ticks_start = SDL_GetTicks();
-      if ((Grp_FPSDivisor == 0) ||
-          ((ticks_start - ticks_last) >= FRAME_TIME_TARGET)) {
-        quit = !GameFrame();
-        if (Grp_FPSDivisor != 0) {
-          // Since SDL_Delay() works at not-even-exact millisecond
-          // granularity, we subtract 1 and spin for the last
-          // millisecond to ensure that we hit the exact frame
-          // boundary.
-          const auto ticks_frame = (SDL_GetTicks() - ticks_start);
-          if (ticks_frame < (FRAME_TIME_TARGET - 1)) {
-            SDL_Delay((FRAME_TIME_TARGET - 1) - ticks_frame);
-          }
-          ticks_last = ticks_start;
+    const auto ticks_start = SDL_GetTicks();
+    if ((Grp_FPSDivisor == 0) ||
+        ((ticks_start - ticks_last) >= FRAME_TIME_TARGET)) {
+      quit = !GameFrame();
+      if (Grp_FPSDivisor != 0) {
+        // Since SDL_Delay() works at not-even-exact millisecond
+        // granularity, we subtract 1 and spin for the last
+        // millisecond to ensure that we hit the exact frame
+        // boundary.
+        const auto ticks_frame = (SDL_GetTicks() - ticks_start);
+        if (ticks_frame < (FRAME_TIME_TARGET - 1)) {
+          SDL_Delay((FRAME_TIME_TARGET - 1) - ticks_frame);
         }
+        ticks_last = ticks_start;
       }
-    } else {
-      SDL_WaitEvent(nullptr);
     }
   }
   return 0;
