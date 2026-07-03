@@ -34,3 +34,6 @@
 [submodule "libs/tinysoundfont"]
 	path = libs/tinysoundfont
 	url = https://github.com/schellingb/TinySoundFont.git
+[submodule "libs/fluidsynth"]
+	path = libs/fluidsynth
+	url = https://github.com/FluidSynth/fluidsynth.git
