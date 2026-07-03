@@ -86,7 +86,8 @@ void EnemyData::Draw() const {
 
   // Drawing mode selection
   const auto &src =
-      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(d - 64 + 8) >> 4]
+      ((a.mode == ANM_DEG) ? a.ptn[static_cast<uint8_t>(
+                                 ut_math_detail::rad_to_deg256(d) - 64 + 8) >> 4]
                            : a.ptn[anm_c]);
   if (GrpSurface_Blit({topleft.x, topleft.y}, sid, src)) {
     if ((anm_ptn != anm_ptnEx) && (IsDamaged != 0U)) {
@@ -359,7 +360,7 @@ void EnemyManager::InitDataX64(EnemyData *e, int x, int y, uint32_t EclID) {
   e->anm_c = 0;
   e->count = 0;
   e->evscore = 0;
-  e->d = 64;
+  e->d = ut_math_detail::deg256_to_rad(64);
   e->flag = EF_DAMAGE | EF_DRAW | EF_HITSB;
 
   e->IsDamaged = 0;
@@ -375,8 +376,8 @@ void EnemyManager::InitDataX64(EnemyData *e, int x, int y, uint32_t EclID) {
   e->cmd_c = 0;
   e->v = 64;
   e->vd = 0;
-  e->vx = cosl(e->d, e->v);
-  e->vy = sinl(e->d, e->v);
+  e->vx = cos_len(e->d, e->v);
+  e->vy = sin_len(e->d, e->v);
 
   e->LLaserRef = 0;
 
@@ -520,8 +521,8 @@ ECL_HEAD:
     break;
 
   case ECL_XYL: // 1+2 Bytes Param
-    e->x += cosl(e->d, PixelToWorld(I16LEAt(&cmd[1])));
-    e->y += sinl(e->d, PixelToWorld(I16LEAt(&cmd[1])));
+    e->x += cos_len(e->d, PixelToWorld(I16LEAt(&cmd[1])));
+    e->y += sin_len(e->d, PixelToWorld(I16LEAt(&cmd[1])));
     bRetFlag = false;
     break;
 
@@ -534,7 +535,7 @@ ECL_HEAD:
       Effects.SendCmdStg4Rocks(cmd[1], 0);
       break;
     case STG4ROCK_ACCMOVE2:
-      Effects.SendCmdStg4Rocks(cmd[1], e->d);
+      Effects.SendCmdStg4Rocks(cmd[1], ut_math_detail::rad_to_deg256(e->d));
       break;
     case STG4ROCK_3DMOVE:
       Effects.SendCmdStg4Rocks(cmd[1], 0);
@@ -708,7 +709,8 @@ ECL_HEAD:
   case ECL_JDSB: { // Jump if player heading angle matches
     ECL_DEBUG("ECL_JDSB", 0);
     const uint8_t temp =
-        abs(atan8((Players.X() - e->x), (Players.Y() - e->y)) - (e->d));
+        abs(atan8((Players.X() - e->x), (Players.Y() - e->y)) -
+            ut_math_detail::rad_to_deg256(e->d));
     if (temp < 4) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
@@ -818,13 +820,13 @@ ECL_HEAD:
     if (e->cmd_c == 0) {
       // Initialization
       e->cmd_c = (U16LEAt(&cmd[2]) + 1);
-      // e->vx    = cosl(e->d,e->v);
-      // e->vy    = sinl(e->d,e->v);
+      // e->vx    = cos_len(e->d,e->v);
+      // e->vy    = sin_len(e->d,e->v);
     }
     if ((--e->cmd_c) != 0) {
       e->v += Cast::sign<int8_t>(cmd[1]);
-      e->x += cosl(e->d, e->v);
-      e->y += sinl(e->d, e->v);
+      e->x += cos_len(e->d, e->v);
+      e->y += sin_len(e->d, e->v);
 
       return;
     }
@@ -883,7 +885,8 @@ ECL_HEAD:
     }
 
     // Determine actual angle
-    e->d = BaseAngle + ((rnd() >> 1) % DeltaAngle);
+    e->d = ut_math_detail::deg256_to_rad(
+        static_cast<uint8_t>(BaseAngle + ((rnd() >> 1) % DeltaAngle)));
 
     bRetFlag = false;
     break;
@@ -892,8 +895,8 @@ ECL_HEAD:
     ECL_DEBUG("ECL_MOV : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
-      e->vx = cosl(e->d, e->v);
-      e->vy = sinl(e->d, e->v);
+      e->vx = cos_len(e->d, e->v);
+      e->vy = sin_len(e->d, e->v);
     }
     if ((--e->cmd_c) != 0) {
       e->x += e->vx;
@@ -910,9 +913,9 @@ ECL_HEAD:
       e->vd = RelDegRL(Cast::sign<int8_t>(cmd[1]));
     }
     if ((--e->cmd_c) != 0) {
-      e->x += cosl(e->d, e->v);
-      e->y += sinl(e->d, e->v);
-      e->d += e->vd;
+      e->x += cos_len(e->d, e->v);
+      e->y += sin_len(e->d, e->v);
+      e->d += e->vd * ut_math_detail::DEG256_TO_RAD;
       return;
     }
     bRetFlag = false;
@@ -927,9 +930,9 @@ ECL_HEAD:
       e->vd = RelDegRL(static_cast<char>(cmd[1 + 8]));
     }
     if ((--e->cmd_c) != 0) {
-      e->x += (cosl(e->d, e->v) + e->vx);
-      e->y += (sinl(e->d, e->v) + e->vy);
-      e->d += e->vd;
+      e->x += (cos_len(e->d, e->v) + e->vx);
+      e->y += (sin_len(e->d, e->v) + e->vy);
+      e->d += e->vd * ut_math_detail::DEG256_TO_RAD;
       return;
     }
     bRetFlag = false;
@@ -947,8 +950,8 @@ ECL_HEAD:
     }
     if ((--e->cmd_c) != 0) {
       e->x += e->vx;
-      e->y = e->vy + sinl(e->d, e->amp << 6);
-      e->d += e->vd;
+      e->y = e->vy + sin_len(e->d, e->amp << 6);
+      e->d += e->vd * ut_math_detail::DEG256_TO_RAD;
       return;
     }
     bRetFlag = false;
@@ -966,8 +969,8 @@ ECL_HEAD:
     }
     if ((--e->cmd_c) != 0) {
       e->y += e->vy;
-      e->x = e->vx + sinl(e->d, e->amp << 6);
-      e->d += e->vd;
+      e->x = e->vx + sin_len(e->d, e->amp << 6);
+      e->d += e->vd * ut_math_detail::DEG256_TO_RAD;
       return;
     }
     bRetFlag = false;
@@ -1063,8 +1066,8 @@ ECL_HEAD:
     // Note: There is no way to escape this instruction except interrupts
     if (e->cmd_c == 0) {
       e->cmd_c = 9999; // Any non-zero value is fine
-      e->vx = cosl(e->d, e->v);
-      e->vy = sinl(e->d, e->v);
+      e->vx = cos_len(e->d, e->v);
+      e->vy = sin_len(e->d, e->v);
       e->vd = Cast::sign<int8_t>(cmd[1]); // Gravity acceleration!!
       e->flag |= EF_CLIP; // Automatically set clipping attribute
     } else {
@@ -1092,41 +1095,41 @@ ECL_HEAD:
 
   case ECL_DEGA: // Absolute angle set
     ECL_DEBUG("ECL_DEGA : %u", cmd[1]);
-    e->d = AbsDegRL(cmd[1]);
+    e->d = ut_math_detail::deg256_to_rad(AbsDegRL(cmd[1]));
     bRetFlag = false;
     break;
 
   case ECL_DEGR: // Relative angle set
     ECL_DEBUG("ECL_DEGR : %d", Cast::sign<int8_t>(cmd[1]));
-    e->d += RelDegRL(Cast::sign<int8_t>(cmd[1]));
+    e->d += RelDegRL(Cast::sign<int8_t>(cmd[1])) * ut_math_detail::DEG256_TO_RAD;
     bRetFlag = false;
     break;
 
   case ECL_DEGX: // Random angle set
     ECL_DEBUG("ECL_DEGX", 0);
-    e->d = rnd() & 0xff;
+    e->d = ut_math_detail::deg256_to_rad(rnd() & 0xff);
     bRetFlag = false;
     break;
 
   case ECL_DEGXU: // Random angle set (up)
-    e->d = 128 + (rnd() & 0x7f);
+    e->d = ut_math_detail::deg256_to_rad(128 + (rnd() & 0x7f));
     bRetFlag = false;
     break;
 
   case ECL_DEGXD: // Random angle set (down)
-    e->d = rnd() & 0x7f;
+    e->d = ut_math_detail::deg256_to_rad(rnd() & 0x7f);
     bRetFlag = false;
     break;
 
   case ECL_DEGEX:
-    e->d = enemy_exdeg;
+    e->d = ut_math_detail::deg256_to_rad(enemy_exdeg);
     enemy_exdeg += enemy_exdeg_d;
     bRetFlag = false;
     break;
 
   case ECL_DEGS: // Angle set to player
     ECL_DEBUG("ECL_DEGS", 0);
-    e->d = atan8(Players.X() - e->x, Players.Y() - e->y);
+    e->d = atan2_rad(Players.Y() - e->y, Players.X() - e->x);
     bRetFlag = false;
     break;
 
@@ -1233,7 +1236,7 @@ ECL_HEAD:
     break;
 
   case ECL_TDEGE: // Sync bullet fire angle
-    e->t_cmd.d = e->d;
+    e->t_cmd.d = ut_math_detail::rad_to_deg256(e->d);
     bRetFlag = false;
     break;
 
@@ -1357,7 +1360,7 @@ ECL_HEAD:
     break;
 
   case ECL_LDEGE: // Set laser angle to own direction
-    e->l_cmd.d = e->d;
+    e->l_cmd.d = ut_math_detail::rad_to_deg256(e->d);
     bRetFlag = false;
     break;
 
@@ -1536,7 +1539,8 @@ ECL_HEAD:
     if (cmd[0] == ECL_ENEMYSETD) {
       const uint32_t n = (4 + (cmd[6] << 2));
       InitDataSTD(new_enemy, x, y, n);
-      new_enemy->d = ID2Value(e, cmd[5]);
+      new_enemy->d =
+          ut_math_detail::deg256_to_rad(static_cast<uint8_t>(ID2Value(e, cmd[5])));
     } else {
       const uint32_t n = (4 + (cmd[5] << 2));
       InitDataSTD(new_enemy, x, y, n);
@@ -1621,7 +1625,7 @@ ECL_HEAD:
       e->y = dwTemp;
       break; // Enemy X coordinate
     case ECLCST_ENEMY_D:
-      e->d = dwTemp;
+      e->d = ut_math_detail::deg256_to_rad(static_cast<uint8_t>(dwTemp));
       break; // Enemy angle
 
     default:
@@ -1981,7 +1985,7 @@ static uint32_t ID2Value(const EnemyData *e, uint8_t id) {
   case ECLCST_ENEMY_Y:
     return e->y; // Enemy Y coordinate
   case ECLCST_ENEMY_D:
-    return e->d; // Enemy angle
+    return ut_math_detail::rad_to_deg256(e->d); // Enemy angle
 
   default:
     return 0;

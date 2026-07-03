@@ -75,13 +75,14 @@ struct EnemyData {
   uint16_t cmd_c;    // Current command repeat count
   uint16_t anm_c;    // Animation counter
 
-  uint8_t d;         // Direction angle 256
-  char vd;           // Angular velocity 128
-  uint8_t amp;       // Amplitude 256
   uint8_t anm_ptn;   // Current animation pattern
   uint8_t anm_ptnEx; // Animation pattern while damaged
   char anm_sp;       // Animation speed
   uint8_t IsDamaged; // Whether damaged
+
+  double d;        // Direction angle (radians)
+  char vd;         // Angular velocity 128 (deg256/frame; also linear gravity accel in GRAX)
+  uint8_t amp;     // Amplitude 256 (sinl length multiplier)
 
   uint8_t flag;   // Enemy state flags (resize as needed)
   uint8_t tama_c; // Bullet fire counter

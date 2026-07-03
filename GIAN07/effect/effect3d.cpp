@@ -94,26 +94,26 @@ WORLD_POINT PList_G[17] = {
 // Warning[8] moved to EffectManager::warning_lines — initialized in
 // InitWarningText()
 
-static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz);
+static void RollPoint(Point3D *p, double dx, double dy, double dz);
 static void Draw3DCube(const Cube3D *c); // General 3D cube drawing
 
-void Transform3D(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
+void Transform3D(Point3D *p, double dx, double dy, double dz) {
   static Point3D temp;
 
   temp.y = p->y;
   temp.z = p->z;
-  p->y = (cosl(dx, temp.y) - sinl(dx, temp.z));
-  p->z = (sinl(dx, temp.y) + cosl(dx, temp.z));
+  p->y = (cos_len(dx, temp.y) - sin_len(dx, temp.z));
+  p->z = (sin_len(dx, temp.y) + cos_len(dx, temp.z));
 
   temp.x = p->x;
   temp.z = p->z;
-  p->x = (cosl(dy, temp.x) + sinl(dy, temp.z));
-  p->z = (-sinl(dy, temp.x) + cosl(dy, temp.z));
+  p->x = (cos_len(dy, temp.x) + sin_len(dy, temp.z));
+  p->z = (-sin_len(dy, temp.x) + cos_len(dy, temp.z));
 
   temp.x = p->x;
   temp.y = p->y;
-  p->x = (cosl(dz, temp.x) - sinl(dz, temp.y));
-  p->y = (sinl(dz, temp.x) + cosl(dz, temp.y));
+  p->x = (cos_len(dz, temp.x) - sin_len(dz, temp.y));
+  p->y = (sin_len(dz, temp.x) + cos_len(dz, temp.y));
 }
 
 void ShiftRight6Bit(const Point3D *o, Point3D *p) {
@@ -152,7 +152,9 @@ void EffectManager::DrawWarningText() {
 
   count += 8;
 
-  if (warning_lines[0].DegX == 0) {
+  const uint8_t degx = ut_math_detail::rad_to_deg256(warning_lines[0].DegX);
+
+  if (degx == 0) {
     GrpGeom->Lock();
     GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>(128 + sinl(count, 48)));
     GrpGeom->SetColor({5, 0, 0});
@@ -164,12 +166,12 @@ void EffectManager::DrawWarningText() {
   } else {
     GrpGeom->Lock();
 
-    if (warning_lines[0].DegX < 10) {
+    if (degx < 10) {
       st = 0;
       det = 0;
       st = 0;
       det = 0;
-    } else if (warning_lines[0].DegX < 20) {
+    } else if (degx < 20) {
       st = -4;
       det = 1;
     } else {
@@ -205,17 +207,17 @@ void MoveWarningR(char count) {
   }
 
   for (auto &llist : Effects.warning_lines) {
-    llist.DegX += (count * 2);
-    llist.DegY += (count * 1);
-    llist.DegZ += (count * 4);
+    llist.DegX += (count * 2) * ut_math_detail::DEG256_TO_RAD;
+    llist.DegY += (count * 1) * ut_math_detail::DEG256_TO_RAD;
+    llist.DegZ += (count * 4) * ut_math_detail::DEG256_TO_RAD;
   }
 }
 
 void EffectManager::MoveWarningText(uint8_t count) {
   for (auto &llist : warning_lines) {
-    llist.DegX = ((count < 64) ? ((64 - count) * 2) : 0);
-    llist.DegY = ((count < 64) ? ((64 - count) * 1) : 0);
-    llist.DegZ = ((count < 64) ? ((64 - count) * 4) : 0);
+    llist.DegX = ((count < 64) ? ut_math_detail::deg256_to_rad(static_cast<uint8_t>((64 - count) * 2)) : 0.0);
+    llist.DegY = ((count < 64) ? ut_math_detail::deg256_to_rad(static_cast<uint8_t>((64 - count) * 1)) : 0.0);
+    llist.DegZ = ((count < 64) ? ut_math_detail::deg256_to_rad(static_cast<uint8_t>((64 - count) * 4)) : 0.0);
   }
 }
 
@@ -246,23 +248,23 @@ void DrawLineList3D(std::span<const LineList3D> w) {
   }
 }
 
-static void RollPoint(Point3D *p, uint8_t dx, uint8_t dy, uint8_t dz) {
+static void RollPoint(Point3D *p, double dx, double dy, double dz) {
   Point3D temp{};
 
   temp.y = p->y;
   temp.z = p->z;
-  p->y = cosl(dx, temp.y) - sinl(dx, temp.z);
-  p->z = sinl(dx, temp.y) + cosl(dx, temp.z);
+  p->y = cos_len(dx, temp.y) - sin_len(dx, temp.z);
+  p->z = sin_len(dx, temp.y) + cos_len(dx, temp.z);
 
   temp.x = p->x;
   temp.z = p->z;
-  p->x = cosl(dy, temp.x) + sinl(dy, temp.z);
-  p->z = -sinl(dy, temp.x) + cosl(dy, temp.z);
+  p->x = cos_len(dy, temp.x) + sin_len(dy, temp.z);
+  p->z = -sin_len(dy, temp.x) + cos_len(dy, temp.z);
 
   temp.x = p->x;
   temp.y = p->y;
-  p->x = cosl(dz, temp.x) - sinl(dz, temp.y);
-  p->y = sinl(dz, temp.x) + cosl(dz, temp.y);
+  p->x = cos_len(dz, temp.x) - sin_len(dz, temp.y);
+  p->y = sin_len(dz, temp.x) + cos_len(dz, temp.y);
 }
 
 void EffectManager::Init3DCubes() {
@@ -270,9 +272,9 @@ void EffectManager::Init3DCubes() {
 
   for (i = 0; i < CUBE_MAX; i++) {
     cubes[i].l = 30 * 64;
-    cubes[i].d.dx = rnd();
-    cubes[i].d.dy = rnd();
-    cubes[i].d.dz = rnd();
+    cubes[i].d.dx = ut_math_detail::deg256_to_rad(static_cast<uint8_t>(rnd()));
+    cubes[i].d.dy = ut_math_detail::deg256_to_rad(static_cast<uint8_t>(rnd()));
+    cubes[i].d.dz = ut_math_detail::deg256_to_rad(static_cast<uint8_t>(rnd()));
     cubes[i].p.x = cosl(i * 256 / CUBE_MAX, 200 * 64);
     cubes[i].p.y = sinl(i * 256 / CUBE_MAX, 200 * 64);
     cubes[i].p.z = 0;
@@ -302,29 +304,31 @@ void EffectManager::Move3DCubes() {
   int i = 0;
   int l = 0;
   int d2 = 0;
-  static uint16_t d;
-  static uint16_t dx;
-  static uint16_t dy;
-  static uint16_t dz;
+  // Orbit/rotation angles (radians). Legacy was 1/256-deg256 fixed-point
+  // uint16_t accumulators (>>8 extracted deg256); the increments below
+  // preserve the original per-frame deg256 rates (1, 0.5, 0.25).
+  static double d;
+  static double dx;
+  static double dy;
+  static double dz;
 
-  d += 64 * 4;
+  d += ut_math_detail::DEG256_TO_RAD;        // +1 deg256/frame
+  dx += ut_math_detail::DEG256_TO_RAD / 2.0; // +0.5 deg256/frame
+  dy -= ut_math_detail::DEG256_TO_RAD / 4.0; // -0.25 deg256/frame
 
-  dx += 32 * 4;
-  dy -= 16 * 4;
-
-  d2 = sinl(d >> 8, 512 / CUBE_MAX);
-  l = sinl(d >> 7, 100 * 64) + ((200 - 20) * 64);
+  d2 = sin_len(d, 512 / CUBE_MAX);
+  l = sin_len(2.0 * d, 100 * 64) + ((200 - 20) * 64);
 
   for (i = 0; i < CUBE_MAX; i++) {
     cubes[i].l = (15 * 64) + (l >> 4) + (i * 128);
-    cubes[i].d.dx += 4;
-    cubes[i].d.dy -= 4;
+    cubes[i].d.dx += 4 * ut_math_detail::DEG256_TO_RAD;
+    cubes[i].d.dy -= 4 * ut_math_detail::DEG256_TO_RAD;
     // cubes[i].p.x = cosl(i*256/CUBE_MAX+d2, l);
     // cubes[i].p.y = sinl(i*256/CUBE_MAX+d2, l);
     cubes[i].p.x = cosl((i * 500 / CUBE_MAX) + d2, l);
     cubes[i].p.y = sinl((i * 500 / CUBE_MAX) + d2, l);
     cubes[i].p.z = (i - (CUBE_MAX / 2)) * 64 * 40;
-    Transform3D(&cubes[i].p, dx >> 8, dy >> 8, dz >> 8);
+    Transform3D(&cubes[i].p, dx, dy, dz);
   }
 
   for (auto &it : stars) {
@@ -353,9 +357,9 @@ static void Draw3DCube(const Cube3D *c) {
 
   o = c->p;
   l = c->l;
-  const uint8_t dx = c->d.dx;
-  const uint8_t dy = c->d.dy;
-  const uint8_t dz = c->d.dz;
+  const double dx = c->d.dx;
+  const double dy = c->d.dy;
+  const double dz = c->d.dz;
 
   l2 = l;
 
@@ -818,7 +822,7 @@ void EffectManager::InitStg6Rasters() {
   for (i = 0; i < S6RASTER_MAX; i++) {
     s6_ras[i].x = (rnd() % (640 - 256)) + 128;
     s6_ras[i].y = -rnd() % (480 + 160); //(480+240)-240;
-    s6_ras[i].deg = rnd();
+    s6_ras[i].deg = ut_math_detail::deg256_to_rad(static_cast<uint8_t>(rnd()));
     s6_ras[i].type = i % 3;
     s6_ras[i].amp = (rnd() % 80) + 70;
     s6_ras[i].vy = 2 + (rnd() % 3);
@@ -837,9 +841,9 @@ void EffectManager::MoveStg6Rasters() {
 
   for (i = 0; i < S6RASTER_MAX; i++) {
     if ((i & 1) != 0) {
-      s6_ras[i].deg += 2;
+      s6_ras[i].deg += 2 * ut_math_detail::DEG256_TO_RAD;
     } else {
-      s6_ras[i].deg -= 2;
+      s6_ras[i].deg -= 2 * ut_math_detail::DEG256_TO_RAD;
     }
 
     s6_ras[i].y += s6_ras[i].vy;
@@ -847,7 +851,7 @@ void EffectManager::MoveStg6Rasters() {
     if (s6_ras[i].y > 480) {
       s6_ras[i].x = (rnd() % (640 - 256)) + 128;
       s6_ras[i].y = -160;
-      s6_ras[i].deg = rnd();
+      s6_ras[i].deg = ut_math_detail::deg256_to_rad(static_cast<uint8_t>(rnd()));
       s6_ras[i].amp = (rnd() % 80) + 70;
     }
   }
@@ -894,7 +898,7 @@ void EffectManager::DrawStg6Rasters() {
     h = (Target[it.type].bottom - Target[it.type].top);
     w = (x2 - x1) / 2;
     for (j = 0; j < h; j += 2) {
-      dx = sinl((it.deg + j), it.amp);
+      dx = sin_len(it.deg + j * ut_math_detail::DEG256_TO_RAD, it.amp);
       src = {x1, (j + oy), x2, (j + 2)};
       GrpSurface_Blit({(it.x + dx - w), (it.y + j)}, sid, src);
     }

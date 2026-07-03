@@ -77,7 +77,7 @@ struct ScrollState {
 
   char RasterDx[31];   // Raster scroll X offset
   uint8_t RasterWidth; // Raster scroll amplitude
-  uint8_t RasterDeg;   // Raster scroll angle
+  double RasterDeg;    // Raster scroll angle (radians)
 
   void (*ExCmd)(void); // Special command
   uint32_t ExCount;    // Special command counter

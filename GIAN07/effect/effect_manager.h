@@ -30,7 +30,7 @@ struct Stg6Raster {
   int x, y;
   char vy;
   uint8_t type;
-  uint8_t deg;
+  double deg;
   uint8_t amp;
 };
 struct Stg6Star {
@@ -72,12 +72,6 @@ struct EffectManager {
 
   // EFFECT3D.cpp — warning wireframe state (was file-static Warning[8])
   LineList3D warning_lines[8];
-
-  // EFFECT3D.cpp — Move3DCube animation state (was static locals)
-  uint16_t cube_anim_d = 0;
-  uint16_t cube_anim_dx = 0;
-  uint16_t cube_anim_dy = 0;
-  uint16_t cube_anim_dz = 0;
 
   // ========================================================================
   // EFFECT.cpp methods (string/circle/screen/lockon/warning effects)

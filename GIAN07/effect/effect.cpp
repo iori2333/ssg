@@ -33,7 +33,7 @@ void EffectManager::MoveCircleEffects() {
     switch (ce->type) {
     case CEFC_STAR:
       ce->r -= 3;
-      ce->d += 2;
+      ce->d += 2 * ut_math_detail::DEG256_TO_RAD;
       if (ce->r <= 0) {
         ce->type = CEFC_NONE;
       }
@@ -79,16 +79,15 @@ void EffectManager::DrawCircleEffects() {
         }
         GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
         for (j = 0; j < 5; j++) {
-          x1 = ce->x +
-               cosl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
-          y1 = ce->y +
-               sinl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
-          x2 = ce->x +
-               cosl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
-                    r);
-          y2 = ce->y +
-               sinl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
-                    r);
+          const int base = (dtable[k] * ce->count / 10);
+          const double a1 =
+              ce->d + (base + j * 256 / 5) * ut_math_detail::DEG256_TO_RAD;
+          const double a2 =
+              ce->d + (base + (j + 2) * 256 / 5) * ut_math_detail::DEG256_TO_RAD;
+          x1 = ce->x + cos_len(a1, r);
+          y1 = ce->y + sin_len(a1, r);
+          x2 = ce->x + cos_len(a2, r);
+          y2 = ce->y + sin_len(a2, r);
           GrpGeom->DrawLine(x1, y1, x2, y2);
         }
       }
@@ -133,7 +132,8 @@ void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
   ce->x = x >> 6;
   ce->y = y >> 6;
   ce->type = type;
-  ce->count = ce->d = 0;
+  ce->count = 0;
+  ce->d = 0.0;
 
   switch (type) {
   case CEFC_STAR:

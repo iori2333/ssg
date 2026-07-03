@@ -30,7 +30,7 @@ struct LineList3D {
   PIXEL_POINT center;       // Vertex coordinate correction
   std::span<WORLD_POINT> p; // Vertex coordinates
 
-  uint8_t DegX, DegY, DegZ; // Rotation angle for each axis
+  double DegX, DegY, DegZ; // Rotation angle for each axis (radians)
 };
 
 struct Circle3D {
@@ -41,9 +41,9 @@ struct Circle3D {
 };
 
 struct Deg3D {
-  int dx;
-  int dy;
-  int dz;
+  double dx;
+  double dy;
+  double dz;
 };
 
 struct Cube3D {

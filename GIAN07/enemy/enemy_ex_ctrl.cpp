@@ -213,14 +213,14 @@ void BossManager::BitSet(BossData *b, uint8_t NumBits, uint32_t BitID) {
       // Initialize data
       Enemies.InitDataX64(e, bit_data.x, bit_data.y, n);
       e->hp = BIT_VIRTUAL_HP;
-      e->d = i * (256 / NumBits);
+      e->d = ut_math_detail::deg256_to_rad(static_cast<uint8_t>(i * (256 / NumBits)));
       e->GR[0] = i;
       e->GR[1] = NumBits;
       Enemies.Execute(e);
 
       // Associate this structure with the created enemy
       bit_data.Bit[i].pEnemy = e;   // Pointer to enemy data
-      bit_data.Bit[i].Angle = e->d; // Current angle
+      bit_data.Bit[i].Angle = ut_math_detail::rad_to_deg256(e->d); // Current angle
       bit_data.Bit[i].Force = 0;    // Other force direction
       bit_data.Bit[i].BitID = i;    // Bit index from start
 
@@ -468,9 +468,9 @@ void BossManager::BitSTDRoll() {
       // Sleep(100);
     }
 
-    e->d = bit->Angle;
-    e->x = ox + cosl(e->d, l);
-    e->y = oy + sinl(e->d, l);
+    e->d = ut_math_detail::deg256_to_rad(bit->Angle);
+    e->x = ox + cos_len(e->d, l);
+    e->y = oy + sin_len(e->d, l);
 
     // Reflect laser command
     switch (bit_data.LaserState) {
@@ -483,8 +483,10 @@ void BossManager::BitSTDRoll() {
         break;
       }
       LaserDeg = 64 + (256 / bit_data.NumBits);
-      gWorld().projectiles.Long().RotateLongAbs(e, e->d + LaserDeg, 0);
-      gWorld().projectiles.Long().RotateLongAbs(e, e->d - LaserDeg, 1);
+      gWorld().projectiles.Long().RotateLongAbs(
+          e, ut_math_detail::rad_to_deg256(e->d) + LaserDeg, 0);
+      gWorld().projectiles.Long().RotateLongAbs(
+          e, ut_math_detail::rad_to_deg256(e->d) - LaserDeg, 1);
       break;
     }
   }
@@ -599,7 +601,7 @@ void BossManager::BitLaserCommand(uint8_t Command) {
     }
 
     lcmd.e = e;
-    lcmd.d = e->d;
+    lcmd.d = ut_math_detail::rad_to_deg256(e->d);
 
     switch (Command) {
     case BLASERCMD_TYPE_A: // Emit unidirectional fixed-angle laser
@@ -630,11 +632,11 @@ void BossManager::BitLaserCommand(uint8_t Command) {
 
       delta = 64 + (256 / bit_data.NumBits);
 
-      lcmd.d = e->d + delta;
+      lcmd.d = ut_math_detail::rad_to_deg256(e->d) + delta;
       if (gWorld().projectiles.Long().SpawnLongLaser(lcmd, e->LLaserRef)) {
         e->LLaserRef++;
       }
-      lcmd.d = e->d - delta;
+      lcmd.d = ut_math_detail::rad_to_deg256(e->d) - delta;
       if (gWorld().projectiles.Long().SpawnLongLaser(lcmd, e->LLaserRef)) {
         e->LLaserRef++;
       }

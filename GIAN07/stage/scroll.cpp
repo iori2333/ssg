@@ -926,10 +926,10 @@ static void ScrollCmdRasterOpen() {
   // Might be a bit heavy...
   for (i = j = 0; i < 31; i++, j += 16) {
     Scroller.scroll.RasterDx[i] = Cast::down<int8_t>(
-        sinl((Scroller.scroll.RasterDeg + j), Scroller.scroll.RasterWidth));
+        sin_len(Scroller.scroll.RasterDeg + j * ut_math_detail::DEG256_TO_RAD, Scroller.scroll.RasterWidth));
   }
 
-  Scroller.scroll.RasterDeg += 2;
+  Scroller.scroll.RasterDeg += 2 * ut_math_detail::DEG256_TO_RAD;
 
   if (Scroller.scroll.RasterWidth < 2) {
     Scroller.scroll.RasterWidth++;
@@ -944,10 +944,10 @@ static void ScrollCmdRasterClose() {
   // Might be a bit heavy...
   for (i = j = 0; i < 31; i++, j += 2) {
     Scroller.scroll.RasterDx[i] = Cast::down<int8_t>(
-        sinl((Scroller.scroll.RasterDeg + j), Scroller.scroll.RasterWidth));
+        sin_len(Scroller.scroll.RasterDeg + j * ut_math_detail::DEG256_TO_RAD, Scroller.scroll.RasterWidth));
   }
 
-  Scroller.scroll.RasterDeg += 8;
+  Scroller.scroll.RasterDeg += 8 * ut_math_detail::DEG256_TO_RAD;
 
   Scroller.scroll.RasterWidth--;
 

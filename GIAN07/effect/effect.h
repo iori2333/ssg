@@ -54,7 +54,7 @@ struct CircleEffectData {
   uint32_t count; // Counter
   uint8_t type;   // Circle effect type
                   // uint8_t Level; // Circle effect level
-  uint8_t d;      // Circle effect angle (mystery)
+  double d;      // Circle effect angle (radians)
 };
 // (CIRCLE_EFC_DATA alias removed — use CircleEffectData directly)
 
