@@ -6,18 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(USE_FLUIDSYNTH "Use FluidSynth instead of TinySoundFont for MIDI backend" ON)
-
-# Generate platform constants header from environment variables
-set(PLATFORM_CONSTANTS_DEFINES "")
-foreach(VARNAME APP_ID PATH_SKELETON)
-    if(DEFINED ENV{${VARNAME}})
-        string(APPEND PLATFORM_CONSTANTS_DEFINES
-            "#define ${VARNAME} \"$ENV{${VARNAME}}\"\n")
-    else()
-        string(APPEND PLATFORM_CONSTANTS_DEFINES "#undef ${VARNAME}\n")
-    endif()
-endforeach()
 
 # ============================================================
 # Platform-specific settings
@@ -51,8 +39,6 @@ elseif(UNIX)
     pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
 endif()
 
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(libs/SDL3 EXCLUDE_FROM_ALL)
 add_subdirectory(libs/BLAKE3/c EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libogg EXCLUDE_FROM_ALL)
@@ -60,30 +46,9 @@ add_subdirectory(libs/libvorbis EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libwebp EXCLUDE_FROM_ALL)
 add_subdirectory(libs/miniaudio EXCLUDE_FROM_ALL)
 add_subdirectory(libs/tomlplusplus EXCLUDE_FROM_ALL)
-
-if(USE_FLUIDSYNTH)
-    set(FLUIDSYNTH_BUILD_EXECUTABLES OFF CACHE BOOL "" FORCE)
-    set(FLUIDSYNTH_BUILD_TESTING OFF CACHE BOOL "" FORCE)
-
-    # Use C++11 OSAL to avoid GLib dependency (available since FluidSynth >=2.2.0).
-    # This is the preferred path on Windows/MSVC where GLib is not typically
-    # available and on Linux where a slimmer build is desired.
-    set(osal "cpp11" CACHE STRING "" FORCE)
-
-    # Disable features that pull in GLib or are unnecessary for just playback.
-    set(enable-ladspa OFF CACHE BOOL "" FORCE)
-    set(enable-libinstpatch OFF CACHE BOOL "" FORCE)
-
-    # Use static library to avoid runtime DLL dependency.
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-
-    add_subdirectory(libs/fluidsynth EXCLUDE_FROM_ALL)
-endif()
-
+add_subdirectory(libs/fluidsynth EXCLUDE_FROM_ALL)
 add_library(dr_libs INTERFACE)
 target_include_directories(dr_libs INTERFACE libs/dr_libs)
-add_library(tinysoundfont INTERFACE)
-target_include_directories(tinysoundfont INTERFACE libs/tinysoundfont)
 
 # ============================================================
 # Main executable sources
@@ -99,13 +64,6 @@ file(GLOB_RECURSE GAME_SRC CONFIGURE_DEPENDS
     "game/*.cpp"
 )
 list(FILTER GAME_SRC EXCLUDE REGEX "game/platform/")
-
-# --- Conditional MIDI backend ---
-if(USE_FLUIDSYNTH)
-    list(FILTER GAME_SRC EXCLUDE REGEX "game/audio/midi_backend_tsf\\.cpp$")
-else()
-    list(FILTER GAME_SRC EXCLUDE REGEX "game/audio/midi_backend_fluidsynth\\.cpp$")
-endif()
 
 # --- Windows-specific backends ---
 file(GLOB PLATFORM_WINDOWS_SRC CONFIGURE_DEPENDS
@@ -161,13 +119,10 @@ target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 # Link libraries
 # ============================================================
 target_link_libraries(GIAN07 PRIVATE
-    vorbis vorbisfile miniaudio dr_libs tinysoundfont
+    vorbis vorbisfile miniaudio dr_libs
     BLAKE3::blake3 SDL3::SDL3-static webp
-    tomlplusplus::tomlplusplus
+    tomlplusplus::tomlplusplus libfluidsynth
 )
-if(USE_FLUIDSYNTH)
-    target_link_libraries(GIAN07 PRIVATE libfluidsynth)
-endif()
 
 # ============================================================
 # Output directories
