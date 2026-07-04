@@ -6,16 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Generate platform constants header from environment variables
-set(PLATFORM_CONSTANTS_DEFINES "")
-foreach(VARNAME APP_ID PATH_SKELETON)
-    if(DEFINED ENV{${VARNAME}})
-        string(APPEND PLATFORM_CONSTANTS_DEFINES
-            "#define ${VARNAME} \"$ENV{${VARNAME}}\"\n")
-    else()
-        string(APPEND PLATFORM_CONSTANTS_DEFINES "#undef ${VARNAME}\n")
-    endif()
-endforeach()
 
 # ============================================================
 # Platform-specific settings
@@ -49,8 +39,6 @@ elseif(UNIX)
     pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
 endif()
 
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(libs/SDL3 EXCLUDE_FROM_ALL)
 add_subdirectory(libs/BLAKE3/c EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libogg EXCLUDE_FROM_ALL)
@@ -58,11 +46,9 @@ add_subdirectory(libs/libvorbis EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libwebp EXCLUDE_FROM_ALL)
 add_subdirectory(libs/miniaudio EXCLUDE_FROM_ALL)
 add_subdirectory(libs/tomlplusplus EXCLUDE_FROM_ALL)
-
+add_subdirectory(libs/fluidsynth EXCLUDE_FROM_ALL)
 add_library(dr_libs INTERFACE)
 target_include_directories(dr_libs INTERFACE libs/dr_libs)
-add_library(tinysoundfont INTERFACE)
-target_include_directories(tinysoundfont INTERFACE libs/tinysoundfont)
 
 # ============================================================
 # Main executable sources
@@ -133,9 +119,9 @@ target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 # Link libraries
 # ============================================================
 target_link_libraries(GIAN07 PRIVATE
-    vorbis vorbisfile miniaudio dr_libs tinysoundfont
+    vorbis vorbisfile miniaudio dr_libs
     BLAKE3::blake3 SDL3::SDL3-static webp
-    tomlplusplus::tomlplusplus
+    tomlplusplus::tomlplusplus libfluidsynth
 )
 
 # ============================================================

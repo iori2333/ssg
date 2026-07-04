@@ -5,6 +5,7 @@
 #include <chrono>
 #include <format>
 
+#include "audio/snd_backend.h"
 #include "demo_manager.h"
 #include "demo_play.h"
 #include "game_main.h"
@@ -863,12 +864,15 @@ bool SProjectInit() {
 
 // Resume game (from ESC exit)
 void GameRestart() {
+  BGM_Resume();
+  SndBackend_ResumeAll();
   GameFlow.game_main = GameProc;
   GameFlow.current_state = GameState::Game;
 }
 
 // Exit game
 bool GameExit(bool bNeedChgMusic) {
+  SndBackend_ResumeAll();
   GrpBackend_PixelAccessEnd();
   TextObj.Clear();
   GrpBackend_Clear();
@@ -926,6 +930,8 @@ void GameOverInit() {
 
 // When continuing
 void GameContinue() {
+  BGM_Resume();
+  SndBackend_ResumeAll();
   Players.ResetForContinue();
 
   GameFlow.game_main = GameProc;
@@ -945,6 +951,8 @@ void GameProc(bool & /*unused*/) {
   if ((Key_Data & KEY_ESC) != 0) {
     // Show exit dialog
     UI.Exit().Open({250, 150}, 1);
+    BGM_Pause();
+    SndBackend_PauseAll();
     GameFlow.game_main = PauseProc;
     GameFlow.current_state = GameState::Pause;
     return;

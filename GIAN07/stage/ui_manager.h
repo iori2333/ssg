@@ -35,6 +35,7 @@ public:
 
   // --- Open scroll menu ---
   void OpenBGMPack();
+  void OpenSoundFont();
   void OpenReplayFiles();
 
   // BGM Pack soundtrack download URL
@@ -50,6 +51,11 @@ private:
   size_t BGMPackListSize();
   void BGMPackGenerate(MenuItem &ret, size_t generated, size_t selected);
   bool BGMPackHandle(MenuController &ctrl, INPUT_BITS key, size_t selected);
+
+  // SoundFont scroll menu callback
+  size_t SoundFontListSize();
+  void SoundFontGenerate(MenuItem &ret, size_t generated, size_t selected);
+  bool SoundFontHandle(MenuController &ctrl, INPUT_BITS key, size_t selected);
 
   // Replay Files scroll menu callback
   size_t ReplayFilesListSize();
@@ -88,6 +94,13 @@ private:
   size_t bgm_sel_at_open_ = 0;
   ScrollMenu bgm_pack_scroll_menu_;
   MenuController bgm_pack_window_;
+
+  // --- SoundFont scroll menu state ---
+  MenuText sf_title_text_;
+  MenuLabel sf_title_item_;
+  std::vector<std::string> sf_labels_;
+  ScrollMenu sf_scroll_menu_;
+  MenuController sf_window_;
 
   // --- Replay Files scroll menu state ---
   MenuText replay_title_text_;

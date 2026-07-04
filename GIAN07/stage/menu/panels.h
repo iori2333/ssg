@@ -132,7 +132,7 @@ public:
 
 private:
   void Refresh(MenuController &ctrl, bool tick);
-  static void FnDev(MenuController &, int_fast8_t);
+  static bool FnDev(MenuController &, INPUT_BITS);
   static void FnFixes(MenuController &, int_fast8_t);
 
   MenuText title_port_;
@@ -152,6 +152,8 @@ public:
   MenuDef &Menu() { return menu_; }
 
   void Refresh(MenuController &ctrl, bool tick);
+
+  friend class UIManager; // For OpenSoundFont()
 
 private:
   static void FnSE(MenuController &, int_fast8_t);
