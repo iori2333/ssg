@@ -872,6 +872,7 @@ void GameRestart() {
 
 // Exit game
 bool GameExit(bool bNeedChgMusic) {
+  SndBackend_ResumeAll();
   GrpBackend_PixelAccessEnd();
   TextObj.Clear();
   GrpBackend_Clear();
@@ -929,6 +930,8 @@ void GameOverInit() {
 
 // When continuing
 void GameContinue() {
+  BGM_Resume();
+  SndBackend_ResumeAll();
   Players.ResetForContinue();
 
   GameFlow.game_main = GameProc;
