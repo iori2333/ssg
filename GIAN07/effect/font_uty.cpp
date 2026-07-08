@@ -65,7 +65,7 @@ void TextBackend_GDICleanup() {
   RemoveFontResourceExW(FONT_MODERN, FR_PRIVATE, nullptr);
 }
 #elifdef LINUX
-static constexpr auto GOTHIC = "MS Gothic,IPAMonaGothic ";
+#define GOTHIC "MS Gothic,IPAMonaGothic "
 
 extern constinit const ENUMARRAY<const char *, FONT_ID> FontSpecs = {
     (GOTHIC "Regular 14px"),
@@ -74,7 +74,6 @@ extern constinit const ENUMARRAY<const char *, FONT_ID> FontSpecs = {
     (GOTHIC "Regular 10px"),
 };
 
-#undef GOTHIC
 #endif
 
 // Glyph selection inside the 16x16 font

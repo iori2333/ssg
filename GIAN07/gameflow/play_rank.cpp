@@ -37,9 +37,9 @@ void RankManager::Add(int n) {
     }
 
     if (state.Rank < 20 * 256) {
-      state.GameLevel = GameLevel::EASY;
+      state.level = GameLevel::EASY;
     } else {
-      state.GameLevel = GameLevel::NORMAL;
+      state.level = GameLevel::NORMAL;
     }
     break;
 
@@ -51,11 +51,11 @@ void RankManager::Add(int n) {
     }
 
     if (state.Rank < 20 * 256) {
-      state.GameLevel = GameLevel::EASY;
+      state.level = GameLevel::EASY;
     } else if (state.Rank < 36 * 256) {
-      state.GameLevel = GameLevel::NORMAL;
+      state.level = GameLevel::NORMAL;
     } else {
-      state.GameLevel = GameLevel::HARD;
+      state.level = GameLevel::HARD;
     }
     break;
 
@@ -68,11 +68,11 @@ void RankManager::Add(int n) {
     }
 
     if (state.Rank < 36 * 256) {
-      state.GameLevel = GameLevel::NORMAL;
+      state.level = GameLevel::NORMAL;
     } else if (state.Rank < 44 * 256) {
-      state.GameLevel = GameLevel::HARD;
+      state.level = GameLevel::HARD;
     } else {
-      state.GameLevel = GameLevel::LUNATIC;
+      state.level = GameLevel::LUNATIC;
     }
     break;
 
@@ -84,9 +84,9 @@ void RankManager::Add(int n) {
     }
 
     if (state.Rank < 44 * 256) {
-      state.GameLevel = GameLevel::HARD;
+      state.level = GameLevel::HARD;
     } else {
-      state.GameLevel = GameLevel::LUNATIC;
+      state.level = GameLevel::LUNATIC;
     }
     break;
 
@@ -97,7 +97,7 @@ void RankManager::Add(int n) {
 
 // Initialize play rank based on current difficulty
 void RankManager::Reset() {
-  state.GameLevel = Games.game_level;
+  state.level = Games.game_level;
 
   switch (Games.game_level) {
   case GameLevel::EASY:

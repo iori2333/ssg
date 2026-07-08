@@ -10,7 +10,7 @@
 
 // [Struct]
 struct PlayRankState {
-  GameLevel GameLevel; // Difficulty change also related to direction count
+  GameLevel level; // Difficulty change also related to direction count
   int Rank;            // Value related to bullet speed changes
 };
 using PlayRankInfo = PlayRankState;

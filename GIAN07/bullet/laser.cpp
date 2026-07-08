@@ -90,7 +90,7 @@ static constexpr auto LF_NMOVE =
 // private methods declared in laser_manager.h
 
 void LaserManager::Spawn() {
-  switch (Ranking.state.GameLevel) {
+  switch (Ranking.state.level) {
   case GameLevel::EASY:
     SetEasy();
     break;
