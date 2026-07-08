@@ -4,6 +4,7 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
+#include <cstdlib>
 #include <algorithm>
 #include <thread>
 
@@ -614,7 +615,7 @@ void Mid_Proc(MID_REALTIME delta) {
 void MID_EVENT::Send(void) const {
   switch (kind) {
   case MID_EVENT_KIND::SYSEX: { // SysEx
-    auto *msg = static_cast<uint8_t *>(_malloca(extra_data.size() + 1));
+    auto *msg = static_cast<uint8_t *>(malloc(extra_data.size() + 1));
     if (!msg) {
       break;
     }
@@ -642,8 +643,9 @@ void MID_EVENT::Send(void) const {
       // for other Roland synths that don't clamp.
       static constexpr uint8_t SC88_REVERB_MACRO[] = {0x41, 0x10, 0x42, 0x12,
                                                       0x40, 0x01, 0x30};
-      if (extra_data.size() == (std::size(SC88_REVERB_MACRO) + 3) &&
-          std::ranges::starts_with(extra_data, SC88_REVERB_MACRO)) {
+      if (extra_data.size() >= std::size(SC88_REVERB_MACRO) &&
+          std::equal(std::begin(SC88_REVERB_MACRO), std::end(SC88_REVERB_MACRO),
+                     extra_data.begin())) {
         const auto fix = std::min<uint8_t>(msg[8], 7);
         if (fix != msg[8]) {
           msg[8] = fix;
@@ -656,8 +658,8 @@ void MID_EVENT::Send(void) const {
     }
     /// -----------------------------------------
 
-    MidBackend_Out({msg, (extra_data.size() + 1)});
-    _freea(msg);
+    MidBackend_Out(std::span{msg, (extra_data.size() + 1)});
+    free(msg);
     break;
   }
 

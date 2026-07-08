@@ -18,6 +18,8 @@
 // is mainly used for background effect changes, etc. (not used for state
 // transitions)
 
+#include <cstdint>
+
 // [Constants]
 
 // SCL instructions

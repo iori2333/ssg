@@ -28,7 +28,7 @@ std::string ReplayAllFN(bool exstg) {
   const auto now = std::chrono::system_clock::now();
   const auto time = std::chrono::system_clock::to_time_t(now);
   struct tm tm;
-  localtime_s(&tm, &time);
+  localtime_r(&time, &tm);
   const auto prefix = exstg ? "replay_ex" : "replay";
   return std::format("{}_{:04}{:02}{:02}_{:02}{:02}{:02}.DAT", prefix,
                      tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
