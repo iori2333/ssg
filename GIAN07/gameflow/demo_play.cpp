@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <ctime>
 #include <format>
 #include <utility>
 
@@ -24,16 +23,14 @@
 
 // File-static variables moved to DemoManager struct in demo_manager.h
 
+namespace {
 std::string ReplayAllFN(bool exstg) {
+  const auto *prefix = exstg ? "replay_ex" : "replay";
   const auto now = std::chrono::system_clock::now();
-  const auto time = std::chrono::system_clock::to_time_t(now);
-  struct tm tm;
-  localtime_r(&time, &tm);
-  const auto prefix = exstg ? "replay_ex" : "replay";
-  return std::format("{}_{:04}{:02}{:02}_{:02}{:02}{:02}.DAT", prefix,
-                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
-                     tm.tm_min, tm.tm_sec);
+  const auto local = std::chrono::floor<std::chrono::seconds>(now);
+  return std::format("{}_{:%Y%m%d_%H%M%S}.DAT", prefix, local);
 }
+} // namespace
 
 void DemoManager::Init() {
   // Prepare random seed
