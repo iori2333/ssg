@@ -19,7 +19,6 @@
 #include "stage/music.h"
 #include "stage/window_sys.h"
 #include "sys/path.h"
-#include "sys/thread.h"
 #include "util/enum_array.h"
 #include "util/hash.h"
 
@@ -257,33 +256,12 @@ constexpr ENUMARRAY<std::string_view, PACK_ID> BASENAMES = {{
 constexpr std::string_view NOT_FOUND = "\xe2\x98\x90 ";
 constexpr std::string_view FOUND = "\xe2\x98\x91 ";
 
-// Packfiles can be in these four states:
-//
-// 1) `THREAD` blank, `PACKFILE_READ` default-constructed:
-//    Uninitialized, at the start of the process.
-//
-// 2) `THREAD` joinable, `PACKFILE_READ` default-constructed:
-//    In the process of loading the packfile and running any post-loading
-//    code.
-//
-// 3) `THREAD` blank, `PACKFILE_READ` empty:
-//    Invalid packfile, after FilStartR() returned an error. Currently not
-//    distinguished from 1), but we might in the future.
-//
-// 4) `THREAD` blank, `PACKFILE_READ` valid:
-//    Checksums are validated, and the packfile is ready for extraction.
-//
-// A single `std::variant` per pack might look like the better way to
-// represent this, but actually comes with two drawbacks:
-// • Since `THREAD` rejoins on destruction, an attempt to change the
-//   variant type from within the thread would deadlock the program.
-// • Suddenly, we also have to handle the `valueless_by_exception` case in
-//   the Packfile() function, which can then no longer return the neat
-//   `const PACKFILE_READ&`.
+// Packfiles load synchronously at startup. A default-constructed
+// `PACKFILE_READ` is uninitialized; after a successful Load(), `pack`
+// holds the parsed data ready for extraction.
 class PACK {
 private:
   PACKFILE_READ pack;
-  THREAD load_thread;
   std::string filename_with_found_prefix;
 
 public:
@@ -292,23 +270,11 @@ public:
     return filename_with_found_prefix;
   }
 
-  const PACKFILE_READ &BlockUntilLoaded() {
-    if (load_thread.Joinable()) {
-      load_thread.Join();
-    }
-    return pack;
-  }
-
-  void AbortLoading() {
-    if (load_thread.Joinable()) {
-      load_thread.Abort();
-    }
-  }
+  const PACKFILE_READ &Get() const { return pack; }
 };
 ENUMARRAY<PACK, PACK_ID> Packs;
 
-// For MUSIC.PAK, we want to start asynchronously calculating all hashes
-// once the process starts.
+// For MUSIC.PAK, calculate all hashes during loading
 std::vector<HASH> MusicHashes;
 
 struct MusicMeta {
@@ -318,22 +284,16 @@ struct MusicMeta {
 std::vector<MusicMeta> MusicMetas;
 
 const PACKFILE_READ &Packfile(PACK_ID id) {
-  return Packs[id].BlockUntilLoaded();
+  return Packs[id].Get();
 }
 
-void LoadMusicHashes(const PACKFILE_READ &in, const THREAD_STOP &st) {
+void LoadMusicHashes(const PACKFILE_READ &in) {
   MusicNum = in.info.size();
   MusicHashes.reserve(MusicNum);
   MusicMetas.resize(MusicNum);
 
   for (auto i = 0; std::cmp_less(i, MusicNum); i++) {
-    if (st) {
-      break;
-    }
     if (const auto file = in.MemExpand(i)) {
-      if (st) {
-        break;
-      }
       auto cursor = file.cursor();
 
       std::string_view title, comment;
@@ -390,16 +350,13 @@ bool PACK::Load(std::string_view path_data, PACK_ID id) {
     return false;
   }
   std::ranges::copy(FOUND, filename_with_found_prefix.begin());
-  load_thread =
-      ThreadStart([this, stream = stream, id](const THREAD_STOP &st) mutable {
-        auto in = FilStartR(stream);
-        if (id == PACK_ID::MUSIC) {
-          LoadMusicHashes(in, st);
-        } else if (id == PACK_ID::SOUND) {
-          LoadSound(in);
-        }
-        pack = std::move(in);
-      });
+  auto in = FilStartR(stream);
+  if (id == PACK_ID::MUSIC) {
+    LoadMusicHashes(in);
+  } else if (id == PACK_ID::SOUND) {
+    LoadSound(in);
+  }
+  pack = std::move(in);
   return true;
 }
 
@@ -415,7 +372,7 @@ bool Check() {
 
 // Load the n-th song //
 bool LoadMusic(fil_no_t filno) {
-  const auto &music = Packs[PACK_ID::MUSIC].BlockUntilLoaded();
+  const auto &music = Packs[PACK_ID::MUSIC].Get();
   if (filno >= MusicHashes.size()) {
     return false;
   }
@@ -445,7 +402,7 @@ bool LoadMusic(fil_no_t filno) {
 }
 
 bool LoadMusicByHash(const HASH &hash) {
-  Packs[PACK_ID::MUSIC].BlockUntilLoaded();
+  Packs[PACK_ID::MUSIC].Get();
   const auto ret = std::ranges::find(MusicHashes, hash);
   if (ret == MusicHashes.cend()) {
     return false;
@@ -536,12 +493,7 @@ void LoaderInit() {
   }
 }
 
-void LoaderCleanup() {
-  // Cleanly shut down any loading threads that might not have joined yet
-  for (auto &pack : DAT::Packs) {
-    pack.AbortLoading();
-  }
-}
+void LoaderCleanup() {}
 
 // Global variables //
 uint32_t MusicNum = 0;                // Number of songs
