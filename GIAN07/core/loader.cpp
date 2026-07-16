@@ -20,7 +20,6 @@
 #include "stage/window_sys.h"
 #include "sys/path.h"
 #include "util/enum_array.h"
-#include "util/hash.h"
 
 #include "scripts_data.h"
 
@@ -33,182 +32,6 @@ static BYTE_BUFFER_BORROWED LoadEmbeddedScript(int filno) {
   }
   return {};
 }
-
-// Hardcoded loop points for ZUN's original MIDI files
-// ---------------------------------------------------
-
-struct MID_LOOP_FOR_HASH {
-  HASH hash;
-  MID_LOOP loop;
-};
-
-// These loop points were detected using https://github.com/nmlgc/mly, with the
-// command line
-//
-// 	<file.mid mly loop-find
-//
-// unless otherwise specified.
-static constinit const auto LOOPS = HashesSorted<MID_LOOP_FOR_HASH, 66>({{
-    // Original soundtrack (MUSIC.DAT)
-    // -------------------------------
-    // clang-format off
-
-	// #01 秋霜玉　～ Clockworks
-	{ .hash="04a44d2751f0cc155b9dbcabf7886bf999801f27f31ffee8566a18449e95ba4f"_B3, .loop={  .start=16557,  .end=94317 } },
-	// #02 フォルスストロベリー
-	{ .hash="e040b0ae4a9a36be23f88d5b0f66c6c5e60f0dfe648404c143f9095b75d1f036"_B3, .loop={  .start=75361, .end=183841 } },
-	// #03 プリムローズシバ
-	{ .hash="4727240794872e31d2591850b0d662af13fa25a77d9798c925cca61da114df43"_B3, .loop={  .start=31561,  .end=93001 } },
-	// #04 幻想帝都
-	{ .hash="d01300e4053bb07abc909fba83b0b1addb00104ee1ac3c9ad981e348b9c66622"_B3, .loop={   .start=4800,  .end=89280 } },
-	// #05 ディザストラスジェミニ
-	{ .hash="694543bea96390d6a6e85771e19561853515f456839f2672516516a6fbd074a4"_B3, .loop={   .start=1184,  .end=77984 } },
-	// #06 華の幻想　紅夢の宙
-	{ .hash="b58f7178ca77351f8d014efce152c50f6057adabbd969efe93610b65161f2a2e"_B3, .loop={  .start=73666, .end=181186 } },
-	// #07 天空アーミー
-	{ .hash="ac10269db4ad75f752fe8a52531238871baf8dcd87f6b2e90d130645e9bf0841"_B3, .loop={   .start=8640, .end=104640 } },
-	// #08 スプートニク幻夜
-	{ .hash="c8402fa2769f9341fb71db27d24550d5e534a652e71a2f21e45417a3a5764f3a"_B3, .loop={  .start=31606, .end=158326 } },
-	// #09 機械サーカス　～ Reverie
-	{ .hash="bde78f7de7bb640ce3e65589b7ccc79b4b702a32475c902eaf04170b6b1da538"_B3, .loop={    .start=961,  .end=93121 } },
-	// #10 カナベラルの夢幻少女
-	{ .hash="c804078d44983f3163220d51f22c035dddc19e78e5bbd129564bcb66447096ae"_B3, .loop={ .start=108481, .end=223681 } },
-	// #11 魔法少女十字軍
-	{ .hash="203b58f72fe30a532575de19ba58de11d0836d20c033eead82c4d4575f359ad1"_B3, .loop={   .start=8641, .end=127681 } },
-	// #12 アンティークテラー
-	{ .hash="0a0a45aa7bae3a6b7ebb082970960e1679c4ae4ce5c3e011d12e73899b99390f"_B3, .loop={   .start=1198, .end=140398 } },
-	// #13 夢機械　～ Innocent Power
-	{ .hash="052382df9912024fc1bcb11c60ca4555998d7206be2f7beefddef22e80ad5e3d"_B3, .loop={    .start=961,  .end=62401 } },
-	// #14 幻想科学　～ Doll's Phantom
-	{ .hash="0b8a97180a2229c42d22556c734668c8c9ccec9d1f32e0c936d7e7bb7a1fddab"_B3, .loop={  .start=75601, .end=185041 } },
-	// #15 少女神性　～ Pandora's Box
-	{ .hash="109d226ed66538074c2e15d4637631e77506321a66b644e627c77fd91d94ce3e"_B3, .loop={  .start=90510, .end=183630 } },
-	// #16 シルクロードアリス
-	{ .hash="46c876e99f605c5c8e5957d6adcecc2231c5e795f7284cca7f496a42a3758b2f"_B3, .loop={   .start=6721, .end=141121 } },
-	// #17 魔女達の舞踏会　～ Magus
-	{ .hash="a0a5ccd7c1b0e78c0365f5290fbf453ddc3d97298a1cf1f6ccc66365785d69c4"_B3, .loop={    .start=961,  .end=77761 } },
-	// #18 二色蓮花蝶　～ Ancients
-	{ .hash="67b2b4690067193ea1703569eaa0eeada59a6577ff10f4e0fb7f7b0e55559435"_B3, .loop={   .start=2880, .end=144960 } },
-	// #19 ハーセルヴス
-	{ .hash="f8cfe5c314ad1d8b7ed435cd876dae2b7750c00f03c1fa9a748428344feaa27e"_B3, .loop={  .start=86401, .end=101761 } },
-	// #20 タイトルドメイド
-	{ .hash="4931e9b4220ecd94d6006fec0805c882f3409840af15dc5a5336d36a65e4e70f"_B3, .loop={    .start=961,  .end=43201 } },
-	// -------------------------------
-
-	// Arranged soundtrack (https://www16.big.or.jp/~zun/html/music_old.html)
-	// ----------------------------------------------------------------------
-	// The first row corresponds to ZUN's original MIDIs, the second and third
-	// rows to the edited non-echo and echo versions in the arranged soundtrack
-	// BGM packs.
-
-	// #01 秋霜玉　～ Clockworks
-	{ .hash="02838ce71bcb2922278d86331af10caebb893ad4dbd7bf66771501dd16640fda"_B3, .loop={  .start=16321,  .end=94081 } },
-	{ .hash="cf98509de1158239e06b0e4cba330b47ef10c9d6325aff13fb57f3e1c177308a"_B3, .loop={  .start=16321,  .end=94081 } },
-	{ .hash="de54464adade220c4e682d833160b768cbdf7c86a74061064472bb9d2e700799"_B3, .loop={  .start=16321,  .end=94081 } },
-	// #02 フォルスストロベリー
-	//		<ssg_02.mid mly cut 466: | mly loop-unfold 240: | mly loop-find
-	{ .hash="2cada452b1d1d1cbcff2e2f2430217fcbbcf4887e44dcbbd7c48d99ee39771f4"_B3, .loop={  .start=75361, .end=183841 } },
-	{ .hash="1e6532a487f574b28d8540d46245884030812c2fba36d86722e6f6ba61feb8d8"_B3, .loop={  .start=75361, .end=183841 } },
-	{ .hash="3fd235970a395feba43fac52b8843d225d2828cb9f178ac73833ae26b6e4492c"_B3, .loop={  .start=75361, .end=183841 } },
-	// #03 プリムローズシバ
-	//   Uses Reverb Macro 0 (Room 1), doesn't need an echo edit.
-	{ .hash="63b0ed5d24e83b20ca603052e01a427477a89d9ec1903b188bd184eed09cf034"_B3, .loop={    .start=961,  .end=62401 } },
-	{ .hash="ff336846794befbbf4188dcdc7496b3f029896b343b8978553527ecc324677fe"_B3, .loop={    .start=961,  .end=62401 } },
-	// #04 幻想帝都
-	//		<ssg_04.mid mly smf0 | mly loop-find
-	{ .hash="2232a7c30b6bee76709342c62997fafab08a483fcde9d3595ba3b0e5d1819d18"_B3, .loop={   .start=4800,  .end=89280 } },
-	{ .hash="8b5f5b50209c725fe7cc6b5506d8f57d5df91cf6fa135e88ca9c6f22dbfda2ea"_B3, .loop={   .start=4800,  .end=89280 } },
-	{ .hash="b7c704265773d3f2efa64dbda283c6e0a45ac8d0e28075136d2152e01936a446"_B3, .loop={   .start=4800,  .end=89280 } },
-	// #05 ディザストラスジェミニ
-	//		<ssg_05.mid mly smf0 | mly cut 386: | mly loop-unfold 226: | mly loop-find
-	{ .hash="26b734bec6e53b3ca02ce82d67f5bc2473f892ac7bc3b0f92703f66e55bfef17"_B3, .loop={  .start=62520, .end=139320 } },
-	{ .hash="6cb425f3501c6c36dbf563f2f515a99e5cabd9772b198f8a5720a2871a178e5f"_B3, .loop={  .start=62520, .end=139320 } },
-	{ .hash="eb2a7526fc9f7d1bbd86aeb99f5055b7d2f75d99240746fdab159645eb0fd1d3"_B3, .loop={  .start=62520, .end=139320 } },
-	// #06 華の幻想　紅夢の宙
-	//		<ssg_06.mid mly cut 494: | mly loop-unfold 270: | mly loop-find
-	{ .hash="6e53bcd7c38a0e54d167d673ecbf0b47404442832c55b858c22edb1b63747939"_B3, .loop={  .start=73681, .end=181201 } },
-	{ .hash="f0f4ce32eb747727ca160da4aab6b6432f9365d3b7c76ea411c089d79e87d2ef"_B3, .loop={  .start=73681, .end=181201 } },
-	{ .hash="4f24b13ad086126c0825363aafd7f6036b042a828c0ef18cd7d42db7989e8300"_B3, .loop={  .start=73681, .end=181201 } },
-	// #07 天空アーミー
-	{ .hash="adba179af78f437b209eef82dc5f043087dfc42f8e584bd7688a57f510a3c26a"_B3, .loop={   .start=8640, .end=104640 } },
-	{ .hash="9c08d7f4dee7bc344431bf7e1a1edbada0593b41adb9046e19dc890d8c1c4bf2"_B3, .loop={   .start=8640, .end=104640 } },
-	{ .hash="f6ff4062e72a2ddf9cd04a1376446b7a87de65b29b30d8cc2370dc328e741dee"_B3, .loop={   .start=8640, .end=104640 } },
-	// #08 スプートニク幻夜
-	{ .hash="75087ec2ce1237d6dfe62e543d174b558343a8d2b09a0e7e767f0fead08644ea"_B3, .loop={  .start=31606, .end=158326 } },
-	{ .hash="07f3114ca2cb648fbcddeb584d9c5c4522ccc05bfca2723267c91de6e87c50c9"_B3, .loop={  .start=31606, .end=158326 } },
-	{ .hash="47dc15bc5bf03e6cd09703bd546a387f8bee58ce9c6b1f45946c74c98745adce"_B3, .loop={  .start=31606, .end=158326 } },
-	// #09 機械サーカス　～ Reverie
-	//		Every supposed loop modulates up by a semitone 16 measures before it
-	//		ends and remains in that new key at the start of the next loop, so the
-	//		piece technically doesn't loop at all. The original stays in G♯m
-	//		throughout.
-
-	// #10 カナベラルの夢幻少女
-	//		<ssg_10.mid mly smf0 | mly loop-find
-	{ .hash="d959e251a069bb198c8c79dcdd61dacfdbb63041bd163018bf4befd3331d30d1"_B3, .loop={    .start=961, .end=116161 } },
-	{ .hash="5bb79c1e0c1fbf94f11a980bed4f43a55107eafa3d9f427f5043101a300b0b3d"_B3, .loop={    .start=961, .end=116161 } },
-	{ .hash="58faba5c7f48a29dae657979b139a2fa55335652cff116ddb4a5fe5b25722a7f"_B3, .loop={    .start=961, .end=116161 } },
-	// #11 魔法少女十字軍
-	{ .hash="b70b6b7ed80b1c605a4b97b26a9d1c564ecab3699e980ba512b40e947260e77c"_B3, .loop={   .start=8641, .end=127681 } },
-	{ .hash="1e04bea18f35790e7a8ada516b9f8f98f6ecf64163f604f7c0f8f0699a4952bc"_B3, .loop={   .start=8641, .end=127681 } },
-	{ .hash="cdc8c3fbd717048a98cb5f92fabeef78a42892a3fa9ef91ea2c0396049aa659c"_B3, .loop={   .start=8641, .end=127681 } },
-	// #12 アンティークテラー
-	//		<ssg_12.mid mly cut 602: | mly loop-unfold 312: | mly loop-find
-	{ .hash="15eca8c0ea2e60e752a93cbcb09043a7213b4b7993b8493d529a4cd440176c63"_B3, .loop={  .start=16081, .end=155281 } },
-	{ .hash="b81e3526f2f6690664106f825d3af8d21a843526e1ceb32191f4e9e82298f1ec"_B3, .loop={  .start=16081, .end=155281 } },
-	{ .hash="5b7dfe45bf71fd138f9b439c4fbfeb4f990a9d96c8abd5c41f80317d36875bb7"_B3, .loop={  .start=16081, .end=155281 } },
-	// #13 夢機械　～ Innocent Power
-	//		Has a unique ending section that starts in Gm and then modulates
-	//		through Em and Fm before it fades out on F♯m.
-
-	// #14 幻想科学　～ Doll's Phantom
-	//		<ssg_14.mid mly cut 550: | mly loop-unfold 322: | mly loop-find
-	{ .hash="3b94f8d5b87cfc2db73dee57744d2de5a4a0daa67cb8b122b0fef26f4fc5cd63"_B3, .loop={  .start=75601, .end=185041 } },
-	{ .hash="acdd1bff05f7fdab9ba6569fd7512c58038be69aef26f7b59cf3ed9463f0cdf8"_B3, .loop={  .start=75601, .end=185041 } },
-	{ .hash="bbd1bfefdd54506f92e1a3b5d77c61884ff11ae2e41512568d36fa7e1507ac1c"_B3, .loop={  .start=75601, .end=185041 } },
-	// #15 少女神性　～ Pandora's Box
-	//		<ssg_15.mid mly cut 522: | mly loop-unfold 328: | mly loop-find
-	{ .hash="7728681d569155c34a71e28e3c75fc104d7b439835fb33fad2a94b6c46e8fe59"_B3, .loop={  .start=90220, .end=183340 } },
-	{ .hash="581ee417e1b3aa578a26c2acc56dd2cffb3bdde722877cfe80d56486122463b4"_B3, .loop={  .start=90220, .end=183340 } },
-	{ .hash="0e401c20edc6dbc29c7b9f968e4f9686e09218b22400035261f71aa3ef123551"_B3, .loop={  .start=90220, .end=183340 } },
-	// #16 シルクロードアリス
-	//		<ssg_16.mid mly cut 624: | mly loop-unfold 344: | mly loop-find
-	{ .hash="384f15ef0325b4806f878e5144cccf2a502217705106e2b7e918a4106554e74c"_B3, .loop={  .start=30721, .end=165121 } },
-	//	    <16.mid mly cut 614: | mly loop-unfold 334: | mly loop-find
-	//   Uses custom reverb settings, doesn't need an echo edit.
-	{ .hash="16732bcc91a128f1a9dd5595f99f8fc0b36a3c5781a50e9eeaecc491d08fb89c"_B3, .loop={  .start=25921, .end=160321 } },
-	// #17 魔女達の舞踏会　～ Magus
-	//		Has a unique 8-bar ending section that first appears in Cm and then
-	//		loops in C♯m while fading out. The fade starts during the first loop,
-	//		so we can't loop this section in-game (unless Romantique Tp were to
-	//		re-record it without the fade).
-
-	// #18 二色蓮花蝶　～ Ancients
-	//   Uses Reverb Macro 1 (Room 2), doesn't need an echo edit.
-	{ .hash="9a695e4659a1293e2d08fe287eb55f4dc6279beab2317004ae520029e552d602"_B3, .loop={   .start=3841, .end=145921 } },
-	{ .hash="3adb2cc55b56bb773704ad564546a07b43df0c7bc4e80928dd03d4aad03a27ce"_B3, .loop={   .start=2881, .end=144961 } },
-	// #19 ハーセルヴス
-	//		Features a unique and very beautiful ending section. Let's let it
-	//		fade out to silence for dramatic effect.
-	{ .hash="0f29ba3a086246621cf0624638a044fc6c6622fee49744da66cf4ae8641d3475"_B3, .loop={     .start=-1,     .end=-1 } },
-	{ .hash="276e1fa39fe52368986bed512b3a248034e17ab79b23b00122be3cd2ed3a6187"_B3, .loop={     .start=-1,     .end=-1 } },
-	{ .hash="5e596cc00a3c99d73e301c858b085f34b13ad33be9417368eec185e7e53b5848"_B3, .loop={     .start=-1,     .end=-1 } },
-    // clang-format on
-    // ----------------------------------------------------------------------
-}});
-
-bool LoadMIDIWithPotentialLoop(BYTE_BUFFER_OWNED buf, const HASH &hash) {
-  const auto ret = Mid_Load(std::move(buf));
-  if (!ret) {
-    return false;
-  }
-  const auto loop_it = LOOPS.Lookup(hash);
-  if (loop_it != LOOPS.end()) {
-    Mid_SetLoop(loop_it->loop);
-  }
-  return ret;
-}
-// ---------------------------------------------------
 
 // Packfile loading //
 bool GrpBMPLoadP(const PACKFILE_READ &in, fil_no_t filno, SURFACE_ID sid) {
@@ -274,9 +97,7 @@ public:
 };
 ENUMARRAY<PACK, PACK_ID> Packs;
 
-// For MUSIC.PAK, calculate all hashes during loading
-std::vector<HASH> MusicHashes;
-
+// For MUSIC.PAK, cache track metadata during loading
 struct MusicMeta {
   std::string title;   // UTF-8
   std::string comment; // UTF-8, \n-separated
@@ -287,9 +108,8 @@ const PACKFILE_READ &Packfile(PACK_ID id) {
   return Packs[id].Get();
 }
 
-void LoadMusicHashes(const PACKFILE_READ &in) {
+void LoadMusicMetadata(const PACKFILE_READ &in) {
   MusicNum = in.info.size();
-  MusicHashes.reserve(MusicNum);
   MusicMetas.resize(MusicNum);
 
   for (auto i = 0; std::cmp_less(i, MusicNum); i++) {
@@ -316,11 +136,6 @@ void LoadMusicHashes(const PACKFILE_READ &in) {
 
       MusicMetas[i].title = title;
       MusicMetas[i].comment = comment;
-
-      // Hash only the MIDI portion for loop point matching
-      const auto *midi_data = file.get() + cursor.cursor;
-      const auto midi_size = file.size() - cursor.cursor;
-      MusicHashes.emplace_back(Hash({midi_data, midi_size}));
     } else {
       assert(!"Failure extracting BGM file?");
     }
@@ -352,7 +167,7 @@ bool PACK::Load(std::string_view path_data, PACK_ID id) {
   std::ranges::copy(FOUND, filename_with_found_prefix.begin());
   auto in = FilStartR(stream);
   if (id == PACK_ID::MUSIC) {
-    LoadMusicHashes(in);
+    LoadMusicMetadata(in);
   } else if (id == PACK_ID::SOUND) {
     LoadSound(in);
   }
@@ -373,7 +188,7 @@ bool Check() {
 // Load the n-th song //
 bool LoadMusic(fil_no_t filno) {
   const auto &music = Packs[PACK_ID::MUSIC].Get();
-  if (filno >= MusicHashes.size()) {
+  if (filno >= static_cast<int>(MusicMetas.size())) {
     return false;
   }
 
@@ -398,16 +213,15 @@ bool LoadMusic(fil_no_t filno) {
     std::memcpy(midi_buf.get(), raw.get() + cursor.cursor, midi_size);
   }
 
-  return LoadMIDIWithPotentialLoop(std::move(midi_buf), MusicHashes[filno]);
+  return Mid_Load(std::move(midi_buf));
 }
 
-bool LoadMusicByHash(const HASH &hash) {
+bool LoadMusicByIndex(int index) {
   Packs[PACK_ID::MUSIC].Get();
-  const auto ret = std::ranges::find(MusicHashes, hash);
-  if (ret == MusicHashes.cend()) {
+  if ((index < 0) || (index >= static_cast<int>(MusicMetas.size()))) {
     return false;
   }
-  return LoadMusic(ret - MusicHashes.begin());
+  return LoadMusic(index);
 }
 } // namespace DAT
 // -------------- //
@@ -1245,12 +1059,7 @@ static void SetAnimeRect2(ANIME_DATA *anm, int x1, int y1, int x2, int y2) {
 // Load the n-th song //
 bool LoadMusic(unsigned int no) { return DAT::LoadMusic(no); }
 
-bool LoadMusicByHash(const HASH &hash) { return DAT::LoadMusicByHash(hash); }
-
-bool LoadMIDIBuffer(BYTE_BUFFER_OWNED buf) {
-  const auto hash = Hash(buf.cursor());
-  return LoadMIDIWithPotentialLoop(std::move(buf), hash);
-}
+bool LoadMusicByIndex(int index) { return DAT::LoadMusicByIndex(index); }
 
 // Load all Sound data //
 bool LoadSound(const PACKFILE_READ &in) {

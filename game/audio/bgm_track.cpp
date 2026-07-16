@@ -6,10 +6,10 @@
 // GCC 15 throws `error: redefinition of 'void std::__terminate()'` if this
 // appears after a module import.
 #if (__cpp_lib_to_chars < 201611L)
-#include <clocale>
 #include <cstdlib>
 #endif
 
+#include <algorithm>
 #include <cassert>
 #include <version>
 
@@ -166,10 +166,6 @@ std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
     intro_part = codec.open(*intro_stream, [&](auto tag, auto value) {
       if (meta.title.empty() && TagEquals(tag, "TITLE")) {
         meta.title = value;
-        return;
-      }
-      if (!meta.source_midi && TagEquals(tag, "SOURCE MIDI")) {
-        meta.source_midi = HashFrom(std::string_view{value});
         return;
       }
       if (!meta.gain_factor && TagEquals(tag, "GAIN FACTOR")) {

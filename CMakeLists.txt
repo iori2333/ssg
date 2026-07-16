@@ -40,7 +40,6 @@ elseif(UNIX)
 endif()
 
 add_subdirectory(libs/SDL3 EXCLUDE_FROM_ALL)
-add_subdirectory(libs/BLAKE3/c EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libogg EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libvorbis EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libwebp EXCLUDE_FROM_ALL)
@@ -120,7 +119,7 @@ target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 # ============================================================
 target_link_libraries(GIAN07 PRIVATE
     vorbis vorbisfile miniaudio dr_libs
-    BLAKE3::blake3 SDL3::SDL3-static webp
+    SDL3::SDL3-static webp
     tomlplusplus::tomlplusplus libfluidsynth
 )
 

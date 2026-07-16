@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "sys/file.h"
-#include "util/hash.h"
 
 // PCM sample format
 // -----------------
@@ -46,9 +45,6 @@ using SAMPLE_COUNT = uint32_t;
 
 struct TRACK_METADATA {
   std::string title;
-
-  // Hash of a MIDI file inside `MUSIC.DAT` that this track is a recording of.
-  std::optional<HASH> source_midi;
 
   // Gain to apply to the track.
   std::optional<float> gain_factor;

@@ -8,7 +8,7 @@
 
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
-#include "util/hash.h"
+#include "sys/buffer.h"
 
 struct SURFACE_DDRAW;
 
@@ -96,8 +96,7 @@ LoadGalleryEnemySurfaces(); // Composite entries 29+30 for bullet gallery
 [[nodiscard]] bool LoadFace(uint8_t FaceID,
                             uint8_t FileNo);   // Load face graphic
 [[nodiscard]] bool LoadMusic(unsigned int no); // Load nth music track
-[[nodiscard]] bool LoadMusicByHash(const HASH &hash);
-[[nodiscard]] bool LoadMIDIBuffer(BYTE_BUFFER_OWNED /*buf*/);
+[[nodiscard]] bool LoadMusicByIndex(int index);
 bool LoadSound(); // Load all sound data
 
 // Load Music Room comment

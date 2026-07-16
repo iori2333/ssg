@@ -16,10 +16,15 @@
 #include "sys/file.h"
 #include "sys/path.h"
 
+// Direct calls into the game-specific loader, avoiding unnecessary function
+// pointer indirection.
+bool LoadMusic(unsigned int no);
+bool LoadMusicByIndex(int index);
+std::string_view MusicTitle(unsigned int index);
+
 using namespace std::chrono_literals;
 
 static constexpr std::string_view BGM_ROOT = "bgm/";
-static constexpr std::string_view EXT_MID = ".mid";
 
 // State
 // -----
@@ -88,8 +93,8 @@ std::string_view BGM_Title(void) {
   if (Waveform && !Waveform->metadata.title.empty()) {
     return Waveform->metadata.title;
   }
-  if (BGM_GetTrackTitle && (LoadedNum > 0)) {
-    return BGM_GetTrackTitle(LoadedNum - 1);
+  if ((LoadedNum > 0)) {
+    return MusicTitle(LoadedNum - 1);
   }
   return {};
 }
@@ -111,32 +116,16 @@ static bool BGM_Load(unsigned int id) {
     const auto prefix_len = PackPath.size();
     PackPath += std::format("{:02}", (id + 1));
 
-    // Try loading a waveform track
-    bool waveform_new = false;
-    bool mid_new = false;
     Waveform = BGM::TrackOpen(PackPath);
-    if (Waveform) {
-      if (SndBackend_BGMLoad(Waveform)) {
-        waveform_new = true;
-        if (const auto &hash = Waveform->metadata.source_midi) {
-          mid_new = BGM_MidLoadByHash(*hash);
-          LoadedOriginalMIDI = mid_new;
-        }
-      }
-    }
-
-    // Try loading a MIDI
-    if (!mid_new) {
-      PackPath += EXT_MID;
-      mid_new = BGM_MidLoadBuffer(SDL_LoadFile(PackPath.c_str()));
+    if (Waveform && SndBackend_BGMLoad(Waveform)) {
+      LoadedOriginalMIDI = LoadMusicByIndex(static_cast<int>(id));
+      PackPath.resize(prefix_len);
+      return true;
     }
 
     PackPath.resize(prefix_len);
-    if (waveform_new || mid_new) {
-      return true;
-    }
   }
-  LoadedOriginalMIDI = BGM_MidLoadOriginal(id);
+  LoadedOriginalMIDI = LoadMusic(id);
   return LoadedOriginalMIDI;
 }
 
