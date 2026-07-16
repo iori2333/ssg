@@ -467,11 +467,11 @@ void MusicRoomProc(bool & /*unused*/) {
     if (playing == BGM_PLAYING::MIDI) {
       BlitBG({504, 83, 136, 25});    // MIDI DEVICE
       BlitLegend({176, 0, 176, 11}); // Device change key
-    }
 
-    // GrpDrawSpect(0,480);
-    GrpDrawSpect(352, 128);
-    GrpDrawNote();
+      // GrpDrawSpect(0,480);
+      GrpDrawSpect(352, 128);
+      GrpDrawNote();
+    }
 
     const auto millis = BGM_PlayTime().count();
     const auto m = ((millis / 1000) / 60);
