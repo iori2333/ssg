@@ -136,15 +136,12 @@ static size_t FindSoundFont(std::string_view name) {
 }
 
 static bool FsInitAudio(void) {
-  // Settings must be configured before creating the synth (FluidSynth 2.1.0+).
   FsSettings = new_fluid_settings();
   if (!FsSettings) {
     return false;
   }
-  fluid_settings_setnum(FsSettings, "synth.sample-rate",
-                        static_cast<double>(SAMPLE_RATE));
+  fluid_settings_setnum(FsSettings, "synth.sample-rate", SAMPLE_RATE);
   fluid_settings_setint(FsSettings, "synth.audio-channels", 2);
-  // Match TSF's default output level (0 dB global gain).
   fluid_settings_setnum(FsSettings, "synth.gain", 1.0);
 
   FsSynth = new_fluid_synth(FsSettings);
@@ -154,7 +151,15 @@ static bool FsInitAudio(void) {
     return false;
   }
 
+  // Try default driver first, then platform-specific fallbacks.
   FsAudioDriver = new_fluid_audio_driver(FsSettings, FsSynth);
+#if !defined(WIN32)
+  if (!FsAudioDriver) {
+    // On Linux, the default ALSA driver may fail on PipeWire-only systems.
+    fluid_settings_setstr(FsSettings, "audio.driver", "pulseaudio");
+    FsAudioDriver = new_fluid_audio_driver(FsSettings, FsSynth);
+  }
+#endif
   if (!FsAudioDriver) {
     delete_fluid_synth(FsSynth);
     FsSynth = nullptr;
