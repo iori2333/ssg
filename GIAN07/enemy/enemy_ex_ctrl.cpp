@@ -13,7 +13,8 @@
 #include "audio/snd.h"
 #include "bullet/laser_manager.h"
 #include "bullet/long_laser.h"
-#include "core/loader.h"
+#include "data/gfx_manager.h"
+#include "data/sfx_manager.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/cast.h"
@@ -121,7 +122,7 @@ void BossManager::SnakyDelete(const BossData *b) {
       break;
     }
 
-    // Snd_SEPlay(SOUND_ID_BOMB, e->x);
+    // Snd_SEPlay(SfxId::Bomb, e->x);
     if (e->LLaserRef != 0U) {
       Lasers.ForceCloseLong(e); // Force close laser
     }
@@ -298,7 +299,7 @@ void BossManager::BitMove() {
       e->count = 0; // For explosion animation set
       e->flag = EF_BOMB;
 
-      Snd_SEPlay(SOUND_ID_BOMB, e->x);
+      Snd_SEPlay(SfxId::Bomb, e->x);
 
       for (j = i + 1; std::cmp_less(j, bit_data.NumBits); j++) {
         bit_data.Bit[j - 1] = bit_data.Bit[j];
@@ -513,7 +514,7 @@ void BossManager::BitDelete() {
     e->count = 0;
     e->flag = EF_BOMB;
 
-    Snd_SEPlay(SOUND_ID_BOMB, e->x);
+    Snd_SEPlay(SfxId::Bomb, e->x);
   }
 
   // Delegate the rest to this function

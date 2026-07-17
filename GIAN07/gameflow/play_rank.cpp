@@ -17,7 +17,7 @@ void RankManager::Add(int n) {
   // Lunatic        40 .. 64
 
   // Change difficulty
-  if (Games.game_stage == GRAPH_ID_EXSTAGE) {
+  if (Games.game_stage == kGfxExStage) {
     if (n > 0) {
       state.Rank += (std::max)(+1, (n / 4));
     } else if (n < 0) {

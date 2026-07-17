@@ -102,7 +102,7 @@ bool Snd_SELoad(BYTE_BUFFER_OWNED buffer, uint8_t id, SND_INSTANCE_ID max) {
   return SndBackend_SELoad(id, max, spec, {pcm_buf, pcm_len});
 }
 
-void Snd_SEPlay(uint8_t id, int x, bool loop) {
+void Snd_SEPlay(SfxId id, int x, bool loop) {
   return SndBackend_SEPlay(id, x, loop);
 }
 

@@ -16,6 +16,7 @@
 #include "core/config.h"
 #include "core/gian.h"
 #include "core/lz_uty.h"
+#include "data/stage_manager.h"
 #include "sys/file.h"
 #include "sys/input.h"
 #include "util/guard.h"
@@ -141,7 +142,7 @@ void DemoManager::SaveDemo() {
 
 bool DemoManager::LoadDemo(int stage) {
   // Unpack
-  const auto temp = ::LoadDemo(stage);
+  const auto temp = stage_mgr.LoadDemo(stage);
   auto temp_cursor = temp.cursor();
   {
     const auto maybe_info = temp_cursor.next<DemoPlayState>();

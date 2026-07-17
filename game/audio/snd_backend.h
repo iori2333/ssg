@@ -44,7 +44,7 @@ void SndBackend_SEUpdateVolume(void);
 
 bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
                        const SDL_AudioSpec &spec, BYTE_BUFFER_BORROWED pcm);
-void SndBackend_SEPlay(uint8_t id, int x = SND_X_MID, bool loop = false);
+void SndBackend_SEPlay(SfxId id, int x = SND_X_MID, bool loop = false);
 void SndBackend_SEStop(uint8_t id);
 
 // Pause or resume all playing sounds if the window loses focus

@@ -302,11 +302,11 @@ bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
   return true;
 }
 
-void SndBackend_SEPlay(uint8_t id, int x, bool loop) {
-  if (id >= SND_OBJ_MAX) {
+void SndBackend_SEPlay(SfxId id, int x, bool loop) {
+  if (std::to_underlying(id) >= SND_OBJ_MAX) {
     return;
   }
-  auto &se = SndObj[id];
+  auto &se = SndObj[std::to_underlying(id)];
   if (!se.Loaded()) {
     return;
   }

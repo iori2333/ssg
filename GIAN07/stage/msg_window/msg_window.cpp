@@ -6,7 +6,8 @@
 
 #include "msg_window.h"
 
-#include "core/loader.h"
+#include "data/gfx_manager.h"
+#include "data/sfx_manager.h"
 #include "platform/text_backend.h"
 #include "stage/menu/menu_renderer.h"
 #include "stage/window_sys.h"
@@ -188,11 +189,11 @@ void MsgWindow::Draw() {
   DrawWindowFrame(x, y, w, h);
 
   // Draw face (only when display is requested)
-  const auto sid = (SURFACE_ID::FACE + (face_id / FACE_NUMX));
+  const auto sid = (SURFACE_ID::FACE + (face_id / kFaceNumX));
   switch (face_state) {
   case MFACE_WAIT:
     oy = max_size.bottom - 100;
-    src = PIXEL_LTWH{((face_id % FACE_NUMX) * FACE_W), 0, FACE_W, FACE_H};
+    src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), 0, FACE_W, FACE_H};
     GrpSurface_Blit({(x + 2), oy}, sid, src);
     break;
 
@@ -201,7 +202,7 @@ void MsgWindow::Draw() {
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
       len = cosl(time + (i * 153), (64 - time) / 2);
-      src = PIXEL_LTWH{((face_id % FACE_NUMX) * FACE_W), i, FACE_W, 1};
+      src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
@@ -211,7 +212,7 @@ void MsgWindow::Draw() {
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
       len = cosl(time + (i * 153), (64 - time) / 2);
-      src = PIXEL_LTWH{((face_id % FACE_NUMX) * FACE_W), i, FACE_W, 1};
+      src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
@@ -221,7 +222,7 @@ void MsgWindow::Draw() {
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
       len = cosl(time + (i * 4), time);
-      src = PIXEL_LTWH{((face_id % FACE_NUMX) * FACE_W), i, FACE_W, 1};
+      src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), i, FACE_W, 1};
       if ((i & 1) != 0) {
         GrpSurface_Blit({(x - len + 2), (oy + i)}, sid, src);
       } else {
@@ -262,7 +263,7 @@ void MsgWindow::Face(uint8_t faceID) {
   if (state == MWIN_DEAD) {
     return; // Cannot display
   }
-  if (faceID / FACE_NUMX >= FACE_MAX) {
+  if (faceID / kFaceNumX >= FACE_MAX) {
     return; // Impossible number
   }
 

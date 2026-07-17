@@ -12,7 +12,8 @@
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
-#include "core/loader.h"
+#include "data/gfx_manager.h"
+#include "data/music_manager.h"
 #include "effect/effect.h"
 #include "effect/font_uty.h"
 #include "gameflow/game_main.h"
@@ -46,7 +47,7 @@ struct MUSICROOM_TEXT {
   void RenderComment(WINDOW_POINT topleft) const;
 };
 
-decltype(MusicNum) MidiPlayID = 0;
+size_t MidiPlayID = 0;
 std::optional<MUSICROOM_TEXT> MusicRoomText;
 // -----
 
@@ -130,7 +131,7 @@ bool MusicRoomInit() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!LoadGraph(GRAPH_ID_MUSICROOM)) {
+  if (!gfx.LoadStage(kGfxMusicRoom)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -146,7 +147,7 @@ bool MusicRoomInit() {
   Mid_TableInit();
 
   // BGM_Stop();
-  auto comment_buf = LoadMusicRoomComment(0);
+  auto comment_buf = music.LoadRoomComment(0);
   if (!comment_buf) {
     DebugOut("MUSIC.PAK がはかいされています");
     GameExit();
@@ -408,9 +409,9 @@ void MusicRoomProc(bool & /*unused*/) {
         MidiPlayID += 2;
       }
       BGM_Stop();
-      MidiPlayID = ((MidiPlayID + MusicNum - 1) % MusicNum);
+      MidiPlayID = ((MidiPlayID + music.kTrackCount - 1) % music.kTrackCount);
       BGM_Switch(MidiPlayID);
-      text.comment_buf = LoadMusicRoomComment(MidiPlayID);
+      text.comment_buf = music.LoadRoomComment(MidiPlayID);
     }
     Old_Key = Key_Data;
   }

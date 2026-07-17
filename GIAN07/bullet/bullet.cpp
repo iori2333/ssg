@@ -1232,7 +1232,7 @@ void BulletManager::MoveByOption(Bullet *t) {
       }
       command.type = T_NORM;
       command.option = TOP_NONE;
-      Snd_SEPlay(12, command.x);
+      Snd_SEPlay(static_cast<SfxId>(12), command.x);
       Spawn(); // Key point is that it varies by difficulty
     }
     return;

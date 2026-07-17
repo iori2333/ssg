@@ -580,7 +580,7 @@ void Player::OnHit() {
 
   if (bomb_ > 0 && bomb_time_ == 0) {
     // Enter deathbomb window with immediate feedback
-    Snd_SEPlay(SOUND_ID_DEAD);
+    Snd_SEPlay(SfxId::Dead);
     Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
     const auto window =
         DEATHBOMB_WINDOW +
@@ -605,13 +605,13 @@ void Player::OnDeath(bool play_se) {
       Effects.SpawnFragment(x_, y_, FRG_HEART);
     }
     if (play_se)
-      Snd_SEPlay(SOUND_ID_DEAD);
+      Snd_SEPlay(SfxId::Dead);
     muteki_ = 30;
     return;
   }
 
   if (play_se) {
-    Snd_SEPlay(SOUND_ID_DEAD);
+    Snd_SEPlay(SfxId::Dead);
     Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
   }
 
@@ -672,7 +672,7 @@ void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }
 void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   if (n != 0U) {
     if (!buzz_sound_) {
-      Snd_SEPlay(SOUND_ID_BUZZ, ex);
+      Snd_SEPlay(SfxId::Buzz, ex);
       buzz_sound_ = true;
     }
     Effects.SpawnFragment(ex, ey, FRG_EVADE);

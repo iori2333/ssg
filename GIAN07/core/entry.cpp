@@ -9,10 +9,11 @@
 
 #include "config.h"
 #include "entry.h"
-#include "loader.h"
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
+#include "data/gfx_manager.h"
+#include "data/init.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "gfx/frame.h"
@@ -124,12 +125,12 @@ bool XInit() {
   }
   BGM_SetGainApply(ConfigDat.bgm_vol_norm);
   Grp_ScreenshotSetPrefix("screenshots/");
-  LoaderInit();
+  DataInit();
   return true;
 }
 
 void XCleanup() {
-  LoaderCleanup();
+  DataCleanup();
   ConfigDat.Save();
   TextBackend_Cleanup();
   GrpBackend_Cleanup();
@@ -158,7 +159,7 @@ void XGrpTry(const GRAPHICS_PARAMS &prev, GRAPHICS_PARAMS &params) {
     TextObj.WipeBeforeNextRender();
     ConfigDat.GraphicsParamsApply(result.live);
     if (result.reload_surfaces) {
-      ReloadGraph();
+      gfx.ReloadStage();
     }
   }
 }

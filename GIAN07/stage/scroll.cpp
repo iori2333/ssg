@@ -296,7 +296,7 @@ static void enemy_set() {
       break;
 
     case SCL_LOADFACE: // Load face graphic (SurfaceID, FileNo)
-      LoadFace(cmd[1], cmd[2]);
+      gfx.LoadFace(cmd[1], cmd[2]);
       Enemies.scl_now += 3;
       break;
 
@@ -344,7 +344,7 @@ static void enemy_set() {
       switch (cmd[1]) {
       case SEFC_WARN:
         // effect_set(0,0,EFC_WARNBOSS,Games.game_stage);
-        Snd_SEPlay(8, GX_MID, true);
+        Snd_SEPlay(static_cast<SfxId>(8), GX_MID, true);
         Effects.SetWarningEffect();
         // StringEffect3(Games.game_stage);
         break;
@@ -395,10 +395,10 @@ static void enemy_set() {
         Effects.SetScreenEffect(SCNEFC_WHITEOUT);
         break; // White out
       case SEFC_LOADEX01:
-        LoadGraph(GRAPH_ID_EXBOSS1);
+        gfx.LoadStage(kGfxExBoss1);
         break;
       case SEFC_LOADEX02:
-        LoadGraph(GRAPH_ID_EXBOSS2);
+        gfx.LoadStage(kGfxExBoss2);
         break;
       case SEFC_STG6RASTER:
         Scroller.Command(SCMD_STG6RASTER);
@@ -487,7 +487,7 @@ static void enemy_set() {
       break;
 
     case SCL_ENEMYPALETTE:
-      LoadPaletteFromMAP(); // Bit depth check delegated to function
+       // Bit depth check delegated to function
       Enemies.scl_now++;
       break;
 
@@ -504,7 +504,7 @@ static void enemy_set() {
   Games.game_count++;
 
   if ((Games.game_count & 0x3f) == 0) {
-    if (Games.game_stage == GRAPH_ID_EXSTAGE) {
+    if (Games.game_stage == kGfxExStage) {
       Ranking.Add(1);
     } else {
       Ranking.Add(1 + (Games.game_stage / 3));

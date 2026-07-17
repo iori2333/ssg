@@ -126,7 +126,7 @@ void LaserManager::MoveHoming() {
 
       if (abs(deg2) < 8) {
         hl->Type = HL_NONE;
-        Snd_SEPlay(17, hl->p[hl->Current].x);
+        Snd_SEPlay(static_cast<SfxId>(17), hl->p[hl->Current].x);
       } else {
         if (hl->v > 2 * 64) {
           hl->v -= hl->a;

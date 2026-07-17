@@ -137,7 +137,7 @@ void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
 
   switch (type) {
   case CEFC_STAR:
-    Snd_SEPlay(SOUND_ID_TAMEFAST);
+    Snd_SEPlay(SfxId::Tamefast);
     ce->rmax = ce->r = 400;
     break;
 
@@ -616,7 +616,7 @@ void EffectManager::LockOn(int *x, int *y, int wx64, int hx64) {
   l->count = 30;
 
   l->state = LOCKON_01;
-  // Snd_SEPlay(SOUND_ID_SELECT);
+  // Snd_SEPlay(SfxId::Select);
 }
 
 // Lock-on animation update

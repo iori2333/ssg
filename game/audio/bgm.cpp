@@ -16,11 +16,7 @@
 #include "sys/file.h"
 #include "sys/path.h"
 
-// Direct calls into the game-specific loader, avoiding unnecessary function
-// pointer indirection.
-bool LoadMusic(unsigned int no);
-bool LoadMusicByIndex(int index);
-std::string_view MusicTitle(unsigned int index);
+#include "data/music_manager.h"
 
 using namespace std::chrono_literals;
 
@@ -94,7 +90,7 @@ std::string_view BGM_Title(void) {
     return Waveform->metadata.title;
   }
   if ((LoadedNum > 0)) {
-    return MusicTitle(LoadedNum - 1);
+    return music.Title(LoadedNum - 1);
   }
   return {};
 }
@@ -118,14 +114,14 @@ static bool BGM_Load(unsigned int id) {
 
     Waveform = BGM::TrackOpen(PackPath);
     if (Waveform && SndBackend_BGMLoad(Waveform)) {
-      LoadedOriginalMIDI = LoadMusicByIndex(static_cast<int>(id));
+      LoadedOriginalMIDI = music.LoadTrackByIndex(static_cast<int>(id));
       PackPath.resize(prefix_len);
       return true;
     }
 
     PackPath.resize(prefix_len);
   }
-  LoadedOriginalMIDI = LoadMusic(id);
+  LoadedOriginalMIDI = music.LoadTrack(id);
   return LoadedOriginalMIDI;
 }
 

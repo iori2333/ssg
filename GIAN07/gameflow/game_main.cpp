@@ -16,6 +16,7 @@
 #include "bullet/bullet_debug.h"
 #include "core/config.h"
 #include "core/gian.h"
+#include "data/stage_manager.h"
 #include "core/level.h"
 #include "effect/bomb_efc.h"
 #include "effect/font_uty.h"
@@ -98,7 +99,7 @@ void GameMove();
 // game_main initial values set in gameflow_manager.cpp
 
 GameLevel CurrentLevel() {
-  return ((Games.game_stage == GRAPH_ID_EXSTAGE) ? GameLevel::EXTRA
+  return ((Games.game_stage == kGfxExStage) ? GameLevel::EXTRA
                                                      : Games.game_level);
 }
 
@@ -118,7 +119,7 @@ bool ScoreNameInit() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!LoadGraph(GRAPH_ID_NAMEREGIST)) {
+  if (!gfx.LoadStage(kGfxNameRegist)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -145,7 +146,7 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     if (input_locked) {
       break;
     }
-    Snd_SEPlay(SOUND_ID_CANCEL);
+    Snd_SEPlay(SfxId::Cancel);
     GameExit(false);
     return;
 
@@ -154,7 +155,7 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     if (Scores.score_strings[4].bMoveEnable) {
       break;
     }
-    Snd_SEPlay(SOUND_ID_SELECT);
+    Snd_SEPlay(SfxId::Select);
     current_dif = (current_dif + 4) % 5;
     current_rank =
         Scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
@@ -165,7 +166,7 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     if (Scores.score_strings[4].bMoveEnable) {
       break;
     }
-    Snd_SEPlay(SOUND_ID_SELECT);
+    Snd_SEPlay(SfxId::Select);
     current_dif = (current_dif + 1) % 5;
     current_rank =
         Scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
@@ -334,12 +335,12 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
     switch (Key_Data) {
     case KEY_UP:
       y = (y + 2) % 3;
-      Snd_SEPlay(SOUND_ID_SELECT);
+      Snd_SEPlay(SfxId::Select);
       break;
 
     case KEY_DOWN:
       y = (y + 1) % 3;
-      Snd_SEPlay(SOUND_ID_SELECT);
+      Snd_SEPlay(SfxId::Select);
       break;
 
     case KEY_LEFT:
@@ -348,7 +349,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       } else {
         x = (x + 25) % 26;
       }
-      Snd_SEPlay(SOUND_ID_SELECT);
+      Snd_SEPlay(SfxId::Select);
       break;
 
     case KEY_RIGHT:
@@ -357,11 +358,11 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       } else {
         x = (x + 1) % 26;
       }
-      Snd_SEPlay(SOUND_ID_SELECT);
+      Snd_SEPlay(SfxId::Select);
       break;
 
     case KEY_BOMB:
-      Snd_SEPlay(SOUND_ID_CANCEL);
+      Snd_SEPlay(SfxId::Cancel);
       goto BACK_NR_PROC;
 
     case KEY_TAMA:
@@ -369,7 +370,7 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       if (input_locked) {
         break;
       }
-      Snd_SEPlay(SOUND_ID_SELECT);
+      Snd_SEPlay(SfxId::Select);
 
       // If at the last character
       if (strlen(Scores.score_strings[current_rank - 1].Name) ==
@@ -514,7 +515,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_name.Score = Players.Score();
   current_name.Evade = Players.GrazeSum();
   current_name.Weapon = Players.Weapon();
-  if (Games.game_stage == GRAPH_ID_EXSTAGE) {
+  if (Games.game_stage == kGfxExStage) {
     current_name.Stage = 1;
   } else {
     current_name.Stage = Games.game_stage;
@@ -534,7 +535,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!LoadGraph(GRAPH_ID_NAMEREGIST)) {
+  if (!gfx.LoadStage(kGfxNameRegist)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -605,7 +606,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
-    Games.game_stage = GRAPH_ID_EXSTAGE;
+    Games.game_stage = kGfxExStage;
   }
 
   return true;
@@ -650,11 +651,11 @@ bool GameNextStage() {
   GameSTD_Init();
   Players.PrepareNextStage();
 
-  if (!LoadGraph(Games.game_stage)) {
+  if (!gfx.LoadStage(Games.game_stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!LoadStageData(Games.game_stage)) {
+  if (!stage_mgr.LoadStageData(Games.game_stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -678,20 +679,20 @@ bool GameReplayInitAll(const char *fn) {
   Grp_Flip();
   GameSTD_Init();
 
-  if (!LoadGraph(Games.game_stage)) {
+  if (!gfx.LoadStage(Games.game_stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
-  if (!LoadStageData(Games.game_stage)) {
+  if (!stage_mgr.LoadStageData(Games.game_stage)) {
     DebugOut("MAP.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
 
-  if (Games.game_stage == GRAPH_ID_EXSTAGE) {
+  if (Games.game_stage == kGfxExStage) {
     Players.SetCredits(0);
   }
 
@@ -774,11 +775,11 @@ bool DemoInit() {
 
   Ranking.Reset();
 
-  if (!LoadGraph(Games.game_stage)) {
+  if (!gfx.LoadStage(Games.game_stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!LoadStageData(Games.game_stage)) {
+  if (!stage_mgr.LoadStageData(Games.game_stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -845,7 +846,7 @@ void SProjectProc(bool & /*unused*/) {
 bool SProjectInit() {
   GrpBackend_PixelAccessStart();
 
-  if (!LoadGraph(GRAPH_ID_SPROJECT)) {
+  if (!gfx.LoadStage(kGfxSProject)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -878,7 +879,7 @@ bool GameExit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!LoadGraph(GRAPH_ID_TITLE)) {
+  if (!gfx.LoadStage(kGfxTitle)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -1133,7 +1134,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     }
     spd = 0;
     deg = 0;
-    Snd_SEPlay(SOUND_ID_BUZZ);
+    Snd_SEPlay(SfxId::Buzz);
   }
 
   if (weapon_key_wait != 0U) {
@@ -1186,7 +1187,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     if (spd != 0) {
       break;
     }
-    if (Games.game_stage == GRAPH_ID_EXSTAGE) {
+    if (Games.game_stage == kGfxExStage) {
       if (((1 << Players.Weapon()) & ConfigDat.extra_stg_flags) == 0) {
         break;
       }
@@ -1196,8 +1197,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     Players.SetMaidShotIndices();
     count = 0;
 
-    Snd_SEPlay(SOUND_ID_SELECT);
-    if (Games.game_stage != GRAPH_ID_EXSTAGE) {
+    Snd_SEPlay(SfxId::Select);
+    if (Games.game_stage != kGfxExStage) {
       if (forceStage != 0) {
         Games.game_stage = forceStage;
         if (Games.game_stage == 2) {
@@ -1225,11 +1226,11 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     Demos.Init();
 
-    if (!LoadGraph(Games.game_stage)) {
+    if (!gfx.LoadStage(Games.game_stage)) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!LoadStageData(Games.game_stage)) {
+    if (!stage_mgr.LoadStageData(Games.game_stage)) {
       DebugOut("MAP.PAK が破壊されています");
       return;
     }
@@ -1243,7 +1244,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     if (spd != 0) {
       break;
     }
-    Snd_SEPlay(SOUND_ID_CANCEL);
+    Snd_SEPlay(SfxId::Cancel);
     GameExit(false);
     return;
   }
@@ -1276,7 +1277,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpGeom->SetColor({0, 0, 1});
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
-      if ((Games.game_stage != GRAPH_ID_EXSTAGE) ||
+      if ((Games.game_stage != kGfxExStage) ||
           (((1 << i) & ConfigDat.extra_stg_flags) != 0)) {
         continue;
       }
@@ -1670,7 +1671,7 @@ static void BulletGalleryProc(bool & /*quit*/) {
   if ((Key_Data & KEY_ESC) != 0U) {
     ConfigDat.bullet_gallery_active = false;
     Bullets.Clear();
-    (void)LoadGraph(GRAPH_ID_TITLE);
+    (void)gfx.LoadStage(kGfxTitle);
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
     GameFlow.current_state = GameState::Title;
@@ -1700,10 +1701,10 @@ static void BulletGalleryProc(bool & /*quit*/) {
 }
 
 void BulletGalleryInit() {
-  if (!LoadGraph(1)) {
+  if (!gfx.LoadStage(1)) {
     return;
   }
-  (void)LoadGalleryEnemySurfaces();
+  (void)gfx.LoadGalleryEnemySurfaces();
   Bullets.SetIndices(400 + 200);
   Bullets.Clear();
   SpawnGalleryBullets();

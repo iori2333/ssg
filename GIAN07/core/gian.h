@@ -32,7 +32,6 @@
 #include "gameflow/play_rank.h"
 #include "gameflow/rank_manager.h"
 #include "gameflow/score_manager.h"
-#include "loader.h"
 #include "player/item.h"
 #include "player/item_manager.h"
 #include "player/player.h"

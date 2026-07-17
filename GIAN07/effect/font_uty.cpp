@@ -6,7 +6,8 @@
 
 #include "font_uty.h"
 
-#include "core/loader.h"
+#include "data/gfx_manager.h"
+#include "data/sfx_manager.h"
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
 

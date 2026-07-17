@@ -106,7 +106,7 @@ void ItemManager::Move() {
       if ((dx * dx + dy * dy) < (static_cast<int64_t>(r) * r)) {
         switch (ip->type) {
         case ITEM_SCORE: {
-          Snd_SEPlay(SOUND_ID_SELECT, ip->x);
+          Snd_SEPlay(SfxId::Select, ip->x);
           // Ranking.Add((SY_MAX-Players.Y())>>10);	// Item pickup no longer
           // increases Rank
           Players.AddScore(point);
@@ -133,13 +133,13 @@ void ItemManager::Move() {
         }
 
         case ITEM_EXTEND:
-          Snd_SEPlay(SOUND_ID_SELECT, ip->x);
+          Snd_SEPlay(SfxId::Select, ip->x);
           Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
           Players.PickupExtend();
           break;
 
         case ITEM_BOMB:
-          Snd_SEPlay(SOUND_ID_SELECT, ip->x);
+          Snd_SEPlay(SfxId::Select, ip->x);
           Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
           Players.PickupBomb();
           break;

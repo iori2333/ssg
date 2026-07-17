@@ -81,7 +81,7 @@ void LaserManager::OpenLong(const EnemyData *e, uint8_t id) {
     if ((lp->e == e) && (lp->EnemyID == id || id == ECLCST_LLASERALL) &&
         lp->flag != LLF_DISABLE) {
       lp->flag = LLF_OPEN;
-      Snd_SEPlay(2, lp->x, true);
+      Snd_SEPlay(static_cast<SfxId>(2), lp->x, true);
     }
   }
 }

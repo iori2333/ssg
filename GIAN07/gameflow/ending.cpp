@@ -9,6 +9,7 @@
 
 #include "audio/bgm.h"
 #include "core/gian.h"
+#include "data/stage_manager.h"
 #include "platform/text_backend.h"
 #include "stage/scene.h"
 #include "util/cast.h"
@@ -23,7 +24,7 @@ bool EndingManager::Init() {
   Grp_Flip();
   GrpBackend_Clear();
 
-  if (!LoadGraph(GRAPH_ID_ENDING) || !LoadStageData(GRAPH_ID_ENDING)) {
+  if (!gfx.LoadStage(kGfxEnding) || !stage_mgr.LoadStageData(kGfxEnding)) {
     return false;
   }
   BGM_Stop();
@@ -127,7 +128,7 @@ void EndingManager::DrawGrpInfo() {
   }
 
   // Display image
-  const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - ending_pic));
+  const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - gfx.ending_gfx));
   GrpSurface_BlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
 }
 
@@ -266,7 +267,7 @@ void EndingManager::SCLDecode() {
         break;
       }
       grp_info.alpha = 0;
-      grp_info.target = ending_pic + cmd[1];
+      grp_info.target = gfx.ending_gfx + cmd[1];
       grp_info.timer = 0;
       grp_info.bWantDisp = true;
       Enemies.scl_now += 2;

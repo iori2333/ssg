@@ -7,7 +7,8 @@
 #include "window_sys.h"
 
 #include "audio/snd.h"
-#include "core/loader.h"
+#include "data/gfx_manager.h"
+#include "data/sfx_manager.h"
 #include "menu/menu_renderer.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
@@ -257,11 +258,11 @@ void MenuController::KeyEvent(INPUT_BITS key) {
     // One item up / One item down
     const auto delta = ((key == KEY_UP) ? -1 : +1);
     Select[Depth] = next_active(*p, Select[Depth], delta);
-    Snd_SEPlay(SOUND_ID_SELECT);
+    Snd_SEPlay(SfxId::Select);
   } else if (Input_IsCancel(key)) {
-    Snd_SEPlay(SOUND_ID_CANCEL);
+    Snd_SEPlay(SfxId::Cancel);
   } else if (Input_OptionKeyDelta(key) != 0) {
-    Snd_SEPlay(SOUND_ID_SELECT);
+    Snd_SEPlay(SfxId::Select);
   } else if (key == 0) {
     FastRepeatWait = CWIN_KEYWAIT;
   }

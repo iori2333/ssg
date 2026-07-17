@@ -18,7 +18,8 @@
 #include "core/config.h"
 #include "core/entry.h"
 #include "core/level.h"
-#include "core/loader.h"
+#include "data/gfx_manager.h"
+#include "data/sfx_manager.h"
 #include "gameflow/demo_play.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
@@ -573,7 +574,7 @@ void SoundPanel::FnSE(MenuController &, int_fast8_t) {
     Snd_SECleanup();
   } else {
     ConfigDat.se_enabled = true;
-    LoadSound();
+    sfx.LoadAll();
   }
 }
 

@@ -203,7 +203,7 @@ void EnemyManager::Clear() {
       if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // Force close laser
       }
-      Snd_SEPlay(SOUND_ID_BOMB, e->x);
+      Snd_SEPlay(SfxId::Bomb, e->x);
     } else {
       // Erasing non-drawing type enemies differs from other cases:
       // do not play explosion animation/sound
@@ -235,7 +235,7 @@ void EnemyManager::InitIndices() {
 bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   e.IsDamaged = ((e.count) & 1);
   if (std::cmp_less_equal(e.hp, damage)) {
-    Snd_SEPlay(SOUND_ID_BOMB, e.x);
+    Snd_SEPlay(SfxId::Bomb, e.x);
     if (e.LLaserRef != 0U) {
       Lasers.ForceCloseLong(&e); // Force close laser
     }
@@ -248,7 +248,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
       Items.Spawn(e.x, e.y, e.item);
     }
   } else {
-    Snd_SEPlay(SOUND_ID_HIT, e.x);
+    Snd_SEPlay(SfxId::Hit, e.x);
     Players.PowerUp(damage); // Power up here too
     e.hp -= damage;
   }
@@ -1479,7 +1479,7 @@ ECL_HEAD:
 
   case ECL_PSE: // Play sound effect
     ECL_DEBUG("ECL_PSE", 0);
-    Snd_SEPlay(cmd[1], e->x);
+    Snd_SEPlay(static_cast<SfxId>(cmd[1]), e->x);
     bRetFlag = false;
     break;
 

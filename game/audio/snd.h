@@ -6,6 +6,7 @@
 #include "volume.h"
 
 #include "core/constants.h"
+#include "data/sfx_manager.h"
 #include "sys/buffer.h"
 #include "util/enum_flags.h"
 
@@ -38,6 +39,6 @@ void Snd_SECleanup(void);
 bool Snd_SELoad(BYTE_BUFFER_OWNED buffer, uint8_t id, SND_INSTANCE_ID max);
 
 // Playback & stop
-void Snd_SEPlay(uint8_t id, int x = SND_X_MID, bool loop = false);
+void Snd_SEPlay(SfxId id, int x = SND_X_MID, bool loop = false);
 void Snd_SEStop(uint8_t id);
 void Snd_SEStopAll(void);
