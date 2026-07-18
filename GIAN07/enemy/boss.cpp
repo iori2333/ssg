@@ -24,8 +24,8 @@
 #include "enemy/enemy_manager.h"
 #include "player/player.h"
 #include "gfx/font_uty.h"
-#include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/geometry.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 

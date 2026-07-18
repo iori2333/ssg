@@ -31,6 +31,7 @@
 #include "enemy/boss_manager.h"
 #include "enemy/enemy_manager.h"
 #include "gfx/font_uty.h"
+#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
 #include "effect/lens.h"
 #include "player/player.h"

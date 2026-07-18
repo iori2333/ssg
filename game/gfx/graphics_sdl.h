@@ -39,20 +39,3 @@ public:
   void DrawHLine(int x1, int x2, int y);
   // -------------------
 };
-
-extern GRAPHICS_GEOMETRY_SDL GrpGeomSDL;
-#define GrpGeom (&GrpGeomSDL)
-
-GRAPHICS_GEOMETRY_SDL *GrpGeom_Poly(void);
-GRAPHICS_GEOMETRY_SDL *GrpGeom_FB(void);
-
-// Must be kept in sync with the hardcoded ones in the SDL_GL_ResetAttributes()
-// implementation.
-#define OPENGL_TARGET_CORE_MAJ 2
-#define OPENGL_TARGET_CORE_MIN 1
-#define OPENGL_TARGET_ES1_MIN 1
-#define OPENGL_TARGET_ES2_MIN 0
-
-#define SUPPORT_GRP_SCALING
-#define SUPPORT_GRP_WINDOWED
-#define SUPPORT_GRP_API

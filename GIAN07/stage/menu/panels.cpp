@@ -17,7 +17,7 @@
 #include "audio/midi_backend.h"
 #include "audio/snd.h"
 #include "core/config.h"
-#include "core/entry.h"
+#include "core/graphics_settings.h"
 #include "core/level.h"
 #include "data/gfx_manager.h"
 #include "data/sfx_manager.h"

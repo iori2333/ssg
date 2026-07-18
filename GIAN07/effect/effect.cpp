@@ -8,6 +8,7 @@
 #include "effect.h"
 #include "effect_manager.h"
 #include "gfx/font_uty.h"
+#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
 
 #include "audio/snd.h"

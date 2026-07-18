@@ -89,7 +89,7 @@ target_compile_definitions(GIAN07 PRIVATE
 if(WIN32)
     target_sources(GIAN07 PRIVATE ${PLATFORM_WINDOWS_SRC})
 
-    target_sources(GIAN07 PRIVATE game/GIAN07.rc)
+    target_sources(GIAN07 PRIVATE GIAN07/app/GIAN07.rc)
 
     target_compile_definitions(GIAN07 PRIVATE WIN32)
     target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})

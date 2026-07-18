@@ -8,7 +8,7 @@
 
 #include "graphics.h"
 
-#include "core/constants.h"
+#include "gfx/constants.h"
 
 /// Enumeration and pre-initialization queries
 /// ------------------------------------------
@@ -142,9 +142,26 @@ using VERTEX_RGBA_SPAN = std::span<const VERTEX_RGBA, N>;
 enum class TRIANGLE_PRIMITIVE : uint8_t { FAN, STRIP, COUNT };
 // ------------
 
-// [GrpGeom] is a GRAPHICS_GEOMETRY_SDL* that points to the current geometry
-// renderer instance.
 class GRAPHICS_GEOMETRY_SDL;
+
+// Must be kept in sync with the hardcoded ones in the SDL_GL_ResetAttributes()
+// implementation.
+#define OPENGL_TARGET_CORE_MAJ 2
+#define OPENGL_TARGET_CORE_MIN 1
+#define OPENGL_TARGET_ES1_MIN 1
+#define OPENGL_TARGET_ES2_MIN 0
+
+#define SUPPORT_GRP_SCALING
+#define SUPPORT_GRP_WINDOWED
+#define SUPPORT_GRP_API
+
+extern GRAPHICS_GEOMETRY_SDL GrpGeomSDL;
+
+// Convenience macro for the common case — use GrpGeom_FB() for framebuffer ops.
+#define GrpGeom (&GrpGeomSDL)
+
+GRAPHICS_GEOMETRY_SDL *GrpGeom_Poly(void);
+GRAPHICS_GEOMETRY_SDL *GrpGeom_FB(void);
 
 // Interface for geometry draw calls that require true-color polygon rendering.
 // The [colors] span either must be either

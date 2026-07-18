@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <utility>
 struct GRAPHICS_PARAMS;
@@ -29,6 +30,6 @@ void WndBackend_Cleanup(void);
 // Returns the current top-left position of the game window.
 std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void);
 
-// Runs the main loop each frame, and returns the exit code after the game was
-// quit.
-int WndBackend_Run(void);
+// Runs the main loop each frame, calling [frame_func] for each iteration, and
+// returns the exit code after the game was quit.
+int WndBackend_Run(std::function<bool()> frame_func);

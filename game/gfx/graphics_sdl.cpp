@@ -16,7 +16,7 @@ using SDL_COLOR = SDL_FColor;
 #include "window_backend.h"
 #include "window_sdl.h"
 
-#include "core/constants.h"
+#include "gfx/constants.h"
 #include "platform/text_backend.h"
 #include "sys/log.h"
 #include "util/enum_array.h"

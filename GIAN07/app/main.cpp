@@ -1,5 +1,5 @@
 ///
-/// SDL entry point
+/// SDL entry point — application assembly layer
 ///
 
 #ifdef WIN32
@@ -18,8 +18,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "core/constants.h"
-#include "core/entry.h"
+#include "entry.h"
+#include "gfx/constants.h"
 #include "gfx/window_backend.h"
 #include "sys/log.h"
 #include "util/guard.h"
@@ -76,5 +76,5 @@ int main(int argc, char **args) {
   }
   auto app_guard = make_guard(XCleanup);
 
-  return WndBackend_Run();
+  return WndBackend_Run(GameFrame);
 }

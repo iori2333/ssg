@@ -8,7 +8,7 @@
 #include "coords.h"
 #include "graphics.h"
 
-#include "core/constants.h"
+#include "gfx/constants.h"
 #include "util/enum_array.h"
 
 using TEXTRENDER_RECT_ID = unsigned int;

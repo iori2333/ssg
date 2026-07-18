@@ -9,8 +9,8 @@
 
 #include "audio/snd.h"
 #include "core/gian.h"
-#include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/geometry.h"
 #include "player/player.h"
 #include "util/ut_math.h"
 

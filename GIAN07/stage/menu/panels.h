@@ -7,7 +7,7 @@
 #include <array>
 #include <vector>
 
-#include "gfx/graphics_sdl.h"
+#include "gfx/graphics_backend.h"
 #include "stage/menu/menu_text.h"
 #include "stage/window_sys.h"
 

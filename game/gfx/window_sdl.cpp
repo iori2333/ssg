@@ -10,13 +10,12 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
 
-#include "frame.h"
 #include "graphics.h"
 #include "graphics_backend.h"
 #include "window_backend.h"
 #include "window_sdl.h"
 
-#include "core/constants.h"
+#include "gfx/constants.h"
 #include "sys/input.h"
 #include "sys/log.h"
 
@@ -282,7 +281,7 @@ std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void) {
   return HelpGetWindowPosition(Window);
 }
 
-int WndBackend_Run(void) {
+int WndBackend_Run(std::function<bool()> frame_func) {
   bool quit = false;
   uint64_t ticks_last = 0;
 
@@ -302,7 +301,7 @@ int WndBackend_Run(void) {
     const auto ticks_start = SDL_GetTicks();
     if ((Grp_FPSDivisor == 0) ||
         ((ticks_start - ticks_last) >= FRAME_TIME_TARGET)) {
-      quit = !GameFrame();
+      quit = !frame_func();
       if (Grp_FPSDivisor != 0) {
         // Since SDL_Delay() works at not-even-exact millisecond
         // granularity, we subtract 1 and spin for the last

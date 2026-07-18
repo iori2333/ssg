@@ -14,8 +14,8 @@
 #include "gameflow/play_rank.h"
 #include "player/player.h"
 #include "gameflow/rank_manager.h"
-#include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/geometry.h"
 #include "util/ut_math.h"
 
 // Laser coordinate management uses the following structure:

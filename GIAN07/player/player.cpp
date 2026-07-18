@@ -22,6 +22,7 @@
 #include "core/gian.h"
 #include "core/level.h"
 #include "gfx/font_uty.h"
+#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
 #include "sys/input.h"
 
