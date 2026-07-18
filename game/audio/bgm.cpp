@@ -1,10 +1,12 @@
 ///
-/// Format-independent background music interface
+/// Format-independent background music interface — pure audio playback
+///
+/// Track selection, title lookup, and BGM pack management live in
+/// GIAN07/track_manager/ — this module only plays what it is given.
 ///
 
-#include <format>
-
-#include <SDL3/SDL_filesystem.h>
+#include <chrono>
+#include <utility>
 
 #include "audio/bgm.h"
 #include "audio/bgm_track.h"
@@ -13,14 +15,8 @@
 #include "audio/snd.h"
 #include "audio/snd_backend.h"
 #include "audio/volume.h"
-#include "sys/file.h"
-#include "sys/path.h"
-
-#include "data/music_manager.h"
 
 using namespace std::chrono_literals;
-
-static constexpr std::string_view BGM_ROOT = "bgm/";
 
 // State
 // -----
@@ -29,17 +25,15 @@ uint8_t BGM_Tempo_Num = BGM_TEMPO_DENOM;
 
 static bool Enabled = false;
 static bool Playing = false;
-static bool LoadedOriginalMIDI = false;
 static bool GainApply = true;
-static unsigned int LoadedNum = 0; // 0 = nothing
+static unsigned int LoadedNum = 0;
 static std::chrono::milliseconds MIDITableUpdatePrev;
 
-static std::optional<bool> PacksAvailable = std::nullopt;
-static std::string PackPath;
 static std::shared_ptr<BGM::TRACK> Waveform; // nullptr = playing MIDI
+static std::string_view WaveformTitle;        // cached from waveform metadata
 // -----
 
-// External dependencies
+// External dependencies for MIDI tempo — exposed as global references
 // ---------------------
 
 const uint8_t &Mid_TempoNum = BGM_Tempo_Num;
@@ -49,9 +43,9 @@ const uint8_t &Snd_BGMTempoNum = BGM_Tempo_Num;
 const uint8_t &Snd_BGMTempoDenom = BGM_TEMPO_DENOM;
 // ---------------------
 
-bool BGM_Init(void) {
+bool BGM_Init(std::string_view preferred_soundfont) {
   BGM_SetTempo(0);
-  Enabled = (MidBackend_Init() | Snd_BGMInit());
+  Enabled = (MidBackend_Init(preferred_soundfont) | Snd_BGMInit());
   return Enabled;
 }
 
@@ -63,8 +57,6 @@ void BGM_Cleanup(void) {
 }
 
 bool BGM_Enabled(void) { return Enabled; }
-
-bool BGM_LoadedOriginalMIDI(void) { return LoadedOriginalMIDI; }
 
 bool BGM_HasGainFactor(void) {
   return (Waveform && Waveform->metadata.gain_factor.has_value());
@@ -85,18 +77,7 @@ std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void) {
   return Mid_PlayTime.realtime;
 }
 
-std::string_view BGM_Title(void) {
-  if (Waveform && !Waveform->metadata.title.empty()) {
-    return Waveform->metadata.title;
-  }
-  if ((LoadedNum > 0)) {
-    return music.Title(LoadedNum - 1);
-  }
-  return {};
-}
-
 bool BGM_ChangeMIDIDevice(int8_t direction) {
-  // Stop according to each function's requirements
   Mid_Stop();
 
   const auto ret = MidBackend_DeviceChange(direction);
@@ -106,39 +87,32 @@ bool BGM_ChangeMIDIDevice(int8_t direction) {
   return ret;
 }
 
-static bool BGM_Load(unsigned int id) {
-  if (!PackPath.empty()) {
-    LoadedOriginalMIDI = false;
-    const auto prefix_len = PackPath.size();
-    PackPath += std::format("{:02}", (id + 1));
+// --- Audio source loading ---
 
-    Waveform = BGM::TrackOpen(PackPath);
-    if (Waveform && SndBackend_BGMLoad(Waveform)) {
-      LoadedOriginalMIDI = music.LoadTrackByIndex(static_cast<int>(id));
-      PackPath.resize(prefix_len);
-      return true;
-    }
-
-    PackPath.resize(prefix_len);
+bool BGM_LoadWaveform(std::string_view path) {
+  Waveform = BGM::TrackOpen(path);
+  if (Waveform && SndBackend_BGMLoad(Waveform)) {
+    WaveformTitle = Waveform->metadata.title;
+    return true;
   }
-  LoadedOriginalMIDI = music.LoadTrack(id);
-  return LoadedOriginalMIDI;
-}
-
-bool BGM_Switch(unsigned int id) {
-  if (!Enabled) {
-    return false;
-  }
-  BGM_Stop();
   Waveform = nullptr;
-  const auto ret = BGM_Load(id);
-  if (ret) {
-    LoadedNum = (id + 1);
-    BGM_SetTempo(BGM_GetTempo());
-    BGM_Play();
-  }
-  return ret;
+  return false;
 }
+
+bool BGM_LoadMIDI(BYTE_BUFFER_OWNED buf) {
+  Waveform = nullptr;
+  return Mid_Load(std::move(buf));
+}
+
+std::string_view BGM_WaveformTitle() { return WaveformTitle; }
+
+unsigned int BGM_LoadedNum() { return LoadedNum; }
+
+void BGM_SetLoadedNum(unsigned int n) { LoadedNum = n; }
+
+void BGM_ClearWaveform() { Waveform = nullptr; }
+
+// --- Playback ---
 
 void BGM_Play(void) {
   BGM_SetGainApply(GainApply);
@@ -165,20 +139,12 @@ void BGM_Stop(void) {
 }
 
 void BGM_Pause(void) {
-  // This is called when the window loses focus. Maybe the user will add a
-  // BGM pack before coming back?
-  PacksAvailable = std::nullopt;
-
-  // Waveform tracks are automatically paused as part of the Snd subsystem
-  // once the game window loses focus. We might need independent pausing in
-  // the future?
   if (!Waveform) {
     Mid_Pause();
   }
 }
 
 void BGM_Resume(void) {
-  // Same as for pausing; /s/paus/resum/g, /s/loses/regains/
   if (!Waveform) {
     Mid_Resume();
   }
@@ -186,10 +152,6 @@ void BGM_Resume(void) {
 
 void BGM_UpdateMIDITables(void) {
   if (Waveform && Playing) {
-    // This is the only per-frame update function in the current
-    // architecture that can actually stop playback at the end of a fade.
-    // Coincidentally, the MIDI tables are the only place where this
-    // matters, and true stopping could be observed.
     if (Waveform->FadeVolumeLinear() <= 0.0f) {
       BGM_Stop();
       return;
@@ -244,74 +206,4 @@ void BGM_SetTempo(int8_t tempo) {
   tempo = std::clamp(tempo, BGM_TEMPO_MIN, BGM_TEMPO_MAX);
   BGM_Tempo_Num = (BGM_TEMPO_DENOM + tempo);
   SndBackend_BGMUpdateTempo();
-}
-
-static bool BGM_PackIterator(std::invocable<std::string_view> auto callback) {
-  return SDL_EnumerateDirectory(
-      BGM_ROOT.data(),
-      [](void *cb, const char *bgm_root, const char *basename) {
-        auto fn = std::format("{}{}", bgm_root, basename);
-        if (!PathIsDirectory(fn.c_str())) {
-          return SDL_ENUM_CONTINUE;
-        }
-        return (std::bit_cast<decltype(callback) *>(cb))
-            ->operator()(std::string_view{basename});
-      },
-      &callback);
-}
-
-bool BGM_PacksAvailable(bool invalidate_cache) {
-  if (PacksAvailable.has_value() && !invalidate_cache) {
-    return PacksAvailable.value();
-  }
-  PacksAvailable =
-      BGM_PackIterator([](std::string_view) { return SDL_ENUM_SUCCESS; });
-  return PacksAvailable.value();
-}
-
-size_t BGM_PackCount(void) {
-  size_t ret = 0;
-  BGM_PackIterator([&](std::string_view) {
-    ret++;
-    return SDL_ENUM_CONTINUE;
-  });
-  return ret;
-}
-
-void BGM_PackForeach(std::function<void(std::string_view pack)> func) {
-  BGM_PackIterator([&](std::string_view pack) {
-    func(pack);
-    return SDL_ENUM_CONTINUE;
-  });
-}
-
-bool BGM_PackSet(std::string_view pack) {
-  std::string_view cur = PackPath;
-  if (!pack.empty()) {
-    const auto path_data = PathForData();
-    const auto root_len = (path_data.size() + BGM_ROOT.size());
-    if ((cur.size() > root_len) &&
-        (cur.substr(root_len, pack.size()) == pack) &&
-        (cur[root_len + pack.size()] == '/') // !!!
-    ) {
-      return true;
-    }
-    PackPath = std::format("{}{}{}/", path_data, BGM_ROOT, pack);
-
-    // Check if this path exists
-    if (!PathIsDirectory(PackPath.c_str())) {
-      PackPath.clear();
-      return false;
-    }
-  } else {
-    if (cur.empty()) {
-      return true;
-    }
-    PackPath.clear();
-  }
-
-  if ((LoadedNum != 0) && Playing) {
-    BGM_Switch(LoadedNum - 1);
-  }
-  return true;
 }

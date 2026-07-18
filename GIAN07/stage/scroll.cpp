@@ -11,6 +11,7 @@
 #include "window_sys.h"
 
 #include "audio/bgm.h"
+#include "track_manager/track_manager.h"
 #include "audio/snd.h"
 #include "core/config.h"
 #include "core/gian.h"
@@ -337,9 +338,9 @@ static void enemy_set() {
       //Demos.load_enable)){
       if (!Games.is_demoplay) {
         BGM_Stop();
-        if (BGM_Switch(cmd[1])) {
+        if (track_mgr.Switch(cmd[1])) {
           BGM_Play();
-          const auto mtitle = BGM_Title();
+          const auto mtitle = track_mgr.CurrentTitle();
           if (!mtitle.empty()) {
             Effects.SetMusicTitle(460, mtitle);
           }

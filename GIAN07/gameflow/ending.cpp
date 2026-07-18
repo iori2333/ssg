@@ -8,6 +8,7 @@
 #include "ending_manager.h"
 
 #include "audio/bgm.h"
+#include "track_manager/track_manager.h"
 #include "core/gian.h"
 #include "enemy/enemy_manager.h"
 #include "data/stage_manager.h"
@@ -330,7 +331,7 @@ void EndingManager::SCLDecode() {
       return;
 
     case SCL_MUSIC:
-      BGM_Switch(cmd[1]);
+      track_mgr.Switch(cmd[1]);
       Enemies.scl_now += 2;
       break;
 

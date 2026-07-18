@@ -11,6 +11,7 @@
 #include "entry.h"
 
 #include "audio/bgm.h"
+#include "track_manager/track_manager.h"
 #include "audio/snd.h"
 #include "core/gian.h"
 #include "data/gfx_manager.h"
@@ -119,9 +120,9 @@ bool XInit() {
 
   // Initialize BGM
   if (ConfigDat.bgm_enabled) {
-    BGM_Init();
+    BGM_Init(ConfigDat.soundfont);
   }
-  if (!BGM_PackSet(ConfigDat.bgm_pack)) {
+  if (!track_mgr.PackSet(ConfigDat.bgm_pack)) {
     ConfigDat.bgm_pack.clear();
   }
   BGM_SetGainApply(ConfigDat.bgm_vol_norm);

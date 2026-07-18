@@ -16,8 +16,13 @@ enum class MID_BACKEND_DEVICE_SOURCE : uint8_t {
   ENV,    // DEFAULT_SOUNDFONT environment variable
 };
 
-// Initializes the backend with a default output device.
-bool MidBackend_Init(void); // MIDI-related initialization
+// Initializes the backend with a preferred SoundFont. If [preferred_soundfont]
+// is empty,  the first found font is used.
+bool MidBackend_Init(std::string_view preferred_soundfont = {});
+
+// Returns the basename of the currently active SoundFont, or std::nullopt
+// if the backend is not initialized.
+std::optional<std::string_view> MidBackend_CurrentSoundFont();
 
 // Shuts down the backend.
 void MidBackend_Cleanup(void); // MIDI-related cleanup

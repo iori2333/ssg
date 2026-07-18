@@ -16,6 +16,7 @@
 #include "score_manager.h"
 
 #include "audio/bgm.h"
+#include "track_manager/track_manager.h"
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser_manager.h"
@@ -559,7 +560,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_state = GameState::NameRegist;
 
   if (bNeedChgMusic) {
-    BGM_Switch(19);
+    track_mgr.Switch(19);
   }
 
   return true;
@@ -919,7 +920,7 @@ bool GameExit(bool bNeedChgMusic) {
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
-      BGM_Switch(0);
+      track_mgr.Switch(0);
     }
   }
 

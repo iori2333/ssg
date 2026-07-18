@@ -15,7 +15,6 @@
 #include "midi.h"
 #include "midi_backend.h"
 
-#include "core/config.h"
 #include "sys/path.h"
 
 static fluid_settings_t *FsSettings = nullptr;
@@ -191,12 +190,10 @@ static void FsCleanupAudio(void) {
 }
 
 static void FsSaveCurrent(void) {
-  if (FsFontIndex < FsFontPaths.size()) {
-    ConfigDat.soundfont = Basename(FsFontPaths[FsFontIndex]);
-  }
+  // Config save is handled by the caller via MidBackend_CurrentSoundFont().
 }
 
-bool MidBackend_Init(void) {
+bool MidBackend_Init(std::string_view preferred_soundfont) {
   if (FsSynth) {
     return true;
   }
@@ -206,7 +203,7 @@ bool MidBackend_Init(void) {
     return false;
   }
 
-  FsFontIndex = FindSoundFont(ConfigDat.soundfont);
+  FsFontIndex = FindSoundFont(preferred_soundfont);
   if (FsFontIndex == SIZE_MAX) {
     FsFontIndex = 0;
     FsSaveCurrent();
@@ -226,6 +223,15 @@ bool MidBackend_Init(void) {
 }
 
 void MidBackend_Cleanup(void) { FsCleanupAudio(); }
+
+std::optional<std::string_view> MidBackend_CurrentSoundFont() {
+  if (!FsSynth || FsFontIndex >= FsFontPaths.size()) {
+    return std::nullopt;
+  }
+  static thread_local std::string cached;
+  cached = Basename(FsFontPaths[FsFontIndex]);
+  return cached;
+}
 
 std::optional<std::string_view> MidBackend_DeviceName(void) {
   if (!FsSynth || FsFontIndex >= FsFontPaths.size()) {

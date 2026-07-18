@@ -12,8 +12,10 @@
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
+#include "core/config.h"
 #include "core/gian.h"
 #include "data/gfx_manager.h"
+#include "track_manager/track_manager.h"
 #include "data/music_manager.h"
 #include "effect/effect.h"
 #include "gfx/font_uty.h"
@@ -84,7 +86,7 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
   std::string_view num = num_str;
 
   TextObj.Render(topleft, title, num, [&num](TEXTRENDER_SESSION &s) {
-    const auto &title = BGM_Title();
+    const auto &title = track_mgr.CurrentTitle();
 
     // GDI would calculate a trailing space as 4 pixels wide, not 8.
     const auto title_left = (s.Extent(num).w + 8);
@@ -411,7 +413,7 @@ void MusicRoomProc(bool & /*unused*/) {
       }
       BGM_Stop();
       MidiPlayID = ((MidiPlayID + music.kTrackCount - 1) % music.kTrackCount);
-      BGM_Switch(MidiPlayID);
+      track_mgr.Switch(MidiPlayID);
       text.comment_buf = music.LoadRoomComment(MidiPlayID);
     }
     Old_Key = Key_Data;
@@ -439,6 +441,9 @@ void MusicRoomProc(bool & /*unused*/) {
       ((SystemKey_Data & SYSKEY_BGM_DEVICE) != 0)) {
     if (!DevChgWait) {
       BGM_ChangeMIDIDevice(1);
+      if (auto sf = MidBackend_CurrentSoundFont()) {
+        ConfigDat.soundfont = sf.value();
+      }
       DevChgWait = true;
     }
   } else {

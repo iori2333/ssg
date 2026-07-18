@@ -10,6 +10,7 @@
 #include "ui_manager.h"
 
 #include "audio/bgm.h"
+#include "track_manager/track_manager.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
 #include "core/config.h"
@@ -247,7 +248,7 @@ bool UIManager::BGMPackHandle(MenuController &ctrl, INPUT_BITS key,
         ConfigDat.bgm_pack = bgm_packs_[selected - 1];
       }
       main_panel_.Sound().Refresh(ctrl, false);
-      BGM_PackSet(ConfigDat.bgm_pack);
+      track_mgr.PackSet(ConfigDat.bgm_pack);
     }
     return false;
   }
@@ -260,8 +261,8 @@ void UIManager::OpenBGMPack() {
   w = (std::max)(w, CWinTextExtent(BGMPackTitleDownload).w);
   w = (std::max)(w, CWinTextExtent(BGMPackTitleNone).w);
   bgm_packs_.clear();
-  bgm_packs_.reserve(BGM_PackCount());
-  BGM_PackForeach([this](const auto pack) { bgm_packs_.emplace_back(pack); });
+  bgm_packs_.reserve(track_mgr.PackCount());
+  track_mgr.PackForeach([this](const auto pack) { bgm_packs_.emplace_back(pack); });
   std::ranges::sort(bgm_packs_);
   bgm_sel_at_open_ = 0;
   for (size_t i = 1; const auto &pack : bgm_packs_) {
@@ -323,6 +324,9 @@ bool UIManager::SoundFontHandle(MenuController &ctrl, INPUT_BITS key,
     if (BGM_Enabled()) {
       Mid_Stop();
       MidBackend_DeviceSelect(selected);
+      if (auto sf = MidBackend_CurrentSoundFont()) {
+        ConfigDat.soundfont = sf.value();
+      }
       if (BGM_Playing() == BGM_PLAYING::MIDI) {
         Mid_Play();
       }

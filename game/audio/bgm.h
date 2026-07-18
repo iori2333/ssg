@@ -5,10 +5,11 @@
 
 #include <chrono>
 #include <cstdint>
-#include <functional>
 #include <string_view>
 
-bool BGM_Init(void);
+#include "sys/buffer.h"
+
+bool BGM_Init(std::string_view preferred_soundfont = {});
 void BGM_Cleanup(void);
 
 // General queries
@@ -21,22 +22,16 @@ enum class BGM_PLAYING {
 };
 
 bool BGM_Enabled(void);
-bool BGM_LoadedOriginalMIDI(void);
 bool BGM_HasGainFactor(void);
 bool BGM_GainApply(void);
 BGM_PLAYING BGM_Playing(void);
 std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void);
-std::string_view BGM_Title(void);
 // ---------------
 
-bool BGM_ChangeMIDIDevice(int8_t direction); // Change output device
+bool BGM_ChangeMIDIDevice(int8_t direction);
 
 // Playback
 // --------
-
-// Stops the currently playing BGM, then loads and plays the track with the
-// given 0-based [id]. Returns `true` if the BGM was changed successfully.
-bool BGM_Switch(unsigned int id);
 
 void BGM_Play(void);
 void BGM_Stop(void);
@@ -44,6 +39,23 @@ void BGM_Stop(void);
 void BGM_Pause(void);
 void BGM_Resume(void);
 // --------
+
+// Audio source loading. At most one of LoadWaveform/LoadMIDI is active
+// at a time; loading one replaces the previous.
+// Returns false if the source could not be opened/decoded.
+bool BGM_LoadWaveform(std::string_view path);
+bool BGM_LoadMIDI(BYTE_BUFFER_OWNED buf);
+
+// Cached waveform title (from Vorbis comment metadata).
+// Empty if no waveform is loaded or if the waveform has no title tag.
+std::string_view BGM_WaveformTitle();
+
+// Track number tracking — read/written by the track management layer.
+unsigned int BGM_LoadedNum();
+void BGM_SetLoadedNum(unsigned int n);
+
+// Clears the waveform source, falling back to pure MIDI playback.
+void BGM_ClearWaveform();
 
 // Processes all MIDI events of a playing waveform track's source MIDI that
 // have occurred since the last call to this function.
@@ -72,19 +84,3 @@ static constexpr int8_t BGM_TEMPO_MAX = 100;
 int8_t BGM_GetTempo(void);
 void BGM_SetTempo(int8_t tempo); // Change tempo
 // -------------
-
-// BGM pack management
-// -------------------
-
-// Returns whether at least one BGM pack exists under the BGM root directory.
-// The result is cached and invalidated whenever BGM is paused.
-bool BGM_PacksAvailable(bool invalidate_cache = false);
-
-size_t BGM_PackCount(void);
-void BGM_PackForeach(std::function<void(std::string_view pack)> func);
-
-// Restarts any currently playing BGM when switching to a different [pack].
-// Returns `false` if the given [pack] doesn't exist, and switches to the empty
-// pack in that case.
-bool BGM_PackSet(std::string_view pack);
-// -------------------

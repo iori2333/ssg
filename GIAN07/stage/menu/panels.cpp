@@ -12,6 +12,7 @@
 #include "panels.h"
 
 #include "audio/bgm.h"
+#include "track_manager/track_manager.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
 #include "audio/snd.h"
@@ -505,6 +506,9 @@ bool MidiPanel::FnDev(MenuController &, INPUT_BITS key) {
   if (delta != 0) {
     if (BGM_Enabled()) {
       BGM_ChangeMIDIDevice(delta);
+      if (auto sf = MidBackend_CurrentSoundFont()) {
+        ConfigDat.soundfont = sf.value();
+      }
     }
     return true;
   }
@@ -583,7 +587,7 @@ void SoundPanel::FnBGM(MenuController &, int_fast8_t) {
     BGM_Cleanup();
   } else {
     if (BGM_Init()) {
-      BGM_Switch(0);
+      track_mgr.Switch(0);
     }
   }
 }
@@ -601,7 +605,7 @@ void SoundPanel::FnBGMVol(MenuController &, int_fast8_t delta) {
 }
 
 void SoundPanel::FnBGMPack(MenuController &, int_fast8_t) {
-  if (!BGM_PacksAvailable()) {
+  if (!track_mgr.PacksAvailable()) {
     SDL_OpenURL(UI.BGMPackSoundtrackURL);
   } else {
     UI.OpenBGMPack();
@@ -618,7 +622,7 @@ void SoundPanel::Refresh(MenuController &ctrl, bool) {
 
   if ((!ctrl.Active()) || (ctrl.LastKey() == KEY_UP) ||
       (ctrl.LastKey() == KEY_DOWN)) {
-    BGM_PacksAvailable(true);
+    track_mgr.PacksAvailable(true);
   }
 
   const auto *const norm_choice = CHOICE_OFF_ON_NARROW[BGM_GainApply()];
@@ -632,7 +636,7 @@ void SoundPanel::Refresh(MenuController &ctrl, bool) {
   title_bgm_vol_.Format("BGMVolume   [ {:3} ]", ConfigDat.bgm_volume);
   title_bgm_gain_.Format("BGMVolNormalize{}", norm_choice);
 
-  if (!BGM_PacksAvailable()) {
+  if (!track_mgr.PacksAvailable()) {
     title_bgm_pack_.Set("BGMPack[ Download ]");
     items_[5].Help = "収録のサントラをダウンロードします";
   } else if (ConfigDat.bgm_pack.empty()) {
