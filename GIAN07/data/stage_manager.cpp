@@ -48,7 +48,7 @@ bool StageManager::LoadStageData(uint8_t stage_num) {
   if (stage_num == kGfxExStage) {
     if ((Enemies.ecl_head = LoadEmbeddedScript(24)).data() == nullptr ||
         (Enemies.scl_head = LoadEmbeddedScript(25)).data() == nullptr ||
-        (Scroller.scroll.DataHead = map_pack.MemExpand(12)) == nullptr) {
+        (Scroller.scroll.DataHead = map_pack.Extract(12)) == nullptr) {
       return false;
     }
   } else if (stage_num == kGfxEnding) {
@@ -66,7 +66,7 @@ bool StageManager::LoadStageData(uint8_t stage_num) {
             nullptr ||
         (Enemies.scl_head = LoadEmbeddedScript(stage_num + 5)).data() ==
             nullptr ||
-        (Scroller.scroll.DataHead = map_pack.MemExpand(stage_num - 1)) ==
+        (Scroller.scroll.DataHead = map_pack.Extract(stage_num - 1)) ==
             nullptr) {
       return false;
     }
@@ -299,5 +299,5 @@ bool StageManager::LoadStageData(uint8_t stage_num) {
 }
 
 BYTE_BUFFER_OWNED StageManager::LoadDemo(int stage_num) {
-  return packs.Map().MemExpand(stage_num - 1 + 6);
+  return packs.Map().Extract(stage_num - 1 + 6);
 }

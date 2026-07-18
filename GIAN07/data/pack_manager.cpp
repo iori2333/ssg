@@ -18,7 +18,7 @@ bool PackArchive::Load(std::string_view data_path) {
   if (stream == nullptr) {
     return false;
   }
-  auto in = FilStartR(stream);
+  auto in = PackFile::Open(*stream);
   if (on_load_) {
     if (!on_load_(in)) {
       return false;
@@ -36,7 +36,7 @@ bool PackManager::LoadAll() {
         PackArchive("MAP.PAK"),
         PackArchive("IMAGES.PAK"),
         PackArchive("MUSIC.PAK", MusicManager::LoadMetadata),
-        PackArchive("SOUND.PAK", [](const PACKFILE_READ &in) {
+        PackArchive("SOUND.PAK", [](const PackFile &in) {
           return SfxManager::LoadAllFromPack(in);
         }),
     }};

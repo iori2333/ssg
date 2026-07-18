@@ -12,8 +12,8 @@
 
 namespace {
 
-bool GrpLoadBmp(const PACKFILE_READ &in, fil_no_t filno, SURFACE_ID sid) {
-  auto maybe_bmp = BMPLoad(in.MemExpand(filno));
+bool GrpLoadBmp(const PackFile &in, uint32_t filno, SURFACE_ID sid) {
+  auto maybe_bmp = BMPLoad(in.Extract(filno));
   assert(maybe_bmp);
   if (!maybe_bmp) {
     return false;
@@ -87,7 +87,7 @@ bool GfxManager::LoadStage(int stage) {
     return false;
   }
 
-  const fil_no_t kMapChipId[STAGE_MAX] = {7, 8, 9, 10, 11, 12};
+  const uint32_t kMapChipId[STAGE_MAX] = {7, 8, 9, 10, 11, 12};
   if (!GrpLoadBmp(graph, 0, SURFACE_ID::SYSTEM) ||
       !GrpLoadBmp(graph, stage + 0, SURFACE_ID::ENEMY) ||
       !GrpLoadBmp(graph, kMapChipId[stage - 1], SURFACE_ID::MAPCHIP) ||
@@ -109,8 +109,8 @@ bool GfxManager::LoadEnemySurface(uint8_t image_no) {
 
 bool GfxManager::LoadGalleryEnemySurfaces() {
   const auto &graph = packs.Images();
-  auto bmp29 = BMPLoad(graph.MemExpand(29));
-  auto bmp30 = BMPLoad(graph.MemExpand(30));
+  auto bmp29 = BMPLoad(graph.Extract(29));
+  auto bmp30 = BMPLoad(graph.Extract(30));
   if (!bmp29 || !bmp30) {
     return false;
   }

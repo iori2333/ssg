@@ -13,7 +13,7 @@ enum class SfxId : uint8_t {
   Enemyshot = 0x10, Hlaser    = 0x11, Tamefast  = 0x12, Warp      = 0x13,
 };
 
-struct PACKFILE_READ;
+class PackFile;
 
 class SfxManager {
 public:
@@ -21,7 +21,7 @@ public:
 
 private:
   friend class PackManager;
-  static bool LoadAllFromPack(const PACKFILE_READ &in);
+  static bool LoadAllFromPack(const PackFile &in);
 };
 
 inline SfxManager sfx;

@@ -131,6 +131,13 @@ set_target_properties(GIAN07 PROPERTIES
     PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
+add_custom_command(TARGET GIAN07 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:GIAN07>"
+        "${CMAKE_SOURCE_DIR}/bin/GIAN07"
+    COMMENT "Copying GIAN07 to bin/"
+)
+
 if(MSVC)
     target_compile_options(GIAN07 PRIVATE /MP)
 endif()

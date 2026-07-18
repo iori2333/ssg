@@ -14,28 +14,28 @@ class PackArchive {
 public:
   PackArchive() = default;
   PackArchive(std::string_view filename,
-              std::function<bool(const PACKFILE_READ &)> on_load = {})
+              std::function<bool(const PackFile &)> on_load = {})
       : filename_(filename), on_load_(std::move(on_load)) {}
 
   bool Load(std::string_view data_path);
 
-  const PACKFILE_READ &Get() const { return data_; }
+  const PackFile &Get() const { return data_; }
   const std::string &Path() const { return filename_; }
 
 private:
-  PACKFILE_READ data_;
+  PackFile data_;
   std::string filename_;
-  std::function<bool(const PACKFILE_READ &)> on_load_;
+  std::function<bool(const PackFile &)> on_load_;
 };
 
 class PackManager {
 public:
   bool LoadAll();
 
-  const PACKFILE_READ &Map()    const { return packs_[kMap].Get(); }
-  const PACKFILE_READ &Images() const { return packs_[kImages].Get(); }
-  const PACKFILE_READ &Music()  const { return packs_[kMusic].Get(); }
-  const PACKFILE_READ &Sound()  const { return packs_[kSound].Get(); }
+  const PackFile &Map()    const { return packs_[kMap].Get(); }
+  const PackFile &Images() const { return packs_[kImages].Get(); }
+  const PackFile &Music()  const { return packs_[kMusic].Get(); }
+  const PackFile &Sound()  const { return packs_[kSound].Get(); }
 
   std::string MissingFilesReport() const;
 

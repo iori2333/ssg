@@ -1,11 +1,13 @@
 ///
 /// LzUty - Packfiles and compression
 ///
+#include "lz_uty.h"
 
 #include <algorithm>
 #include <array>
 #include <numeric>
 #include <optional>
+#include <vector>
 
 #include <SDL3/SDL_iostream.h>
 
@@ -14,39 +16,25 @@
 #include "sys/file.h"
 #include "util/guard.h"
 
+namespace {
+
 constexpr auto LZSS_DICT_BITS = 13;
 constexpr auto LZSS_SEQ_BITS = 4;
 constexpr auto LZSS_SEQ_MIN = 3;
 constexpr auto LZSS_DICT_MASK = ((1 << LZSS_DICT_BITS) - 1);
 constexpr auto LZSS_SEQ_MAX = (LZSS_SEQ_MIN + ((1 << LZSS_SEQ_BITS) - 1));
 
-template <typename Container>
-fil_checksum_t
-FilChecksumAddFile(fil_checksum_t &current_total, fil_size_t offset,
-                   fil_size_t size_uncompressed, const Container &compressed) {
-  auto ret =
-      std::accumulate(compressed.begin(), compressed.end(), fil_checksum_t{0});
-  current_total += ret;
-  current_total += size_uncompressed;
-  current_total += offset;
-  return ret;
-}
+constexpr const std::array<char, 4> kPbgHeadName = {'P', 'B', 'G', 0x1A};
 
-std::optional<BYTE_BUFFER_BORROWED>
-FilFileGetCompressed(const BYTE_BUFFER_OWNED &packfile,
-                     const std::span<const PBG_FILEINFO> info, fil_no_t filno) {
-  if (filno >= info.size()) {
-    return std::nullopt;
-  }
-  const size_t start = info[filno].offset;
-  const auto end =
-      ((filno == (info.size() - 1)) ? packfile.size()
-                                    : size_t{info[filno + 1].offset});
-  if ((start >= packfile.size()) || (end > packfile.size())) {
-    return std::nullopt;
-  }
-  return BYTE_BUFFER_BORROWED{(packfile.get() + start), (end - start)};
-}
+struct PbgFileHead {
+  std::array<char, kPbgHeadName.size()> name = kPbgHeadName;
+  ENDIAN_LITTLE<uint32_t> sum = 0;
+  ENDIAN_LITTLE<uint32_t> n = 0;
+};
+
+} // namespace
+
+// ---- Bit-level I/O --------------------------------------------------
 
 uint8_t BIT_DEVICE_READ::GetBit() {
   if (cursor.byte >= buffer.size()) {
@@ -62,7 +50,6 @@ uint32_t BIT_DEVICE_READ::GetBits(size_t bitcount) {
   if ((bitcount > 24) || (bytes_remaining == 0)) {
     return 0xFFFFFFFF;
   }
-
   if (((bitcount + 7) / 8) >= bytes_remaining) {
     bitcount = std::min(((bytes_remaining * 8) - cursor.bit), bitcount);
   }
@@ -84,9 +71,13 @@ uint32_t BIT_DEVICE_READ::GetBits(size_t bitcount) {
 }
 
 void BIT_DEVICE_WRITE::PutBit(uint8_t bit) {
-  auto &byte = ((bit_cursor == 0) ? buffer.emplace_back(0x00) : buffer.back());
-  byte |= ((bit & 1) << (7 - bit_cursor));
-  bit_cursor++;
+  if (bit_cursor == 0) {
+    buffer.push_back(0x00);
+  }
+  buffer.back() |= ((bit & 1) << (7 - bit_cursor));
+  if (++bit_cursor == 0) {
+    buffer.push_back(0x00);
+  }
 }
 
 void BIT_DEVICE_WRITE::PutBits(uint32_t bits, unsigned int bitcount) {
@@ -101,30 +92,55 @@ bool BIT_DEVICE_WRITE::Write(const char *s) const {
   return SDL_SaveFile(s, buffer.data(), buffer.size());
 }
 
-BYTE_BUFFER_OWNED PACKFILE_READ::MemExpand(fil_no_t filno) const {
-  const auto maybe_compressed = FilFileGetCompressed(packfile, info, filno);
-  if (!maybe_compressed) {
-    return nullptr;
-  }
+BIT_FILE_READ BitFilCreateR(const char *s) { return {SDL_LoadFile(s)}; }
 
-  const uint32_t size_uncompressed = info[filno].size_uncompressed;
+// ---- LZSS -----------------------------------------------------------
+
+template <typename Container>
+uint32_t FilChecksumAddFile(uint32_t &current_total, uint32_t offset,
+                            uint32_t size_uncompressed,
+                            const Container &compressed) {
+  auto ret = std::accumulate(compressed.begin(), compressed.end(), uint32_t{0});
+  current_total += ret;
+  current_total += size_uncompressed;
+  current_total += offset;
+  return ret;
+}
+
+std::optional<BYTE_BUFFER_BORROWED>
+FilFileGetCompressed(const BYTE_BUFFER_OWNED &packfile,
+                     std::span<const PbgFileInfo> info, uint32_t filno) {
+  if (filno >= info.size()) {
+    return std::nullopt;
+  }
+  const size_t start = info[filno].offset;
+  const auto end = ((filno == (info.size() - 1))
+                        ? packfile.size()
+                        : size_t{info[filno + 1].offset});
+  if ((start >= packfile.size()) || (end > packfile.size())) {
+    return std::nullopt;
+  }
+  return BYTE_BUFFER_BORROWED{(packfile.get() + start), (end - start)};
+}
+
+static BYTE_BUFFER_OWNED
+Decompress(const BYTE_BUFFER_BORROWED &compressed, uint32_t size_uncompressed) {
   BYTE_BUFFER_OWNED uncompressed = {size_uncompressed};
   if (!uncompressed) {
     return nullptr;
   }
 
-  // Textbook LZSS.
   std::array<uint8_t, (1 << LZSS_DICT_BITS)> dict{};
-  fil_size_t out_i = 0;
+  uint32_t out_i = 0;
 
-  auto output = [&uncompressed, &dict, &out_i](uint8_t literal) {
+  auto output = [&](uint8_t literal) {
     uncompressed.get()[out_i] = literal;
     dict[out_i & LZSS_DICT_MASK] = literal;
     out_i++;
   };
 
-  BIT_DEVICE_READ device = {maybe_compressed.value()};
-  while (out_i < info[filno].size_uncompressed) {
+  BIT_DEVICE_READ device = {compressed};
+  while (out_i < size_uncompressed) {
     const bool is_literal = device.GetBit() != 0U;
     if (is_literal) {
       output(device.GetBits(8));
@@ -134,22 +150,19 @@ BYTE_BUFFER_OWNED PACKFILE_READ::MemExpand(fil_no_t filno) const {
         break;
       }
       seq_offset--;
-
       const auto seq_length = (device.GetBits(LZSS_SEQ_BITS) + LZSS_SEQ_MIN);
       for (auto i = decltype(seq_length){0}; i < seq_length; i++) {
         output(dict[seq_offset++ & LZSS_DICT_MASK]);
       }
     }
   }
-
   return uncompressed;
 }
 
 BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
   constexpr auto DICT_WINDOW = ((1 << LZSS_DICT_BITS) - LZSS_SEQ_MAX);
-
   BIT_DEVICE_WRITE device;
-  fil_size_t in_i = 0;
+  uint32_t in_i = 0;
 
   while (in_i < buffer.size()) {
     unsigned int seq_offset = 0;
@@ -166,12 +179,7 @@ BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
         }
         length_new++;
       }
-      if ((length_new > seq_length)) {
-        // ([seq_offset] == LZSS_DICT_MASK) would cause the in-file
-        // offset to overflow back to 0, which is interpreted as the
-        // "sentinel offset" that causes the original game to stop
-        // decompressing.
-        // (That's why offsets are 1-based to begin with.)
+      if (length_new > seq_length) {
         if ((dict_i & LZSS_DICT_MASK) != LZSS_DICT_MASK) {
           seq_length = length_new;
           seq_offset = dict_i;
@@ -180,9 +188,8 @@ BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
       dict_i++;
     }
     if (seq_length < LZSS_SEQ_MIN) {
-      auto literal = buffer[in_i];
       device.PutBit(1U);
-      device.PutBits(literal, 8);
+      device.PutBits(buffer[in_i], 8);
       in_i++;
     } else {
       device.PutBit(0U);
@@ -191,50 +198,121 @@ BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
       in_i += seq_length;
     }
   }
-
-  // Write the sentinel offset
   device.PutBit(0U);
   device.PutBits(0, LZSS_DICT_BITS);
-
   return device.buffer;
 }
 
-bool PACKFILE_WRITE::Write(
-    const char *s, std::optional<FILE_TIMESTAMPS> maybe_timestamps) const {
-  PBG_FILEHEAD head = {.n = files.size()};
-  std::vector<PBG_FILEINFO> info(files.size());
-  fil_checksum_t sum = 0; // in native byte order
+// ---- PackFile -------------------------------------------------------
+
+PackFile OpenFromBuffer(BYTE_BUFFER_OWNED);
+
+uint32_t PackFile::Count() const {
+  return static_cast<uint32_t>(entries_.size());
+}
+
+PackFile PackFile::Open(const char *path) {
+  return OpenFromBuffer(SDL_LoadFile(path));
+}
+
+PackFile PackFile::Open(SDL_IOStream &stream) {
+  return OpenFromBuffer(SDL_LoadFile_IO(&stream, true));
+}
+
+PackFile OpenFromBuffer(BYTE_BUFFER_OWNED packfile) {
+  PackFile result;
+  auto packfile_cursor = packfile.cursor();
+
+  const auto maybe_head = packfile_cursor.next<PbgFileHead>();
+  if (!maybe_head) {
+    return result;
+  }
+  const auto &head = maybe_head.value()[0];
+  if (head.name != kPbgHeadName) {
+    return result;
+  }
+
+  const auto maybe_info = packfile_cursor.next<PbgFileInfo>(head.n);
+  if (!maybe_info) {
+    return result;
+  }
+  const auto info_span = maybe_info.value();
+
+  uint32_t total_checksum = 0;
+  for (uint32_t i = 0; i < info_span.size(); i++) {
+    const auto maybe_compressed =
+        FilFileGetCompressed(packfile, info_span, i);
+    if (!maybe_compressed) {
+      return result;
+    }
+    const auto checksum = std::accumulate(
+        maybe_compressed.value().begin(), maybe_compressed.value().end(),
+        uint32_t{0});
+    total_checksum += checksum;
+    total_checksum += info_span[i].size_uncompressed;
+    total_checksum += info_span[i].offset;
+    if (checksum != info_span[i].checksum_compressed) {
+      return result;
+    }
+  }
+  if (total_checksum != head.sum) {
+    return result;
+  }
+
+  result.data_ = std::move(packfile);
+  result.entries_ = info_span;
+  return result;
+}
+
+BYTE_BUFFER_OWNED PackFile::Extract(uint32_t index) const {
+  const auto maybe_compressed = FilFileGetCompressed(data_, entries_, index);
+  if (!maybe_compressed) {
+    return nullptr;
+  }
+  return Decompress(maybe_compressed.value(),
+                    entries_[index].size_uncompressed);
+}
+
+// ---- PackWriter -----------------------------------------------------
+
+void PackWriter::Add(std::span<const uint8_t> data) {
+  files_.emplace_back(data.data(), data.size());
+}
+
+bool PackWriter::Write(const char *path,
+                       std::optional<FILE_TIMESTAMPS> maybe_timestamps) const {
+  PbgFileHead head = {.n = static_cast<uint32_t>(files_.size())};
+  std::vector<PbgFileInfo> info(files_.size());
+  uint32_t sum = 0;
 
   auto write_header = [&head, &info](SDL_IOStream *stream) {
     return (SDL_MustWriteIO(stream, &head, sizeof(head)) &&
             SDL_MustWriteIO(stream, info.data(),
-                            (info.size() * sizeof(PBG_FILEINFO))));
+                            (info.size() * sizeof(PbgFileInfo))));
   };
 
-  auto *stream = SDL_IOFromFile(s, "wb");
+  auto *stream = SDL_IOFromFile(path, "wb");
   if (stream == nullptr) {
     return false;
   }
   auto close_guard = make_guard([&] {
-    File_CloseWithTimestamps(std::move(stream), s, std::move(maybe_timestamps));
+    File_CloseWithTimestamps(std::move(stream), path, std::move(maybe_timestamps));
   });
 
-  // Write temporary header
   if (!write_header(stream)) {
     return false;
   }
 
-  // Compress and write files
-  for (fil_no_t i = 0; i < files.size(); i++) {
-    auto compressed = Compress(files[i]);
+  for (uint32_t i = 0; i < files_.size(); i++) {
+    auto compressed = Compress(files_[i]);
 
     const auto offset = SDL_TellIO(stream);
     if (offset == -1) {
       return false;
     }
-
     info[i].offset = offset;
-    info[i].size_uncompressed = files[i].size();
+    info[i].size_uncompressed =
+        static_cast<uint32_t>(files_[i].size());
     info[i].checksum_compressed = FilChecksumAddFile(
         sum, info[i].offset, info[i].size_uncompressed, compressed);
     if (!SDL_MustWriteIO(stream, compressed.data(), compressed.size())) {
@@ -242,57 +320,7 @@ bool PACKFILE_WRITE::Write(
     }
   }
 
-  // Write real header
   head.sum = sum;
   return ((SDL_SeekIO(stream, 0, SDL_IO_SEEK_SET) != -1) &&
           write_header(stream));
 }
-
-BIT_FILE_READ BitFilCreateR(const char *s) { return {SDL_LoadFile(s)}; }
-
-PACKFILE_READ FilStartR(BYTE_BUFFER_OWNED packfile) {
-  auto packfile_cursor = packfile.cursor();
-
-  // PBG_FILEHEAD
-  const auto maybe_head = packfile_cursor.next<PBG_FILEHEAD>();
-  if (!maybe_head) {
-    return {};
-  }
-  const auto &head = maybe_head.value()[0];
-  if (head.name != PBG_HEADNAME) {
-    return {};
-  }
-
-  // PBG_FILEINFO
-  const auto maybe_info = packfile_cursor.next<PBG_FILEINFO>(head.n);
-  if (!maybe_info) {
-    return {};
-  }
-  const auto info = maybe_info.value();
-
-  // Checksums
-  fil_checksum_t total_checksum = 0;
-  for (fil_no_t i = 0; i < info.size(); i++) {
-    const auto maybe_compressed = FilFileGetCompressed(packfile, info, i);
-    if (!maybe_compressed) {
-      return {};
-    }
-    const auto checksum =
-        FilChecksumAddFile(total_checksum, info[i].offset,
-                           info[i].size_uncompressed, maybe_compressed.value());
-    if (checksum != info[i].checksum_compressed) {
-      return {};
-    }
-  }
-  if (total_checksum != head.sum) {
-    return {};
-  }
-
-  return {std::move(packfile), info};
-}
-
-PACKFILE_READ FilStartR(SDL_IOStream *stream) {
-  return FilStartR(SDL_LoadFile_IO(stream, true));
-}
-
-PACKFILE_READ FilStartR(const char *s) { return FilStartR(SDL_LoadFile(s)); }

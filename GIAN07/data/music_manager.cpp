@@ -10,11 +10,11 @@
 #include "pack_manager.h"
 #include "util/endian.h"
 
-bool MusicManager::LoadMetadata(const PACKFILE_READ &in) {
+bool MusicManager::LoadMetadata(const PackFile &in) {
   music.metas_.resize(kTrackCount);
 
   for (auto i = 0; std::cmp_less(i, kTrackCount); i++) {
-    if (const auto file = in.MemExpand(i)) {
+    if (const auto file = in.Extract(i)) {
       auto cursor = file.cursor();
 
       std::string_view title, comment;
@@ -50,7 +50,7 @@ bool MusicManager::LoadTrack(unsigned int index) {
     return false;
   }
 
-  auto raw = music_pack.MemExpand(index);
+  auto raw = music_pack.Extract(index);
   if (!raw) {
     return false;
   }

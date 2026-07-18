@@ -15,14 +15,14 @@ constexpr uint8_t kSfxMax[] = {
     2, 5, 1, 1, 1, 1, 5, 1, 5, 1,
 };
 
-bool SndLoadFromPack(const PACKFILE_READ &in, fil_no_t filno, uint8_t id,
+bool SndLoadFromPack(const PackFile &in, uint32_t filno, uint8_t id,
                      int max) {
-  return Snd_SELoad(in.MemExpand(filno), id, max);
+  return Snd_SELoad(in.Extract(filno), id, max);
 }
 
 } // namespace
 
-bool SfxManager::LoadAllFromPack(const PACKFILE_READ &in) {
+bool SfxManager::LoadAllFromPack(const PackFile &in) {
   if (!ConfigDat.se_enabled || !Snd_SEInit()) {
     ConfigDat.se_enabled = false;
     return false;

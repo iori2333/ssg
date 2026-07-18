@@ -22,7 +22,7 @@ public:
 
 private:
   friend class PackManager;
-  static bool LoadMetadata(const PACKFILE_READ &in);
+  static bool LoadMetadata(const PackFile &in);
 
   struct Meta { std::string title, comment; };
   std::vector<Meta> metas_;

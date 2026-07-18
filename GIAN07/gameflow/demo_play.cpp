@@ -157,7 +157,7 @@ bool DemoManager::LoadDemo(int stage) {
       return false;
     }
     const auto inputs = maybe_inputs.value();
-    memcpy(demo_buffer.data(), inputs.data(), inputs.size_bytes());
+    memcpy(demo_buffer.data(), inputs.data(), inputs.size());
   }
   return LoadSetup();
 }
@@ -214,12 +214,13 @@ void DemoManager::SaveReplayAll(bool exstg) {
     info.FrameCounts[i] = multi_stage_frames[i];
   }
 
-  PACKFILE_WRITE out;
-  out.files.emplace_back(reinterpret_cast<const uint8_t *>(&info),
-                         sizeof(info));
+  PackWriter out;
+  out.Add(std::span<const uint8_t>(
+      reinterpret_cast<const uint8_t *>(&info), sizeof(info)));
   for (auto &buf : stage_record_bufs) {
-    out.files.emplace_back(reinterpret_cast<const uint8_t *>(buf.data()),
-                           buf.size() * sizeof(INPUT_BITS));
+    out.Add(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(buf.data()),
+        buf.size() * sizeof(INPUT_BITS)));
   }
 
   const auto fn = ReplayAllFN(exstg);
@@ -230,12 +231,12 @@ void DemoManager::SaveReplayAll(bool exstg) {
 }
 
 bool DemoManager::LoadReplayAll(const char *fn) {
-  const auto in = FilStartR(fn);
+  const auto in = PackFile::Open(fn);
   if (!in) {
     return false;
   }
 
-  BYTE_BUFFER_OWNED temp = in.MemExpand(0);
+  BYTE_BUFFER_OWNED temp = in.Extract(0);
   if (nullptr == temp) {
     return false;
   }
@@ -251,7 +252,7 @@ bool DemoManager::LoadReplayAll(const char *fn) {
   all_playback_buf.clear();
   uint32_t total_frames = 0;
   for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
-    temp = in.MemExpand(i + 1);
+    temp = in.Extract(i + 1);
     if (nullptr == temp) {
       return false;
     }
