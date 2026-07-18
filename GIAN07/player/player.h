@@ -21,6 +21,8 @@
 inline constexpr int VIVDEAD_VAL = 300;   // Viv death time
 inline constexpr int VIVMUTEKI_VAL = 180; // Viv invincibility time
 
+inline constexpr int PLAYER_HITBOX_RADIUS = 1.5 * 64;  // Player hitbox radius, x64 fixed-point (2 px)
+
 inline constexpr int MAID_MOVE_DISABLE_TIME = 150; // Move-disabled duration
 
 inline constexpr int BOMBMUTEKI_VAL = 60; // Bomb-end invincibility
@@ -153,7 +155,8 @@ public:
   [[nodiscard]] bool HitCheck(int x, int y, int r) const {
     auto dx = x - x_;
     auto dy = y - y_;
-    return dx * dx + dy * dy <= r * r;
+    auto combined = r + PLAYER_HITBOX_RADIUS;
+    return dx * dx + dy * dy <= combined * combined;
   }
 
   // --- Weapon select preview ---

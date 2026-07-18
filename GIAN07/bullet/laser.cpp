@@ -472,7 +472,7 @@ void LaserManager::HitCheck(LASER_DATA *lp) {
     // abs((length*sinm(lp->d)+ty)/( cosm(lp->d))); w1 = (w1+w2)/2;	//
     //  Improved precision
     //                     }
-    if (length > 0 && length <= (lp->l) && w1 <= (lp->w)) {
+    if (length > 0 && length <= (lp->l) && w1 <= (lp->w + PLAYER_HITBOX_RADIUS)) {
       Players.OnHit();
     } else if (length > 0 && length <= (lp->l) &&
                w1 <= (lp->w + LASER_EVADE_WIDTH)) {

@@ -468,7 +468,7 @@ void LaserManager::HitCheckLong(const LongLaserData *lp) {
   if (length > 0 && width <= (lp->w + (64 * 15))) {
     Players.AddEvade(LLASER_EVADE);
   }
-  if (length > 0 && width <= (lp->w)) {
+  if (length > 0 && width <= (lp->w + PLAYER_HITBOX_RADIUS)) {
     Players.OnHit();
   }
 }

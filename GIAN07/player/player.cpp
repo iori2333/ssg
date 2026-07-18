@@ -295,8 +295,10 @@ void Player::Draw() {
 
     GrpGeom->Lock();
 
+    const int hit_r = std::ceil(PLAYER_HITBOX_RADIUS / 64.0);
+
     GrpGeom->SetColor({5, 5, 5});
-    GeomCircleF({cx, cy}, 3);
+    GeomCircleF({cx, cy}, hit_r);
 
     GrpGeom->SetColor({5, 2, 2});
     GeomCircleF({cx, cy}, 1);

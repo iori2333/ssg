@@ -188,8 +188,8 @@ void LaserManager::MoveHoming() {
       }
 
       // Hit check
-      if (HITCHK(x, Players.X(), HOMINGL_WIDTH * 2 / 3) &&
-          HITCHK(y, Players.Y(), HOMINGL_WIDTH * 2 / 3)) {
+      if (HITCHK(x, Players.X(), (HOMINGL_WIDTH * 2 / 3) + PLAYER_HITBOX_RADIUS) &&
+          HITCHK(y, Players.Y(), (HOMINGL_WIDTH * 2 / 3) + PLAYER_HITBOX_RADIUS)) {
         //	hl->State = HLS_DEAD;	// Delete this one
         Players.OnHit(); // Kill it
       }

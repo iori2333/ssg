@@ -14,8 +14,9 @@
 #include "long_laser.h"
 
 #include "core/gian.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
+#include "player/player.h"
 
 namespace {
 
@@ -29,12 +30,12 @@ constexpr int HlGetPrev(int current, int n) {
 }
 
 void DrawQuadFilled(GRAPHICS_GEOMETRY_SDL &gp,
-                     std::span<const VERTEX_XY, 4> p) {
+                    std::span<const VERTEX_XY, 4> p) {
   const std::array<VERTEX_XY, 4> strip = {p[0], p[3], p[1], p[2]};
   gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
 }
 
-}  // namespace
+} // namespace
 
 void BulletDebug_DrawHitboxes(int mode) {
   const RGB216 kBlack{0, 0, 0};
@@ -168,4 +169,11 @@ void BulletDebug_DrawHitboxes(int mode) {
       current = HlGetPrev(current, HLASER_SECTION);
     }
   }
+
+  // --- Player hitbox ---
+  const int px = Players.X() >> 6;
+  const int py = Players.Y() >> 6;
+  const int pr = std::ceil(PLAYER_HITBOX_RADIUS / 64.0);
+
+  Geometry::CircleF_Approximated(*gp, {px, py}, pr, true);
 }
