@@ -15,6 +15,9 @@
 
 #include "util/ut_math.h"
 
+// GRP_RES_RECT: native resolution as a rectangle, used by game scenes
+inline constexpr WINDOW_LTRB GRP_RES_RECT = {{.x = 0, .y = 0}, GRP_RES};
+
 // [Constants]
 
 // Coordinate related

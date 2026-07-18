@@ -8,8 +8,6 @@
 
 #include "path.h"
 
-#include "core/constants.h"
-
 static std::string_view PathDataView;
 
 std::string_view PathForData(void) {

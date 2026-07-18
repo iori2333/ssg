@@ -12,6 +12,7 @@
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
+#include "core/gian.h"
 #include "data/gfx_manager.h"
 #include "data/music_manager.h"
 #include "effect/effect.h"

@@ -12,6 +12,7 @@
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
+#include "core/gian.h"
 #include "data/gfx_manager.h"
 #include "data/init.h"
 #include "gameflow/game_main.h"
