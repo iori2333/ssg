@@ -7,7 +7,7 @@
 #include <cinttypes>
 #include <format>
 
-#include "music.h"
+#include "music_room.h"
 
 #include "audio/bgm.h"
 #include "audio/midi.h"
@@ -15,7 +15,7 @@
 #include "data/gfx_manager.h"
 #include "data/music_manager.h"
 #include "effect/effect.h"
-#include "effect/font_uty.h"
+#include "gfx/font_uty.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "gfx/text.h"

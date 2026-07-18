@@ -9,9 +9,14 @@
 
 #include "audio/snd.h"
 #include "core/config.h"
+#include "effect/effect_manager.h"
+#include "enemy/enemy_manager.h"
+#include "item/item_manager.h"
 #include "core/gian.h"
 #include "core/level.h"
+#include "gameflow/rank_manager.h"
 #include "gfx/graphics_backend.h"
+#include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 

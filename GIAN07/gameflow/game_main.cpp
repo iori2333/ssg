@@ -9,21 +9,33 @@
 #include "demo_manager.h"
 #include "demo_play.h"
 #include "game_main.h"
+#include "gameflow_manager.h"
+#include "gameflow/rank_manager.h"
+#include "item/item_manager.h"
 #include "score.h"
+#include "score_manager.h"
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
+#include "bullet/bullet_manager.h"
+#include "bullet/laser_manager.h"
 #include "bullet/bullet_debug.h"
 #include "core/config.h"
 #include "core/gian.h"
+#include "data/gfx_manager.h"
 #include "data/stage_manager.h"
 #include "core/level.h"
 #include "effect/bomb_efc.h"
-#include "effect/font_uty.h"
-#include "effect/geometry.h"
+#include "effect/effect_manager.h"
+#include "enemy/boss_manager.h"
+#include "enemy/enemy_manager.h"
+#include "gfx/font_uty.h"
+#include "gfx/geometry.h"
 #include "effect/lens.h"
+#include "player/player.h"
 #include "platform/text_backend.h"
-#include "stage/music.h"
+#include "music_room/music_room.h"
+#include "stage/scroll_manager.h"
 #include "stage/ui_manager.h"
 #include "stage/window_sys.h"
 #include "sys/input.h"
@@ -635,6 +647,13 @@ bool GameInit(std::function<void(bool &)> next_proc) {
       UI.InitContinue();
     }
   }
+
+  // Wire up UI callbacks into the gameflow layer
+  UI.on_game_exit = [] { GameExit(); };
+  UI.on_game_exit_no_save = [] { GameFlow.NameRegistInit(true); };
+  UI.on_game_restart = [] { GameRestart(); };
+  UI.on_game_continue = [] { GameContinue(); };
+
   GrpBackend_SetClip(PLAYFIELD_CLIP);
   GameFlow.game_main = std::move(next_proc);
   return true;

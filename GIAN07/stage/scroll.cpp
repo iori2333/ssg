@@ -2,6 +2,7 @@
 /// Scroll - Scrolling and map data processing
 ///
 
+#include <cstring>
 #include <utility>
 
 #include "scene.h"
@@ -13,9 +14,21 @@
 #include "audio/snd.h"
 #include "core/config.h"
 #include "core/gian.h"
+#include "data/gfx_manager.h"
+#include "effect/effect.h"
+#include "effect/effect_manager.h"
+#include "enemy/boss_manager.h"
+#include "enemy/enemy_manager.h"
 #include "core/level.h"
+#include "gameflow/demo_manager.h"
 #include "gameflow/demo_play.h"
+#include "gameflow/rank_manager.h"
+#include "gameflow/gameflow_manager.h"
+#include "gameflow/ending_manager.h"
+#include "gameflow/game_main.h"
+#include "player/player.h"
 #include "gfx/graphics_backend.h"
+#include "stage/scroll_manager.h"
 #include "sys/input.h"
 #include "util/cast.h"
 #include "util/debug.h"

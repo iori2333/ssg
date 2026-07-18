@@ -4,7 +4,7 @@
 
 #include "fragment.h"
 #include "effect_manager.h"
-#include "geometry.h"
+#include "gfx/geometry.h"
 
 #include "data/gfx_manager.h"
 #include "data/sfx_manager.h"

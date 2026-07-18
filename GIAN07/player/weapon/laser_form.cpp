@@ -5,7 +5,9 @@
 
 #include "laser_form.h"
 
+#include "bullet/bullet_manager.h"
 #include "core/gian.h"
+#include "enemy/enemy_manager.h"
 #include "player/player.h"
 
 // --- LaserForm (base: wider spread) ---

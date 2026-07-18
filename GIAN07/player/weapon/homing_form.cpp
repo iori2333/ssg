@@ -5,7 +5,9 @@
 
 #include "homing_form.h"
 
+#include "bullet/bullet_manager.h"
 #include "core/gian.h"
+#include "enemy/enemy_manager.h"
 #include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"

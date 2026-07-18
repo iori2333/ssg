@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #include "boss.h"
-#include "enemy_ex_ctrl.h"
+#include "boss_systems.h"
 
 struct BossManager {
   std::array<BossData, BOSS_MAX> bosses; // Boss[]

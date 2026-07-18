@@ -11,8 +11,10 @@
 #include "core/entity.h"
 #include "core/gian.h"
 #include "core/level.h"
-#include "effect/geometry.h"
 #include "gameflow/play_rank.h"
+#include "player/player.h"
+#include "gameflow/rank_manager.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/ut_math.h"
 

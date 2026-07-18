@@ -3,10 +3,12 @@
 ///
 
 #include <algorithm>
+#include <cstring>
 
 #include "effect.h"
-#include "font_uty.h"
-#include "geometry.h"
+#include "effect_manager.h"
+#include "gfx/font_uty.h"
+#include "gfx/geometry.h"
 
 #include "audio/snd.h"
 #include "core/gian.h"

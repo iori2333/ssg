@@ -125,7 +125,13 @@ bool XInit() {
   }
   BGM_SetGainApply(ConfigDat.bgm_vol_norm);
   Grp_ScreenshotSetPrefix("screenshots/");
-  DataInit();
+  const auto err = DataInit();
+  if (err.has_value()) {
+    GameFlow.game_main = [](bool &quit) { quit = true; };
+    GameFlow.current_state = GameState::External;
+  } else {
+    SProjectInit();
+  }
   return true;
 }
 

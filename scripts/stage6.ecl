@@ -2767,7 +2767,7 @@
     JMP jmp=@label_1D98
 .org 0x1DA0
 @script_19:
-    SETUP hp=240 score=2000
+    SETUP hp=1000 score=8000
     ANM pattern=6 speed=2
     CLIP_ON
     ITEM type=2

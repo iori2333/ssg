@@ -6,7 +6,6 @@
 #include "volume.h"
 
 #include "core/constants.h"
-#include "data/sfx_manager.h"
 #include "sys/buffer.h"
 #include "util/enum_flags.h"
 

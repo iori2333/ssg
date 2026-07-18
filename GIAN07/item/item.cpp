@@ -10,7 +10,10 @@
 #include "audio/snd.h"
 #include "core/entity.h"
 #include "core/gian.h"
+#include "effect/effect_manager.h"
+#include "effect/fragment.h"
 #include "gfx/graphics_backend.h"
+#include "player/player.h"
 #include "util/ut_math.h"
 
 int GetItemHitRadius(uint8_t type) {

@@ -15,8 +15,6 @@
 #include "core/config.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/demo_play.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
 
 // Only global instance
 UIManager UI;
@@ -49,7 +47,7 @@ UIManager::UIManager()
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
                        Demos.SaveReplayAll(false);
-                       GameExit();
+                       UI.on_game_exit();
                        return false;
                      }
                      return true;
@@ -58,7 +56,7 @@ UIManager::UIManager()
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
                        Demos.save_all_enable = false;
-                       GameExit();
+                       UI.on_game_exit();
                        return false;
                      }
                      return true;
@@ -66,7 +64,7 @@ UIManager::UIManager()
           MenuItem{"   だ め だ め", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       GameRestart();
+                       UI.on_game_restart();
                        return false;
                      }
                      return true;
@@ -81,7 +79,7 @@ UIManager::UIManager()
           MenuItem{"   お っ け ～", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       GameContinue();
+                       UI.on_game_continue();
                        return false;
                      }
                      return true;
@@ -89,7 +87,7 @@ UIManager::UIManager()
           MenuItem{"   や だ や だ", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       GameFlow.NameRegistInit(true);
+                       UI.on_game_exit_no_save();
                        return false;
                      }
                      return true;
@@ -106,7 +104,7 @@ UIManager::UIManager()
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
                        Demos.SaveReplayAll(false);
-                       GameExit(true);
+                       UI.on_game_exit();
                        return false;
                      }
                      return true;
@@ -115,7 +113,7 @@ UIManager::UIManager()
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
                        Demos.save_all_enable = false;
-                       GameExit(true);
+                       UI.on_game_exit();
                        return false;
                      }
                      return true;

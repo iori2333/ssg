@@ -14,7 +14,7 @@
 #include "long_laser.h"
 
 #include "core/gian.h"
-#include "effect/geometry.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics_sdl.h"
 
 namespace {

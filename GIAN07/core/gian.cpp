@@ -10,7 +10,7 @@
 #include "gian.h"
 #include "level.h"
 
-#include "effect/font_uty.h"
+#include "gfx/font_uty.h"
 #include "gameflow/rank_manager.h"
 #include "player/player.h"
 #include "util/time.h"

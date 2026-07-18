@@ -5,6 +5,7 @@
 #include "effect3d.h"
 
 #include "core/gian.h"
+#include "effect/effect_manager.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
 #include "util/ut_math.h"

@@ -8,14 +8,23 @@
 
 #include "boss.h"
 #include "boss_manager.h"
-#include "enemy_ex_ctrl.h"
+#include "boss_systems.h"
 
 #include "audio/snd.h"
 #include "core/gian.h"
-#include "core/loader.h"
+#include "data/gfx_manager.h"
+#include "data/sfx_manager.h"
 #include "effect/bomb_efc.h"
-#include "effect/font_uty.h"
-#include "effect/geometry.h"
+#include "bullet/bullet_manager.h"
+#include "bullet/laser_manager.h"
+#include "item/item_manager.h"
+#include "effect/bomb_efc.h"
+#include "effect/effect_manager.h"
+#include "stage/scroll_manager.h"
+#include "enemy/enemy_manager.h"
+#include "player/player.h"
+#include "gfx/font_uty.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
@@ -487,7 +496,7 @@ void BossManager::DrawHPG() {
       const int remain = std::min((hpg.TimerMax - hpg.TimerNow) / 60, 99);
       if (remain >= 0) {
         if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
-          Snd_SEPlay(SOUND_ID_SBLASER);
+          Snd_SEPlay(SfxId::Sblaser);
         }
         hpg.PrevTimerSeconds = remain;
         if (remain < 10) {
@@ -504,7 +513,7 @@ void BossManager::DrawHPG() {
           99);
       if (remain >= 0) {
         if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
-          Snd_SEPlay(SOUND_ID_SBLASER);
+          Snd_SEPlay(SfxId::Sblaser);
         }
         hpg.PrevTimerSeconds = remain;
         if (remain < 10) {
@@ -539,7 +548,7 @@ void BossManager::KillAll() {
       SnakyDelete(b);
       Effects.SpawnFragment(e->x, e->y, FRG_FATCIRCLE);
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
-      Snd_SEPlay(SOUND_ID_BOSSBOMB, e->x);
+      Snd_SEPlay(SfxId::Bossbomb, e->x);
       if (e->LLaserRef != 0U) {
         Lasers.ForceCloseLong(e); // Force close laser
       }
@@ -563,7 +572,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     Effects.SpawnFragment(e.x, e.y, FRG_FATCIRCLE);
     Effects.SpawnBombEffect(e.x, e.y, EXBOMB_STD);
     Scroller.Command(SCMD_QUAKE);
-    Snd_SEPlay(SOUND_ID_BOSSBOMB, e.x);
+    Snd_SEPlay(SfxId::Bossbomb, e.x);
     if (e.LLaserRef != 0U) {
       Lasers.ForceCloseLong(&e); // Force close laser
     }
@@ -590,7 +599,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     b.IsUsed = false;
     count--; // Uses boss reference count?
   } else {
-    Snd_SEPlay(SOUND_ID_HIT, e.x);
+    Snd_SEPlay(SfxId::Hit, e.x);
     Players.PowerUp(damage);
     e.hp -= damage;
   }
@@ -610,10 +619,8 @@ bool BossManager::DamageAt(int x, int y, int damage) {
 
   for (auto &it : bosses) {
     auto *b = &it;
-    if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.IsBombActive() != 0U) {
-        continue;
-      }
+    if (b->ExState != BEXST_NORM && Players.IsBombActive() != 0U) {
+      continue;
     }
 
     if (b->IsUsed) {
@@ -646,10 +653,8 @@ bool BossManager::DamageAt2(int x, int y, int damage) {
 
   for (auto &it : bosses) {
     auto *b = &it;
-    if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.IsBombActive() != 0U) {
-        continue;
-      }
+    if (b->ExState != BEXST_NORM && Players.IsBombActive() != 0U) {
+      continue;
     }
 
     if (b->IsUsed) {
@@ -683,10 +688,8 @@ void BossManager::DamageAt3(int x, int y, uint8_t d) {
 
   for (auto &it : bosses) {
     auto *b = &it;
-    if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.IsBombActive() != 0U) {
-        continue;
-      }
+    if (b->ExState != BEXST_NORM && Players.IsBombActive() != 0U) {
+      continue;
     }
 
     if (b->IsUsed) {
@@ -717,10 +720,8 @@ void BossManager::DamageAll(int damage) {
 
   for (auto &it : bosses) {
     auto *b = &it;
-    if (b->ExState == BEXST_SHILD1 || b->ExState == BEXST_SHILD2) {
-      if (Players.IsBombActive() != 0U) {
-        continue;
-      }
+    if (b->ExState != BEXST_NORM && Players.IsBombActive() != 0U) {
+      continue;
     }
 
     if (b->IsUsed) {

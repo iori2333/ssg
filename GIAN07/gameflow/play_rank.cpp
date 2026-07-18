@@ -6,6 +6,8 @@
 
 #include "core/gian.h"
 #include "core/level.h"
+#include "data/gfx_manager.h"
+#include "gameflow/rank_manager.h"
 
 // PlayRank moved to rank_manager.cpp
 

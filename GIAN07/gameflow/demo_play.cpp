@@ -17,6 +17,7 @@
 #include "core/gian.h"
 #include "core/lz_uty.h"
 #include "data/stage_manager.h"
+#include "player/player.h"
 #include "sys/file.h"
 #include "sys/input.h"
 #include "util/guard.h"

@@ -9,7 +9,9 @@
 
 #include "audio/bgm.h"
 #include "core/gian.h"
+#include "enemy/enemy_manager.h"
 #include "data/stage_manager.h"
+#include "gameflow/gameflow_manager.h"
 #include "platform/text_backend.h"
 #include "stage/scene.h"
 #include "util/cast.h"

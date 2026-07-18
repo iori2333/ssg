@@ -12,11 +12,17 @@
 #include "weapon/wide_form.h"
 
 #include "audio/snd.h"
+#include "bullet/bullet_manager.h"
+#include "bullet/laser_manager.h"
+#include "gameflow/game_main.h"
+#include "gameflow/rank_manager.h"
+#include "stage/scroll_manager.h"
+#include "effect/effect_manager.h"
 #include "core/config.h"
 #include "core/gian.h"
 #include "core/level.h"
-#include "effect/font_uty.h"
-#include "effect/geometry.h"
+#include "gfx/font_uty.h"
+#include "gfx/geometry.h"
 #include "sys/input.h"
 
 // --- Player method implementations ---

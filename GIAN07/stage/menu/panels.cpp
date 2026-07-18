@@ -24,7 +24,7 @@
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "gfx/graphics_backend.h"
-#include "stage/music.h"
+#include "music_room/music_room.h"
 #include "stage/ui_manager.h"
 #include "stage/window_sys.h"
 #include "sys/input.h"

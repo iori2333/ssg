@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "enemy_ex_ctrl.h"
+#include "boss_systems.h"
 
 #include "boss_manager.h"
 #include "enemy_manager.h"

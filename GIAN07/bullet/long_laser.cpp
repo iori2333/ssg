@@ -6,7 +6,7 @@
 #include "laser_manager.h"
 
 #include "audio/snd.h"
-#include "effect/geometry.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/ut_math.h"

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,12 @@
 class UIManager {
 public:
   UIManager();
+
+  // --- Game flow callbacks (injected by gameflow layer) ---
+  std::function<void()> on_game_exit;
+  std::function<void()> on_game_exit_no_save;
+  std::function<void()> on_game_restart;
+  std::function<void()> on_game_continue;
 
   // --- Message window ---
   MsgWindow &Msg() { return msg_window_; }
