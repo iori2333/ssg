@@ -580,9 +580,7 @@ void GameSTD_Init() {
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
   Bullets.SetIndices(400 + 200); // 400 for small bullets
-  Lasers.SetIndices();
-  Lasers.SetupLong();  // Calls long_lasers.Init()
-  Lasers.InitHoming();  // Calls homing.Init()
+  Lasers.Init();
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
   Effects.InitLockOn();
@@ -906,7 +904,7 @@ bool GameExit(bool bNeedChgMusic) {
   }
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  Lasers.SetupLong(); // Stop sound
+  Lasers.Init(); // Stop sound + re-init pools
   Snd_SEStop(8);      // Stop warning sound
 
   const auto flags = MsgWindowFlags::CENTER;
@@ -1515,7 +1513,7 @@ void GameDraw() {
   Players.Draw();
 
   if (GrpGeom_FB() != nullptr) {
-    Lasers.DrawLong();
+    Lasers.RenderLong();
   }
 
   Effects.DrawLockOn();
@@ -1525,10 +1523,10 @@ void GameDraw() {
 
   // Long laser draws need two passes for Z ordering
   if (GrpGeom_Poly() != nullptr) {
-    Lasers.DrawLong();
+    Lasers.RenderLong();
   }
 
-  Lasers.DrawHoming();
+  Lasers.RenderHoming();
   Lasers.Draw();
   Bullets.Draw();
 

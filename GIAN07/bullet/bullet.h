@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "core/entity.h"
 
 ///// [Update history] /////

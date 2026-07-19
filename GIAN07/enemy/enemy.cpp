@@ -148,7 +148,7 @@ void EnemyManager::Move() {
           (e->x < GX_MIN - (e->g_width)) || (e->x > GX_MAX + (e->g_width))) {
         if ((e->flag & EF_CLIP) == 0) {
           if (e->LLaserRef != 0U) {
-            Lasers.ForceCloseLong(e);
+            Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); });
           }
           e->flag = EF_DELETE;
         }
@@ -210,7 +210,7 @@ void EnemyManager::Clear() {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef != 0U) {
-        Lasers.ForceCloseLong(e); // Force close laser
+        Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
       }
       Snd_SEPlay(SfxId::Bomb, e->x);
     } else {
@@ -220,7 +220,7 @@ void EnemyManager::Clear() {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef != 0U) {
-        Lasers.ForceCloseLong(e); // Force close laser
+        Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
       }
       // Do not play explosion sound
     }
@@ -246,7 +246,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   if (std::cmp_less_equal(e.hp, damage)) {
     Snd_SEPlay(SfxId::Bomb, e.x);
     if (e.LLaserRef != 0U) {
-      Lasers.ForceCloseLong(&e); // Force close laser
+      Lasers.ApplyLongLasers(&e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
     }
     Players.PowerUp(static_cast<uint8_t>(e.hp)); // Power up
     e.hp = 0;
@@ -494,7 +494,6 @@ void EnemyManager::Execute(EnemyData *e) {
 
   bool bRetFlag = false; // Set to false for execution clock 0 instructions
   int RegCmp = 0;
-  HomingLaserInfo HInfo{};
 
   const PIXEL_LTRB rcDegX2 = {
       GX_MIN + (150 * 64), GY_MIN + ((GY_MID - GY_MIN - (40 * 64)) / 3),
@@ -573,41 +572,41 @@ ECL_HEAD:
     break;
 
   case ECL_HLASER: // Homing laser set
-    HInfo.c = e->l_cmd.c;
-    HInfo.d = e->l_cmd.d;
-    HInfo.dw = e->l_cmd.dw;
-    HInfo.n = e->l_cmd.n;
-    HInfo.type = e->l_cmd.type;
-    HInfo.x = e->x + e->l_cmd.x;
-    HInfo.y = e->y + e->l_cmd.y;
-    Lasers.SpawnHoming(&HInfo);
+    Lasers.SpawnHoming(HomingSpawnInfo{
+        .x = e->x + e->l_cmd.x,
+        .y = e->y + e->l_cmd.y,
+        .d = e->l_cmd.d,
+        .dw = e->l_cmd.dw,
+        .n = e->l_cmd.n,
+        .c = e->l_cmd.c,
+        .type = e->l_cmd.type,
+    });
     break;
 
   case ECL_LLSET: // Long laser set
-    Lasers.long_cmd.c = e->l_cmd.c;
-    Lasers.long_cmd.d = e->l_cmd.d;
-    Lasers.long_cmd.dx = e->l_cmd.x;
-    Lasers.long_cmd.dy = e->l_cmd.y;
-    Lasers.long_cmd.e = e;
-    Lasers.long_cmd.type = e->l_cmd.type;
-    // Lasers.long_cmd.type = (e->l_cmd.type==0) ? LLS_LONG : LLS_SETDEG;
-    Lasers.long_cmd.v = e->l_cmd.v;
-    Lasers.long_cmd.w = e->l_cmd.w;
-
-    // Do not increment reference count on failure
-    if (Lasers.SpawnLongLaser(e->LLaserRef)) {
+    if (Lasers.SpawnLongLaser(LongLaserSpawnInfo{
+        .enemy = e,
+        .enemy_id = e->LLaserRef,
+        .dx = e->l_cmd.x,
+        .dy = e->l_cmd.y,
+        .v = e->l_cmd.v,
+        .w = e->l_cmd.w,
+        .d = e->l_cmd.d,
+        .c = e->l_cmd.c,
+        .type = static_cast<LongLaserType>(e->l_cmd.type),
+    })) {
       e->LLaserRef++;
     }
     bRetFlag = false;
     break;
 
   case ECL_LLOPEN: // Long laser open cmd,id
-    Lasers.OpenLong(e, cmd[1]);
+    Lasers.ApplyLongLasers(e, cmd[1], [](auto &ll) { ll.Open(); });
     bRetFlag = false;
     break;
 
   case ECL_LLCLOSE: // Long laser close (delete & decrement ref count) cmd,id
-    Lasers.CloseLong(e, cmd[1]);
+    Lasers.ApplyLongLasers(e, cmd[1], [](auto &ll) { ll.Close(); });
     if (cmd[1] == ECLCST_LLASERALL) {
       e->LLaserRef = 0;
     } else {
@@ -617,13 +616,14 @@ ECL_HEAD:
     break;
 
   case ECL_LLCLOSEL: // Long laser to line state cmd,id
-    Lasers.LineLong(e, cmd[1]);
+    Lasers.ApplyLongLasers(e, cmd[1], [](auto &ll) { ll.CloseToLine(); });
     bRetFlag = false;
     break;
 
   case ECL_LLDEGR: // Long laser relative angle change cmd,id,deg
     // Order is reversed, so be careful
-    Lasers.RotateLongRel(e, Cast::sign<int8_t>(cmd[2]), cmd[1]);
+    Lasers.ApplyLongLasers(e, cmd[1],
+        [delta = Cast::sign<int8_t>(cmd[2])](auto &ll) { ll.AdjustAngle(delta); });
     bRetFlag = false;
     break;
 
@@ -640,7 +640,7 @@ ECL_HEAD:
   case ECL_END: // Force enemy deletion
     ECL_DEBUG("ECL_END", 0);
     if (e->LLaserRef != 0U) {
-      Lasers.ForceCloseLong(e); // Force close laser
+      Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
     }
     e->flag = EF_DELETE; // To be changed later
     return;              // Bug prevention (maybe)
@@ -1297,25 +1297,48 @@ ECL_HEAD:
   case ECL_TCLR:       // Clear all enemy bullets (including lasers)
     Bosses.ClearCmd(); // Prioritize this above all (includes bit clearing)
     Bullets.Clear();
-    Lasers.Clear();
+    Lasers.ClearAll();
     Lasers.ClearHoming();
     Clear();
     bRetFlag = false;
     break;
 
   case ECL_LASER: // Fire laser
-    Lasers.cmd = e->l_cmd;
-    Lasers.cmd.x += e->x;
-    Lasers.cmd.y += e->y;
-    Lasers.Spawn();
+    Lasers.SpawnReflect(ReflectSpawnInfo{
+        .x = e->x + e->l_cmd.x,
+        .y = e->y + e->l_cmd.y,
+        .v = e->l_cmd.v,
+        .w = e->l_cmd.w,
+        .l = e->l_cmd.l,
+        .l2 = e->l_cmd.l2,
+        .d = e->l_cmd.d,
+        .dw = e->l_cmd.dw,
+        .n = e->l_cmd.n,
+        .c = e->l_cmd.c,
+        .a = e->l_cmd.a,
+        .cmd = e->l_cmd.cmd,
+        .cmd_type = e->l_cmd.type,
+    });
     bRetFlag = false;
     break;
 
   case ECL_LASER2: // Fire laser
-    Lasers.cmd = e->l_cmd;
-    Lasers.cmd.x += e->x;
-    Lasers.cmd.y += e->y;
-    Lasers.SpawnEX();
+    Lasers.SpawnReflect(ReflectSpawnInfo{
+        .no_scaling = true,
+        .x = e->x + e->l_cmd.x,
+        .y = e->y + e->l_cmd.y,
+        .v = e->l_cmd.v,
+        .w = e->l_cmd.w,
+        .l = e->l_cmd.l,
+        .l2 = e->l_cmd.l2,
+        .d = e->l_cmd.d,
+        .dw = e->l_cmd.dw,
+        .n = e->l_cmd.n,
+        .c = e->l_cmd.c,
+        .a = e->l_cmd.a,
+        .cmd = e->l_cmd.cmd,
+        .cmd_type = e->l_cmd.type,
+    });
     bRetFlag = false;
     break;
 

@@ -510,7 +510,7 @@ void Player::Update() {
 
   if (bomb_time_ != 0U) {
     Bullets.Clear();
-    Lasers.Clear();
+    Lasers.ClearAll();
   }
 
   buzz_sound_ = false;
@@ -637,7 +637,7 @@ void Player::OnDeath(bool play_se) {
     bomb_used_++;
     Ranking.Add(-BOMB_RANK_DECR); // auto bomb_ decreases rank
     Bullets.Clear();
-    Lasers.Clear();
+    Lasers.ClearAll();
     return;
   }
 
@@ -673,7 +673,7 @@ void Player::OnDeath(bool play_se) {
   }
 
   Bullets.Clear();
-  Lasers.Clear();
+  Lasers.ClearAll();
 }
 
 void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }

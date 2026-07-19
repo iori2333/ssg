@@ -1,39 +1,38 @@
 ///
-/// LaserBase - Abstract base class for all laser types
+/// LaserBase — Abstract base templated on SpawnInfo
 ///
 
 #pragma once
 
 #include <cstdint>
 
-// Common fields shared by all three laser types:
-//   - LaserReflect (short / reflective laser)
-//   - LaserLong (thick infinite beam anchored to an enemy)
-//   - LaserHoming (homing snake laser)
-//
-// Each derived type implements the pure-virtual lifecycle:
-//   Move()      — per-frame physics / state update
-//   Draw()      — render geometry
-//   HitCheck()  — collision detection against the player
-//   IsDead()    — whether this laser should be removed from the active pool
-//   StartClear()— begin the death / clear animation
+// ── Hit-test result ────────────────────────────────────────────
+enum class HitResult : uint8_t { Miss, Graze, Hit };
+inline constexpr auto kLaserEvadeValue = 1;
 
-struct LaserBase {
-  int x, y;         // Reference position (x64 fixed-point)
-  int v;             // Velocity
-
-  uint8_t d;         // Direction angle (0–255)
-  uint8_t c;         // Color index
-  uint8_t type;      // Sub-type discriminator
-  uint8_t flag;      // State / life-cycle flag
-
-  uint32_t count;    // Frame counter
-
+// ── LaserBase ───────────────────────────────────────────────────
+template <typename SI> struct LaserBase {
+  LaserBase(const LaserBase &) = delete;
+  LaserBase(LaserBase &&) = delete;
+  LaserBase &operator=(const LaserBase &) = delete;
+  LaserBase &operator=(LaserBase &&) = delete;
   virtual ~LaserBase() = default;
 
-  virtual void Move() = 0;
-  virtual void Draw() const = 0;
-  virtual void HitCheck() = 0;
+  virtual void Render() const = 0;
   virtual bool IsDead() const = 0;
-  virtual void StartClear() = 0;
+  virtual void Kill() = 0;
+  virtual void Spawn(const SI &info) = 0;
+  virtual HitResult CheckHit(int player_x, int player_y) const = 0;
+
+  [[nodiscard]] int X() const { return x_; }
+  [[nodiscard]] int Y() const { return y_; }
+  [[nodiscard]] uint8_t Dir() const { return d_; }
+
+protected:
+  int x_{};
+  int y_{};
+  int v_{};
+  uint8_t d_{};
+  uint8_t c_{};
+  uint32_t count_{};
 };

@@ -550,7 +550,7 @@ void BossManager::KillAll() {
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SfxId::Bossbomb, e->x);
       if (e->LLaserRef != 0U) {
-        Lasers.ForceCloseLong(e); // Force close laser
+        Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
       }
       e->hp = 0;
       e->count = 0;
@@ -574,7 +574,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SfxId::Bossbomb, e.x);
     if (e.LLaserRef != 0U) {
-      Lasers.ForceCloseLong(&e); // Force close laser
+      Lasers.ApplyLongLasers(&e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
     }
     Players.PowerUp(Cast::down<uint8_t>(e.hp));
     e.hp = 0;
@@ -595,7 +595,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
       Items.Spawn(e.x, e.y, e.item);
     }
     Players.AddScore(e.score);
-    Lasers.Clear();
+    Lasers.ClearAll();
     b.IsUsed = false;
     count--; // Uses boss reference count?
   } else {

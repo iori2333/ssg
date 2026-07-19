@@ -4,87 +4,69 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
 
 #include "core/laser_pool.h"
-#include "laser_reflect.h"
-#include "long_laser.h"
-#include "homing_laser.h"
+#include "laser/homing.h"
+#include "laser/reflect.h"
+#include "laser/long.h"
+
+struct EnemyData;
 
 struct LaserManager {
-  // --- Pools ---
-  LaserPool<LaserReflect, LASER_MAX> reflect;
-  LaserPool<LaserLong, LLASER_MAX> long_lasers;
-  LaserPool<LaserHoming, HLASER_MAX> homing;
+  LaserPool<LaserReflect, kReflectMax> reflect;
+  LaserPool<LaserLong, kLongLaserMax> long_lasers;
+  LaserPool<LaserHoming, kHomingMax> homing;
 
-  // --- Command buffers ---
-  LaserCommand cmd{};
-  LongLaserCommand long_cmd{};
-  HomingLaserInfo homing_cmd{};
+  void Init();
 
-  // ================================================================
-  //  Init
-  // ================================================================
-  void SetIndices();
-  void SetupLong();
-  void InitHoming();
+  bool SpawnReflect(const ReflectSpawnInfo &info);
+  bool SpawnLongLaser(const LongLaserSpawnInfo &info);
+  bool SpawnHoming(const HomingSpawnInfo &info);
 
-  // ================================================================
-  //  Spawn (signatures preserved for ECL compatibility)
-  // ================================================================
-  void Spawn();
-  void SpawnEX();
-  bool SpawnLongLaser(uint8_t id);
-  void SpawnHoming(const HomingLaserInfo *info);
-
-  // ================================================================
-  //  Per-frame (MoveAll / DrawAll / ClearAll are the unified entry
-  //  points; old names kept as inline wrappers for callers)
-  // ================================================================
-  void MoveAll();
-  void DrawAll() const;
+  void UpdateAll();
+  void HitCheckAll() const;
+  void RenderAll() const;
   void ClearAll();
 
-  // backward-compat wrappers
-  void Move()   { MoveAll(); }
-  void Draw()   { DrawAll(); }
-  void Clear()  { ClearAll(); }
+  void Move() { UpdateAll(); }
+  void Draw() { RenderAll(); }
+  void Clear() { ClearAll(); }
 
-  // ================================================================
-  //  Long laser controls (unchanged signatures)
-  // ================================================================
-  void OpenLong(const EnemyData *e, uint8_t id);
-  void CloseLong(const EnemyData *e, uint8_t id);
-  void LineLong(const EnemyData *e, uint8_t id);
-  void RotateLongAbs(const EnemyData *e, uint8_t d, uint8_t id);
-  void RotateLongRel(const EnemyData *e, char d, uint8_t id);
-  void ForceCloseLong(const EnemyData *e);
-  void MoveLong();
-  void DrawLong() const;
+  template <typename Fn>
+  void ApplyReflectLasers(Fn fn) {
+    for (auto &r : reflect) {
+      fn(r);
+    }
+  }
+
+  template <typename Fn>
+  void ApplyHomingLasers(Fn fn) {
+    for (auto &h : homing) {
+      fn(h);
+    }
+  }
+
+  template <typename Fn>
+  void ApplyLongLasers(const EnemyData *e, uint8_t id, Fn fn) {
+    for (auto &ll : long_lasers) {
+      if (ll.BelongsTo(e, id)) {
+        fn(ll);
+      }
+    }
+  }
+
+  void RenderReflect() const;
+  void RenderLong() const;
+  void RenderHoming() const;
+  void ClearReflect();
   void ClearLong();
-
-  // ================================================================
-  //  Homing laser (unchanged signatures — will convert in Phase 4)
-  // ================================================================
-  void MoveHoming();
-  void DrawHoming() const;
   void ClearHoming();
 
-  // ================================================================
-  //  Cross-pool helpers
-  // ================================================================
-  int HitReflect(const LaserReflect *lp);
-
-  // --- Long laser geometry helper (used by LaserLong::Move) ---
-  void SetLongPoint(LaserLong *lp);
-
 private:
-  // --- Difficulty scaling ---
-  void SetEasy();
-  void SetHard();
-  void SetLunatic();
-  [[nodiscard]] uint8_t CalcDir(uint16_t i) const;
+  void UpdateReflect();
+  void UpdateLong();
+  void UpdateHoming();
 };
 
 extern LaserManager Lasers;

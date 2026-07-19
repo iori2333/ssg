@@ -5,61 +5,118 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
+#include <type_traits>
 #include <utility>
 
+#include <concepts>
+
+#include "bullet/laser_base.h"
 #include "core/entity.h"
 
 template <typename T, std::size_t N>
+  requires std::derived_from<T, LaserBase<typename T::SpawnInfo>>
 struct LaserPool {
-  std::array<T, N> data{};
-  std::array<std::uint16_t, N> indices{};
-  std::uint16_t count = 0;
+  // ── Forward iterator ─────────────────────────────────────────
+  template <bool IsConst>
+  struct Iterator {
+    using iterator_concept = std::forward_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
 
-  // Reset indices to 0..N-1 and count to 0.
-  void Init() noexcept {
-    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(N); i++) {
-      indices[i] = i;
+    using pointer = std::conditional_t<IsConst, const T *, T *>;
+    using reference = std::conditional_t<IsConst, const T &, T &>;
+
+    using DataPtr = std::conditional_t<IsConst, const T *, T *>;
+
+    constexpr Iterator(DataPtr data, const std::size_t *indices,
+                       std::size_t pos) noexcept
+        : data_(data), indices_(indices), pos_(pos) {}
+
+    constexpr reference operator*() const noexcept {
+      return data_[indices_[pos_]];
     }
-    count = 0;
+    constexpr pointer operator->() const noexcept {
+      return &data_[indices_[pos_]];
+    }
+
+    constexpr Iterator &operator++() noexcept {
+      ++pos_;
+      return *this;
+    }
+    constexpr Iterator operator++(int) noexcept {
+      auto tmp = *this;
+      ++pos_;
+      return tmp;
+    }
+
+    constexpr bool operator==(const Iterator &other) const noexcept {
+      return pos_ == other.pos_;
+    }
+
+  private:
+    DataPtr data_{};
+    const std::size_t *indices_{};
+    std::size_t pos_{};
+  };
+
+  using iterator = Iterator<false>;
+  using const_iterator = Iterator<true>;
+
+  // ── Iteration ────────────────────────────────────────────────
+  constexpr iterator begin() noexcept {
+    return {data_.data(), indices_.data(), 0};
+  }
+  constexpr iterator end() noexcept {
+    return {data_.data(), indices_.data(), count_};
+  }
+  constexpr const_iterator begin() const noexcept {
+    return {data_.data(), indices_.data(), 0};
+  }
+  constexpr const_iterator end() const noexcept {
+    return {data_.data(), indices_.data(), count_};
   }
 
-  // Allocate the next free slot. Returns nullptr if the pool is full.
-  // The caller is responsible for initialising the returned object.
+  // ── Operations ───────────────────────────────────────────────
+  void Init() noexcept {
+    for (std::size_t i = 0; i < N; i++) {
+      indices_[i] = i;
+    }
+    count_ = 0;
+  }
+
   [[nodiscard]] T *Alloc() noexcept {
-    if (count == static_cast<std::uint16_t>(N)) {
+    if (count_ == N) {
       return nullptr;
     }
-    return &data[indices[count++]];
+    return &data_[indices_[count_++]];
   }
 
-  // Access an active element by its logical position (0 ≤ i < count).
-  T &Active(std::uint16_t i) noexcept { return data[indices[i]]; }
-  [[nodiscard]] const T &Active(std::uint16_t i) const noexcept {
-    return data[indices[i]];
+  T &Active(std::size_t i) noexcept { return data_[indices_[i]]; }
+  [[nodiscard]] const T &Active(std::size_t i) const noexcept {
+    return data_[indices_[i]];
   }
 
-  // Map a logical active index to the raw slot index.
-  [[nodiscard]] std::uint16_t RawIndex(std::uint16_t active_i) const noexcept {
-    return indices[active_i];
+  [[nodiscard]] std::size_t RawIndex(std::size_t active_i) const noexcept {
+    return indices_[active_i];
   }
 
-  // Reverse-map: given a pointer to an element inside data[],
-  // return its raw slot index (data[T* - data.data()]).
-  [[nodiscard]] std::uint16_t RawIndexOf(const T *p) const noexcept {
-    return static_cast<std::uint16_t>(p - data.data());
+  [[nodiscard]] std::size_t RawIndexOf(const T *p) const noexcept {
+    return static_cast<std::size_t>(p - data_.data());
   }
 
-  // Compact the pool: move all elements for which is_dead returns true
-  // past `count`, then shrink count to the first dead slot.
-  template <typename Pred>
-  void Compact(Pred is_dead) noexcept {
-    Indsort(indices, count, data, std::move(is_dead));
+  template <typename Pred> void Compact(Pred is_dead) noexcept {
+    Indsort(indices_, count_, data_, std::move(is_dead));
   }
 
-  [[nodiscard]] bool IsFull() const noexcept {
-    return count == static_cast<std::uint16_t>(N);
-  }
-  [[nodiscard]] bool IsEmpty() const noexcept { return count == 0; }
-  [[nodiscard]] std::uint16_t Size() const noexcept { return count; }
+  [[nodiscard]] bool IsFull() const noexcept { return count_ == N; }
+  [[nodiscard]] bool IsEmpty() const noexcept { return count_ == 0; }
+  [[nodiscard]] std::size_t Size() const noexcept { return count_; }
+
+private:
+  std::array<T, N> data_{};
+  std::array<std::size_t, N> indices_{};
+  std::size_t count_ = 0;
 };
