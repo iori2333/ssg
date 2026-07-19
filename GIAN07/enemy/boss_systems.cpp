@@ -124,7 +124,7 @@ void BossManager::SnakyDelete(const BossData *b) {
 
     // Snd_SEPlay(SfxId::Bomb, e->x);
     if (e->LLaserRef != 0U) {
-      Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
+      Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     // PowerUp(e->hp);			// Power up
     e->hp = 0;
@@ -293,7 +293,7 @@ void BossManager::BitMove() {
 
       // Send deletion request to enemy associated with bit array
       if (e->LLaserRef != 0U) {
-        Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); });
+Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
       }
       e->hp = 0;
       e->count = 0; // For explosion animation set
@@ -484,10 +484,10 @@ void BossManager::BitSTDRoll() {
         break;
       }
       LaserDeg = 64 + (256 / bit_data.NumBits);
-      Lasers.ApplyLongLasers(e, 0,
-          [d = e->d + LaserDeg](auto &ll) { ll.SetAngle(d); });
-      Lasers.ApplyLongLasers(e, 1,
-          [d = e->d - LaserDeg](auto &ll) { ll.SetAngle(d); });
+      Lasers.ControlLongLaser(e, 0,
+          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle, static_cast<uint8_t>(e->d + LaserDeg)});
+      Lasers.ControlLongLaser(e, 1,
+          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle, static_cast<uint8_t>(e->d - LaserDeg)});
       break;
     }
   }
@@ -510,7 +510,7 @@ void BossManager::BitDelete() {
     }
 
     if (e->LLaserRef != 0U) {
-      Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); });
+      Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     e->hp = 0;
     e->count = 0;
@@ -647,20 +647,20 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       break;
 
     case BLASERCMD_OPEN:
-      Lasers.ApplyLongLasers(e, ECLCST_LLASERALL,
-                             [](auto &ll) { ll.Open(); });
+      Lasers.ControlLongLaser(e, ECLCST_LLASERALL,
+                              LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
       continue;
 
     case BLASERCMD_CLOSE:
-      Lasers.ApplyLongLasers(e, ECLCST_LLASERALL,
-                             [](auto &ll) { ll.Close(); });
+      Lasers.ControlLongLaser(e, ECLCST_LLASERALL,
+                              LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
       e->LLaserRef = 0;
       bit_data.bIsLaserEnable = false;
       continue;
 
     case BLASERCMD_CLOSEL:
-      Lasers.ApplyLongLasers(e, ECLCST_LLASERALL,
-                             [](auto &ll) { ll.CloseToLine(); });
+      Lasers.ControlLongLaser(e, ECLCST_LLASERALL,
+                              LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
       continue;
     }
 

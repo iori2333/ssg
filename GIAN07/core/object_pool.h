@@ -1,5 +1,5 @@
 ///
-/// LaserPool - Fixed-capacity entity pool with index-based compaction
+/// ObjectPool - Fixed-capacity entity pool with index-based compaction
 ///
 
 #pragma once
@@ -13,12 +13,12 @@
 
 #include <concepts>
 
-#include "bullet/laser_base.h"
+#include "bullet/bullet_base.h"
 #include "core/entity.h"
 
 template <typename T, std::size_t N>
-  requires std::derived_from<T, LaserBase<typename T::SpawnInfo>>
-struct LaserPool {
+  requires std::derived_from<T, BulletBase<typename T::SpawnInfo, typename T::UpdateInfo>>
+struct ObjectPool {
   // ── Forward iterator ─────────────────────────────────────────
   template <bool IsConst>
   struct Iterator {

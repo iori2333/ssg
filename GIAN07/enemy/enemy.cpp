@@ -126,10 +126,8 @@ void EnemyManager::Move() {
       if ((e->t_rep != 0U) && (e->hp != 0U)) {
         e->tama_c = (e->tama_c + 1) % (e->t_rep);
         if (e->tama_c == 0) {
-          Bullets.command = e->t_cmd;
-          Bullets.command.x += e->x;
-          Bullets.command.y += e->y;
-          Bullets.Spawn();
+          auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, true);
+          Bullets.Spawn(si);
         }
       }
 
@@ -148,7 +146,7 @@ void EnemyManager::Move() {
           (e->x < GX_MIN - (e->g_width)) || (e->x > GX_MAX + (e->g_width))) {
         if ((e->flag & EF_CLIP) == 0) {
           if (e->LLaserRef != 0U) {
-            Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); });
+            Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
           }
           e->flag = EF_DELETE;
         }
@@ -210,7 +208,7 @@ void EnemyManager::Clear() {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef != 0U) {
-        Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
+        Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
       Snd_SEPlay(SfxId::Bomb, e->x);
     } else {
@@ -220,7 +218,7 @@ void EnemyManager::Clear() {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef != 0U) {
-        Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
+        Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
       // Do not play explosion sound
     }
@@ -246,7 +244,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   if (std::cmp_less_equal(e.hp, damage)) {
     Snd_SEPlay(SfxId::Bomb, e.x);
     if (e.LLaserRef != 0U) {
-      Lasers.ApplyLongLasers(&e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
+      Lasers.ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     Players.PowerUp(static_cast<uint8_t>(e.hp)); // Power up
     e.hp = 0;
@@ -601,12 +599,12 @@ ECL_HEAD:
     break;
 
   case ECL_LLOPEN: // Long laser open cmd,id
-    Lasers.ApplyLongLasers(e, cmd[1], [](auto &ll) { ll.Open(); });
+    Lasers.ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
     bRetFlag = false;
     break;
 
   case ECL_LLCLOSE: // Long laser close (delete & decrement ref count) cmd,id
-    Lasers.ApplyLongLasers(e, cmd[1], [](auto &ll) { ll.Close(); });
+    Lasers.ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
     if (cmd[1] == ECLCST_LLASERALL) {
       e->LLaserRef = 0;
     } else {
@@ -616,14 +614,14 @@ ECL_HEAD:
     break;
 
   case ECL_LLCLOSEL: // Long laser to line state cmd,id
-    Lasers.ApplyLongLasers(e, cmd[1], [](auto &ll) { ll.CloseToLine(); });
+    Lasers.ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
     bRetFlag = false;
     break;
 
   case ECL_LLDEGR: // Long laser relative angle change cmd,id,deg
     // Order is reversed, so be careful
-    Lasers.ApplyLongLasers(e, cmd[1],
-        [delta = Cast::sign<int8_t>(cmd[2])](auto &ll) { ll.AdjustAngle(delta); });
+    Lasers.ControlLongLaser(e, cmd[1],
+        LongLaserUpdateInfo{LongLaserUpdateInfo::Command::AdjustAngle, 0, Cast::sign<int8_t>(cmd[2])});
     bRetFlag = false;
     break;
 
@@ -640,7 +638,7 @@ ECL_HEAD:
   case ECL_END: // Force enemy deletion
     ECL_DEBUG("ECL_END", 0);
     if (e->LLaserRef != 0U) {
-      Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
+      Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     e->flag = EF_DELETE; // To be changed later
     return;              // Bug prevention (maybe)
@@ -1170,34 +1168,34 @@ ECL_HEAD:
     break;
 
   case ECL_TAMA: // Fire bullet
-    Bullets.command = e->t_cmd;
-    Bullets.command.x += e->x;
-    Bullets.command.y += e->y;
-    Bullets.Spawn();
+    {
+      auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, true);
+      Bullets.Spawn(si);
+    }
     bRetFlag = false;
     break;
 
   case ECL_TAMA2: // Fire bullet (no difficulty change)
-    Bullets.command = e->t_cmd;
-    Bullets.command.x += e->x;
-    Bullets.command.y += e->y;
-    Bullets.SpawnEX();
+    {
+      auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false);
+      Bullets.Spawn(si);
+    }
     bRetFlag = false;
     break;
 
   case ECL_TAMAL: // Fire bullets in a line
-    Bullets.command = e->t_cmd;
-    Bullets.command.x += e->x;
-    Bullets.command.y += e->y;
-    Bullets.SpawnLine();
+    {
+      auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false);
+      Bullets.SpawnLine(si);
+    }
     bRetFlag = false;
     break;
 
   case ECL_TAMAEX:
-    Bullets.command = e->t_cmd;
-    Bullets.command.x += e->x;
-    Bullets.command.y += e->y;
-    Bullets.SpawnExtra01();
+    {
+      auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false);
+      Bullets.SpawnExtra01(si);
+    }
     bRetFlag = false;
     break;
 

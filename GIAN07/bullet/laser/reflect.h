@@ -7,7 +7,7 @@
 #include <optional>
 #include <span>
 
-#include "../laser_base.h"
+#include "../bullet_base.h"
 
 #include "gfx/graphics_backend.h"
 
@@ -61,30 +61,34 @@ enum class ReflectState : uint8_t {
 // ── Pool capacity ──────────────────────────────────────────────
 inline constexpr auto kReflectMax = 1000;
 
+// ── Update info ────────────────────────────────────────────────
+struct ReflectUpdateInfo {
+  std::span<const LaserLong *> longs;
+
+  struct UpdateResult {
+    bool spawn_requested = false;
+    ReflectSpawnInfo spawn_info;
+  };
+};
+
 // ── LaserReflect ───────────────────────────────────────────────
-struct LaserReflect : LaserBase<ReflectSpawnInfo> {
+struct LaserReflect : BulletBase<ReflectSpawnInfo, ReflectUpdateInfo> {
   using SpawnInfo = ReflectSpawnInfo;
+  using UpdateInfo = ReflectUpdateInfo;
+
+  friend struct LaserManager;
 
   void Render() const override;
   bool IsDead() const override;
   void Kill() override;
   void Spawn(const ReflectSpawnInfo &info) override;
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y) const override;
-
-  [[nodiscard]] std::optional<ReflectSpawnInfo>
-  Update(std::span<const LaserLong *> longs);
-
-  void MarkDead() { state_ = ReflectState::Dead; }
-
-  [[nodiscard]] ReflectState State() const { return state_; }
-  [[nodiscard]] int W() const { return w_; }
-  [[nodiscard]] std::span<const VERTEX_XY, 4> P() const { return p_; }
-  [[nodiscard]] int WX() const { return wx_; }
-  [[nodiscard]] int WY() const { return wy_; }
-  [[nodiscard]] int LX() const { return lx_; }
-  [[nodiscard]] int LY() const { return ly_; }
+  [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
+  void RenderDebugHitbox(int mode) const override;
 
 private:
+  void MarkDead() { state_ = ReflectState::Dead; }
+
   int vx_{};
   int vy_{};
   int lx_{};
@@ -106,15 +110,13 @@ private:
   void SetupGeometry();
 
   void UpdateGrowing();
-  [[nodiscard]] std::optional<ReflectSpawnInfo>
-  UpdateFlying(std::span<const LaserLong *> longs);
-  [[nodiscard]] std::optional<ReflectSpawnInfo>
-  UpdateShooting(std::span<const LaserLong *> longs);
+  [[nodiscard]] UpdateResult UpdateFlying(std::span<const LaserLong *> longs);
+  [[nodiscard]] UpdateResult UpdateShooting(std::span<const LaserLong *> longs);
   void UpdateReflected();
   void UpdateNoMove();
   void UpdateClearing();
 
-  [[nodiscard]] static std::optional<ReflectSpawnInfo>
+  [[nodiscard]] static UpdateResult
   CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
                  int dx, int dy);
 

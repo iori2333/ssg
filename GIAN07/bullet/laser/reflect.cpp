@@ -9,10 +9,15 @@
 
 #include "bullet/bullet_common.h"
 #include "core/gian.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
 #include "player/player.h"
+#include "util/cast.h"
 #include "util/ut_math.h"
+
+namespace {
+inline constexpr auto kDebugLaserEvadeWidth = 12 * 64;
+} // namespace
 
 // Laser geometry:
 //   3-----------------Length---> >----------2
@@ -42,36 +47,36 @@ void LaserReflect::SetupGeometry() {
 
 // ── Reflection check ────────────────────────────────────────────────
 
-std::optional<ReflectSpawnInfo>
+LaserReflect::UpdateResult
 LaserReflect::CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
                              int dx, int dy) {
-  if (!ll.IsReflectable()) {
-    return std::nullopt;
+  if (ll.state_ != LongState::Active) {
+    return {};
   }
 
   const long lx = self.x_ + cosl(self.d_, self.l_);
   const long ly = self.y_ + sinl(self.d_, self.l_);
 
-  const long tx = lx - ll.X();
-  const long ty = ly - ll.Y();
-  const long length = cosl(ll.Dir(), tx) + sinl(ll.Dir(), ty);
-  const long width = std::abs(-sinl(ll.Dir(), tx) + cosl(ll.Dir(), ty));
+  const long tx = lx - ll.x_;
+  const long ty = ly - ll.y_;
+  const long length = cosl(ll.d_, tx) + sinl(ll.d_, ty);
+  const long width = std::abs(-sinl(ll.d_, tx) + cosl(ll.d_, ty));
 
-  if (length <= 0 || width > ll.W()) {
-    return std::nullopt;
+  if (length <= 0 || width > ll.w_) {
+    return {};
   }
 
   // Only reflect if the head is moving toward the beam centre.
   // If it is moving away, we are in the post-reflection tail and
   // the head merely hasn't cleared the beam's width yet.
-  const long signed_width = -sinl(ll.Dir(), tx) + cosl(ll.Dir(), ty);
-  const long vel_norm = -sinl(ll.Dir(), dx) + cosl(ll.Dir(), dy);
+  const long signed_width = -sinl(ll.d_, tx) + cosl(ll.d_, ty);
+  const long vel_norm = -sinl(ll.d_, dx) + cosl(ll.d_, dy);
 
-  if (signed_width * vel_norm > 0 || (vel_norm == 0 && width <= ll.W())) {
-    return std::nullopt;
+  if (signed_width * vel_norm > 0 || (vel_norm == 0 && width <= ll.w_)) {
+    return {};
   }
 
-  return ReflectSpawnInfo{
+  return UpdateResult{true, ReflectSpawnInfo{
       .no_scaling = true,
       .x = static_cast<int>(lx),
       .y = static_cast<int>(ly),
@@ -79,12 +84,12 @@ LaserReflect::CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
       .w = self.w_,
       .l = self.lmax_,
         .d = static_cast<uint8_t>(-static_cast<int>(self.d_) +
-                                  (static_cast<int>(ll.Dir()) << 1)),
+                                  (static_cast<int>(ll.d_) << 1)),
       .n = 1,
       .c = self.c_,
       .cmd = bullet_common::kCmdWay,
       .cmd_type = static_cast<uint8_t>(ReflectLaserType::Reflect),
-  };
+  }};
 }
 
 // ── Spawn ────────────────────────────────────────────────────────────
@@ -133,40 +138,32 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
 
 // ── State machine ───────────────────────────────────────────────────
 
-std::optional<ReflectSpawnInfo>
-LaserReflect::Update(std::span<const LaserLong *> longs) {
+auto LaserReflect::Update(const UpdateInfo &info) -> UpdateResult {
   ++count_;
 
-  std::optional<ReflectSpawnInfo> result;
+  UpdateResult result;
 
   switch (state_) {
   case ReflectState::Idle:
     break;
-
   case ReflectState::Growing:
     UpdateGrowing();
     break;
-
   case ReflectState::Flying:
-    result = UpdateFlying(longs);
+    result = UpdateFlying(info.longs);
     break;
-
   case ReflectState::Shooting:
-    result = UpdateShooting(longs);
+    result = UpdateShooting(info.longs);
     break;
-
   case ReflectState::Reflected:
     UpdateReflected();
     break;
-
   case ReflectState::NoMove:
     UpdateNoMove();
     break;
-
   case ReflectState::Clearing:
     UpdateClearing();
     break;
-
   case ReflectState::Dead:
     break;
   }
@@ -192,24 +189,22 @@ void LaserReflect::UpdateGrowing() {
   }
 }
 
-std::optional<ReflectSpawnInfo>
-LaserReflect::UpdateFlying(std::span<const LaserLong *> longs) {
+auto LaserReflect::UpdateFlying(std::span<const LaserLong *> longs) -> UpdateResult {
   x_ += vx_;
   y_ += vy_;
   SetupGeometry();
 
   for (const auto *ll : longs) {
-    if (auto hit = CheckLongLaser(*this, *ll, vx_, vy_)) {
+    if (auto hit = CheckLongLaser(*this, *ll, vx_, vy_); hit.spawn_requested) {
       state_ = ReflectState::Reflected;
       return hit;
     }
   }
 
-  return std::nullopt;
+  return {};
 }
 
-std::optional<ReflectSpawnInfo>
-LaserReflect::UpdateShooting(std::span<const LaserLong *> longs) {
+auto LaserReflect::UpdateShooting(std::span<const LaserLong *> longs) -> UpdateResult {
   l_ += v_;
   lx_ = cosl(d_, l_ >> 6);
   ly_ = sinl(d_, l_ >> 6);
@@ -221,21 +216,21 @@ LaserReflect::UpdateShooting(std::span<const LaserLong *> longs) {
 
   if (l_ >= lmax_) {
     state_ = ReflectState::Flying;
-    return std::nullopt;
+    return {};
   }
 
   const int dx = cosl(d_, v_);
   const int dy = sinl(d_, v_);
 
   for (const auto *ll : longs) {
-    if (auto hit = CheckLongLaser(*this, *ll, dx, dy)) {
+    if (auto hit = CheckLongLaser(*this, *ll, dx, dy); hit.spawn_requested) {
       ltemp_ = l_;
       state_ = ReflectState::Reflected;
       return hit;
     }
   }
 
-  return std::nullopt;
+  return {};
 }
 
 void LaserReflect::UpdateReflected() {
@@ -352,5 +347,38 @@ void LaserReflect::Kill() {
   if (state_ != ReflectState::Clearing && state_ != ReflectState::Dead) {
     state_ = ReflectState::Clearing;
     count_ = 0;
+  }
+}
+
+// ── Debug ─────────────────────────────────────────────────────────
+
+void LaserReflect::RenderDebugHitbox(int mode) const {
+  if (state_ == ReflectState::Dead || state_ == ReflectState::Clearing) {
+    return;
+  }
+  auto *gp = GrpGeom_Poly();
+  if (gp == nullptr) {
+    return;
+  }
+  const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
+  gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+
+  if (mode >= 2 && w_ > 0) {
+    const int bx = x_ >> 6;
+    const int by = y_ >> 6;
+    const int scale = (w_ + kDebugLaserEvadeWidth);
+    const int wx2 = wx_ * scale / w_;
+    const int wy2 = wy_ * scale / w_;
+    VERTEX_XY ep[4];
+    ep[1].x = ep[0].x = static_cast<float>(bx + wx2);
+    ep[1].y = ep[0].y = static_cast<float>(by + wy2);
+    ep[2].x = ep[3].x = static_cast<float>(bx - wx2);
+    ep[2].y = ep[3].y = static_cast<float>(by - wy2);
+    ep[1].x += static_cast<float>(lx_);
+    ep[1].y += static_cast<float>(ly_);
+    ep[2].x += static_cast<float>(lx_);
+    ep[2].y += static_cast<float>(ly_);
+    const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
+    gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
   }
 }

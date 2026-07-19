@@ -550,7 +550,7 @@ void BossManager::KillAll() {
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SfxId::Bossbomb, e->x);
       if (e->LLaserRef != 0U) {
-        Lasers.ApplyLongLasers(e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
+        Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
       e->hp = 0;
       e->count = 0;
@@ -574,7 +574,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SfxId::Bossbomb, e.x);
     if (e.LLaserRef != 0U) {
-      Lasers.ApplyLongLasers(&e, ECLCST_LLASERALL, [](auto &ll) { ll.ForceClose(); }); // Force close laser
+      Lasers.ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     Players.PowerUp(Cast::down<uint8_t>(e.hp));
     e.hp = 0;
@@ -778,10 +778,8 @@ void BossManager::STDMove(BossData *b) {
   if (e->t_rep != 0U) {
     e->tama_c = (e->tama_c + 1) % (e->t_rep);
     if (e->tama_c == 0) {
-      Bullets.command = e->t_cmd;
-      Bullets.command.x += e->x;
-      Bullets.command.y += e->y;
-      Bullets.Spawn();
+      auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, true);
+      Bullets.Spawn(si);
     }
   }
 

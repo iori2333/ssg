@@ -6,7 +6,7 @@
 
 #include <span>
 
-#include "../laser_base.h"
+#include "../bullet_base.h"
 
 #include "enemy/enemy.h"
 #include "gfx/graphics_backend.h"
@@ -45,48 +45,49 @@ enum class LongState : uint8_t {
   Line = 0x10,
 };
 
+// ── Update info (per-frame tick or external control command) ─────
+struct LongLaserUpdateInfo {
+  enum class Command : uint8_t {
+    Tick,
+    Open,
+    Close,
+    CloseToLine,
+    ForceClose,
+    SetAngle,
+    AdjustAngle,
+    SetEnemyGone,
+  };
+  Command command = Command::Tick;
+  uint8_t angle = 0;
+  int8_t delta = 0;
+
+  struct UpdateResult {};
+};
+
 // ── LaserLong ────────────────────────────────────────────────────
-struct LaserLong : LaserBase<LongLaserSpawnInfo> {
+struct LaserLong : BulletBase<LongLaserSpawnInfo, LongLaserUpdateInfo> {
   using SpawnInfo = LongLaserSpawnInfo;
+  using UpdateInfo = LongLaserUpdateInfo;
+
+  friend struct LaserManager;
+  friend struct LaserReflect; // for reflection on long lasers, must keep
 
   void Render() const override;
   bool IsDead() const override;
   void Kill() override;
   void Spawn(const LongLaserSpawnInfo &info) override;
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y) const override;
+  [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
+  void RenderDebugHitbox(int mode) const override;
 
-  void Update();
-
-  void Open();
-  void Close();
-  void CloseToLine();
-  void ForceClose();
-  void SetAngle(uint8_t angle);
-  void AdjustAngle(int8_t delta);
-  void SetEnemyGone();
+private:
   [[nodiscard]] bool BelongsTo(const EnemyData *e, uint8_t id) const;
-
-  void RecalcGeometry();
-
-  [[nodiscard]] LongState State() const { return state_; }
-  [[nodiscard]] int W() const { return w_; }
-  [[nodiscard]] std::span<const VERTEX_XY, 4> P() const { return p_; }
-  [[nodiscard]] int WX() const { return wx_; }
-  [[nodiscard]] int WY() const { return wy_; }
-  [[nodiscard]] int LX() const { return lx_; }
-  [[nodiscard]] int LY() const { return ly_; }
-  [[nodiscard]] int InfX() const { return infx_; }
-  [[nodiscard]] int InfY() const { return infy_; }
-  [[nodiscard]] bool IsReflectable() const {
-    return state_ == LongState::Active;
-  }
 
   void MarkDead() {
     state_ = LongState::Inactive;
     e_ = nullptr;
   }
 
-private:
   const EnemyData *e_{};
   int dx_{};
   int dy_{};
@@ -104,8 +105,13 @@ private:
   LongLaserType subtype_{LongLaserType::Long};
   LongState state_{LongState::Inactive};
 
+  void RecalcGeometry();
   void UpdateOpening();
   void UpdateClosing();
+  void TickUpdate();
+  void ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle, int8_t delta);
+  void FixAngleGeometry();
+
   void DrawBeam() const;
   void DrawPreviewLine() const;
 };

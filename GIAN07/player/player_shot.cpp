@@ -95,35 +95,35 @@ void Player::MoveMaidShot() {
 
   for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
     auto *t = &maid_tama_[maid_tama_ind_[i]];
-    if (t->c == TID_HOMING_BOMB_B) {
-      Enemies.DamageAt(t->x, t->y, TogeDamage[t->c]);
-      t->count++;
-      if (t->count >= 19) {
-        t->flag = TF_DELETE;
+    if (t->c_ == TID_HOMING_BOMB_B) {
+      Enemies.DamageAt(t->x_, t->y_, TogeDamage[t->c_]);
+      t->count_++;
+      if (t->count_ >= 19) {
+        t->flag_ = TF_DELETE;
       }
       continue;
     }
-    if (t->effect == TE_NONE) {
+    if (t->effect_ == TE_NONE) {
       BulletManager::MoveByType(t);
       Bullets.MoveByOption(t);
-      t->count++;
-      if (((t->flag & TF_CLIP) == 0) && ((t->x) < GX_MIN || (t->x) > GX_MAX ||
-                                         (t->y) < GY_MIN || (t->y) > GY_MAX)) {
-        t->flag = TF_DELETE;
+      t->count_++;
+      if (((t->flag_ & TF_CLIP) == 0) && ((t->x_) < GX_MIN || (t->x_) > GX_MAX ||
+                                         (t->y_) < GY_MIN || (t->y_) > GY_MAX)) {
+        t->flag_ = TF_DELETE;
       }
 
-      if (Enemies.DamageAt(t->x, t->y, TogeDamage[t->c])) {
-        if (t->c == TID_HOMING_BOMB_A) {
+      if (Enemies.DamageAt(t->x_, t->y_, TogeDamage[t->c_])) {
+        if (t->c_ == TID_HOMING_BOMB_A) {
           TamaSTDForm(TID_HOMING_BOMB_B);
           Bullets.command.type = T_SBHBOMB;
-          TamaSetXY(t->x, t->y);
+          TamaSetXY(t->x_, t->y_);
           TamaSetDeg(-64, 16);
           TamaSetSpd(10, 0);
           TamaSetNum(1, 0);
           SpawnShot_();
         }
-        t->flag = TF_DELETE;
-        Effects.SpawnFragment(t->x, t->y, FRG_HIT);
+        t->flag_ = TF_DELETE;
+        Effects.SpawnFragment(t->x_, t->y_, FRG_HIT);
       }
     } else {
       {
@@ -132,7 +132,7 @@ void Player::MoveMaidShot() {
     }
   }
   Indsort(maid_tama_ind_, maid_tama_now_, maid_tama_,
-          [](const Bullet &t) { return (t.flag & TF_DELETE); });
+          [](const Bullet &t) { return (t.flag_ & TF_DELETE); });
 
   // Weapon-specific continuous-beam collision (laser).
   ActiveForm_()->OnCollisionTick();
@@ -155,45 +155,45 @@ void Player::DrawMaidShot() {
   for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
     auto *t = &maid_tama_[maid_tama_ind_[i]];
 
-    x = (t->x >> 6) - 8;
-    y = (t->y >> 6) - 8;
+    x = (t->x_ >> 6) - 8;
+    y = (t->y_ >> 6) - 8;
 
-    switch (t->c) {
+    switch (t->c_) {
     case TID_WIDE_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 176, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 176, 16, 16};
       break;
     case TID_WIDE_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 192, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 192, 16, 16};
       break;
     case TID_HOMING_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 208, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 208, 16, 16};
       break;
     case TID_HOMING_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 224, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 224, 16, 16};
       break;
     case TID_HOMING_BOMB_A:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 288, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 288, 16, 16};
       break;
     case TID_LASER_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 256, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 256, 16, 16};
       break;
 
     case TID_HOMING_BOMB_B:
-      src = HomingBomb[(t->count / 4) % 5];
+      src = HomingBomb[(static_cast<int>(t->count_) / 4) % 5];
       break;
 
     // Focus (low-speed) form shots reuse the base-form sprite rows.
     case TID_WIDE_FOCUS_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 176, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 176, 16, 16};
       break;
     case TID_WIDE_FOCUS_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 192, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 192, 16, 16};
       break;
     case TID_HOMING_FOCUS_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 208, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 208, 16, 16};
       break;
     case TID_HOMING_FOCUS_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d + 8) & 0xf0)), 224, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 224, 16, 16};
       break;
     }
 

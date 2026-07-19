@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../laser_base.h"
+#include "../bullet_base.h"
 
 #include "core/point.h"
 
@@ -38,24 +38,23 @@ enum class HomingState : uint8_t {
 };
 
 // ── LaserHoming ─────────────────────────────────────────────────
-struct LaserHoming : LaserBase<HomingSpawnInfo> {
+struct LaserHoming : BulletBase<HomingSpawnInfo, Empty> {
   using SpawnInfo = HomingSpawnInfo;
+  using UpdateInfo = Empty;
+
+  friend struct LaserManager;
 
   void Render() const override;
   bool IsDead() const override;
   void Kill() override;
   void Spawn(const HomingSpawnInfo &info) override;
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y) const override;
-
-  void Update();
-
-  [[nodiscard]] HomingState State() const { return state_; }
-  [[nodiscard]] int Current() const { return current_; }
-  [[nodiscard]] const DegPoint *Segments() const { return p_; }
-
-  void MarkDead() { state_ = HomingState::Dead; }
+  [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
+  void RenderDebugHitbox(int mode) const override;
 
 private:
+  void MarkDead() { state_ = HomingState::Dead; }
+
   int current_{};
   int a_{};
   uint8_t left_{};

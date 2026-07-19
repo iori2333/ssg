@@ -10,6 +10,8 @@
 #include "audio/snd.h"
 #include "bullet_common.h"
 #include "core/gian.h"
+#include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
 #include "gameflow/play_rank.h"
 #include "gameflow/rank_manager.h"
 #include "player/player.h"
@@ -122,8 +124,9 @@ void LaserManager::UpdateReflect() {
   std::span<const LaserLong *> long_span(active_longs.data(), long_count);
 
   for (auto &r : reflect) {
-    if (auto info = r.Update(long_span)) {
-      SpawnReflect(*info);
+    auto result = r.Update(ReflectUpdateInfo{long_span});
+    if (result.spawn_requested) {
+      SpawnReflect(result.spawn_info);
     }
     if (r.X() < GX_MIN || r.X() > GX_MAX || r.Y() < GY_MIN ||
         r.Y() > GY_MAX) {
@@ -164,7 +167,7 @@ void LaserManager::HitCheckAll() const {
         Players.OnHit();
         return;
       case HitResult::Graze:
-        Players.AddEvade(kLaserEvadeValue);
+        Players.AddEvade(kBulletEvadeValue);
         break;
       case HitResult::Miss:
         break;
@@ -227,3 +230,50 @@ void LaserManager::ClearLong() {
 }
 
 void LaserManager::ClearHoming() { homing.Init(); }
+
+// ── External control ──────────────────────────────────────────────
+
+void LaserManager::ControlLongLaser(const EnemyData *e, uint8_t id,
+                                    const LongLaserUpdateInfo &info) {
+  for (auto &ll : long_lasers) {
+    if (!ll.BelongsTo(e, id)) {
+      continue;
+    }
+    ll.Update(info);
+    switch (info.command) {
+    case LongLaserUpdateInfo::Command::Open:
+      Snd_SEPlay(static_cast<SfxId>(2), ll.X(), true);
+      break;
+    case LongLaserUpdateInfo::Command::Close:
+    case LongLaserUpdateInfo::Command::CloseToLine:
+    case LongLaserUpdateInfo::Command::ForceClose:
+      Snd_SEStop(2);
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+// ── Debug ──────────────────────────────────────────────────────────
+
+void LaserManager::RenderDebugHitboxes(int mode) const {
+  auto *gp = GrpGeom_Poly();
+  if (gp == nullptr) {
+    return;
+  }
+  const RGB216 kBlack{0, 0, 0};
+  constexpr uint8_t kAlpha = 204;
+  gp->SetColor(kBlack);
+  gp->SetAlphaNorm(kAlpha);
+
+  for (const auto &r : reflect) {
+    r.RenderDebugHitbox(mode);
+  }
+  for (const auto &ll : long_lasers) {
+    ll.RenderDebugHitbox(mode);
+  }
+  for (const auto &h : homing) {
+    h.RenderDebugHitbox(mode);
+  }
+}

@@ -34,6 +34,7 @@ inline constexpr RGB216 kTable8BitC[16] = {
 
 inline constexpr size_t kBeamVertexCount = 34;
 inline constexpr auto kBeamLength = 800;
+inline constexpr auto kDebugLaserEvadeWidth = 15 * 64;
 inline constexpr auto kLongLaserEvadeWidth = 15 * 64;
 
 } // namespace
@@ -90,77 +91,20 @@ void LaserLong::RecalcGeometry() {
   pp[2].y += infy_;
 }
 
-// ── Control methods ────────────────────────────────────────────────
+// ── Update ──────────────────────────────────────────────────────────
 
-void LaserLong::Open() {
-  if (state_ == LongState::Inactive) {
-    return;
+LaserLong::UpdateResult LaserLong::Update(const UpdateInfo &info) {
+  if (info.command == LongLaserUpdateInfo::Command::Tick) {
+    TickUpdate();
+  } else {
+    ApplyCommand(info.command, info.angle, info.delta);
   }
-  state_ = LongState::Opening;
-  Snd_SEPlay(static_cast<SfxId>(2), x_, true);
+  return {};
 }
 
-void LaserLong::Close() {
-  if (state_ == LongState::Inactive) {
-    return;
-  }
-  state_ = LongState::Closing;
-  Snd_SEStop(2);
-}
+// ── Per-frame tick ──────────────────────────────────────────────────
 
-void LaserLong::CloseToLine() {
-  if (state_ == LongState::Inactive) {
-    return;
-  }
-  state_ = LongState::ClosingToLine;
-  Snd_SEStop(2);
-}
-
-void LaserLong::ForceClose() {
-  state_ = LongState::Closing;
-  Snd_SEStop(2);
-}
-
-void LaserLong::SetAngle(uint8_t angle) {
-  d_ = angle;
-
-  lx_ = cosl(d_, w_ >> 6);
-  ly_ = sinl(d_, w_ >> 6);
-  wx_ = -(ly_);
-  wy_ = lx_;
-
-  infx_ = cosl(d_, kBeamLength);
-  infy_ = sinl(d_, kBeamLength);
-
-  RecalcGeometry();
-}
-
-void LaserLong::AdjustAngle(int8_t delta) {
-  d_ += delta;
-
-  lx_ = cosl(d_, w_ >> 6);
-  ly_ = sinl(d_, w_ >> 6);
-  wx_ = -(ly_);
-  wy_ = lx_;
-
-  infx_ = cosl(d_, kBeamLength);
-  infy_ = sinl(d_, kBeamLength);
-
-  RecalcGeometry();
-}
-
-void LaserLong::SetEnemyGone() {
-  state_ = LongState::Inactive;
-  e_ = nullptr;
-}
-
-bool LaserLong::BelongsTo(const EnemyData *e, uint8_t id) const {
-  return e_ == e && (enemy_id_ == id || id == ECLCST_LLASERALL);
-}
-
-// ── State machine ──────────────────────────────────────────────────
-
-void LaserLong::Update() {
+void LaserLong::TickUpdate() {
   ++count_;
 
   if (subtype_ == LongLaserType::SetDeg && e_ != nullptr && d_ != e_->d) {
@@ -369,4 +313,96 @@ void LaserLong::DrawPreviewLine() const {
   const int py = y_ >> 6;
   GrpGeom->SetColor({4, 4, 4});
   GrpGeom->DrawLine(px, py, (px + infx_), (py + infy_));
+}
+
+// ── Command dispatch ─────────────────────────────────────────────────
+
+void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle, int8_t delta) {
+  using Cmd = LongLaserUpdateInfo::Command;
+  switch (cmd) {
+  case Cmd::Open:
+    if (state_ == LongState::Inactive) {
+      return;
+    }
+    state_ = LongState::Opening;
+    break;
+  case Cmd::Close:
+    if (state_ == LongState::Inactive) {
+      return;
+    }
+    state_ = LongState::Closing;
+    break;
+  case Cmd::CloseToLine:
+    if (state_ == LongState::Inactive) {
+      return;
+    }
+    state_ = LongState::ClosingToLine;
+    break;
+  case Cmd::ForceClose:
+    state_ = LongState::Closing;
+    break;
+  case Cmd::SetAngle:
+    d_ = angle;
+    FixAngleGeometry();
+    break;
+  case Cmd::AdjustAngle:
+    d_ += delta;
+    FixAngleGeometry();
+    break;
+  case Cmd::SetEnemyGone:
+    state_ = LongState::Inactive;
+    e_ = nullptr;
+    break;
+  default:
+    break;
+  }
+}
+
+void LaserLong::FixAngleGeometry() {
+  lx_ = cosl(d_, w_ >> 6);
+  ly_ = sinl(d_, w_ >> 6);
+  wx_ = -(ly_);
+  wy_ = lx_;
+  infx_ = cosl(d_, kBeamLength);
+  infy_ = sinl(d_, kBeamLength);
+  RecalcGeometry();
+}
+
+bool LaserLong::BelongsTo(const EnemyData *e, uint8_t id) const {
+  return e_ == e && (enemy_id_ == id || id == ECLCST_LLASERALL);
+}
+
+// ── Debug ──────────────────────────────────────────────────────────
+
+void LaserLong::RenderDebugHitbox(int mode) const {
+  if (state_ != LongState::Active && state_ != LongState::Opening) {
+    return;
+  }
+  auto *gp = GrpGeom_Poly();
+  if (gp == nullptr) {
+    return;
+  }
+  const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
+  gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+
+  if (mode >= 2 && w_ > 0) {
+    const int bx = x_ >> 6;
+    const int by = y_ >> 6;
+    const int scale = (w_ + kDebugLaserEvadeWidth);
+    const int wx2 = wx_ * scale / w_;
+    const int wy2 = wy_ * scale / w_;
+    const int lx2 = lx_ * scale / w_;
+    const int ly2 = ly_ * scale / w_;
+    VERTEX_XY ep[4];
+    ep[1].x = ep[0].x = static_cast<float>(bx + wx2 + lx2);
+    ep[1].y = ep[0].y = static_cast<float>(by + wy2 + ly2);
+    ep[2].x = ep[3].x = static_cast<float>(bx - wx2 + lx2);
+    ep[2].y = ep[3].y = static_cast<float>(by - wy2 + ly2);
+    ep[1].x += static_cast<float>(infx_);
+    ep[1].y += static_cast<float>(infy_);
+    ep[2].x += static_cast<float>(infx_);
+    ep[2].y += static_cast<float>(infy_);
+    const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
+    gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
+  }
 }

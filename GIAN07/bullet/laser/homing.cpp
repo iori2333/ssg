@@ -80,7 +80,7 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
 
 // ── State machine ──────────────────────────────────────────────────
 
-void LaserHoming::Update() {
+auto LaserHoming::Update(const UpdateInfo & /*info*/) -> UpdateResult {
   int prev_x = p_[current_].x;
   int prev_y = p_[current_].y;
   int prev_deg = p_[current_].d;
@@ -139,6 +139,7 @@ void LaserHoming::Update() {
       ty < GY_MIN - (4 * 64) || ty > GY_MAX + (4 * 64)) {
     state_ = HomingState::Dead;
   }
+  return {};
 }
 
 // ── Virtual overrides ──────────────────────────────────────────────
@@ -256,4 +257,31 @@ HitResult LaserHoming::CheckHit(int px, int py) const {
     }
   }
   return HitResult::Miss;
+}
+
+// ── Debug ──────────────────────────────────────────────────────────
+
+void LaserHoming::RenderDebugHitbox(int mode) const {
+  if (state_ == HomingState::Dead) {
+    return;
+  }
+  auto *gp = GrpGeom_Poly();
+  if (gp == nullptr) {
+    return;
+  }
+  const int hit_r = (kHomingWidth * 2 / 3) >> 6;
+  const int evade_r = (kHomingWidth + 15 * 64) >> 6;
+
+  int current = current_;
+  for (int j = 0; j < kHomingLen; j++) {
+    const auto &pt = p_[current];
+    const int cx = pt.x >> 6;
+    const int cy = pt.y >> 6;
+
+    if (mode >= 2) {
+      Geometry::CircleF_Approximated(*gp, {cx, cy}, evade_r, true);
+    }
+    Geometry::CircleF_Approximated(*gp, {cx, cy}, hit_r, true);
+    current = GetPrev(current, kHomingSection);
+  }
 }

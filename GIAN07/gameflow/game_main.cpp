@@ -20,7 +20,6 @@
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser_manager.h"
-#include "bullet/bullet_debug.h"
 #include "core/config.h"
 #include "core/gian.h"
 #include "data/gfx_manager.h"
@@ -579,7 +578,7 @@ void GameSTD_Init() {
   // Players.Initialize();
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
-  Bullets.SetIndices(400 + 200); // 400 for small bullets
+  Bullets.Init();
   Lasers.Init();
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
@@ -1532,7 +1531,18 @@ void GameDraw() {
 
 #ifdef PBG_DEBUG
   if (ConfigDat.hitbox_display != 0) {
-    BulletDebug_DrawHitboxes(ConfigDat.hitbox_display);
+    Bullets.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    Lasers.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    auto *gp = GrpGeom_Poly();
+    if (gp != nullptr) {
+      const RGB216 kBlack{0, 0, 0};
+      gp->SetColor(kBlack);
+      gp->SetAlphaNorm(204);
+      const int px = Players.X() >> 6;
+      const int py = Players.Y() >> 6;
+      const int pr = std::ceil(PLAYER_HITBOX_RADIUS / 64.0);
+      Geometry::CircleF_Approximated(*gp, {px, py}, pr, true);
+    }
   }
 #endif
 
@@ -1570,21 +1580,7 @@ bool GameFlowManager::IsDraw() {
 }
 
 #ifdef PBG_DEBUG
-static void GalleryUpdateAngles() {
-  for (uint16_t i = 0; i < Bullets.count_small; i++) {
-    auto *t = &Bullets.bullets[Bullets.indices_small[i]];
-    if ((t->c & 0xF0) == TAMA_ANGLE) {
-      t->d += 4;
-    }
-  }
-  for (uint16_t i = 0; i < Bullets.count_large; i++) {
-    auto *t = &Bullets.bullets[Bullets.indices_large[i]];
-    const auto cat = t->c & 0xF0;
-    if (cat == TAMA_ANGLE || cat == TAMA_EXTRA2) {
-      t->d += 4;
-    }
-  }
-}
+static void GalleryUpdateAngles() { Bullets.RotateDisplayAngles(); }
 
 static void GalleryDrawLabels() {
   static constexpr int x0 = 160;
@@ -1633,54 +1629,7 @@ static void SpawnGalleryBullets() {
       }
       const int wx = (x0 + col * dx) * 64;
       const int wy = (y0 + row * dy) * 64;
-
-      if ((c & 0xF0) == TAMA_SMALL) {
-        const auto idx = Bullets.count_small;
-        auto *t = &Bullets.bullets[Bullets.indices_small[idx]];
-        Bullets.count_small++;
-        t->x = wx;
-        t->y = wy;
-        t->vx = 0;
-        t->vy = 0;
-        t->v = 0;
-        t->v0 = 0;
-        t->c = c;
-        t->d = 0;
-        t->d16 = 0;
-        t->effect = 0;
-        t->flag = 0;
-        t->type = T_NORM;
-        t->rep = 0;
-        t->option = 0;
-        t->a = 0;
-        t->vd = 0;
-        t->count = 0;
-        t->tx = 0;
-        t->ty = 0;
-      } else {
-        const auto idx = Bullets.count_large;
-        auto *t = &Bullets.bullets[Bullets.indices_large[idx]];
-        Bullets.count_large++;
-        t->x = wx;
-        t->y = wy;
-        t->vx = 0;
-        t->vy = 0;
-        t->v = 0;
-        t->v0 = 0;
-        t->c = c;
-        t->d = 0;
-        t->d16 = 0;
-        t->effect = 0;
-        t->flag = 0;
-        t->type = T_NORM;
-        t->rep = 0;
-        t->option = 0;
-        t->a = 0;
-        t->vd = 0;
-        t->count = 0;
-        t->tx = 0;
-        t->ty = 0;
-      }
+      Bullets.PlaceDisplayBullet(wx, wy, c);
     }
   }
 }
@@ -1706,7 +1655,18 @@ static void BulletGalleryProc(bool & /*quit*/) {
   Bullets.Draw();
 
   if (ConfigDat.hitbox_display != 0) {
-    BulletDebug_DrawHitboxes(ConfigDat.hitbox_display);
+    Bullets.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    Lasers.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    auto *gp = GrpGeom_Poly();
+    if (gp != nullptr) {
+      const RGB216 kBlack{0, 0, 0};
+      gp->SetColor(kBlack);
+      gp->SetAlphaNorm(204);
+      const int px = Players.X() >> 6;
+      const int py = Players.Y() >> 6;
+      const int pr = std::ceil(PLAYER_HITBOX_RADIUS / 64.0);
+      Geometry::CircleF_Approximated(*gp, {px, py}, pr, true);
+    }
   }
 
   GalleryDrawLabels();
@@ -1723,7 +1683,7 @@ void BulletGalleryInit() {
     return;
   }
   (void)gfx.LoadGalleryEnemySurfaces();
-  Bullets.SetIndices(400 + 200);
+  Bullets.Init();
   Bullets.Clear();
   SpawnGalleryBullets();
   ConfigDat.bullet_gallery_active = true;

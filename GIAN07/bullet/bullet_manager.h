@@ -4,55 +4,69 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
 
 #include "bullet.h"
+#include "core/object_pool.h"
 
 struct BulletManager {
-  // --- Bullet data ---
-  std::array<Bullet, TAMA_MAX> bullets;         // Tama[]
-  BulletCommand command;                        // TamaCmd
-  std::array<uint16_t, TAMA_MAX> indices_small; // Tama1Ind[]
-  std::array<uint16_t, TAMA_MAX> indices_large; // Tama2Ind[]
-  uint16_t count_small = 0;                     // Tama1Now
-  uint16_t count_large = 0;                     // Tama2Now
-  uint16_t max_small = 0;                       // Tama1Max
-  uint16_t max_large = 0;                       // Tama2Max
-  int speed = 0;                                // TamaSpeed
+  ObjectPool<Bullet, kBulletSmallMax> pool_small;
+  ObjectPool<Bullet, kBulletLargeMax> pool_large;
 
-  // --- Public methods ---
-  void Spawn();
-  void SpawnEX();
-  void SpawnLine();
-  void SpawnExtra01();
-  int SpeedEx(uint8_t d) const;
-  void Move();
-  void Draw();
-  void Clear();
+  void Init();
+
+  bool Spawn(const BulletSpawnInfo &si);
+  bool SpawnLine(const BulletSpawnInfo &si);
+  bool SpawnExtra01(const BulletSpawnInfo &si);
+
+  void UpdateAll();
+  void HitCheckAll();
+  void RenderAll() const;
+  void ClearAll();
+
+  void Move() { UpdateAll(); }
+  void Draw() { RenderAll(); }
+  void Clear() { ClearAll(); }
+
   uint32_t ScoreToItems();
   void ToItems(uint8_t n);
-  void SetIndices(uint16_t tama1);
-  uint8_t Dir(uint16_t i) const;
-  int NewSpeed(uint16_t i) const;
-  int LineCmdNewSpeed(uint16_t i) const;
-  int Speed(uint16_t i) const;
-  uint8_t Flag() const;
-  static void MoveByType(Bullet *t);
+  void RenderDebugHitboxes(int mode) const;
+
+  // Gallery / debug helpers
+  void PlaceDisplayBullet(int x, int y, uint8_t color);
+  void RotateDisplayAngles();
+
+  // ── Player shot compat (TODO: remove after player shot refactor) ──
+
+  BulletCommand command; // deprecated
+
+  [[nodiscard]] uint8_t Dir(uint16_t i) const;
+  [[nodiscard]] int Speed(uint16_t i) const;
+  [[nodiscard]] uint8_t Flag() const;
   void MoveByOption(Bullet *t);
+
+  static void MoveByType(Bullet *t);
   static void MoveByEffect(Bullet *t);
 
 private:
-  void TamaSetMain();
-  void SetEasy();
-  void SetHard();
-  void SetLunatic();
+  template <typename Pool>
+  void SpawnImpl(const BulletSpawnInfo &si, Pool &pool);
+
+  template <typename Fn> void ApplySmall(Fn fn) {
+    for (auto &b : pool_small) {
+      fn(b);
+    }
+  }
+  template <typename Fn> void ApplyLarge(Fn fn) {
+    for (auto &b : pool_large) {
+      fn(b);
+    }
+  }
 };
 
 extern BulletManager Bullets;
 
-//// Bullet command macros (moved from TAMA.h -- reference Bullets.command
-///directly) ////
+//// Bullet command inline helpers (set Bullets.command) ////
 
 inline void TamaSetForm(uint8_t cmd, uint8_t option, uint8_t type, uint8_t c) {
   Bullets.command.cmd = cmd;

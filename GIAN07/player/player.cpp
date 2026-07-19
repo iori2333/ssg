@@ -62,26 +62,26 @@ void Player::SpawnShot_() {
 
     auto *t = &maid_tama_[maid_tama_ind_[maid_tama_now_++]];
 
-    t->x = t->tx = Bullets.command.x;
-    t->y = t->ty = Bullets.command.y;
+    t->x_ = t->tx_ = Bullets.command.x;
+    t->y_ = t->ty_ = Bullets.command.y;
 
-    t->v = t->v0 = Bullets.Speed(i);
-    t->a = Bullets.command.a;
+    t->v_ = t->v0_ = Bullets.Speed(i);
+    t->a_ = Bullets.command.a;
 
-    t->d = Bullets.Dir(i);
-    t->d16 = (t->d << 8);
+    t->d_ = Bullets.Dir(i);
+    t->d16_ = (t->d_ << 8);
 
-    t->vx = cosl(t->d, t->v);
-    t->vy = sinl(t->d, t->v);
+    t->vx_ = cosl(t->d_, t->v_);
+    t->vy_ = sinl(t->d_, t->v_);
 
-    t->vd = Bullets.command.vd;
-    t->c = Bullets.command.c;
-    t->rep = Bullets.command.rep;
-    t->type = Bullets.command.type;
-    t->option = Bullets.command.option;
-    t->effect = 0;
-    t->count = 0;
-    t->flag = Bullets.Flag();
+    t->vd_ = Bullets.command.vd;
+    t->c_ = Bullets.command.c;
+    t->rep_ = Bullets.command.rep;
+    t->type_ = Bullets.command.type;
+    t->option_ = Bullets.command.option;
+    t->effect_ = 0;
+    t->count_ = 0;
+    t->flag_ = Bullets.Flag();
   }
 }
 
