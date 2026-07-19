@@ -146,7 +146,6 @@ struct Bullet : BulletBase<BulletSpawnInfo, BulletUpdateInfo> {
   using UpdateInfo = BulletUpdateInfo;
 
   friend struct BulletManager;
-  friend class Player; // TODO: remove when player shots are refactored
 
   void Render() const override;
   bool IsDead() const override;
@@ -176,14 +175,13 @@ private:
   uint8_t type_{};
   uint8_t option_{};
   uint8_t effect_{};
-  mutable uint8_t flag_{};
+  uint8_t flag_{};
 
   void MoveByType(const UpdateInfo &info, UpdateResult &result);
   void MoveByOption(UpdateResult &result);
   void MoveByEffect();
   void RevertToNormal();
-  void Draw() const;
-  static void DrawEffect(const Bullet *t);
+  void DrawEffect() const;
 };
 
 //// Free function: build SpawnInfo from ECL command ////

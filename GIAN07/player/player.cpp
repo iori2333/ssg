@@ -54,34 +54,38 @@ bool Player::IsSubShotFrame_(uint16_t t) const {
   return (t == 0 || t == MAID_SUB_SHOT) && bomb_time_ == 0;
 }
 
-void Player::SpawnShot_() {
-  for (uint8_t i = 0; i < Bullets.command.n; i++) {
+void Player::SpawnShot(const PlayerShotSpawnInfo &si) {
+  for (uint8_t i = 0; i < si.n; i++) {
     if (maid_tama_now_ + 1 >= MAIDTAMA_MAX) {
       return;
     }
 
     auto *t = &maid_tama_[maid_tama_ind_[maid_tama_now_++]];
 
-    t->x_ = t->tx_ = Bullets.command.x;
-    t->y_ = t->ty_ = Bullets.command.y;
+    uint8_t di = i % si.n;
+    di++;
+    uint8_t d;
+    if ((si.n & 1) != 0) {
+      d = si.d + ((di >> 1) * si.dw * (1 - ((di & 1) << 1)));
+    } else {
+      d = si.d - (si.dw >> 1) + ((di >> 1) * si.dw * (1 - ((di & 1) << 1)));
+    }
 
-    t->v_ = t->v0_ = Bullets.Speed(i);
-    t->a_ = Bullets.command.a;
-
-    t->d_ = Bullets.Dir(i);
-    t->d16_ = (t->d_ << 8);
-
-    t->vx_ = cosl(t->d_, t->v_);
-    t->vy_ = sinl(t->d_, t->v_);
-
-    t->vd_ = Bullets.command.vd;
-    t->c_ = Bullets.command.c;
-    t->rep_ = Bullets.command.rep;
-    t->type_ = Bullets.command.type;
-    t->option_ = Bullets.command.option;
+    t->x_ = t->tx_ = si.x;
+    t->y_ = t->ty_ = si.y;
+    t->v_ = t->v0_ = si.v;
+    t->a_ = si.a;
+    t->d_ = d;
+    t->d16_ = (d << 8);
+    t->vx_ = cosl(d, si.v);
+    t->vy_ = sinl(d, si.v);
+    t->vd_ = si.vd;
+    t->c_ = si.c;
+    t->type_ = si.type;
+    t->rep_ = si.rep;
     t->effect_ = 0;
     t->count_ = 0;
-    t->flag_ = Bullets.Flag();
+    t->flag_ = 0;
   }
 }
 

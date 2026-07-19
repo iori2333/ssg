@@ -5,7 +5,6 @@
 
 #include "homing_form.h"
 
-#include "bullet/bullet_manager.h"
 #include "core/gian.h"
 #include "enemy/enemy_manager.h"
 #include "player/player.h"
@@ -19,42 +18,33 @@ void HomingForm::FireMain(uint8_t tier) {
   case 0: {
     player_.toge_ex_ += 32;
     const auto dd = Cast::down<int8_t>(sinl(player_.toge_ex_, 4));
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64 + dd, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(),
+                          static_cast<uint8_t>(-64 + dd), 0, 1,
+                          SPEEDM(54), 0, TID_HOMING_MAIN};
+    player_.SpawnShot(si);
     break;
   }
-  case 1:
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 1: {
+    PlayerShotSpawnInfo si{player_.X() - (6 * 64), player_.Y(),
+                          192, 0, 1, SPEEDM(54), 0, TID_HOMING_MAIN};
+    player_.SpawnShot(si);
+    si.x += 12 * 64;
+    player_.SpawnShot(si);
     break;
+  }
   case 2:
-  case 3:
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    player_.SpawnShot_();
+  case 3: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 7, 3,
+                          SPEEDM(54), 0, TID_HOMING_MAIN};
+    player_.SpawnShot(si);
     break;
-  default:
-    // tier 4-8: 5-way
-    TamaSTDForm(TID_HOMING_MAIN);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 7);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    player_.SpawnShot_();
+  }
+  default: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 7, 5,
+                          SPEEDM(54), 0, TID_HOMING_MAIN};
+    player_.SpawnShot(si);
     break;
+  }
   }
 }
 
@@ -63,44 +53,43 @@ void HomingForm::FireSub(uint8_t tier) {
     return;
   }
 
-  TamaSTDForm(TID_HOMING_SUB);
-  Bullets.command.type = T_SBHOMING;
-  Bullets.command.rep = 64;
-  Bullets.command.vd = 5;
+  PlayerShotSpawnInfo si{};
+  si.type = 9;     // T_SBHOMING
+  si.rep = 64;
+  si.vd = 5;
+  si.v = SPEEDM(28);
+  si.a = 4;
+  si.c = TID_HOMING_SUB;
 
-  // Right option
-  TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
-  TamaSetSpd(28, 4);
+  si.x = player_.OpX() + (SBOPT_DX * 64);
+  si.y = player_.OpY();
   if (tier < 8) {
-    TamaSetDeg(64 - 5, 0);
-    TamaSetNum(1, 0);
+    si.d = 59;
+    si.dw = 0;
+    si.n = 1;
   } else {
-    TamaSetDeg(64 - 22, 30);
-    TamaSetNum(2, 0);
+    si.d = 42;
+    si.dw = 30;
+    si.n = 2;
   }
-  player_.SpawnShot_();
+  player_.SpawnShot(si);
 
-  // Left option
-  TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
+  si.x = player_.OpX() - (SBOPT_DX * 64);
   if (tier < 8) {
-    TamaSetDeg(64 + 5, 0);
+    si.d = 69;
+    si.dw = 0;
   } else {
-    TamaSetDeg(64 + 22, 30);
+    si.d = 86;
+    si.dw = 30;
   }
-  player_.SpawnShot_();
+  player_.SpawnShot(si);
 }
 
 void HomingForm::FireBomb() {
   if (player_.bomb_time_ % 30 == 1) {
-    TamaSTDForm(TID_HOMING_BOMB_A);
-    Bullets.command.type = T_SBHOMING;
-    Bullets.command.rep = 64;
-    Bullets.command.vd = 5;
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetSpd(28, 4);
-    TamaSetDeg(64, 16);
-    TamaSetNum(8, 1);
-    player_.SpawnShot_();
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 64, 16, 8,
+                          SPEEDM(28), 4, TID_HOMING_BOMB_A, 9, 64, 5};
+    player_.SpawnShot(si);
   }
 }
 
@@ -112,14 +101,11 @@ void HomingFocusForm::FireMain(uint8_t tier) {
   const int count = (tier <= 0) ? 1 : (tier <= 2) ? 2 : (tier <= 4) ? 3 : 4;
   const int spread = (count - 1) * (12 * 64);
 
-  TamaSTDForm(TID_HOMING_FOCUS_MAIN);
-  TamaSetDeg(-64, 0);
-  TamaSetSpd(54, 0);
-  TamaSetNum(1, 0);
-  TamaSetXY(player_.X() - spread / 2, player_.Y());
+  PlayerShotSpawnInfo si{player_.X() - spread / 2, player_.Y(),
+                        192, 0, 1, SPEEDM(54), 0, TID_HOMING_FOCUS_MAIN};
   for (int i = 0; i < count; i++) {
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
+    player_.SpawnShot(si);
+    si.x += 12 * 64;
   }
 }
 
@@ -128,16 +114,10 @@ void HomingFocusForm::FireSub(uint8_t tier) {
     return;
   }
 
-  TamaSTDForm(TID_HOMING_FOCUS_SUB);
-  TamaSetDeg(-64, 0);
-  TamaSetSpd(54, 0);
-  TamaSetNum(1, 0);
+  PlayerShotSpawnInfo si{player_.OpX() + (SBOPT_DX * 64), player_.OpY(),
+                        192, 0, 1, SPEEDM(54), 0, TID_HOMING_FOCUS_SUB};
+  player_.SpawnShot(si);
 
-  // Right option
-  TamaSetXY(player_.OpX() + (SBOPT_DX * 64), player_.OpY());
-  player_.SpawnShot_();
-
-  // Left option
-  TamaSetXY(player_.OpX() - (SBOPT_DX * 64), player_.OpY());
-  player_.SpawnShot_();
+  si.x = player_.OpX() - (SBOPT_DX * 64);
+  player_.SpawnShot(si);
 }

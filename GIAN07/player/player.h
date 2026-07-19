@@ -167,7 +167,7 @@ public:
   void CommitWeaponSelection();
 
   // --- Shot pool helper (used by WeaponForm subclasses) ---
-  void SpawnShot_();
+  void SpawnShot(const PlayerShotSpawnInfo &si);
 
 private:
   friend class WeaponForm;
@@ -238,7 +238,7 @@ private:
   bool buzz_sound_ = false;
 
   // --- Shot pool ---
-  std::array<Bullet, MAIDTAMA_MAX> maid_tama_{};
+  std::array<PlayerShot, MAIDTAMA_MAX> maid_tama_{};
   std::array<uint16_t, MAIDTAMA_MAX> maid_tama_ind_{};
   uint16_t maid_tama_now_ = 0;
 

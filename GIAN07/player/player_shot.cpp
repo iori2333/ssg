@@ -1,5 +1,5 @@
 ///
-/// PlayerShot - Player shot pool management: fire dispatch, bullet
+/// PlayerShot — Player shot pool management: fire dispatch, bullet
 /// movement, collision, and drawing.
 ///
 /// Attack form logic (FireMain / FireSub / FireBomb) lives in the
@@ -10,7 +10,7 @@
 #include "player_shot.h"
 
 #include "audio/snd.h"
-#include "bullet/bullet_manager.h"
+#include "core/entity.h"
 #include "core/gian.h"
 #include "effect/effect_manager.h"
 #include "effect/fragment.h"
@@ -23,35 +23,26 @@
 #include "util/cast.h"
 #include "util/ut_math.h"
 #include "weapon/weapon_form.h"
+
 #include <utility>
 
 // --- Damage table indexed by bullet ID (t->c) ---
 constexpr uint8_t TogeDamage[0x0c] = {
-    // MainWeapon		// SubWeapon
-    TDM_WIDE_MAIN,
-    TDM_WIDE_SUB, // TYPE_A(WIDE)
-    TDM_HOMING_MAIN,
-    TDM_HOMING_SUB, // TYPE_B(HOMING)
-    TDM_LASER_MAIN,
-    TDM_LASER_SUB, // TYPE_C
-    1,
-    1, // For homing bomb_
-    TDM_WIDE_FOCUS_MAIN,
-    TDM_WIDE_FOCUS_SUB, // TYPE_A focus (WIDE)
-    TDM_HOMING_FOCUS_MAIN,
-    TDM_HOMING_FOCUS_SUB // TYPE_B focus (HOMING)
+    TDM_WIDE_MAIN,        TDM_WIDE_SUB,   TDM_HOMING_MAIN,
+    TDM_HOMING_SUB,       TDM_LASER_MAIN, TDM_LASER_SUB,
+    1,                    1,
+    TDM_WIDE_FOCUS_MAIN,  TDM_WIDE_FOCUS_SUB,
+    TDM_HOMING_FOCUS_MAIN, TDM_HOMING_FOCUS_SUB,
 };
 
 // --- Fire dispatch ---
 
 void Player::SetMaidShot() {
-  // Start fire cooldown when the fire key is pressed.
   if (((Key_Data & KEY_TAMA) != 0) && toge_time_ == 0 &&
       muteki_ < MAID_MOVE_DISABLE_TIME) {
     toge_time_ = MAID_TAMA_START;
   }
 
-  // Activate bomb_ if conditions are met.
   if (((Key_Data & KEY_BOMB) != 0) && (bomb_time_ == 0) &&
       (muteki_ == 0 || deathbomb_time_ != 0) && (bomb_ != 0U) &&
       (!Scroller.scene.MsgFlag)) {
@@ -63,16 +54,14 @@ void Player::SetMaidShot() {
       deathbomb_count_++;
       deathbomb_time_ = 0;
     }
-    Ranking.Add(-25); // Difficulty down
+    Ranking.Add(-25);
   }
 
-  // Bomb update (always uses the base form, not focus).
   if (bomb_time_ != 0U) {
     bomb_time_--;
     BaseForm_()->FireBomb();
   }
 
-  // Main / sub shot dispatch via the active (possibly focus) form.
   if (toge_time_ != 0U) {
     const uint8_t tier = (exp_ + 1) >> 5;
     if (IsMainShotFrame_(toge_time_)) {
@@ -84,8 +73,81 @@ void Player::SetMaidShot() {
     toge_time_--;
   }
 
-  // Per-frame form tick (laser forms manage lay_time_ / lay_grp_).
   BaseForm_()->OnFireTick();
+}
+
+// --- Movement helpers ---
+
+void PlayerShot::MoveByType() {
+  short deg_t = 0;
+
+  switch (type_) {
+  case 0: // T_NORM
+    tx_ += vx_;
+    ty_ += vy_;
+    return;
+
+  case 9: { // T_SBHOMING
+    if ((count_ & 1) != 0) {
+      Effects.SpawnFragment(x_, y_, FRG_SMOKE);
+    }
+    tx_ += vx_;
+    ty_ += vy_;
+    if (count_ < 70 && Enemies.homing_flag != HOMING_DUMMY) {
+      deg_t = atan8(Enemies.homing_x - x_, Enemies.homing_y - y_) - d_;
+    } else if (count_ < 70) {
+      deg_t = atan8(0, (-20 * 64) - y_) - d_;
+    } else {
+      flag_ = 0;
+      deg_t = 0;
+    }
+    if (deg_t < -128) {
+      deg_t += 256;
+    }
+    if (deg_t > 128) {
+      deg_t -= 256;
+    }
+    if (deg_t == 0) {
+      if (vd_ != 0) {
+        vd_--;
+      }
+      v_ += a_;
+    } else {
+      if (vd_ < INT8_MAX) {
+        vd_++;
+      }
+      v_ -= a_;
+    }
+    d_ += (deg_t * Cast::sign<uint8_t>(vd_) / 255);
+    vx_ = cosl(d_, v_);
+    vy_ = sinl(d_, v_);
+    return;
+  }
+  case 10: // T_SBHBOMB
+    if (count_ >= 49) {
+      flag_ |= PlayerFlag::DEL;
+    }
+    return;
+  }
+}
+
+void PlayerShot::MoveByEffect() {
+  switch (effect_ & 0xf0) {
+  case 0x50: // TE_CIRCLE1
+    x_ = (tx_ += (vx_ >> 1));
+    y_ = (ty_ += (vy_ >> 1));
+    if (count_ >= 19) {
+      effect_ = 0;
+    }
+    return;
+  case 0xf0: // TE_DELETE
+    x_ += (vx_ >> 1);
+    y_ += (vy_ >> 1);
+    if (count_ >= 47) {
+      flag_ |= PlayerFlag::DEL;
+    }
+    return;
+  }
 }
 
 // --- Bullet movement & hit check ---
@@ -99,42 +161,37 @@ void Player::MoveMaidShot() {
       Enemies.DamageAt(t->x_, t->y_, TogeDamage[t->c_]);
       t->count_++;
       if (t->count_ >= 19) {
-        t->flag_ = TF_DELETE;
+        t->flag_ |= PlayerFlag::DEL;
       }
       continue;
     }
-    if (t->effect_ == TE_NONE) {
-      BulletManager::MoveByType(t);
-      Bullets.MoveByOption(t);
+    if (t->effect_ == 0) {
+      t->MoveByType();
+      t->x_ = t->tx_;
+      t->y_ = t->ty_;
       t->count_++;
-      if (((t->flag_ & TF_CLIP) == 0) && ((t->x_) < GX_MIN || (t->x_) > GX_MAX ||
-                                         (t->y_) < GY_MIN || (t->y_) > GY_MAX)) {
-        t->flag_ = TF_DELETE;
+      if (((t->flag_ & PlayerFlag::CLIP) == 0) && ((t->x_) < GX_MIN || (t->x_) > GX_MAX ||
+                                        (t->y_) < GY_MIN || (t->y_) > GY_MAX)) {
+        t->flag_ |= PlayerFlag::DEL;
       }
 
       if (Enemies.DamageAt(t->x_, t->y_, TogeDamage[t->c_])) {
         if (t->c_ == TID_HOMING_BOMB_A) {
-          TamaSTDForm(TID_HOMING_BOMB_B);
-          Bullets.command.type = T_SBHBOMB;
-          TamaSetXY(t->x_, t->y_);
-          TamaSetDeg(-64, 16);
-          TamaSetSpd(10, 0);
-          TamaSetNum(1, 0);
-          SpawnShot_();
+          PlayerShotSpawnInfo si{.x=t->x_, .y=t->y_, .d=192, .dw=16, .n=1,
+                                .v=SPEEDM(10), .a=0,
+                                .c=TID_HOMING_BOMB_B, .type=10};
+          SpawnShot(si);
         }
-        t->flag_ = TF_DELETE;
+        t->flag_ |= PlayerFlag::DEL;
         Effects.SpawnFragment(t->x_, t->y_, FRG_HIT);
       }
     } else {
-      {
-        BulletManager::MoveByEffect(t);
-      }
+      t->MoveByEffect();
     }
   }
   Indsort(maid_tama_ind_, maid_tama_now_, maid_tama_,
-          [](const Bullet &t) { return (t.flag_ & TF_DELETE); });
+          [](const PlayerShot &t) { return (t.flag_ & PlayerFlag::DEL); });
 
-  // Weapon-specific continuous-beam collision (laser).
   ActiveForm_()->OnCollisionTick();
 }
 
@@ -147,10 +204,10 @@ void Player::DrawMaidShot() {
   PIXEL_LTRB src;
   PIXEL_LTRB ltemp;
   static PIXEL_LTRB HomingBomb[5] = {{520, 104, 520 + 8, 104 + 8},
-                                     {528, 104, 528 + 16, 104 + 16},
-                                     {544, 104, 544 + 24, 104 + 24},
-                                     {568, 104, 568 + 32, 104 + 32},
-                                     {600, 104, 600 + 40, 104 + 40}};
+                                      {528, 104, 528 + 16, 104 + 16},
+                                      {544, 104, 544 + 24, 104 + 24},
+                                      {568, 104, 568 + 32, 104 + 32},
+                                      {600, 104, 600 + 40, 104 + 40}};
 
   for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
     auto *t = &maid_tama_[maid_tama_ind_[i]];
@@ -177,12 +234,9 @@ void Player::DrawMaidShot() {
     case TID_LASER_SUB:
       src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 256, 16, 16};
       break;
-
     case TID_HOMING_BOMB_B:
       src = HomingBomb[(static_cast<int>(t->count_) / 4) % 5];
       break;
-
-    // Focus (low-speed) form shots reuse the base-form sprite rows.
     case TID_WIDE_FOCUS_MAIN:
       src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 176, 16, 16};
       break;
@@ -200,9 +254,7 @@ void Player::DrawMaidShot() {
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
   }
 
-  // Laser drawing
   if (weapon_ == 2 && (lay_grp_ != 0U)) {
-    // Focus (low-speed) form: pull the two beams closer together.
     const int loff = ((Key_Data & KEY_SHIFT) != 0) ? (SBOPT_DX / 2) : SBOPT_DX;
     ltemp = PIXEL_LTWH{(384 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
 

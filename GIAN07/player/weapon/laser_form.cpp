@@ -5,7 +5,6 @@
 
 #include "laser_form.h"
 
-#include "bullet/bullet_manager.h"
 #include "core/gian.h"
 #include "enemy/enemy_manager.h"
 #include "player/player.h"
@@ -14,60 +13,49 @@
 
 void LaserForm::FireMain(uint8_t tier) {
   switch (tier) {
-  case 0:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
+  case 0: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 0, 1,
+                          SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
     break;
+  }
   case 1:
-  case 2:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 2: {
+    PlayerShotSpawnInfo si{player_.X() - (6 * 64), player_.Y(),
+                          192, 0, 1, SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
+    si.x += 12 * 64;
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 50);
     break;
+  }
   case 3:
-  case 4:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 6);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    player_.SpawnShot_();
+  case 4: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 6, 3,
+                          SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 100);
     break;
+  }
   case 5:
   case 6:
-  case 7:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetSpd(54, 0);
-    TamaSetDeg(-64 - 5, 10);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetNum(2, 0);
-    player_.SpawnShot_();
-    TamaSetDeg(-64 + 5, 10);
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 7: {
+    PlayerShotSpawnInfo si{player_.X() - (6 * 64), player_.Y(),
+                          187, 10, 2, SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
+    si.x += 12 * 64;
+    si.d = 197;
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 150);
     break;
-  default:
-    // tier 8
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 6);
-    TamaSetSpd(54, 0);
-    TamaSetNum(5, 0);
-    player_.SpawnShot_();
+  }
+  default: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 6, 5,
+                          SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 200);
     break;
+  }
   }
 }
 
@@ -120,60 +108,49 @@ void LaserForm::OnCollisionTick() {
 
 void LaserFocusForm::FireMain(uint8_t tier) {
   switch (tier) {
-  case 0:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
+  case 0: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 0, 1,
+                          SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
     break;
+  }
   case 1:
-  case 2:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetDeg(-64, 0);
-    TamaSetSpd(54, 0);
-    TamaSetNum(1, 0);
-    player_.SpawnShot_();
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 2: {
+    PlayerShotSpawnInfo si{player_.X() - (6 * 64), player_.Y(),
+                          192, 0, 1, SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
+    si.x += 12 * 64;
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 50);
     break;
+  }
   case 3:
-  case 4:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 2);
-    TamaSetSpd(54, 0);
-    TamaSetNum(3, 0);
-    player_.SpawnShot_();
+  case 4: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 2, 3,
+                          SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 100);
     break;
+  }
   case 5:
   case 6:
-  case 7:
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetSpd(54, 0);
-    TamaSetDeg(-64 - 2, 4);
-    TamaSetXY(player_.X() - (6 * 64), player_.Y());
-    TamaSetNum(2, 0);
-    player_.SpawnShot_();
-    TamaSetDeg(-64 + 2, 4);
-    Bullets.command.x += (12 * 64);
-    player_.SpawnShot_();
+  case 7: {
+    PlayerShotSpawnInfo si{player_.X() - (6 * 64), player_.Y(),
+                          190, 4, 2, SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
+    si.x += 12 * 64;
+    si.d = 194;
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 150);
     break;
-  default:
-    // tier 8: 4-way narrow spread
-    TamaSTDForm(TID_LASER_SUB);
-    TamaSetXY(player_.X(), player_.Y());
-    TamaSetDeg(-64, 2);
-    TamaSetSpd(54, 0);
-    TamaSetNum(4, 0);
-    player_.SpawnShot_();
+  }
+  default: {
+    PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 2, 4,
+                          SPEEDM(54), 0, TID_LASER_SUB};
+    player_.SpawnShot(si);
     Player::SetMLaser(64 + 200);
     break;
+  }
   }
 }
 
@@ -196,7 +173,6 @@ void LaserFocusForm::OnFireTick() {
 
 void LaserFocusForm::OnCollisionTick() {
   if (player_.lay_grp_ != 0U) {
-    // Focus form: narrowed beam spacing, damage matches base.
     const int loff = SBOPT_DX / 2;
     const int ldmg = (player_.lay_grp_ / 3) + 1;
     Enemies.DamageAt2(player_.opx_ + (loff << 6), player_.opy_, ldmg);

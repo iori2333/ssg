@@ -14,10 +14,6 @@
 struct EnemyData;
 
 struct LaserManager {
-  ObjectPool<LaserReflect, kReflectMax> reflect;
-  ObjectPool<LaserLong, kLongLaserMax> long_lasers;
-  ObjectPool<LaserHoming, kHomingMax> homing;
-
   void Init();
 
   bool SpawnReflect(const ReflectSpawnInfo &info);
@@ -36,19 +32,23 @@ struct LaserManager {
   void ControlLongLaser(const EnemyData *e, uint8_t id,
                         const LongLaserUpdateInfo &info);
 
-  void RenderReflect() const;
   void RenderLong() const;
   void RenderHoming() const;
-  void ClearReflect();
-  void ClearLong();
   void ClearHoming();
 
   void RenderDebugHitboxes(int mode) const;
 
 private:
+  ObjectPool<LaserReflect, kReflectMax> reflect;
+  ObjectPool<LaserLong, kLongLaserMax> long_lasers;
+  ObjectPool<LaserHoming, kHomingMax> homing;
+
   void UpdateReflect();
   void UpdateLong();
   void UpdateHoming();
+  void RenderReflect() const;
+  void ClearReflect();
+  void ClearLong();
 };
 
 extern LaserManager Lasers;

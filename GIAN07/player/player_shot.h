@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "bullet/bullet.h"
+#include <cstdint>
 
 // [ Constants ]
 
@@ -34,16 +34,46 @@ inline constexpr auto TDM_HOMING_SUB = 7;  // Homing sub shot damage
 inline constexpr auto TDM_LASER_MAIN = 2;  // Laser main shot damage
 inline constexpr auto TDM_LASER_SUB = 5;   // Laser sub shot damage
 
-// Focus (low-speed) form damages. WIDE/LASER/HOMING focus gain no per-hit
-// bonus over the base form; their edge is shot pattern (straight columns /
-// tighter grouping), not raw damage.
 inline constexpr auto TDM_WIDE_FOCUS_MAIN = 6; // Wide focus main shot damage
 inline constexpr auto TDM_WIDE_FOCUS_SUB = 4;  // Wide focus sub shot damage
-inline constexpr auto TDM_HOMING_FOCUS_MAIN =
-    6;                                          // Homing focus main shot damage
+inline constexpr auto TDM_HOMING_FOCUS_MAIN = 6; // Homing focus main shot damage
 inline constexpr auto TDM_HOMING_FOCUS_SUB = 7; // Homing focus sub shot damage
 
-// [ Functions ]
+// [ Player shot data ]
 
-// [ Variables ]
-// Access via Players.maid_tama, Players.maid_tama_ind, Players.maid_tama_now
+namespace PlayerFlag {
+inline constexpr auto CLIP = 0x01;
+inline constexpr auto DEL = 0x80;
+} // namespace PlayerFlag
+
+struct PlayerShot {
+  int x_{}, y_{};
+  int tx_{}, ty_{};
+  int vx_{}, vy_{};
+  int v_{}, v0_{};
+  char a_{};
+  uint8_t d_{};
+  uint16_t d16_{};
+  int8_t vd_{};
+  uint8_t c_{};
+  uint8_t type_{};
+  uint8_t rep_{};
+  uint16_t count_{};
+  uint8_t flag_{};
+  uint8_t effect_{};
+
+  void MoveByType();
+  void MoveByEffect();
+};
+
+struct PlayerShotSpawnInfo {
+  int x, y;
+  uint8_t d, dw;
+  uint8_t n;
+  int v;
+  char a;
+  uint8_t c;
+  uint8_t type = 0;
+  uint8_t rep = 0;
+  int8_t vd = 0;
+};

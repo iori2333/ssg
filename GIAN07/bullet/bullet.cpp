@@ -44,7 +44,7 @@ constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB {
 }
 } // namespace
 
-void Bullet::DrawEffect(const Bullet *t) {
+void Bullet::DrawEffect() const {
   static constexpr PIXEL_LTRB Data[6][5] = {
       {RCSET(168, 344, 32), RCSET(232, 344, 28), RCSET(288, 344, 24),
        RCSET(336, 344, 20), RCSET(328, 416, 16)},
@@ -73,14 +73,14 @@ void Bullet::DrawEffect(const Bullet *t) {
       Data[0], Data[1], Data[5], Data[3], Data[4], Data[5], Data[0], Data[0],
       Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
   };
-  const int ptn = (static_cast<int>(t->count_) / 4 % 5);
-  int x = (t->x_ >> 6) - Width[ptn];
-  int y = (t->y_ >> 6) - Width[ptn];
+  const int ptn = (static_cast<int>(count_) / 4 % 5);
+  int x = (x_ >> 6) - Width[ptn];
+  int y = (y_ >> 6) - Width[ptn];
   PIXEL_LTRB temp;
-  if (t->c_ >= 16 * 3) {
+  if (c_ >= 16 * 3) {
     temp = Target[3][ptn];
   } else {
-    temp = Target[t->c_][ptn];
+    temp = Target[c_][ptn];
   }
   GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, temp);
 }
@@ -493,9 +493,7 @@ void Bullet::MoveByEffect() {
 
 // ── Bullet: Render ───────────────────────────────────────────────
 
-void Bullet::Render() const { Draw(); }
-
-void Bullet::Draw() const {
+void Bullet::Render() const {
   static const PIXEL_LTRB rcExtraTama[4] = {{128, 384, 128 + 32, 384 + 32},
                                             {128 + 32, 384, 128 + 56, 384 + 24},
                                             {128 + 56, 384, 128 + 72, 384 + 16},
@@ -519,7 +517,7 @@ void Bullet::Draw() const {
     }
     return;
   case TE_CIRCLE1:
-    DrawEffect(this);
+    DrawEffect();
     return;
   }
 
