@@ -1,59 +1,45 @@
 ///
-/// HomingLaser - Long laser processing
+/// LaserHoming - Snake-like homing laser
 ///
 
 #pragma once
 
+#include "laser_base.h"
+
 #include "core/point.h"
 
-// [Constants]
-inline constexpr auto HLASER_MAX = 162;
-inline constexpr auto HLASER_LEN = 7;     // Number of draw passes..
-inline constexpr auto HLASER_SECTION = 4; // Load width
-
-inline constexpr auto HL_NONE = 0;  // Just move forward
-inline constexpr auto HL_TYPE1 = 1; // Type 1
-
-inline constexpr auto HLS_NORM = 0x00;  // Homing laser normal
-inline constexpr auto HLS_CLEAR = 0x01; // Homing laser clearing
-inline constexpr auto HLS_DEAD = 0xff;  // Homing laser delete request
-
-// [Structs]
-
-// Homing laser
-struct HomingLaserData {
-  int Current; // Current head index
-  int v;       // Speed
-  int a;       // Acceleration
-
-  uint32_t Count; // Frame counter
-
-  uint8_t Type;  // Type (acceleration & homing)
-  uint8_t State; // State
-  uint8_t c;     // Color
-  uint8_t Left;  // Remaining homing count
-
-  HomingLaserData *Next;                   // Pointer to next laser
-  DegPoint p[HLASER_LEN * HLASER_SECTION]; // Vertex queue (ExDef.h)
-};
-// (HLaserData alias removed — use HomingLaserData directly)
-
-// Homing laser set info
+// ── Homing laser spawn info (ECL fills Lasers.homing_cmd) ───────
 struct HomingLaserInfo {
-  int x, y; // Center coordinates
-
-  uint8_t d;  // Angle
-  uint8_t dw; // Angle spread
-  uint8_t n;  // Count
-
-  uint8_t c;    // Color
-  uint8_t type; // Type
+  int x, y;
+  uint8_t d;
+  uint8_t dw;
+  uint8_t n;
+  uint8_t c;
+  uint8_t type;
 };
-// (HLaserInfo alias removed — use HomingLaserInfo directly)
 
-// [Global variables]
-// Access directly via Lasers.homing_count, Lasers.homing_cmd
+// ── Constants ───────────────────────────────────────────────────
+inline constexpr auto HLASER_MAX     = 162;
+inline constexpr auto HLASER_LEN     = 7;
+inline constexpr auto HLASER_SECTION = 4;
 
-// [Function prototypes]
-// Backward-compat inline wrappers moved to end of laser_manager.h
-// Implementations moved to LaserManager methods
+inline constexpr auto HL_NONE  = 0;
+inline constexpr auto HL_TYPE1 = 1;
+
+inline constexpr auto HLS_NORM  = 0x00;
+inline constexpr auto HLS_CLEAR = 0x01;
+inline constexpr auto HLS_DEAD  = 0xff;
+
+// ── LaserHoming ─────────────────────────────────────────────────
+struct LaserHoming : LaserBase {
+  int Current;
+  int a;
+  uint8_t Left;
+  DegPoint p[HLASER_LEN * HLASER_SECTION];
+
+  void Move() override;
+  void Draw() const override;
+  void HitCheck() override;
+  bool IsDead() const override;
+  void StartClear() override;
+};

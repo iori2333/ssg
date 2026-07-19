@@ -14,7 +14,7 @@
 #include "ecl.h"
 
 #include "bullet/bullet.h"
-#include "bullet/laser.h"
+#include "bullet/laser_reflect.h"
 #include "sys/buffer.h"
 
 // Enemy constants

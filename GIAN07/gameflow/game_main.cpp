@@ -581,8 +581,8 @@ void GameSTD_Init() {
   Enemies.InitIndices();
   Bullets.SetIndices(400 + 200); // 400 for small bullets
   Lasers.SetIndices();
-  Lasers.SetupLong();
-  Lasers.InitHoming();
+  Lasers.SetupLong();  // Calls long_lasers.Init()
+  Lasers.InitHoming();  // Calls homing.Init()
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
   Effects.InitLockOn();
@@ -1481,9 +1481,7 @@ void GameMove() {
   Enemies.Move();
   Items.Move();
   Bullets.Move();
-  Lasers.Move();
-  Lasers.MoveLong();
-  Lasers.MoveHoming();
+  Lasers.Move();       // MoveAll — replaces Move+MoveLong+MoveHoming
   Effects.MoveFragments();
   Effects.MoveStringEffects();
   Effects.MoveCircleEffects();
@@ -1525,6 +1523,7 @@ void GameDraw() {
   Effects.DrawFragments();
   Items.Draw();
 
+  // Long laser draws need two passes for Z ordering
   if (GrpGeom_Poly() != nullptr) {
     Lasers.DrawLong();
   }

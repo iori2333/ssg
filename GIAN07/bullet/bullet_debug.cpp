@@ -9,7 +9,7 @@
 #include "bullet_debug.h"
 #include "bullet_manager.h"
 #include "homing_laser.h"
-#include "laser.h"
+#include "laser_reflect.h"
 #include "laser_manager.h"
 #include "long_laser.h"
 
@@ -89,8 +89,8 @@ void BulletDebug_DrawHitboxes(int mode) {
   }
 
   // --- Short / reflect lasers ---
-  for (uint16_t i = 0; i < Lasers.count; i++) {
-    const auto *lp = &Lasers.lasers[Lasers.laser_indices[i]];
+  for (uint16_t i = 0; i < Lasers.reflect.count; i++) {
+    const auto *lp = &Lasers.reflect.Active(i);
     if ((lp->flag & (LF_DELETE | kLfClear)) != 0) {
       continue;
     }
@@ -117,7 +117,8 @@ void BulletDebug_DrawHitboxes(int mode) {
   }
 
   // --- Long lasers ---
-  for (const auto &ll : Lasers.long_lasers) {
+  for (uint16_t i = 0; i < Lasers.long_lasers.count; i++) {
+    const auto &ll = Lasers.long_lasers.Active(i);
     if (ll.flag != LLF_NORM && ll.flag != LLF_OPEN) {
       continue;
     }
@@ -146,8 +147,9 @@ void BulletDebug_DrawHitboxes(int mode) {
   }
 
   // --- Homing lasers ---
-  for (auto *hl = Lasers.active.Next; hl != nullptr; hl = hl->Next) {
-    if (hl->State == HLS_DEAD) {
+  for (uint16_t i = 0; i < Lasers.homing.count; i++) {
+    const auto *hl = &Lasers.homing.Active(i);
+    if (hl->flag == HLS_DEAD) {
       continue;
     }
 
