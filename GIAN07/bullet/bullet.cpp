@@ -6,7 +6,7 @@
 #include "bullet_common.h"
 
 #include "core/gian.h"
-#include "gameflow/rank_manager.h"
+#include "core/game_manager.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
@@ -88,13 +88,13 @@ void Bullet::DrawEffect() const {
 // ── MakeBulletSpawnInfo ──────────────────────────────────────────
 
 BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd, int ox, int oy,
-                                    bool scaling) {
+                                    bool scaling, const GameManager &game) {
   BulletCommand scaled = cmd;
   scaled.x += ox;
   scaled.y += oy;
 
   if (scaling) {
-    switch (Ranking.state.level) {
+    switch (game.EffectiveLevel()) {
     case GameLevel::EASY:
       bullet_common::ApplyEasyCountSpread(scaled.cmd & bullet_common::kCmdMask,
                                           scaled.n, scaled.dw);
@@ -119,7 +119,7 @@ BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd, int ox, int oy,
 
   int v = SPEEDM(scaled.v);
   if (scaling && (scaled.type & 0x0f) == T_NORM) {
-    v = bullet_common::ScaleVelocityByRank(v, Ranking.state.Rank);
+    v = bullet_common::ScaleVelocityByRank(v, game.rank);
   }
 
   return {scaled.x,

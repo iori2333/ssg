@@ -124,7 +124,7 @@ void BossManager::SnakyDelete(const BossData *b) {
 
     // Snd_SEPlay(SfxId::Bomb, e->x);
     if (e->LLaserRef != 0U) {
-      Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+      lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     // PowerUp(e->hp);			// Power up
     e->hp = 0;
@@ -293,7 +293,7 @@ void BossManager::BitMove() {
 
       // Send deletion request to enemy associated with bit array
       if (e->LLaserRef != 0U) {
-Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
       }
       e->hp = 0;
       e->count = 0; // For explosion animation set
@@ -484,9 +484,9 @@ void BossManager::BitSTDRoll() {
         break;
       }
       LaserDeg = 64 + (256 / bit_data.NumBits);
-      Lasers.ControlLongLaser(e, 0,
+      lasers_->ControlLongLaser(e, 0,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle, static_cast<uint8_t>(e->d + LaserDeg)});
-      Lasers.ControlLongLaser(e, 1,
+      lasers_->ControlLongLaser(e, 1,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle, static_cast<uint8_t>(e->d - LaserDeg)});
       break;
     }
@@ -510,7 +510,7 @@ void BossManager::BitDelete() {
     }
 
     if (e->LLaserRef != 0U) {
-      Lasers.ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+      lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     e->hp = 0;
     e->count = 0;
@@ -609,7 +609,7 @@ void BossManager::BitLaserCommand(uint8_t Command) {
     case BLASERCMD_TYPE_A: // Emit unidirectional fixed-angle laser
       info.c = 2;
       info.enemy_id = e->LLaserRef;
-      if (Lasers.SpawnLongLaser(info)) {
+      if (lasers_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       break;
@@ -618,13 +618,13 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       info.d += 64;
       info.c = 1;
       info.enemy_id = e->LLaserRef;
-      if (Lasers.SpawnLongLaser(info)) {
+      if (lasers_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
 
       info.d += 128;
       info.enemy_id = e->LLaserRef;
-      if (Lasers.SpawnLongLaser(info)) {
+      if (lasers_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       break;
@@ -636,30 +636,30 @@ void BossManager::BitLaserCommand(uint8_t Command) {
 
       info.d = e->d + delta;
       info.enemy_id = e->LLaserRef;
-      if (Lasers.SpawnLongLaser(info)) {
+      if (lasers_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       info.d = e->d - delta;
       info.enemy_id = e->LLaserRef;
-      if (Lasers.SpawnLongLaser(info)) {
+      if (lasers_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       break;
 
     case BLASERCMD_OPEN:
-      Lasers.ControlLongLaser(e, ECLCST_LLASERALL,
+      lasers_->ControlLongLaser(e, ECLCST_LLASERALL,
                               LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
       continue;
 
     case BLASERCMD_CLOSE:
-      Lasers.ControlLongLaser(e, ECLCST_LLASERALL,
+      lasers_->ControlLongLaser(e, ECLCST_LLASERALL,
                               LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
       e->LLaserRef = 0;
       bit_data.bIsLaserEnable = false;
       continue;
 
     case BLASERCMD_CLOSEL:
-      Lasers.ControlLongLaser(e, ECLCST_LLASERALL,
+      lasers_->ControlLongLaser(e, ECLCST_LLASERALL,
                               LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
       continue;
     }

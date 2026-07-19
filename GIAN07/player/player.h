@@ -63,6 +63,9 @@ class HomingForm;
 class HomingFocusForm;
 class LaserForm;
 class LaserFocusForm;
+struct BulletManager;
+struct LaserManager;
+struct GameManager;
 
 // [ Player class ]
 enum class PlayerReward : uint8_t { NONE, BOMB, EXTEND };
@@ -77,6 +80,9 @@ public:
   Player &operator=(Player &&other) = delete;
 
   // --- Lifecycle ---
+  void Bind(BulletManager &bm) { bullets_ = &bm; }
+  void Bind(LaserManager &lm) { lasers_ = &lm; }
+  void Bind(GameManager &gm) { game_ = &gm; }
   void Draw();
   void DrawStatus() const;
   void Update();
@@ -236,6 +242,10 @@ private:
 
   bool game_over_ = false;
   bool buzz_sound_ = false;
+
+  BulletManager *bullets_ = nullptr;
+  LaserManager *lasers_ = nullptr;
+  GameManager *game_ = nullptr;
 
   // --- Shot pool ---
   std::array<PlayerShot, MAIDTAMA_MAX> maid_tama_{};

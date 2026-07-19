@@ -9,8 +9,15 @@
 #include "bullet.h"
 #include "core/object_pool.h"
 
+struct ItemManager;
+struct GameManager;
+
 struct BulletManager {
   void Init();
+
+  // --- DI ---
+  void Bind(ItemManager &im) { items_ = &im; }
+  void Bind(GameManager &gm) { game_ = &gm; }
 
   bool Spawn(const BulletSpawnInfo &si);
   bool SpawnLine(const BulletSpawnInfo &si);
@@ -33,6 +40,8 @@ struct BulletManager {
   void RotateDisplayAngles();
 
 private:
+  ItemManager *items_ = nullptr;
+  GameManager *game_ = nullptr;
   ObjectPool<Bullet, kBulletSmallMax> pool_small;
   ObjectPool<Bullet, kBulletLargeMax> pool_large;
 
@@ -50,5 +59,3 @@ private:
     }
   }
 };
-
-extern BulletManager Bullets;

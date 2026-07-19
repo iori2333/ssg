@@ -23,7 +23,7 @@
 #include "core/level.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/demo_play.h"
-#include "gameflow/rank_manager.h"
+#include "core/game_manager.h"
 #include "gameflow/gameflow_manager.h"
 #include "gameflow/ending_manager.h"
 #include "gameflow/game_main.h"
@@ -194,7 +194,7 @@ static void enemy_set() {
         if (((Key_Data & KEY_TAMA) != 0) || ((Key_Data & KEY_RETURN) != 0) ||
             ((Key_Data & KEY_BOMB) != 0)) {
           if (!Scroller.scene.ReturnFlag) {
-            Games.game_count = temp;
+            GameFlow.ctx.game.count = temp;
             Scroller.scene.ReturnFlag = true;
           }
         } else {
@@ -204,14 +204,14 @@ static void enemy_set() {
       //
       // if((Key_Data & KEY_SKIP) &&
       // Scroller.scene.MsgFlag)
-      // Games.game_count+=(temp-Games.game_count)/3; else if((Key_Data
-      // & KEY_RETURN) && !Scroller.scene.ReturnFlag){ Games.game_count  =
+      // GameFlow.ctx.game.count+=(temp-GameFlow.ctx.game.count)/3; else if((Key_Data
+      // & KEY_RETURN) && !Scroller.scene.ReturnFlag){ GameFlow.ctx.game.count  =
       // temp; Scroller.scene.ReturnFlag = true;
       // }
       // if(!(Key_Data & KEY_RETURN) &&
       // Scroller.scene.ReturnFlag) { Scroller.scene.ReturnFlag = false;
       // }
-      if (temp > Games.game_count) {
+      if (temp > GameFlow.ctx.game.count) {
         bFlag = false;
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)
@@ -336,7 +336,7 @@ static void enemy_set() {
     case SCL_MUSIC:
       //				if(!(// DemoplaySaveEnable||//
       //Demos.load_enable)){
-      if (!Games.is_demoplay) {
+      if (!GameFlow.ctx.game.is_demoplay) {
         BGM_Stop();
         if (track_mgr.Switch(cmd[1])) {
           BGM_Play();
@@ -357,10 +357,10 @@ static void enemy_set() {
     case SCL_EFC:
       switch (cmd[1]) {
       case SEFC_WARN:
-        // effect_set(0,0,EFC_WARNBOSS,Games.game_stage);
+        // effect_set(0,0,EFC_WARNBOSS,GameFlow.ctx.game.stage);
         Snd_SEPlay(static_cast<SfxId>(8), GX_MID, true);
         Effects.SetWarningEffect();
-        // StringEffect3(Games.game_stage);
+        // StringEffect3(GameFlow.ctx.game.stage);
         break;
 
       case SEFC_WARNSTOP:
@@ -409,10 +409,10 @@ static void enemy_set() {
         Effects.SetScreenEffect(SCNEFC_WHITEOUT);
         break; // White out
       case SEFC_LOADEX01:
-        gfx.LoadStage(kGfxExBoss1);
+        gfx.LoadStage(GameStage::EX_BOSS1);
         break;
       case SEFC_LOADEX02:
-        gfx.LoadStage(kGfxExBoss2);
+        gfx.LoadStage(GameStage::EX_BOSS2);
         break;
       case SEFC_STG6RASTER:
         Scroller.Command(SCMD_STG6RASTER);
@@ -444,7 +444,7 @@ static void enemy_set() {
         return;
       }
       if (Demos.load_all_enable) {
-        if (Games.game_stage < Demos.playback_max_stage) {
+        if (GameFlow.ctx.game.stage < Demos.playback_max_stage) {
           GameNextStage();
         }
         return;
@@ -463,10 +463,10 @@ static void enemy_set() {
         return;
       }
 
-      if (Games.game_stage == STAGE_MAX) {
-        Games.game_stage = 7;
+      if (GameFlow.ctx.game.stage == GameStage::STAGE_6) {
+        GameFlow.ctx.game.stage = GameStage::CLEARED;
       }
-      if (Games.game_level != GameLevel::EASY) {
+      if (GameFlow.ctx.game.level != GameLevel::EASY) {
         switch (Players.Weapon()) {
         case 0:
           ConfigDat.extra_stg_flags |= 1;
@@ -515,13 +515,13 @@ static void enemy_set() {
     }
   }
 
-  Games.game_count++;
+  GameFlow.ctx.game.count++;
 
-  if ((Games.game_count & 0x3f) == 0) {
-    if (Games.game_stage == kGfxExStage) {
-      Ranking.Add(1);
+  if ((GameFlow.ctx.game.count & 0x3f) == 0) {
+    if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
+      Scroller.game_->AddRank(1);
     } else {
-      Ranking.Add(1 + (Games.game_stage / 3));
+      Scroller.game_->AddRank(1 + (std::to_underlying(GameFlow.ctx.game.stage) / 3));
     }
   }
 }

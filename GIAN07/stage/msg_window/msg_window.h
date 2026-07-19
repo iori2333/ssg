@@ -62,5 +62,3 @@ private:
   std::optional<TEXTRENDER_RECT_ID> trr;
 };
 
-// Migration global instance. To be consolidated into UIManager etc.
-extern MsgWindow MsgWin;

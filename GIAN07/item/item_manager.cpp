@@ -1,7 +1,3 @@
 ///
-/// ItemManager - Centralized item system state
+/// ItemManager — migrated to GameContext
 ///
-
-#include "item_manager.h"
-
-ItemManager Items;

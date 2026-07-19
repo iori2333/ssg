@@ -27,7 +27,7 @@ bool EndingManager::Init() {
   Grp_Flip();
   GrpBackend_Clear();
 
-  if (!gfx.LoadStage(kGfxEnding) || !stage_mgr.LoadStageData(kGfxEnding)) {
+  if (!gfx.LoadStage(GameStage::ENDING) || !stage_mgr.LoadStageData(GameStage::ENDING)) {
     return false;
   }
   BGM_Stop();
@@ -219,7 +219,7 @@ void EndingManager::SCLDecode() {
     switch (cmd[0]) {
     case SCL_TIME: {
       const auto temp = I32LEAt(&cmd[1]);
-      if (std::cmp_greater(temp, Games.game_count)) {
+      if (std::cmp_greater(temp, GameFlow.ctx.game.count)) {
         bFlag = false;
       } else {
         Enemies.scl_now += 5; // cmd(1)+time(4)
@@ -356,5 +356,5 @@ void EndingManager::SCLDecode() {
     }
   }
 
-  Games.game_count++;
+  GameFlow.ctx.game.count++;
 }

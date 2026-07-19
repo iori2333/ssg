@@ -10,6 +10,11 @@
 #include "boss.h"
 #include "boss_systems.h"
 
+struct BulletManager;
+struct ItemManager;
+struct LaserManager;
+struct GameManager;
+
 struct BossManager {
   std::array<BossData, BOSS_MAX> bosses; // Boss[]
   uint16_t count = 0;                    // BossNow
@@ -19,7 +24,18 @@ struct BossManager {
   SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX]; // SnakeData[]
   BitData bit_data;                         // BitData
 
+  BulletManager *bullets_ = nullptr;
+  LaserManager *lasers_ = nullptr;
+  ItemManager *items_ = nullptr;
+  GameManager *game_ = nullptr;
+
   // === Methods ===
+
+  // --- DI ---
+  void Bind(BulletManager &bm) { bullets_ = &bm; }
+  void Bind(LaserManager &lm) { lasers_ = &lm; }
+  void Bind(ItemManager &im) { items_ = &im; }
+  void Bind(GameManager &gm) { game_ = &gm; }
 
   // Initialization and setup
   void Init();

@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "core/game_manager.h"
 #include "demo_play.h"
 
 struct DemoManager {
@@ -16,7 +17,7 @@ struct DemoManager {
   bool save_all_enable = false;
   bool load_all_enable = false;
   MULTI_REPLAY_INFO multi_play_info = {};
-  uint8_t playback_max_stage = 0;
+  GameStage playback_max_stage = GameStage::NONE;
   std::string pending_replay_file;
   DemoPlayState demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};
@@ -41,7 +42,7 @@ struct DemoManager {
   [[nodiscard]] bool LoadSetup();
   [[nodiscard]] bool Record(INPUT_BITS key);
   void SaveDemo();
-  [[nodiscard]] bool LoadDemo(int stage);
+  [[nodiscard]] bool LoadDemo(GameStage stage);
   INPUT_BITS Move();
   void Cleanup();
   void SaveReplayAll(bool exstg);

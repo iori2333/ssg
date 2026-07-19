@@ -12,15 +12,11 @@
 #include "item/item_manager.h"
 #include "core/gian.h"
 #include "core/level.h"
-#include "gameflow/rank_manager.h"
+#include "core/game_manager.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/ut_math.h"
-
-// ── Global instance ──────────────────────────────────────────────
-
-BulletManager Bullets;
 
 // ── BulletManager: Init ──────────────────────────────────────────
 
@@ -176,7 +172,7 @@ void BulletManager::UpdateAll() {
     }
     if (r.division_requested) {
       Snd_SEPlay(static_cast<SfxId>(12), r.division_cx);
-      auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true);
+      auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true, *game_);
       Spawn(si);
     }
   }
@@ -189,7 +185,7 @@ void BulletManager::UpdateAll() {
     }
     if (r.division_requested) {
       Snd_SEPlay(static_cast<SfxId>(12), r.division_cx);
-      auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true);
+      auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true, *game_);
       Spawn(si);
     }
   }
@@ -292,7 +288,7 @@ void BulletManager::ToItems(uint8_t n) {
     if (b.effect_ != TE_DELETE) {
       b.count_ = 0;
       if (rnd() % n == 0) {
-        Items.Spawn(b.x_, b.y_, ITEM_SCORE);
+        items_->Spawn(b.x_, b.y_, ITEM_SCORE);
         b.flag_ = TF_DELETE;
         b.c_ = 0x25;
       } else {
@@ -307,7 +303,7 @@ void BulletManager::ToItems(uint8_t n) {
     if (b.effect_ != TE_DELETE) {
       b.count_ = 0;
       if (rnd() % n == 0) {
-        Items.Spawn(b.x_, b.y_, ITEM_SCORE);
+        items_->Spawn(b.x_, b.y_, ITEM_SCORE);
         b.flag_ = TF_DELETE;
         b.c_ = 0x25;
       } else {

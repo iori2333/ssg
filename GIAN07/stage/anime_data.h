@@ -5,8 +5,10 @@
 
 #include <cstdint>
 
+#include "core/game_manager.h"
+
 namespace anime_data {
 
-void SetupStageAnime(uint8_t stage_num);
+void SetupStageAnime(GameStage stage);
 
 } // namespace anime_data

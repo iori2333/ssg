@@ -6,7 +6,7 @@
 #include <cassert>
 
 #include "core/config.h"
-#include "core/game_manager.h"
+#include "gameflow/gameflow_manager.h"
 #include "enemy/enemy_manager.h"
 #include "gfx_manager.h"
 #include "pack_manager.h"
@@ -28,7 +28,7 @@ BYTE_BUFFER_BORROWED LoadEmbeddedScript(int filno) {
 
 } // namespace
 
-bool StageManager::LoadStageData(uint8_t stage_num) {
+bool StageManager::LoadStageData(GameStage stage_num) {
   Enemies.scl_now = nullptr;
   Enemies.ecl_head = {};
   Enemies.scl_head = {};
@@ -36,28 +36,29 @@ bool StageManager::LoadStageData(uint8_t stage_num) {
 
   const auto &map_pack = packs.Map();
 
-  if (stage_num == kGfxExStage) {
+  if (stage_num == GameStage::EXTRA) {
     if ((Enemies.ecl_head = LoadEmbeddedScript(24)).data() == nullptr ||
         (Enemies.scl_head = LoadEmbeddedScript(25)).data() == nullptr ||
         (Scroller.scroll.DataHead = map_pack.Extract(12)) == nullptr) {
       return false;
     }
-  } else if (stage_num == kGfxEnding) {
+  } else if (stage_num == GameStage::ENDING) {
     if ((Enemies.scl_head = LoadEmbeddedScript(47)).data() == nullptr) {
       return false;
     }
     Enemies.scl_now = Enemies.scl_head.data();
-    Games.game_count = 0;
+    GameFlow.ctx.game.count = 0;
     return true;
   } else {
-    if ((stage_num < 1) || (stage_num > STAGE_MAX)) {
+    const auto stage_val = std::to_underlying(stage_num);
+    if (stage_val < 1 || stage_val > STAGE_MAX) {
       return false;
     }
-    if ((Enemies.ecl_head = LoadEmbeddedScript(stage_num - 1)).data() ==
+    if ((Enemies.ecl_head = LoadEmbeddedScript(stage_val - 1)).data() ==
             nullptr ||
-        (Enemies.scl_head = LoadEmbeddedScript(stage_num + 5)).data() ==
+        (Enemies.scl_head = LoadEmbeddedScript(stage_val + 5)).data() ==
             nullptr ||
-        (Scroller.scroll.DataHead = map_pack.Extract(stage_num - 1)) ==
+        (Scroller.scroll.DataHead = map_pack.Extract(stage_val - 1)) ==
             nullptr) {
       return false;
     }
@@ -68,7 +69,7 @@ bool StageManager::LoadStageData(uint8_t stage_num) {
   }
 
   Enemies.scl_now = Enemies.scl_head.data();
-  Games.game_count = 0;
+  GameFlow.ctx.game.count = 0;
 
   anime_data::SetupStageAnime(stage_num);
 

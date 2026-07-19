@@ -15,7 +15,7 @@
 #include "effect/effect_manager.h"
 #include "effect/fragment.h"
 #include "enemy/enemy_manager.h"
-#include "gameflow/rank_manager.h"
+#include "core/game_manager.h"
 #include "gfx/graphics_backend.h"
 #include "player.h"
 #include "stage/scroll_manager.h"
@@ -54,7 +54,7 @@ void Player::SetMaidShot() {
       deathbomb_count_++;
       deathbomb_time_ = 0;
     }
-    Ranking.Add(-25);
+    game_->AddRank(-25);
   }
 
   if (bomb_time_ != 0U) {

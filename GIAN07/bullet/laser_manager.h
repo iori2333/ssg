@@ -12,6 +12,7 @@
 #include "laser/long.h"
 
 struct EnemyData;
+struct GameManager;
 
 struct LaserManager {
   void Init();
@@ -38,7 +39,11 @@ struct LaserManager {
 
   void RenderDebugHitboxes(int mode) const;
 
+  // --- DI ---
+  void Bind(GameManager &gm) { game_ = &gm; }
+
 private:
+  GameManager *game_ = nullptr;
   ObjectPool<LaserReflect, kReflectMax> reflect;
   ObjectPool<LaserLong, kLongLaserMax> long_lasers;
   ObjectPool<LaserHoming, kHomingMax> homing;
@@ -50,5 +55,3 @@ private:
   void ClearReflect();
   void ClearLong();
 };
-
-extern LaserManager Lasers;

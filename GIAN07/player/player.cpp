@@ -15,7 +15,8 @@
 #include "bullet/bullet_manager.h"
 #include "bullet/laser_manager.h"
 #include "gameflow/game_main.h"
-#include "gameflow/rank_manager.h"
+#include "gameflow/gameflow_manager.h"
+#include "core/game_manager.h"
 #include "stage/scroll_manager.h"
 #include "effect/effect_manager.h"
 #include "core/config.h"
@@ -513,8 +514,8 @@ void Player::Update() {
   SetMaidShot();
 
   if (bomb_time_ != 0U) {
-    Bullets.Clear();
-    Lasers.ClearAll();
+    bullets_->Clear();
+    lasers_->ClearAll();
   }
 
   buzz_sound_ = false;
@@ -598,7 +599,7 @@ void Player::OnHit() {
     const auto window =
         DEATHBOMB_WINDOW +
         (static_cast<int>(GameLevel::LUNATIC) -
-         static_cast<int>(std::to_underlying(Games.game_level))) *
+         static_cast<int>(std::to_underlying(GameFlow.ctx.game.level))) *
             2;
     deathbomb_time_ = static_cast<uint16_t>(window);
     muteki_ = static_cast<uint16_t>(window);
@@ -639,9 +640,9 @@ void Player::OnDeath(bool play_se) {
     muteki_ = BOMBMUTEKI_VAL;
     bomb_--;
     bomb_used_++;
-    Ranking.Add(-BOMB_RANK_DECR); // auto bomb_ decreases rank
-    Bullets.Clear();
-    Lasers.ClearAll();
+    game_->AddRank(-BOMB_RANK_DECR); // auto bomb_ decreases rank
+    bullets_->Clear();
+    lasers_->ClearAll();
     return;
   }
 
@@ -660,7 +661,7 @@ void Player::OnDeath(bool play_se) {
   bomb_ = ConfigDat.bomb_stock;
   muteki_ = VIVDEAD_VAL;
 
-  Ranking.Add(-DEATH_RANK_DECR); // death decreases rank
+  game_->AddRank(-DEATH_RANK_DECR); // death decreases rank
 
   if (left_ != 0U) {
     left_ -= 1;
@@ -676,8 +677,8 @@ void Player::OnDeath(bool play_se) {
     GameOverInit();
   }
 
-  Bullets.Clear();
-  Lasers.ClearAll();
+  bullets_->Clear();
+  lasers_->ClearAll();
 }
 
 void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }

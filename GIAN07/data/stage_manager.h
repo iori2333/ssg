@@ -5,11 +5,12 @@
 
 #include <cstdint>
 
+#include "core/game_manager.h"
 #include "sys/buffer.h"
 
 class StageManager {
 public:
-  bool LoadStageData(uint8_t stage);
+  bool LoadStageData(GameStage stage);
   BYTE_BUFFER_OWNED LoadDemo(int stage);
 };
 

@@ -18,6 +18,5 @@ struct ItemManager {
   void SetIndices();
 };
 
-extern ItemManager Items;
 
 // === Backward-compatibility inline wrappers ===

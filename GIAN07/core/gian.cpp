@@ -11,7 +11,8 @@
 #include "level.h"
 
 #include "gfx/font_uty.h"
-#include "gameflow/rank_manager.h"
+#include "gameflow/gameflow_manager.h"
+#include "core/game_manager.h"
 #include "player/player.h"
 #include "util/time.h"
 
@@ -36,9 +37,9 @@ void StdStatusOutput() {
   GrpPut16(0, 0, std::format("FPS   {:3}", fps).c_str());
 
   // ---- RANK  display ----
-  GrpPut16(0, 40, std::format("R {:7}", Ranking.state.Rank).c_str());
+  GrpPut16(0, 40, std::format("R {:7}", GameFlow.ctx.game.rank).c_str());
   // ---- LEVEL display ----
-  auto lv = std::to_underlying(Games.game_level);
+  auto lv = std::to_underlying(GameFlow.ctx.game.level);
   GrpPut16(0, 60,
            std::format("L {:>7}", lv < 5 ? LevelName[lv] : "Unknown").c_str());
 

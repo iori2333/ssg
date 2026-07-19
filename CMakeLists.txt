@@ -143,31 +143,6 @@ if(MSVC)
 endif()
 
 # ============================================================
-# Pack tool (standalone utility)
-# ============================================================
-add_executable(pack_tool
-    tools/pack_tool.cpp
-    GIAN07/core/lz_uty.cpp
-    game/sys/buffer.cpp
-    game/sys/file.cpp
-)
-if(WIN32)
-    target_compile_definitions(pack_tool PRIVATE WIN32)
-    target_link_libraries(pack_tool PRIVATE ${WIN32_SYSTEM_LIBS})
-endif()
-target_include_directories(pack_tool PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/game
-    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
-)
-target_link_libraries(pack_tool PRIVATE SDL3::SDL3-static)
-set_target_properties(pack_tool PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-if(MSVC)
-    target_compile_options(pack_tool PRIVATE /MP)
-endif()
-
-# ============================================================
 # Script tool (ECL/SCL disassembler/assembler)
 # ============================================================
 add_executable(script_tool

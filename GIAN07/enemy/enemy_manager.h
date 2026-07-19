@@ -10,6 +10,11 @@
 #include "enemy.h"
 #include "sys/buffer.h"
 
+struct BulletManager;
+struct ItemManager;
+struct LaserManager;
+struct GameManager;
+
 struct EnemyManager {
   // --- Enemy data ---
   std::array<EnemyData, ENEMY_MAX> entities; // Enemy[]
@@ -32,6 +37,17 @@ struct EnemyManager {
   // --- Special angle (used in ENEMY.cpp) ---
   uint8_t enemy_exdeg = 0;   // EnemyEXDEG
   uint8_t enemy_exdeg_d = 0; // EnemyEXDEG_D
+
+  BulletManager *bullets_ = nullptr;
+  LaserManager *lasers_ = nullptr;
+  ItemManager *items_ = nullptr;
+  GameManager *game_ = nullptr;
+
+  // --- DI ---
+  void Bind(BulletManager &bm) { bullets_ = &bm; }
+  void Bind(LaserManager &lm) { lasers_ = &lm; }
+  void Bind(ItemManager &im) { items_ = &im; }
+  void Bind(GameManager &gm) { game_ = &gm; }
 
   // === Methods ===
 

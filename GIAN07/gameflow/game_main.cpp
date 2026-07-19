@@ -10,7 +10,7 @@
 #include "demo_play.h"
 #include "game_main.h"
 #include "gameflow_manager.h"
-#include "gameflow/rank_manager.h"
+#include "core/game_manager.h"
 #include "item/item_manager.h"
 #include "score.h"
 #include "score_manager.h"
@@ -85,7 +85,7 @@ void Render(PIXEL_COORD top) {
 }; // namespace Version
 
 // GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
-// current_name, current_rank, current_dif, Games.is_demoplay,
+// current_name, current_rank, current_dif, GameFlow.ctx.game.is_demoplay,
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
 
 // Converted functions -> inline wrappers provided in gameflow_manager.h
@@ -112,8 +112,8 @@ void GameMove();
 // game_main initial values set in gameflow_manager.cpp
 
 GameLevel CurrentLevel() {
-  return ((Games.game_stage == kGfxExStage) ? GameLevel::EXTRA
-                                                     : Games.game_level);
+  return ((GameFlow.ctx.game.stage == GameStage::EXTRA) ? GameLevel::EXTRA
+                                                      : GameFlow.ctx.game.level);
 }
 
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
@@ -132,7 +132,7 @@ bool ScoreNameInit() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(kGfxNameRegist)) {
+  if (!gfx.LoadStage(GameStage::NAME_REGIST)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -528,10 +528,10 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_name.Score = Players.Score();
   current_name.Evade = Players.GrazeSum();
   current_name.Weapon = Players.Weapon();
-  if (Games.game_stage == kGfxExStage) {
+  if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
     current_name.Stage = 1;
   } else {
-    current_name.Stage = Games.game_stage;
+    current_name.Stage = std::to_underlying(GameFlow.ctx.game.stage);
   }
 
   // For debugging...
@@ -548,7 +548,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(kGfxNameRegist)) {
+  if (!gfx.LoadStage(GameStage::NAME_REGIST)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -575,15 +575,32 @@ void GameSTD_Init() {
 
   Bosses.Init();
 
+  // --- DI ---
+  Enemies.Bind(GameFlow.ctx.bullets);
+  Enemies.Bind(GameFlow.ctx.lasers);
+  Enemies.Bind(GameFlow.ctx.items);
+  Enemies.Bind(GameFlow.ctx.game);
+  Bosses.Bind(GameFlow.ctx.bullets);
+  Bosses.Bind(GameFlow.ctx.lasers);
+  Bosses.Bind(GameFlow.ctx.items);
+  Bosses.Bind(GameFlow.ctx.game);
+  Players.Bind(GameFlow.ctx.bullets);
+  Players.Bind(GameFlow.ctx.lasers);
+  Players.Bind(GameFlow.ctx.game);
+  Scroller.Bind(GameFlow.ctx.game);
+  GameFlow.ctx.bullets.Bind(GameFlow.ctx.items);
+  GameFlow.ctx.bullets.Bind(GameFlow.ctx.game);
+  GameFlow.ctx.lasers.Bind(GameFlow.ctx.game);
+
   // Players.Initialize();
   Players.SetMaidShotIndices();
   Enemies.InitIndices();
-  Bullets.Init();
-  Lasers.Init();
+  GameFlow.ctx.bullets.Init();
+  GameFlow.ctx.lasers.Init();
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
   Effects.InitLockOn();
-  Items.SetIndices();
+  GameFlow.ctx.items.SetIndices();
   Effects.InitFragments();
   Effects.InitScreenEffect();
   Effects.SetScreenEffect(SCNEFC_CFADEIN);
@@ -603,10 +620,10 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  Games.game_level = (ExStg ? GameLevel::HARD : ConfigDat.game_level);
+  GameFlow.ctx.game.level = (ExStg ? GameLevel::HARD : ConfigDat.game_level);
 
   GameSTD_Init();
-  Ranking.Reset();
+  GameFlow.ctx.game.ResetRank();
 
   Players.Initialize();
 
@@ -617,7 +634,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
-    Games.game_stage = kGfxExStage;
+    GameFlow.ctx.game.stage = GameStage::EXTRA;
   }
 
   return true;
@@ -660,20 +677,20 @@ bool GameInit(std::function<void(bool &)> next_proc) {
 
 // Transition to next stage
 bool GameNextStage() {
-  Games.game_stage++;
+  ++GameFlow.ctx.game.stage;
 
   // Transition to ending
-  Games.game_stage =
-      std::min<int>(Games.game_stage, STAGE_MAX); // To be changed later
+  GameFlow.ctx.game.stage = static_cast<GameStage>(
+      std::min(GameFlow.ctx.game.stage, GameStage::STAGE_6)); // To be changed later
 
   GameSTD_Init();
   Players.PrepareNextStage();
 
-  if (!gfx.LoadStage(Games.game_stage)) {
+  if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!stage_mgr.LoadStageData(Games.game_stage)) {
+  if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -689,28 +706,28 @@ bool GameReplayInitAll(const char *fn) {
     return false;
   }
 
-  Games.game_stage = Demos.multi_play_info.Stages[0];
+  GameFlow.ctx.game.stage = static_cast<GameStage>(Demos.multi_play_info.Stages[0]);
 
-  Ranking.Reset();
+  GameFlow.ctx.game.ResetRank();
 
   GrpBackend_Clear();
   Grp_Flip();
   GameSTD_Init();
 
-  if (!gfx.LoadStage(Games.game_stage)) {
+  if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
-  if (!stage_mgr.LoadStageData(Games.game_stage)) {
+  if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     Demos.Cleanup();
     Demos.load_all_enable = false;
     return false;
   }
 
-  if (Games.game_stage == kGfxExStage) {
+  if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
     Players.SetCredits(0);
   }
 
@@ -784,23 +801,24 @@ bool DemoInit() {
   Players.Initialize();
 
   rnd_seed_set(Time_SteadyTicksMS());
-  Games.game_stage = (rnd() % STAGE_MAX) + 1;
+  GameFlow.ctx.game.stage = static_cast<GameStage>((rnd() % STAGE_MAX) + 1);
 
-  if (!Demos.LoadDemo(Games.game_stage)) {
+  if (!Demos.LoadDemo(GameFlow.ctx.game.stage)) {
     // DebugOut("Demo play data does not exist");
     return false;
   }
 
-  Ranking.Reset();
+  GameFlow.ctx.game.ResetRank();
 
-  if (!gfx.LoadStage(Games.game_stage)) {
+  if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!stage_mgr.LoadStageData(Games.game_stage)) {
+  if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
+  // ...
 
   GameFlow.current_state = GameState::Demo;
   return GameInit([](bool &q) { DemoProc(q); });
@@ -864,7 +882,7 @@ void SProjectProc(bool & /*unused*/) {
 bool SProjectInit() {
   GrpBackend_PixelAccessStart();
 
-  if (!gfx.LoadStage(kGfxSProject)) {
+  if (!gfx.LoadStage(GameStage::S_PROJECT)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -897,13 +915,13 @@ bool GameExit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(kGfxTitle)) {
+  if (!gfx.LoadStage(GameStage::TITLE)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  Lasers.Init(); // Stop sound + re-init pools
+  GameFlow.ctx.lasers.Init(); // Stop sound + re-init pools
   Snd_SEStop(8);      // Stop warning sound
 
   const auto flags = MsgWindowFlags::CENTER;
@@ -914,7 +932,7 @@ bool GameExit(bool bNeedChgMusic) {
 
   GameFlow.demo_timer = 0;
 
-  Games.game_stage = 0;
+  GameFlow.ctx.game.stage = GameStage::NONE;
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
@@ -1094,12 +1112,12 @@ void DemoProc(bool & /*unused*/) {
     Key_Data = Demos.Move();
   }
 
-  Games.is_demoplay = true;
+  GameFlow.ctx.game.is_demoplay = true;
 
   // Exit immediately if ESC is pressed
   if ((Key_Data & KEY_ESC) != 0) {
     Demos.Cleanup();
-    Games.is_demoplay = false;
+    GameFlow.ctx.game.is_demoplay = false;
     GameExit();
     return;
   }
@@ -1108,7 +1126,7 @@ void DemoProc(bool & /*unused*/) {
 
   if (GameFlow.current_state != GameState::Demo) {
     Demos.Cleanup(); // Cleanup
-    Games.is_demoplay = false;
+    GameFlow.ctx.game.is_demoplay = false;
     GameExit(); // Force exit (game over countermeasure)
     return;
   }
@@ -1205,7 +1223,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     if (spd != 0) {
       break;
     }
-    if (Games.game_stage == kGfxExStage) {
+    if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
       if (((1 << Players.Weapon()) & ConfigDat.extra_stg_flags) == 0) {
         break;
       }
@@ -1216,25 +1234,25 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     count = 0;
 
     Snd_SEPlay(SfxId::Select);
-    if (Games.game_stage != kGfxExStage) {
+    if (GameFlow.ctx.game.stage != GameStage::EXTRA) {
       if (forceStage != 0) {
-        Games.game_stage = forceStage;
-        if (Games.game_stage == 2) {
+        GameFlow.ctx.game.stage = static_cast<GameStage>(forceStage);
+        if (GameFlow.ctx.game.stage == GameStage::STAGE_2) {
           Players.SetPower(160);
         }
-        if (Games.game_stage >= 3) {
+        if (GameFlow.ctx.game.stage >= GameStage::STAGE_3) {
           Players.SetPower(255);
         }
       } else if (ConfigDat.stage_select != 0U) {
-        Games.game_stage = ConfigDat.stage_select;
-        if (Games.game_stage == 2) {
+        GameFlow.ctx.game.stage = static_cast<GameStage>(ConfigDat.stage_select);
+        if (GameFlow.ctx.game.stage == GameStage::STAGE_2) {
           Players.SetPower(160);
         }
-        if (Games.game_stage >= 3) {
+        if (GameFlow.ctx.game.stage >= GameStage::STAGE_3) {
           Players.SetPower(255);
         }
       } else {
-        Games.game_stage = 1;
+        GameFlow.ctx.game.stage = GameStage::STAGE_1;
       }
     } else {
       Players.SetCredits(0);
@@ -1244,11 +1262,11 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     Demos.Init();
 
-    if (!gfx.LoadStage(Games.game_stage)) {
+    if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!stage_mgr.LoadStageData(Games.game_stage)) {
+    if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
       DebugOut("MAP.PAK が破壊されています");
       return;
     }
@@ -1295,7 +1313,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpGeom->SetColor({0, 0, 1});
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
-      if ((Games.game_stage != kGfxExStage) ||
+      if ((GameFlow.ctx.game.stage != GameStage::EXTRA) ||
           (((1 << i) & ConfigDat.extra_stg_flags) != 0)) {
         continue;
       }
@@ -1476,9 +1494,9 @@ void GameMove() {
 
   Bosses.Move();
   Enemies.Move();
-  Items.Move();
-  Bullets.Move();
-  Lasers.Move();       // MoveAll — replaces Move+MoveLong+MoveHoming
+  GameFlow.ctx.items.Move();
+  GameFlow.ctx.bullets.Move();
+  GameFlow.ctx.lasers.Move();       // MoveAll — replaces Move+MoveLong+MoveHoming
   Effects.MoveFragments();
   Effects.MoveStringEffects();
   Effects.MoveCircleEffects();
@@ -1512,27 +1530,27 @@ void GameDraw() {
   Players.Draw();
 
   if (GrpGeom_FB() != nullptr) {
-    Lasers.RenderLong();
+    GameFlow.ctx.lasers.RenderLong();
   }
 
   Effects.DrawLockOn();
 
   Effects.DrawFragments();
-  Items.Draw();
+  GameFlow.ctx.items.Draw();
 
   // Long laser draws need two passes for Z ordering
   if (GrpGeom_Poly() != nullptr) {
-    Lasers.RenderLong();
+    GameFlow.ctx.lasers.RenderLong();
   }
 
-  Lasers.RenderHoming();
-  Lasers.Draw();
-  Bullets.Draw();
+  GameFlow.ctx.lasers.RenderHoming();
+  GameFlow.ctx.lasers.Draw();
+  GameFlow.ctx.bullets.Draw();
 
 #ifdef PBG_DEBUG
   if (ConfigDat.hitbox_display != 0) {
-    Bullets.RenderDebugHitboxes(ConfigDat.hitbox_display);
-    Lasers.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    GameFlow.ctx.bullets.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    GameFlow.ctx.lasers.RenderDebugHitboxes(ConfigDat.hitbox_display);
     auto *gp = GrpGeom_Poly();
     if (gp != nullptr) {
       const RGB216 kBlack{0, 0, 0};
@@ -1580,7 +1598,7 @@ bool GameFlowManager::IsDraw() {
 }
 
 #ifdef PBG_DEBUG
-static void GalleryUpdateAngles() { Bullets.RotateDisplayAngles(); }
+static void GalleryUpdateAngles() { GameFlow.ctx.bullets.RotateDisplayAngles(); }
 
 static void GalleryDrawLabels() {
   static constexpr int x0 = 160;
@@ -1629,7 +1647,7 @@ static void SpawnGalleryBullets() {
       }
       const int wx = (x0 + col * dx) * 64;
       const int wy = (y0 + row * dy) * 64;
-      Bullets.PlaceDisplayBullet(wx, wy, c);
+      GameFlow.ctx.bullets.PlaceDisplayBullet(wx, wy, c);
     }
   }
 }
@@ -1637,8 +1655,8 @@ static void SpawnGalleryBullets() {
 static void BulletGalleryProc(bool & /*quit*/) {
   if ((Key_Data & KEY_ESC) != 0U) {
     ConfigDat.bullet_gallery_active = false;
-    Bullets.Clear();
-    (void)gfx.LoadStage(kGfxTitle);
+    GameFlow.ctx.bullets.Clear();
+    (void)gfx.LoadStage(GameStage::TITLE);
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
     GameFlow.current_state = GameState::Title;
@@ -1652,11 +1670,11 @@ static void BulletGalleryProc(bool & /*quit*/) {
   }
 
   GrpBackend_Clear();
-  Bullets.Draw();
+  GameFlow.ctx.bullets.Draw();
 
   if (ConfigDat.hitbox_display != 0) {
-    Bullets.RenderDebugHitboxes(ConfigDat.hitbox_display);
-    Lasers.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    GameFlow.ctx.bullets.RenderDebugHitboxes(ConfigDat.hitbox_display);
+    GameFlow.ctx.lasers.RenderDebugHitboxes(ConfigDat.hitbox_display);
     auto *gp = GrpGeom_Poly();
     if (gp != nullptr) {
       const RGB216 kBlack{0, 0, 0};
@@ -1683,8 +1701,8 @@ void BulletGalleryInit() {
     return;
   }
   (void)gfx.LoadGalleryEnemySurfaces();
-  Bullets.Init();
-  Bullets.Clear();
+  GameFlow.ctx.bullets.Init();
+  GameFlow.ctx.bullets.Clear();
   SpawnGalleryBullets();
   ConfigDat.bullet_gallery_active = true;
   GameFlow.game_main = BulletGalleryProc;

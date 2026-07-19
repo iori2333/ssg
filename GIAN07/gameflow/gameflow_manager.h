@@ -11,6 +11,8 @@
 #include "game_main.h"
 #include "score.h"
 
+#include "core/game_context.h"
+
 ///// [ Game state enum ] /////
 enum class GameState {
   Title,
@@ -44,6 +46,8 @@ struct GameFlowManager {
   uint8_t current_rank = 0;
   uint8_t current_dif = 0;
   bool input_locked = false;
+
+  GameContext ctx{};
 
   // === Methods ===
   void TitleProc(bool &);

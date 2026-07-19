@@ -12,13 +12,9 @@
 #include "core/gian.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "gameflow/play_rank.h"
-#include "gameflow/rank_manager.h"
+#include "core/game_manager.h"
 #include "player/player.h"
 #include "util/ut_math.h"
-
-// ── Global instance ─────────────────────────────────────────────────
-LaserManager Lasers;
 
 namespace {
 inline constexpr auto kZSetFlag = 0x08;
@@ -38,7 +34,7 @@ void LaserManager::Init() {
 bool LaserManager::SpawnReflect(const ReflectSpawnInfo &info) {
   auto cmd = info;
   if (!cmd.no_scaling) {
-    switch (Ranking.state.level) {
+    switch (game_->EffectiveLevel()) {
     case GameLevel::EASY:
       bullet_common::ApplyEasyCountSpread(cmd.cmd & bullet_common::kCmdMask,
                                           cmd.n, cmd.dw);
@@ -59,7 +55,7 @@ bool LaserManager::SpawnReflect(const ReflectSpawnInfo &info) {
     default:
       break;
     }
-    cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, Ranking.state.Rank);
+    cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, game_->rank);
   }
 
   auto base_deg = (cmd.cmd & kZSetFlag) != 0

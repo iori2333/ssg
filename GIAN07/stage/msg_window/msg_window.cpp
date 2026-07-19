@@ -13,10 +13,6 @@
 #include "stage/window_sys.h"
 #include "util/ut_math.h"
 
-// [Global variables]
-
-MsgWindow MsgWin; // Message window (backward compat, UIManager is the main)
-
 void MsgWindow::MsgBlank() {
   line = 0;
   for (auto &m : msg) {

@@ -8,6 +8,8 @@
 
 #include "bullet_base.h"
 
+struct GameManager;
+
 ////Bullet constants////
 inline constexpr auto TAMA_MAX = (801 * 3);
 inline constexpr auto TAMA_EVADE = 1;
@@ -186,4 +188,5 @@ private:
 
 //// Free function: build SpawnInfo from ECL command ////
 [[nodiscard]] BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd,
-                                                  int ox, int oy, bool scaling);
+                                                  int ox, int oy, bool scaling,
+                                                  const GameManager &game);

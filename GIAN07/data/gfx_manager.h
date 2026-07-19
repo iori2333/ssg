@@ -6,25 +6,18 @@
 #include <cstdint>
 
 #include "core/constants.h"
+#include "core/game_manager.h"
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 
 struct FaceData { PALETTE pal; };
 struct EndingGfx { PIXEL_LTRB rcTarget; PALETTE pal; };
 
-inline constexpr auto kGfxMusicRoom  = 128;
-inline constexpr auto kGfxTitle      = 129;
-inline constexpr auto kGfxNameRegist = 130;
-inline constexpr auto kGfxExStage    = 131;
-inline constexpr auto kGfxExBoss1    = 132;
-inline constexpr auto kGfxExBoss2    = 133;
-inline constexpr auto kGfxSProject   = 134;
-inline constexpr auto kGfxEnding     = 135;
-inline constexpr auto kFaceNumX      = 6;
+inline constexpr auto kFaceNumX = 6;
 
 class GfxManager {
 public:
-  bool LoadStage(int stage);
+  bool LoadStage(GameStage stage);
   void ReloadStage();
   bool LoadEnemySurface(uint8_t image_no);
   bool LoadGalleryEnemySurfaces();
@@ -35,7 +28,7 @@ public:
   PALETTE sp_project_palette{};
 
 private:
-  int loaded_stage_ = 0;
+  GameStage loaded_stage_ = GameStage::NONE;
   PALETTE enemy_palette_{};
 };
 

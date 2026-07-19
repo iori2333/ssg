@@ -23,30 +23,30 @@ bool GrpLoadBmp(const PackFile &in, uint32_t filno, SURFACE_ID sid) {
 
 } // namespace
 
-bool GfxManager::LoadStage(int stage) {
+bool GfxManager::LoadStage(GameStage stage) {
   loaded_stage_ = stage;
   const auto &graph = packs.Images();
 
-  if (stage == kGfxMusicRoom) {
+  if (stage == GameStage::MUSIC_ROOM) {
     return GrpLoadBmp(graph, 0, SURFACE_ID::SYSTEM) &&
            GrpLoadBmp(graph, 19 + 4, SURFACE_ID::MUSIC);
   }
-  if (stage == kGfxTitle) {
+  if (stage == GameStage::TITLE) {
     return GrpLoadBmp(graph, 0, SURFACE_ID::SYSTEM) &&
            GrpLoadBmp(graph, 20 + 4, SURFACE_ID::TITLE);
   }
-  if (stage == kGfxNameRegist) {
+  if (stage == GameStage::NAME_REGIST) {
     return GrpLoadBmp(graph, 0, SURFACE_ID::SYSTEM) &&
            GrpLoadBmp(graph, 21 + 4, SURFACE_ID::NAMEREG);
   }
-  if (stage == kGfxSProject) {
+  if (stage == GameStage::S_PROJECT) {
     if (!GrpLoadBmp(graph, 31, SURFACE_ID::SPROJECT)) {
       return false;
     }
     GrpBackend_PaletteGet(sp_project_palette);
     return true;
   }
-  if (stage == kGfxEnding) {
+  if (stage == GameStage::ENDING) {
     if (!GrpLoadBmp(graph, 32, SURFACE_ID::ENDING_CREDITS)) {
       return false;
     }
@@ -58,7 +58,7 @@ bool GfxManager::LoadStage(int stage) {
     }
     return true;
   }
-  if (stage == kGfxExStage) {
+  if (stage == GameStage::EXTRA) {
     if (!GrpLoadBmp(graph, 0, SURFACE_ID::SYSTEM) ||
         !GrpLoadBmp(graph, 27 + 1, SURFACE_ID::ENEMY) ||
         !GrpLoadBmp(graph, 27, SURFACE_ID::MAPCHIP) ||
@@ -68,14 +68,14 @@ bool GfxManager::LoadStage(int stage) {
     GrpBackend_PaletteGet(enemy_palette_);
     return true;
   }
-  if (stage == kGfxExBoss1) {
+  if (stage == GameStage::EX_BOSS1) {
     if (!GrpLoadBmp(graph, 29, SURFACE_ID::ENEMY)) {
       return false;
     }
     GrpBackend_PaletteGet(enemy_palette_);
     return true;
   }
-  if (stage == kGfxExBoss2) {
+  if (stage == GameStage::EX_BOSS2) {
     if (!GrpLoadBmp(graph, 30, SURFACE_ID::ENEMY)) {
       return false;
     }
@@ -83,14 +83,15 @@ bool GfxManager::LoadStage(int stage) {
     return true;
   }
 
-  if ((stage < 1) || (stage > STAGE_MAX)) {
+  const auto stage_val = std::to_underlying(stage);
+  if (stage_val < 1 || stage_val > STAGE_MAX) {
     return false;
   }
 
   const uint32_t kMapChipId[STAGE_MAX] = {7, 8, 9, 10, 11, 12};
   if (!GrpLoadBmp(graph, 0, SURFACE_ID::SYSTEM) ||
-      !GrpLoadBmp(graph, stage + 0, SURFACE_ID::ENEMY) ||
-      !GrpLoadBmp(graph, kMapChipId[stage - 1], SURFACE_ID::MAPCHIP) ||
+      !GrpLoadBmp(graph, stage_val + 0, SURFACE_ID::ENEMY) ||
+      !GrpLoadBmp(graph, kMapChipId[stage_val - 1], SURFACE_ID::MAPCHIP) ||
       !GrpLoadBmp(graph, 26, SURFACE_ID::BOMBER)) {
     return false;
   }
@@ -99,7 +100,7 @@ bool GfxManager::LoadStage(int stage) {
 }
 
 void GfxManager::ReloadStage() {
-  assert(loaded_stage_ != 0);
+  assert(loaded_stage_ != GameStage::NONE);
   LoadStage(loaded_stage_);
 }
 

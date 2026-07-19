@@ -134,7 +134,7 @@ bool MusicRoomInit() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(kGfxMusicRoom)) {
+  if (!gfx.LoadStage(GameStage::MUSIC_ROOM)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
