@@ -33,6 +33,8 @@ struct LongLaserSpawnInfo {
   uint8_t d{};
   uint8_t c{};
   LongLaserType type{LongLaserType::Long};
+  int player_x{};
+  int player_y{};
 };
 
 // ── State machine ────────────────────────────────────────────────

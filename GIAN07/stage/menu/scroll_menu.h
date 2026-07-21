@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <functional>
 
-#include "stage/window_sys.h"
+#include "stage/menu/window_sys.h"
 
 class ScrollMenu {
 public:

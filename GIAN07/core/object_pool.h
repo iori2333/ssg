@@ -6,18 +6,13 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
 #include <type_traits>
 #include <utility>
 
-#include <concepts>
-
-#include "bullet/bullet_base.h"
 #include "core/entity.h"
 
 template <typename T, std::size_t N>
-  requires std::derived_from<T, BulletBase<typename T::SpawnInfo, typename T::UpdateInfo>>
 struct ObjectPool {
   // ── Forward iterator ─────────────────────────────────────────
   template <bool IsConst>

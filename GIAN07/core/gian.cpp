@@ -16,7 +16,7 @@
 #include "player/player.h"
 #include "util/time.h"
 
-void StdStatusOutput() {
+void StdStatusOutput(PracticeMode practice_mode) {
   const WINDOW_COORD column2_left = (GRP_RES.w - 128);
 
   static uint32_t prev;
@@ -43,13 +43,13 @@ void StdStatusOutput() {
   GrpPut16(0, 60,
            std::format("L {:>7}", lv < 5 ? LevelName[lv] : "Unknown").c_str());
 
-  GrpPut16(0, 100, std::format("Miss {:4}", Players.MissCount()).c_str());
-  GrpPut16(0, 120, std::format("Bomb {:4}", Players.BombUsed()).c_str());
-  GrpPut16(0, 140, std::format("DthB {:4}", Players.DeathbombCount()).c_str());
+  GrpPut16(0, 100, std::format("Miss {:4}", GameFlow.ctx.player.MissCount()).c_str());
+  GrpPut16(0, 120, std::format("Bomb {:4}", GameFlow.ctx.player.BombUsed()).c_str());
+  GrpPut16(0, 140, std::format("DthB {:4}", GameFlow.ctx.player.DeathbombCount()).c_str());
 
   GrpPut16(0, 180, "Stars");
-  auto stars = std::min(Players.StarCounter(), 9999U);
-  auto threshold = std::min(Players.StarThreshold(), 9999U);
+  auto stars = std::min(GameFlow.ctx.player.StarCounter(), 9999U);
+  auto threshold = std::min(GameFlow.ctx.player.StarThreshold(), 9999U);
   GrpPut16(0, 200, std::format("{:4}/{:4}", stars, threshold).c_str());
 
   const auto tm = Time_NowLocal();
@@ -67,16 +67,16 @@ void StdStatusOutput() {
   GrpPut16(column2_left, 360, "Debug  ON");
 #endif
 
-  if (ConfigDat.practice_mode == PracticeMode::AUTOBOMB) {
+  if (practice_mode == PracticeMode::AUTOBOMB) {
     GrpPut16(column2_left, 380, "Prac AUTO");
-  } else if (ConfigDat.practice_mode == PracticeMode::INVINCIBLE) {
+  } else if (practice_mode == PracticeMode::INVINCIBLE) {
     GrpPut16(column2_left, 380, "Prac  INV");
   }
 
   GrpPut16(column2_left, 420,
-           std::format("Bomb {:4}", Players.Bombs()).c_str());
+           std::format("Bomb {:4}", GameFlow.ctx.player.Bombs()).c_str());
   GrpPut16(column2_left, 440,
-           std::format("Left {:4}", Players.Lives()).c_str());
+           std::format("Left {:4}", GameFlow.ctx.player.Lives()).c_str());
   GrpPut16(column2_left, 460,
-           std::format("Credit {:2}", Players.Credits()).c_str());
+           std::format("Credit {:2}", GameFlow.ctx.player.Credits()).c_str());
 }

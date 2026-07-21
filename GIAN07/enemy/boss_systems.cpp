@@ -697,7 +697,7 @@ void BossManager::BitSendCommand(uint8_t Command, int Param) {
   case BITCMD_MOVTARGET: // Boomerang move toward target (Vivit)
     bit_data.v = 64 * 10;
     bit_data.a = -8;
-    bit_data.d = atan8(Players.X() - bit_data.x, Players.Y() - bit_data.y);
+    bit_data.d = atan8(player_->X() - bit_data.x, player_->Y() - bit_data.y);
     bit_data.State = BITCMD_MOVTARGET;
     break;
 

@@ -29,26 +29,24 @@
 // Screenshots
 // -----------
 
-const uint8_t &Grp_ScreenshotEffort = ConfigDat.screenshot_effort;
-// -----------
+static ConfigData g_config;
 
-// Volume controls
-// ---------------
+const uint8_t &Grp_ScreenshotEffort = g_config.graphics.screenshot_effort;
 
-const VOLUME &Mid_Volume = ConfigDat.bgm_volume;
-const VOLUME &Snd_VolumeBGM = ConfigDat.bgm_volume;
-const VOLUME &Snd_VolumeSE = ConfigDat.se_volume;
-// ---------------
+const VOLUME &Mid_Volume = g_config.audio.bgm_volume;
+const VOLUME &Snd_VolumeBGM = g_config.audio.bgm_volume;
+const VOLUME &Snd_VolumeSE = g_config.audio.se_volume;
 
-// Pad bindings
-// ------------
+static std::array<INPUT_PAD_BINDING, 4> MakePadBindings() {
+  return {{
+      {g_config.input.pad_tama, KEY_TAMA},
+      {g_config.input.pad_bomb, KEY_BOMB},
+      {g_config.input.pad_shift, KEY_SHIFT},
+      {g_config.input.pad_cancel, KEY_ESC},
+  }};
+}
 
-static constexpr std::array<INPUT_PAD_BINDING, 4> PadBindings = {{
-    {ConfigDat.pad_tama, KEY_TAMA},
-    {ConfigDat.pad_bomb, KEY_BOMB},
-    {ConfigDat.pad_shift, KEY_SHIFT},
-    {ConfigDat.pad_cancel, KEY_ESC},
-}};
+static std::array<INPUT_PAD_BINDING, 4> PadBindings = MakePadBindings();
 std::span<const INPUT_PAD_BINDING> Key_PadBindings = PadBindings;
 // ------------
 
@@ -98,9 +96,9 @@ bool XInit() {
   DebugSetup();
 
   // Load config
-  ConfigDat.Load();
-  Grp_FPSDivisor = ConfigDat.fps_divisor;
-  ConfigDat.midi_flags = Mid_SetFlags(ConfigDat.midi_flags);
+  g_config.Load();
+  Grp_FPSDivisor = g_config.graphics.fps_divisor;
+  g_config.audio.midi_flags = Mid_SetFlags(g_config.audio.midi_flags);
 
   // Config-dependent initialization
   if (!GrpBackend_Enum()) {
@@ -108,24 +106,36 @@ bool XInit() {
   }
 
   // Initialize graphics
-  const auto maybe_params = Grp_InitOrFallback(ConfigDat.GraphicsParams());
+  const auto maybe_params = Grp_InitOrFallback(g_config.graphics.GraphicsParams());
   if (!maybe_params) {
     return false;
   }
-  ConfigDat.GraphicsParamsApply(maybe_params.value().live);
+  g_config.graphics.GraphicsParamsApply(maybe_params.value().live);
   GrpBackend_SetClip(GRP_RES_RECT);
 
   // Accept keyboard (JoyPad) input
   Key_Start();
 
   // Initialize BGM
-  if (ConfigDat.bgm_enabled) {
-    BGM_Init(ConfigDat.soundfont);
+  if (g_config.audio.bgm_enabled) {
+    BGM_Init(g_config.audio.soundfont);
   }
-  if (!track_mgr.PackSet(ConfigDat.bgm_pack)) {
-    ConfigDat.bgm_pack.clear();
+  if (!track_mgr.PackSet(g_config.audio.bgm_pack)) {
+    g_config.audio.bgm_pack.clear();
   }
-  BGM_SetGainApply(ConfigDat.bgm_vol_norm);
+  BGM_SetGainApply(g_config.audio.bgm_vol_norm);
+  GameFlow.ctx.game.game_config_ = &g_config.game;
+  GameFlow.ctx.game_cfg = &g_config.game;
+  GameFlow.ctx.graphics_cfg = &g_config.graphics;
+  GameFlow.ctx.audio_cfg = &g_config.audio;
+  GameFlow.ctx.input_cfg = &g_config.input;
+#ifdef PBG_DEBUG
+  GameFlow.ctx.debug_cfg = &g_config.debug;
+#endif
+
+  GameFlow.ctx.save_config = [&] { SaveConfigFile(g_config); };
+  GameFlow.ctx.cfg = &g_config;
+
   Grp_ScreenshotSetPrefix("screenshots/");
   const auto err = DataInit();
   if (err.has_value()) {
@@ -139,7 +149,7 @@ bool XInit() {
 
 void XCleanup() {
   DataCleanup();
-  ConfigDat.Save();
+  SaveConfigFile(g_config);
   TextBackend_Cleanup();
   GrpBackend_Cleanup();
   BGM_Cleanup();
@@ -150,18 +160,18 @@ void XCleanup() {
 bool GameFrame() {
 #ifdef SUPPORT_GRP_WINDOWED
   if ((SystemKey_Data & SYSKEY_GRP_FULLSCREEN) != 0) {
-    XGrpTryCycleDisp();
+    XGrpTryCycleDisp(g_config.graphics);
   }
 #endif
 #ifdef SUPPORT_GRP_SCALING
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_UP) != 0) {
-    XGrpTryCycleScale(+1, false);
+    XGrpTryCycleScale(g_config.graphics, +1, false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_DOWN) != 0) {
-    XGrpTryCycleScale(-1, false);
+    XGrpTryCycleScale(g_config.graphics, -1, false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_MODE) != 0) {
-    XGrpTryCycleScMode();
+    XGrpTryCycleScMode(g_config.graphics);
   }
 #endif
   if ((SystemKey_Data & SYSKEY_GRP_TURBO) != 0) {
@@ -169,14 +179,14 @@ bool GameFrame() {
         ((Grp_FPSDivisor != 0) ? Grp_FPSDivisor : 1);
     if (Grp_FPSDivisor != 0) {
       fps_divisor_prev = Grp_FPSDivisor;
-      ConfigDat.fps_divisor = Grp_FPSDivisor = 0;
+      g_config.graphics.fps_divisor = Grp_FPSDivisor = 0;
     } else {
-      ConfigDat.fps_divisor = Grp_FPSDivisor = fps_divisor_prev;
+      g_config.graphics.fps_divisor = Grp_FPSDivisor = fps_divisor_prev;
     }
   }
 #ifdef SUPPORT_GRP_API
   if ((SystemKey_Data & SYSKEY_GRP_API) != 0) {
-    XGrpTry([](auto &params) {
+    XGrpTry(g_config.graphics, [](auto &params) {
       params.api = ((params.api + 1) % GrpBackend_APICount());
     });
   }

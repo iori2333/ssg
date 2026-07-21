@@ -9,7 +9,7 @@
 
 #include "gfx/graphics_backend.h"
 #include "stage/menu/menu_text.h"
-#include "stage/window_sys.h"
+#include "stage/menu/window_sys.h"
 
 // ---------------------------------------------------------------------------
 // Difficulty settings panel
@@ -182,10 +182,10 @@ public:
   PadPanel();
   MenuDef &Menu() { return menu_; }
 
+  static bool FnPadImpl(MenuController &, INPUT_BITS, INPUT_PAD_BUTTON &);
+
 private:
   void Refresh(MenuController &ctrl, bool tick);
-  template <INPUT_PAD_BUTTON &ConfigPad>
-  static bool Fn(MenuController &, INPUT_BITS);
 
   std::array<MenuText, 4> titles_;
   std::vector<MenuItem> items_;

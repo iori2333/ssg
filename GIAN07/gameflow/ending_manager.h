@@ -100,11 +100,3 @@ private:
   void DrawFadeInfo();
   void SCLDecode();
 };
-
-extern EndingManager Ending;
-
-// === Backward-compatible inline wrapper (GameMain state machine entry point,
-// must be kept) ===
-inline bool EndingInit() { return Ending.Init(); }
-inline void EndingProc(bool &q) { Ending.Proc(q); }
-inline void EndingDraw() { Ending.Draw(); }

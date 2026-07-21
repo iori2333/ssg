@@ -32,7 +32,7 @@ bool EndingManager::Init() {
   }
   BGM_Stop();
 
-  GameFlow.game_main = EndingProc;
+  GameFlow.game_main = [](bool &q) { GameFlow.ctx.ending.Proc(q); };
   GameFlow.current_state = GameState::Ending;
 
   flash_state = 0;

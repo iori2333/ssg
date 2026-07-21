@@ -16,9 +16,9 @@
 #include "core/config.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/demo_play.h"
+#include "gameflow/gameflow_manager.h"
 
 // Only global instance
-UIManager UI;
 
 // ---------------------------------------------------------------------------
 // BGM Pack / Replay Files constants
@@ -47,8 +47,8 @@ UIManager::UIManager()
           MenuItem{"  Save && Exit  ", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       Demos.SaveReplayAll(false);
-                       UI.on_game_exit();
+                       GameFlow.ctx.demos.SaveReplayAll(false);
+                       GameFlow.ctx.ui.on_game_exit();
                        return false;
                      }
                      return true;
@@ -56,8 +56,8 @@ UIManager::UIManager()
           MenuItem{"   お っ け ～ ", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       Demos.save_all_enable = false;
-                       UI.on_game_exit();
+                       GameFlow.ctx.demos.save_all_enable = false;
+                       GameFlow.ctx.ui.on_game_exit();
                        return false;
                      }
                      return true;
@@ -65,7 +65,7 @@ UIManager::UIManager()
           MenuItem{"   だ め だ め", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       UI.on_game_restart();
+                       GameFlow.ctx.ui.on_game_restart();
                        return false;
                      }
                      return true;
@@ -80,7 +80,7 @@ UIManager::UIManager()
           MenuItem{"   お っ け ～", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       UI.on_game_continue();
+                       GameFlow.ctx.ui.on_game_continue();
                        return false;
                      }
                      return true;
@@ -88,7 +88,7 @@ UIManager::UIManager()
           MenuItem{"   や だ や だ", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       UI.on_game_exit_no_save();
+                       GameFlow.ctx.ui.on_game_exit_no_save();
                        return false;
                      }
                      return true;
@@ -104,8 +104,8 @@ UIManager::UIManager()
           MenuItem{"   お っ け ～ ", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       Demos.SaveReplayAll(false);
-                       UI.on_game_exit();
+                       GameFlow.ctx.demos.SaveReplayAll(false);
+                       GameFlow.ctx.ui.on_game_exit();
                        return false;
                      }
                      return true;
@@ -113,8 +113,8 @@ UIManager::UIManager()
           MenuItem{"   や だ や だ", "",
                    [](MenuController &, INPUT_BITS key) {
                      if (Input_IsOK(key)) {
-                       Demos.save_all_enable = false;
-                       UI.on_game_exit();
+                       GameFlow.ctx.demos.save_all_enable = false;
+                       GameFlow.ctx.ui.on_game_exit();
                        return false;
                      }
                      return true;
@@ -243,12 +243,12 @@ bool UIManager::BGMPackHandle(MenuController &ctrl, INPUT_BITS key,
       SDL_OpenURL(BGMPackSoundtrackURL);
     } else {
       if (selected == 0) {
-        ConfigDat.bgm_pack.clear();
+        GameFlow.ctx.cfg->audio.bgm_pack.clear();
       } else {
-        ConfigDat.bgm_pack = bgm_packs_[selected - 1];
+        GameFlow.ctx.cfg->audio.bgm_pack = bgm_packs_[selected - 1];
       }
       main_panel_.Sound().Refresh(ctrl, false);
-      track_mgr.PackSet(ConfigDat.bgm_pack);
+      track_mgr.PackSet(GameFlow.ctx.cfg->audio.bgm_pack);
     }
     return false;
   }
@@ -266,7 +266,7 @@ void UIManager::OpenBGMPack() {
   std::ranges::sort(bgm_packs_);
   bgm_sel_at_open_ = 0;
   for (size_t i = 1; const auto &pack : bgm_packs_) {
-    if (pack == ConfigDat.bgm_pack) {
+    if (pack == GameFlow.ctx.cfg->audio.bgm_pack) {
       bgm_sel_at_open_ = i;
     }
     w = (std::max)(w,
@@ -325,7 +325,7 @@ bool UIManager::SoundFontHandle(MenuController &ctrl, INPUT_BITS key,
       Mid_Stop();
       MidBackend_DeviceSelect(selected);
       if (auto sf = MidBackend_CurrentSoundFont()) {
-        ConfigDat.soundfont = sf.value();
+        GameFlow.ctx.cfg->audio.soundfont = sf.value();
       }
       if (BGM_Playing() == BGM_PLAYING::MIDI) {
         Mid_Play();
@@ -421,7 +421,7 @@ bool UIManager::ReplayFilesHandle(MenuController &, INPUT_BITS key,
       return false;
     }
     if (selected < replay_files_.size()) {
-      ::Demos.pending_replay_file = replay_files_[selected];
+      ::GameFlow.ctx.demos.pending_replay_file = replay_files_[selected];
       return false;
     }
   }

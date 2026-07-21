@@ -13,6 +13,8 @@
 #include <memory>
 #include <optional>
 
+#include "core/object_pool.h"
+#include "core/config.h"
 #include "player_shot.h"
 #include "weapon/weapon_form.h"
 
@@ -83,10 +85,12 @@ public:
   void Bind(BulletManager &bm) { bullets_ = &bm; }
   void Bind(LaserManager &lm) { lasers_ = &lm; }
   void Bind(GameManager &gm) { game_ = &gm; }
+  void Bind(const GameConfig &gc) { game_config_ = &gc; }
+  void Bind(const InputConfig &ic) { input_config_ = &ic; }
   void Draw();
   void DrawStatus() const;
   void Update();
-  void Initialize();
+  void Initialize(int player_stock, int bomb_stock);
   void PrepareNextStage();
   void OnHit();
   void OnDeath(bool play_se = true);
@@ -103,7 +107,7 @@ public:
   void MoveMaidShot();
   void DrawMaidShot();
   void SetMaidShotIndices();
-  static void SetMLaser(uint16_t time);
+  void SetMLaser(uint16_t time);
 
   // --- Laser angle ---
   [[nodiscard]] uint8_t GetLaserDeg() const;
@@ -132,7 +136,7 @@ public:
   bool IsInvincible() const { return muteki_ != 0; }
   bool IsBombActive() const { return bomb_time_ != 0; }
   bool IsGameOver() const { return game_over_; }
-  uint16_t ShotCount() const { return maid_tama_now_; }
+  uint16_t ShotCount() const { return static_cast<uint16_t>(maid_tama_.Size()); }
 
   // --- Setters / action methods ---
   void SetWeapon(uint8_t w) { weapon_ = w; }
@@ -143,7 +147,7 @@ public:
   void SetCredits(uint8_t c) { credit_ = c; }
   void UseCredit() { credit_--; }
   void SetScore(int64_t s) { score_ = s; }
-  void ResetForContinue();
+  void ResetForContinue(int player_stock);
   void ClearInvincibility() { muteki_ = 0; }
   void ClearLaserState() {
     lay_time_ = 0;
@@ -246,11 +250,11 @@ private:
   BulletManager *bullets_ = nullptr;
   LaserManager *lasers_ = nullptr;
   GameManager *game_ = nullptr;
+  const GameConfig *game_config_ = nullptr;
+  const InputConfig *input_config_ = nullptr;
 
   // --- Shot pool ---
-  std::array<PlayerShot, MAIDTAMA_MAX> maid_tama_{};
-  std::array<uint16_t, MAIDTAMA_MAX> maid_tama_ind_{};
-  uint16_t maid_tama_now_ = 0;
+  ObjectPool<PlayerShot, MAIDTAMA_MAX> maid_tama_{};
 
   // --- Weapon-select preview snapshot ---
   // Lightweight state save/restore for the weapon select screen.
@@ -277,6 +281,3 @@ private:
   void SaveSnapshot_(StateSnapshot &s) const;
   void RestoreSnapshot_(const StateSnapshot &s);
 };
-
-// [ Global instance ]
-extern Player Players;

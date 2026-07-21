@@ -37,10 +37,15 @@ enum class HomingState : uint8_t {
   Dead = 0xff,
 };
 
+struct HomingUpdateInfo {
+  int player_x, player_y;
+  struct UpdateResult {};
+};
+
 // ── LaserHoming ─────────────────────────────────────────────────
-struct LaserHoming : BulletBase<HomingSpawnInfo, Empty> {
+struct LaserHoming : BulletBase<HomingSpawnInfo, HomingUpdateInfo> {
   using SpawnInfo = HomingSpawnInfo;
-  using UpdateInfo = Empty;
+  using UpdateInfo = HomingUpdateInfo;
 
   friend struct LaserManager;
 

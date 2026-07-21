@@ -10,7 +10,7 @@
 #include "data/sfx_manager.h"
 #include "platform/text_backend.h"
 #include "stage/menu/menu_renderer.h"
-#include "stage/window_sys.h"
+#include "stage/menu/window_sys.h"
 #include "util/ut_math.h"
 
 void MsgWindow::MsgBlank() {

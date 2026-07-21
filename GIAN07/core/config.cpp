@@ -12,7 +12,6 @@
 #include "sys/file.h"
 #include "util/guard.h"
 
-///// Constants /////
 static constexpr auto CFG_FN = "SSG.TOML";
 
 // Validation helpers
@@ -36,10 +35,7 @@ static constexpr bool ValidScreenshotEffort(uint8_t v) {
   return v <= GRP_SCREENSHOT_EFFORT_MAX;
 }
 static constexpr bool ValidVolume(VOLUME v) { return v <= VOLUME_MAX; }
-static constexpr bool ValidStageSelect(uint8_t v) { return v <= STAGE_MAX; }
 static constexpr bool ValidWinMMPad(INPUT_PAD_BUTTON v) { return v <= 32; }
-
-// TOML loading helper
 
 namespace {
 
@@ -63,139 +59,131 @@ void LoadToml(const toml::table &tbl, const char *key, T &dest,
 
 } // namespace
 
-static bool TOMLLoad(const char *fn) {
+static void TOMLLoad(const char *fn, ConfigData &cfg) {
   auto *f = SDL_IOFromFile(fn, "rb");
   if (f == nullptr) {
-    return false;
+    return;
   }
   auto f_guard = make_guard(f, SDL_CloseIO);
 
   const auto size = SDL_GetIOSize(f);
   if (size <= 0) {
-    return false;
+    return;
   }
 
   std::string buf(static_cast<size_t>(size), '\0');
   if (SDL_ReadIO(f, buf.data(), size) != size) {
-    return false;
+    return;
   }
 
   toml::table tbl;
   try {
     tbl = toml::parse(buf);
   } catch (const toml::parse_error &) {
-    return false;
+    return;
   }
 
   // [difficulty]
   if (auto *sec = tbl["difficulty"].as_table()) {
-    LoadToml(*sec, "game_level", ConfigDat.game_level, ValidGameLevel);
-    LoadToml(*sec, "player_stock", ConfigDat.player_stock, ValidPlayerStock);
-    LoadToml(*sec, "bomb_stock", ConfigDat.bomb_stock, ValidBombStock);
-    LoadToml(*sec, "practice_mode", ConfigDat.practice_mode, ValidPracticeMode);
+    LoadToml(*sec, "game_level", cfg.game.game_level, ValidGameLevel);
+    LoadToml(*sec, "player_stock", cfg.game.player_stock, ValidPlayerStock);
+    LoadToml(*sec, "bomb_stock", cfg.game.bomb_stock, ValidBombStock);
+    LoadToml(*sec, "practice_mode", cfg.game.practice_mode, ValidPracticeMode);
   }
 
   // [graphics]
   if (auto *sec = tbl["graphics"].as_table()) {
-    LoadToml(*sec, "device_id", ConfigDat.device_id, [](auto) { return true; });
-    LoadToml(*sec, "api", ConfigDat.graphics_api);
-    LoadToml(*sec, "window_scale_4x", ConfigDat.window_scale_4x,
+    LoadToml(*sec, "device_id", cfg.graphics.device_id,
              [](auto) { return true; });
-    LoadToml(*sec, "window_left", ConfigDat.window_left);
-    LoadToml(*sec, "window_top", ConfigDat.window_top);
-    LoadToml(*sec, "fps_divisor", ConfigDat.fps_divisor, ValidFPSDivisor);
-    LoadToml(*sec, "window_upper", ConfigDat.window_upper);
-    LoadToml(*sec, "msg_disable", ConfigDat.msg_disable);
-    LoadToml(*sec, "graphics_param_flags", ConfigDat.graphics_param_flags,
+    LoadToml(*sec, "api", cfg.graphics.graphics_api);
+    LoadToml(*sec, "window_scale_4x", cfg.graphics.window_scale_4x,
+             [](auto) { return true; });
+    LoadToml(*sec, "window_left", cfg.graphics.window_left);
+    LoadToml(*sec, "window_top", cfg.graphics.window_top);
+    LoadToml(*sec, "fps_divisor", cfg.graphics.fps_divisor, ValidFPSDivisor);
+    LoadToml(*sec, "window_upper", cfg.graphics.window_upper);
+    LoadToml(*sec, "msg_disable", cfg.graphics.msg_disable);
+    LoadToml(*sec, "graphics_param_flags", cfg.graphics.graphics_param_flags,
              [](GRAPHICS_PARAM_FLAGS f) {
                return (std::to_underlying(f) &
                        ~std::to_underlying(GRAPHICS_PARAM_FLAGS::MASK)) == 0;
              });
-    LoadToml(*sec, "screenshot_effort", ConfigDat.screenshot_effort,
+    LoadToml(*sec, "screenshot_effort", cfg.graphics.screenshot_effort,
              ValidScreenshotEffort);
   }
 
   // [sound]
   if (auto *sec = tbl["sound"].as_table()) {
-    LoadToml(*sec, "bgm_enabled", ConfigDat.bgm_enabled);
-    LoadToml(*sec, "se_enabled", ConfigDat.se_enabled);
-    LoadToml(*sec, "bgm_volume_normalized", ConfigDat.bgm_vol_norm);
-    LoadToml(*sec, "se_volume", ConfigDat.se_volume, ValidVolume);
-    LoadToml(*sec, "bgm_volume", ConfigDat.bgm_volume, ValidVolume);
-    LoadToml(*sec, "bgm_pack", ConfigDat.bgm_pack);
-    LoadToml(*sec, "soundfont", ConfigDat.soundfont);
+    LoadToml(*sec, "bgm_enabled", cfg.audio.bgm_enabled);
+    LoadToml(*sec, "se_enabled", cfg.audio.se_enabled);
+    LoadToml(*sec, "bgm_volume_normalized", cfg.audio.bgm_vol_norm);
+    LoadToml(*sec, "se_volume", cfg.audio.se_volume, ValidVolume);
+    LoadToml(*sec, "bgm_volume", cfg.audio.bgm_volume, ValidVolume);
+    LoadToml(*sec, "bgm_pack", cfg.audio.bgm_pack);
+    LoadToml(*sec, "soundfont", cfg.audio.soundfont);
     bool midi_fix = false;
     LoadToml(*sec, "midi_fix_sysex_bugs", midi_fix);
     if (midi_fix) {
-      ConfigDat.midi_flags |= MID_FLAGS::FIX_SYSEX_BUGS;
+      cfg.audio.midi_flags |= MID_FLAGS::FIX_SYSEX_BUGS;
     } else {
-      ConfigDat.midi_flags &= ~MID_FLAGS::FIX_SYSEX_BUGS;
+      cfg.audio.midi_flags &= ~MID_FLAGS::FIX_SYSEX_BUGS;
     }
   }
 
   // [input]
   if (auto *sec = tbl["input"].as_table()) {
-    LoadToml(*sec, "joypad_enabled", ConfigDat.joypad_enabled);
-    LoadToml(*sec, "z_msg_skip_enabled", ConfigDat.z_msg_skip_enabled);
-    LoadToml(*sec, "z_spd_down_enabled", ConfigDat.z_spd_down_enabled);
-    LoadToml(*sec, "pad_tama", ConfigDat.pad_tama, ValidWinMMPad);
-    LoadToml(*sec, "pad_bomb", ConfigDat.pad_bomb, ValidWinMMPad);
-    LoadToml(*sec, "pad_shift", ConfigDat.pad_shift, ValidWinMMPad);
-    LoadToml(*sec, "pad_cancel", ConfigDat.pad_cancel, ValidWinMMPad);
+    LoadToml(*sec, "joypad_enabled", cfg.input.joypad_enabled);
+    LoadToml(*sec, "z_msg_skip_enabled", cfg.input.z_msg_skip_enabled);
+    LoadToml(*sec, "z_spd_down_enabled", cfg.input.z_spd_down_enabled);
+    LoadToml(*sec, "pad_tama", cfg.input.pad_tama, ValidWinMMPad);
+    LoadToml(*sec, "pad_bomb", cfg.input.pad_bomb, ValidWinMMPad);
+    LoadToml(*sec, "pad_shift", cfg.input.pad_shift, ValidWinMMPad);
+    LoadToml(*sec, "pad_cancel", cfg.input.pad_cancel, ValidWinMMPad);
   }
-
-  // [progress]
-  if (auto *sec = tbl["progress"].as_table()) {
-    LoadToml(*sec, "extra_stg_flags", ConfigDat.extra_stg_flags,
-             [](auto) { return true; });
-    LoadToml(*sec, "stage_select", ConfigDat.stage_select, ValidStageSelect);
-  }
-
-  return true;
 }
 
-static void TOMLSave(const char *fn) {
+static void TOMLSave(const char *fn, const ConfigData &cfg) {
   toml::table tbl;
 
   // [difficulty]
   {
     toml::table sec;
-    sec.emplace("game_level", std::to_underlying(ConfigDat.game_level));
-    sec.emplace("player_stock", ConfigDat.player_stock);
-    sec.emplace("bomb_stock", ConfigDat.bomb_stock);
-    sec.emplace("practice_mode", std::to_underlying(ConfigDat.practice_mode));
+    sec.emplace("game_level", std::to_underlying(cfg.game.game_level));
+    sec.emplace("player_stock", cfg.game.player_stock);
+    sec.emplace("bomb_stock", cfg.game.bomb_stock);
+    sec.emplace("practice_mode", std::to_underlying(cfg.game.practice_mode));
     tbl.emplace("difficulty", std::move(sec));
   }
 
   // [graphics]
   {
     toml::table sec;
-    sec.emplace("device_id", ConfigDat.device_id);
-    sec.emplace("api", ConfigDat.graphics_api);
-    sec.emplace("window_scale_4x", ConfigDat.window_scale_4x);
-    sec.emplace("window_left", ConfigDat.window_left);
-    sec.emplace("window_top", ConfigDat.window_top);
-    sec.emplace("fps_divisor", ConfigDat.fps_divisor);
-    sec.emplace("window_upper", ConfigDat.window_upper);
-    sec.emplace("msg_disable", ConfigDat.msg_disable);
+    sec.emplace("device_id", cfg.graphics.device_id);
+    sec.emplace("api", cfg.graphics.graphics_api);
+    sec.emplace("window_scale_4x", cfg.graphics.window_scale_4x);
+    sec.emplace("window_left", cfg.graphics.window_left);
+    sec.emplace("window_top", cfg.graphics.window_top);
+    sec.emplace("fps_divisor", cfg.graphics.fps_divisor);
+    sec.emplace("window_upper", cfg.graphics.window_upper);
+    sec.emplace("msg_disable", cfg.graphics.msg_disable);
     sec.emplace("graphics_param_flags",
-                std::to_underlying(ConfigDat.graphics_param_flags));
-    sec.emplace("screenshot_effort", ConfigDat.screenshot_effort);
+                std::to_underlying(cfg.graphics.graphics_param_flags));
+    sec.emplace("screenshot_effort", cfg.graphics.screenshot_effort);
     tbl.emplace("graphics", std::move(sec));
   }
 
   // [sound]
   {
     toml::table sec;
-    sec.emplace("bgm_enabled", ConfigDat.bgm_enabled);
-    sec.emplace("se_enabled", ConfigDat.se_enabled);
-    sec.emplace("bgm_volume_normalized", ConfigDat.bgm_vol_norm);
-    sec.emplace("se_volume", ConfigDat.se_volume);
-    sec.emplace("bgm_volume", ConfigDat.bgm_volume);
-    sec.emplace("bgm_pack", ConfigDat.bgm_pack);
-    sec.emplace("soundfont", ConfigDat.soundfont);
+    sec.emplace("bgm_enabled", cfg.audio.bgm_enabled);
+    sec.emplace("se_enabled", cfg.audio.se_enabled);
+    sec.emplace("bgm_volume_normalized", cfg.audio.bgm_vol_norm);
+    sec.emplace("se_volume", cfg.audio.se_volume);
+    sec.emplace("bgm_volume", cfg.audio.bgm_volume);
+    sec.emplace("bgm_pack", cfg.audio.bgm_pack);
+    sec.emplace("soundfont", cfg.audio.soundfont);
     sec.emplace("midi_fix_sysex_bugs",
-                (ConfigDat.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS) !=
+                (cfg.audio.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS) !=
                     MID_FLAGS::NONE);
     tbl.emplace("sound", std::move(sec));
   }
@@ -203,22 +191,14 @@ static void TOMLSave(const char *fn) {
   // [input]
   {
     toml::table sec;
-    sec.emplace("joypad_enabled", ConfigDat.joypad_enabled);
-    sec.emplace("z_msg_skip_enabled", ConfigDat.z_msg_skip_enabled);
-    sec.emplace("z_spd_down_enabled", ConfigDat.z_spd_down_enabled);
-    sec.emplace("pad_tama", ConfigDat.pad_tama);
-    sec.emplace("pad_bomb", ConfigDat.pad_bomb);
-    sec.emplace("pad_shift", ConfigDat.pad_shift);
-    sec.emplace("pad_cancel", ConfigDat.pad_cancel);
+    sec.emplace("joypad_enabled", cfg.input.joypad_enabled);
+    sec.emplace("z_msg_skip_enabled", cfg.input.z_msg_skip_enabled);
+    sec.emplace("z_spd_down_enabled", cfg.input.z_spd_down_enabled);
+    sec.emplace("pad_tama", cfg.input.pad_tama);
+    sec.emplace("pad_bomb", cfg.input.pad_bomb);
+    sec.emplace("pad_shift", cfg.input.pad_shift);
+    sec.emplace("pad_cancel", cfg.input.pad_cancel);
     tbl.emplace("input", std::move(sec));
-  }
-
-  // [progress]
-  {
-    toml::table sec;
-    sec.emplace("extra_stg_flags", ConfigDat.extra_stg_flags);
-    sec.emplace("stage_select", ConfigDat.stage_select);
-    tbl.emplace("progress", std::move(sec));
   }
 
   std::ostringstream oss;
@@ -234,9 +214,7 @@ static void TOMLSave(const char *fn) {
   SDL_MustWriteIO(f, str.data(), str.size());
 }
 
-// -------------------
-
-GRAPHICS_PARAMS ConfigData::GraphicsParams() const {
+GRAPHICS_PARAMS GraphicsConfig::GraphicsParams() const {
   return {
       .flags = graphics_param_flags,
       .device_id = device_id,
@@ -249,7 +227,7 @@ GRAPHICS_PARAMS ConfigData::GraphicsParams() const {
   };
 }
 
-void ConfigData::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
+void GraphicsConfig::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
   graphics_param_flags = params.flags;
   device_id = params.device_id;
 #ifdef SUPPORT_GRP_API
@@ -260,7 +238,7 @@ void ConfigData::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
   window_top = params.top;
 }
 
-uint8_t ConfigData::PackInputFlags() const {
+uint8_t InputConfig::PackInputFlags() const {
   uint8_t v = 0;
   if (joypad_enabled)
     v |= 1;
@@ -271,31 +249,31 @@ uint8_t ConfigData::PackInputFlags() const {
   return v;
 }
 
-void ConfigData::UnpackInputFlags(uint8_t v) {
+void InputConfig::UnpackInputFlags(uint8_t v) {
   joypad_enabled = (v & 1) != 0;
   z_msg_skip_enabled = (v & 2) != 0;
   z_spd_down_enabled = (v & 4) != 0;
 }
 
-///// [Global variables] /////
-ConfigData ConfigDat;
-
-// Initialize config contents
-void ConfigData::Load() {
-  TOMLLoad(CFG_FN);
+ConfigData LoadConfigFile() {
+  ConfigData cfg;
+  cfg.Load();
+  return cfg;
 }
 
-// Save config contents
-void ConfigData::Save() {
-  // Sync runtime audio state into config
-  ConfigDat.bgm_enabled = BGM_Enabled();
-  ConfigDat.bgm_vol_norm = BGM_GainApply();
+void SaveConfigFile(ConfigData &cfg) {
+  cfg.audio.bgm_enabled = BGM_Enabled();
+  cfg.audio.bgm_vol_norm = BGM_GainApply();
 
   if (const auto maybe_topleft = WndBackend_Topleft()) {
     const auto &topleft = maybe_topleft.value();
-    ConfigDat.window_left = topleft.first;
-    ConfigDat.window_top = topleft.second;
+    cfg.graphics.window_left = topleft.first;
+    cfg.graphics.window_top = topleft.second;
   }
 
-  TOMLSave(CFG_FN);
+  cfg.Save();
 }
+
+void ConfigData::Load() { TOMLLoad(CFG_FN, *this); }
+
+void ConfigData::Save() { TOMLSave(CFG_FN, *this); }

@@ -7,8 +7,8 @@
 
 #include "scene.h"
 #include "scroll.h"
-#include "ui_manager.h"
-#include "window_sys.h"
+#include "menu/ui_manager.h"
+#include "menu/window_sys.h"
 
 #include "audio/bgm.h"
 #include "track_manager/track_manager.h"
@@ -283,29 +283,29 @@ static void enemy_set() {
       break;
 
     case SCL_MWOPEN: // Open message window
-      if (!ConfigDat.msg_disable) {
-        UI.Msg().Open();
+      if (!Scroller.graphics_cfg_->msg_disable) {
+        GameFlow.ctx.ui.Msg().Open();
       }
       Scroller.scene.MsgFlag = true;
       Enemies.scl_now++;
       break;
 
     case SCL_MWCLOSE: // Close message window
-      if (!ConfigDat.msg_disable) {
-        UI.Msg().Close();
+      if (!Scroller.graphics_cfg_->msg_disable) {
+        GameFlow.ctx.ui.Msg().Close();
       }
       Scroller.scene.MsgFlag = false;
       Enemies.scl_now++;
       break;
 
     case SCL_MSG: // Output message
-      // UI.Msg().Cmd(MWCMD_SMALLFONT);
-      UI.Msg().Msg(reinterpret_cast<const char *>(cmd + 1));
+      // GameFlow.ctx.ui.Msg().Cmd(MWCMD_SMALLFONT);
+      GameFlow.ctx.ui.Msg().Msg(reinterpret_cast<const char *>(cmd + 1));
       Enemies.scl_now += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
       break;
 
     case SCL_FACE: // Display face
-      UI.Msg().Face(cmd[1]);
+      GameFlow.ctx.ui.Msg().Face(cmd[1]);
       Enemies.scl_now += 2;
       break;
 
@@ -315,16 +315,16 @@ static void enemy_set() {
       break;
 
     case SCL_NPG: // Change to new page
-      UI.Msg().Cmd(MWCMD_NEWPAGE);
+      GameFlow.ctx.ui.Msg().Cmd(MWCMD_NEWPAGE);
       Enemies.scl_now++;
       break;
 
     case SCL_END: // Return without changing count
                   //
-                  // UI.Msg().Open();
-                  // UI.Msg().Cmd(MWCMD_NEWPAGE);
-                  // UI.Msg().Cmd(MWCMD_LARGEFONT);
-                  // UI.Msg().Msg("SCL complete");
+                  // GameFlow.ctx.ui.Msg().Open();
+                  // GameFlow.ctx.ui.Msg().Cmd(MWCMD_NEWPAGE);
+                  // GameFlow.ctx.ui.Msg().Cmd(MWCMD_LARGEFONT);
+                  // GameFlow.ctx.ui.Msg().Msg("SCL complete");
                   // SCL_DEBUG("--- SCL_END ---");
       return;
 
@@ -335,7 +335,7 @@ static void enemy_set() {
 
     case SCL_MUSIC:
       //				if(!(// DemoplaySaveEnable||//
-      //Demos.load_enable)){
+      //GameFlow.ctx.demos.load_enable)){
       if (!GameFlow.ctx.game.is_demoplay) {
         BGM_Stop();
         if (track_mgr.Switch(cmd[1])) {
@@ -438,13 +438,13 @@ static void enemy_set() {
       break;
 
     case SCL_STAGECLEAR: // Stage clear
-      if (Demos.save_all_enable) {
-        Demos.FlushStage();
+      if (GameFlow.ctx.demos.save_all_enable) {
+        GameFlow.ctx.demos.FlushStage();
         GameNextStage();
         return;
       }
-      if (Demos.load_all_enable) {
-        if (GameFlow.ctx.game.stage < Demos.playback_max_stage) {
+      if (GameFlow.ctx.demos.load_all_enable) {
+        if (GameFlow.ctx.game.stage < GameFlow.ctx.demos.playback_max_stage) {
           GameNextStage();
         }
         return;
@@ -454,12 +454,12 @@ static void enemy_set() {
       return;
 
     case SCL_GAMECLEAR:
-      if (Demos.save_all_enable) {
-        Demos.FlushStage();
-        Demos.SaveReplayAll(false);
+      if (GameFlow.ctx.demos.save_all_enable) {
+        GameFlow.ctx.demos.FlushStage();
+        GameFlow.ctx.demos.SaveReplayAll(false);
         // Fall through to normal ending logic
       }
-      if (Demos.load_all_enable) {
+      if (GameFlow.ctx.demos.load_all_enable) {
         return;
       }
 
@@ -467,28 +467,28 @@ static void enemy_set() {
         GameFlow.ctx.game.stage = GameStage::CLEARED;
       }
       if (GameFlow.ctx.game.level != GameLevel::EASY) {
-        switch (Players.Weapon()) {
+        switch (GameFlow.ctx.player.Weapon()) {
         case 0:
-          ConfigDat.extra_stg_flags |= 1;
+          GameFlow.ctx.game.extra_stg_flags |= 1;
           break;
         case 1:
-          ConfigDat.extra_stg_flags |= 2;
+          GameFlow.ctx.game.extra_stg_flags |= 2;
           break;
         case 2:
-          ConfigDat.extra_stg_flags |= 4;
+          GameFlow.ctx.game.extra_stg_flags |= 4;
           break;
         }
       }
-      ConfigDat.Save();
-      Ending.Init();
+      GameFlow.ctx.save_config();
+      GameFlow.ctx.ending.Init();
       return;
 
     case SCL_EXTRACLEAR:
-      if (Demos.save_all_enable) {
-        Demos.FlushStage();
-        Demos.SaveReplayAll(true);
+      if (GameFlow.ctx.demos.save_all_enable) {
+        GameFlow.ctx.demos.FlushStage();
+        GameFlow.ctx.demos.SaveReplayAll(true);
       }
-      if (Demos.load_all_enable) {
+      if (GameFlow.ctx.demos.load_all_enable) {
         return;
       }
 
@@ -506,10 +506,10 @@ static void enemy_set() {
       break;
 
     default: // Not implemented or bug
-      UI.Msg().Open();
-      UI.Msg().Cmd(MWCMD_NEWPAGE);
-      UI.Msg().Cmd(MWCMD_LARGEFONT);
-      UI.Msg().Msg("バグ発生だにょ");
+      GameFlow.ctx.ui.Msg().Open();
+      GameFlow.ctx.ui.Msg().Cmd(MWCMD_NEWPAGE);
+      GameFlow.ctx.ui.Msg().Cmd(MWCMD_LARGEFONT);
+      GameFlow.ctx.ui.Msg().Msg("バグ発生だにょ");
       SCL_DEBUG("---- SCL !BUG! ---");
       return;
     }

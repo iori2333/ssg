@@ -42,12 +42,12 @@ void DemoManager::Init() {
       ((Cast::up<uint32_t>(rnd()) + 1U) * (Cast::up<uint32_t>(rnd()) + 1U));
   rnd_seed_set(demo_info.RndSeed);
 
-  demo_info.Exp = Players.Power();
-  demo_info.Weapon = Players.Weapon();
+  demo_info.Exp = GameFlow.ctx.player.Power();
+  demo_info.Weapon = GameFlow.ctx.player.Weapon();
   demo_info.CfgDat.GameLevel = std::to_underlying(GameFlow.ctx.game.level);
-  demo_info.CfgDat.PlayerStock = Players.Lives();
-  demo_info.CfgDat.BombStock = ConfigDat.bomb_stock;
-  demo_info.CfgDat.InputFlags = ConfigDat.PackInputFlags();
+  demo_info.CfgDat.PlayerStock = GameFlow.ctx.player.Lives();
+  demo_info.CfgDat.BombStock = GameFlow.ctx.cfg->game.bomb_stock;
+  demo_info.CfgDat.InputFlags = GameFlow.ctx.cfg->input.PackInputFlags();
 
   demo_frame_cur = 0;
   save_all_enable = true;
@@ -87,19 +87,19 @@ bool DemoManager::LoadSetup() {
 
   // Initialize config
   // Preserve current config
-  config_temp.PlayerStock = ConfigDat.player_stock;
-  config_temp.BombStock = ConfigDat.bomb_stock;
-  config_temp.InputFlags = ConfigDat.PackInputFlags();
+  config_temp.PlayerStock = GameFlow.ctx.cfg->game.player_stock;
+  config_temp.BombStock = GameFlow.ctx.cfg->game.bomb_stock;
+  config_temp.InputFlags = GameFlow.ctx.cfg->input.PackInputFlags();
 
   // Transfer recorded config
-  ConfigDat.bomb_stock = demo_info.CfgDat.BombStock;
-  ConfigDat.player_stock = demo_info.CfgDat.PlayerStock;
-  ConfigDat.UnpackInputFlags(demo_info.CfgDat.InputFlags);
+  GameFlow.ctx.cfg->game.bomb_stock = demo_info.CfgDat.BombStock;
+  GameFlow.ctx.cfg->game.player_stock = demo_info.CfgDat.PlayerStock;
+  GameFlow.ctx.cfg->input.UnpackInputFlags(demo_info.CfgDat.InputFlags);
   GameFlow.ctx.game.level = static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
 
   // Restore player stats
-  Players.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
-                           ConfigDat.player_stock, ConfigDat.bomb_stock);
+  GameFlow.ctx.player.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
+                           GameFlow.ctx.cfg->game.player_stock, GameFlow.ctx.cfg->game.bomb_stock);
 
   // Initialize random number
   // Sync random seed last
@@ -181,9 +181,9 @@ INPUT_BITS DemoManager::Move() {
 }
 
 void DemoManager::Cleanup() {
-  ConfigDat.player_stock = config_temp.PlayerStock;
-  ConfigDat.bomb_stock = config_temp.BombStock;
-  ConfigDat.UnpackInputFlags(config_temp.InputFlags);
+  GameFlow.ctx.cfg->game.player_stock = config_temp.PlayerStock;
+  GameFlow.ctx.cfg->game.bomb_stock = config_temp.BombStock;
+  GameFlow.ctx.cfg->input.UnpackInputFlags(config_temp.InputFlags);
 
   load_enable = false;
   load_all_enable = false;

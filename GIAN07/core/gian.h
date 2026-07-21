@@ -11,6 +11,7 @@
 
 // [Include Files]
 #include "constants.h"
+#include "config.h"
 
 #include "util/ut_math.h"
 
@@ -93,4 +94,4 @@ inline int GY_RND() { return (Y_MIN + (rnd() % (Y_MAX - Y_MIN))) << 6; }
 // Hit check: nonzero if hit
 inline bool HITCHK(int a, int b, int h) { return std::abs(a - b) < h; }
 
-void StdStatusOutput();
+void StdStatusOutput(PracticeMode practice_mode);

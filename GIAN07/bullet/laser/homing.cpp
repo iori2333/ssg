@@ -80,7 +80,7 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
 
 // ── State machine ──────────────────────────────────────────────────
 
-auto LaserHoming::Update(const UpdateInfo & /*info*/) -> UpdateResult {
+auto LaserHoming::Update(const UpdateInfo &info) -> UpdateResult {
   int prev_x = p_[current_].x;
   int prev_y = p_[current_].y;
   int prev_deg = p_[current_].d;
@@ -91,7 +91,7 @@ auto LaserHoming::Update(const UpdateInfo & /*info*/) -> UpdateResult {
   switch (subtype_) {
   case HomingType::Type1: {
     int deg2 =
-        -prev_deg + atan8(Players.X() - prev_x, Players.Y() - prev_y);
+        -prev_deg + atan8(info.player_x - prev_x, info.player_y - prev_y);
     if (deg2 < -128) {
       deg2 += 256;
     } else if (deg2 > 128) {

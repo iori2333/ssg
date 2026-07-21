@@ -33,7 +33,7 @@ void BulletManager::SpawnImpl(const BulletSpawnInfo &si, Pool &pool) {
   const uint16_t setmax = n * (si.rapid ? si.ns : 1U);
 
   auto base_deg =
-      si.zset ? atan8(Players.X() - si.x, Players.Y() - si.y) : uint8_t{0};
+      si.zset ? atan8(player_->X() - si.x, player_->Y() - si.y) : uint8_t{0};
   base_deg = static_cast<uint8_t>(base_deg + si.d);
 
   for (uint16_t i = 0; i < setmax; i++) {
@@ -161,7 +161,7 @@ bool BulletManager::SpawnExtra01(const BulletSpawnInfo &si) {
 // ── BulletManager: Update & HitCheck ─────────────────────────────
 
 void BulletManager::UpdateAll() {
-  const BulletUpdateInfo info{Players.X(), Players.Y(),
+  const BulletUpdateInfo info{player_->X(), player_->Y(),
                               Enemies.homing_flag != HOMING_DUMMY,
                               Enemies.homing_x, Enemies.homing_y};
 
@@ -195,25 +195,25 @@ void BulletManager::UpdateAll() {
 }
 
 void BulletManager::HitCheckAll() {
-  if (Players.IsInvincible() != 0U) {
+  if (player_->IsInvincible() != 0U) {
     return;
   }
-  const int px = Players.X();
-  const int py = Players.Y();
+  const int px = player_->X();
+  const int py = player_->Y();
 
   auto check = [&](auto &pool) {
     for (auto &b : pool) {
       switch (b.CheckHit(px, py)) {
       case HitResult::Hit:
         b.MarkDead();
-        Players.OnHit();
+        player_->OnHit();
         return;
       case HitResult::Graze:
         if (!b.HasGrazed()) {
           b.MarkGrazed();
-          Players.AddEvadeEx(b.X(), b.Y(), TAMA_EVADE);
+          player_->AddEvadeEx(b.X(), b.Y(), TAMA_EVADE);
         } else {
-          Players.AddEvadeEx(b.X(), b.Y(), 0);
+          player_->AddEvadeEx(b.X(), b.Y(), 0);
         }
         break;
       default:
@@ -251,7 +251,7 @@ void BulletManager::ClearAll() {
 
 uint32_t BulletManager::ScoreToItems() {
   uint32_t sum = 0;
-  uint32_t score = TAMA1_POINT + Players.GrazeCount() * 100;
+  uint32_t score = TAMA1_POINT + player_->GrazeCount() * 100;
   for (auto &b : pool_small) {
     if (b.effect_ != TE_DELETE) {
       Effects.SpawnPointEffect(b.x_ - 64 * 4, b.y_ - 64 * 4, score);
@@ -263,7 +263,7 @@ uint32_t BulletManager::ScoreToItems() {
   }
   pool_small.Compact([](const Bullet &b) { return b.IsDead(); });
 
-  score = TAMA2_POINT + Players.GrazeCount() * 100;
+  score = TAMA2_POINT + player_->GrazeCount() * 100;
   for (auto &b : pool_large) {
     if (b.effect_ != TE_DELETE) {
       Effects.SpawnPointEffect(b.x_ - 64 * 8, b.y_ - 64 * 8, score);

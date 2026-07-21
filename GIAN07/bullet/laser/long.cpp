@@ -59,7 +59,7 @@ void LaserLong::Spawn(const LongLaserSpawnInfo &info) {
   d_ = info.d;
 
   if (info.type == LongLaserType::LongZ) {
-    d_ += atan8(Players.X() - x_, Players.Y() - y_);
+    d_ += atan8(info.player_x - x_, info.player_y - y_);
     subtype_ = LongLaserType::Long;
   } else {
     subtype_ = info.type;

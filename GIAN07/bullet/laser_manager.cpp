@@ -59,7 +59,7 @@ bool LaserManager::SpawnReflect(const ReflectSpawnInfo &info) {
   }
 
   auto base_deg = (cmd.cmd & kZSetFlag) != 0
-                      ? atan8(Players.X() - cmd.x, Players.Y() - cmd.y)
+                      ? atan8(player_->X() - cmd.x, player_->Y() - cmd.y)
                       : 0;
   base_deg += cmd.d;
 
@@ -79,11 +79,14 @@ bool LaserManager::SpawnReflect(const ReflectSpawnInfo &info) {
 // ── Spawn: Long lasers ─────────────────────────────────────────────
 
 bool LaserManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
+  auto si = info;
+  si.player_x = player_->X();
+  si.player_y = player_->Y();
   auto *lp = long_lasers.Alloc();
   if (lp == nullptr) {
     return false;
   }
-  lp->Spawn(info);
+  lp->Spawn(si);
   return true;
 }
 
@@ -140,8 +143,9 @@ void LaserManager::UpdateLong() {
 }
 
 void LaserManager::UpdateHoming() {
+  const auto pi = HomingUpdateInfo{player_->X(), player_->Y()};
   for (auto &h : homing) {
-    h.Update();
+    h.Update(pi);
   }
   homing.Compact([](const LaserHoming &h) { return h.IsDead(); });
 }
@@ -149,21 +153,21 @@ void LaserManager::UpdateHoming() {
 // ── Per-frame collision ───────────────────────────────────────────
 
 void LaserManager::HitCheckAll() const {
-  if (Players.IsInvincible()) {
+  if (player_->IsInvincible()) {
     return;
   }
 
-  const int px = Players.X();
-  const int py = Players.Y();
+  const int px = player_->X();
+  const int py = player_->Y();
 
   auto check = [&](auto &pool) {
     for (const auto &laser : pool) {
       switch (laser.CheckHit(px, py)) {
       case HitResult::Hit:
-        Players.OnHit();
+        player_->OnHit();
         return;
       case HitResult::Graze:
-        Players.AddEvade(kBulletEvadeValue);
+        player_->AddEvade(kBulletEvadeValue);
         break;
       case HitResult::Miss:
         break;

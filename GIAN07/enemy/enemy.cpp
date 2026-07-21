@@ -57,7 +57,7 @@ static void EnemyDrawBomb(int x, int y, uint32_t count);
 static uint32_t ID2Value(const EnemyData *e, uint8_t id);
 
 void EnemyManager::UpdateHoming(const EnemyData *e) {
-  const int temp = (Players.Y() - e->y);
+  const int temp = (player_->Y() - e->y);
 
   if (temp < 0) {
     return;
@@ -132,12 +132,12 @@ void EnemyManager::Move() {
       }
 
       // Cactus hit check
-      if (HITCHK(e->x, Players.X(), e->g_width) &&
-          HITCHK(e->y, Players.Y(), e->g_height) &&
-          Players.IsInvincible() == 0) {
+      if (HITCHK(e->x, player_->X(), e->g_width) &&
+          HITCHK(e->y, player_->Y(), e->g_height) &&
+          player_->IsInvincible() == 0) {
         // Might be interesting to damage the enemy around here?
         if ((e->flag & EF_HITSB) != 0) {
-          Players.OnHit();
+          player_->OnHit();
         }
       }
 
@@ -246,17 +246,17 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
     if (e.LLaserRef != 0U) {
       Enemies.lasers_->ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
-    Players.PowerUp(static_cast<uint8_t>(e.hp)); // Power up
+    player_->PowerUp(static_cast<uint8_t>(e.hp)); // Power up
     e.hp = 0;
     e.count = 0;
     e.flag = EF_BOMB;
-    Players.AddScore(e.score);
+    player_->AddScore(e.score);
     if (e.item != 0U) {
       Enemies.items_->Spawn(e.x, e.y, e.item);
     }
   } else {
     Snd_SEPlay(SfxId::Hit, e.x);
-    Players.PowerUp(damage); // Power up here too
+    player_->PowerUp(damage); // Power up here too
     e.hp -= damage;
   }
   return true;
@@ -713,7 +713,7 @@ ECL_HEAD:
   case ECL_JDSB: { // Jump if player heading angle matches
     ECL_DEBUG("ECL_JDSB", 0);
     const uint8_t temp =
-        abs(atan8((Players.X() - e->x), (Players.Y() - e->y)) - (e->d));
+        abs(atan8((player_->X() - e->x), (player_->Y() - e->y)) - (e->d));
     if (temp < 4) {
       e->cmd = U32LEAt(&cmd[1]);
       goto ECL_HEAD;
@@ -1025,7 +1025,7 @@ ECL_HEAD:
     ECL_DEBUG("ECL_MXS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
-      e->vx = ((Players.X()) - (e->x)) / e->cmd_c;
+      e->vx = ((player_->X()) - (e->x)) / e->cmd_c;
       e->vy = 0;
     }
     if ((--e->cmd_c) != 0) {
@@ -1040,7 +1040,7 @@ ECL_HEAD:
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
       e->vx = 0;
-      e->vy = ((Players.Y()) - (e->y)) / e->cmd_c;
+      e->vy = ((player_->Y()) - (e->y)) / e->cmd_c;
     }
     if ((--e->cmd_c) != 0) {
       e->y += e->vy;
@@ -1053,8 +1053,8 @@ ECL_HEAD:
     ECL_DEBUG("ECL_MXYS : %d", e->cmd_c);
     if (e->cmd_c == 0) {
       e->cmd_c = (U16LEAt(&cmd[1]) + 1);
-      e->vx = ((Players.X()) - (e->x)) / e->cmd_c;
-      e->vy = ((Players.Y()) - (e->y)) / e->cmd_c;
+      e->vx = ((player_->X()) - (e->x)) / e->cmd_c;
+      e->vy = ((player_->Y()) - (e->y)) / e->cmd_c;
     }
     if ((--e->cmd_c) != 0) {
       e->x += e->vx;
@@ -1131,7 +1131,7 @@ ECL_HEAD:
 
   case ECL_DEGS: // Angle set to player
     ECL_DEBUG("ECL_DEGS", 0);
-    e->d = atan8(Players.X() - e->x, Players.Y() - e->y);
+    e->d = atan8(player_->X() - e->x, player_->Y() - e->y);
     bRetFlag = false;
     break;
 
@@ -1162,8 +1162,8 @@ ECL_HEAD:
     break;
 
   case ECL_XYS:
-    e->x = Players.X();
-    e->y = Players.Y();
+    e->x = player_->X();
+    e->y = player_->Y();
     bRetFlag = false;
     break;
 
@@ -1229,7 +1229,7 @@ ECL_HEAD:
 
   case ECL_TDEGS: // Bullet fire angle cactus set
     // Strictly speaking, should use TamaCmd x,y...
-    e->t_cmd.d = atan8(Players.X() - e->x, Players.Y() - e->y);
+    e->t_cmd.d = atan8(player_->X() - e->x, player_->Y() - e->y);
     bRetFlag = false;
     break;
 
@@ -1374,7 +1374,7 @@ ECL_HEAD:
 
   case ECL_LDEGS: // Laser fire angle cactus set
     // Strictly speaking, should use LaserCmd x,y...
-    e->l_cmd.d = atan8(Players.X() - e->x, Players.Y() - e->y);
+    e->l_cmd.d = atan8(player_->X() - e->x, player_->Y() - e->y);
     bRetFlag = false;
     break;
 

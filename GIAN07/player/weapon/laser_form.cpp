@@ -26,7 +26,7 @@ void LaserForm::FireMain(uint8_t tier) {
     player_.SpawnShot(si);
     si.x += 12 * 64;
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 50);
+    player_.SetMLaser(64 + 50);
     break;
   }
   case 3:
@@ -34,7 +34,7 @@ void LaserForm::FireMain(uint8_t tier) {
     PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 6, 3,
                           SPEEDM(54), 0, TID_LASER_SUB};
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 100);
+    player_.SetMLaser(64 + 100);
     break;
   }
   case 5:
@@ -46,14 +46,14 @@ void LaserForm::FireMain(uint8_t tier) {
     si.x += 12 * 64;
     si.d = 197;
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 150);
+    player_.SetMLaser(64 + 150);
     break;
   }
   default: {
     PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 6, 5,
                           SPEEDM(54), 0, TID_LASER_SUB};
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 200);
+    player_.SetMLaser(64 + 200);
     break;
   }
   }
@@ -121,7 +121,7 @@ void LaserFocusForm::FireMain(uint8_t tier) {
     player_.SpawnShot(si);
     si.x += 12 * 64;
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 50);
+    player_.SetMLaser(64 + 50);
     break;
   }
   case 3:
@@ -129,7 +129,7 @@ void LaserFocusForm::FireMain(uint8_t tier) {
     PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 2, 3,
                           SPEEDM(54), 0, TID_LASER_SUB};
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 100);
+    player_.SetMLaser(64 + 100);
     break;
   }
   case 5:
@@ -141,14 +141,14 @@ void LaserFocusForm::FireMain(uint8_t tier) {
     si.x += 12 * 64;
     si.d = 194;
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 150);
+    player_.SetMLaser(64 + 150);
     break;
   }
   default: {
     PlayerShotSpawnInfo si{player_.X(), player_.Y(), 192, 2, 4,
                           SPEEDM(54), 0, TID_LASER_SUB};
     player_.SpawnShot(si);
-    Player::SetMLaser(64 + 200);
+    player_.SetMLaser(64 + 200);
     break;
   }
   }

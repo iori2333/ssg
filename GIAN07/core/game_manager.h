@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "config.h"
 #include "level.h"
 
 enum class GameStage : uint8_t {
@@ -45,8 +46,13 @@ struct GameManager {
   uint32_t count = 0;
   GameStage stage = GameStage::STAGE_1;
   GameLevel level = GameLevel::NORMAL;
+  PracticeMode practice_mode = PracticeMode::OFF;
   bool is_demoplay = false;
   int rank = 0;
+  uint8_t extra_stg_flags = 0;
+  bool bullet_gallery_active = false;
+
+  const GameConfig *game_config_ = nullptr;
 
   [[nodiscard]] GameLevel EffectiveLevel() const;
   void AddRank(int n);

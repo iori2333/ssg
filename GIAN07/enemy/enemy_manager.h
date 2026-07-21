@@ -14,6 +14,7 @@ struct BulletManager;
 struct ItemManager;
 struct LaserManager;
 struct GameManager;
+class Player;
 
 struct EnemyManager {
   // --- Enemy data ---
@@ -42,12 +43,14 @@ struct EnemyManager {
   LaserManager *lasers_ = nullptr;
   ItemManager *items_ = nullptr;
   GameManager *game_ = nullptr;
+  Player *player_ = nullptr;
 
   // --- DI ---
   void Bind(BulletManager &bm) { bullets_ = &bm; }
   void Bind(LaserManager &lm) { lasers_ = &lm; }
   void Bind(ItemManager &im) { items_ = &im; }
   void Bind(GameManager &gm) { game_ = &gm; }
+  void Bind(Player &p) { player_ = &p; }
 
   // === Methods ===
 
@@ -64,7 +67,7 @@ struct EnemyManager {
   void InitIndices();
 
   // Damage
-  static bool ApplyDamage(EnemyData &e, int damage);
+  bool ApplyDamage(EnemyData &e, int damage);
   bool DamageAt(int x, int y, int damage);
   bool DamageAt2(int x, int y, int damage);
   void DamageAt3(int x, int y, uint8_t d);

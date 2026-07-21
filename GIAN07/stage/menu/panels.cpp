@@ -26,8 +26,8 @@
 #include "gameflow/gameflow_manager.h"
 #include "gfx/graphics_backend.h"
 #include "music_room/music_room.h"
-#include "stage/ui_manager.h"
-#include "stage/window_sys.h"
+#include "stage/menu/ui_manager.h"
+#include "stage/menu/window_sys.h"
 #include "sys/input.h"
 
 using namespace std::chrono_literals;
@@ -81,19 +81,19 @@ DifficultyPanel::DifficultyPanel() {
 }
 
 void DifficultyPanel::FnPlayerStock(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.player_stock, delta, 0, STOCK_PLAYER_MAX);
+  RingStep(GameFlow.ctx.cfg->game.player_stock, delta, 0, STOCK_PLAYER_MAX);
 }
 
 void DifficultyPanel::FnBombStock(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.bomb_stock, delta, 0, STOCK_BOMB_MAX);
+  RingStep(GameFlow.ctx.cfg->game.bomb_stock, delta, 0, STOCK_BOMB_MAX);
 }
 
 void DifficultyPanel::FnDifficulty(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.game_level, delta, GameLevel::EASY, GameLevel::LUNATIC);
+  RingStep(GameFlow.ctx.cfg->game.game_level, delta, GameLevel::EASY, GameLevel::LUNATIC);
 }
 
 void DifficultyPanel::FnPracticeMode(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.practice_mode, delta, PracticeMode::OFF,
+  RingStep(GameFlow.ctx.cfg->game.practice_mode, delta, PracticeMode::OFF,
            PracticeMode::INVINCIBLE);
 }
 
@@ -102,12 +102,12 @@ void DifficultyPanel::Refresh(MenuController &, bool) {
                                                "Lunatic"};
   static constexpr const char *const practice[3] = {" Off ", "AutoB", "Invin"};
 
-  titles_[0].Format("PlayerStock [ {} ]", ConfigDat.player_stock + 1);
-  titles_[1].Format("BombStock   [ {} ]", ConfigDat.bomb_stock);
+  titles_[0].Format("PlayerStock [ {} ]", GameFlow.ctx.cfg->game.player_stock + 1);
+  titles_[1].Format("BombStock   [ {} ]", GameFlow.ctx.cfg->game.bomb_stock);
   titles_[2].Format("Difficulty[{}]",
-                    dif[std::to_underlying(ConfigDat.game_level)]);
+                    dif[std::to_underlying(GameFlow.ctx.cfg->game.game_level)]);
   titles_[3].Format("PracticeMode[{}]",
-                    practice[std::to_underlying(ConfigDat.practice_mode)]);
+                    practice[std::to_underlying(GameFlow.ctx.cfg->game.practice_mode)]);
 
   for (size_t i = 0; i < items_.size() - 1; i++) {
     items_[i].Title = titles_[i].Lit();
@@ -133,7 +133,7 @@ ScreenshotPanel::ScreenshotPanel() {
 }
 
 void ScreenshotPanel::FnFormat(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.screenshot_effort, delta, 0, GRP_SCREENSHOT_EFFORT_MAX);
+  RingStep(GameFlow.ctx.cfg->graphics.screenshot_effort, delta, 0, GRP_SCREENSHOT_EFFORT_MAX);
 }
 
 void ScreenshotPanel::RefreshActive(MenuController &ctrl) {
@@ -141,7 +141,7 @@ void ScreenshotPanel::RefreshActive(MenuController &ctrl) {
 }
 
 void ScreenshotPanel::Refresh(MenuController &ctrl, bool) {
-  const auto effort = ConfigDat.screenshot_effort;
+  const auto effort = GameFlow.ctx.cfg->graphics.screenshot_effort;
   enum class ALIGN { LEFT, CENTER };
   const auto format_for = [](uint8_t e, ALIGN align) -> std::string {
     if (e == 0) {
@@ -187,17 +187,17 @@ void ScreenshotPanel::Refresh(MenuController &ctrl, bool) {
       title_perf_[i].Format("{}[{:5}.{:02}ms]", fmt, t_int, t_frac);
       if (hovered) {
         constexpr auto target_ms = decltype(0ms)(FRAME_TIME_TARGET);
-        if (time > (target_ms * ConfigDat.fps_divisor)) {
+        if (time > (target_ms * GameFlow.ctx.cfg->graphics.fps_divisor)) {
           const auto [fps_int, fps_frac] = split_into_fraction(
               std::chrono::milliseconds(1000).count() / time.count());
           help_perf_.Format("Frame rate will drop to ~{}.{:02} FPS", fps_int,
                             fps_frac);
         } else {
           static constexpr const char *FPS[3] = {"62.5", "30", "20"};
-          assert(ConfigDat.fps_divisor > 0);
-          assert((ConfigDat.fps_divisor - 1) < std::size(FPS));
+          assert(GameFlow.ctx.cfg->graphics.fps_divisor > 0);
+          assert((GameFlow.ctx.cfg->graphics.fps_divisor - 1) < std::size(FPS));
           help_perf_.Format("Frame rate will stay at {} FPS",
-                            FPS[ConfigDat.fps_divisor - 1]);
+                            FPS[GameFlow.ctx.cfg->graphics.fps_divisor - 1]);
         }
       }
     }
@@ -216,11 +216,11 @@ ApiPanel::ApiPanel()
             [this](MenuController &c, bool t) { Refresh(c, t); }) {}
 
 void ApiPanel::FnDef(MenuController &, int_fast8_t) {
-  XGrpTry([](auto &params) { params.api = -1; });
+  XGrpTry(GameFlow.ctx.cfg->graphics, [](auto &params) { params.api = -1; });
 }
 
 void ApiPanel::FnOverride(MenuController &ctrl, int_fast8_t) {
-  XGrpTry([&](auto &params) { params.api = (ctrl.CurrentSelection() - 1); });
+  XGrpTry(GameFlow.ctx.cfg->graphics, [&](auto &params) { params.api = (ctrl.CurrentSelection() - 1); });
 }
 
 void ApiPanel::Init() {
@@ -242,7 +242,7 @@ void ApiPanel::Init() {
 }
 
 void ApiPanel::Refresh(MenuController &, bool) {
-  const bool is_def_api = ConfigDat.graphics_api.empty();
+  const bool is_def_api = GameFlow.ctx.cfg->graphics.graphics_api.empty();
   std::string_view api_active = GrpBackend_APILabel(GrpBackend_APIString());
 
   item_def_.SetActive(!is_def_api);
@@ -309,34 +309,34 @@ void GraphicsPanel::Init() {
 }
 
 void GraphicsPanel::FnDisp(MenuController &, int_fast8_t) {
-  XGrpTryCycleDisp();
+  XGrpTryCycleDisp(GameFlow.ctx.cfg->graphics);
 }
 
 void GraphicsPanel::FnFSMode(MenuController &, int_fast8_t) {
-  XGrpTry([](auto &params) {
+  XGrpTry(GameFlow.ctx.cfg->graphics, [](auto &params) {
     params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
   });
 }
 
 void GraphicsPanel::FnScale(MenuController &, int_fast8_t delta) {
-  XGrpTryCycleScale(delta, true);
+  XGrpTryCycleScale(GameFlow.ctx.cfg->graphics, delta, true);
 }
 
 void GraphicsPanel::FnScMode(MenuController &, int_fast8_t) {
-  XGrpTryCycleScMode();
+  XGrpTryCycleScMode(GameFlow.ctx.cfg->graphics);
 }
 
 void GraphicsPanel::FnSkip(MenuController &, int_fast8_t delta) {
-  RingStep(ConfigDat.fps_divisor, delta, 0, FPS_DIVISOR_MAX);
-  Grp_FPSDivisor = ConfigDat.fps_divisor;
+  RingStep(GameFlow.ctx.cfg->graphics.fps_divisor, delta, 0, FPS_DIVISOR_MAX);
+  Grp_FPSDivisor = GameFlow.ctx.cfg->graphics.fps_divisor;
 }
 
 void GraphicsPanel::FnWinLocate(MenuController &, int_fast8_t delta) {
   // Cycle through 3 states: bottom → top → hidden → bottom
   uint8_t state;
-  if (ConfigDat.msg_disable) {
+  if (GameFlow.ctx.cfg->graphics.msg_disable) {
     state = 2;
-  } else if (ConfigDat.window_upper) {
+  } else if (GameFlow.ctx.cfg->graphics.window_upper) {
     state = 1;
   } else {
     state = 0;
@@ -344,12 +344,12 @@ void GraphicsPanel::FnWinLocate(MenuController &, int_fast8_t delta) {
 
   state = (delta < 0) ? ((state + 2) % 3) : ((state + 1) % 3);
 
-  ConfigDat.window_upper = (state == 1);
-  ConfigDat.msg_disable = (state == 2);
+  GameFlow.ctx.cfg->graphics.window_upper = (state == 1);
+  GameFlow.ctx.cfg->graphics.msg_disable = (state == 2);
 }
 
 void GraphicsPanel::Refresh(MenuController &, bool) {
-  const auto params = ConfigDat.GraphicsParams();
+  const auto params = GameFlow.ctx.cfg->graphics.GraphicsParams();
 
   static constexpr auto aspect = (GRP_RES / std::gcd(GRP_RES.w, GRP_RES.h));
   static constexpr const char *DISPLAY_MODES[] = {"  Window  ", "Fullscreen"};
@@ -363,8 +363,8 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
                                                  "20Fps"};
 
   const auto u_or_d =
-      (ConfigDat.msg_disable ? 2 : (ConfigDat.window_upper ? 0 : 1));
-  const auto dev = GrpBackend_DeviceLabel(ConfigDat.device_id);
+      (GameFlow.ctx.cfg->graphics.msg_disable ? 2 : (GameFlow.ctx.cfg->graphics.window_upper ? 0 : 1));
+  const auto dev = GrpBackend_DeviceLabel(GameFlow.ctx.cfg->graphics.device_id);
   const auto fs = params.FullscreenFlags();
   const auto in_borderless_fullscreen = (fs.fullscreen && !fs.exclusive);
 
@@ -414,7 +414,7 @@ void GraphicsPanel::Refresh(MenuController &, bool) {
   EnumFlagSet(item_ptrs_[SC_MODE_IDX]->Flags, MenuFlags::DISABLED,
               static_cast<std::underlying_type_t<MenuFlags>>(sc_mode_disabled));
 #endif
-  title_skip_.Format("FrameRate[ {} ]", FRate[ConfigDat.fps_divisor]);
+  title_skip_.Format("FrameRate[ {} ]", FRate[GameFlow.ctx.cfg->graphics.fps_divisor]);
   title_msg_.Format("MsgWindow[{}]", UorD[u_or_d]);
 
   // Help strings
@@ -498,7 +498,7 @@ MidiPanel::MidiPanel() {
 
 bool MidiPanel::FnDev(MenuController &, INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    UI.OpenSoundFont();
+    GameFlow.ctx.ui.OpenSoundFont();
     return true;
   }
   // LEFT/RIGHT still work for quick cycling without opening the scroll menu.
@@ -507,7 +507,7 @@ bool MidiPanel::FnDev(MenuController &, INPUT_BITS key) {
     if (BGM_Enabled()) {
       BGM_ChangeMIDIDevice(delta);
       if (auto sf = MidBackend_CurrentSoundFont()) {
-        ConfigDat.soundfont = sf.value();
+        GameFlow.ctx.cfg->audio.soundfont = sf.value();
       }
     }
     return true;
@@ -516,8 +516,8 @@ bool MidiPanel::FnDev(MenuController &, INPUT_BITS key) {
 }
 
 void MidiPanel::FnFixes(MenuController &, int_fast8_t) {
-  const auto flags = (ConfigDat.midi_flags ^ MID_FLAGS::FIX_SYSEX_BUGS);
-  ConfigDat.midi_flags = Mid_SetFlags(flags);
+  const auto flags = (GameFlow.ctx.cfg->audio.midi_flags ^ MID_FLAGS::FIX_SYSEX_BUGS);
+  GameFlow.ctx.cfg->audio.midi_flags = Mid_SetFlags(flags);
 }
 
 void MidiPanel::Refresh(MenuController &, bool tick) {
@@ -544,7 +544,7 @@ void MidiPanel::Refresh(MenuController &, bool tick) {
   EnumFlagSet(items_[0].Flags, MenuFlags::DISABLED,
               static_cast<std::underlying_type_t<MenuFlags>>(!maybe_dev));
 
-  const auto fixes = !!(ConfigDat.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS);
+  const auto fixes = !!(GameFlow.ctx.cfg->audio.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS);
   title_fixes_.Format("SC88ProFXCompat{}", CHOICE_OFF_ON_NARROW[fixes]);
   items_[1].Title = title_fixes_.Lit();
 }
@@ -573,11 +573,11 @@ SoundPanel::SoundPanel() {
 }
 
 void SoundPanel::FnSE(MenuController &, int_fast8_t) {
-  if (ConfigDat.se_enabled) {
-    ConfigDat.se_enabled = false;
+  if (GameFlow.ctx.cfg->audio.se_enabled) {
+    GameFlow.ctx.cfg->audio.se_enabled = false;
     Snd_SECleanup();
   } else {
-    ConfigDat.se_enabled = true;
+    GameFlow.ctx.cfg->audio.se_enabled = true;
     sfx.LoadAll();
   }
 }
@@ -593,22 +593,22 @@ void SoundPanel::FnBGM(MenuController &, int_fast8_t) {
 }
 
 void SoundPanel::FnSEVol(MenuController &, int_fast8_t delta) {
-  ConfigDat.se_volume =
-      std::clamp((ConfigDat.se_volume + delta), 0, int{VOLUME_MAX});
+  GameFlow.ctx.cfg->audio.se_volume =
+      std::clamp((GameFlow.ctx.cfg->audio.se_volume + delta), 0, int{VOLUME_MAX});
   Snd_UpdateVolumes();
 }
 
 void SoundPanel::FnBGMVol(MenuController &, int_fast8_t delta) {
-  ConfigDat.bgm_volume =
-      std::clamp((ConfigDat.bgm_volume + delta), 0, int{VOLUME_MAX});
+  GameFlow.ctx.cfg->audio.bgm_volume =
+      std::clamp((GameFlow.ctx.cfg->audio.bgm_volume + delta), 0, int{VOLUME_MAX});
   BGM_UpdateVolume();
 }
 
 void SoundPanel::FnBGMPack(MenuController &, int_fast8_t) {
   if (!track_mgr.PacksAvailable()) {
-    SDL_OpenURL(UI.BGMPackSoundtrackURL);
+    SDL_OpenURL(GameFlow.ctx.ui.BGMPackSoundtrackURL);
   } else {
-    UI.OpenBGMPack();
+    GameFlow.ctx.ui.OpenBGMPack();
   }
 }
 
@@ -617,7 +617,7 @@ void SoundPanel::FnBGMGain(MenuController &, int_fast8_t) {
 }
 
 void SoundPanel::Refresh(MenuController &ctrl, bool) {
-  const auto sound_active = ConfigDat.se_enabled;
+  const auto sound_active = GameFlow.ctx.cfg->audio.se_enabled;
   const auto bgm_active = BGM_Enabled();
 
   if ((!ctrl.Active()) || (ctrl.LastKey() == KEY_UP) ||
@@ -632,14 +632,14 @@ void SoundPanel::Refresh(MenuController &ctrl, bool) {
 
   title_se_.Format("Sound  [{}]", CHOICE_USE[sound_active == 0]);
   title_bgm_.Format("BGM    [{}]", CHOICE_USE[!bgm_active]);
-  title_se_vol_.Format("SoundVolume [ {:3} ]", ConfigDat.se_volume);
-  title_bgm_vol_.Format("BGMVolume   [ {:3} ]", ConfigDat.bgm_volume);
+  title_se_vol_.Format("SoundVolume [ {:3} ]", GameFlow.ctx.cfg->audio.se_volume);
+  title_bgm_vol_.Format("BGMVolume   [ {:3} ]", GameFlow.ctx.cfg->audio.bgm_volume);
   title_bgm_gain_.Format("BGMVolNormalize{}", norm_choice);
 
   if (!track_mgr.PacksAvailable()) {
     title_bgm_pack_.Set("BGMPack[ Download ]");
     items_[5].Help = "収録のサントラをダウンロードします";
-  } else if (ConfigDat.bgm_pack.empty()) {
+  } else if (GameFlow.ctx.cfg->audio.bgm_pack.empty()) {
     title_bgm_pack_.Format("BGMPack[{}]", CHOICE_USE[1]);
     items_[5].Help = "BGMパックのメニューを開きます";
   } else {
@@ -656,27 +656,44 @@ void SoundPanel::Refresh(MenuController &ctrl, bool) {
 }
 
 // ---------------------------------------------------------------------------
+// PadPanel — Fn helper wrappers (work around ConfigData pointer indirection)
+// ---------------------------------------------------------------------------
+
+static bool FnPadTama(MenuController &c, INPUT_BITS k) {
+  return PadPanel::FnPadImpl(c, k, GameFlow.ctx.cfg->input.pad_tama);
+}
+static bool FnPadBomb(MenuController &c, INPUT_BITS k) {
+  return PadPanel::FnPadImpl(c, k, GameFlow.ctx.cfg->input.pad_bomb);
+}
+static bool FnPadShift(MenuController &c, INPUT_BITS k) {
+  return PadPanel::FnPadImpl(c, k, GameFlow.ctx.cfg->input.pad_shift);
+}
+static bool FnPadCancel(MenuController &c, INPUT_BITS k) {
+  return PadPanel::FnPadImpl(c, k, GameFlow.ctx.cfg->input.pad_cancel);
+}
+
+// ---------------------------------------------------------------------------
 // PadPanel
 // ---------------------------------------------------------------------------
 
 PadPanel::PadPanel() {
   static constexpr const char *HELP = "パッド上のボタンを押すと変更";
   items_.reserve(5);
-  items_.emplace_back(titles_[0].Lit(), HELP, Fn<ConfigDat.pad_tama>);
-  items_.emplace_back(titles_[1].Lit(), HELP, Fn<ConfigDat.pad_bomb>);
-  items_.emplace_back(titles_[2].Lit(), HELP, Fn<ConfigDat.pad_shift>);
-  items_.emplace_back(titles_[3].Lit(), HELP, Fn<ConfigDat.pad_cancel>);
+  items_.emplace_back(titles_[0].Lit(), HELP, FnPadTama);
+  items_.emplace_back(titles_[1].Lit(), HELP, FnPadBomb);
+  items_.emplace_back(titles_[2].Lit(), HELP, FnPadShift);
+  items_.emplace_back(titles_[3].Lit(), HELP, FnPadCancel);
   items_.emplace_back(SubmenuExitItem);
   menu_ = MenuDef(std::span(items_),
                   [this](MenuController &c, bool t) { Refresh(c, t); });
 }
 
-template <INPUT_PAD_BUTTON &ConfigPad>
-bool PadPanel::Fn(MenuController &ctrl, INPUT_BITS key) {
+bool PadPanel::FnPadImpl(MenuController &ctrl, INPUT_BITS key,
+                         INPUT_PAD_BUTTON &config_pad) {
   key &= (~Pad_Data);
   const auto temp = Key_PadSingle();
   if (temp) {
-    ConfigPad = temp.value();
+    config_pad = temp.value();
     ctrl.SearchActive()->SetItems(ctrl, false);
   }
   return !Input_IsOK(key);
@@ -698,10 +715,10 @@ void PadPanel::Refresh(MenuController &, bool) {
     }
   };
 
-  set(titles_[0], labels[0], ConfigDat.pad_tama);
-  set(titles_[1], labels[1], ConfigDat.pad_bomb);
-  set(titles_[2], labels[2], ConfigDat.pad_shift);
-  set(titles_[3], labels[3], ConfigDat.pad_cancel);
+  set(titles_[0], labels[0], GameFlow.ctx.cfg->input.pad_tama);
+  set(titles_[1], labels[1], GameFlow.ctx.cfg->input.pad_bomb);
+  set(titles_[2], labels[2], GameFlow.ctx.cfg->input.pad_shift);
+  set(titles_[3], labels[3], GameFlow.ctx.cfg->input.pad_cancel);
 
   for (size_t i = 0; i < 4; i++) {
     items_[i].Title = titles_[i].Lit();
@@ -725,16 +742,16 @@ InputPanel::InputPanel() {
 }
 
 void InputPanel::FnMsgSkip(MenuController &, int_fast8_t) {
-  ConfigDat.z_msg_skip_enabled = !ConfigDat.z_msg_skip_enabled;
+  GameFlow.ctx.cfg->input.z_msg_skip_enabled = !GameFlow.ctx.cfg->input.z_msg_skip_enabled;
 }
 
 void InputPanel::FnZSpeedDown(MenuController &, int_fast8_t) {
-  ConfigDat.z_spd_down_enabled = !ConfigDat.z_spd_down_enabled;
+  GameFlow.ctx.cfg->input.z_spd_down_enabled = !GameFlow.ctx.cfg->input.z_spd_down_enabled;
 }
 
 void InputPanel::Refresh(MenuController &, bool) {
-  const auto skip = ConfigDat.z_msg_skip_enabled;
-  const auto down = ConfigDat.z_spd_down_enabled;
+  const auto skip = GameFlow.ctx.cfg->input.z_msg_skip_enabled;
+  const auto down = GameFlow.ctx.cfg->input.z_spd_down_enabled;
 
   titles_[0].Format("Z-MessageSkip[{}]", (skip ? "ＯＫ" : "禁止"));
   titles_[1].Format("Z-SpeedDown  [{}]", (down ? "ＯＫ" : "禁止"));
@@ -760,9 +777,9 @@ DebugPanel::DebugPanel() {
 }
 
 void DebugPanel::FnHitboxDisplay(MenuController &, int_fast8_t delta) {
-  int32_t v = ConfigDat.hitbox_display;
+  int32_t v = GameFlow.ctx.cfg->debug.hitbox_display;
   v = (delta < 0) ? ((v <= 0) ? 2 : (v - 1)) : ((v >= 2) ? 0 : (v + 1));
-  ConfigDat.hitbox_display = v;
+  GameFlow.ctx.cfg->debug.hitbox_display = v;
 }
 
 bool DebugPanel::FnBulletGallery(MenuController &, INPUT_BITS key) {
@@ -775,7 +792,7 @@ bool DebugPanel::FnBulletGallery(MenuController &, INPUT_BITS key) {
 void DebugPanel::Refresh(MenuController &, bool) {
   static constexpr const char *kHitboxLabels[3] = {"Off ", "Hit ", "All "};
   titles_[0].Format("Hitbox     [ {} ]",
-                    kHitboxLabels[std::clamp(ConfigDat.hitbox_display, 0, 2)]);
+                    kHitboxLabels[std::clamp(GameFlow.ctx.cfg->debug.hitbox_display, 0, 2)]);
   titles_[1].Format("Bullet Gallery");
 
   for (size_t i = 0; i < items_.size() - 1; i++) {
@@ -835,7 +852,7 @@ bool MainMenuPanel::FnGameStart(MenuController &, INPUT_BITS key) {
 
 bool MainMenuPanel::FnExStart(MenuController &, INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    if (ConfigDat.extra_stg_flags != 0U) {
+    if (GameFlow.ctx.game.extra_stg_flags != 0U) {
       GameFlow.WeaponSelectInit(true);
     }
   }
@@ -851,7 +868,7 @@ bool MainMenuPanel::FnScore(MenuController &, INPUT_BITS key) {
 
 bool MainMenuPanel::FnMusic(MenuController &, INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    UI.MsgForceClose();
+    GameFlow.ctx.ui.MsgForceClose();
     MusicRoomInit();
   }
   return true;
@@ -859,7 +876,7 @@ bool MainMenuPanel::FnMusic(MenuController &, INPUT_BITS key) {
 
 bool MainMenuPanel::ReplayFilesMenuOpen(MenuController &, INPUT_BITS key) {
   if (Input_IsOK(key)) {
-    UI.OpenReplayFiles();
+    GameFlow.ctx.ui.OpenReplayFiles();
   }
   return true;
 }

@@ -14,6 +14,7 @@ struct BulletManager;
 struct ItemManager;
 struct LaserManager;
 struct GameManager;
+class Player;
 
 struct BossManager {
   std::array<BossData, BOSS_MAX> bosses; // Boss[]
@@ -28,6 +29,7 @@ struct BossManager {
   LaserManager *lasers_ = nullptr;
   ItemManager *items_ = nullptr;
   GameManager *game_ = nullptr;
+  Player *player_ = nullptr;
 
   // === Methods ===
 
@@ -36,6 +38,7 @@ struct BossManager {
   void Bind(LaserManager &lm) { lasers_ = &lm; }
   void Bind(ItemManager &im) { items_ = &im; }
   void Bind(GameManager &gm) { game_ = &gm; }
+  void Bind(Player &p) { player_ = &p; }
 
   // Initialization and setup
   void Init();

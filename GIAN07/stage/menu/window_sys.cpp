@@ -9,7 +9,7 @@
 #include "audio/snd.h"
 #include "data/gfx_manager.h"
 #include "data/sfx_manager.h"
-#include "menu/menu_renderer.h"
+#include "menu_renderer.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
 #include "util/enum_flags.h"

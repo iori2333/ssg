@@ -8,7 +8,7 @@
 #include <string>
 
 #include "gfx/text.h"
-#include "stage/window_sys.h"
+#include "stage/menu/window_sys.h"
 
 // Message window flags
 enum class MsgWindowFlags : uint8_t {

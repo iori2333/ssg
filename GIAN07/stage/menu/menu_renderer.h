@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "stage/window_sys.h"
+#include "stage/menu/window_sys.h"
 
 struct TEXTRENDER_SESSION;
 

@@ -6,6 +6,7 @@
 #include "audio/snd.h"
 #include "core/config.h"
 #include "core/lz_uty.h"
+#include "gameflow/gameflow_manager.h"
 #include "pack_manager.h"
 
 namespace {
@@ -23,14 +24,14 @@ bool SndLoadFromPack(const PackFile &in, uint32_t filno, uint8_t id,
 } // namespace
 
 bool SfxManager::LoadAllFromPack(const PackFile &in) {
-  if (!ConfigDat.se_enabled || !Snd_SEInit()) {
-    ConfigDat.se_enabled = false;
+  if (!GameFlow.ctx.cfg->audio.se_enabled || !Snd_SEInit()) {
+    GameFlow.ctx.cfg->audio.se_enabled = false;
     return false;
   }
 
   for (uint8_t id = 0; id < std::size(kSfxMax); id++) {
     if (!SndLoadFromPack(in, id, id, kSfxMax[id])) {
-      ConfigDat.se_enabled = false;
+      GameFlow.ctx.cfg->audio.se_enabled = false;
       Snd_SECleanup();
       return false;
     }

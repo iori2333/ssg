@@ -10,7 +10,6 @@
 #include "player_shot.h"
 
 #include "audio/snd.h"
-#include "core/entity.h"
 #include "core/gian.h"
 #include "effect/effect_manager.h"
 #include "effect/fragment.h"
@@ -23,8 +22,6 @@
 #include "util/cast.h"
 #include "util/ut_math.h"
 #include "weapon/weapon_form.h"
-
-#include <utility>
 
 // --- Damage table indexed by bullet ID (t->c) ---
 constexpr uint8_t TogeDamage[0x0c] = {
@@ -153,44 +150,47 @@ void PlayerShot::MoveByEffect() {
 // --- Bullet movement & hit check ---
 
 void Player::MoveMaidShot() {
-  int i = 0;
-
-  for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
-    auto *t = &maid_tama_[maid_tama_ind_[i]];
-    if (t->c_ == TID_HOMING_BOMB_B) {
-      Enemies.DamageAt(t->x_, t->y_, TogeDamage[t->c_]);
-      t->count_++;
-      if (t->count_ >= 19) {
-        t->flag_ |= PlayerFlag::DEL;
+  for (auto &t : maid_tama_) {
+    if (t.c_ == TID_HOMING_BOMB_B) {
+      Enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_]);
+      t.count_++;
+      if (t.count_ >= 19) {
+        t.flag_ |= PlayerFlag::DEL;
       }
       continue;
     }
-    if (t->effect_ == 0) {
-      t->MoveByType();
-      t->x_ = t->tx_;
-      t->y_ = t->ty_;
-      t->count_++;
-      if (((t->flag_ & PlayerFlag::CLIP) == 0) && ((t->x_) < GX_MIN || (t->x_) > GX_MAX ||
-                                        (t->y_) < GY_MIN || (t->y_) > GY_MAX)) {
-        t->flag_ |= PlayerFlag::DEL;
+    if (t.effect_ == 0) {
+      t.MoveByType();
+      t.x_ = t.tx_;
+      t.y_ = t.ty_;
+      t.count_++;
+      if (((t.flag_ & PlayerFlag::CLIP) == 0) && ((t.x_) < GX_MIN || (t.x_) > GX_MAX ||
+                                        (t.y_) < GY_MIN || (t.y_) > GY_MAX)) {
+        t.flag_ |= PlayerFlag::DEL;
       }
 
-      if (Enemies.DamageAt(t->x_, t->y_, TogeDamage[t->c_])) {
-        if (t->c_ == TID_HOMING_BOMB_A) {
-          PlayerShotSpawnInfo si{.x=t->x_, .y=t->y_, .d=192, .dw=16, .n=1,
-                                .v=SPEEDM(10), .a=0,
-                                .c=TID_HOMING_BOMB_B, .type=10};
+      if (Enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_])) {
+        if (t.c_ == TID_HOMING_BOMB_A) {
+          PlayerShotSpawnInfo si{.x = t.x_,
+                                 .y = t.y_,
+                                 .d = 192,
+                                 .dw = 16,
+                                 .n = 1,
+                                 .v = SPEEDM(10),
+                                 .a = 0,
+                                 .c = TID_HOMING_BOMB_B,
+                                 .type = 10};
           SpawnShot(si);
         }
-        t->flag_ |= PlayerFlag::DEL;
-        Effects.SpawnFragment(t->x_, t->y_, FRG_HIT);
+        t.flag_ |= PlayerFlag::DEL;
+        Effects.SpawnFragment(t.x_, t.y_, FRG_HIT);
       }
     } else {
-      t->MoveByEffect();
+      t.MoveByEffect();
     }
   }
-  Indsort(maid_tama_ind_, maid_tama_now_, maid_tama_,
-          [](const PlayerShot &t) { return (t.flag_ & PlayerFlag::DEL); });
+  maid_tama_.Compact(
+      [](const PlayerShot &t) { return static_cast<bool>(t.flag_ & PlayerFlag::DEL); });
 
   ActiveForm_()->OnCollisionTick();
 }
@@ -198,7 +198,6 @@ void Player::MoveMaidShot() {
 // --- Bullet drawing ---
 
 void Player::DrawMaidShot() {
-  int i = 0;
   int x = 0;
   int y = 0;
   PIXEL_LTRB src;
@@ -209,45 +208,44 @@ void Player::DrawMaidShot() {
                                       {568, 104, 568 + 32, 104 + 32},
                                       {600, 104, 600 + 40, 104 + 40}};
 
-  for (i = 0; std::cmp_less(i, maid_tama_now_); i++) {
-    auto *t = &maid_tama_[maid_tama_ind_[i]];
+  for (auto &t : maid_tama_) {
 
-    x = (t->x_ >> 6) - 8;
-    y = (t->y_ >> 6) - 8;
+    x = (t.x_ >> 6) - 8;
+    y = (t.y_ >> 6) - 8;
 
-    switch (t->c_) {
+    switch (t.c_) {
     case TID_WIDE_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 176, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 176, 16, 16};
       break;
     case TID_WIDE_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 192, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 192, 16, 16};
       break;
     case TID_HOMING_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 208, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 208, 16, 16};
       break;
     case TID_HOMING_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 224, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 224, 16, 16};
       break;
     case TID_HOMING_BOMB_A:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 288, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 288, 16, 16};
       break;
     case TID_LASER_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 256, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 256, 16, 16};
       break;
     case TID_HOMING_BOMB_B:
-      src = HomingBomb[(static_cast<int>(t->count_) / 4) % 5];
+      src = HomingBomb[(static_cast<int>(t.count_) / 4) % 5];
       break;
     case TID_WIDE_FOCUS_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 176, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 176, 16, 16};
       break;
     case TID_WIDE_FOCUS_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 192, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 192, 16, 16};
       break;
     case TID_HOMING_FOCUS_MAIN:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 208, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 208, 16, 16};
       break;
     case TID_HOMING_FOCUS_SUB:
-      src = PIXEL_LTWH{(384 + ((t->d_ + 8) & 0xf0)), 224, 16, 16};
+      src = PIXEL_LTWH{(384 + ((t.d_ + 8) & 0xf0)), 224, 16, 16};
       break;
     }
 
@@ -267,12 +265,12 @@ void Player::DrawMaidShot() {
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
 
     ltemp = PIXEL_LTWH{(384 + 8 + ((lay_grp_ - 1) << 4)), 240, 8, 16};
-    for (i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+    for (int i = (opy_ >> 6) - 36; i > -16; i -= 16) {
       x = (opx_ >> 6) + 4 - 8 + loff;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
     }
-    for (i = (opy_ >> 6) - 36; i > -16; i -= 16) {
+    for (int i = (opy_ >> 6) - 36; i > -16; i -= 16) {
       x = (opx_ >> 6) + 4 - 8 - loff;
       y = i;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, ltemp);
@@ -282,23 +280,18 @@ void Player::DrawMaidShot() {
 
 // --- Shot pool initialization ---
 
-void Player::SetMaidShotIndices() {
-  for (int i = 0; i < MAIDTAMA_MAX; i++) {
-    maid_tama_ind_[i] = i;
-  }
-  maid_tama_now_ = 0;
-}
+void Player::SetMaidShotIndices() { maid_tama_.Init(); }
 
 // --- Laser fire trigger ---
 
 void Player::SetMLaser(uint16_t time) {
-  if ((Players.bomb_time_ != 0U) || Players.muteki_ > MAID_MOVE_DISABLE_TIME) {
-    Players.lay_time_ = 0;
-    Players.lay_grp_ = 0;
+  if ((bomb_time_ != 0U) || muteki_ > MAID_MOVE_DISABLE_TIME) {
+    lay_time_ = 0;
+    lay_grp_ = 0;
     return;
   }
 
-  if (Players.lay_time_ == 0) {
-    Players.lay_time_ = time;
+  if (lay_time_ == 0) {
+    lay_time_ = time;
   }
 }

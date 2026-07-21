@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "menu/panels.h"
-#include "menu/scroll_menu.h"
-#include "msg_window/msg_window.h"
+#include "panels.h"
+#include "scroll_menu.h"
+#include "../msg_window/msg_window.h"
 #include "window_sys.h"
 
 class UIManager {
@@ -117,5 +117,4 @@ private:
   MenuController replay_files_window_;
 };
 
-// Single global instance
-extern UIManager UI;
+// Access via GameFlow.ctx.ui

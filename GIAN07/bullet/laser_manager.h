@@ -13,6 +13,7 @@
 
 struct EnemyData;
 struct GameManager;
+class Player;
 
 struct LaserManager {
   void Init();
@@ -41,9 +42,11 @@ struct LaserManager {
 
   // --- DI ---
   void Bind(GameManager &gm) { game_ = &gm; }
+  void Bind(Player &p) { player_ = &p; }
 
 private:
   GameManager *game_ = nullptr;
+  Player *player_ = nullptr;
   ObjectPool<LaserReflect, kReflectMax> reflect;
   ObjectPool<LaserLong, kLongLaserMax> long_lasers;
   ObjectPool<LaserHoming, kHomingMax> homing;

@@ -49,4 +49,4 @@ struct DemoManager {
   [[nodiscard]] bool LoadReplayAll(const char *fn);
 };
 
-extern DemoManager Demos;
+// Backward-compat: access via GameFlow.ctx.demos

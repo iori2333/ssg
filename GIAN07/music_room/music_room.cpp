@@ -442,7 +442,7 @@ void MusicRoomProc(bool & /*unused*/) {
     if (!DevChgWait) {
       BGM_ChangeMIDIDevice(1);
       if (auto sf = MidBackend_CurrentSoundFont()) {
-        ConfigDat.soundfont = sf.value();
+        GameFlow.ctx.cfg->audio.soundfont = sf.value();
       }
       DevChgWait = true;
     }

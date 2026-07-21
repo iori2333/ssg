@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
 
 // [ Constants ]
@@ -39,4 +38,4 @@ struct ItemData {
 // Migrated to ItemManager
 
 // [ Variables ]
-// Access directly via Items.entities, Items.indices, Items.count
+// Access via Items.pool

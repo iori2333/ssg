@@ -4,18 +4,21 @@
 
 #pragma once
 
+#include "core/object_pool.h"
 #include "item.h"
 
-struct ItemManager {
-  std::array<ItemData, ITEM_MAX> entities; // Items.entities[]
-  std::array<uint16_t, ITEM_MAX> indices;  // Items.indices[]
-  uint16_t count = 0;                      // Items.count
+class Player;
 
-  // === Methods ===
+struct ItemManager {
+  ObjectPool<ItemData, ITEM_MAX> pool;
+  Player *player_ = nullptr;
+
+  void Bind(Player &p) { player_ = &p; }
+
+  void Init();
   void Spawn(int x, int y, uint8_t type);
   void Move();
   void Draw();
-  void SetIndices();
 };
 
 

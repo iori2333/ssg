@@ -11,6 +11,7 @@
 
 struct ItemManager;
 struct GameManager;
+class Player;
 
 struct BulletManager {
   void Init();
@@ -18,6 +19,7 @@ struct BulletManager {
   // --- DI ---
   void Bind(ItemManager &im) { items_ = &im; }
   void Bind(GameManager &gm) { game_ = &gm; }
+  void Bind(Player &p) { player_ = &p; }
 
   bool Spawn(const BulletSpawnInfo &si);
   bool SpawnLine(const BulletSpawnInfo &si);
@@ -42,6 +44,7 @@ struct BulletManager {
 private:
   ItemManager *items_ = nullptr;
   GameManager *game_ = nullptr;
+  Player *player_ = nullptr;
   ObjectPool<Bullet, kBulletSmallMax> pool_small;
   ObjectPool<Bullet, kBulletLargeMax> pool_large;
 

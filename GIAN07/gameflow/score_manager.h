@@ -58,8 +58,6 @@ private:
   void XPut(BIT_DEVICE_WRITE &bd, T data, uint64_t &ExMask);
 };
 
-extern ScoreManager Scores;
-
 template <std::unsigned_integral T>
 T ScoreManager::XGet(BIT_DEVICE_READ &bd, uint64_t &ExMask) {
   ExMask = (((ExMask & 0x800000000000000) >> 60) + (ExMask << 1));
