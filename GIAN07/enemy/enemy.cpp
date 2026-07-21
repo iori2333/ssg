@@ -126,7 +126,7 @@ void EnemyManager::Move() {
         e->tama_c = (e->tama_c + 1) % (e->t_rep);
         if (e->tama_c == 0) {
           auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, true, *game_);
-          bullets_->Spawn(si);
+          bullets_->SpawnBullet(si);
         }
       }
 
@@ -1169,7 +1169,7 @@ ECL_HEAD:
   case ECL_TAMA: // Fire bullet
     {
       auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, true, *game_);
-      bullets_->Spawn(si);
+      bullets_->SpawnBullet(si);
     }
     bRetFlag = false;
     break;
@@ -1177,23 +1177,23 @@ ECL_HEAD:
   case ECL_TAMA2: // Fire bullet (no difficulty change)
     {
       auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false, *game_);
-      bullets_->Spawn(si);
+      bullets_->SpawnBullet(si);
     }
     bRetFlag = false;
     break;
 
   case ECL_TAMAL: // Fire bullets in a line
     {
-      auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false, *game_);
-      bullets_->SpawnLine(si);
+auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false, *game_, BulletSpawnType::Line);
+    bullets_->SpawnBullet(si);
     }
     bRetFlag = false;
     break;
 
   case ECL_TAMAEX:
     {
-      auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false, *game_);
-      bullets_->SpawnExtra01(si);
+auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, false, *game_, BulletSpawnType::Extra01);
+    bullets_->SpawnBullet(si);
     }
     bRetFlag = false;
     break;
@@ -1293,7 +1293,7 @@ ECL_HEAD:
 
   case ECL_TCLR:       // Clear all enemy bullets (including lasers)
     Bosses.ClearCmd(); // Prioritize this above all (includes bit clearing)
-    bullets_->ClearAll();
+    bullets_->Clear();
     Clear();
     bRetFlag = false;
     break;

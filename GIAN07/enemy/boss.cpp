@@ -595,7 +595,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
       items_->Spawn(e.x, e.y, e.item);
     }
     player_->AddScore(e.score);
-    bullets_->ClearAll();
+    bullets_->Clear();
     b.IsUsed = false;
     count--; // Uses boss reference count?
   } else {
@@ -779,7 +779,7 @@ void BossManager::STDMove(BossData *b) {
     e->tama_c = (e->tama_c + 1) % (e->t_rep);
     if (e->tama_c == 0) {
       auto si = MakeBulletSpawnInfo(e->t_cmd, e->x, e->y, true, *Bosses.game_);
-      Bosses.bullets_->Spawn(si);
+      Bosses.bullets_->SpawnBullet(si);
     }
   }
 

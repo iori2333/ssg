@@ -1487,7 +1487,7 @@ void GameMove() {
   Bosses.Move();
   Enemies.Move();
   GameFlow.ctx.items.Move();
-  GameFlow.ctx.bullets.UpdateAll();
+  GameFlow.ctx.bullets.Update();
   Effects.MoveFragments();
   Effects.MoveStringEffects();
   Effects.MoveCircleEffects();
@@ -1520,23 +1520,12 @@ void GameDraw() {
 
   GameFlow.ctx.player.Draw();
 
-  if (GrpGeom_FB() != nullptr) {
-    GameFlow.ctx.bullets.RenderLong();
-  }
-
   Effects.DrawLockOn();
 
   Effects.DrawFragments();
   GameFlow.ctx.items.Draw();
 
-  // Long laser draws need two passes for Z ordering
-  if (GrpGeom_Poly() != nullptr) {
-    GameFlow.ctx.bullets.RenderLong();
-  }
-
-  GameFlow.ctx.bullets.RenderHoming();
-  GameFlow.ctx.bullets.RenderReflect();
-  GameFlow.ctx.bullets.RenderAll();
+  GameFlow.ctx.bullets.Render();
 
 #ifdef PBG_DEBUG
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
@@ -1645,7 +1634,7 @@ static void SpawnGalleryBullets() {
 static void BulletGalleryProc(bool & /*quit*/) {
   if ((Key_Data & KEY_ESC) != 0U) {
     GameFlow.ctx.game.bullet_gallery_active = false;
-    GameFlow.ctx.bullets.ClearAll();
+    GameFlow.ctx.bullets.Clear();
     (void)gfx.LoadStage(GameStage::TITLE);
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
@@ -1660,7 +1649,7 @@ static void BulletGalleryProc(bool & /*quit*/) {
   }
 
   GrpBackend_Clear();
-  GameFlow.ctx.bullets.RenderAll();
+  GameFlow.ctx.bullets.Render();
 
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
@@ -1691,7 +1680,7 @@ void BulletGalleryInit() {
   }
   (void)gfx.LoadGalleryEnemySurfaces();
   GameFlow.ctx.bullets.Init();
-  GameFlow.ctx.bullets.ClearAll();
+  GameFlow.ctx.bullets.Clear();
   SpawnGalleryBullets();
   GameFlow.ctx.game.bullet_gallery_active = true;
   GameFlow.game_main = BulletGalleryProc;

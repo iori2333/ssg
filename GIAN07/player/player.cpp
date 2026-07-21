@@ -512,7 +512,7 @@ void Player::Update() {
   SetMaidShot();
 
   if (bomb_time_ != 0U) {
-    bullets_->ClearAll();
+    bullets_->Clear();
   }
 
   buzz_sound_ = false;
@@ -638,7 +638,7 @@ void Player::OnDeath(bool play_se) {
     bomb_--;
     bomb_used_++;
     game_->AddRank(-BOMB_RANK_DECR); // auto bomb_ decreases rank
-    bullets_->ClearAll();
+    bullets_->Clear();
     return;
   }
 
@@ -673,7 +673,7 @@ void Player::OnDeath(bool play_se) {
     GameOverInit();
   }
 
-  bullets_->ClearAll();
+  bullets_->Clear();
 }
 
 void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }

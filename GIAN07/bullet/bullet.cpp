@@ -88,7 +88,8 @@ void Bullet::DrawEffect() const {
 // ── MakeBulletSpawnInfo ──────────────────────────────────────────
 
 BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd, int ox, int oy,
-                                    bool scaling, const GameManager &game) {
+                                    bool scaling, const GameManager &game,
+                                    BulletSpawnType spawn_type) {
   BulletCommand scaled = cmd;
   scaled.x += ox;
   scaled.y += oy;
@@ -139,7 +140,8 @@ BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd, int ox, int oy,
           static_cast<uint8_t>(scaled.cmd & 0xf0),
           static_cast<uint8_t>(scaled.cmd & 0x03),
           (scaled.cmd & TAMA_REN) != 0,
-          (scaled.cmd & TAMA_ZSET) != 0};
+          (scaled.cmd & TAMA_ZSET) != 0,
+          spawn_type};
 }
 
 // ── Bullet: Spawn ────────────────────────────────────────────────

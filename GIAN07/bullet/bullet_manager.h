@@ -26,9 +26,7 @@ struct BulletManager {
   void Bind(Player &p) { player_ = &p; }
 
   // --- Bullet spawn ---
-  bool Spawn(const BulletSpawnInfo &si);
-  bool SpawnLine(const BulletSpawnInfo &si);
-  bool SpawnExtra01(const BulletSpawnInfo &si);
+  bool SpawnBullet(const BulletSpawnInfo &si);
 
   // --- Laser spawn ---
   bool SpawnReflect(const ReflectSpawnInfo &info);
@@ -36,20 +34,16 @@ struct BulletManager {
   bool SpawnHoming(const HomingSpawnInfo &info);
 
   // --- Per-frame ---
-  void UpdateAll();
-  void HitCheckAll();
-  void ClearAll();
+  void Update();
+  void HitCheck();
+  void Clear();
 
-  // --- Render (granular, matching game-loop draw order) ---
-  void RenderAll() const;
-  void RenderLong() const;
-  void RenderHoming() const;
-  void RenderReflect() const;
+  // --- Render ---
+  void Render() const;
 
   // --- Laser control ---
   void ControlLongLaser(const EnemyData *e, uint8_t id,
                         const LongLaserUpdateInfo &info);
-  void ClearHoming();
 
   // --- Bullet items / scoring ---
   uint32_t ScoreToItems();
@@ -67,32 +61,20 @@ private:
   GameManager *game_ = nullptr;
   Player *player_ = nullptr;
 
-  // Bullet pools
-  ObjectPool<Bullet, kBulletSmallMax> pool_small;
-  ObjectPool<Bullet, kBulletLargeMax> pool_large;
+  // Bullet pool
+  ObjectPool<Bullet, kBulletMax> pool;
 
   // Laser pools
   ObjectPool<LaserReflect, kReflectMax> reflect;
   ObjectPool<LaserLong, kLongLaserMax> long_lasers;
   ObjectPool<LaserHoming, kHomingMax> homing;
 
-  template <typename Pool>
-  void SpawnImpl(const BulletSpawnInfo &si, Pool &pool);
-
-  template <typename Fn> void ApplySmall(Fn fn) {
-    for (auto &b : pool_small) {
-      fn(b);
-    }
-  }
-  template <typename Fn> void ApplyLarge(Fn fn) {
-    for (auto &b : pool_large) {
-      fn(b);
-    }
-  }
-
+  void UpdateBullet();
   void UpdateReflect();
+
+  bool SpawnBulletNormal(const BulletSpawnInfo &si);
+  bool SpawnBulletLine(const BulletSpawnInfo &si);
+  bool SpawnBulletExtra01(const BulletSpawnInfo &si);
   void UpdateLong();
   void UpdateHoming();
-  void ClearReflect();
-  void ClearLong();
 };

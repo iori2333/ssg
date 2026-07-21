@@ -103,8 +103,14 @@ struct BulletCommand {
 };
 
 ////Pool capacities////
-inline constexpr auto kBulletSmallMax = TAMA_MAX;
-inline constexpr auto kBulletLargeMax = TAMA_MAX;
+inline constexpr auto kBulletMax = TAMA_MAX * 2;
+
+////Bullet spawn type discriminator////
+enum class BulletSpawnType : uint8_t {
+  Normal = 0x00,
+  Line = 0x01,
+  Extra01 = 0x02,
+};
 
 ////Spawn parameter struct////
 struct BulletSpawnInfo {
@@ -123,6 +129,7 @@ struct BulletSpawnInfo {
   uint8_t cmd_type{};
   bool rapid{};
   bool zset{};
+  BulletSpawnType spawn_type{BulletSpawnType::Normal};
 };
 
 struct BulletManager;
@@ -189,4 +196,6 @@ private:
 //// Free function: build SpawnInfo from ECL command ////
 [[nodiscard]] BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd,
                                                   int ox, int oy, bool scaling,
-                                                  const GameManager &game);
+                                                  const GameManager &game,
+                                                  BulletSpawnType spawn_type =
+                                                      BulletSpawnType::Normal);
