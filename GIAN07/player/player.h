@@ -66,7 +66,6 @@ class HomingFocusForm;
 class LaserForm;
 class LaserFocusForm;
 struct BulletManager;
-struct LaserManager;
 struct GameManager;
 
 // [ Player class ]
@@ -83,7 +82,6 @@ public:
 
   // --- Lifecycle ---
   void Bind(BulletManager &bm) { bullets_ = &bm; }
-  void Bind(LaserManager &lm) { lasers_ = &lm; }
   void Bind(GameManager &gm) { game_ = &gm; }
   void Bind(const GameConfig &gc) { game_config_ = &gc; }
   void Bind(const InputConfig &ic) { input_config_ = &ic; }
@@ -248,7 +246,6 @@ private:
   bool buzz_sound_ = false;
 
   BulletManager *bullets_ = nullptr;
-  LaserManager *lasers_ = nullptr;
   GameManager *game_ = nullptr;
   const GameConfig *game_config_ = nullptr;
   const InputConfig *input_config_ = nullptr;

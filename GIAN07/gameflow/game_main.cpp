@@ -19,7 +19,6 @@
 #include "track_manager/track_manager.h"
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
-#include "bullet/laser_manager.h"
 #include "core/config.h"
 #include "core/gian.h"
 #include "data/gfx_manager.h"
@@ -577,24 +576,19 @@ void GameSTD_Init() {
 
   // --- DI ---
   Enemies.Bind(GameFlow.ctx.bullets);
-  Enemies.Bind(GameFlow.ctx.lasers);
   Enemies.Bind(GameFlow.ctx.items);
   Enemies.Bind(GameFlow.ctx.game);
   Enemies.Bind(GameFlow.ctx.player);
   Bosses.Bind(GameFlow.ctx.bullets);
-  Bosses.Bind(GameFlow.ctx.lasers);
   Bosses.Bind(GameFlow.ctx.items);
   Bosses.Bind(GameFlow.ctx.game);
   Bosses.Bind(GameFlow.ctx.player);
   GameFlow.ctx.player.Bind(GameFlow.ctx.bullets);
-  GameFlow.ctx.player.Bind(GameFlow.ctx.lasers);
   GameFlow.ctx.player.Bind(GameFlow.ctx.game);
   GameFlow.ctx.items.Bind(GameFlow.ctx.player);
   GameFlow.ctx.bullets.Bind(GameFlow.ctx.items);
   GameFlow.ctx.bullets.Bind(GameFlow.ctx.game);
   GameFlow.ctx.bullets.Bind(GameFlow.ctx.player);
-  GameFlow.ctx.lasers.Bind(GameFlow.ctx.game);
-  GameFlow.ctx.lasers.Bind(GameFlow.ctx.player);
   Scroller.Bind(GameFlow.ctx.game);
   Scroller.Bind(GameFlow.ctx.player);
   Scroller.Bind(*GameFlow.ctx.graphics_cfg);
@@ -604,7 +598,6 @@ void GameSTD_Init() {
   GameFlow.ctx.player.SetMaidShotIndices();
   Enemies.InitIndices();
   GameFlow.ctx.bullets.Init();
-  GameFlow.ctx.lasers.Init();
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
   Effects.InitLockOn();
@@ -929,7 +922,6 @@ bool GameExit(bool bNeedChgMusic) {
   }
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  GameFlow.ctx.lasers.Init(); // Stop sound + re-init pools
   Snd_SEStop(8);      // Stop warning sound
 
   const auto flags = MsgWindowFlags::CENTER;
@@ -1495,8 +1487,7 @@ void GameMove() {
   Bosses.Move();
   Enemies.Move();
   GameFlow.ctx.items.Move();
-  GameFlow.ctx.bullets.Move();
-  GameFlow.ctx.lasers.Move();       // MoveAll — replaces Move+MoveLong+MoveHoming
+  GameFlow.ctx.bullets.UpdateAll();
   Effects.MoveFragments();
   Effects.MoveStringEffects();
   Effects.MoveCircleEffects();
@@ -1530,7 +1521,7 @@ void GameDraw() {
   GameFlow.ctx.player.Draw();
 
   if (GrpGeom_FB() != nullptr) {
-    GameFlow.ctx.lasers.RenderLong();
+    GameFlow.ctx.bullets.RenderLong();
   }
 
   Effects.DrawLockOn();
@@ -1540,17 +1531,16 @@ void GameDraw() {
 
   // Long laser draws need two passes for Z ordering
   if (GrpGeom_Poly() != nullptr) {
-    GameFlow.ctx.lasers.RenderLong();
+    GameFlow.ctx.bullets.RenderLong();
   }
 
-  GameFlow.ctx.lasers.RenderHoming();
-  GameFlow.ctx.lasers.Draw();
-  GameFlow.ctx.bullets.Draw();
+  GameFlow.ctx.bullets.RenderHoming();
+  GameFlow.ctx.bullets.RenderReflect();
+  GameFlow.ctx.bullets.RenderAll();
 
 #ifdef PBG_DEBUG
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
-    GameFlow.ctx.lasers.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
     auto *gp = GrpGeom_Poly();
     if (gp != nullptr) {
       const RGB216 kBlack{0, 0, 0};
@@ -1655,7 +1645,7 @@ static void SpawnGalleryBullets() {
 static void BulletGalleryProc(bool & /*quit*/) {
   if ((Key_Data & KEY_ESC) != 0U) {
     GameFlow.ctx.game.bullet_gallery_active = false;
-    GameFlow.ctx.bullets.Clear();
+    GameFlow.ctx.bullets.ClearAll();
     (void)gfx.LoadStage(GameStage::TITLE);
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
@@ -1670,11 +1660,10 @@ static void BulletGalleryProc(bool & /*quit*/) {
   }
 
   GrpBackend_Clear();
-  GameFlow.ctx.bullets.Draw();
+  GameFlow.ctx.bullets.RenderAll();
 
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
-    GameFlow.ctx.lasers.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
     auto *gp = GrpGeom_Poly();
     if (gp != nullptr) {
       const RGB216 kBlack{0, 0, 0};
@@ -1702,7 +1691,7 @@ void BulletGalleryInit() {
   }
   (void)gfx.LoadGalleryEnemySurfaces();
   GameFlow.ctx.bullets.Init();
-  GameFlow.ctx.bullets.Clear();
+  GameFlow.ctx.bullets.ClearAll();
   SpawnGalleryBullets();
   GameFlow.ctx.game.bullet_gallery_active = true;
   GameFlow.game_main = BulletGalleryProc;

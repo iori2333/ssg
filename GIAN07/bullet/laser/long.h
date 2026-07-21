@@ -71,7 +71,7 @@ struct LaserLong : BulletBase<LongLaserSpawnInfo, LongLaserUpdateInfo> {
   using SpawnInfo = LongLaserSpawnInfo;
   using UpdateInfo = LongLaserUpdateInfo;
 
-  friend struct LaserManager;
+  friend struct BulletManager;
   friend struct LaserReflect; // for reflection on long lasers, must keep
 
   void Render() const override;

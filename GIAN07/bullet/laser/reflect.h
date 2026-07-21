@@ -76,7 +76,7 @@ struct LaserReflect : BulletBase<ReflectSpawnInfo, ReflectUpdateInfo> {
   using SpawnInfo = ReflectSpawnInfo;
   using UpdateInfo = ReflectUpdateInfo;
 
-  friend struct LaserManager;
+  friend struct BulletManager;
 
   void Render() const override;
   bool IsDead() const override;

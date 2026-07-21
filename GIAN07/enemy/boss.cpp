@@ -16,7 +16,6 @@
 #include "data/sfx_manager.h"
 #include "effect/bomb_efc.h"
 #include "bullet/bullet_manager.h"
-#include "bullet/laser_manager.h"
 #include "item/item_manager.h"
 #include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
@@ -551,7 +550,7 @@ void BossManager::KillAll() {
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SfxId::Bossbomb, e->x);
       if (e->LLaserRef != 0U) {
-        lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+        bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
       e->hp = 0;
       e->count = 0;
@@ -575,7 +574,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     Scroller.Command(SCMD_QUAKE);
     Snd_SEPlay(SfxId::Bossbomb, e.x);
     if (e.LLaserRef != 0U) {
-      lasers_->ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+      bullets_->ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     player_->PowerUp(Cast::down<uint8_t>(e.hp));
     e.hp = 0;
@@ -596,7 +595,7 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
       items_->Spawn(e.x, e.y, e.item);
     }
     player_->AddScore(e.score);
-    lasers_->ClearAll();
+    bullets_->ClearAll();
     b.IsUsed = false;
     count--; // Uses boss reference count?
   } else {

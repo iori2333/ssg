@@ -14,7 +14,6 @@
 #include "core/game_manager.h"
 #include "stage/scene.h"
 #include "stage/scroll_manager.h"
-#include "bullet/laser_manager.h"
 #include "core/entity.h"
 #include "enemy/boss_manager.h"
 #include "item/item_manager.h"
@@ -146,7 +145,7 @@ void EnemyManager::Move() {
           (e->x < GX_MIN - (e->g_width)) || (e->x > GX_MAX + (e->g_width))) {
         if ((e->flag & EF_CLIP) == 0) {
           if (e->LLaserRef != 0U) {
-            lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+            bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
           }
           e->flag = EF_DELETE;
         }
@@ -208,7 +207,7 @@ void EnemyManager::Clear() {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef != 0U) {
-        lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+        bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
       Snd_SEPlay(SfxId::Bomb, e->x);
     } else {
@@ -218,7 +217,7 @@ void EnemyManager::Clear() {
       e->hp = 0;
       e->count = 0;
       if (e->LLaserRef != 0U) {
-        lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+        bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
       // Do not play explosion sound
     }
@@ -244,7 +243,7 @@ bool EnemyManager::ApplyDamage(EnemyData &e, int damage) {
   if (std::cmp_less_equal(e.hp, damage)) {
     Snd_SEPlay(SfxId::Bomb, e.x);
     if (e.LLaserRef != 0U) {
-      Enemies.lasers_->ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+      Enemies.bullets_->ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     player_->PowerUp(static_cast<uint8_t>(e.hp)); // Power up
     e.hp = 0;
@@ -570,7 +569,7 @@ ECL_HEAD:
     break;
 
   case ECL_HLASER: // Homing laser set
-    lasers_->SpawnHoming(HomingSpawnInfo{
+    bullets_->SpawnHoming(HomingSpawnInfo{
         .x = e->x + e->l_cmd.x,
         .y = e->y + e->l_cmd.y,
         .d = e->l_cmd.d,
@@ -582,7 +581,7 @@ ECL_HEAD:
     break;
 
   case ECL_LLSET: // Long laser set
-    if (lasers_->SpawnLongLaser(LongLaserSpawnInfo{
+    if (bullets_->SpawnLongLaser(LongLaserSpawnInfo{
         .enemy = e,
         .enemy_id = e->LLaserRef,
         .dx = e->l_cmd.x,
@@ -599,12 +598,12 @@ ECL_HEAD:
     break;
 
   case ECL_LLOPEN: // Long laser open cmd,id
-    lasers_->ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
+    bullets_->ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
     bRetFlag = false;
     break;
 
   case ECL_LLCLOSE: // Long laser close (delete & decrement ref count) cmd,id
-    lasers_->ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
+    bullets_->ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
     if (cmd[1] == ECLCST_LLASERALL) {
       e->LLaserRef = 0;
     } else {
@@ -614,13 +613,13 @@ ECL_HEAD:
     break;
 
   case ECL_LLCLOSEL: // Long laser to line state cmd,id
-    lasers_->ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
+    bullets_->ControlLongLaser(e, cmd[1], LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
     bRetFlag = false;
     break;
 
   case ECL_LLDEGR: // Long laser relative angle change cmd,id,deg
     // Order is reversed, so be careful
-    lasers_->ControlLongLaser(e, cmd[1],
+    bullets_->ControlLongLaser(e, cmd[1],
         LongLaserUpdateInfo{LongLaserUpdateInfo::Command::AdjustAngle, 0, Cast::sign<int8_t>(cmd[2])});
     bRetFlag = false;
     break;
@@ -638,7 +637,7 @@ ECL_HEAD:
   case ECL_END: // Force enemy deletion
     ECL_DEBUG("ECL_END", 0);
     if (e->LLaserRef != 0U) {
-      lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+      bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     e->flag = EF_DELETE; // To be changed later
     return;              // Bug prevention (maybe)
@@ -1294,15 +1293,13 @@ ECL_HEAD:
 
   case ECL_TCLR:       // Clear all enemy bullets (including lasers)
     Bosses.ClearCmd(); // Prioritize this above all (includes bit clearing)
-    bullets_->Clear();
-    lasers_->ClearAll();
-    lasers_->ClearHoming();
+    bullets_->ClearAll();
     Clear();
     bRetFlag = false;
     break;
 
   case ECL_LASER: // Fire laser
-    lasers_->SpawnReflect(ReflectSpawnInfo{
+    bullets_->SpawnReflect(ReflectSpawnInfo{
         .x = e->x + e->l_cmd.x,
         .y = e->y + e->l_cmd.y,
         .v = e->l_cmd.v,
@@ -1321,7 +1318,7 @@ ECL_HEAD:
     break;
 
   case ECL_LASER2: // Fire laser
-    lasers_->SpawnReflect(ReflectSpawnInfo{
+    bullets_->SpawnReflect(ReflectSpawnInfo{
         .no_scaling = true,
         .x = e->x + e->l_cmd.x,
         .y = e->y + e->l_cmd.y,

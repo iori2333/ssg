@@ -12,7 +12,6 @@
 
 struct BulletManager;
 struct ItemManager;
-struct LaserManager;
 struct GameManager;
 class Player;
 
@@ -26,7 +25,6 @@ struct BossManager {
   BitData bit_data;                         // BitData
 
   BulletManager *bullets_ = nullptr;
-  LaserManager *lasers_ = nullptr;
   ItemManager *items_ = nullptr;
   GameManager *game_ = nullptr;
   Player *player_ = nullptr;
@@ -35,7 +33,6 @@ struct BossManager {
 
   // --- DI ---
   void Bind(BulletManager &bm) { bullets_ = &bm; }
-  void Bind(LaserManager &lm) { lasers_ = &lm; }
   void Bind(ItemManager &im) { items_ = &im; }
   void Bind(GameManager &gm) { game_ = &gm; }
   void Bind(Player &p) { player_ = &p; }

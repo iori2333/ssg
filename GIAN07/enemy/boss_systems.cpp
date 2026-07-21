@@ -11,7 +11,7 @@
 #include "enemy_manager.h"
 
 #include "audio/snd.h"
-#include "bullet/laser_manager.h"
+#include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
 #include "data/gfx_manager.h"
 #include "data/sfx_manager.h"
@@ -124,7 +124,7 @@ void BossManager::SnakyDelete(const BossData *b) {
 
     // Snd_SEPlay(SfxId::Bomb, e->x);
     if (e->LLaserRef != 0U) {
-      lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+      bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     // PowerUp(e->hp);			// Power up
     e->hp = 0;
@@ -293,7 +293,7 @@ void BossManager::BitMove() {
 
       // Send deletion request to enemy associated with bit array
       if (e->LLaserRef != 0U) {
-lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
       }
       e->hp = 0;
       e->count = 0; // For explosion animation set
@@ -484,9 +484,9 @@ void BossManager::BitSTDRoll() {
         break;
       }
       LaserDeg = 64 + (256 / bit_data.NumBits);
-      lasers_->ControlLongLaser(e, 0,
+      bullets_->ControlLongLaser(e, 0,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle, static_cast<uint8_t>(e->d + LaserDeg)});
-      lasers_->ControlLongLaser(e, 1,
+      bullets_->ControlLongLaser(e, 1,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle, static_cast<uint8_t>(e->d - LaserDeg)});
       break;
     }
@@ -510,7 +510,7 @@ void BossManager::BitDelete() {
     }
 
     if (e->LLaserRef != 0U) {
-      lasers_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+      bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     e->hp = 0;
     e->count = 0;
@@ -609,7 +609,7 @@ void BossManager::BitLaserCommand(uint8_t Command) {
     case BLASERCMD_TYPE_A: // Emit unidirectional fixed-angle laser
       info.c = 2;
       info.enemy_id = e->LLaserRef;
-      if (lasers_->SpawnLongLaser(info)) {
+      if (bullets_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       break;
@@ -618,13 +618,13 @@ void BossManager::BitLaserCommand(uint8_t Command) {
       info.d += 64;
       info.c = 1;
       info.enemy_id = e->LLaserRef;
-      if (lasers_->SpawnLongLaser(info)) {
+      if (bullets_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
 
       info.d += 128;
       info.enemy_id = e->LLaserRef;
-      if (lasers_->SpawnLongLaser(info)) {
+      if (bullets_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       break;
@@ -636,30 +636,30 @@ void BossManager::BitLaserCommand(uint8_t Command) {
 
       info.d = e->d + delta;
       info.enemy_id = e->LLaserRef;
-      if (lasers_->SpawnLongLaser(info)) {
+      if (bullets_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       info.d = e->d - delta;
       info.enemy_id = e->LLaserRef;
-      if (lasers_->SpawnLongLaser(info)) {
+      if (bullets_->SpawnLongLaser(info)) {
         e->LLaserRef++;
       }
       break;
 
     case BLASERCMD_OPEN:
-      lasers_->ControlLongLaser(e, ECLCST_LLASERALL,
+      bullets_->ControlLongLaser(e, ECLCST_LLASERALL,
                               LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
       continue;
 
     case BLASERCMD_CLOSE:
-      lasers_->ControlLongLaser(e, ECLCST_LLASERALL,
+      bullets_->ControlLongLaser(e, ECLCST_LLASERALL,
                               LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
       e->LLaserRef = 0;
       bit_data.bIsLaserEnable = false;
       continue;
 
     case BLASERCMD_CLOSEL:
-      lasers_->ControlLongLaser(e, ECLCST_LLASERALL,
+      bullets_->ControlLongLaser(e, ECLCST_LLASERALL,
                               LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
       continue;
     }

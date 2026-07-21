@@ -47,7 +47,7 @@ struct LaserHoming : BulletBase<HomingSpawnInfo, HomingUpdateInfo> {
   using SpawnInfo = HomingSpawnInfo;
   using UpdateInfo = HomingUpdateInfo;
 
-  friend struct LaserManager;
+  friend struct BulletManager;
 
   void Render() const override;
   bool IsDead() const override;

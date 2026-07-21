@@ -7,7 +7,6 @@
 #include <functional>
 
 #include "bullet/bullet_manager.h"
-#include "bullet/laser_manager.h"
 #include "config.h"
 #include "game_manager.h"
 #include "gameflow/demo_manager.h"
@@ -19,7 +18,6 @@
 
 struct GameContext {
   BulletManager bullets;
-  LaserManager lasers;
   ItemManager items;
   GameManager game;
   Player player;

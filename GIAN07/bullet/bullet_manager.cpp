@@ -1,31 +1,42 @@
 ///
-/// BulletManager — Centralized bullet system state
+/// BulletManager — Centralized bullet and laser system state
 ///
+
+#include <array>
+#include <span>
 
 #include "bullet.h"
 #include "bullet_common.h"
 #include "bullet_manager.h"
 
 #include "audio/snd.h"
+#include "core/gian.h"
+#include "core/game_manager.h"
+#include "core/level.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
-#include "item/item_manager.h"
-#include "core/gian.h"
-#include "core/level.h"
-#include "core/game_manager.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
+#include "item/item_manager.h"
 #include "player/player.h"
 #include "util/ut_math.h"
+
+namespace {
+inline constexpr auto kZSetFlag = 0x08;
+} // namespace
 
 // ── BulletManager: Init ──────────────────────────────────────────
 
 void BulletManager::Init() {
   pool_small.Init();
   pool_large.Init();
+  reflect.Init();
+  long_lasers.Init();
+  homing.Init();
+  Snd_SEStop(2);
 }
 
-// ── BulletManager: Spawn ─────────────────────────────────────────
+// ── BulletManager: Spawn (bullets) ────────────────────────────────
 
 template <typename Pool>
 void BulletManager::SpawnImpl(const BulletSpawnInfo &si, Pool &pool) {
@@ -158,7 +169,79 @@ bool BulletManager::SpawnExtra01(const BulletSpawnInfo &si) {
   return do_spawn(pool_large);
 }
 
-// ── BulletManager: Update & HitCheck ─────────────────────────────
+// ── BulletManager: Spawn (lasers) ─────────────────────────────────
+
+bool BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
+  auto cmd = info;
+  if (!cmd.no_scaling) {
+    switch (game_->EffectiveLevel()) {
+    case GameLevel::EASY:
+      bullet_common::ApplyEasyCountSpread(cmd.cmd & bullet_common::kCmdMask,
+                                          cmd.n, cmd.dw);
+      cmd.l = bullet_common::ScaleLengthEasy(cmd.l);
+      break;
+    case GameLevel::HARD:
+    case GameLevel::EXTRA:
+      bullet_common::ApplyHardCountSpread(cmd.cmd & bullet_common::kCmdMask,
+                                          cmd.n, cmd.dw);
+      cmd.l = bullet_common::ScaleLengthHard(cmd.l);
+      break;
+    case GameLevel::LUNATIC:
+      bullet_common::ApplyLunaticCountSpread(cmd.cmd & bullet_common::kCmdMask,
+                                             cmd.n, cmd.dw);
+      cmd.l = bullet_common::ScaleLengthLunatic(cmd.l);
+      break;
+    case GameLevel::NORMAL:
+    default:
+      break;
+    }
+    cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, game_->rank);
+  }
+
+  auto base_deg = (cmd.cmd & kZSetFlag) != 0
+                      ? atan8(player_->X() - cmd.x, player_->Y() - cmd.y)
+                      : 0;
+  base_deg += cmd.d;
+
+  for (uint8_t i = 0; i < cmd.n; i++) {
+    auto *r = reflect.Alloc();
+    if (r == nullptr) {
+      return false;
+    }
+    auto si = cmd;
+    si.base_deg = base_deg;
+    si.bullet_index = i;
+    r->Spawn(si);
+  }
+  return true;
+}
+
+bool BulletManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
+  auto si = info;
+  si.player_x = player_->X();
+  si.player_y = player_->Y();
+  auto *lp = long_lasers.Alloc();
+  if (lp == nullptr) {
+    return false;
+  }
+  lp->Spawn(si);
+  return true;
+}
+
+bool BulletManager::SpawnHoming(const HomingSpawnInfo &info) {
+  for (int i = 1; i <= static_cast<int>(info.n); i++) {
+    auto *p = homing.Alloc();
+    if (p == nullptr) {
+      return false;
+    }
+    auto si = info;
+    si.bullet_index = i;
+    p->Spawn(si);
+  }
+  return true;
+}
+
+// ── BulletManager: Update ─────────────────────────────────────────
 
 void BulletManager::UpdateAll() {
   const BulletUpdateInfo info{player_->X(), player_->Y(),
@@ -191,8 +274,50 @@ void BulletManager::UpdateAll() {
   }
   pool_large.Compact([](const Bullet &b) { return b.IsDead(); });
 
+  UpdateReflect();
+  UpdateLong();
+  UpdateHoming();
+
   HitCheckAll();
 }
+
+void BulletManager::UpdateReflect() {
+  std::array<const LaserLong *, kLongLaserMax> active_longs{};
+  std::size_t long_count = 0;
+  for (const auto &ll : long_lasers) {
+    active_longs[long_count++] = &ll;
+  }
+  std::span<const LaserLong *> long_span(active_longs.data(), long_count);
+
+  for (auto &r : reflect) {
+    auto result = r.Update(ReflectUpdateInfo{long_span});
+    if (result.spawn_requested) {
+      SpawnReflect(result.spawn_info);
+    }
+    if (r.X() < GX_MIN || r.X() > GX_MAX || r.Y() < GY_MIN ||
+        r.Y() > GY_MAX) {
+      r.MarkDead();
+    }
+  }
+  reflect.Compact([](const LaserReflect &l) { return l.IsDead(); });
+}
+
+void BulletManager::UpdateLong() {
+  for (auto &ll : long_lasers) {
+    ll.Update();
+  }
+  long_lasers.Compact([](const LaserLong &l) { return l.IsDead(); });
+}
+
+void BulletManager::UpdateHoming() {
+  const auto pi = HomingUpdateInfo{player_->X(), player_->Y()};
+  for (auto &h : homing) {
+    h.Update(pi);
+  }
+  homing.Compact([](const LaserHoming &h) { return h.IsDead(); });
+}
+
+// ── BulletManager: HitCheck ───────────────────────────────────────
 
 void BulletManager::HitCheckAll() {
   if (player_->IsInvincible() != 0U) {
@@ -201,7 +326,7 @@ void BulletManager::HitCheckAll() {
   const int px = player_->X();
   const int py = player_->Y();
 
-  auto check = [&](auto &pool) {
+  auto check_bullets = [&](auto &pool) {
     for (auto &b : pool) {
       switch (b.CheckHit(px, py)) {
       case HitResult::Hit:
@@ -221,11 +346,30 @@ void BulletManager::HitCheckAll() {
       }
     }
   };
-  check(pool_small);
-  check(pool_large);
+  check_bullets(pool_small);
+  check_bullets(pool_large);
+
+  auto check_lasers = [&](const auto &pool) {
+    for (const auto &laser : pool) {
+      switch (laser.CheckHit(px, py)) {
+      case HitResult::Hit:
+        player_->OnHit();
+        return;
+      case HitResult::Graze:
+        player_->AddEvade(kBulletEvadeValue);
+        break;
+      case HitResult::Miss:
+        break;
+      }
+    }
+  };
+
+  check_lasers(reflect);
+  check_lasers(long_lasers);
+  check_lasers(homing);
 }
 
-// ── BulletManager: Render ────────────────────────────────────────
+// ── BulletManager: Render ─────────────────────────────────────────
 
 void BulletManager::RenderAll() const {
   for (const auto &b : pool_large) {
@@ -236,7 +380,31 @@ void BulletManager::RenderAll() const {
   }
 }
 
-// ── BulletManager: Clear / Score / Items ─────────────────────────
+void BulletManager::RenderReflect() const {
+  GrpGeom->Lock();
+  for (const auto &r : reflect) {
+    r.Render();
+  }
+  GrpGeom->Unlock();
+}
+
+void BulletManager::RenderLong() const {
+  GrpGeom->Lock();
+  for (const auto &ll : long_lasers) {
+    ll.Render();
+  }
+  GrpGeom->Unlock();
+}
+
+void BulletManager::RenderHoming() const {
+  GrpGeom->Lock();
+  for (const auto &h : homing) {
+    h.Render();
+  }
+  GrpGeom->Unlock();
+}
+
+// ── BulletManager: Clear / Score / Items ──────────────────────────
 
 void BulletManager::ClearAll() {
   for (auto &b : pool_small) {
@@ -247,7 +415,26 @@ void BulletManager::ClearAll() {
   }
   pool_small.Compact([](const Bullet &b) { return b.IsDead(); });
   pool_large.Compact([](const Bullet &b) { return b.IsDead(); });
+
+  ClearReflect();
+  ClearLong();
+  ClearHoming();
 }
+
+void BulletManager::ClearReflect() {
+  for (auto &r : reflect) {
+    r.Kill();
+  }
+}
+
+void BulletManager::ClearLong() {
+  for (auto &ll : long_lasers) {
+    ll.Kill();
+  }
+  Snd_SEStop(2);
+}
+
+void BulletManager::ClearHoming() { homing.Init(); }
 
 uint32_t BulletManager::ScoreToItems() {
   uint32_t sum = 0;
@@ -315,7 +502,31 @@ void BulletManager::ToItems(uint8_t n) {
   pool_large.Compact([](const Bullet &b) { return b.IsDead(); });
 }
 
-// ── Gallery / debug helpers ─────────────────────────────────────
+// ── Laser control ─────────────────────────────────────────────────
+
+void BulletManager::ControlLongLaser(const EnemyData *e, uint8_t id,
+                                     const LongLaserUpdateInfo &info) {
+  for (auto &ll : long_lasers) {
+    if (!ll.BelongsTo(e, id)) {
+      continue;
+    }
+    ll.Update(info);
+    switch (info.command) {
+    case LongLaserUpdateInfo::Command::Open:
+      Snd_SEPlay(static_cast<SfxId>(2), ll.X(), true);
+      break;
+    case LongLaserUpdateInfo::Command::Close:
+    case LongLaserUpdateInfo::Command::CloseToLine:
+    case LongLaserUpdateInfo::Command::ForceClose:
+      Snd_SEStop(2);
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+// ── Gallery / debug helpers ───────────────────────────────────────
 
 void BulletManager::PlaceDisplayBullet(int x, int y, uint8_t color) {
   if ((color & 0xF0) == TAMA_SMALL) {
@@ -349,3 +560,23 @@ void BulletManager::RotateDisplayAngles() {
   });
 }
 
+void BulletManager::RenderDebugHitboxes(int mode) const {
+  auto *gp = GrpGeom_Poly();
+  if (gp == nullptr) {
+    return;
+  }
+  const RGB216 kBlack{0, 0, 0};
+  constexpr uint8_t kAlpha = 204;
+  gp->SetColor(kBlack);
+  gp->SetAlphaNorm(kAlpha);
+
+  for (const auto &r : reflect) {
+    r.RenderDebugHitbox(mode);
+  }
+  for (const auto &ll : long_lasers) {
+    ll.RenderDebugHitbox(mode);
+  }
+  for (const auto &h : homing) {
+    h.RenderDebugHitbox(mode);
+  }
+}
