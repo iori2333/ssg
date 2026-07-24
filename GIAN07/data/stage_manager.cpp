@@ -28,7 +28,7 @@ BYTE_BUFFER_BORROWED LoadEmbeddedScript(int filno) {
 
 } // namespace
 
-bool StageManager::LoadStageData(GameStage stage_num) {
+bool StageManager::LoadStageData(AssetId stage_num) {
   Enemies.scl_now = nullptr;
   Enemies.ecl_head = {};
   Enemies.scl_head = {};
@@ -36,13 +36,13 @@ bool StageManager::LoadStageData(GameStage stage_num) {
 
   const auto &map_pack = packs.Map();
 
-  if (stage_num == GameStage::EXTRA) {
+  if (stage_num == AssetId::EXTRA) {
     if ((Enemies.ecl_head = LoadEmbeddedScript(24)).data() == nullptr ||
         (Enemies.scl_head = LoadEmbeddedScript(25)).data() == nullptr ||
         (Scroller.scroll.DataHead = map_pack.Extract(12)) == nullptr) {
       return false;
     }
-  } else if (stage_num == GameStage::ENDING) {
+  } else if (stage_num == AssetId::ENDING) {
     if ((Enemies.scl_head = LoadEmbeddedScript(47)).data() == nullptr) {
       return false;
     }
@@ -51,14 +51,14 @@ bool StageManager::LoadStageData(GameStage stage_num) {
     return true;
   } else {
     const auto stage_val = std::to_underlying(stage_num);
-    if (stage_val < 1 || stage_val > STAGE_MAX) {
+    if (stage_val >= STAGE_MAX) {
       return false;
     }
-    if ((Enemies.ecl_head = LoadEmbeddedScript(stage_val - 1)).data() ==
+    if ((Enemies.ecl_head = LoadEmbeddedScript(stage_val)).data() ==
             nullptr ||
-        (Enemies.scl_head = LoadEmbeddedScript(stage_val + 5)).data() ==
+        (Enemies.scl_head = LoadEmbeddedScript(stage_val + 6)).data() ==
             nullptr ||
-        (Scroller.scroll.DataHead = map_pack.Extract(stage_val - 1)) ==
+        (Scroller.scroll.DataHead = map_pack.Extract(stage_val)) ==
             nullptr) {
       return false;
     }
@@ -76,6 +76,6 @@ bool StageManager::LoadStageData(GameStage stage_num) {
   return true;
 }
 
-BYTE_BUFFER_OWNED StageManager::LoadDemo(int stage_num) {
-  return packs.Map().Extract(stage_num - 1 + 6);
+BYTE_BUFFER_OWNED StageManager::LoadDemo(StageId stage) {
+  return packs.Map().Extract(std::to_underlying(stage) + 6);
 }

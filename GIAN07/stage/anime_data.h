@@ -5,10 +5,10 @@
 
 #include <cstdint>
 
-#include "core/game_manager.h"
+#include "data/gfx_manager.h"
 
 namespace anime_data {
 
-void SetupStageAnime(GameStage stage);
+void SetupStageAnime(AssetId stage);
 
 } // namespace anime_data

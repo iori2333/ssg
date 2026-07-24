@@ -27,7 +27,7 @@ bool EndingManager::Init() {
   Grp_Flip();
   GrpBackend_Clear();
 
-  if (!gfx.LoadStage(GameStage::ENDING) || !stage_mgr.LoadStageData(GameStage::ENDING)) {
+  if (!gfx.LoadStage(AssetId::ENDING) || !stage_mgr.LoadStageData(AssetId::ENDING)) {
     return false;
   }
   BGM_Stop();

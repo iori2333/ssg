@@ -17,7 +17,7 @@ struct DemoManager {
   bool save_all_enable = false;
   bool load_all_enable = false;
   MULTI_REPLAY_INFO multi_play_info = {};
-  GameStage playback_max_stage = GameStage::NONE;
+  StageId playback_max_stage = StageId::STAGE_1;
   std::string pending_replay_file;
   DemoPlayState demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};
@@ -42,7 +42,7 @@ struct DemoManager {
   [[nodiscard]] bool LoadSetup();
   [[nodiscard]] bool Record(INPUT_BITS key);
   void SaveDemo();
-  [[nodiscard]] bool LoadDemo(GameStage stage);
+  [[nodiscard]] bool LoadDemo(StageId stage);
   INPUT_BITS Move();
   void Cleanup();
   void SaveReplayAll(bool exstg);

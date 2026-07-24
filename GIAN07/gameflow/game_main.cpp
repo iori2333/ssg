@@ -111,7 +111,7 @@ void GameMove();
 // game_main initial values set in gameflow_manager.cpp
 
 GameLevel CurrentLevel() {
-  return ((GameFlow.ctx.game.stage == GameStage::EXTRA) ? GameLevel::EXTRA
+  return ((GameFlow.ctx.game.stage == StageId::EXTRA) ? GameLevel::EXTRA
                                                       : GameFlow.ctx.game.level);
 }
 
@@ -131,7 +131,7 @@ bool ScoreNameInit() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(GameStage::NAME_REGIST)) {
+  if (!gfx.LoadStage(AssetId::NAME_REGIST)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -527,10 +527,10 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_name.Score = GameFlow.ctx.player.Score();
   current_name.Evade = GameFlow.ctx.player.GrazeSum();
   current_name.Weapon = GameFlow.ctx.player.Weapon();
-  if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
+  if (GameFlow.ctx.game.stage == StageId::EXTRA) {
     current_name.Stage = 1;
   } else {
-    current_name.Stage = std::to_underlying(GameFlow.ctx.game.stage);
+    current_name.Stage = std::to_underlying(GameFlow.ctx.game.stage) + 1;
   }
 
   // For debugging...
@@ -547,7 +547,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(GameStage::NAME_REGIST)) {
+  if (!gfx.LoadStage(AssetId::NAME_REGIST)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -635,7 +635,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
-    GameFlow.ctx.game.stage = GameStage::EXTRA;
+    GameFlow.ctx.game.stage = StageId::EXTRA;
   }
 
   return true;
@@ -679,19 +679,19 @@ bool GameInit(std::function<void(bool &)> next_proc) {
 // Transition to next stage
 bool GameNextStage() {
   ++GameFlow.ctx.game.stage;
-
-  // Transition to ending
-  GameFlow.ctx.game.stage = static_cast<GameStage>(
-      std::min(GameFlow.ctx.game.stage, GameStage::STAGE_6)); // To be changed later
+  // SCL_STAGECLEAR is never issued after STAGE_6; SCL_GAMECLEAR handles it.
+  if (GameFlow.ctx.game.stage > StageId::STAGE_6) {
+    GameFlow.ctx.game.stage = StageId::STAGE_6;
+  }
 
   GameSTD_Init();
   GameFlow.ctx.player.PrepareNextStage();
 
-  if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
+  if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
+  if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -707,7 +707,7 @@ bool GameReplayInitAll(const char *fn) {
     return false;
   }
 
-  GameFlow.ctx.game.stage = static_cast<GameStage>(GameFlow.ctx.demos.multi_play_info.Stages[0]);
+  GameFlow.ctx.game.stage = static_cast<StageId>(GameFlow.ctx.demos.multi_play_info.Stages[0]);
 
   GameFlow.ctx.game.ResetRank();
 
@@ -715,20 +715,20 @@ bool GameReplayInitAll(const char *fn) {
   Grp_Flip();
   GameSTD_Init();
 
-  if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
+  if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
     DebugOut("IMAGES.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
     return false;
   }
-  if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
+  if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
     DebugOut("MAP.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
     return false;
   }
 
-  if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
+  if (GameFlow.ctx.game.stage == StageId::EXTRA) {
     GameFlow.ctx.player.SetCredits(0);
   }
 
@@ -802,7 +802,7 @@ bool DemoInit() {
   GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
                                   GameFlow.ctx.game_cfg->bomb_stock);
   rnd_seed_set(Time_SteadyTicksMS());
-  GameFlow.ctx.game.stage = static_cast<GameStage>((rnd() % STAGE_MAX) + 1);
+  GameFlow.ctx.game.stage = static_cast<StageId>(rnd() % STAGE_MAX);
 
   if (!GameFlow.ctx.demos.LoadDemo(GameFlow.ctx.game.stage)) {
     // DebugOut("Demo play data does not exist");
@@ -811,11 +811,11 @@ bool DemoInit() {
 
   GameFlow.ctx.game.ResetRank();
 
-  if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
+  if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
+  if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -883,7 +883,7 @@ void SProjectProc(bool & /*unused*/) {
 bool SProjectInit() {
   GrpBackend_PixelAccessStart();
 
-  if (!gfx.LoadStage(GameStage::S_PROJECT)) {
+  if (!gfx.LoadStage(AssetId::S_PROJECT)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -916,7 +916,7 @@ bool GameExit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(GameStage::TITLE)) {
+  if (!gfx.LoadStage(AssetId::TITLE)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -932,7 +932,7 @@ bool GameExit(bool bNeedChgMusic) {
 
   GameFlow.demo_timer = 0;
 
-  GameFlow.ctx.game.stage = GameStage::NONE;
+  GameFlow.ctx.game.stage = StageId::STAGE_1;
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
@@ -1223,7 +1223,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     if (spd != 0) {
       break;
     }
-    if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
+    if (GameFlow.ctx.game.stage == StageId::EXTRA) {
       if (((1 << GameFlow.ctx.player.Weapon()) & GameFlow.ctx.game.extra_stg_flags) == 0) {
         break;
       }
@@ -1234,17 +1234,17 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     count = 0;
 
     Snd_SEPlay(SfxId::Select);
-    if (GameFlow.ctx.game.stage != GameStage::EXTRA) {
+    if (GameFlow.ctx.game.stage != StageId::EXTRA) {
       if (forceStage != 0) {
-        GameFlow.ctx.game.stage = static_cast<GameStage>(forceStage);
-        if (GameFlow.ctx.game.stage == GameStage::STAGE_2) {
+        GameFlow.ctx.game.stage = static_cast<StageId>(forceStage - 1);
+        if (GameFlow.ctx.game.stage == StageId::STAGE_2) {
           GameFlow.ctx.player.SetPower(160);
         }
-        if (GameFlow.ctx.game.stage >= GameStage::STAGE_3) {
+        if (GameFlow.ctx.game.stage >= StageId::STAGE_3) {
           GameFlow.ctx.player.SetPower(255);
         }
       } else {
-        GameFlow.ctx.game.stage = GameStage::STAGE_1;
+        GameFlow.ctx.game.stage = StageId::STAGE_1;
       }
     } else {
       GameFlow.ctx.player.SetCredits(0);
@@ -1254,11 +1254,11 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     GameFlow.ctx.demos.Init();
 
-    if (!gfx.LoadStage(GameFlow.ctx.game.stage)) {
+    if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!stage_mgr.LoadStageData(GameFlow.ctx.game.stage)) {
+    if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
       DebugOut("MAP.PAK が破壊されています");
       return;
     }
@@ -1305,7 +1305,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpGeom->SetColor({0, 0, 1});
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
-      if ((GameFlow.ctx.game.stage != GameStage::EXTRA) ||
+      if ((GameFlow.ctx.game.stage != StageId::EXTRA) ||
           (((1 << i) & GameFlow.ctx.game.extra_stg_flags) != 0)) {
         continue;
       }
@@ -1633,9 +1633,8 @@ static void SpawnGalleryBullets() {
 
 static void BulletGalleryProc(bool & /*quit*/) {
   if ((Key_Data & KEY_ESC) != 0U) {
-    GameFlow.ctx.game.bullet_gallery_active = false;
     GameFlow.ctx.bullets.Clear();
-    (void)gfx.LoadStage(GameStage::TITLE);
+    (void)gfx.LoadStage(AssetId::TITLE);
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
     GameFlow.current_state = GameState::Title;
@@ -1675,14 +1674,13 @@ static void BulletGalleryProc(bool & /*quit*/) {
 }
 
 void BulletGalleryInit() {
-  if (!gfx.LoadStage(1)) {
+  if (!gfx.LoadSystemSurface()) {
     return;
   }
   (void)gfx.LoadGalleryEnemySurfaces();
   GameFlow.ctx.bullets.Init();
   GameFlow.ctx.bullets.Clear();
   SpawnGalleryBullets();
-  GameFlow.ctx.game.bullet_gallery_active = true;
   GameFlow.game_main = BulletGalleryProc;
   GameFlow.current_state = GameState::BulletGallery;
 }

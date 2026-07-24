@@ -132,7 +132,7 @@ void DemoManager::SaveDemo() {
   demo_info.FrameCount = (demo_frame_cur + 1);
 
   char fn[] = "STG_Demo.DAT";
-  fn[3] = ('0' + static_cast<int>(GameFlow.ctx.game.stage));
+  fn[3] = ('0' + static_cast<int>(GameFlow.ctx.game.stage) + 1);
 
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f != nullptr) {
@@ -143,9 +143,9 @@ void DemoManager::SaveDemo() {
   }
 }
 
-bool DemoManager::LoadDemo(GameStage stage) {
+bool DemoManager::LoadDemo(StageId stage) {
   // Unpack
-  const auto temp = stage_mgr.LoadDemo(static_cast<int>(std::to_underlying(stage)));
+  const auto temp = stage_mgr.LoadDemo(stage);
   auto temp_cursor = temp.cursor();
   {
     const auto maybe_info = temp_cursor.next<DemoPlayState>();
@@ -245,11 +245,24 @@ bool DemoManager::LoadReplayAll(const char *fn) {
   }
   memcpy(&multi_play_info, temp.get(), sizeof(MULTI_REPLAY_INFO));
 
+  // Old replay files stored 1-based stage numbers (1-6 for normal, 131 for EXTRA).
+  // Convert to new 0-based StageId format on load.
+  if (multi_play_info.StageCount > 0) {
+    auto first = multi_play_info.Stages[0];
+    if (first >= 1 && first <= STAGE_MAX) {
+      for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
+        multi_play_info.Stages[i]--;
+      }
+    } else if (first > STAGE_MAX) {
+      multi_play_info.Stages[0] = std::to_underlying(StageId::EXTRA);
+    }
+  }
+
   // Compute max stage for stage transition gating
-  playback_max_stage = GameStage::NONE;
+  playback_max_stage = StageId::STAGE_1;
   for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
     playback_max_stage =
-        std::max(static_cast<GameStage>(multi_play_info.Stages[i]),
+        std::max(static_cast<StageId>(multi_play_info.Stages[i]),
                  playback_max_stage);
   }
 

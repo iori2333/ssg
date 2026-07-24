@@ -6,12 +6,13 @@
 #include <cstdint>
 
 #include "core/game_manager.h"
+#include "gfx_manager.h"
 #include "sys/buffer.h"
 
 class StageManager {
 public:
-  bool LoadStageData(GameStage stage);
-  BYTE_BUFFER_OWNED LoadDemo(int stage);
+  bool LoadStageData(AssetId stage);
+  BYTE_BUFFER_OWNED LoadDemo(StageId stage);
 };
 
 inline StageManager stage_mgr;

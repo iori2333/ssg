@@ -31,7 +31,7 @@ GameLevel GameManager::EffectiveLevel() const {
 }
 
 void GameManager::AddRank(int n) {
-  if (stage == GameStage::EXTRA) {
+  if (stage == StageId::EXTRA) {
     if (n > 0) {
       rank += (std::max)(+1, (n / 4));
     } else if (n < 0) {

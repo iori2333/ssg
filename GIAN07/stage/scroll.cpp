@@ -409,10 +409,10 @@ static void enemy_set() {
         Effects.SetScreenEffect(SCNEFC_WHITEOUT);
         break; // White out
       case SEFC_LOADEX01:
-        gfx.LoadStage(GameStage::EX_BOSS1);
+        gfx.SwapEnemySurface(29);
         break;
       case SEFC_LOADEX02:
-        gfx.LoadStage(GameStage::EX_BOSS2);
+        gfx.SwapEnemySurface(30);
         break;
       case SEFC_STG6RASTER:
         Scroller.Command(SCMD_STG6RASTER);
@@ -463,9 +463,6 @@ static void enemy_set() {
         return;
       }
 
-      if (GameFlow.ctx.game.stage == GameStage::STAGE_6) {
-        GameFlow.ctx.game.stage = GameStage::CLEARED;
-      }
       if (GameFlow.ctx.game.level != GameLevel::EASY) {
         switch (GameFlow.ctx.player.Weapon()) {
         case 0:
@@ -518,10 +515,10 @@ static void enemy_set() {
   GameFlow.ctx.game.count++;
 
   if ((GameFlow.ctx.game.count & 0x3f) == 0) {
-    if (GameFlow.ctx.game.stage == GameStage::EXTRA) {
+    if (GameFlow.ctx.game.stage == StageId::EXTRA) {
       Scroller.game_->AddRank(1);
     } else {
-      Scroller.game_->AddRank(1 + (std::to_underlying(GameFlow.ctx.game.stage) / 3));
+      Scroller.game_->AddRank(1 + ((std::to_underlying(GameFlow.ctx.game.stage) + 1) / 3));
     }
   }
 }
