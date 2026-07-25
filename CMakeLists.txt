@@ -45,6 +45,11 @@ add_subdirectory(libs/libvorbis EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libwebp EXCLUDE_FROM_ALL)
 add_subdirectory(libs/miniaudio EXCLUDE_FROM_ALL)
 add_subdirectory(libs/tomlplusplus EXCLUDE_FROM_ALL)
+# fluidsynth defaults to osal=glib which requires GLib2 (not available on Windows).
+# Use cpp11 OS abstraction instead, which depends only on C++17 std::filesystem.
+if(WIN32)
+    set(osal cpp11 CACHE STRING "fluidsynth OS abstraction (cpp11 avoids GLib2)" FORCE)
+endif()
 add_subdirectory(libs/fluidsynth EXCLUDE_FROM_ALL)
 add_library(dr_libs INTERFACE)
 target_include_directories(dr_libs INTERFACE libs/dr_libs)
@@ -134,7 +139,7 @@ set_target_properties(GIAN07 PROPERTIES
 add_custom_command(TARGET GIAN07 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:GIAN07>"
-        "${CMAKE_SOURCE_DIR}/bin/GIAN07"
+        "${CMAKE_SOURCE_DIR}/bin/"
     COMMENT "Copying GIAN07 to bin/"
 )
 
