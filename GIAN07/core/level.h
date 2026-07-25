@@ -14,7 +14,3 @@ enum class GameLevel : uint8_t {
   LUNATIC = 3,
   EXTRA = 4,
 };
-
-inline constexpr std::array LevelName = {
-    "Easy", "Normal", "Hard", "Lunatic", "Extra",
-};

@@ -41,7 +41,9 @@ struct GameManager {
 
   const GameConfig *game_config_ = nullptr;
 
+  [[nodiscard]] std::string_view LevelName() const;
   [[nodiscard]] GameLevel EffectiveLevel() const;
+  void Update();
   void AddRank(int n);
   void ResetRank();
 };

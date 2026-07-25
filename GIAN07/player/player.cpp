@@ -13,18 +13,19 @@
 
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
-#include "core/game_manager.h"
-#include "stage/scroll_manager.h"
-#include "effect/effect_manager.h"
 #include "core/config.h"
+#include "core/game_manager.h"
 #include "core/gian.h"
 #include "core/level.h"
+#include "effect/effect_manager.h"
+#include "gameflow/game_main.h"
+#include "gameflow/gameflow_manager.h"
 #include "gfx/font_uty.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
+#include "stage/scroll_manager.h"
 #include "sys/input.h"
+
 
 // --- Player method implementations ---
 
@@ -751,7 +752,7 @@ void Player::PowerUp(uint8_t damage) {
       exp_++, exp2_ = 0;
     }
     return;
-  case 8:
+  default:
     return; // at full power-up
   }
 }

@@ -11,7 +11,6 @@
 struct GameManager;
 
 ////Bullet constants////
-inline constexpr auto TAMA_MAX = (801 * 3);
 inline constexpr auto TAMA_EVADE = 1;
 
 inline constexpr auto TAMA1_POINT = 10000;
@@ -103,7 +102,7 @@ struct BulletCommand {
 };
 
 ////Pool capacities////
-inline constexpr auto kBulletMax = TAMA_MAX * 2;
+inline constexpr auto kBulletMax = 2048;
 
 ////Bullet spawn type discriminator////
 enum class BulletSpawnType : uint8_t {
@@ -134,7 +133,8 @@ struct BulletSpawnInfo {
 
 struct BulletManager;
 
-////World context + side-effect result (passed to / returned from Bullet::Update)////
+////World context + side-effect result (passed to / returned from
+///Bullet::Update)////
 struct BulletUpdateInfo {
   int player_x, player_y;
   bool enemy_homing_valid;
@@ -194,8 +194,7 @@ private:
 };
 
 //// Free function: build SpawnInfo from ECL command ////
-[[nodiscard]] BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd,
-                                                  int ox, int oy, bool scaling,
-                                                  const GameManager &game,
-                                                  BulletSpawnType spawn_type =
-                                                      BulletSpawnType::Normal);
+[[nodiscard]] BulletSpawnInfo
+MakeBulletSpawnInfo(const BulletCommand &cmd, int ox, int oy, bool scaling,
+                    const GameManager &game,
+                    BulletSpawnType spawn_type = BulletSpawnType::Normal);

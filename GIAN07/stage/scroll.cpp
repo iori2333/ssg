@@ -513,14 +513,6 @@ static void enemy_set() {
   }
 
   GameFlow.ctx.game.count++;
-
-  if ((GameFlow.ctx.game.count & 0x3f) == 0) {
-    if (GameFlow.ctx.game.stage == StageId::EXTRA) {
-      Scroller.game_->AddRank(1);
-    } else {
-      Scroller.game_->AddRank(1 + ((std::to_underlying(GameFlow.ctx.game.stage) + 1) / 3));
-    }
-  }
 }
 
 static void PutEnemy(const uint8_t *p) {

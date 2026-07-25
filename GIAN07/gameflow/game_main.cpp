@@ -621,7 +621,7 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameFlow.ctx.game.level = (ExStg ? GameLevel::HARD : GameFlow.ctx.game_cfg->game_level);
+  GameFlow.ctx.game.level = (ExStg ? GameLevel::EXTRA : GameFlow.ctx.game_cfg->game_level);
 
   GameSTD_Init();
   GameFlow.ctx.game.ResetRank();
@@ -1224,7 +1224,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       break;
     }
     if (GameFlow.ctx.game.stage == StageId::EXTRA) {
-      if (((1 << GameFlow.ctx.player.Weapon()) & GameFlow.ctx.game.extra_stg_flags) == 0) {
+      if (((1 << GameFlow.ctx.player.Weapon())) == 0) {
         break;
       }
     }
@@ -1500,6 +1500,7 @@ void GameMove() {
   // Changed position of these two lines
   GameFlow.ctx.player.Update();
   GameFlow.ctx.player.MoveMaidShot();
+  GameFlow.ctx.game.Update();
 }
 
 void GameDraw() {

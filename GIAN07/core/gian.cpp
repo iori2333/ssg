@@ -10,9 +10,9 @@
 #include "gian.h"
 #include "level.h"
 
-#include "gfx/font_uty.h"
-#include "gameflow/gameflow_manager.h"
 #include "core/game_manager.h"
+#include "gameflow/gameflow_manager.h"
+#include "gfx/font_uty.h"
 #include "player/player.h"
 #include "util/time.h"
 
@@ -23,7 +23,6 @@ void StdStatusOutput(PracticeMode practice_mode) {
   static uint32_t fps;
   static uint32_t count;
   // extern InputConfig			IConfig;
-  const char *const DItem[4] = {"Easy", "Norm", "Hard", "Luna"};
 
   const auto now = Time_SteadyTicksMS();
   if ((now - prev) <= 1000) {
@@ -39,13 +38,16 @@ void StdStatusOutput(PracticeMode practice_mode) {
   // ---- RANK  display ----
   GrpPut16(0, 40, std::format("R {:7}", GameFlow.ctx.game.rank).c_str());
   // ---- LEVEL display ----
-  auto lv = std::to_underlying(GameFlow.ctx.game.level);
-  GrpPut16(0, 60,
-           std::format("L {:>7}", lv < 5 ? LevelName[lv] : "Unknown").c_str());
+  auto lv = GameFlow.ctx.game.LevelName();
+  GrpPut16(0, 60, std::format("L {:>7}", lv).c_str());
 
-  GrpPut16(0, 100, std::format("Miss {:4}", GameFlow.ctx.player.MissCount()).c_str());
-  GrpPut16(0, 120, std::format("Bomb {:4}", GameFlow.ctx.player.BombUsed()).c_str());
-  GrpPut16(0, 140, std::format("DthB {:4}", GameFlow.ctx.player.DeathbombCount()).c_str());
+  GrpPut16(0, 100,
+           std::format("Miss {:4}", GameFlow.ctx.player.MissCount()).c_str());
+  GrpPut16(0, 120,
+           std::format("Bomb {:4}", GameFlow.ctx.player.BombUsed()).c_str());
+  GrpPut16(
+      0, 140,
+      std::format("DthB {:4}", GameFlow.ctx.player.DeathbombCount()).c_str());
 
   GrpPut16(0, 180, "Stars");
   auto stars = std::min(GameFlow.ctx.player.StarCounter(), 9999U);
