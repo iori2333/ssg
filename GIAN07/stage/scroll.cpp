@@ -15,7 +15,6 @@
 #include "core/game_manager.h"
 #include "core/gian.h"
 #include "core/level.h"
-#include "data/gfx_manager.h"
 #include "effect/effect.h"
 #include "effect/effect_manager.h"
 #include "enemy/boss_manager.h"
@@ -28,7 +27,6 @@
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "sys/input.h"
-#include "track_manager/track_manager.h"
 #include "ui/ui_manager.h"
 #include "util/cast.h"
 #include "util/debug.h"
@@ -130,7 +128,6 @@ void ScrollManager::Move() {
     }
   }
 }
-
 static PBGMAP *ScNextLine(PBGMAP *p) {
   int i = 0;
 
@@ -308,7 +305,7 @@ static void enemy_set() {
       break;
 
     case SCL_LOADFACE: // Load face graphic (SurfaceID, FileNo)
-      gfx.LoadFace(cmd[1], cmd[2]);
+      (void)GameFlow.ctx.graphics.LoadFace(cmd[1], cmd[2]);
       Enemies.scl_now += 3;
       break;
 
@@ -336,9 +333,9 @@ static void enemy_set() {
       //GameFlow.ctx.demos.load_enable)){
       if (!GameFlow.ctx.game.is_demoplay) {
         BGM_Stop();
-        if (track_mgr.Switch(cmd[1])) {
+        if (GameFlow.ctx.tracks.Switch(cmd[1])) {
           BGM_Play();
-          const auto mtitle = track_mgr.CurrentTitle();
+          const auto mtitle = GameFlow.ctx.tracks.CurrentTitle();
           if (!mtitle.empty()) {
             Effects.SetMusicTitle(460, mtitle);
           }
@@ -407,10 +404,10 @@ static void enemy_set() {
         Effects.SetScreenEffect(SCNEFC_WHITEOUT);
         break; // White out
       case SEFC_LOADEX01:
-        gfx.SwapEnemySurface(29);
+        (void)GameFlow.ctx.graphics.SwapEnemySurface(29);
         break;
       case SEFC_LOADEX02:
-        gfx.SwapEnemySurface(30);
+        (void)GameFlow.ctx.graphics.SwapEnemySurface(30);
         break;
       case SEFC_STG6RASTER:
         Scroller.Command(SCMD_STG6RASTER);

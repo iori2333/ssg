@@ -8,13 +8,12 @@
 #include "ending_manager.h"
 
 #include "audio/bgm.h"
-#include "track_manager/track_manager.h"
 #include "core/gian.h"
 #include "enemy/enemy_manager.h"
-#include "data/stage_manager.h"
 #include "gameflow/gameflow_manager.h"
 #include "platform/text_backend.h"
 #include "stage/scene.h"
+#include "stage/scroll_manager.h"
 #include "util/cast.h"
 #include "util/endian.h"
 
@@ -27,7 +26,8 @@ bool EndingManager::Init() {
   Grp_Flip();
   GrpBackend_Clear();
 
-  if (!gfx.LoadStage(AssetId::ENDING) || !stage_mgr.LoadStageData(AssetId::ENDING)) {
+  if (!GameFlow.ctx.graphics.LoadEnding() ||
+      !GameFlow.ctx.stages.LoadEnding(Enemies, Scroller, GameFlow.ctx.game)) {
     return false;
   }
   BGM_Stop();
@@ -131,7 +131,7 @@ void EndingManager::DrawGrpInfo() {
   }
 
   // Display image
-  const auto sid = (SURFACE_ID::ENDING_PIC + (grp_info.target - gfx.ending_gfx));
+  const auto sid = SURFACE_ID::ENDING_PIC + grp_info.picture_id;
   GrpSurface_BlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
 }
 
@@ -270,7 +270,7 @@ void EndingManager::SCLDecode() {
         break;
       }
       grp_info.alpha = 0;
-      grp_info.target = gfx.ending_gfx + cmd[1];
+      grp_info.picture_id = cmd[1];
       grp_info.timer = 0;
       grp_info.bWantDisp = true;
       Enemies.scl_now += 2;
@@ -331,7 +331,7 @@ void EndingManager::SCLDecode() {
       return;
 
     case SCL_MUSIC:
-      track_mgr.Switch(cmd[1]);
+      GameFlow.ctx.tracks.Switch(cmd[1]);
       Enemies.scl_now += 2;
       break;
 

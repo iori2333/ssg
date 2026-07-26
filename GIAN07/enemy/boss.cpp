@@ -12,8 +12,6 @@
 
 #include "audio/snd.h"
 #include "core/gian.h"
-#include "data/gfx_manager.h"
-#include "data/sfx_manager.h"
 #include "effect/bomb_efc.h"
 #include "bullet/bullet_manager.h"
 #include "item/item_manager.h"

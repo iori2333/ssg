@@ -10,9 +10,12 @@
 #include <vector>
 
 #include "core/game_manager.h"
+#include "data/game_data.h"
 #include "demo_play.h"
 
 struct DemoManager {
+  explicit DemoManager(const data::GameData &data) : data_(&data) {}
+
   bool load_enable = false;
   bool save_all_enable = false;
   bool load_all_enable = false;
@@ -47,6 +50,9 @@ struct DemoManager {
   void Cleanup();
   void SaveReplayAll(bool exstg);
   [[nodiscard]] bool LoadReplayAll(const char *fn);
+
+private:
+  const data::GameData *data_;
 };
 
 // Backward-compat: access via GameFlow.ctx.demos

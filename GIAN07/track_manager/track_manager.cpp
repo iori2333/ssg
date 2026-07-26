@@ -1,14 +1,15 @@
 ///
 /// TrackManager — track selection, title lookup, BGM pack management
 ///
-#include "track_manager.h"
-
 #include <format>
+#include <utility>
 
 #include <SDL3/SDL_filesystem.h>
 
+#include "track_manager.h"
+
 #include "audio/bgm.h"
-#include "data/music_manager.h"
+#include "audio/midi.h"
 #include "sys/file.h"
 #include "sys/path.h"
 
@@ -26,7 +27,8 @@ bool TrackManager::Switch(unsigned int id) {
   BGM_ClearWaveform();
 
   // Always load MIDI for sequencer notes and fallback audio.
-  if (!music.LoadTrack(id)) {
+  auto midi = data_->ExtractMusicMidi(id);
+  if (!midi || !Mid_Load(std::move(midi))) {
     return false;
   }
 
@@ -49,12 +51,12 @@ std::string_view TrackManager::CurrentTitle() const {
     return wt;
   }
   if (loaded_num_ > 0) {
-    return music.Title(loaded_num_ - 1);
+    return data_->TrackTitle(loaded_num_ - 1);
   }
   return {};
 }
 
-size_t TrackManager::TrackCount() const { return MusicManager::kTrackCount; }
+size_t TrackManager::TrackCount() const { return data_->TrackCount(); }
 
 // ---------------------------------------------------------------------------
 // BGM pack management

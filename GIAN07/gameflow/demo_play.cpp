@@ -17,7 +17,6 @@
 #include "core/game_manager.h"
 #include "core/gian.h"
 #include "core/lz_uty.h"
-#include "data/stage_manager.h"
 #include "gameflow/gameflow_manager.h"
 #include "player/player.h"
 #include "sys/file.h"
@@ -145,7 +144,7 @@ void DemoManager::SaveDemo() {
 
 bool DemoManager::LoadDemo(StageId stage) {
   // Unpack
-  const auto temp = stage_mgr.LoadDemo(stage);
+  const auto temp = data_->ExtractMap(std::to_underlying(stage) + 6);
   auto temp_cursor = temp.cursor();
   {
     const auto maybe_info = temp_cursor.next<DemoPlayState>();
@@ -160,11 +159,10 @@ bool DemoManager::LoadDemo(StageId stage) {
       return false;
     }
     const auto inputs = maybe_inputs.value();
-    memcpy(demo_buffer.data(), inputs.data(), inputs.size());
+    memcpy(demo_buffer.data(), inputs.data(), inputs.size_bytes());
   }
   return LoadSetup();
 }
-
 INPUT_BITS DemoManager::Move() {
   if (!load_enable) {
     return KEY_ESC;

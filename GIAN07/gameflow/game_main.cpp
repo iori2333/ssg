@@ -20,8 +20,6 @@
 #include "core/game_manager.h"
 #include "core/gian.h"
 #include "core/level.h"
-#include "data/gfx_manager.h"
-#include "data/stage_manager.h"
 #include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
 #include "effect/lens.h"
@@ -36,7 +34,6 @@
 #include "player/player.h"
 #include "stage/scroll_manager.h"
 #include "sys/input.h"
-#include "track_manager/track_manager.h"
 #include "ui/ui_manager.h"
 #include "util/debug.h"
 #include "util/time.h"
@@ -130,7 +127,7 @@ bool ScoreNameInit() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(AssetId::NAME_REGIST)) {
+  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -546,7 +543,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(AssetId::NAME_REGIST)) {
+  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -558,7 +555,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_state = GameState::NameRegist;
 
   if (bNeedChgMusic) {
-    track_mgr.Switch(19);
+    GameFlow.ctx.tracks.Switch(19);
   }
 
   return true;
@@ -686,11 +683,12 @@ bool GameNextStage() {
   GameSTD_Init();
   GameFlow.ctx.player.PrepareNextStage();
 
-  if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
+  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
+  if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
+                                GameFlow.ctx.game)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -714,13 +712,14 @@ bool GameReplayInitAll(const char *fn) {
   Grp_Flip();
   GameSTD_Init();
 
-  if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
+  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
     return false;
   }
-  if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
+  if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
+                                GameFlow.ctx.game)) {
     DebugOut("MAP.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
@@ -810,11 +809,12 @@ bool DemoInit() {
 
   GameFlow.ctx.game.ResetRank();
 
-  if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
+  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
+  if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
+                                GameFlow.ctx.game)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -882,7 +882,7 @@ void SProjectProc(bool & /*unused*/) {
 bool SProjectInit() {
   GrpBackend_PixelAccessStart();
 
-  if (!gfx.LoadStage(AssetId::S_PROJECT)) {
+  if (!GameFlow.ctx.graphics.LoadProjectScreen()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -915,7 +915,7 @@ bool GameExit(bool bNeedChgMusic) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(AssetId::TITLE)) {
+  if (!GameFlow.ctx.graphics.LoadTitle()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -936,7 +936,7 @@ bool GameExit(bool bNeedChgMusic) {
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
-      track_mgr.Switch(0);
+      GameFlow.ctx.tracks.Switch(0);
     }
   }
 
@@ -1254,11 +1254,12 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     GameFlow.ctx.demos.Init();
 
-    if (!gfx.LoadStage(StageToAssetId(GameFlow.ctx.game.stage))) {
+    if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!stage_mgr.LoadStageData(StageToAssetId(GameFlow.ctx.game.stage))) {
+    if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
+                                GameFlow.ctx.game)) {
       DebugOut("MAP.PAK が破壊されています");
       return;
     }
@@ -1632,7 +1633,7 @@ static void SpawnGalleryBullets() {
 static void BulletGalleryProc(bool & /*quit*/) {
   if ((Key_Data & KEY_ESC) != 0U) {
     GameFlow.ctx.bullets.Clear();
-    (void)gfx.LoadStage(AssetId::TITLE);
+    (void)GameFlow.ctx.graphics.LoadTitle();
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.game_main = [](bool &q) { GameFlow.TitleProc(q); };
     GameFlow.current_state = GameState::Title;
@@ -1672,10 +1673,9 @@ static void BulletGalleryProc(bool & /*quit*/) {
 }
 
 void BulletGalleryInit() {
-  if (!gfx.LoadSystemSurface()) {
+  if (!GameFlow.ctx.graphics.LoadBulletGallery()) {
     return;
   }
-  (void)gfx.LoadGalleryEnemySurfaces();
   GameFlow.ctx.bullets.Init();
   GameFlow.ctx.bullets.Clear();
   SpawnGalleryBullets();

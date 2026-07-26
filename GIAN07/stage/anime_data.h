@@ -3,12 +3,10 @@
 ///
 #pragma once
 
-#include <cstdint>
-
-#include "data/gfx_manager.h"
+#include "core/game_manager.h"
 
 namespace anime_data {
 
-void SetupStageAnime(AssetId stage);
+void SetupStageAnime(StageId stage);
 
 } // namespace anime_data

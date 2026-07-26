@@ -11,8 +11,6 @@
 
 #include "ending.h"
 
-#include "data/gfx_manager.h"
-#include "data/sfx_manager.h"
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "platform/text_backend.h"
@@ -24,7 +22,7 @@ struct EndingManager {
     uint32_t timer = 0;
     uint32_t fadein = 0;
     uint32_t fadeout = 0;
-    EndingGfx *target = nullptr;
+    uint8_t picture_id = 0;
     short alpha = 0;
     int x = 0, y = 0;
     bool bWantDisp = false;

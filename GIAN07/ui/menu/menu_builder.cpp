@@ -28,7 +28,6 @@
 #include "core/config.h"
 #include "core/graphics_settings.h"
 #include "core/level.h"
-#include "data/sfx_manager.h"
 #include "gameflow/gameflow_manager.h"
 #include "gfx/graphics_backend.h"
 #include "music_room/music_room.h"
@@ -121,7 +120,7 @@ static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg) {
         return std::string(GrpBackend_APILabel(GrpBackend_APIString(i)));
       },
       [&gfx_cfg](size_t i) {
-        XGrpTry(gfx_cfg,
+        XGrpTry(gfx_cfg, GameFlow.ctx.graphics,
                 [i](auto &params) { params.api = static_cast<int>(i); });
         return false;
       },
@@ -151,7 +150,7 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
     auto disp = std::make_unique<ChoiceNode>(
         "Display", "Switch between window and fullscreen modes", &disp_state, 0,
         1, std::vector<std::string>{"Window", "Fullscreen"},
-        [&gfx_cfg] { XGrpTryCycleDisp(gfx_cfg); });
+        [&gfx_cfg] { XGrpTryCycleDisp(gfx_cfg, GameFlow.ctx.graphics); });
     disp->SetPoll([&gfx_cfg]() {
       disp_state =
           gfx_cfg.GraphicsParams().FullscreenFlags().fullscreen ? 1 : 0;
@@ -163,7 +162,7 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
     auto fs_mode = std::make_unique<ChoiceNode>(
         "FullScr", "Fullscreen mode", &fs_state, 0, 1,
         std::vector<std::string>{"Borderless", "Exclusive"}, [&gfx_cfg] {
-          XGrpTry(gfx_cfg, [](auto &params) {
+          XGrpTry(gfx_cfg, GameFlow.ctx.graphics, [](auto &params) {
             params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
           });
         });
@@ -182,11 +181,11 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
     auto scale = std::make_unique<ActionNode>(
         "ScaleFact", "Window scaling factor",
         [&gfx_cfg](MenuController &) {
-          XGrpTryCycleScale(gfx_cfg, 0, true);
+          XGrpTryCycleScale(gfx_cfg, GameFlow.ctx.graphics, 0, true);
           return true;
         },
         [&gfx_cfg](MenuController &, int delta) {
-          XGrpTryCycleScale(gfx_cfg, delta, true);
+          XGrpTryCycleScale(gfx_cfg, GameFlow.ctx.graphics, delta, true);
         });
     auto *scale_raw = scale.get();
     scale->SetPoll([scale_raw, &gfx_cfg]() {
@@ -222,7 +221,7 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
     auto sc_mode = std::make_unique<ChoiceNode>(
         "ScaleMode", "Scaling method", &sc_state, 0, 1,
         std::vector<std::string>{"FrameBuf", "Geometry"},
-        [&gfx_cfg] { XGrpTryCycleScMode(gfx_cfg); });
+        [&gfx_cfg] { XGrpTryCycleScMode(gfx_cfg, GameFlow.ctx.graphics); });
     auto *sc_raw = sc_mode.get();
     sc_mode->SetPoll([sc_raw, &gfx_cfg]() {
       sc_state = !!(gfx_cfg.graphics_param_flags &
@@ -372,22 +371,24 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(7);
 
-  ch.push_back(
-      std::make_unique<ToggleNode>("Sound / SE", "SEを鳴らすかどうかの設定",
-                                   std::ref(audio_cfg.se_enabled), [](bool on) {
-                                     if (on) {
-                                       sfx.LoadAll();
-                                     } else {
-                                       Snd_SECleanup();
-                                     }
-                                   }));
+  ch.push_back(std::make_unique<ToggleNode>(
+      "Sound / SE", "SEを鳴らすかどうかの設定", std::ref(audio_cfg.se_enabled),
+      [&audio_cfg](bool on) {
+        if (on) {
+          if (!GameFlow.ctx.sound_effects.Load()) {
+            audio_cfg.se_enabled = false;
+          }
+        } else {
+          Snd_SECleanup();
+        }
+      }));
 
   ch.push_back(std::make_unique<ToggleNode>("BGM", "BGMを鳴らすかどうかの設定",
                                             std::ref(audio_cfg.bgm_enabled),
                                             [](bool on) {
                                               if (on) {
                                                 if (BGM_Init()) {
-                                                  track_mgr.Switch(0);
+                                                  GameFlow.ctx.tracks.Switch(0);
                                                 }
                                               } else {
                                                 BGM_Cleanup();
@@ -422,8 +423,8 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
 
   {
     auto packs = std::make_shared<std::vector<std::string>>();
-    if (track_mgr.PacksAvailable()) {
-      track_mgr.PackForeach(
+    if (GameFlow.ctx.tracks.PacksAvailable()) {
+      GameFlow.ctx.tracks.PackForeach(
           [&](std::string_view p) { packs->emplace_back(p); });
       std::ranges::sort(*packs);
     }
@@ -442,13 +443,13 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
         [packs](size_t i) -> bool {
           if (i == 0) {
             GameFlow.ctx.cfg->audio.bgm_pack.clear();
-            track_mgr.PackSet(GameFlow.ctx.cfg->audio.bgm_pack);
+            GameFlow.ctx.tracks.PackSet(GameFlow.ctx.cfg->audio.bgm_pack);
           } else if (i == packs->size() + 1) {
             SDL_OpenURL("https://github.com/nmlgc/BGMPacks/"
                         "releases/tag/2024-10-05");
           } else {
             GameFlow.ctx.cfg->audio.bgm_pack = (*packs)[i - 1];
-            track_mgr.PackSet(GameFlow.ctx.cfg->audio.bgm_pack);
+            GameFlow.ctx.tracks.PackSet(GameFlow.ctx.cfg->audio.bgm_pack);
           }
           return false;
         });

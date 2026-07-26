@@ -13,8 +13,6 @@
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
-#include "data/gfx_manager.h"
-#include "data/sfx_manager.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/cast.h"

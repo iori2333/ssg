@@ -1,105 +1,62 @@
-# Manager 迁移方案
+# Architecture migration status
 
-## 已完成的迁移
+## Composition root
 
-### 已删除的全局
+Application-owned systems are composed under `GameFlow.ctx`:
 
-| 全局 | 操作 |
-|------|------|
-| `Bullets` | 迁移到 `GameContext.bullets` |
-| `Lasers` | 迁移到 `GameContext.lasers` |
-| `Items` | 迁移到 `GameContext.items` |
-| `Ranking` | 合并入 `GameManager`，迁移到 `GameContext.game` |
-| `Games` | 合并入 `GameManager`，迁移到 `GameContext.game` |
-| `kGfx*` 常量 | 全部合并为 `GameStage` enum |
-| `MsgWin` | 删除（死代码） |
-| `play_rank.h/cpp` | 删除（合并入 GameManager） |
-| `rank_manager.h/cpp` | 删除（合并入 GameManager） |
-| `pack_tool` | 从 CMakeLists.txt 中删除 |
-
-### 当前架构
-
-```
-GameFlow (global)
-  └── ctx: GameContext
-       ├── BulletManager bullets
-       ├── LaserManager lasers
-       ├── ItemManager items
-       └── GameManager game (count, stage, level, rank, AddRank, ResetRank)
+```text
+GameFlow (global transition coordinator)
+  `-- ctx: GameContext
+      |-- data: GameData
+      |-- graphics: GraphicsLoader
+      |-- sound_effects: SfxLoader
+      |-- tracks: TrackManager
+      |-- stages: StageLoader
+      |-- bullets: BulletManager
+      |-- items: ItemManager
+      |-- game: GameManager
+      |-- player: Player
+      |-- ending: EndingManager
+      |-- scores: ScoreManager
+      |-- demos: DemoManager
+      `-- ui: UIManager
 ```
 
-### DI 模式
+`GameData` is the sole owner of `MAP.PAK`, `IMAGES.PAK`, `MUSIC.PAK`, and
+`SOUND.PAK`. It validates archives and exposes data-only extraction and music
+catalog APIs. Graphics, sound, track, demo, and stage services receive that
+owner explicitly; there are no data-layer global manager instances.
 
-每个消费模块在 .h 中声明指针 + Bind() 重载：
+`UIManager` owns menu controllers, menu trees, replay-list storage, and the
+message window. Callers use its semantic APIs rather than concrete global UI
+objects.
 
-```cpp
-struct EnemyManager {
-  BulletManager *bullets_ = nullptr;
-  LaserManager *lasers_ = nullptr;
-  ItemManager *items_ = nullptr;
-  GameManager *game_ = nullptr;
+## Completed migrations
 
-  void Bind(BulletManager &bm) { bullets_ = &bm; }
-  void Bind(LaserManager &lm) { lasers_ = &lm; }
-  void Bind(ItemManager &im) { items_ = &im; }
-  void Bind(GameManager &gm) { game_ = &gm; }
-};
-```
+- Removed the legacy loader and the later global `PackManager`, `GfxManager`,
+  `MusicManager`, `SfxManager`, and `StageManager` replacements.
+- Separated required archive validation from optional audio-device startup.
+- Moved stage runtime installation to `stage::StageLoader`.
+- Moved track selection and playback orchestration into the context-owned
+  `TrackManager`; music metadata remains data owned by `GameData`.
+- Removed the legacy menu/window controller family and consolidated
+  application UI under `UIManager`.
+- Moved bullet, item, player, game, ending, score, demo, and UI ownership into
+  `GameContext`.
 
-注入点统一在 `GameSTD_Init()` 中：
+## Remaining global runtime systems
 
-```cpp
-Enemies.Bind(GameFlow.ctx.bullets);
-Enemies.Bind(GameFlow.ctx.lasers);
-Enemies.Bind(GameFlow.ctx.items);
-Enemies.Bind(GameFlow.ctx.game);
-// ...
-GameFlow.ctx.bullets.Bind(GameFlow.ctx.items);
-GameFlow.ctx.bullets.Bind(GameFlow.ctx.game);
-GameFlow.ctx.lasers.Bind(GameFlow.ctx.game);
-```
+The remaining high-level global instances are:
 
-### GameStage
+- `GameFlow`: application state-transition coordinator and composition root.
+- `Enemies`: enemy runtime and ECL/SCL execution state.
+- `Bosses`: boss runtime state.
+- `Scroller`: scene and map scrolling runtime state.
+- `Effects`: gameplay visual-effect runtime state.
 
-```cpp
-enum class GameStage : uint8_t {
-  NONE = 0,
-  STAGE_1 = 1, ..., STAGE_6 = 6, CLEARED = 7,
-  MUSIC_ROOM = 128, TITLE = 129, ..., ENDING = 135,
-};
-```
+These systems already accept several dependencies through `Bind()` or explicit
+method parameters. Future migration should move ownership one subsystem at a
+time without introducing compatibility globals.
 
-`gfx.LoadStage()`, `stage_mgr.LoadStageData()`, `Demos.LoadDemo()` 等函数签名直接接受 `GameStage`，调用方不需要 cast。
-
----
-
-## 剩余待迁移的全局
-
-### 第 2 层：战斗核心
-
-| 全局 | 优先级 | 复杂度 | 说明 |
-|------|--------|--------|------|
-| `Enemies` | 高 | 大 | 自身是全局，但已有 DI 基础设施 |
-| `Bosses` | 高 | 大 | 同上 |
-| `Players` | 高 | 大 | 9 类未 DI 依赖需要处理 |
-
-### 第 3 层：跨模块关切
-
-| 全局 | 说明 |
-|------|------|
-| `Effects` | 15+ 种效果类型，9 个外部消费者 |
-| `Scroller` | 已有 ranking_ DI |
-
-### 第 5 层：非战斗子系统（仅由 gameflow 驱动，可最后处理）
-
-| 全局 | 说明 |
-|------|------|
-| `ConfigDat` | 运行时常量 |
-| `Demos` | 录制/回放 |
-| `Scores` | 高分持久化，0 个外部消费者 |
-| `Ending` | Credits 演出 |
-| `UI` | UI 系统 |
-
-### game/ 层基础设施
-
-`Key_Data`、`Snd_SEPlay`、`GrpGeom` 等 — 跨平台抽象，暂不迁移。
+Low-level process-wide backends such as input state, audio playback, graphics
+surfaces, and geometry rendering remain global platform abstractions for now.

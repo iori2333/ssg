@@ -3,7 +3,6 @@
 ///
 #include "anime_data.h"
 
-#include "data/gfx_manager.h"
 #include "enemy/enemy.h"
 #include "enemy/enemy_manager.h"
 
@@ -20,11 +19,11 @@ void SetAnimeRect(ANIME_DATA *anm, int x1, int y1, int x2, int y2) {
 
 namespace anime_data {
 
-void SetupStageAnime(AssetId stage_num) {
+void SetupStageAnime(StageId stage_num) {
   int i = 0;
 
   switch (stage_num) {
-  case AssetId::EXTRA:
+  case StageId::EXTRA:
     Enemies.anime[0].SetSheet<4, 80>({.x = 0, .y = 0}, ANM_NORM);
     Enemies.anime[1].SetSheet<4, 80>({.x = 320, .y = 0}, ANM_NORM);
     Enemies.anime[2].SetSheet<6, 80>({.x = 0, .y = 80}, ANM_STOP);
@@ -87,7 +86,7 @@ void SetupStageAnime(AssetId stage_num) {
     Enemies.anime[42].ptn[2] = PIXEL_LTWH{552, 0, 24, 24};
     Enemies.anime[42].ptn[3] = PIXEL_LTWH{552, 48, 24, 24};
     break;
-  case AssetId::STAGE_1:
+  case StageId::STAGE_1:
     Enemies.anime[0].size = {.w = 72, .h = 56};
     Enemies.anime[0].n = 2; Enemies.anime[0].mode = ANM_NORM;
     Enemies.anime[0].ptn[0] = {0, 0, 72, 56};
@@ -107,7 +106,7 @@ void SetupStageAnime(AssetId stage_num) {
     Enemies.anime[7].n = 1; Enemies.anime[7].mode = ANM_NORM;
     Enemies.anime[7].ptn[0] = {72, 184, (72 * 2), 248};
     break;
-  case AssetId::STAGE_2:
+  case StageId::STAGE_2:
     Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});
     Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32});
     Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64});
@@ -146,7 +145,7 @@ void SetupStageAnime(AssetId stage_num) {
     SetAnimeRect(&Enemies.anime[20], 560, 160, 639, 270);
     SetAnimeRect(&Enemies.anime[21], 576, 320, 639, 399);
     break;
-  case AssetId::STAGE_3:
+  case StageId::STAGE_3:
     Enemies.anime[0].size = {.w = 56, .h = 56};
     Enemies.anime[0].n = 16; Enemies.anime[0].mode = ANM_DEG;
     for (i = 0; i < 8; i++) Enemies.anime[0].ptn[i] = PIXEL_LTWH{i * 56, 0, 56, 56};
@@ -174,7 +173,7 @@ void SetupStageAnime(AssetId stage_num) {
     Enemies.anime[9].n = 1; Enemies.anime[9].mode = ANM_NORM;
     Enemies.anime[9].ptn[0] = {512, 164, 640, 240};
     break;
-  case AssetId::STAGE_4:
+  case StageId::STAGE_4:
     Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});
     Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32});
     Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64});
@@ -188,7 +187,7 @@ void SetupStageAnime(AssetId stage_num) {
     Enemies.anime[7].n = 1; Enemies.anime[7].mode = ANM_NORM;
     Enemies.anime[7].ptn[0] = {0, 296, 304, 480};
     break;
-  case AssetId::STAGE_5:
+  case StageId::STAGE_5:
     Enemies.anime[0].SetSheetDeg<32>({.x = 0, .y = 0});
     Enemies.anime[1].SetSheetDeg<32>({.x = 0, .y = 32});
     Enemies.anime[2].SetSheetDeg<32>({.x = 0, .y = 64});
@@ -205,7 +204,7 @@ void SetupStageAnime(AssetId stage_num) {
     Enemies.anime[8].SetSheet<1>({.x = 512, .y = 96}, {.w = 80, .h = 72}, ANM_NORM);
     Enemies.anime[9].SetSheet<1>({.x = 304, .y = 256}, {.w = 336, .h = 224}, ANM_NORM);
     break;
-  case AssetId::STAGE_6:
+  case StageId::STAGE_6:
     Enemies.anime[0].size = {.w = 56, .h = 72};
     Enemies.anime[0].n = 6; Enemies.anime[0].mode = ANM_STOP;
     for (i = 0; i < 6; i++) Enemies.anime[0].ptn[i] = PIXEL_LTWH{(56 * i), 72, 56, 72};

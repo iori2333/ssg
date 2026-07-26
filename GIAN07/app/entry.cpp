@@ -6,17 +6,16 @@
 #include <filesystem>
 
 #include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_messagebox.h>
 
-#include "core/config.h"
-#include "core/graphics_settings.h"
 #include "entry.h"
 
 #include "audio/bgm.h"
-#include "track_manager/track_manager.h"
 #include "audio/snd.h"
+#include "core/config.h"
 #include "core/gian.h"
-#include "data/gfx_manager.h"
-#include "data/init.h"
+#include "core/graphics_settings.h"
+#include "data/game_data.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
 #include "gfx/graphics_backend.h"
@@ -107,7 +106,8 @@ bool XInit() {
   }
 
   // Initialize graphics
-  const auto maybe_params = Grp_InitOrFallback(g_config.graphics.GraphicsParams());
+  const auto maybe_params =
+      Grp_InitOrFallback(g_config.graphics.GraphicsParams());
   if (!maybe_params) {
     return false;
   }
@@ -121,9 +121,6 @@ bool XInit() {
   if (g_config.audio.bgm_enabled) {
     BGM_Init(g_config.audio.soundfont);
   }
-  if (!track_mgr.PackSet(g_config.audio.bgm_pack)) {
-    g_config.audio.bgm_pack.clear();
-  }
   BGM_SetGainApply(g_config.audio.bgm_vol_norm);
   GameFlow.ctx.game.game_config_ = &g_config.game;
   GameFlow.ctx.game_cfg = &g_config.game;
@@ -136,18 +133,26 @@ bool XInit() {
   GameFlow.ctx.cfg = &g_config;
 
   Grp_ScreenshotSetPrefix("screenshots/");
-  const auto err = DataInit();
-  if (err.has_value()) {
+  const auto data_errors = GameFlow.ctx.data.Load(PathForData());
+  if (!data_errors.empty()) {
+    const auto message = data::FormatLoadErrors(data_errors);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Invalid game data",
+                             message.c_str(), nullptr);
     GameFlow.game_main = [](bool &quit) { quit = true; };
     GameFlow.current_state = GameState::External;
   } else {
+    if (g_config.audio.se_enabled && !GameFlow.ctx.sound_effects.Load()) {
+      g_config.audio.se_enabled = false;
+    }
+    if (!GameFlow.ctx.tracks.PackSet(g_config.audio.bgm_pack)) {
+      g_config.audio.bgm_pack.clear();
+    }
     SProjectInit();
   }
   return true;
 }
 
 void XCleanup() {
-  DataCleanup();
   SaveConfigFile(g_config);
   TextBackend_Cleanup();
   GrpBackend_Cleanup();
@@ -159,18 +164,18 @@ void XCleanup() {
 bool GameFrame() {
 #ifdef SUPPORT_GRP_WINDOWED
   if ((SystemKey_Data & SYSKEY_GRP_FULLSCREEN) != 0) {
-    XGrpTryCycleDisp(g_config.graphics);
+    XGrpTryCycleDisp(g_config.graphics, GameFlow.ctx.graphics);
   }
 #endif
 #ifdef SUPPORT_GRP_SCALING
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_UP) != 0) {
-    XGrpTryCycleScale(g_config.graphics, +1, false);
+    XGrpTryCycleScale(g_config.graphics, GameFlow.ctx.graphics, +1, false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_DOWN) != 0) {
-    XGrpTryCycleScale(g_config.graphics, -1, false);
+    XGrpTryCycleScale(g_config.graphics, GameFlow.ctx.graphics, -1, false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_MODE) != 0) {
-    XGrpTryCycleScMode(g_config.graphics);
+    XGrpTryCycleScMode(g_config.graphics, GameFlow.ctx.graphics);
   }
 #endif
   if ((SystemKey_Data & SYSKEY_GRP_TURBO) != 0) {
@@ -185,7 +190,7 @@ bool GameFrame() {
   }
 #ifdef SUPPORT_GRP_API
   if ((SystemKey_Data & SYSKEY_GRP_API) != 0) {
-    XGrpTry(g_config.graphics, [](auto &params) {
+    XGrpTry(g_config.graphics, GameFlow.ctx.graphics, [](auto &params) {
       params.api = ((params.api + 1) % GrpBackend_APICount());
     });
   }

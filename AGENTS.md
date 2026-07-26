@@ -33,7 +33,6 @@ All vendored dependencies live under `libs/` as Git submodules:
 
 - `libs/SDL3`
 - `libs/miniaudio`
-- `libs/BLAKE3`
 - `libs/dr_libs`
 - `libs/libogg`
 - `libs/libvorbis`
@@ -46,6 +45,8 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | Directory | Purpose |
 | --- | --- |
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
+| `GIAN07/data/` | Validated PAK ownership, music catalog data, and graphics/SFX loading adapters |
+| `GIAN07/stage/` | Stage scripts, runtime stage loading, scrolling, and scene processing |
 | `GIAN07/ui/` | Application-wide UI ownership: menu controllers, menu definitions, and message windows |
 | `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
 | `game/sys/` | System wrappers – buffer, file, path, thread, log, input |

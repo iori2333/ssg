@@ -8,8 +8,6 @@
 #include "bomb_efc.h"
 #include "effect_manager.h"
 
-#include "data/gfx_manager.h"
-#include "data/sfx_manager.h"
 #include "gfx/graphics_backend.h"
 #include "util/ut_math.h"
 

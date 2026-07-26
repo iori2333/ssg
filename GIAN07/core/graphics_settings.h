@@ -5,12 +5,13 @@
 
 #include "core/config.h"
 
-#include "data/gfx_manager.h"
+#include "data/graphics_loader.h"
 #include "gfx/graphics.h"
 #include "gfx/window_backend.h"
 #include "platform/text_backend.h"
 
-inline void XGrpTry(GraphicsConfig &gfx_cfg, const GRAPHICS_PARAMS &prev, GRAPHICS_PARAMS &params) {
+inline void XGrpTry(GraphicsConfig &gfx_cfg, data::GraphicsLoader &loader,
+                    const GRAPHICS_PARAMS &prev, GRAPHICS_PARAMS &params) {
   if (prev == params) {
     return;
   }
@@ -30,7 +31,7 @@ inline void XGrpTry(GraphicsConfig &gfx_cfg, const GRAPHICS_PARAMS &prev, GRAPHI
     TextObj.WipeBeforeNextRender();
     gfx_cfg.GraphicsParamsApply(result.live);
     if (result.reload_surfaces) {
-      gfx.ReloadStage();
+      (void)loader.Reload();
     }
   }
 }
@@ -38,15 +39,18 @@ inline void XGrpTry(GraphicsConfig &gfx_cfg, const GRAPHICS_PARAMS &prev, GRAPHI
 // Tries the graphics configuration that results from applying the given
 // [patch_func] onto the current configuration, and updates all subsystems
 // accordingly.
-void XGrpTry(GraphicsConfig &gfx_cfg, std::invocable<GRAPHICS_PARAMS &> auto &&patch_func) {
+void XGrpTry(GraphicsConfig &gfx_cfg, data::GraphicsLoader &loader,
+             std::invocable<GRAPHICS_PARAMS &> auto &&patch_func) {
   const auto prev = gfx_cfg.GraphicsParams();
   auto params = prev;
   patch_func(params);
-  XGrpTry(gfx_cfg, prev, params);
+  XGrpTry(gfx_cfg, loader, prev, params);
 }
 
-inline void XGrpTryCycleScale(GraphicsConfig &gfx_cfg, int_fast8_t delta, bool include_max) {
-  XGrpTry(gfx_cfg, [&](auto &params) {
+inline void XGrpTryCycleScale(GraphicsConfig &gfx_cfg,
+                              data::GraphicsLoader &loader, int_fast8_t delta,
+                              bool include_max) {
+  XGrpTry(gfx_cfg, loader, [&](auto &params) {
     const auto fs = params.FullscreenFlags();
     if (fs.fullscreen && !fs.exclusive) {
       using FIT = GRAPHICS_FULLSCREEN_FIT;
@@ -60,13 +64,16 @@ inline void XGrpTryCycleScale(GraphicsConfig &gfx_cfg, int_fast8_t delta, bool i
   });
 }
 
-inline void XGrpTryCycleDisp(GraphicsConfig &gfx_cfg) {
-  XGrpTry(gfx_cfg,
-      [](auto &params) { params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN; });
+inline void XGrpTryCycleDisp(GraphicsConfig &gfx_cfg,
+                             data::GraphicsLoader &loader) {
+  XGrpTry(gfx_cfg, loader, [](auto &params) {
+    params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+  });
 }
 
-inline void XGrpTryCycleScMode(GraphicsConfig &gfx_cfg) {
-  XGrpTry(gfx_cfg, [](auto &params) {
+inline void XGrpTryCycleScMode(GraphicsConfig &gfx_cfg,
+                               data::GraphicsLoader &loader) {
+  XGrpTry(gfx_cfg, loader, [](auto &params) {
     params.flags ^= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
   });
 }

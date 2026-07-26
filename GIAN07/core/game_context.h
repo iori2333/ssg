@@ -10,21 +10,32 @@
 #include "game_manager.h"
 
 #include "bullet/bullet_manager.h"
+#include "data/game_data.h"
+#include "data/graphics_loader.h"
+#include "data/sfx_loader.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/ending_manager.h"
 #include "gameflow/score_manager.h"
 #include "item/item_manager.h"
 #include "player/player.h"
+#include "stage/stage_loader.h"
+#include "track_manager/track_manager.h"
 #include "ui/ui_manager.h"
 
 struct GameContext {
+  data::GameData data;
+  data::GraphicsLoader graphics{data};
+  data::SfxLoader sound_effects{data};
+  TrackManager tracks{data};
+  stage::StageLoader stages{data};
+
   BulletManager bullets;
   ItemManager items;
   GameManager game;
   Player player;
   EndingManager ending;
   ScoreManager scores;
-  DemoManager demos;
+  DemoManager demos{data};
   UIManager ui;
 
   const GameConfig *game_cfg = nullptr;

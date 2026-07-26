@@ -6,12 +6,13 @@
 
 #include "msg_window.h"
 
-#include "data/gfx_manager.h"
-#include "data/sfx_manager.h"
+#include "core/constants.h"
 #include "platform/text_backend.h"
 #include "util/ut_math.h"
 
 namespace {
+
+constexpr auto kFaceColumns = 6;
 
 inline constexpr auto MWIN_DEAD = 0x00;
 inline constexpr auto MWIN_OPEN = 0x01;
@@ -212,11 +213,11 @@ void MsgWindow::Draw() {
   DrawWindowFrame(x, y, w, h);
 
   // Draw face (only when display is requested)
-  const auto sid = (SURFACE_ID::FACE + (face_id / kFaceNumX));
+  const auto sid = (SURFACE_ID::FACE + (face_id / kFaceColumns));
   switch (face_state) {
   case MFACE_WAIT:
     oy = max_size.bottom - 100;
-    src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), 0, FACE_W, FACE_H};
+    src = PIXEL_LTWH{((face_id % kFaceColumns) * FACE_W), 0, FACE_W, FACE_H};
     GrpSurface_Blit({(x + 2), oy}, sid, src);
     break;
 
@@ -225,7 +226,7 @@ void MsgWindow::Draw() {
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
       len = cosl(time + (i * 153), (64 - time) / 2);
-      src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), i, FACE_W, 1};
+      src = PIXEL_LTWH{((face_id % kFaceColumns) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
@@ -235,7 +236,7 @@ void MsgWindow::Draw() {
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
       len = cosl(time + (i * 153), (64 - time) / 2);
-      src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), i, FACE_W, 1};
+      src = PIXEL_LTWH{((face_id % kFaceColumns) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
@@ -245,7 +246,7 @@ void MsgWindow::Draw() {
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
       len = cosl(time + (i * 4), time);
-      src = PIXEL_LTWH{((face_id % kFaceNumX) * FACE_W), i, FACE_W, 1};
+      src = PIXEL_LTWH{((face_id % kFaceColumns) * FACE_W), i, FACE_W, 1};
       if ((i & 1) != 0) {
         GrpSurface_Blit({(x - len + 2), (oy + i)}, sid, src);
       } else {
@@ -286,7 +287,7 @@ void MsgWindow::SetFace(uint8_t face_id) {
   if (state == MWIN_DEAD) {
     return; // Cannot display
   }
-  if (face_id / kFaceNumX >= FACE_MAX) {
+  if (face_id / kFaceColumns >= FACE_MAX) {
     return; // Impossible number
   }
 

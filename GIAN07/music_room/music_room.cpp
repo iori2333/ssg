@@ -14,13 +14,10 @@
 #include "audio/midi_backend.h"
 #include "core/config.h"
 #include "core/gian.h"
-#include "data/gfx_manager.h"
-#include "track_manager/track_manager.h"
-#include "data/music_manager.h"
 #include "effect/effect.h"
-#include "gfx/font_uty.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
+#include "gfx/font_uty.h"
 #include "gfx/text.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
@@ -42,7 +39,7 @@ struct MUSICROOM_TEXT {
   TEXTRENDER_RECT_ID title;
   TEXTRENDER_RECT_ID comment;
   TEXTRENDER_RECT_ID version;
-  BYTE_BUFFER_OWNED comment_buf = nullptr;
+  std::string_view comment_text;
 
   void RenderVersion(WINDOW_POINT topleft) const;
   void RenderMidDev(WINDOW_POINT topleft) const;
@@ -86,7 +83,7 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
   std::string_view num = num_str;
 
   TextObj.Render(topleft, title, num, [&num](TEXTRENDER_SESSION &s) {
-    const auto &title = track_mgr.CurrentTitle();
+    const auto &title = GameFlow.ctx.tracks.CurrentTitle();
 
     // GDI would calculate a trailing space as 4 pixels wide, not 8.
     const auto title_left = (s.Extent(num).w + 8);
@@ -100,33 +97,28 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
 }
 
 void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
-  if (!comment_buf || comment_buf.size() == 0) {
+  if (comment_text.empty()) {
     return;
   }
+  TextObj.Render(topleft, comment, comment_text, [this](TEXTRENDER_SESSION &s) {
+    int y = 0;
+    s.SetFont(FONT_ID::SMALL);
+    s.SetColor(ColorDefault);
 
-  const std::string_view comment_str = {
-      reinterpret_cast<const char *>(comment_buf.get()), comment_buf.size()};
-
-  TextObj.Render(topleft, comment, comment_str,
-                 [&comment_str](TEXTRENDER_SESSION &s) {
-                   int y = 0;
-                   s.SetFont(FONT_ID::SMALL);
-                   s.SetColor(ColorDefault);
-
-                   size_t pos = 0;
-                   while (pos < comment_str.size()) {
-                     const auto nl = comment_str.find('\n', pos);
-                     const auto line = comment_str.substr(pos, nl - pos);
-                     if (!line.empty() || nl != std::string_view::npos) {
-                       s.Put({.x = 0, .y = y}, line);
-                       y += 16;
-                     }
-                     if (nl == std::string_view::npos) {
-                       break;
-                     }
-                     pos = nl + 1;
-                   }
-                 });
+    size_t pos = 0;
+    while (pos < comment_text.size()) {
+      const auto nl = comment_text.find('\n', pos);
+      const auto line = comment_text.substr(pos, nl - pos);
+      if (!line.empty() || nl != std::string_view::npos) {
+        s.Put({.x = 0, .y = y}, line);
+        y += 16;
+      }
+      if (nl == std::string_view::npos) {
+        break;
+      }
+      pos = nl + 1;
+    }
+  });
 }
 
 bool MusicRoomInit() {
@@ -134,7 +126,7 @@ bool MusicRoomInit() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!gfx.LoadStage(AssetId::MUSIC_ROOM)) {
+  if (!GameFlow.ctx.graphics.LoadMusicRoom()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -150,8 +142,8 @@ bool MusicRoomInit() {
   Mid_TableInit();
 
   // BGM_Stop();
-  auto comment_buf = music.LoadRoomComment(0);
-  if (!comment_buf) {
+  const auto comment = GameFlow.ctx.data.TrackComment(0);
+  if (comment.empty()) {
     DebugOut("MUSIC.PAK がはかいされています");
     GameExit();
     return false;
@@ -163,7 +155,7 @@ bool MusicRoomInit() {
       .comment = TextObj.Register({.w = 272, .h = 192}),
       .version = TextObj.Register({.w = 490, .h = 13}),
 
-      .comment_buf = std::move(comment_buf),
+      .comment_text = comment,
   };
 
   // if(!LoadMusic(0)) {
@@ -412,9 +404,10 @@ void MusicRoomProc(bool & /*unused*/) {
         MidiPlayID += 2;
       }
       BGM_Stop();
-      MidiPlayID = ((MidiPlayID + music.kTrackCount - 1) % music.kTrackCount);
-      track_mgr.Switch(MidiPlayID);
-      text.comment_buf = music.LoadRoomComment(MidiPlayID);
+      const auto track_count = GameFlow.ctx.tracks.TrackCount();
+      MidiPlayID = ((MidiPlayID + track_count - 1) % track_count);
+      GameFlow.ctx.tracks.Switch(MidiPlayID);
+      text.comment_text = GameFlow.ctx.data.TrackComment(MidiPlayID);
     }
     Old_Key = Key_Data;
   }
