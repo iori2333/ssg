@@ -122,7 +122,6 @@ bool XInit() {
     BGM_Init(g_config.audio.soundfont);
   }
   BGM_SetGainApply(g_config.audio.bgm_vol_norm);
-  GameFlow.ctx.game.game_config_ = &g_config.game;
   GameFlow.ctx.game_cfg = &g_config.game;
   GameFlow.ctx.graphics_cfg = &g_config.graphics;
   GameFlow.ctx.audio_cfg = &g_config.audio;

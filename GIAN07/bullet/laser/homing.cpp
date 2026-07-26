@@ -9,14 +9,13 @@
 
 #include "audio/snd.h"
 #include "core/gian.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
-#include "player/player.h"
+#include "gfx/graphics_backend.h"
 #include "util/ut_math.h"
 
 namespace {
 
-inline constexpr auto kHomingWidth = 8 * 64;
+inline constexpr auto kHomingWidth = 8_px;
 
 constexpr int GetPrev(int current, int n) {
   return (current + n) % (kHomingLen * kHomingSection);
@@ -53,14 +52,13 @@ uint8_t ComputeDeg(const HomingSpawnInfo &info, int i) {
   if ((info.n & 1) != 0) {
     return info.d + ((i >> 1) * info.dw * (1 - ((i & 1) << 1)));
   }
-  return info.d - (info.dw >> 1) +
-         ((i >> 1) * info.dw * (1 - ((i & 1) << 1)));
+  return info.d - (info.dw >> 1) + ((i >> 1) * info.dw * (1 - ((i & 1) << 1)));
 }
 
 // ── Spawn ────────────────────────────────────────────────────────────
 
 void LaserHoming::Spawn(const HomingSpawnInfo &info) {
-  v_ = 64 * 4;
+  v_ = 4_px;
   a_ = 10;
   count_ = 0;
   current_ = 0;
@@ -102,7 +100,7 @@ auto LaserHoming::Update(const UpdateInfo &info) -> UpdateResult {
       subtype_ = HomingType::None;
       Snd_SEPlay(static_cast<SfxId>(17), p_[current_].x);
     } else {
-      if (v_ > 2 * 64) {
+      if (v_ > 2_px) {
         v_ -= a_;
       }
       int i = 1 + (static_cast<int>(count_) / 32);
@@ -135,8 +133,8 @@ auto LaserHoming::Update(const UpdateInfo &info) -> UpdateResult {
   int tail_i = GetNext(current_);
   int tx = p_[tail_i].x;
   int ty = p_[tail_i].y;
-  if (tx < GX_MIN - (4 * 64) || tx > GX_MAX + (4 * 64) ||
-      ty < GY_MIN - (4 * 64) || ty > GY_MAX + (4 * 64)) {
+  if (tx < GX_MIN - 4_px || tx > GX_MAX + 4_px || ty < GY_MIN - 4_px ||
+      ty > GY_MAX + 4_px) {
     state_ = HomingState::Dead;
   }
   return {};
@@ -185,7 +183,7 @@ void LaserHoming::Render() const {
     src[0] = src[3];
     src[1] = src[2];
 
-    if (w > 64 * 2) {
+    if (w > 2_px) {
       w -= 64;
     }
   }
@@ -239,18 +237,16 @@ void LaserHoming::Kill() { state_ = HomingState::Dead; }
 
 // ── Hit detection ──────────────────────────────────────────────────
 
-HitResult LaserHoming::CheckHit(int px, int py) const {
+HitResult LaserHoming::CheckHit(int px, int py, int player_radius) const {
   if (state_ == HomingState::Dead) {
     return HitResult::Miss;
   }
 
   for (auto &j : p_) {
-    if (HITCHK(j.x, px, kHomingWidth + 15 * 64) &&
-        HITCHK(j.y, py, kHomingWidth + 15 * 64)) {
-      if (HITCHK(j.x, px,
-                 kHomingWidth * 2 / 3 + PLAYER_HITBOX_RADIUS) &&
-          HITCHK(j.y, py,
-                 kHomingWidth * 2 / 3 + PLAYER_HITBOX_RADIUS)) {
+    if (HITCHK(j.x, px, kHomingWidth + 15_px) &&
+        HITCHK(j.y, py, kHomingWidth + 15_px)) {
+      if (HITCHK(j.x, px, kHomingWidth * 2 / 3 + player_radius) &&
+          HITCHK(j.y, py, kHomingWidth * 2 / 3 + player_radius)) {
         return HitResult::Hit;
       }
       return HitResult::Graze;
@@ -270,7 +266,7 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
     return;
   }
   const int hit_r = (kHomingWidth * 2 / 3) >> 6;
-  const int evade_r = (kHomingWidth + 15 * 64) >> 6;
+  const int evade_r = (kHomingWidth + 15_px) >> 6;
 
   int current = current_;
   for (int j = 0; j < kHomingLen; j++) {

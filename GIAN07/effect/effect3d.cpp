@@ -270,12 +270,12 @@ void EffectManager::Init3DCubes() {
   int i = 0;
 
   for (i = 0; i < CUBE_MAX; i++) {
-    cubes[i].l = 30 * 64;
+    cubes[i].l = 30_px;
     cubes[i].d.dx = rnd();
     cubes[i].d.dy = rnd();
     cubes[i].d.dz = rnd();
-    cubes[i].p.x = cosl(i * 256 / CUBE_MAX, 200 * 64);
-    cubes[i].p.y = sinl(i * 256 / CUBE_MAX, 200 * 64);
+    cubes[i].p.x = cosl(i * 256 / CUBE_MAX, 200_px);
+    cubes[i].p.y = sinl(i * 256 / CUBE_MAX, 200_px);
     cubes[i].p.z = 0;
   }
 
@@ -314,17 +314,17 @@ void EffectManager::Move3DCubes() {
   dy -= 16 * 4;
 
   d2 = sinl(d >> 8, 512 / CUBE_MAX);
-  l = sinl(d >> 7, 100 * 64) + ((200 - 20) * 64);
+  l = sinl(d >> 7, 100_px) + 180_px;
 
   for (i = 0; i < CUBE_MAX; i++) {
-    cubes[i].l = (15 * 64) + (l >> 4) + (i * 128);
+    cubes[i].l = 15_px + (l >> 4) + (i * 128);
     cubes[i].d.dx += 4;
     cubes[i].d.dy -= 4;
     // cubes[i].p.x = cosl(i*256/CUBE_MAX+d2, l);
     // cubes[i].p.y = sinl(i*256/CUBE_MAX+d2, l);
     cubes[i].p.x = cosl((i * 500 / CUBE_MAX) + d2, l);
     cubes[i].p.y = sinl((i * 500 / CUBE_MAX) + d2, l);
-    cubes[i].p.z = (i - (CUBE_MAX / 2)) * 64 * 40;
+    cubes[i].p.z = (i - (CUBE_MAX / 2)) * 40_px;
     Transform3D(&cubes[i].p, dx >> 8, dy >> 8, dz >> 8);
   }
 
@@ -424,18 +424,18 @@ void EffectManager::InitFakeECL() {
   int v = 0;
 
   wf_line.d = 0;
-  wf_line.ox = 640 * 64 / 2;
-  wf_line.oy = 480 * 64 / 2;
+  wf_line.ox = 320_px;
+  wf_line.oy = 240_px;
   wf_line.w = 30;
 
   for (auto &it : fake_ecl_strs) {
     const uint8_t d = (rnd() % 128);
-    v = (rnd() % (64 * 5)) + (64 * 5);
+    v = (rnd() % 5_px) + 5_px;
 
     it.SrcX = (((rnd() % 7) * 9) * 8);
     it.SrcY = ((rnd() % 16) * 16);
-    it.x = ((28 + (rnd() % 484)) * 64);
-    it.y = -((rnd() % 640) * 64);
+    it.x = PixelToWorld(28 + (rnd() % 484));
+    it.y = -PixelToWorld(rnd() % 640);
     it.vx = 0; // cosl(d, v);
     it.vy = v; // sinl(d, v);
   }
@@ -451,14 +451,14 @@ void EffectManager::MoveFakeECL() {
     it.x += it.vx;
     it.y += it.vy;
 
-    if (it.y >= (480 * 64)) {
+    if (it.y >= 480_px) {
       const uint8_t d = (rnd() % 128);
-      v = (rnd() % (64 * 5)) + (64 * 5);
+      v = (rnd() % 5_px) + 5_px;
 
       it.SrcX = (((rnd() % 7) * 9) * 8);
       it.SrcY = ((rnd() % 16) * 16);
-      it.x = ((28 + (rnd() % 484)) * 64);
-      it.y = -((rnd() % 640) * 64);
+      it.x = PixelToWorld(28 + (rnd() % 484));
+      it.y = -PixelToWorld(rnd() % 640);
       it.vx = 0; // cosl(d, v);
       it.vy = v; // sinl(d, v);
     }
@@ -604,9 +604,9 @@ void EffectManager::InitStg4Rocks() {
     y = ((i % 4) * dy) + (rnd() % dy2);
     //((380*64/16) * (i%(ROCK_MAX/16+1))) + rnd()%(380*64/16);
 
-    rocks[i].x = ((rnd() % (500 * 64)) - (250 * 64));
-    rocks[i].y = (-250 * 64) - y; // Up above
-    rocks[i].z = ((rnd() % (500 * 64)) - (250 * 64));
+    rocks[i].x = (rnd() % 500_px) - 250_px;
+    rocks[i].y = -250_px - y; // Up above
+    rocks[i].z = (rnd() % 500_px) - 250_px;
 
     if (i == ROCK_MAX * 5 / 8) {
       id--;
@@ -639,9 +639,9 @@ void EffectManager::MoveStg4Rocks() {
     switch (p->State) {
     case STG4ROCK_STDMOVE:
       p->y += p->vy;
-      if (p->y > (250 + 40) * 64) {
-        p->x = ((rnd() % (500 * 64)) - (250 * 64));
-        p->y = (-250 - 40 - (rnd() % 250)) * 64;
+      if (p->y > 290_px) {
+        p->x = (rnd() % 500_px) - 250_px;
+        p->y = -PixelToWorld(290 + (rnd() % 250));
         p->vy = ((4 - p->GrpID) * 16);
         p->v = p->vy;
       }
@@ -652,9 +652,9 @@ void EffectManager::MoveStg4Rocks() {
       p->vy = p->v;
       p->y += p->vy;
 
-      if (p->y > (250 + 40) * 64) {
-        p->x = ((rnd() % (500 * 64)) - (250 * 64));
-        p->y = (-250 - 40 - (rnd() % 250)) * 64;
+      if (p->y > 290_px) {
+        p->x = (rnd() % 500_px) - 250_px;
+        p->y = -PixelToWorld(290 + (rnd() % 250));
         p->vy = ((4 - p->GrpID) * 32 * 3);
         p->v = p->vy;
         p->a = 0;
@@ -667,9 +667,9 @@ void EffectManager::MoveStg4Rocks() {
       p->y += p->vy;
 
       if (p->count > 60 * 2) {
-        if (p->y > (250 + 40) * 64 || p->y < (-250 - 40) * 64) {
-          p->x = ((rnd() % (500 * 64)) - (250 * 64));
-          p->y = (-250 - 40 - (rnd() % 250)) * 64;
+        if (p->y > 290_px || p->y < -290_px) {
+          p->x = (rnd() % 500_px) - 250_px;
+          p->y = -PixelToWorld(290 + (rnd() % 250));
           p->vy = ((4 - p->GrpID) * 32);
           p->v = p->vy;
         }
@@ -682,9 +682,9 @@ void EffectManager::MoveStg4Rocks() {
         break;
       }
 
-      if (p->y > (250 + 40) * 64 || p->y < (-250 - 40) * 64) {
-        p->x = ((rnd() % (500 * 64)) - (250 * 64));
-        p->y = ((250 + 40) * 64) + (rnd() % 250);
+      if (p->y > 290_px || p->y < -290_px) {
+        p->x = (rnd() % 500_px) - 250_px;
+        p->y = 290_px + (rnd() % 250);
         p->vy = (-(4 - p->GrpID) * 32 * 3);
         p->v = p->vy;
         p->a = 0;
@@ -725,7 +725,7 @@ void EffectManager::MoveStg4Rocks() {
       break;
 
     case STG4ROCK_LEAVE:
-      if (p->y > (500 + 40) * 64) {
+      if (p->y > 540_px) {
         break;
       } else {
         p->y += p->vy;
@@ -733,7 +733,7 @@ void EffectManager::MoveStg4Rocks() {
       break;
 
     case STG4ROCK_END:
-      if (p->y > (500 + 40) * 64) {
+      if (p->y > 540_px) {
         {
           break;
         }

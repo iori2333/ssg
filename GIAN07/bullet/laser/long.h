@@ -76,7 +76,8 @@ struct LaserLong : BulletBase<LongLaserSpawnInfo, LongLaserUpdateInfo> {
   bool IsDead() const override;
   void Kill() override;
   void Spawn(const LongLaserSpawnInfo &info) override;
-  [[nodiscard]] HitResult CheckHit(int player_x, int player_y) const override;
+  [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
+                                   int player_radius) const override;
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
   void RenderDebugHitbox(int mode) const override;
 

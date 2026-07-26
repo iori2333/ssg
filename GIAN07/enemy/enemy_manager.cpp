@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <limits>
 #include <utility>
 
@@ -114,9 +115,14 @@ void EnemyManager::BeginActorFrame(EnemyActor &actor,
 }
 
 void EnemyManager::CheckPlayerCollision(const EnemyActor &actor) const {
-  if (HITCHK(actor.x, player_->X(), actor.hitbox_half_width) &&
-      HITCHK(actor.y, player_->Y(), actor.hitbox_half_height) &&
-      player_->IsInvincible() == 0 && (actor.flag & EF_HITSB) != 0) {
+  const int dx =
+      std::max(std::abs(player_->X() - actor.x) - actor.hitbox_half_width, 0);
+  const int dy =
+      std::max(std::abs(player_->Y() - actor.y) - actor.hitbox_half_height, 0);
+  const auto radius = static_cast<int64_t>(player_->HitRadius());
+  if (static_cast<int64_t>(dx) * dx + static_cast<int64_t>(dy) * dy <=
+          radius * radius &&
+      !player_->IsInvincible() && (actor.flag & EF_HITSB) != 0) {
     player_->OnHit();
   }
 }

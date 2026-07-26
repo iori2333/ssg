@@ -32,7 +32,8 @@ template <typename SI, typename UI = Empty> struct BulletBase {
   virtual bool IsDead() const = 0;
   virtual void Kill() = 0;
   virtual void Spawn(const SI &info) = 0;
-  virtual HitResult CheckHit(int player_x, int player_y) const = 0;
+  virtual HitResult CheckHit(int player_x, int player_y,
+                             int player_radius) const = 0;
   virtual UpdateResult Update(const UI &info = {}) = 0;
   virtual void RenderDebugHitbox(int mode) const = 0;
 

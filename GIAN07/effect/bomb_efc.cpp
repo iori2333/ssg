@@ -134,7 +134,7 @@ void EffectManager::MoveBombEffectSTD(BombEfcCtrl *p) {
   x = p->x;
   y = p->y;
   const auto t = p->count;
-  v = sinl((t / 2) - 64, 200 * 64) + (200 * 64);
+  v = sinl((t / 2) - 64, 200_px) + 200_px;
 
   for (auto &it : p->Obj) {
     auto *target = &it;

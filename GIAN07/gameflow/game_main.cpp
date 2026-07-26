@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <chrono>
 #include <format>
+#include <utility>
 
 #include "demo_manager.h"
 #include "demo_play.h"
@@ -39,6 +40,10 @@
 #include "util/ut_math.h"
 
 constexpr WINDOW_POINT MAIN_WINDOW_TOPLEFT = {400, 250};
+
+constexpr uint8_t PlayerTypeIndex(PlayerType type) {
+  return std::to_underlying(type);
+}
 
 namespace Version {
 struct LINE {
@@ -201,7 +206,7 @@ void GameFlowManager::ScoreDraw() {
 
   for (i = 0; i < 5; i++) {
     v = (GameFlow.ctx.scores.score_strings[i].x - ((50 + (i * 24)) << 6)) / 12;
-    if (v > 64 * 2) {
+    if (v > 2_px) {
       // v = max(v,20*64);
       GameFlow.ctx.scores.score_strings[i].x -= v;
     } else {
@@ -531,7 +536,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   }
   current_name.Score = GameFlow.ctx.player.Score();
   current_name.Evade = GameFlow.ctx.player.GrazeSum();
-  current_name.Weapon = GameFlow.ctx.player.Weapon();
+  current_name.Weapon = PlayerTypeIndex(GameFlow.ctx.player.Type());
   if (GameFlow.ctx.game.stage == StageId::EXTRA) {
     current_name.Stage = 1;
   } else {
@@ -588,7 +593,6 @@ void GameSTD_Init() {
   GameFlow.ctx.player.Bind(*GameFlow.ctx.game_cfg);
   GameFlow.ctx.player.Bind(*GameFlow.ctx.input_cfg);
 
-  GameFlow.ctx.player.SetMaidShotIndices();
   GameFlow.ctx.enemies.Reset();
   GameFlow.ctx.ui.UpdateBossHud(GameFlow.ctx.enemies.BossHud());
   GameFlow.ctx.bullets.Init();
@@ -621,12 +625,12 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GameSTD_Init();
   GameFlow.ctx.game.ResetRank();
 
+  GameFlow.ctx.player.SelectType(PlayerType::Wide);
   GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
                                  GameFlow.ctx.game_cfg->bomb_stock);
   GrpBackend_SetClip(GRP_RES_RECT);
 
   weapon_key_wait = 1;
-  GameFlow.ctx.player.BeginWeaponPreview();
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
@@ -1005,6 +1009,7 @@ void GameProc(bool & /*unused*/) {
   //		count = 30;
   //	}
   GameMove();
+  GameFlow.ctx.demos.UpdateLastRecordedInput(Key_Data);
   if (GameFlow.current_state != GameState::Game) {
     return;
   }
@@ -1160,14 +1165,10 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
   deg += spd;
   if (deg >= 85 || deg <= -85) {
-    // if(deg>=64 || deg<=-64){
-    // if(spd<0) GameFlow.ctx.player.Weapon() =
-    // (GameFlow.ctx.player.Weapon()+3)%4; else GameFlow.ctx.player.Weapon() =
-    // (GameFlow.ctx.player.Weapon()+1)%4;
     if (spd < 0) {
-      GameFlow.ctx.player.RotateWeapon(-1);
+      GameFlow.ctx.player.RotateType(-1);
     } else {
-      GameFlow.ctx.player.RotateWeapon(1);
+      GameFlow.ctx.player.RotateType(1);
     }
     spd = 0;
     deg = 0;
@@ -1205,7 +1206,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   switch (Key_Data) {
   case KEY_RIGHT:
     if (spd < 0) {
-      GameFlow.ctx.player.RotateWeapon(-1);
+      GameFlow.ctx.player.RotateType(-1);
       deg += 85;
     }
     spd = 3;
@@ -1213,7 +1214,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
   case KEY_LEFT:
     if (spd > 0) {
-      GameFlow.ctx.player.RotateWeapon(1);
+      GameFlow.ctx.player.RotateType(1);
       deg -= 85;
     }
     spd = -3;
@@ -1225,13 +1226,13 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       break;
     }
     if (GameFlow.ctx.game.stage == StageId::EXTRA) {
-      if (((1 << GameFlow.ctx.player.Weapon())) == 0) {
+      if (((1 << PlayerTypeIndex(GameFlow.ctx.player.Type()))) == 0) {
         break;
       }
     }
 
-    GameFlow.ctx.player.CommitWeaponSelection();
-    GameFlow.ctx.player.SetMaidShotIndices();
+    GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
+                                   GameFlow.ctx.game_cfg->bomb_stock);
     count = 0;
 
     Snd_SEPlay(SfxId::Select);
@@ -1296,9 +1297,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpSurface_Blit({(400 - 28 + 4), 420}, SURFACE_ID::SYSTEM, rc);
 
     for (i = 0; i < 3; i++) {
-      // for(i=0;i<4;i++){
-      // d = (-i+GameFlow.ctx.player.Weapon())*64 + deg - 64;
-      d = ((-i + GameFlow.ctx.player.Weapon()) * 85) + deg - 64;
+      d = ((-i + PlayerTypeIndex(GameFlow.ctx.player.Type())) * 85) + deg - 64;
       x = 120 + cosl(d, 90) - (56 / 2);
       y = 260 + sinl(d, 110) - (48 / 2);
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src[i]);
@@ -1313,7 +1312,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
         continue;
       }
 
-      d = ((-i + GameFlow.ctx.player.Weapon()) * 85) + deg - 64;
+      d = ((-i + PlayerTypeIndex(GameFlow.ctx.player.Type())) * 85) + deg - 64;
       x = 120 + cosl(d, 90) - (56 / 2);
       y = 260 + sinl(d, 110) - (48 / 2);
       GrpGeom->DrawBoxA(x, y, (x + 56), (y + 48));
@@ -1322,31 +1321,27 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     GameFlow.ctx.player.SetPower(static_cast<uint8_t>(std::min(count, 255)));
     if (GameFlow.ctx.player.Power() < 31) {
-      GameFlow.ctx.player.ClearLaserState();
+      GameFlow.ctx.player.ClearContinuousAttack();
     }
 
     GameFlow.ctx.enemies.ResetHomingTarget();
     Key_Data = KEY_TAMA | shift_held;
 
     GameFlow.ctx.player.ClearInvincibility();
-    GameFlow.ctx.player.SetPosition((400 * 64) + sinl((count / 3) * 6, 60 * 64),
-                                    (350 * 64) +
-                                        sinl((count / 3) * 4, 30 * 64));
+    GameFlow.ctx.player.SetPosition(400_px + sinl((count / 3) * 6, 60_px),
+                                    350_px + sinl((count / 3) * 4, 30_px));
 
-    GameFlow.ctx.player.Update(GameFlow.ctx.enemies);
-    GameFlow.ctx.player.MoveMaidShot(GameFlow.ctx.enemies);
+    GameFlow.ctx.player.Update(GameFlow.ctx.enemies, Key_Data);
 
     GrpBackend_SetClip({(400 - 110), (400 - 300 + 2), (400 + 110), (400 + 10)});
     for (x = 400 - 110 - 2; x < 400 + 110; x += 32) {
       for (y = 400 - 300 + 2 + ((count * 2) % 32) - 32; y < 400 + 10; y += 32) {
-        d = GameFlow.ctx.player.Weapon() << 4;
         rc = PIXEL_LTWH{224, 256, 32, 32};
-        // rc = PIXEL_LTWH{ d, (296 - 24), 16, 16 };
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, rc);
       }
     }
     GameFlow.ctx.player.Draw();
-    GameFlow.ctx.player.DrawMaidShot();
+    GameFlow.ctx.player.DrawProjectiles();
 
     rc = PIXEL_LTWH{72, (272 + 16), 56, 8};
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
@@ -1373,13 +1368,6 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     }
     GrpGeom->Unlock();
 
-    //	HDC		hdc;
-    //	char	buf[100];
-    //	DxObj.Back->GetDC(&hdc);
-    //	sprintf(buf,"GameFlow.ctx.player.Weapon() =
-    //%d",GameFlow.ctx.player.Weapon()); TextOut(hdc,0,0,buf,strlen(buf));
-    //	DxObj.Back->ReleaseDC(hdc);
-    //
     Grp_Flip();
   }
 }
@@ -1513,8 +1501,8 @@ void HandleStageTransition(stage::StageTransition transition) {
       return;
     }
     if (GameFlow.ctx.game.level != GameLevel::EASY) {
-      GameFlow.ctx.game.extra_stg_flags |=
-          static_cast<uint8_t>(1U << GameFlow.ctx.player.Weapon());
+      GameFlow.ctx.game.extra_stg_flags |= static_cast<uint8_t>(
+          1U << PlayerTypeIndex(GameFlow.ctx.player.Type()));
     }
     GameFlow.ctx.save_config();
     (void)GameFlow.ctx.ending.Init();
@@ -1562,13 +1550,28 @@ void GameMove() {
   Effects.MoveWarningEffect();
   Effects.MoveScreenEffect();
 
-  // Changed position of these two lines
-  GameFlow.ctx.player.Update(GameFlow.ctx.enemies);
-  GameFlow.ctx.player.MoveMaidShot(GameFlow.ctx.enemies);
+  GameFlow.ctx.player.Update(GameFlow.ctx.enemies, Key_Data);
   GameFlow.ctx.game.Update(GameFlow.ctx.stage.Frame());
 }
 
 void GameDraw() {
+  const GameplayHudModel hud_model{
+      .score = GameFlow.ctx.player.Score(),
+      .bombs = GameFlow.ctx.player.Bombs(),
+      .lives = GameFlow.ctx.player.Lives(),
+      .credits = GameFlow.ctx.player.Credits(),
+      .graze_count = GameFlow.ctx.player.GrazeCount(),
+      .graze_wait_time = GameFlow.ctx.player.GrazeWaitTime(),
+      .miss_count = GameFlow.ctx.player.MissCount(),
+      .bomb_used = GameFlow.ctx.player.BombUsed(),
+      .deathbomb_count = GameFlow.ctx.player.DeathbombCount(),
+      .star_counter = GameFlow.ctx.player.StarCounter(),
+      .star_threshold = GameFlow.ctx.player.StarThreshold(),
+      .rank = GameFlow.ctx.game.rank,
+      .level_name = GameFlow.ctx.game.LevelName(),
+      .practice_mode = GameFlow.ctx.game_cfg->practice_mode,
+  };
+
   GrpBackend_Clear();
 
   GameFlow.ctx.stage.Draw(Effects);
@@ -1576,13 +1579,13 @@ void GameDraw() {
 
   GameFlow.ctx.enemies.DrawBosses();
 
-  GameFlow.ctx.player.DrawWideBomb(); // Probably fine here but...
+  GameFlow.ctx.player.DrawBombBackground();
 
   Effects.DrawBombEffects();
 
   GameFlow.ctx.enemies.DrawRegular();
 
-  GameFlow.ctx.player.DrawMaidShot();
+  GameFlow.ctx.player.DrawProjectiles();
 
   GameFlow.ctx.player.Draw();
 
@@ -1596,16 +1599,7 @@ void GameDraw() {
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(
         GameFlow.ctx.debug_cfg->hitbox_display);
-    auto *gp = GrpGeom_Poly();
-    if (gp != nullptr) {
-      const RGB216 kBlack{0, 0, 0};
-      gp->SetColor(kBlack);
-      gp->SetAlphaNorm(204);
-      const int px = GameFlow.ctx.player.X() >> 6;
-      const int py = GameFlow.ctx.player.Y() >> 6;
-      const int pr = std::ceil(PLAYER_HITBOX_RADIUS / 64.0);
-      Geometry::CircleF_Approximated(*gp, {px, py}, pr, true);
-    }
+    GameFlow.ctx.player.DrawDebugHitbox();
   }
 
   // static uint8_t test = 0;
@@ -1617,7 +1611,7 @@ void GameDraw() {
   // DrawWarning();
 
   Effects.DrawStringEffects();
-  GameFlow.ctx.player.DrawStatus();
+  GameFlow.ctx.ui.DrawTopHud(hud_model);
 
   GameFlow.ctx.ui.DrawBossHud(GameFlow.ctx.stage.Frame());
   Effects.DrawScreenEffect();
@@ -1626,7 +1620,7 @@ void GameDraw() {
   // GrpBackend_SetClip(PLAYFIELD_CLIP);
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  StdStatusOutput(GameFlow.ctx.game.practice_mode);
+  GameFlow.ctx.ui.DrawSidebarHud(hud_model);
   GrpBackend_SetClip({X_MIN, Y_MIN, (X_MAX + 1), (Y_MAX + 1)});
 }
 
@@ -1690,8 +1684,8 @@ static void SpawnGalleryBullets() {
       if (c == 0xFF) {
         continue;
       }
-      const int wx = (x0 + col * dx) * 64;
-      const int wy = (y0 + row * dy) * 64;
+      const int wx = PixelToWorld(x0 + col * dx);
+      const int wy = PixelToWorld(y0 + row * dy);
       GameFlow.ctx.bullets.PlaceDisplayBullet(wx, wy, c);
     }
   }
@@ -1719,16 +1713,7 @@ static void BulletGalleryProc(bool & /*quit*/) {
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(
         GameFlow.ctx.debug_cfg->hitbox_display);
-    auto *gp = GrpGeom_Poly();
-    if (gp != nullptr) {
-      const RGB216 kBlack{0, 0, 0};
-      gp->SetColor(kBlack);
-      gp->SetAlphaNorm(204);
-      const int px = GameFlow.ctx.player.X() >> 6;
-      const int py = GameFlow.ctx.player.Y() >> 6;
-      const int pr = std::ceil(PLAYER_HITBOX_RADIUS / 64.0);
-      Geometry::CircleF_Approximated(*gp, {px, py}, pr, true);
-    }
+    GameFlow.ctx.player.DrawDebugHitbox();
   }
 
   GalleryDrawLabels();

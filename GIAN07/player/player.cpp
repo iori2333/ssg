@@ -6,10 +6,10 @@
 #include <format>
 #include <utility>
 
+#include "loadout/homing_loadout.h"
+#include "loadout/laser_loadout.h"
+#include "loadout/wide_loadout.h"
 #include "player.h"
-#include "weapon/homing_form.h"
-#include "weapon/laser_form.h"
-#include "weapon/wide_form.h"
 
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
@@ -19,8 +19,6 @@
 #include "core/level.h"
 #include "effect/effect_manager.h"
 #include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
-#include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
@@ -28,22 +26,7 @@
 
 // --- Player method implementations ---
 
-// Constructor: create weapon_ form strategy objects.
-Player::Player() noexcept {
-  forms_[0] = std::make_unique<WideForm>(*this);
-  forms_[1] = std::make_unique<WideFocusForm>(*this);
-  forms_[2] = std::make_unique<HomingForm>(*this);
-  forms_[3] = std::make_unique<HomingFocusForm>(*this);
-  forms_[4] = std::make_unique<LaserForm>(*this);
-  forms_[5] = std::make_unique<LaserFocusForm>(*this);
-}
-
-WeaponForm *Player::BaseForm_() const { return forms_[2 * weapon_].get(); }
-
-WeaponForm *Player::ActiveForm_() const {
-  const bool focus = (Key_Data & KEY_SHIFT) != 0;
-  return forms_[weapon_ * 2 + (focus ? 1 : 0)].get();
-}
+Player::Player() : loadout_(std::make_unique<WideLoadout>()) {}
 
 bool Player::IsMainShotFrame_(uint16_t t) const {
   return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
@@ -55,211 +38,71 @@ bool Player::IsSubShotFrame_(uint16_t t) const {
 }
 
 void Player::SpawnShot(const PlayerShotSpawnInfo &si) {
-  for (uint8_t i = 0; i < si.n; i++) {
+  for (uint8_t i = 0; i < si.count; i++) {
     auto *t = maid_tama_.Alloc();
     if (!t) {
       return;
     }
 
-    uint8_t di = i % si.n;
+    uint8_t di = i % si.count;
     di++;
     uint8_t d;
-    if ((si.n & 1) != 0) {
-      d = si.d + ((di >> 1) * si.dw * (1 - ((di & 1) << 1)));
+    if ((si.count & 1) != 0) {
+      d = si.direction +
+          ((di >> 1) * si.direction_step * (1 - ((di & 1) << 1)));
     } else {
-      d = si.d - (si.dw >> 1) + ((di >> 1) * si.dw * (1 - ((di & 1) << 1)));
+      d = si.direction - (si.direction_step >> 1) +
+          ((di >> 1) * si.direction_step * (1 - ((di & 1) << 1)));
     }
 
-    t->x_ = t->tx_ = si.x;
-    t->y_ = t->ty_ = si.y;
-    t->v_ = t->v0_ = si.v;
-    t->a_ = si.a;
-    t->d_ = d;
-    t->d16_ = (d << 8);
-    t->vx_ = cosl(d, si.v);
-    t->vy_ = sinl(d, si.v);
-    t->vd_ = si.vd;
-    t->c_ = si.c;
-    t->type_ = si.type;
-    t->rep_ = si.rep;
-    t->effect_ = 0;
-    t->count_ = 0;
-    t->flag_ = 0;
+    t->x_ = si.x;
+    t->y_ = si.y;
+    t->speed_ = si.speed;
+    t->acceleration_ = si.acceleration;
+    t->direction_ = d;
+    t->velocity_x_ = cosl(d, si.speed);
+    t->velocity_y_ = sinl(d, si.speed);
+    t->turn_rate_ = si.turn_rate;
+    t->kind_ = si.kind;
+    t->motion_ = si.motion;
+    t->age_ = 0;
+    t->pending_removal_ = false;
   }
 }
 
-void Player::DrawWideBomb() const {
-  static PIXEL_LTRB data[6] = {
-      {0, 0, 210, 240},           {210, 0, 210 * 2, 240},
-      {210 * 2, 0, 210 * 3, 240}, {0, 240, 210, 480},
-      {210, 240, 210 * 2, 480},   {210 * 2, 240, 210 * 3, 480}};
+void Player::DrawBombBackground() const {
+  loadout_->DrawBombBackground(*this, bomb_time_);
+}
 
-  int x = 0;
-  int y = 0;
-  int t = 0;
+int Player::HitRadiusPixels_() const {
+  return (HitRadius() + WORLD_COORD_SCALE - 1) / WORLD_COORD_SCALE;
+}
 
-  constexpr int BX_MIN = (X_MIN + 100);
-  constexpr int BY_MIN = (Y_MIN + 100);
-
-  if (weapon_ != 0 || bomb_time_ == 0) {
+void Player::DrawFocusHitbox_() const {
+  if (!focused_ || invincibility_time_ >= RESPAWN_INVINCIBILITY_DURATION) {
     return;
   }
 
-  x = BX_MIN;
-  y = BY_MIN;
-
-  if (bomb_time_ > 80) {
-    t = (((60 * 4) - bomb_time_) / 4);
-    t = std::max(t, 0);
-    t = std::min(t, 5);
-  } else {
-    t = (bomb_time_ / 4);
-    t = std::min(t, 5);
-  }
-
-  GrpSurface_Blit({x, y}, SURFACE_ID::BOMBER, data[t]);
-}
-
-void Player::DrawLaserBomb_() const {
-  constexpr RGBA col_channeled = RGB216{0, 0, 5}.ToRGB().WithAlpha(0xFF);
-  VERTEX_XY p[4];
-  int i = 0;
-  int w = 0;
-  int lx = 0;
-  int ly = 0;
-  int wx = 0;
-  int wy = 0;
-  const auto LaserDeg = GetLaserDeg();
+  const WINDOW_POINT center{x_ >> WORLD_COORD_BITS, y_ >> WORLD_COORD_BITS};
 
   GrpGeom->Lock();
-  if (LaserDeg < 58) {
-    for (w = 3; w > 0; w--) {
-      for (i = -3; i <= 3; i++) {
-        const auto d = GetRightLaserDeg(LaserDeg, i);
+  GrpGeom->SetColor({5, 5, 5});
+  GeomCircleF(center, HitRadiusPixels_());
+  GrpGeom->SetColor({5, 2, 2});
+  GeomCircleF(center, 1);
+  GrpGeom->Unlock();
+}
 
-        lx = cosl(d, 850);
-        ly = sinl(d, 850);
-        wx = cosl(d + 64, w);
-        wy = sinl(d + 64, w);
-        p[0].x = (opx_ >> 6) + SBOPT_DX + 0 + wx;
-        p[0].y = (opy_ >> 6) + 0 + wy;
-        p[3].x = (opx_ >> 6) + SBOPT_DX + 0 - wx;
-        p[3].y = (opy_ >> 6) + 0 - wy;
-        p[2].x = (opx_ >> 6) + SBOPT_DX + lx - wx;
-        p[2].y = (opy_ >> 6) + ly - wy;
-        p[1].x = (opx_ >> 6) + SBOPT_DX + lx + wx;
-        p[1].y = (opy_ >> 6) + ly + wy;
-        if (auto *gp = GrpGeom_Poly()) {
-          gp->SetAlphaOne();
-          GeomGrdRectA(*gp, p, col_channeled);
-        } else if (auto *gf = GrpGeom_FB()) {
-          switch (w) {
-          case 1:
-            gf->SetColor({4, 4, 5});
-            break;
-          case 2:
-            gf->SetColor({2, 2, 5});
-            break;
-          case 3:
-            gf->SetColor({0, 0, 5});
-            break;
-          }
-          gf->DrawTriangleFan(p);
-        }
-      }
-      for (i = -3; i <= 3; i++) {
-        const auto d = GetLeftLaserDeg(LaserDeg, i);
-
-        lx = cosl(d, 850);
-        ly = sinl(d, 850);
-        wx = cosl(d + 64, w);
-        wy = sinl(d + 64, w);
-        p[0].x = (opx_ >> 6) - SBOPT_DX + 0 + wx;
-        p[0].y = (opy_ >> 6) + 0 + wy;
-        p[3].x = (opx_ >> 6) - SBOPT_DX + 0 - wx;
-        p[3].y = (opy_ >> 6) + 0 - wy;
-        p[2].x = (opx_ >> 6) - SBOPT_DX + lx - wx;
-        p[2].y = (opy_ >> 6) + ly - wy;
-        p[1].x = (opx_ >> 6) - SBOPT_DX + lx + wx;
-        p[1].y = (opy_ >> 6) + ly + wy;
-        if (auto *gp = GrpGeom_Poly()) {
-          gp->SetAlphaOne();
-          GeomGrdRectA(*gp, p, col_channeled);
-        } else if (auto *gf = GrpGeom_FB()) {
-          switch (w) {
-          case 1:
-            gf->SetColor({4, 4, 5});
-            break;
-          case 2:
-            gf->SetColor({2, 2, 5});
-            break;
-          case 3:
-            gf->SetColor({0, 0, 5});
-            break;
-          }
-          gf->DrawTriangleFan(p);
-        }
-      }
-      if (GrpGeom_Poly() != nullptr) {
-        break;
-      }
-    }
-  } else if (LaserDeg < 150) {
-    uint8_t c = 0;
-    for (w = 12 - ((LaserDeg - 64) / 8); w > 0; w -= 2, c++) {
-      for (i = -3; i <= 3; i++) {
-        const auto d = GetRightLaserDeg(LaserDeg, i);
-
-        lx = cosl(d, 850);
-        ly = sinl(d, 850);
-        wx = cosl(d + 64, w);
-        wy = sinl(d + 64, w);
-        p[0].x = (opx_ >> 6) + SBOPT_DX + 0 + wx;
-        p[0].y = (opy_ >> 6) + 0 + wy;
-        p[3].x = (opx_ >> 6) + SBOPT_DX + 0 - wx;
-        p[3].y = (opy_ >> 6) + 0 - wy;
-        p[2].x = (opx_ >> 6) + SBOPT_DX + lx - wx;
-        p[2].y = (opy_ >> 6) + ly - wy;
-        p[1].x = (opx_ >> 6) + SBOPT_DX + lx + wx;
-        p[1].y = (opy_ >> 6) + ly + wy;
-        if (auto *gp = GrpGeom_Poly()) {
-          gp->SetAlphaOne();
-          GeomGrdRectA(*gp, p, col_channeled);
-        } else if (auto *gf = GrpGeom_FB()) {
-          gf->SetColor({c, c, 5U});
-          gf->DrawTriangleFan(p);
-        }
-      }
-      for (i = -3; i <= 3; i++) {
-        const auto d = GetLeftLaserDeg(LaserDeg, i);
-
-        lx = cosl(d, 850);
-        ly = sinl(d, 850);
-        wx = cosl(d + 64, w);
-        wy = sinl(d + 64, w);
-        p[0].x = (opx_ >> 6) - SBOPT_DX + 0 + wx;
-        p[0].y = (opy_ >> 6) + 0 + wy;
-        p[3].x = (opx_ >> 6) - SBOPT_DX + 0 - wx;
-        p[3].y = (opy_ >> 6) + 0 - wy;
-        p[2].x = (opx_ >> 6) - SBOPT_DX + lx - wx;
-        p[2].y = (opy_ >> 6) + ly - wy;
-        p[1].x = (opx_ >> 6) - SBOPT_DX + lx + wx;
-        p[1].y = (opy_ >> 6) + ly + wy;
-        if (auto *gp = GrpGeom_Poly()) {
-          gp->SetAlphaOne();
-          GeomGrdRectA(*gp, p, col_channeled);
-        } else if (auto *gf = GrpGeom_FB()) {
-          gf->SetColor({c, c, 5U});
-          gf->DrawTriangleFan(p);
-        }
-      }
-      if (GrpGeom_Poly() != nullptr) {
-        break;
-      }
-    }
+void Player::DrawDebugHitbox() const {
+  auto *geometry = GrpGeom_Poly();
+  if (geometry == nullptr) {
+    return;
   }
 
-  GrpGeom->Unlock();
+  const WINDOW_POINT center{x_ >> WORLD_COORD_BITS, y_ >> WORLD_COORD_BITS};
+  geometry->SetColor({0, 0, 0});
+  geometry->SetAlphaNorm(204);
+  Geometry::CircleF_Approximated(*geometry, center, HitRadiusPixels_(), true);
 }
 
 void Player::Draw() {
@@ -283,86 +126,30 @@ void Player::Draw() {
   draw_flag = 1 - draw_flag;
   draw_flag2++;
 
-  if (muteki_ == VIVDEAD_VAL) {
+  if (invincibility_time_ == RESPAWN_INVINCIBILITY_DURATION) {
     draw_flag = 0;
   }
 
-  if (muteki_ == 0 || (draw_flag != 0U)) {
+  if (!IsInvincible() || (draw_flag != 0U)) {
     src = PIXEL_LTWH{(384 + (grp_id_ * 32)), 128, (16 * 2), (16 * 3)};
     GrpSurface_Blit({sx, sy}, SURFACE_ID::SYSTEM, src);
   }
 
-  if ((Key_Data & KEY_SHIFT) != 0 && muteki_ < VIVDEAD_VAL) {
-    const auto cx = (x_ >> 6);
-    const auto cy = (y_ >> 6);
-
-    GrpGeom->Lock();
-
-    const int hit_r = std::ceil(PLAYER_HITBOX_RADIUS / 64.0);
-
-    GrpGeom->SetColor({5, 5, 5});
-    GeomCircleF({cx, cy}, hit_r);
-
-    GrpGeom->SetColor({5, 2, 2});
-    GeomCircleF({cx, cy}, 1);
-
-    GrpGeom->Unlock();
-  }
+  DrawFocusHitbox_();
 
   if (((exp_ + 1) >> 5) != 0) {
-    if (muteki_ < VIVDEAD_VAL) {
-      const int opt_off = (weapon_ == 2 && (Key_Data & KEY_SHIFT) != 0)
-                              ? (SBOPT_DX / 2)
-                              : SBOPT_DX;
-      src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
+    if (invincibility_time_ < RESPAWN_INVINCIBILITY_DURATION) {
+      const int opt_off = loadout_->OptionOffset(focused_);
+      src = VivBit[loadout_->OptionSprite()][(draw_flag2 >> 2) & 1];
       GrpSurface_Blit({(ox + opt_off), oy}, SURFACE_ID::SYSTEM, src);
-      src = VivBit[weapon_ & 3][(draw_flag2 >> 2) & 1];
       GrpSurface_Blit({(ox - opt_off), oy}, SURFACE_ID::SYSTEM, src);
     }
   }
 
-  if ((bomb_time_ != 0U) && weapon_ == 2) {
-    DrawLaserBomb_();
-  }
+  loadout_->DrawBombForeground(*this, bomb_time_);
 }
 
-void Player::DrawStatus() const {
-  int i = 0;
-  int temp = 0;
-  constexpr PIXEL_LTRB src = {0, 80, 128, (80 + 24)};
-
-  if (evade_c_ != 0U) {
-    GrpGeom->Lock();
-    GrpGeom->SetColor({5, 1, 0});
-    GrpGeom->SetAlphaOne();
-    for (i = 0; i <= 10; i++) {
-      temp = 128 + 9 + (evade_c_ >> 2) + (5 - i);
-      if (temp > (128 + 8)) {
-        GrpGeom->DrawBoxA((128 + 8), (16 + 3 + i), temp, (16 + 3 + i + 1));
-      }
-    }
-    GrpGeom->Unlock();
-  }
-  GrpSurface_Blit({128, 16}, SURFACE_ID::SYSTEM, src);
-  GrpPut57(128 + 95, 16 + 91 - 80, std::format("{:3}", evade_).c_str());
-
-  GrpPut16(128, 0, std::format("{:9}", score_).c_str());
-
-  GrpPut16(280, 0, std::format("       Bomb {}", bomb_).c_str());
-
-  for (i = 0; std::cmp_less(i, left_); i++) {
-    constexpr PIXEL_LTWH life_src = {608, 432, 16, 16};
-    GrpSurface_Blit({(280 + (i * 14)), 0}, SURFACE_ID::SYSTEM, life_src);
-  }
-}
-
-void Player::Update(EnemyManager &enemies) {
-  int vx = 0;
-  int vy = 0;
-  int v = 0;
-  constexpr int speed_tbl[] = {VIV_SPEED_WIDE, VIV_SPEED_HOMING,
-                               VIV_SPEED_LASER};
-
+void Player::UpdateStatus_() {
   // Decrease graze remaining time
   if (evade_c_ != 0U) {
     if ((bomb_time_ != 0U) && evade_c_ >= 2) {
@@ -385,15 +172,19 @@ void Player::Update(EnemyManager &enemies) {
   }
 
   // Decrease invincibility time (not during bomb_)
-  if ((muteki_ != 0U) && bomb_time_ == 0) {
-    muteki_--;
+  if ((invincibility_time_ != 0U) && bomb_time_ == 0) {
+    invincibility_time_--;
+  }
+  if (life_state_ == LifeState::Respawning &&
+      invincibility_time_ < RESPAWN_MOVEMENT_THRESHOLD) {
+    life_state_ = LifeState::Active;
   }
 
   // Deathbomb window countdown
   if (deathbomb_time_ != 0U) {
     deathbomb_time_--;
     if (deathbomb_time_ == 0U) {
-      OnDeath(false); // sound already played in OnHit
+      CommitDeath_();
     }
   }
 
@@ -411,34 +202,43 @@ void Player::Update(EnemyManager &enemies) {
   } else if (dscore_ >= 10) {
     score_ += 10, dscore_ -= 10;
   }
+}
 
-  // Enable held-button slowdown
+INPUT_BITS Player::PrepareInput_(INPUT_BITS input) {
   if (input_config_->z_spd_down_enabled) {
-    if ((Key_Data & KEY_TAMA) != 0) {
+    if ((input & KEY_TAMA) != 0) {
       if (shift_counter_ < 8) {
         shift_counter_++;
       } else {
-        Key_Data = Key_Data | KEY_SHIFT;
+        input |= KEY_SHIFT;
       }
     } else {
       shift_counter_ = 0;
     }
   }
 
-  if (muteki_ < MAID_MOVE_DISABLE_TIME) {
+  focused_ = (input & KEY_SHIFT) != 0;
+  return input;
+}
+
+void Player::UpdateMovement_(INPUT_BITS input) {
+  int vx = 0;
+  int vy = 0;
+  int v = 0;
+
+  if (!IsMovementDisabled()) {
     vx = vy = 0;
-    v = ((Key_Data & KEY_SHIFT) != 0) ? (speed_tbl[weapon_] / 3)
-                                      : speed_tbl[weapon_];
-    if ((Key_Data & KEY_UP) != 0) {
+    v = loadout_->MoveSpeed(focused_);
+    if ((input & KEY_UP) != 0) {
       vy -= v;
     }
-    if ((Key_Data & KEY_DOWN) != 0) {
+    if ((input & KEY_DOWN) != 0) {
       vy += v;
     }
-    if ((Key_Data & KEY_LEFT) != 0) {
+    if ((input & KEY_LEFT) != 0) {
       vx -= v;
     }
-    if ((Key_Data & KEY_RIGHT) != 0) {
+    if ((input & KEY_RIGHT) != 0) {
       vx += v;
     }
 
@@ -475,47 +275,42 @@ void Player::Update(EnemyManager &enemies) {
     grp_id_ = 1;
   }
 
-  opx_ = x_;
-  opy_ = y_;
+  UpdateOptionPosition_(vx, vy);
+}
 
-  // Option processing
-  if (vx < 0) {
-    vx += 64;
-  }
-  if (vx > 0) {
-    vx -= 64;
-  }
-  if (vy < 0) {
-    vy += 64;
-  }
-  if (vy > 0) {
-    vy -= 64;
-  }
+void Player::UpdateOptionPosition_(int movement_x, int movement_y) {
+  option_lag_x_ -= std::clamp(option_lag_x_, -1_px, 1_px);
+  option_lag_y_ -= std::clamp(option_lag_y_, -1_px, 1_px);
 
-  if (vx < 0 && vx < 6 * 64) {
-    vx += 2 * 64;
+  if (movement_x < 0 && option_lag_x_ < 6_px) {
+    option_lag_x_ += 2_px;
   }
-  if (vx > 0 && vx > -6 * 64) {
-    vx -= 2 * 64;
+  if (movement_x > 0 && option_lag_x_ > -6_px) {
+    option_lag_x_ -= 2_px;
   }
-  if (vy < 0 && vy < 10 * 64) {
-    vy += 2 * 64;
+  if (movement_y < 0 && option_lag_y_ < 10_px) {
+    option_lag_y_ += 2_px;
   }
-  if (vy > 0 && vy > -10 * 64) {
-    vy -= 2 * 64;
+  if (movement_y > 0 && option_lag_y_ > -10_px) {
+    option_lag_y_ -= 2_px;
   }
 
-  opx_ = x_ + vx;
-  opy_ = y_ + vy + (64 * 6);
+  opx_ = x_ + option_lag_x_;
+  opy_ = y_ + option_lag_y_ + 6_px;
+}
 
-  // Bullet & bomb_ setup
-  SetMaidShot(enemies);
+void Player::Update(EnemyManager &enemies, INPUT_BITS input) {
+  UpdateStatus_();
+  input = PrepareInput_(input);
+  UpdateMovement_(input);
+  UpdateWeapons_(enemies, input);
 
   if (bomb_time_ != 0U) {
     bullets_->Clear();
   }
 
   buzz_sound_ = false;
+  UpdateProjectiles_(enemies);
 }
 
 void Player::Initialize(int player_stock, int bomb_stock) {
@@ -545,14 +340,11 @@ void Player::Initialize(int player_stock, int bomb_stock) {
 
   grp_id_ = 1;
 
-  muteki_ = VIVDEAD_VAL;
+  invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
+  life_state_ = LifeState::Respawning;
 
   game_over_ = false;
-
-  toge_ex_ = 0;
   toge_time_ = 0;
-  lay_time_ = 0;
-  lay_grp_ = 0;
   shift_counter_ = 0;
 
   buzz_sound_ = false;
@@ -560,102 +352,113 @@ void Player::Initialize(int player_stock, int bomb_stock) {
 
 void Player::PrepareNextStage() {
   x_ = opx_ = SX_START;
-  y_ = opx_ = SY_START;
-  vx_ = 0;
-  vy_ = 0;
+  y_ = opy_ = SY_START;
+  option_lag_x_ = option_lag_y_ = 0;
 
-  toge_ex_ = 0;
   toge_time_ = 0;
-  lay_time_ = 0;
-  lay_grp_ = 0;
+  loadout_->Reset();
+  maid_tama_.Init();
 
-  muteki_ = VIVDEAD_VAL;
+  invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
   bomb_time_ = 0;
   deathbomb_time_ = 0;
+  life_state_ = LifeState::Respawning;
   shift_counter_ = 0;
-
+  focused_ = false;
   buzz_sound_ = false;
 }
 
 void Player::OnHit() {
-  if (muteki_ != 0)
-    return;
-  if (deathbomb_time_ != 0)
-    return;
-
-  // Practice modes are handled inside OnDeath
-  if (game_->game_config_->practice_mode >= PracticeMode::AUTOBOMB) {
-    OnDeath(true);
+  if (IsInvincible()) {
     return;
   }
 
-  if (bomb_ > 0 && bomb_time_ == 0) {
-    // Enter deathbomb window with immediate feedback
-    Snd_SEPlay(SfxId::Dead);
-    Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
-    const auto window =
-        DEATHBOMB_WINDOW +
-        (static_cast<int>(GameLevel::LUNATIC) -
-         static_cast<int>(std::to_underlying(GameFlow.ctx.game.level))) *
-            2;
-    deathbomb_time_ = static_cast<uint16_t>(window);
-    muteki_ = static_cast<uint16_t>(window);
+  switch (game_config_->practice_mode) {
+  case PracticeMode::OFF:
+  case PracticeMode::AUTOBOMB:
+    if (bomb_ != 0U && bomb_time_ == 0U) {
+      EnterDeathbombWindow_();
+      if (game_config_->practice_mode == PracticeMode::AUTOBOMB) {
+        Key_Data |= KEY_BOMB;
+      }
+    } else {
+      PlayHitFeedback_();
+      CommitDeath_();
+    }
     return;
-  }
-
-  // No bomb_ stock — instant death
-  OnDeath(true);
-}
-
-void Player::OnDeath(bool play_se) {
-  int i = 0;
-
-  if (game_->game_config_->practice_mode == PracticeMode::INVINCIBLE) {
-    Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
-    for (i = 0; i < 50; i++) {
+  case PracticeMode::INVINCIBLE:
+    PlayHitFeedback_();
+    for (int i = 0; i < 50; i++) {
       Effects.SpawnFragment(x_, y_, FRG_HEART);
     }
-    if (play_se)
-      Snd_SEPlay(SfxId::Dead);
-    muteki_ = 30;
+    invincibility_time_ = PRACTICE_HIT_INVINCIBILITY_DURATION;
     return;
   }
+}
 
-  if (play_se) {
-    Snd_SEPlay(SfxId::Dead);
-    Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
+void Player::PlayHitFeedback_() const {
+  Snd_SEPlay(SfxId::Dead);
+  Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
+}
+
+void Player::EnterDeathbombWindow_() {
+  PlayHitFeedback_();
+  const auto window =
+      DEATHBOMB_WINDOW + (static_cast<int>(GameLevel::LUNATIC) -
+                          static_cast<int>(std::to_underlying(game_->level))) *
+                             2;
+  deathbomb_time_ = static_cast<uint16_t>(window);
+  life_state_ = LifeState::DeathbombWindow;
+}
+
+bool Player::ActivateBomb_(BombTrigger trigger) {
+  if (bomb_time_ != 0U || bomb_ == 0U || stage_->DialogueActive()) {
+    return false;
   }
 
-  // Auto bomb_: in practice mode with auto-bomb_ or higher, if bomb_ key is not
-  // pressed and bomb_ stock remains, automatically activate bomb_ instead of
-  // dying
-  if (game_->game_config_->practice_mode == PracticeMode::AUTOBOMB &&
-      ((Key_Data & KEY_BOMB) == 0) && (bomb_time_ == 0) && (bomb_ > 0) &&
-      (!stage_->DialogueActive())) {
-    static constexpr uint8_t bomb_time_tbl[4] = {60 * 4, 60 * 3, 60 * 2, 0};
-    bomb_time_ = bomb_time_tbl[weapon_ & 3];
-    muteki_ = BOMBMUTEKI_VAL;
-    bomb_--;
-    bomb_used_++;
-    game_->AddRank(-BOMB_RANK_DECR); // auto bomb_ decreases rank
-    bullets_->Clear();
-    return;
+  const bool rescuing_deathbomb = life_state_ == LifeState::DeathbombWindow;
+  if (trigger == BombTrigger::Manual &&
+      (invincibility_time_ != 0U || rescuing_deathbomb)) {
+    return false;
+  }
+  if (trigger == BombTrigger::Deathbomb && !rescuing_deathbomb) {
+    return false;
   }
 
-  for (i = 0; i < 50; i++) {
+  bomb_time_ = loadout_->BombDuration();
+  invincibility_time_ = BOMB_END_INVINCIBILITY_DURATION;
+  const uint8_t bomb_cost =
+      trigger == BombTrigger::Deathbomb && bomb_ >= DEATHBOMB_COST
+          ? DEATHBOMB_COST
+          : 1;
+  bomb_ -= bomb_cost;
+  bomb_used_++;
+  if (trigger == BombTrigger::Deathbomb) {
+    deathbomb_count_++;
+  }
+  deathbomb_time_ = 0;
+  life_state_ = LifeState::Active;
+  game_->AddRank(-BOMB_RANK_DECR);
+  bullets_->Clear();
+  return true;
+}
+
+void Player::CommitDeath_() {
+  for (int i = 0; i < 50; i++) {
     Effects.SpawnFragment(x_, y_, FRG_HEART);
   }
 
   x_ = opx_ = SX_START;
-  y_ = opx_ = SY_START;
-  vx_ = 0;
-  vy_ = 0;
+  y_ = opy_ = SY_START;
+  option_lag_x_ = option_lag_y_ = 0;
 
-  lay_time_ = 0;
-  lay_grp_ = 0;
+  loadout_->Reset();
 
   bomb_ = game_config_->bomb_stock;
-  muteki_ = VIVDEAD_VAL;
+  bomb_time_ = 0;
+  deathbomb_time_ = 0;
+  invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
+  life_state_ = LifeState::Respawning;
 
   game_->AddRank(-DEATH_RANK_DECR); // death decreases rank
 
@@ -756,27 +559,27 @@ void Player::PowerUp(uint8_t damage) {
   }
 }
 
-uint8_t Player::GetLaserDeg() const { return ((120 - bomb_time_) * 3) / 2; }
+void Player::SelectType(PlayerType type) {
+  if (loadout_ && loadout_->Type() == type) {
+    return;
+  }
 
-uint8_t Player::GetLeftOrRightLaserDeg_(uint8_t LaserDeg, int i) {
-  return ((LaserDeg < 58)
-              ? ((LaserDeg * 3) + ((i * (64 - LaserDeg)) / 2))
-              : ((58 * 3) + ((i * (64 - (std::min)(62, int{LaserDeg}))) / 2)));
+  switch (type) {
+  case PlayerType::Wide:
+    loadout_ = std::make_unique<WideLoadout>();
+    break;
+  case PlayerType::Homing:
+    loadout_ = std::make_unique<HomingLoadout>();
+    break;
+  case PlayerType::Laser:
+    loadout_ = std::make_unique<LaserLoadout>();
+    break;
+  }
 }
 
-uint8_t Player::GetRightLaserDeg(uint8_t LaserDeg, int i) {
-  return (64 + 48 - GetLeftOrRightLaserDeg_(LaserDeg, i));
-}
-
-uint8_t Player::GetLeftLaserDeg(uint8_t LaserDeg, int i) {
-  return (64 - 48 + GetLeftOrRightLaserDeg_(LaserDeg, i));
-}
-
-// --- New action methods ---
-
-void Player::RotateWeapon(int dir) {
-  // dir: +1 = forward, -1 = backward; wraps among 3 weapons.
-  weapon_ = (weapon_ + (dir < 0 ? 2 : 1)) % 3;
+void Player::RotateType(int dir) {
+  const auto current = std::to_underlying(Type());
+  SelectType(static_cast<PlayerType>((current + (dir < 0 ? 2 : 1)) % 3));
 }
 
 PlayerReward Player::AddStar(uint32_t n) {
@@ -809,105 +612,8 @@ void Player::ResetForContinue(int player_stock) {
 
 void Player::ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
                               uint8_t bombs) {
-  weapon_ = weapon;
+  SelectType(static_cast<PlayerType>(std::min<uint8_t>(weapon, 2)));
   exp_ = exp;
   left_ = left;
   bomb_ = bombs;
-}
-
-// --- Weapon-select preview ---
-
-void Player::SaveSnapshot_(StateSnapshot &s) const {
-  s.x = x_;
-  s.y = y_;
-  s.vx = vx_;
-  s.vy = vy_;
-  s.opx = opx_;
-  s.opy = opy_;
-  s.score = score_;
-  s.dscore = dscore_;
-  s.evade_sum = evade_sum_;
-  s.evadesc = evadesc_;
-  s.evade = evade_;
-  s.evade_c = evade_c_;
-  s.star_counter = star_counter_;
-  s.star_threshold = star_threshold_;
-  s.star_extend_count = star_extend_count_;
-  s.v = v_;
-  s.weapon = weapon_;
-  s.exp = exp_;
-  s.bomb = bomb_;
-  s.left = left_;
-  s.credit = credit_;
-  s.miss_count = miss_count_;
-  s.bomb_used = bomb_used_;
-  s.deathbomb_count = deathbomb_count_;
-  s.grp_id = grp_id_;
-  s.bomb_time = bomb_time_;
-  s.exp2 = exp2_;
-  s.muteki = muteki_;
-  s.deathbomb_time = deathbomb_time_;
-  s.lay_time = lay_time_;
-  s.lay_grp = lay_grp_;
-  s.toge_time = toge_time_;
-  s.toge_ex = toge_ex_;
-  s.shift_counter = shift_counter_;
-  s.game_over = game_over_;
-  s.buzz_sound = buzz_sound_;
-}
-
-void Player::RestoreSnapshot_(const StateSnapshot &s) {
-  x_ = s.x;
-  y_ = s.y;
-  vx_ = s.vx;
-  vy_ = s.vy;
-  opx_ = s.opx;
-  opy_ = s.opy;
-  score_ = s.score;
-  dscore_ = s.dscore;
-  evade_sum_ = s.evade_sum;
-  evadesc_ = s.evadesc;
-  evade_ = s.evade;
-  evade_c_ = s.evade_c;
-  star_counter_ = s.star_counter;
-  star_threshold_ = s.star_threshold;
-  star_extend_count_ = s.star_extend_count;
-  v_ = s.v;
-  weapon_ = s.weapon;
-  exp_ = s.exp;
-  bomb_ = s.bomb;
-  left_ = s.left;
-  credit_ = s.credit;
-  miss_count_ = s.miss_count;
-  bomb_used_ = s.bomb_used;
-  deathbomb_count_ = s.deathbomb_count;
-  grp_id_ = s.grp_id;
-  bomb_time_ = s.bomb_time;
-  exp2_ = s.exp2;
-  muteki_ = s.muteki;
-  deathbomb_time_ = s.deathbomb_time;
-  lay_time_ = s.lay_time;
-  lay_grp_ = s.lay_grp;
-  toge_time_ = s.toge_time;
-  toge_ex_ = s.toge_ex;
-  shift_counter_ = s.shift_counter;
-  game_over_ = s.game_over;
-  buzz_sound_ = s.buzz_sound;
-}
-
-void Player::BeginWeaponPreview() {
-  StateSnapshot s;
-  SaveSnapshot_(s);
-  preview_snapshot_ = s;
-  weapon_ = 0;
-}
-
-void Player::CommitWeaponSelection() {
-  if (!preview_snapshot_) {
-    return;
-  }
-  const uint8_t selected = weapon_;
-  RestoreSnapshot_(*preview_snapshot_);
-  weapon_ = selected;
-  preview_snapshot_.reset();
 }

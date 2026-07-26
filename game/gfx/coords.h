@@ -205,8 +205,19 @@ constexpr auto WORLD_COORD_BITS = 6;
 
 using WORLD_COORD = int;
 
+inline constexpr WORLD_COORD WORLD_COORD_SCALE = 1 << WORLD_COORD_BITS;
+
 inline constexpr WORLD_COORD PixelToWorld(PIXEL_COORD v) {
-  return (v << WORLD_COORD_BITS);
+  return v * WORLD_COORD_SCALE;
+}
+
+// Pixel literals expressed in world units, e.g. 1.5_px == 96.
+consteval WORLD_COORD operator""_px(unsigned long long pixels) {
+  return static_cast<WORLD_COORD>(pixels * WORLD_COORD_SCALE);
+}
+
+consteval WORLD_COORD operator""_px(long double pixels) {
+  return static_cast<WORLD_COORD>(pixels * WORLD_COORD_SCALE);
 }
 
 struct WORLD_POINT {

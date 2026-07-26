@@ -336,10 +336,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     if (--actor.script.wait_counter != 0) {
       if (instruction.Opcode() == EclOpcode::WaveX) {
         actor.x += actor.vx;
-        actor.y = actor.vy + sinl(actor.d, actor.amp << 6);
+        actor.y = actor.vy + sinl(actor.d, PixelToWorld(actor.amp));
       } else {
         actor.y += actor.vy;
-        actor.x = actor.vx + sinl(actor.d, actor.amp << 6);
+        actor.x = actor.vx + sinl(actor.d, PixelToWorld(actor.amp));
       }
       actor.d += actor.vd;
       return Step::Repeat;
@@ -503,9 +503,8 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
 
   case EclOpcode::RandomBoundedAngle: {
     const PIXEL_LTRB bounds = {
-        GX_MIN + (150 * 64), GY_MIN + ((GY_MID - GY_MIN - (40 * 64)) / 3),
-        GX_MAX - (150 * 64),
-        GY_MID - ((GY_MID - GY_MIN - (40 * 64)) / 3) - (40 * 64)};
+        GX_MIN + 150_px, GY_MIN + ((GY_MID - GY_MIN - 40_px) / 3),
+        GX_MAX - 150_px, GY_MID - ((GY_MID - GY_MIN - 40_px) / 3) - 40_px};
     uint16_t base = 0;
     constexpr uint16_t range = 32;
     if (actor.y < bounds.top) {
@@ -537,11 +536,12 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
 
   case EclOpcode::RandomPosition:
     if (actor.x > GX_MID) {
-      actor.x = (X_MID * 64) - ((rnd() % (X_MAX - X_MIN - 100)) * 32);
+      actor.x = PixelToWorld(X_MID) - ((rnd() % (X_MAX - X_MIN - 100)) * 32);
     } else {
-      actor.x = (X_MID * 64) + ((rnd() % (X_MAX - X_MIN - 100)) * 32);
+      actor.x = PixelToWorld(X_MID) + ((rnd() % (X_MAX - X_MIN - 100)) * 32);
     }
-    actor.y = ((rnd() % (Y_MID - Y_MIN - 160)) * 64) + ((Y_MIN + 40) * 64);
+    actor.y =
+        PixelToWorld(rnd() % (Y_MID - Y_MIN - 160)) + PixelToWorld(Y_MIN + 40);
     return Step::Advance;
 
   case EclOpcode::MovePolar: {

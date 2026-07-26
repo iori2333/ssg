@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "gfx/coords.h"
+
 // [ Constants ]
 
 // Maximum count
@@ -19,8 +21,8 @@ inline constexpr auto ITEM_BOMB = 0x03;   // bomb
 
 // Other
 inline constexpr auto ITEM_GRAVITY = 3; // Y acceleration for items
-inline constexpr auto ITEM_HIT_RADIUS = 16 * 64;
-inline constexpr auto ITEM_HIT_RADIUS_LARGE = 28 * 64;
+inline constexpr auto ITEM_HIT_RADIUS = 16_px;
+inline constexpr auto ITEM_HIT_RADIUS_LARGE = 28_px;
 
 int GetItemHitRadius(uint8_t type);
 

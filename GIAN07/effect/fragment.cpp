@@ -5,8 +5,8 @@
 #include "fragment.h"
 #include "effect_manager.h"
 
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
 #include "util/ut_math.h"
 
 // fragments[], fragment_ptr moved to EffectManager in effect_manager.cpp
@@ -44,7 +44,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
   switch (cmd) {
   case FRG_HIT:
     d = rnd() & 0xff;
-    l = 64 + (rnd() % (64 * 3));
+    l = 1_px + (rnd() % 3_px);
     f->count = 24;
     f->vx = cosl(d, l);
     f->vy = sinl(d, l);
@@ -52,7 +52,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
 
   case FRG_EVADE:
     d = rnd() & 0xff;
-    l = (64 * 4) + (rnd() % (64 * 3));
+    l = 4_px + (rnd() % 3_px);
     f->count = 24;
     f->vx = cosl(d, l);
     f->vy = sinl(d, l);
@@ -67,7 +67,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
   case FRG_STAR1:
     f->count = 64;
     d = rnd() & 0xff;
-    l = (64 * 5) + (rnd() % (64 * 3));
+    l = 5_px + (rnd() % 3_px);
     f->vx = cosl(d, l);
     f->vy = sinl(d, l);
     break;
@@ -75,7 +75,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
   case FRG_STAR2:
     f->count = 64;
     d = rnd() & 0xff;
-    l = (64 * 4) + (rnd() % (64 * 3));
+    l = 4_px + (rnd() % 3_px);
     f->vx = cosl(d, l);
     f->vy = sinl(d, l);
     break;
@@ -83,7 +83,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
   case FRG_STAR3:
     f->count = 64;
     d = -64 - 48 + (rnd() % 96);
-    l = (64 * 6) + (rnd() % (64 * 4));
+    l = 6_px + (rnd() % 4_px);
     f->vx = cosl(d, l);
     f->vy = sinl(d, l);
     break;
@@ -91,7 +91,7 @@ void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
   case FRG_HEART:
     f->count = 105;
     d = rnd() & 0xff;
-    l = (64 * 2) + (rnd() % (64 * 5));
+    l = 2_px + (rnd() % 5_px);
     f->vx = cosl(d, l);
     f->vy = sinl(d, l);
     break;

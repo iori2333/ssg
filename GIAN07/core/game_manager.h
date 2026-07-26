@@ -5,9 +5,9 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 #include <utility>
 
-#include "config.h"
 #include "level.h"
 
 enum class StageId : uint8_t {
@@ -33,12 +33,9 @@ inline StageId &operator++(StageId &s) {
 struct GameManager {
   StageId stage = StageId::STAGE_1;
   GameLevel level = GameLevel::NORMAL;
-  PracticeMode practice_mode = PracticeMode::OFF;
   bool is_demoplay = false;
   int rank = 0;
   uint8_t extra_stg_flags = 0;
-
-  const GameConfig *game_config_ = nullptr;
 
   [[nodiscard]] std::string_view LevelName() const;
   [[nodiscard]] GameLevel EffectiveLevel() const;

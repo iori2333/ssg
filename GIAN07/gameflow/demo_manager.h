@@ -44,6 +44,7 @@ struct DemoManager {
   void FlushStage();
   [[nodiscard]] bool LoadSetup();
   [[nodiscard]] bool Record(INPUT_BITS key);
+  void UpdateLastRecordedInput(INPUT_BITS key);
   void SaveDemo();
   [[nodiscard]] bool LoadDemo(StageId stage);
   INPUT_BITS Move();

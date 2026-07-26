@@ -5,11 +5,10 @@
 #include "bullet.h"
 #include "bullet_common.h"
 
-#include "core/gian.h"
 #include "core/game_manager.h"
+#include "core/gian.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 
@@ -172,9 +171,8 @@ BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
   if (effect_ == TE_NONE) {
     MoveByType(info, result);
     MoveByOption(result);
-    if ((flag_ & TF_CLIP) == 0 &&
-        (x_ < GX_MIN - 4 * 64 || x_ > GX_MAX + 4 * 64 ||
-         y_ < GY_MIN - 4 * 64 || y_ > GY_MAX + 4 * 64)) {
+    if ((flag_ & TF_CLIP) == 0 && (x_ < GX_MIN - 4_px || x_ > GX_MAX + 4_px ||
+                                   y_ < GY_MIN - 4_px || y_ > GY_MAX + 4_px)) {
       flag_ |= TF_DELETE;
     }
   } else {
@@ -305,7 +303,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     if (count_ < 130 - 60 && info.enemy_homing_valid) {
       deg_t = atan8(info.enemy_homing_x - x_, info.enemy_homing_y - y_) - d_;
     } else if (count_ < 130 - 60) {
-      deg_t = atan8(0, (-20 * 64) - y_) - d_;
+      deg_t = atan8(0, -20_px - y_) - d_;
     } else {
       flag_ = TF_NONE;
       deg_t = 0;
@@ -347,15 +345,14 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     y_ = ty_;
     return;
   case TOP_WAVE:
-    op_temp =
-        sinl(Cast::down_sign<uint8_t>(static_cast<int>(count_ << 2)),
-             ((option_ & 0x0f) << 7));
+    op_temp = sinl(Cast::down_sign<uint8_t>(static_cast<int>(count_ << 2)),
+                   ((option_ & 0x0f) << 7));
     x_ = tx_ - sinl(d_, op_temp);
     y_ = ty_ + cosl(d_, op_temp);
     return;
   case TOP_ROLL: {
-    const auto angle = Cast::down_sign<uint8_t>(
-        static_cast<int>(d_ + (count_ << 1)));
+    const auto angle =
+        Cast::down_sign<uint8_t>(static_cast<int>(d_ + (count_ << 1)));
     op_temp = (option_ & 0x0f) << 8;
     x_ = tx_ + cosl(angle, op_temp);
     y_ = ty_ + sinl(angle, op_temp);
@@ -456,9 +453,20 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
       result.division_requested = true;
       result.division_cx = cx;
       result.division_cy = cy;
-      result.division_cmd = {cx,     cy,    nd, dw, n,  2,     static_cast<uint8_t>(sv),
-                              static_cast<uint8_t>(c_ & 0x0f), 0, 0, 0,
-                              ecmd,   T_NORM,   TOP_NONE};
+      result.division_cmd = {cx,
+                             cy,
+                             nd,
+                             dw,
+                             n,
+                             2,
+                             static_cast<uint8_t>(sv),
+                             static_cast<uint8_t>(c_ & 0x0f),
+                             0,
+                             0,
+                             0,
+                             ecmd,
+                             T_NORM,
+                             TOP_NONE};
     }
     return;
   }
@@ -509,13 +517,13 @@ void Bullet::Render() const {
   switch (effect_) {
   case TE_DELETE:
     if (is_small) {
-      GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{384 + ((static_cast<int>(count_) / 6) << 3),
-                                 120, 8, 8});
+      GrpSurface_Blit(
+          {x, y}, SURFACE_ID::SYSTEM,
+          PIXEL_LTWH{384 + ((static_cast<int>(count_) / 6) << 3), 120, 8, 8});
     } else {
-      GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{384 + ((static_cast<int>(count_) / 6) << 4),
-                                 104, 16, 16});
+      GrpSurface_Blit(
+          {x, y}, SURFACE_ID::SYSTEM,
+          PIXEL_LTWH{384 + ((static_cast<int>(count_) / 6) << 4), 104, 16, 16});
     }
     return;
   case TE_CIRCLE1:
@@ -528,9 +536,9 @@ void Bullet::Render() const {
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
                       PIXEL_LTWH{(c_ << 3) + 384, 0, 8, 8});
     } else {
-      GrpSurface_Blit({x - 4, y - 4}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{((d_ + 8) & 0xf0) + 384,
-                                 24 + ((c_ & 0x0f) << 4), 16, 16});
+      GrpSurface_Blit(
+          {x - 4, y - 4}, SURFACE_ID::SYSTEM,
+          PIXEL_LTWH{((d_ + 8) & 0xf0) + 384, 24 + ((c_ & 0x0f) << 4), 16, 16});
     }
     return;
   }
@@ -556,9 +564,9 @@ void Bullet::Render() const {
   }
   case TAMA_ANGLE:
     if (c_ != 32 + 5) {
-      GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{((d_ + 8) & 0xf0) + 384,
-                                 24 + ((c_ & 0x0f) << 4), 16, 16});
+      GrpSurface_Blit(
+          {x, y}, SURFACE_ID::SYSTEM,
+          PIXEL_LTWH{((d_ + 8) & 0xf0) + 384, 24 + ((c_ & 0x0f) << 4), 16, 16});
     } else {
       const auto d = Cast::down_sign<uint8_t>(d_ + 4) / 8;
       int dx = (d % 8) * 32;
@@ -582,19 +590,20 @@ void Bullet::Kill() {
   }
 }
 
-HitResult Bullet::CheckHit(int player_x, int player_y) const {
+HitResult Bullet::CheckHit(int player_x, int player_y,
+                           int player_radius) const {
   if ((flag_ & TF_DELETE) != 0) {
     return HitResult::Miss;
   }
   const int hit_radius = GetBulletHitRadius(c_);
   int dx = x_ - player_x;
   int dy = y_ - player_y;
-  int combined = hit_radius + PLAYER_HITBOX_RADIUS;
+  int combined = hit_radius + player_radius;
   if (dx * dx + dy * dy <= combined * combined) {
     return HitResult::Hit;
   }
   const int evade_radius = GetBulletEvadeRadius(c_);
-  combined = evade_radius + PLAYER_HITBOX_RADIUS;
+  combined = evade_radius + player_radius;
   if (dx * dx + dy * dy <= combined * combined) {
     return HitResult::Graze;
   }
@@ -624,4 +633,3 @@ void Bullet::RenderDebugHitbox(int mode) const {
     Geometry::CircleF_Approximated(*gp, {cx, cy}, r_px, true);
   }
 }
-

@@ -68,7 +68,7 @@ void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
   center_y_ = parent.y;
 
   radius_ = 0;
-  target_radius_ = 64 * 80;
+  target_radius_ = 80_px;
   count_ = count;
   rotation_speed_ = (((rnd() >> 1) & 1) != 0) ? 2 : -2;
   base_angle_ = 0;
@@ -131,7 +131,7 @@ void BitFormation::Update() {
     center_x_ += cosl(direction_, speed_);
     center_y_ += sinl(direction_, speed_);
 
-    if (speed_ <= -64 * 10) {
+    if (speed_ <= -10_px) {
       motion_ = MotionState::Orbit;
     }
 
@@ -244,11 +244,11 @@ void BitFormation::PruneInvalidParts() {
 // Basic radius processing
 void BitFormation::UpdateRadius() {
   if (radius_ > target_radius_) {
-    radius_ -= 64 * 2;
+    radius_ -= 2_px;
 
     radius_ = std::max(radius_, target_radius_);
   } else if (radius_ < target_radius_) {
-    radius_ += 64 * 2;
+    radius_ += 2_px;
 
     radius_ = std::min(radius_, target_radius_);
   }
@@ -465,8 +465,8 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
         .enemy = e,
         .dx = 0,
         .dy = 0,
-        .v = 64,
-        .w = 64 * 8,
+        .v = 1_px,
+        .w = 8_px,
         .d = e->d,
         .type = LongLaserType::Long,
     };
@@ -568,7 +568,7 @@ void BitFormation::Command(EclBitCommand command, int param) {
     break;
 
   case EclBitCommand::MoveTowardPlayer:
-    speed_ = 64 * 10;
+    speed_ = 10_px;
     acceleration_ = -8;
     direction_ = atan8(player_->X() - center_x_, player_->Y() - center_y_);
     motion_ = MotionState::MoveTowardPlayer;

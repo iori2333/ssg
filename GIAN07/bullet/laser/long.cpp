@@ -11,7 +11,6 @@
 #include "enemy/ecl/ecl.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "player/player.h"
 #include "util/ut_math.h"
 
 namespace {
@@ -34,8 +33,8 @@ inline constexpr RGB216 kTable8BitC[16] = {
 
 inline constexpr size_t kBeamVertexCount = 34;
 inline constexpr auto kBeamLength = 800;
-inline constexpr auto kDebugLaserEvadeWidth = 15 * 64;
-inline constexpr auto kLongLaserEvadeWidth = 15 * 64;
+inline constexpr auto kDebugLaserEvadeWidth = 15_px;
+inline constexpr auto kLongLaserEvadeWidth = 15_px;
 
 } // namespace
 
@@ -190,7 +189,7 @@ void LaserLong::UpdateClosing() {
   RecalcGeometry();
 }
 
-HitResult LaserLong::CheckHit(int px, int py) const {
+HitResult LaserLong::CheckHit(int px, int py, int player_radius) const {
   if (state_ != LongState::Opening && state_ != LongState::Active) {
     return HitResult::Miss;
   }
@@ -202,7 +201,7 @@ HitResult LaserLong::CheckHit(int px, int py) const {
 
   if (len <= 0)
     return HitResult::Miss;
-  if (dist <= w_ + PLAYER_HITBOX_RADIUS)
+  if (dist <= w_ + player_radius)
     return HitResult::Hit;
   if (dist <= w_ + kLongLaserEvadeWidth)
     return HitResult::Graze;

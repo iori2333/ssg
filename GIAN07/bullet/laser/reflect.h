@@ -81,7 +81,8 @@ struct LaserReflect : BulletBase<ReflectSpawnInfo, ReflectUpdateInfo> {
   bool IsDead() const override;
   void Kill() override;
   void Spawn(const ReflectSpawnInfo &info) override;
-  [[nodiscard]] HitResult CheckHit(int player_x, int player_y) const override;
+  [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
+                                   int player_radius) const override;
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
   void RenderDebugHitbox(int mode) const override;
 

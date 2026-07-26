@@ -299,9 +299,10 @@ void BulletManager::HitCheck() {
   }
   const int px = player_->X();
   const int py = player_->Y();
+  const int player_radius = player_->HitRadius();
 
   for (auto &b : pool) {
-    switch (b.CheckHit(px, py)) {
+    switch (b.CheckHit(px, py, player_radius)) {
     case HitResult::Hit:
       b.MarkDead();
       player_->OnHit();
@@ -321,7 +322,7 @@ void BulletManager::HitCheck() {
 
   auto check_lasers = [&](const auto &lpool) {
     for (const auto &laser : lpool) {
-      switch (laser.CheckHit(px, py)) {
+      switch (laser.CheckHit(px, py, player_radius)) {
       case HitResult::Hit:
         player_->OnHit();
         return;
@@ -388,7 +389,7 @@ uint32_t BulletManager::ScoreToItems() {
       continue;
     }
     if (b.effect_ != TE_DELETE) {
-      Effects.SpawnPointEffect(b.x_ - 64 * 4, b.y_ - 64 * 4, score);
+      Effects.SpawnPointEffect(b.x_ - 4_px, b.y_ - 4_px, score);
       sum += score;
       b.flag_ = TF_DELETE;
       b.count_ = 0;
@@ -403,7 +404,7 @@ uint32_t BulletManager::ScoreToItems() {
       continue;
     }
     if (b.effect_ != TE_DELETE) {
-      Effects.SpawnPointEffect(b.x_ - 64 * 8, b.y_ - 64 * 8, score);
+      Effects.SpawnPointEffect(b.x_ - 8_px, b.y_ - 8_px, score);
       sum += score;
       b.flag_ = TF_DELETE;
       b.count_ = 0;

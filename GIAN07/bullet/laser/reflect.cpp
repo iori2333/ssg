@@ -4,19 +4,18 @@
 
 #include <algorithm>
 
-#include "reflect.h"
 #include "long.h"
+#include "reflect.h"
 
 #include "bullet/bullet_common.h"
 #include "core/gian.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 
 namespace {
-inline constexpr auto kDebugLaserEvadeWidth = 12 * 64;
+inline constexpr auto kDebugLaserEvadeWidth = 12_px;
 } // namespace
 
 // Laser geometry:
@@ -28,7 +27,7 @@ inline constexpr auto kDebugLaserEvadeWidth = 12 * 64;
 
 // ── Local constants ─────────────────────────────────────────────────
 namespace {
-inline constexpr auto kLaserEvadeWidth = 12 * 64;
+inline constexpr auto kLaserEvadeWidth = 12_px;
 } // namespace
 
 // ── Geometry ───────────────────────────────────────────────────────
@@ -76,28 +75,29 @@ LaserReflect::CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
     return {};
   }
 
-  return UpdateResult{true, ReflectSpawnInfo{
-      .no_scaling = true,
-      .x = static_cast<int>(lx),
-      .y = static_cast<int>(ly),
-      .v = self.v_,
-      .w = self.w_,
-      .l = self.lmax_,
-        .d = static_cast<uint8_t>(-static_cast<int>(self.d_) +
-                                  (static_cast<int>(ll.d_) << 1)),
-      .n = 1,
-      .c = self.c_,
-      .cmd = bullet_common::kCmdWay,
-      .cmd_type = static_cast<uint8_t>(ReflectLaserType::Reflect),
-  }};
+  return UpdateResult{
+      true, ReflectSpawnInfo{
+                .no_scaling = true,
+                .x = static_cast<int>(lx),
+                .y = static_cast<int>(ly),
+                .v = self.v_,
+                .w = self.w_,
+                .l = self.lmax_,
+                .d = static_cast<uint8_t>(-static_cast<int>(self.d_) +
+                                          (static_cast<int>(ll.d_) << 1)),
+                .n = 1,
+                .c = self.c_,
+                .cmd = bullet_common::kCmdWay,
+                .cmd_type = static_cast<uint8_t>(ReflectLaserType::Reflect),
+            }};
 }
 
 // ── Spawn ────────────────────────────────────────────────────────────
 
 void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
   d_ = bullet_common::CalcSpreadDir(info.bullet_index,
-                                     info.cmd & bullet_common::kCmdMask,
-                                     info.n, info.base_deg, info.dw);
+                                    info.cmd & bullet_common::kCmdMask, info.n,
+                                    info.base_deg, info.dw);
 
   if (info.l2 != 0) {
     x_ = info.x + cosl(d_, info.l2);
@@ -189,7 +189,8 @@ void LaserReflect::UpdateGrowing() {
   }
 }
 
-auto LaserReflect::UpdateFlying(std::span<const LaserLong *> longs) -> UpdateResult {
+auto LaserReflect::UpdateFlying(std::span<const LaserLong *> longs)
+    -> UpdateResult {
   x_ += vx_;
   y_ += vy_;
   SetupGeometry();
@@ -204,7 +205,8 @@ auto LaserReflect::UpdateFlying(std::span<const LaserLong *> longs) -> UpdateRes
   return {};
 }
 
-auto LaserReflect::UpdateShooting(std::span<const LaserLong *> longs) -> UpdateResult {
+auto LaserReflect::UpdateShooting(std::span<const LaserLong *> longs)
+    -> UpdateResult {
   l_ += v_;
   lx_ = cosl(d_, l_ >> 6);
   ly_ = sinl(d_, l_ >> 6);
@@ -283,7 +285,7 @@ void LaserReflect::UpdateClearing() {
 
 // ── Hit detection ───────────────────────────────────────────────────
 
-HitResult LaserReflect::CheckHit(int px, int py) const {
+HitResult LaserReflect::CheckHit(int px, int py, int player_radius) const {
   if (state_ == ReflectState::Dead || state_ == ReflectState::Clearing) {
     return HitResult::Miss;
   }
@@ -293,9 +295,12 @@ HitResult LaserReflect::CheckHit(int px, int py) const {
   const int len = cosl(d_, tx) + sinl(d_, ty);
   const int dist = std::abs(-sinl(d_, tx) + cosl(d_, ty));
 
-  if (len <= 0 || len > l_) return HitResult::Miss;
-  if (dist <= w_ + PLAYER_HITBOX_RADIUS) return HitResult::Hit;
-  if (dist <= w_ + kLaserEvadeWidth) return HitResult::Graze;
+  if (len <= 0 || len > l_)
+    return HitResult::Miss;
+  if (dist <= w_ + player_radius)
+    return HitResult::Hit;
+  if (dist <= w_ + kLaserEvadeWidth)
+    return HitResult::Graze;
   return HitResult::Miss;
 }
 
@@ -339,9 +344,7 @@ void LaserReflect::DrawOuter() const {
   }
 }
 
-bool LaserReflect::IsDead() const {
-  return state_ == ReflectState::Dead;
-}
+bool LaserReflect::IsDead() const { return state_ == ReflectState::Dead; }
 
 void LaserReflect::Kill() {
   if (state_ != ReflectState::Clearing && state_ != ReflectState::Dead) {

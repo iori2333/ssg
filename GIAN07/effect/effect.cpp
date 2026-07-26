@@ -8,8 +8,8 @@
 #include "effect.h"
 #include "effect_manager.h"
 #include "gfx/font_uty.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
 
 #include "audio/snd.h"
 #include "core/gian.h"
@@ -205,7 +205,7 @@ void EffectManager::SpawnPointEffect(int x, int y, uint32_t point) {
     it.x = x;
     it.y = y;
     it.vx = 0;
-    it.vy = ((-64 * 3) + 32);
+    it.vy = -2.5_px;
     it.cmd = SEFC_STR2;
     it.time = 90;
     return;
@@ -220,7 +220,7 @@ void EffectManager::SpawnGameOverEffect() {
     }
 
     it.x = GX_MID;
-    it.y = (GY_MID - (64 * (60 + 40)));
+    it.y = GY_MID - 100_px;
     it.vx = 0;
     it.vy = 0;
     it.cmd = SEFC_GAMEOVER;
@@ -250,8 +250,8 @@ void EffectManager::SetMusicTitle(int y, std::string_view s) {
   auto x = (std::max)((640 - 128 - 32 - extent.w), 128);
 
   e->cmd = SEFC_MTITLE1;
-  e->x = (x << 6); // + ((64 * 2) * 16);
-  e->y = (y << 6);
+  e->x = PixelToWorld(x);
+  e->y = PixelToWorld(y);
   e->time = (64 * 2);
   e->vx = extent.w;
   e->vy = extent.h;
@@ -299,8 +299,8 @@ void EffectManager::MoveStringEffects() {
         const uint8_t deg = (128 + (rnd() % 128));
         e->cmd = SEFC_STR1_3;
         e->time = 64;
-        e->vx = cosl(deg, 10 * 64);
-        e->vy = sinl(deg, 10 * 64);
+        e->vx = cosl(deg, 10_px);
+        e->vy = sinl(deg, 10_px);
       }
       break;
 

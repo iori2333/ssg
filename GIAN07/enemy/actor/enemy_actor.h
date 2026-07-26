@@ -41,7 +41,7 @@ enum class EnemyActorState : uint8_t {
 inline constexpr int ENEMY_BOMB_SPD = 4;
 
 // Homing constants
-inline constexpr int HOMING_DUMMY = (500 * 64); // Dummy value when not homing
+inline constexpr int HOMING_DUMMY = 500_px; // Dummy value when not homing
 
 // Animation constants
 inline constexpr std::size_t ENEMY_ANIMATION_MAX = 50;

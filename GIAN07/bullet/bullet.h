@@ -8,6 +8,8 @@
 
 #include "bullet_base.h"
 
+#include "gfx/coords.h"
+
 struct GameManager;
 
 ////Bullet constants////
@@ -16,8 +18,8 @@ inline constexpr auto TAMA_EVADE = 1;
 inline constexpr auto TAMA1_POINT = 10000;
 inline constexpr auto TAMA2_POINT = 15000;
 
-inline constexpr auto TAMA_EVADE_RADIUS_SMALL = 24 * 64;
-inline constexpr auto TAMA_EVADE_RADIUS_LARGE = 32 * 64;
+inline constexpr auto TAMA_EVADE_RADIUS_SMALL = 24_px;
+inline constexpr auto TAMA_EVADE_RADIUS_LARGE = 32_px;
 
 inline constexpr auto TAMA_SMALL = 0x00;
 inline constexpr auto TAMA_LARGE = 0x10;
@@ -31,10 +33,10 @@ inline constexpr auto TAMASP_RND1 = 0x40;
 inline constexpr auto TAMASP_RND2 = 0x80;
 inline constexpr auto TAMASP_RND3 = 0xc0;
 
-inline constexpr int TAMA_HIT_S = 2.5 * 64;
-inline constexpr int TAMA_HIT_M = 4.5 * 64;
-inline constexpr int TAMA_HIT_L = 7.5 * 64;
-inline constexpr int TAMA_HIT_XL = 10.5 * 64;
+inline constexpr int TAMA_HIT_S = 2.5_px;
+inline constexpr int TAMA_HIT_M = 4.5_px;
+inline constexpr int TAMA_HIT_L = 7.5_px;
+inline constexpr int TAMA_HIT_XL = 10.5_px;
 
 inline constexpr auto T_NORM = 0x00;
 inline constexpr auto T_NORM_A = 0x01;
@@ -134,7 +136,7 @@ struct BulletSpawnInfo {
 struct BulletManager;
 
 ////World context + side-effect result (passed to / returned from
-///Bullet::Update)////
+/// Bullet::Update)////
 struct BulletUpdateInfo {
   int player_x, player_y;
   bool enemy_homing_valid;
@@ -160,7 +162,8 @@ struct Bullet : BulletBase<BulletSpawnInfo, BulletUpdateInfo> {
   bool IsDead() const override;
   void Kill() override;
   void Spawn(const BulletSpawnInfo &info) override;
-  [[nodiscard]] HitResult CheckHit(int player_x, int player_y) const override;
+  [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
+                                   int player_radius) const override;
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
   void RenderDebugHitbox(int mode) const override;
 

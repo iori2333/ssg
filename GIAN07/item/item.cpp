@@ -39,18 +39,18 @@ void ItemManager::Spawn(int x, int y, uint8_t type) {
 
   switch (type) {
   case ITEM_SCORE:
-    ip->vx = cosl(deg, 64 * 3);
-    ip->vy = sinl(deg, 64 * 3);
+    ip->vx = cosl(deg, 3_px);
+    ip->vy = sinl(deg, 3_px);
     break;
 
   case ITEM_EXTEND:
-    ip->vx = cosl(deg, 64 * 2);
-    ip->vy = sinl(deg, 64 * 2);
+    ip->vx = cosl(deg, 2_px);
+    ip->vy = sinl(deg, 2_px);
     break;
 
   case ITEM_BOMB:
-    ip->vx = cosl(deg, 64 * 2);
-    ip->vy = sinl(deg, 64 * 2);
+    ip->vx = cosl(deg, 2_px);
+    ip->vy = sinl(deg, 2_px);
     break;
   }
 }
@@ -91,7 +91,7 @@ void ItemManager::Move() {
       ip.y += ty / l;
     }
 
-    if (ip.vy < 64 * 6) {
+    if (ip.vy < 6_px) {
       ip.vy += ITEM_GRAVITY;
     }
     ip.count++;
@@ -145,14 +145,13 @@ void ItemManager::Move() {
     }
 
     // Do not delete upward
-    if ((ip.x) < GX_MIN - (8 * 64) || (ip.x) > GX_MAX + (8 * 64) ||
-        (ip.y) > GY_MAX + (8 * 64)) {
+    if ((ip.x) < GX_MIN - 8_px || (ip.x) > GX_MAX + 8_px ||
+        (ip.y) > GY_MAX + 8_px) {
       ip.type = ITEM_DELETE;
     }
   }
 
-  pool.Compact(
-      [](const ItemData &i) { return (i.type == ITEM_DELETE); });
+  pool.Compact([](const ItemData &i) { return (i.type == ITEM_DELETE); });
 }
 
 // Draw items
