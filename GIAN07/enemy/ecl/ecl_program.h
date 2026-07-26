@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -221,9 +222,25 @@ using EclArguments = std::variant<
     EclRegisterConstantArguments, EclRegisterSignedConstantArguments,
     EclRegisterValueArguments, EclRegisterPairArguments, EclRegisterArguments>;
 
-struct EclInstruction {
-  EclOpcode opcode;
-  EclArguments arguments;
+class EclInstructionFactory;
+
+class EclInstruction {
+public:
+  [[nodiscard]] EclOpcode Opcode() const { return opcode_; }
+
+  template <typename Arguments>
+  [[nodiscard]] const Arguments &ArgumentsAs() const {
+    return std::get<Arguments>(arguments_);
+  }
+
+private:
+  friend class EclInstructionFactory;
+
+  EclInstruction(EclOpcode opcode, EclArguments arguments)
+      : opcode_(opcode), arguments_(std::move(arguments)) {}
+
+  EclOpcode opcode_;
+  EclArguments arguments_;
 };
 
 class EclProgram {

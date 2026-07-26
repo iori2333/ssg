@@ -9,9 +9,9 @@
 #include <cstdint>
 
 #include "boss.h"
-#include "enemy.h"
 
 #include "core/point.h"
+#include "enemy/actor/enemy_actor.h"
 
 struct BulletManager;
 class EnemySystem;
@@ -29,15 +29,18 @@ public:
   void Spawn(BossData &parent, uint32_t tail_script);
   void Update();
   void Remove(const BossData &parent);
+  void OnActorRetired(const EnemyActor &actor);
 
 private:
   struct Snake {
     std::array<DegPoint, SNAKE_LENGTH * SNAKE_POINTS_PER_SEGMENT> trail{};
     std::array<EnemyActor *, SNAKE_LENGTH> segments{};
-    BossData *parent = nullptr;
+    EnemyActor *parent = nullptr;
     std::size_t head = 0;
     bool active = false;
   };
+
+  void Destroy(Snake &snake);
 
   std::array<Snake, SNAKE_MAX> snakes_{};
   EnemySystem *enemies_;

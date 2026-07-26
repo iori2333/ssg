@@ -68,14 +68,16 @@ void LaserForm::FireBomb(EnemySystem &enemies) {
   int oy = player_.OpY();
   for (int i = -3; i <= 3; i++) {
     const auto d = Player::GetRightLaserDeg(LaserDeg, i);
-    enemies.DamageAt3(ox, oy, d);
+    enemies.ApplyAttack(
+        EnemyAttack::DirectedBeam(WORLD_POINT::FromWorld(ox, oy), d));
   }
 
   ox = player_.OpX() - (SBOPT_DX * 64);
   oy = player_.OpY();
   for (int i = -3; i <= 3; i++) {
     const auto d = Player::GetLeftLaserDeg(LaserDeg, i);
-    enemies.DamageAt3(ox, oy, d);
+    enemies.ApplyAttack(
+        EnemyAttack::DirectedBeam(WORLD_POINT::FromWorld(ox, oy), d));
   }
 }
 
@@ -101,8 +103,12 @@ void LaserForm::OnFireTick() {
 void LaserForm::OnCollisionTick(EnemySystem &enemies) {
   if (player_.lay_grp_ != 0U) {
     const int ldmg = (player_.lay_grp_ / 3) + 1;
-    enemies.DamageAt2(player_.opx_ + (SBOPT_DX << 6), player_.opy_, ldmg);
-    enemies.DamageAt2(player_.opx_ - (SBOPT_DX << 6), player_.opy_, ldmg);
+    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+        WORLD_POINT::FromWorld(player_.opx_ + (SBOPT_DX << 6), player_.opy_),
+        ldmg));
+    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+        WORLD_POINT::FromWorld(player_.opx_ - (SBOPT_DX << 6), player_.opy_),
+        ldmg));
   }
 }
 
@@ -179,7 +185,11 @@ void LaserFocusForm::OnCollisionTick(EnemySystem &enemies) {
   if (player_.lay_grp_ != 0U) {
     const int loff = SBOPT_DX / 2;
     const int ldmg = (player_.lay_grp_ / 3) + 1;
-    enemies.DamageAt2(player_.opx_ + (loff << 6), player_.opy_, ldmg);
-    enemies.DamageAt2(player_.opx_ - (loff << 6), player_.opy_, ldmg);
+    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+        WORLD_POINT::FromWorld(player_.opx_ + (loff << 6), player_.opy_),
+        ldmg));
+    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+        WORLD_POINT::FromWorld(player_.opx_ - (loff << 6), player_.opy_),
+        ldmg));
   }
 }

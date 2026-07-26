@@ -8,11 +8,14 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "enemy/boss/boss.h"
+
 inline constexpr std::size_t BOSS_HEALTH_GAUGE_HEIGHT = 24;
 
 class BossHealthGauge {
 public:
   void Reset();
+  void Sync(const BossHudModel &model);
   void Open(uint32_t max_hp);
   void AddPhase(uint32_t hp);
   void Update(uint32_t hp);
@@ -44,4 +47,6 @@ private:
   int32_t timer_now_ = 0;
   int32_t previous_timer_seconds_ = -1;
   int32_t stage_timeout_end_ = -1;
+  uint64_t encounter_revision_ = 0;
+  uint64_t phase_revision_ = 0;
 };

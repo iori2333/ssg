@@ -54,8 +54,8 @@ bool StageLoader::Load(StageId stage, EnemySystem &enemies,
     return false;
   }
 
-  enemies.InstallStageAssets(std::move(*enemy_program), std::move(animations));
-  return true;
+  return enemies.InstallStageAssets(std::move(*enemy_program),
+                                    std::move(animations));
 }
 
 bool StageLoader::LoadEnding(SceneRunner &scene) const {

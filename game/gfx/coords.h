@@ -210,11 +210,10 @@ inline constexpr WORLD_COORD PixelToWorld(PIXEL_COORD v) {
 }
 
 struct WORLD_POINT {
-  WORLD_COORD x;
-  WORLD_COORD y;
+  WORLD_COORD x{};
+  WORLD_COORD y{};
 
-#pragma warning(suppress : 26495) // type.6
-  WORLD_POINT() noexcept {}
+  constexpr WORLD_POINT() noexcept = default;
 
   // World-space points should never be constructed from integer literals.
   // These literals may or may not be pixels, and usage code should not
@@ -229,6 +228,14 @@ struct WORLD_POINT {
 
   WORLD_POINT(const PIXEL_POINT &pixel)
       : x(pixel.x << WORLD_COORD_BITS), y(pixel.y << WORLD_COORD_BITS) {}
+
+  [[nodiscard]] static constexpr WORLD_POINT FromWorld(WORLD_COORD x,
+                                                       WORLD_COORD y) {
+    WORLD_POINT point;
+    point.x = x;
+    point.y = y;
+    return point;
+  }
 
   WORLD_POINT &operator-=(const WORLD_POINT &other) {
     x -= other.x;

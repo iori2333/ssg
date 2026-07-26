@@ -159,7 +159,8 @@ void PlayerShot::MoveByEffect() {
 void Player::MoveMaidShot(EnemySystem &enemies) {
   for (auto &t : maid_tama_) {
     if (t.c_ == TID_HOMING_BOMB_B) {
-      enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_]);
+      enemies.ApplyAttack(EnemyAttack::Point(WORLD_POINT::FromWorld(t.x_, t.y_),
+                                             TogeDamage[t.c_]));
       t.count_++;
       if (t.count_ >= 19) {
         t.flag_ |= PlayerFlag::DEL;
@@ -177,7 +178,8 @@ void Player::MoveMaidShot(EnemySystem &enemies) {
         t.flag_ |= PlayerFlag::DEL;
       }
 
-      if (enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_])) {
+      if (enemies.ApplyAttack(EnemyAttack::Point(
+              WORLD_POINT::FromWorld(t.x_, t.y_), TogeDamage[t.c_]))) {
         if (t.c_ == TID_HOMING_BOMB_A) {
           PlayerShotSpawnInfo si{.x = t.x_,
                                  .y = t.y_,

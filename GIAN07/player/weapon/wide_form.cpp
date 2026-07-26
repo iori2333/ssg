@@ -171,7 +171,7 @@ void WideForm::FireBomb(EnemySystem &enemies) {
   Effects.SpawnFragment(dx, dy, FRG_STAR1);
   Effects.SpawnFragment(dx, dy, FRG_STAR2);
 
-  enemies.DamageAll(1);
+  enemies.ApplyAttack(EnemyAttack::All(1));
 }
 
 uint16_t WideForm::BombDuration() const { return WIDE_BOMB_TIME; }

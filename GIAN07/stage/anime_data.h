@@ -4,7 +4,7 @@
 #pragma once
 
 #include "core/game_manager.h"
-#include "enemy/enemy.h"
+#include "enemy/actor/enemy_actor.h"
 
 namespace anime_data {
 

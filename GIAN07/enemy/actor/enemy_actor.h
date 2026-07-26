@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 
 // [Revision history]
@@ -16,11 +17,9 @@
 // assignment to struct) 2000/02/25 : Added enemy hit-check function
 // enemy_damage() 2000/02/22 : Changed enemy clipping range.
 
-#include "ecl.h"
-
 #include "bullet/bullet.h"
 #include "bullet/laser/reflect.h"
-#include "sys/buffer.h"
+#include "enemy/ecl/ecl.h"
 
 // Enemy constants
 inline constexpr uint16_t ENEMY_MAX = 50; // Maximum number of enemies
@@ -32,8 +31,12 @@ inline constexpr uint8_t EF_DAMAGE = 0x04; // Whether the enemy can take damage
 inline constexpr uint8_t EF_HITSB = 0x08;  // Whether enemy collides with player
 inline constexpr uint8_t EF_RLCHG =
     0x10; // Whether to enable ECL horizontal flip
-inline constexpr uint8_t EF_BOMB = 0x20;   // Enemy is exploding
-inline constexpr uint8_t EF_DELETE = 0x40; // Delete enemy this frame
+
+enum class EnemyActorState : uint8_t {
+  Active,
+  Exploding,
+  PendingRemoval,
+};
 
 inline constexpr int ENEMY_BOMB_SPD = 4;
 
@@ -41,11 +44,11 @@ inline constexpr int ENEMY_BOMB_SPD = 4;
 inline constexpr int HOMING_DUMMY = (500 * 64); // Dummy value when not homing
 
 // Animation constants
-inline constexpr uint8_t ANIME_MAX = 50;    // Number of animation types
-inline constexpr uint8_t ANIMEPTN_MAX = 16; // Maximum animation patterns
-inline constexpr uint8_t ANM_NORM = 0x00;   // Normal animation
-inline constexpr uint8_t ANM_DEG = 0x01;    // Animate by angle
-inline constexpr uint8_t ANM_STOP = 0x02;   // Stop at final pattern
+inline constexpr std::size_t ENEMY_ANIMATION_MAX = 50;
+inline constexpr std::size_t ENEMY_ANIMATION_FRAME_MAX = 16;
+inline constexpr uint8_t ANM_NORM = 0x00; // Normal animation
+inline constexpr uint8_t ANM_DEG = 0x01;  // Animate by angle
+inline constexpr uint8_t ANM_STOP = 0x02; // Stop at final pattern
 
 struct EclInterruptState {
   std::optional<size_t> target;
@@ -64,52 +67,55 @@ struct EclRuntime {
 
 // Shared actor core used by regular enemies, bosses, and boss parts.
 struct EnemyActor {
-  WORLD_COORD x, y; // Display coordinates
-  int vx, vy;       // Velocity (x,y) components (x64)
+  EnemyActorState state = EnemyActorState::Active;
 
-  int v; // Velocity component (x64)
+  WORLD_COORD x{}, y{}; // Display coordinates
+  int vx{}, vy{};       // Velocity (x,y) components (x64)
 
-  uint32_t hp;    // Remaining HP (too large?)
-  uint32_t item;  // Used for items etc.?
-  uint32_t count; // Multipurpose frame counter
+  int v{}; // Velocity component (x64)
 
-  uint32_t score;   // Score (time-based score variation?)
-  uint32_t evscore; // Graze score
+  uint32_t hp{};    // Remaining HP (too large?)
+  uint32_t item{};  // Used for items etc.?
+  uint32_t count{}; // Multipurpose frame counter
 
-  EclRuntime script;
+  uint32_t score{}; // Score (time-based score variation?)
+  uint32_t graze_score{};
 
-  uint16_t g_width;  // Graphic width /2*64 (also used for hit detection)
-  uint16_t g_height; // Graphic height /2*64 (same as above)
-  uint16_t anm_c;    // Animation counter
+  EclRuntime script{};
 
-  uint8_t d;         // Direction angle 256
-  char vd;           // Angular velocity 128
-  uint8_t amp;       // Amplitude 256
-  uint8_t anm_ptn;   // Current animation pattern
-  uint8_t anm_ptnEx; // Animation pattern while damaged
-  char anm_sp;       // Animation speed
-  uint8_t IsDamaged; // Whether damaged
+  uint16_t hitbox_half_width{};
+  uint16_t hitbox_half_height{};
+  uint16_t animation_frame{};
 
-  uint8_t flag;   // Enemy state flags (resize as needed)
-  uint8_t tama_c; // Bullet fire counter
-  uint8_t t_rep;  // Bullet fire interval
+  uint8_t d{};   // Direction angle 256
+  char vd{};     // Angular velocity 128
+  uint8_t amp{}; // Amplitude 256
+  uint8_t animation{};
+  uint8_t damage_animation{};
+  char animation_speed{};
+  uint8_t damage_flash{};
 
-  uint8_t LLaserRef; // Thick laser reference count
+  uint8_t flag{}; // Enemy state flags (resize as needed)
+  uint8_t auto_fire_frame{};
+  uint8_t auto_fire_interval{};
 
-  BulletCommand t_cmd; // Bullet fire command
-  LaserCommand l_cmd;  // Laser fire command
+  uint8_t long_laser_count{};
+
+  BulletCommand bullet_command{};
+  LaserCommand laser_command{};
 };
 
-struct ANIME_DATA {
-  uint8_t mode;                 // Animation mode
-  uint8_t n;                    // Number of animation patterns
-  PIXEL_SIZE size;              // Image width, image height
-  PIXEL_LTRB ptn[ANIMEPTN_MAX]; // Rectangular areas for animation
+struct EnemyAnimation {
+  uint8_t mode;    // Animation mode
+  uint8_t n;       // Number of animation patterns
+  PIXEL_SIZE size; // Image width, image height
+  PIXEL_LTRB ptn[ENEMY_ANIMATION_FRAME_MAX];
 
   void SetSheet(PIXEL_POINT topleft, uint8_t frame_count, PIXEL_SIZE frame_size,
                 uint8_t animation_mode) {
     size = frame_size;
-    n = std::min(frame_count, ANIMEPTN_MAX);
+    n = static_cast<uint8_t>(
+        std::min<std::size_t>(frame_count, ENEMY_ANIMATION_FRAME_MAX));
     mode = animation_mode;
 
     for (uint8_t frame = 0; frame < n; ++frame) {
@@ -125,8 +131,9 @@ struct ANIME_DATA {
   }
 
   void SetDirectionalSheet(PIXEL_POINT topleft, PIXEL_COORD frame_size) {
-    SetSquareSheet(topleft, ANIMEPTN_MAX, frame_size, ANM_DEG);
+    SetSquareSheet(topleft, static_cast<uint8_t>(ENEMY_ANIMATION_FRAME_MAX),
+                   frame_size, ANM_DEG);
   }
 };
 
-using EnemyAnimationSet = std::array<ANIME_DATA, ANIME_MAX>;
+using EnemyAnimationSet = std::array<EnemyAnimation, ENEMY_ANIMATION_MAX>;

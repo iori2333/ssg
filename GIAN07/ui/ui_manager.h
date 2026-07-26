@@ -11,6 +11,7 @@
 #include <string_view>
 #include <vector>
 
+#include "gameplay/boss_health_gauge.h"
 #include "menu/menu_controller.h"
 #include "menu/menu_tree.h"
 #include "msg_window/msg_window.h"
@@ -38,6 +39,10 @@ public:
   void SetLargeMessageFont();
   void NewMessagePage();
 
+  // --- Gameplay HUD ---
+  void UpdateBossHud(const BossHudModel &model) { boss_health_.Sync(model); }
+  void DrawBossHud(uint32_t stage_frame) { boss_health_.Draw(stage_frame); }
+
   // --- Menu window access ---
   menu::MenuController &Main() { return main_window_; }
   menu::MenuController &Exit() { return exit_window_; }
@@ -59,6 +64,7 @@ public:
 private:
   // --- Message window ---
   MsgWindow msg_window_;
+  BossHealthGauge boss_health_;
 
   // --- Main menu ---
   std::unique_ptr<menu::IMenuNode> root_menu_;

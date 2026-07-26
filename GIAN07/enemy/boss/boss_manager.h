@@ -4,20 +4,22 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include "bit_formation.h"
 #include "boss.h"
-#include "boss_health_gauge.h"
 #include "snake_formation.h"
 
 #include "core/object_pool.h"
+#include "enemy/actor/enemy_combat.h"
 #include "gfx/coords.h"
 
 struct BulletManager;
 class EnemySystem;
+class EclHost;
+struct EffectManager;
 struct ItemManager;
-struct GameManager;
 class Player;
 
 namespace stage {
@@ -25,36 +27,37 @@ class StageSession;
 }
 
 class BossManager {
+  friend class EclHost;
   friend class EnemySystem;
 
   BossManager(EnemySystem &system, BulletManager &bullets, ItemManager &items,
-              GameManager &game, Player &player, stage::StageSession &stage);
-
-  ObjectPool<BossData, BOSS_MAX> actors_;
-  BossHealthGauge health_gauge_;
-
-  SnakeFormation snakes_;
-  BitFormation bits_;
+              Player &player, stage::StageSession &stage,
+              EffectManager &effects);
 
   EnemySystem *system_;
   BulletManager *bullets_;
   ItemManager *items_;
-  GameManager *game_;
   Player *player_;
   stage::StageSession *stage_;
+  EffectManager *effects_;
+
+  ObjectPool<BossData, BOSS_MAX> actors_;
+  BossHudModel hud_{};
+
+  SnakeFormation snakes_;
+  std::array<BitFormation, BOSS_MAX> bits_;
 
   // === Methods ===
 
   // Initialization and setup
   void Reset();
+  void OnActorRetired(const EnemyActor &actor);
   void Spawn(WORLD_POINT position, uint32_t script_id);
   void SpawnFromEcl(WORLD_POINT position, uint32_t script_id);
 
   // Movement and drawing
   void Update();
-  void DrawActors();
   void ClearProjectiles();
-  void DrawHud(uint32_t stage_frame);
 
   // Timer
   void SetStageTimeout(int32_t timeout_end);
@@ -65,23 +68,24 @@ class BossManager {
     return static_cast<uint16_t>(actors_.Size());
   }
   [[nodiscard]] uint32_t TotalHp() const;
+  [[nodiscard]] const BossHudModel &Hud() const { return hud_; }
 
   // Damage
-  bool ApplyDamage(BossData &b, EnemyActor &e, int damage);
-  bool DamageAt(int x, int y, int damage);
-  bool DamageAt2(int x, int y, int damage);
-  void DamageAt3(int x, int y, uint8_t d);
-  void DamageAll(int damage);
+  bool ApplyDamage(BossData &boss, int damage);
+  bool ApplyAttack(const EnemyAttack &attack);
 
   // Interrupts and bit control
-  void HandleAction(EnemyActor *actor, EclBossAction action);
-  void SetBitAttack(EnemyActor *actor, uint32_t script_id);
-  void ControlBitLaser(EnemyActor *actor, EclBitLaserCommand command);
-  void ControlBits(EnemyActor *actor, EclBitCommand command, int parameter);
-  [[nodiscard]] int BitCount() const;
+  void HandleAction(EnemyActor &actor, EclBossAction action);
+  void SetBitAttack(EnemyActor &actor, uint32_t script_id);
+  void ControlBitLaser(EnemyActor &actor, EclBitLaserCommand command);
+  void ControlBits(EnemyActor &actor, EclBitCommand command, int parameter);
+  [[nodiscard]] int BitCount(const EnemyActor &actor) const;
 
   void SpawnActor(WORLD_POINT position, uint32_t script_id,
                   bool open_health_gauge);
-  void UpdateActor(BossData &boss);
-  void RemoveDefeatedActors();
+  void UpdateState(BossData &boss);
+  void RemoveFinishedActors();
+  [[nodiscard]] BitFormation *AcquireBits(BossData &boss);
+  [[nodiscard]] BitFormation *FindBits(const EnemyActor &actor);
+  [[nodiscard]] const BitFormation *FindBits(const EnemyActor &actor) const;
 };

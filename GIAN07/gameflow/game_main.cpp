@@ -590,6 +590,7 @@ void GameSTD_Init() {
 
   GameFlow.ctx.player.SetMaidShotIndices();
   GameFlow.ctx.enemies.Reset();
+  GameFlow.ctx.ui.UpdateBossHud(GameFlow.ctx.enemies.BossHud());
   GameFlow.ctx.bullets.Init();
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
@@ -1549,6 +1550,7 @@ void GameMove() {
   }
 
   GameFlow.ctx.enemies.Update();
+  GameFlow.ctx.ui.UpdateBossHud(GameFlow.ctx.enemies.BossHud());
   GameFlow.ctx.items.Move();
   GameFlow.ctx.bullets.Update(GameFlow.ctx.enemies.HomingTarget());
   Effects.MoveFragments();
@@ -1617,7 +1619,7 @@ void GameDraw() {
   Effects.DrawStringEffects();
   GameFlow.ctx.player.DrawStatus();
 
-  GameFlow.ctx.enemies.DrawBossHud(GameFlow.ctx.stage.Frame());
+  GameFlow.ctx.ui.DrawBossHud(GameFlow.ctx.stage.Frame());
   Effects.DrawScreenEffect();
 
   GameFlow.ctx.ui.DrawMessageWindow();

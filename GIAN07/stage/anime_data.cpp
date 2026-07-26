@@ -5,11 +5,11 @@
 
 namespace {
 
-void SetAnimeRect(ANIME_DATA *anm, int x1, int y1, int x2, int y2) {
-  anm->size = {.w = (x2 - x1), .h = (y2 - y1)};
-  anm->n = 1;
-  anm->mode = ANM_NORM;
-  anm->ptn[0] = {x1, y1, x2, y2};
+void SetAnimeRect(EnemyAnimation &animation, int x1, int y1, int x2, int y2) {
+  animation.size = {.w = (x2 - x1), .h = (y2 - y1)};
+  animation.n = 1;
+  animation.mode = ANM_NORM;
+  animation.ptn[0] = {x1, y1, x2, y2};
 }
 
 } // namespace
@@ -156,14 +156,14 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[12].n = 1;
     animations[12].mode = ANM_NORM;
     animations[12].ptn[0] = {64, 208, 128, 272};
-    SetAnimeRect(&animations[14], 0, 288, 159, 479);
-    SetAnimeRect(&animations[15], 160, 384, 271, 479);
-    SetAnimeRect(&animations[16], 272, 368, 390, 478);
-    SetAnimeRect(&animations[17], 400, 368, 496, 431);
-    SetAnimeRect(&animations[18], 400, 160, 558, 359);
-    SetAnimeRect(&animations[19], 528, 48, 639, 160);
-    SetAnimeRect(&animations[20], 560, 160, 639, 270);
-    SetAnimeRect(&animations[21], 576, 320, 639, 399);
+    SetAnimeRect(animations[14], 0, 288, 159, 479);
+    SetAnimeRect(animations[15], 160, 384, 271, 479);
+    SetAnimeRect(animations[16], 272, 368, 390, 478);
+    SetAnimeRect(animations[17], 400, 368, 496, 431);
+    SetAnimeRect(animations[18], 400, 160, 558, 359);
+    SetAnimeRect(animations[19], 528, 48, 639, 160);
+    SetAnimeRect(animations[20], 560, 160, 639, 270);
+    SetAnimeRect(animations[21], 576, 320, 639, 399);
     break;
   case StageId::STAGE_3:
     animations[0].size = {.w = 56, .h = 56};
@@ -261,7 +261,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     for (i = 0; i < 9; i++)
       animations[3].ptn[i] = PIXEL_LTWH{(56 * i), 0, 56, 72};
     animations[3].ptn[9] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
-    SetAnimeRect(&animations[4], 432, 272, 632, 464);
+    SetAnimeRect(animations[4], 432, 272, 632, 464);
     animations[5].size = {.w = 56, .h = 72};
     animations[5].n = 11;
     animations[5].mode = ANM_STOP;

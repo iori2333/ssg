@@ -8,7 +8,7 @@
 #include "long.h"
 
 #include "audio/snd.h"
-#include "enemy/ecl.h"
+#include "enemy/ecl/ecl.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
@@ -107,27 +107,34 @@ LaserLong::UpdateResult LaserLong::Update(const UpdateInfo &info) {
 void LaserLong::TickUpdate() {
   ++count_;
 
-  if (subtype_ == LongLaserType::SetDeg && e_ != nullptr && d_ != e_->d) {
-    d_ = e_->d;
+  if (e_ == nullptr) {
+    if (state_ != LongState::Closing && state_ != LongState::ClosingToLine) {
+      MarkDead();
+      return;
+    }
+  } else {
+    if (subtype_ == LongLaserType::SetDeg && d_ != e_->d) {
+      d_ = e_->d;
 
-    lx_ = cosl(d_, w_ >> 6);
-    ly_ = sinl(d_, w_ >> 6);
-    wx_ = -(ly_);
-    wy_ = lx_;
+      lx_ = cosl(d_, w_ >> 6);
+      ly_ = sinl(d_, w_ >> 6);
+      wx_ = -(ly_);
+      wy_ = lx_;
 
-    infx_ = cosl(d_, kBeamLength);
-    infy_ = sinl(d_, kBeamLength);
+      infx_ = cosl(d_, kBeamLength);
+      infy_ = sinl(d_, kBeamLength);
 
+      RecalcGeometry();
+    }
+
+    x_ = e_->x + dx_;
+    y_ = e_->y + dy_;
     RecalcGeometry();
   }
 
   if (state_ == LongState::Inactive) {
     return;
   }
-
-  x_ = e_->x + dx_;
-  y_ = e_->y + dy_;
-  RecalcGeometry();
 
   switch (state_) {
   case LongState::Opening:
@@ -344,6 +351,7 @@ void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
     break;
   case Cmd::ForceClose:
     state_ = LongState::Closing;
+    e_ = nullptr;
     break;
   case Cmd::SetAngle:
     d_ = angle;
@@ -352,10 +360,6 @@ void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
   case Cmd::AdjustAngle:
     d_ += delta;
     FixAngleGeometry();
-    break;
-  case Cmd::SetEnemyGone:
-    state_ = LongState::Inactive;
-    e_ = nullptr;
     break;
   default:
     break;
@@ -373,7 +377,8 @@ void LaserLong::FixAngleGeometry() {
 }
 
 bool LaserLong::BelongsTo(const EnemyActor *e, uint8_t id) const {
-  return e_ == e && (enemy_id_ == id || id == ECL_ALL_LONG_LASERS);
+  return e_ == e && e != nullptr &&
+         (enemy_id_ == id || id == ECL_ALL_LONG_LASERS);
 }
 
 // ── Debug ──────────────────────────────────────────────────────────

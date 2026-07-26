@@ -11,7 +11,7 @@
 #include <string_view>
 #include <vector>
 
-#include "enemy/ecl_program.h"
+#include "enemy/ecl/ecl_program.h"
 #include "scripts_data.h"
 #include "stage/scene_program.h"
 #include "stage/stage_map.h"

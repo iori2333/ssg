@@ -5,11 +5,11 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "enemy_system.h"
 #include "snake_formation.h"
 
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
+#include "enemy/enemy_system.h"
 
 void SnakeFormation::Reset() {
   for (auto &snake : snakes_) {
@@ -25,7 +25,7 @@ void SnakeFormation::Spawn(BossData &parent, uint32_t tail_script) {
   }
 
   snake->active = true;
-  snake->parent = &parent;
+  snake->parent = &parent.actor;
   snake->head = 0;
 
   for (auto &point : snake->trail) {
@@ -34,7 +34,9 @@ void SnakeFormation::Spawn(BossData &parent, uint32_t tail_script) {
 
   const WORLD_POINT position{&parent.actor.x, &parent.actor.y};
   for (auto &segment : snake->segments) {
-    segment = enemies_->SpawnRegular(position, tail_script);
+    if (auto *actor = enemies_->SpawnRegular(position, tail_script)) {
+      segment = actor;
+    }
   }
 }
 
@@ -43,6 +45,12 @@ void SnakeFormation::Update() {
 
   for (auto &snake : snakes_) {
     if (!snake.active) {
+      continue;
+    }
+
+    const auto *parent = snake.parent;
+    if (parent == nullptr) {
+      Destroy(snake);
       continue;
     }
 
@@ -63,35 +71,53 @@ void SnakeFormation::Update() {
 
     snake.head = (snake.head + 1) % point_count;
     snake.trail[snake.head] = {
-        .x = snake.parent->actor.x,
-        .y = snake.parent->actor.y,
-        .d = snake.parent->actor.d,
+        .x = parent->x,
+        .y = parent->y,
+        .d = parent->d,
     };
   }
 }
 
 void SnakeFormation::Remove(const BossData &parent) {
   auto snake = std::ranges::find_if(snakes_, [&parent](const auto &candidate) {
-    return candidate.parent == &parent;
+    return candidate.parent == &parent.actor;
   });
   if (snake == snakes_.end()) {
     return;
   }
 
-  for (auto *segment : snake->segments) {
+  Destroy(*snake);
+}
+
+void SnakeFormation::OnActorRetired(const EnemyActor &actor) {
+  for (auto &snake : snakes_) {
+    if (snake.parent == &actor) {
+      Destroy(snake);
+      continue;
+    }
+    for (auto &segment : snake.segments) {
+      if (segment == &actor) {
+        segment = nullptr;
+      }
+    }
+  }
+}
+
+void SnakeFormation::Destroy(Snake &snake) {
+  for (auto *segment : snake.segments) {
     if (segment == nullptr) {
-      break;
+      continue;
     }
 
-    if (segment->LLaserRef != 0U) {
+    if (segment->long_laser_count != 0U) {
       bullets_->ControlLongLaser(
           segment, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     segment->hp = 0;
     segment->count = 0;
-    segment->flag = EF_BOMB;
+    segment->state = EnemyActorState::Exploding;
   }
 
-  *snake = {};
+  snake = {};
 }

@@ -7,7 +7,7 @@
 #include <span>
 
 #include "bullet/bullet_base.h"
-#include "enemy/enemy.h"
+#include "enemy/actor/enemy_actor.h"
 #include "gfx/graphics_backend.h"
 
 // ── Pool capacity ────────────────────────────────────────────────
@@ -56,7 +56,6 @@ struct LongLaserUpdateInfo {
     ForceClose,
     SetAngle,
     AdjustAngle,
-    SetEnemyGone,
   };
   Command command = Command::Tick;
   uint8_t angle = 0;

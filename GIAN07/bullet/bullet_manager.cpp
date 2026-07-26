@@ -200,6 +200,9 @@ bool BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
 }
 
 bool BulletManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
+  if (info.enemy == nullptr) {
+    return false;
+  }
   auto si = info;
   si.player_x = player_->X();
   si.player_y = player_->Y();

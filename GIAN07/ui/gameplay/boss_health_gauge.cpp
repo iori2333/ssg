@@ -18,7 +18,37 @@ static constexpr auto BOSS_HEALTH_GAUGE_WIDTH = 256;
 static constexpr auto BOSS_HEALTH_GAUGE_START_X = X_MAX;
 static constexpr auto BOSS_HEALTH_GAUGE_END_X = 260;
 
-void BossHealthGauge::Reset() { state_ = State::Hidden; }
+void BossHealthGauge::Sync(const BossHudModel &model) {
+  if (encounter_revision_ != model.encounter_revision) {
+    encounter_revision_ = model.encounter_revision;
+    phase_revision_ = model.phase_revision;
+    if (model.active) {
+      Open(model.max_hp);
+    } else {
+      Reset();
+    }
+  } else if (phase_revision_ != model.phase_revision) {
+    phase_revision_ = model.phase_revision;
+    AddPhase(model.phase_hp);
+  }
+
+  SetCombatState(model.phase_threshold_hp, model.timer_max, model.timer_now);
+  SetStageTimeout(model.stage_timeout_end);
+  Update(model.current_hp);
+}
+
+void BossHealthGauge::Reset() {
+  state_ = State::Hidden;
+  current_hp_ = 0;
+  max_hp_ = 0;
+  target_hp_ = 0;
+  phase_hp_ = 0;
+  phase_threshold_hp_ = -1;
+  timer_max_ = -1;
+  timer_now_ = 0;
+  previous_timer_seconds_ = -1;
+  stage_timeout_end_ = -1;
+}
 
 void BossHealthGauge::SetCombatState(int32_t phase_threshold_hp,
                                      int32_t timer_max, int32_t timer_now) {
@@ -32,6 +62,10 @@ void BossHealthGauge::SetStageTimeout(int32_t timeout_end) {
 }
 
 void BossHealthGauge::Open(uint32_t max) {
+  if (max == 0) {
+    Reset();
+    return;
+  }
   max_hp_ = max;
   current_hp_ = 0;
   target_hp_ = max;
@@ -39,6 +73,7 @@ void BossHealthGauge::Open(uint32_t max) {
 
   state_ = State::OpeningFrame;
   stage_timeout_end_ = -1;
+  previous_timer_seconds_ = -1;
 
   for (std::size_t index = 0; index < row_x_.size(); ++index) {
     row_x_[index] = BOSS_HEALTH_GAUGE_START_X + static_cast<int>(index * 20);

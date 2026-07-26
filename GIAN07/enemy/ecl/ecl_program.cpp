@@ -13,6 +13,14 @@
 
 #include "util/endian.h"
 
+class EclInstructionFactory {
+public:
+  template <typename Arguments>
+  static EclInstruction Make(EclOpcode opcode, Arguments arguments) {
+    return EclInstruction(opcode, std::move(arguments));
+  }
+};
+
 namespace {
 
 constexpr size_t InvalidPosition = std::numeric_limits<size_t>::max();
@@ -229,7 +237,7 @@ std::optional<EclValue> DecodeRegister(uint8_t raw) {
 
 template <typename Arguments>
 EclInstruction MakeInstruction(EclOpcode opcode, Arguments arguments) {
-  return {.opcode = opcode, .arguments = std::move(arguments)};
+  return EclInstructionFactory::Make(opcode, std::move(arguments));
 }
 
 std::optional<EclInstruction>

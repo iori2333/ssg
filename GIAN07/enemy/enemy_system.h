@@ -5,16 +5,20 @@
 #pragma once
 
 #include <cstdint>
-#include <utility>
 
-#include "boss_manager.h"
-#include "ecl_program.h"
-#include "enemy.h"
+#include "actor/enemy_actor.h"
+#include "actor/enemy_actor_runtime.h"
+#include "actor/enemy_combat.h"
+#include "boss/boss_manager.h"
+#include "ecl/ecl_host.h"
+#include "ecl/ecl_vm.h"
+#include "render/enemy_renderer.h"
 
 #include "core/object_pool.h"
 #include "gfx/coords.h"
 
 struct BulletManager;
+struct EffectManager;
 struct GameManager;
 struct ItemManager;
 class Player;
@@ -32,12 +36,11 @@ struct EnemyHomingTarget {
 class EnemySystem {
 public:
   EnemySystem(BulletManager &bullets, ItemManager &items, GameManager &game,
-              Player &player, stage::StageSession &stage);
+              Player &player, stage::StageSession &stage,
+              EffectManager &effects);
 
-  void InstallStageAssets(EclProgram program, EnemyAnimationSet animations) {
-    program_ = std::move(program);
-    anime = std::move(animations);
-  }
+  [[nodiscard]] bool InstallStageAssets(EclProgram program,
+                                        EnemyAnimationSet animations);
 
   void Reset();
   void ResetRegular();
@@ -45,7 +48,6 @@ public:
 
   void DrawBosses();
   void DrawRegular();
-  void DrawBossHud(uint32_t stage_frame);
 
   void SpawnFromScene(int16_t x, int16_t y, uint8_t script_id);
   void SpawnBoss(PIXEL_POINT position, uint32_t script_id);
@@ -54,75 +56,46 @@ public:
 
   [[nodiscard]] uint16_t BossCount() const { return bosses_.ActiveCount(); }
   [[nodiscard]] uint32_t BossHpSum() const { return bosses_.TotalHp(); }
+  [[nodiscard]] const BossHudModel &BossHud() const { return bosses_.Hud(); }
   [[nodiscard]] const EnemyHomingTarget &HomingTarget() const {
     return homing_target_;
   }
   void ResetHomingTarget();
 
-  bool DamageAt(int x, int y, int damage);
-  bool DamageAt2(int x, int y, int damage);
-  void DamageAt3(int x, int y, uint8_t direction);
-  void DamageAll(int damage);
+  bool ApplyAttack(const EnemyAttack &attack);
 
 private:
   friend class BossManager;
   friend class BitFormation;
+  friend class EclHost;
+  friend class EnemyActorRuntime;
   friend class SnakeFormation;
 
   // Shared actor/ECL operations used by the owned BossManager.
   void ClearRegular();
-  void DrawActor(const EnemyActor &actor) const;
+  void CompactRegular();
+  void RetireActor(EnemyActor &actor);
   EnemyActor *SpawnRegular(WORLD_POINT position, uint32_t script_id);
   void InitializeActor(EnemyActor &actor, WORLD_POINT position,
                        uint32_t script_id);
-  void JumpToScript(EnemyActor *actor, uint32_t script_id);
-  void Execute(EnemyActor *actor);
-  enum class EclStep { Advance, Jump, Yield, Repeat, Halt };
-  EclStep ExecuteInstruction(EnemyActor &actor,
-                             const EclInstruction &instruction,
-                             int &comparison);
-  EclStep ExecuteControlInstruction(EnemyActor &actor,
-                                    const EclInstruction &instruction);
-  EclStep ExecuteMovementInstruction(EnemyActor &actor,
-                                     const EclInstruction &instruction);
-  EclStep ExecuteBulletInstruction(EnemyActor &actor,
-                                   const EclInstruction &instruction);
-  EclStep ExecuteLaserInstruction(EnemyActor &actor,
-                                  const EclInstruction &instruction);
-  EclStep ExecuteActorInstruction(EnemyActor &actor,
-                                  const EclInstruction &instruction);
-  EclStep ExecuteRegisterInstruction(EnemyActor &actor,
-                                     const EclInstruction &instruction,
-                                     int &comparison);
-  [[nodiscard]] static uint32_t ReadValue(const EnemyActor &actor,
-                                          EclValue value);
-  static void WriteValue(EnemyActor &actor, EclValue destination,
-                         uint32_t value);
-  void CheckInterrupts(EnemyActor *actor);
-  void UpdateAnimation(EnemyActor *actor);
-  void ConsiderHomingTarget(const EnemyActor *actor);
-
-  static bool LaserHitCheck(const EnemyActor *actor, int origin_x, int origin_y,
-                            uint8_t direction);
+  void UpdateAnimation(EnemyActor &actor);
+  void ConsiderHomingTarget(const EnemyActor &actor);
 
   void MoveRegular();
   bool ApplyDamage(EnemyActor &actor, int damage);
 
+  EnemyAnimationSet animations_{};
+  EnemyRenderer renderer_;
   ObjectPool<EnemyActor, ENEMY_MAX> regular_enemies_;
-
-  EclProgram program_;
-  EnemyAnimationSet anime{};
   EnemyHomingTarget homing_target_;
   int homing_distance_ = HOMING_DUMMY;
 
-  uint8_t enemy_exdeg = 0;
-  uint8_t enemy_exdeg_d = 0;
-
   BulletManager *bullets_;
   ItemManager *items_;
-  GameManager *game_;
   Player *player_;
-  stage::StageSession *stage_;
 
+  EclHost ecl_host_;
+  EclVm ecl_;
+  EnemyActorRuntime actor_runtime_;
   BossManager bosses_;
 };
