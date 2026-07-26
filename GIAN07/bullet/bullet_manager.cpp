@@ -14,7 +14,7 @@
 #include "core/gian.h"
 #include "core/level.h"
 #include "effect/effect_manager.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "item/item_manager.h"

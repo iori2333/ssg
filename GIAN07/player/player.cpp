@@ -356,7 +356,7 @@ void Player::DrawStatus() const {
   }
 }
 
-void Player::Update(EnemySystem &enemies) {
+void Player::Update(EnemyManager &enemies) {
   int vx = 0;
   int vy = 0;
   int v = 0;

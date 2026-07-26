@@ -6,8 +6,9 @@
 #include "laser_form.h"
 
 #include "core/gian.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "player/player.h"
+#include "player/player_attack.h"
 
 // --- LaserForm (base: wider spread) ---
 
@@ -61,23 +62,23 @@ void LaserForm::FireMain(uint8_t tier) {
   }
 }
 
-void LaserForm::FireBomb(EnemySystem &enemies) {
+void LaserForm::FireBomb(EnemyManager &enemies) {
   const auto LaserDeg = player_.GetLaserDeg();
 
   int ox = player_.OpX() + (SBOPT_DX * 64);
   int oy = player_.OpY();
   for (int i = -3; i <= 3; i++) {
     const auto d = Player::GetRightLaserDeg(LaserDeg, i);
-    enemies.ApplyAttack(
-        EnemyAttack::DirectedBeam(WORLD_POINT::FromWorld(ox, oy), d));
+    enemies.ApplyPlayerAttack(
+        PlayerAttack::DirectedBeam(WORLD_POINT::FromWorld(ox, oy), d));
   }
 
   ox = player_.OpX() - (SBOPT_DX * 64);
   oy = player_.OpY();
   for (int i = -3; i <= 3; i++) {
     const auto d = Player::GetLeftLaserDeg(LaserDeg, i);
-    enemies.ApplyAttack(
-        EnemyAttack::DirectedBeam(WORLD_POINT::FromWorld(ox, oy), d));
+    enemies.ApplyPlayerAttack(
+        PlayerAttack::DirectedBeam(WORLD_POINT::FromWorld(ox, oy), d));
   }
 }
 
@@ -100,13 +101,13 @@ void LaserForm::OnFireTick() {
   }
 }
 
-void LaserForm::OnCollisionTick(EnemySystem &enemies) {
+void LaserForm::OnCollisionTick(EnemyManager &enemies) {
   if (player_.lay_grp_ != 0U) {
     const int ldmg = (player_.lay_grp_ / 3) + 1;
-    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+    enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
         WORLD_POINT::FromWorld(player_.opx_ + (SBOPT_DX << 6), player_.opy_),
         ldmg));
-    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+    enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
         WORLD_POINT::FromWorld(player_.opx_ - (SBOPT_DX << 6), player_.opy_),
         ldmg));
   }
@@ -181,14 +182,14 @@ void LaserFocusForm::OnFireTick() {
   }
 }
 
-void LaserFocusForm::OnCollisionTick(EnemySystem &enemies) {
+void LaserFocusForm::OnCollisionTick(EnemyManager &enemies) {
   if (player_.lay_grp_ != 0U) {
     const int loff = SBOPT_DX / 2;
     const int ldmg = (player_.lay_grp_ / 3) + 1;
-    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+    enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
         WORLD_POINT::FromWorld(player_.opx_ + (loff << 6), player_.opy_),
         ldmg));
-    enemies.ApplyAttack(EnemyAttack::VerticalBeam(
+    enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
         WORLD_POINT::FromWorld(player_.opx_ - (loff << 6), player_.opy_),
         ldmg));
   }

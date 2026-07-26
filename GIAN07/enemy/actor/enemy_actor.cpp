@@ -1,0 +1,78 @@
+///
+/// EnemyActor - local state transitions, animation, and hit geometry
+///
+
+#include <algorithm>
+#include <cstdlib>
+
+#include "enemy_actor.h"
+
+#include "core/gian.h"
+#include "player/player_attack.h"
+#include "util/ut_math.h"
+
+void EnemyActor::BeginExplosion() {
+  hp = 0;
+  count = 0;
+  state = EnemyActorState::Exploding;
+}
+
+void EnemyActor::UpdateAnimation(const EnemyAnimationSet &animations) {
+  if (animation >= animations.size()) {
+    state = EnemyActorState::PendingRemoval;
+    return;
+  }
+  const auto &animation_data = animations[animation];
+  if (animation_data.n == 0) {
+    state = EnemyActorState::PendingRemoval;
+    return;
+  }
+
+  switch (animation_data.mode) {
+  case ANM_NORM:
+    if (animation_speed > 0 && count % animation_speed == 0) {
+      animation_frame = (animation_frame + 1) % animation_data.n;
+    } else if (animation_speed < 0 && count % -animation_speed == 0) {
+      animation_frame =
+          (animation_frame + animation_data.n - 1) % animation_data.n;
+    }
+    break;
+
+  case ANM_STOP:
+    if (animation_speed > 0 && count % animation_speed == 0 &&
+        animation_frame < animation_data.n - 1) {
+      ++animation_frame;
+    }
+    break;
+
+  default:
+    break;
+  }
+}
+
+bool EnemyActor::IsHitBy(const PlayerAttack &attack) const {
+  switch (attack.shape) {
+  case PlayerAttackShape::Point:
+    return HITCHK(attack.origin.x, x, hitbox_half_width) &&
+           HITCHK(attack.origin.y, y, hitbox_half_height);
+
+  case PlayerAttackShape::VerticalBeam:
+    return HITCHK(attack.origin.x, x, hitbox_half_width) && attack.origin.y > y;
+
+  case PlayerAttackShape::DirectedBeam: {
+    const int hit_width =
+        std::min(hitbox_half_height, hitbox_half_width) + PixelToWorld(3);
+    const int offset_x = x - attack.origin.x;
+    const int offset_y = y - attack.origin.y;
+    const int length =
+        cosl(attack.direction, offset_x) + sinl(attack.direction, offset_y);
+    const int width = std::abs(-sinl(attack.direction, offset_x) +
+                               cosl(attack.direction, offset_y));
+    return length > 0 && width < hit_width;
+  }
+
+  case PlayerAttackShape::AllEnemies:
+    return true;
+  }
+  return false;
+}

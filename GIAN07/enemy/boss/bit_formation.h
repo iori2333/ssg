@@ -13,7 +13,7 @@
 #include "enemy/actor/enemy_actor.h"
 
 struct BulletManager;
-class EnemySystem;
+class EnemyManager;
 class Player;
 
 inline constexpr std::size_t BIT_MAX = 6;
@@ -30,11 +30,11 @@ struct BitLinkGeometry {
 
 class BitFormation {
 public:
-  BitFormation(EnemySystem &enemies, BulletManager &bullets, Player &player)
+  BitFormation(EnemyManager &enemies, BulletManager &bullets, Player &player)
       : enemies_(&enemies), bullets_(&bullets), player_(&player) {}
 
   void Reset();
-  void Spawn(BossData &parent, uint8_t count, uint32_t script_id);
+  void Spawn(BossActor &parent, uint8_t count, uint32_t script_id);
   void Update();
   void Destroy();
   [[nodiscard]] BitLinkGeometry LinkGeometry() const;
@@ -84,7 +84,7 @@ private:
   uint16_t base_angle_ = 0;
   bool laser_active_ = false;
 
-  EnemySystem *enemies_;
+  EnemyManager *enemies_;
   BulletManager *bullets_;
   Player *player_;
 };

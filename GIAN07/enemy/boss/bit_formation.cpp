@@ -12,7 +12,7 @@
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
@@ -43,7 +43,7 @@ void BitFormation::Reset() {
 }
 
 // Set bits
-void BitFormation::Spawn(BossData &parent, uint8_t count, uint32_t script_id) {
+void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
   static constexpr std::array<uint8_t, BIT_MAX> hp_multipliers = {1, 4, 2,
                                                                   5, 3, 6};
 
@@ -62,10 +62,10 @@ void BitFormation::Spawn(BossData &parent, uint8_t count, uint32_t script_id) {
   }
 
   motion_ = MotionState::Orbit;
-  parent_ = &parent.actor;
+  parent_ = &parent;
 
-  center_x_ = parent.actor.x;
-  center_y_ = parent.actor.y;
+  center_x_ = parent.x;
+  center_y_ = parent.y;
 
   radius_ = 0;
   target_radius_ = 64 * 80;
@@ -171,9 +171,7 @@ void BitFormation::Update() {
             e, ECL_ALL_LONG_LASERS,
             LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
       }
-      e->hp = 0;
-      e->count = 0; // For explosion animation set
-      e->state = EnemyActorState::Exploding;
+      e->BeginExplosion();
 
       Snd_SEPlay(SfxId::Bomb, e->x);
 
@@ -393,9 +391,7 @@ void BitFormation::Destroy() {
           e, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
-    e->hp = 0;
-    e->count = 0;
-    e->state = EnemyActorState::Exploding;
+    e->BeginExplosion();
 
     Snd_SEPlay(SfxId::Bomb, e->x);
   }

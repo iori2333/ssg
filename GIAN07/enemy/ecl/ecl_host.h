@@ -13,7 +13,7 @@
 
 struct BulletManager;
 struct GameManager;
-class EnemySystem;
+class EnemyManager;
 class Player;
 
 namespace stage {
@@ -22,7 +22,7 @@ class StageSession;
 
 class EclHost {
 public:
-  EclHost(EnemySystem &enemies, BulletManager &bullets, GameManager &game,
+  EclHost(EnemyManager &enemies, BulletManager &bullets, GameManager &game,
           Player &player, stage::StageSession &stage)
       : enemies_(&enemies), bullets_(&bullets), game_(&game), player_(&player),
         stage_(&stage) {}
@@ -49,7 +49,7 @@ public:
                    int parameter) const;
 
 private:
-  EnemySystem *enemies_;
+  EnemyManager *enemies_;
   BulletManager *bullets_;
   GameManager *game_;
   Player *player_;

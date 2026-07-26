@@ -19,14 +19,14 @@ public:
       : animations_(&animations), player_(&player) {}
 
   void DrawRegular(const ObjectPool<EnemyActor, ENEMY_MAX> &actors) const;
-  void DrawBosses(const ObjectPool<BossData, BOSS_MAX> &bosses,
+  void DrawBosses(const ObjectPool<BossActor, BOSS_MAX> &bosses,
                   const std::array<BitFormation, BOSS_MAX> &formations) const;
 
 private:
   void DrawActor(const EnemyActor &actor) const;
   void DrawExplosion(const EnemyActor &actor) const;
   void DrawBossLinks(const BitFormation &formation) const;
-  bool DrawBossSpecialState(const BossData &boss) const;
+  bool DrawBossSpecialState(const BossActor &boss) const;
 
   const EnemyAnimationSet *animations_;
   const Player *player_;

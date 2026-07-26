@@ -11,7 +11,7 @@
 #include "sys/input.h"
 
 struct EffectManager;
-struct EnemySystem;
+class EnemyManager;
 struct GameManager;
 class TrackManager;
 class UIManager;
@@ -30,7 +30,7 @@ enum class StageTransition : uint8_t {
 };
 
 struct StageUpdateContext {
-  EnemySystem &enemies;
+  EnemyManager &enemies;
   EffectManager &effects;
   UIManager &ui;
   data::GraphicsLoader &graphics;

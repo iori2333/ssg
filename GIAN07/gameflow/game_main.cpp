@@ -23,7 +23,7 @@
 #include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
 #include "effect/lens.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"

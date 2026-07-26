@@ -11,7 +11,7 @@ public:
   explicit HomingForm(Player &p) : WeaponForm(p) {}
   void FireMain(uint8_t tier) override;
   void FireSub(uint8_t tier) override;
-  void FireBomb(EnemySystem &enemies) override;
+  void FireBomb(EnemyManager &enemies) override;
   uint16_t BombDuration() const override;
 };
 

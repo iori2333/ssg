@@ -6,7 +6,7 @@
 #include "homing_form.h"
 
 #include "core/gian.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
@@ -91,7 +91,7 @@ void HomingForm::FireSub(uint8_t tier) {
   player_.SpawnShot(si);
 }
 
-void HomingForm::FireBomb(EnemySystem & /*enemies*/) {
+void HomingForm::FireBomb(EnemyManager & /*enemies*/) {
   if (player_.bomb_time_ % 30 == 1) {
     PlayerShotSpawnInfo si{player_.X(), player_.Y(), 64, 16,
                            8,           SPEEDM(28),  4,  TID_HOMING_BOMB_A,

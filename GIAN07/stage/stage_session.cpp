@@ -13,7 +13,7 @@
 #include "data/graphics_loader.h"
 #include "effect/effect.h"
 #include "effect/effect_manager.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "track_manager/track_manager.h"
 #include "ui/ui_manager.h"
 

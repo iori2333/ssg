@@ -9,6 +9,7 @@
 
 #include "player_shot.h"
 #include "player.h"
+#include "player_attack.h"
 #include "weapon/weapon_form.h"
 
 #include "audio/snd.h"
@@ -16,7 +17,7 @@
 #include "core/gian.h"
 #include "effect/effect_manager.h"
 #include "effect/fragment.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
@@ -41,7 +42,7 @@ constexpr uint8_t TogeDamage[0x0c] = {
 
 // --- Fire dispatch ---
 
-void Player::SetMaidShot(EnemySystem &enemies) {
+void Player::SetMaidShot(EnemyManager &enemies) {
   if (((Key_Data & KEY_TAMA) != 0) && toge_time_ == 0 &&
       muteki_ < MAID_MOVE_DISABLE_TIME) {
     toge_time_ = MAID_TAMA_START;
@@ -156,11 +157,11 @@ void PlayerShot::MoveByEffect() {
 
 // --- Bullet movement & hit check ---
 
-void Player::MoveMaidShot(EnemySystem &enemies) {
+void Player::MoveMaidShot(EnemyManager &enemies) {
   for (auto &t : maid_tama_) {
     if (t.c_ == TID_HOMING_BOMB_B) {
-      enemies.ApplyAttack(EnemyAttack::Point(WORLD_POINT::FromWorld(t.x_, t.y_),
-                                             TogeDamage[t.c_]));
+      enemies.ApplyPlayerAttack(PlayerAttack::Point(
+          WORLD_POINT::FromWorld(t.x_, t.y_), TogeDamage[t.c_]));
       t.count_++;
       if (t.count_ >= 19) {
         t.flag_ |= PlayerFlag::DEL;
@@ -178,7 +179,7 @@ void Player::MoveMaidShot(EnemySystem &enemies) {
         t.flag_ |= PlayerFlag::DEL;
       }
 
-      if (enemies.ApplyAttack(EnemyAttack::Point(
+      if (enemies.ApplyPlayerAttack(PlayerAttack::Point(
               WORLD_POINT::FromWorld(t.x_, t.y_), TogeDamage[t.c_]))) {
         if (t.c_ == TID_HOMING_BOMB_A) {
           PlayerShotSpawnInfo si{.x = t.x_,

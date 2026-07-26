@@ -14,7 +14,7 @@
 #include "data/graphics_loader.h"
 #include "data/sfx_loader.h"
 #include "effect/effect_manager.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/ending_manager.h"
 #include "gameflow/score_manager.h"
@@ -37,7 +37,7 @@ struct GameContext {
   ItemManager items;
   GameManager game;
   Player player;
-  EnemySystem enemies{bullets, items, game, player, stage, Effects};
+  EnemyManager enemies{bullets, items, game, player, stage, Effects};
   EndingManager ending;
   ScoreManager scores;
   DemoManager demos{data};

@@ -9,7 +9,7 @@
 #include "stage_loader.h"
 #include "stage_session.h"
 
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "scripts_data.h"
 
 namespace {
@@ -27,7 +27,7 @@ BYTE_BUFFER_BORROWED LoadEmbeddedScript(int file_no) {
 
 namespace stage {
 
-bool StageLoader::Load(StageId stage, EnemySystem &enemies,
+bool StageLoader::Load(StageId stage, EnemyManager &enemies,
                        StageSession &session) const {
   const auto stage_index = std::to_underlying(stage);
   if (stage_index > std::to_underlying(StageId::EXTRA)) {

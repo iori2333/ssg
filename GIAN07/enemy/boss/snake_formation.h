@@ -14,7 +14,7 @@
 #include "enemy/actor/enemy_actor.h"
 
 struct BulletManager;
-class EnemySystem;
+class EnemyManager;
 
 inline constexpr std::size_t SNAKE_MAX = 4;
 inline constexpr std::size_t SNAKE_LENGTH = 30;
@@ -22,13 +22,13 @@ inline constexpr std::size_t SNAKE_POINTS_PER_SEGMENT = 8;
 
 class SnakeFormation {
 public:
-  SnakeFormation(EnemySystem &enemies, BulletManager &bullets)
+  SnakeFormation(EnemyManager &enemies, BulletManager &bullets)
       : enemies_(&enemies), bullets_(&bullets) {}
 
   void Reset();
-  void Spawn(BossData &parent, uint32_t tail_script);
+  void Spawn(BossActor &parent, uint32_t tail_script);
   void Update();
-  void Remove(const BossData &parent);
+  void Remove(const BossActor &parent);
   void OnActorRetired(const EnemyActor &actor);
 
 private:
@@ -43,6 +43,6 @@ private:
   void Destroy(Snake &snake);
 
   std::array<Snake, SNAKE_MAX> snakes_{};
-  EnemySystem *enemies_;
+  EnemyManager *enemies_;
   BulletManager *bullets_;
 };

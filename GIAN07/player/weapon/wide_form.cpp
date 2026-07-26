@@ -6,8 +6,9 @@
 
 #include "core/gian.h"
 #include "effect/effect_manager.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 #include "player/player.h"
+#include "player/player_attack.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 
@@ -155,7 +156,7 @@ void WideForm::FireSub(uint8_t tier) {
   }
 }
 
-void WideForm::FireBomb(EnemySystem &enemies) {
+void WideForm::FireBomb(EnemyManager &enemies) {
   int dx = 0, dy = 0, l = 0;
 
   if (player_.bomb_time_ > WIDE_BOMB_TIME - 30) {
@@ -171,7 +172,7 @@ void WideForm::FireBomb(EnemySystem &enemies) {
   Effects.SpawnFragment(dx, dy, FRG_STAR1);
   Effects.SpawnFragment(dx, dy, FRG_STAR2);
 
-  enemies.ApplyAttack(EnemyAttack::All(1));
+  enemies.ApplyPlayerAttack(PlayerAttack::AllEnemies(1));
 }
 
 uint16_t WideForm::BombDuration() const { return WIDE_BOMB_TIME; }

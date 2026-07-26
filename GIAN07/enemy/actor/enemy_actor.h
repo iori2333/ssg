@@ -55,7 +55,7 @@ struct EclInterruptState {
   uint32_t threshold = 0;
 };
 
-struct EclRuntime {
+struct EclScriptState {
   size_t position = 0;
   size_t return_position = 0;
   uint32_t interrupt_timer = 0;
@@ -63,46 +63,6 @@ struct EclRuntime {
   std::array<EclInterruptState, ECL_INTERRUPT_COUNT> interrupts{};
   uint16_t loop_counter = 0;
   uint16_t wait_counter = 0;
-};
-
-// Shared actor core used by regular enemies, bosses, and boss parts.
-struct EnemyActor {
-  EnemyActorState state = EnemyActorState::Active;
-
-  WORLD_COORD x{}, y{}; // Display coordinates
-  int vx{}, vy{};       // Velocity (x,y) components (x64)
-
-  int v{}; // Velocity component (x64)
-
-  uint32_t hp{};    // Remaining HP (too large?)
-  uint32_t item{};  // Used for items etc.?
-  uint32_t count{}; // Multipurpose frame counter
-
-  uint32_t score{}; // Score (time-based score variation?)
-  uint32_t graze_score{};
-
-  EclRuntime script{};
-
-  uint16_t hitbox_half_width{};
-  uint16_t hitbox_half_height{};
-  uint16_t animation_frame{};
-
-  uint8_t d{};   // Direction angle 256
-  char vd{};     // Angular velocity 128
-  uint8_t amp{}; // Amplitude 256
-  uint8_t animation{};
-  uint8_t damage_animation{};
-  char animation_speed{};
-  uint8_t damage_flash{};
-
-  uint8_t flag{}; // Enemy state flags (resize as needed)
-  uint8_t auto_fire_frame{};
-  uint8_t auto_fire_interval{};
-
-  uint8_t long_laser_count{};
-
-  BulletCommand bullet_command{};
-  LaserCommand laser_command{};
 };
 
 struct EnemyAnimation {
@@ -137,3 +97,49 @@ struct EnemyAnimation {
 };
 
 using EnemyAnimationSet = std::array<EnemyAnimation, ENEMY_ANIMATION_MAX>;
+
+struct PlayerAttack;
+
+// Shared actor core used by regular enemies, bosses, and boss parts.
+struct EnemyActor {
+  void BeginExplosion();
+  [[nodiscard]] bool IsHitBy(const PlayerAttack &attack) const;
+  void UpdateAnimation(const EnemyAnimationSet &animations);
+
+  EnemyActorState state = EnemyActorState::Active;
+
+  WORLD_COORD x{}, y{}; // Display coordinates
+  int vx{}, vy{};       // Velocity (x,y) components (x64)
+
+  int v{}; // Velocity component (x64)
+
+  uint32_t hp{};    // Remaining HP (too large?)
+  uint32_t item{};  // Used for items etc.?
+  uint32_t count{}; // Multipurpose frame counter
+
+  uint32_t score{}; // Score (time-based score variation?)
+  uint32_t graze_score{};
+
+  EclScriptState script{};
+
+  uint16_t hitbox_half_width{};
+  uint16_t hitbox_half_height{};
+  uint16_t animation_frame{};
+
+  uint8_t d{};   // Direction angle 256
+  int8_t vd{};   // Angular velocity 128
+  uint8_t amp{}; // Amplitude 256
+  uint8_t animation{};
+  uint8_t damage_animation{};
+  int8_t animation_speed{};
+  uint8_t damage_flash{};
+
+  uint8_t flag{}; // Enemy state flags (resize as needed)
+  uint8_t auto_fire_frame{};
+  uint8_t auto_fire_interval{};
+
+  uint8_t long_laser_count{};
+
+  BulletCommand bullet_command{};
+  LaserCommand laser_command{};
+};

@@ -6,7 +6,7 @@
 #include "core/game_manager.h"
 #include "data/game_data.h"
 
-struct EnemySystem;
+class EnemyManager;
 
 namespace stage {
 
@@ -17,7 +17,7 @@ class StageLoader {
 public:
   explicit StageLoader(const data::GameData &data) : data_(&data) {}
 
-  [[nodiscard]] bool Load(StageId stage, EnemySystem &enemies,
+  [[nodiscard]] bool Load(StageId stage, EnemyManager &enemies,
                           StageSession &session) const;
   [[nodiscard]] bool LoadEnding(SceneRunner &scene) const;
 

@@ -9,7 +9,7 @@
 
 #include "enemy/actor/enemy_actor.h"
 
-enum class BossState : uint8_t {
+enum class BossMode : uint8_t {
   Normal,
   ButterflyWings,
   BirdWings,
@@ -17,10 +17,37 @@ enum class BossState : uint8_t {
   BombSpirit,
 };
 
-struct BossData {
-  EnemyActor actor;
-  uint32_t state_frame = 0; // State counter (zeroed on transition)
-  BossState state = BossState::Normal;
+struct BossActor : EnemyActor {
+  void ResetForSpawn() {
+    item = 0;
+    EnterMode(BossMode::Normal);
+  }
+
+  void EnterMode(BossMode next_mode) {
+    mode = next_mode;
+    mode_frame = 0;
+  }
+
+  void UpdateMode() {
+    if (mode == BossMode::ButterflyWings &&
+        mode_frame < kButterflyTransitionFrames) {
+      ++mode_frame;
+    }
+  }
+
+  [[nodiscard]] bool IsDefeated() const {
+    return hp == 0 && state == EnemyActorState::Exploding;
+  }
+
+  [[nodiscard]] bool IsFinished() const {
+    return state == EnemyActorState::PendingRemoval || IsDefeated();
+  }
+
+  BossMode mode = BossMode::Normal;
+  uint32_t mode_frame = 0;
+
+private:
+  static constexpr uint32_t kButterflyTransitionFrames = 88;
 };
 
 struct BossHudModel {

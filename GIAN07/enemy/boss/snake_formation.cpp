@@ -9,7 +9,7 @@
 
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
-#include "enemy/enemy_system.h"
+#include "enemy/enemy_manager.h"
 
 void SnakeFormation::Reset() {
   for (auto &snake : snakes_) {
@@ -17,7 +17,7 @@ void SnakeFormation::Reset() {
   }
 }
 
-void SnakeFormation::Spawn(BossData &parent, uint32_t tail_script) {
+void SnakeFormation::Spawn(BossActor &parent, uint32_t tail_script) {
   auto snake = std::ranges::find_if(
       snakes_, [](const auto &candidate) { return !candidate.active; });
   if (snake == snakes_.end()) {
@@ -25,14 +25,14 @@ void SnakeFormation::Spawn(BossData &parent, uint32_t tail_script) {
   }
 
   snake->active = true;
-  snake->parent = &parent.actor;
+  snake->parent = &parent;
   snake->head = 0;
 
   for (auto &point : snake->trail) {
-    point = {.x = parent.actor.x, .y = parent.actor.y, .d = parent.actor.d};
+    point = {.x = parent.x, .y = parent.y, .d = parent.d};
   }
 
-  const WORLD_POINT position{&parent.actor.x, &parent.actor.y};
+  const WORLD_POINT position{&parent.x, &parent.y};
   for (auto &segment : snake->segments) {
     if (auto *actor = enemies_->SpawnRegular(position, tail_script)) {
       segment = actor;
@@ -78,9 +78,9 @@ void SnakeFormation::Update() {
   }
 }
 
-void SnakeFormation::Remove(const BossData &parent) {
+void SnakeFormation::Remove(const BossActor &parent) {
   auto snake = std::ranges::find_if(snakes_, [&parent](const auto &candidate) {
-    return candidate.parent == &parent.actor;
+    return candidate.parent == &parent;
   });
   if (snake == snakes_.end()) {
     return;
@@ -114,9 +114,7 @@ void SnakeFormation::Destroy(Snake &snake) {
           segment, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
-    segment->hp = 0;
-    segment->count = 0;
-    segment->state = EnemyActorState::Exploding;
+    segment->BeginExplosion();
   }
 
   snake = {};

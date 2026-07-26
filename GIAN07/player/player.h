@@ -68,7 +68,7 @@ class HomingFocusForm;
 class LaserForm;
 class LaserFocusForm;
 struct BulletManager;
-class EnemySystem;
+class EnemyManager;
 struct GameManager;
 
 namespace stage {
@@ -95,7 +95,7 @@ public:
   void Bind(const InputConfig &ic) { input_config_ = &ic; }
   void Draw();
   void DrawStatus() const;
-  void Update(EnemySystem &enemies);
+  void Update(EnemyManager &enemies);
   void Initialize(int player_stock, int bomb_stock);
   void PrepareNextStage();
   void OnHit();
@@ -109,8 +109,8 @@ public:
   void PowerUp(uint8_t damage);
 
   // --- Shot system ---
-  void SetMaidShot(EnemySystem &enemies);
-  void MoveMaidShot(EnemySystem &enemies);
+  void SetMaidShot(EnemyManager &enemies);
+  void MoveMaidShot(EnemyManager &enemies);
   void DrawMaidShot();
   void SetMaidShotIndices();
   void SetMLaser(uint16_t time);

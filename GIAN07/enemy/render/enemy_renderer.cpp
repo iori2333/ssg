@@ -62,7 +62,7 @@ void EnemyRenderer::DrawExplosion(const EnemyActor &actor) const {
 }
 
 void EnemyRenderer::DrawBosses(
-    const ObjectPool<BossData, BOSS_MAX> &bosses,
+    const ObjectPool<BossActor, BOSS_MAX> &bosses,
     const std::array<BitFormation, BOSS_MAX> &formations) const {
   for (const auto &formation : formations) {
     DrawBossLinks(formation);
@@ -72,8 +72,8 @@ void EnemyRenderer::DrawBosses(
     if (DrawBossSpecialState(boss)) {
       continue;
     }
-    if ((boss.actor.flag & EF_DRAW) != 0) {
-      DrawActor(boss.actor);
+    if ((boss.flag & EF_DRAW) != 0) {
+      DrawActor(boss);
     }
   }
 }
@@ -93,51 +93,50 @@ void EnemyRenderer::DrawBossLinks(const BitFormation &formation) const {
   GrpGeom->Unlock();
 }
 
-bool EnemyRenderer::DrawBossSpecialState(const BossData &boss) const {
+bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
   constexpr auto surface = SURFACE_ID::ENEMY;
-  const auto &actor = boss.actor;
-  const auto center = WORLD_POINT::FromWorld(actor.x, actor.y).ToPixel();
+  const auto center = WORLD_POINT::FromWorld(boss.x, boss.y).ToPixel();
 
-  if (boss.state == BossState::BombSpirit && player_->IsBombActive() != 0U &&
-      (actor.flag & EF_DRAW) != 0) {
+  if (boss.mode == BossMode::BombSpirit && player_->IsBombActive() != 0U &&
+      (boss.flag & EF_DRAW) != 0) {
     const PIXEL_LTRB spirit = PIXEL_LTWH{
-        160 + (Cast::sign<int32_t>(actor.count / 2) % 4) * 40, 80, 40, 40};
+        160 + (Cast::sign<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
     GrpBackend_SetClip(GRP_RES_RECT);
     GrpSurface_Blit({center.x - 20, center.y - 20}, surface, spirit);
     GrpBackend_SetClip({X_MIN, Y_MIN, X_MAX + 1, Y_MAX + 1});
     return true;
   }
 
-  if (boss.state == BossState::BombShield && player_->IsBombActive() != 0U &&
-      (actor.flag & EF_DRAW) != 0) {
+  if (boss.mode == BossMode::BombShield && player_->IsBombActive() != 0U &&
+      (boss.flag & EF_DRAW) != 0) {
     GrpGeom->Lock();
     for (uint8_t layer = 0; layer <= 5; ++layer) {
       GrpGeom->SetColor({5U - layer, 5U - layer, 5U});
       GeomCircle({center.x, center.y},
-                 sinl(actor.count * 4, 30 + layer * 4) + 80);
+                 sinl(boss.count * 4, 30 + layer * 4) + 80);
     }
     GrpGeom->Unlock();
   }
 
-  switch (boss.state) {
-  case BossState::ButterflyWings: {
+  switch (boss.mode) {
+  case BossMode::ButterflyWings: {
     const auto offset =
-        std::max((static_cast<int>(boss.state_frame) - 72) << 2, 0);
+        std::max((static_cast<int>(boss.mode_frame) - 72) << 2, 0);
     GrpSurface_Blit({center.x - 64 - offset, center.y - 92}, surface,
                     {0, 176, 128, 360});
     GrpSurface_Blit({center.x - 64 + offset, center.y - 92}, surface,
                     {128, 176, 256, 360});
     break;
   }
-  case BossState::BirdWings:
+  case BossMode::BirdWings:
     GrpSurface_Blit({center.x - 94, center.y - 52}, surface,
                     {552, 0, 640, 104});
     GrpSurface_Blit({center.x + 6, center.y - 52}, surface,
                     {552, 104, 640, 208});
     break;
-  case BossState::Normal:
-  case BossState::BombShield:
-  case BossState::BombSpirit:
+  case BossMode::Normal:
+  case BossMode::BombShield:
+  case BossMode::BombSpirit:
     break;
   }
   return false;
