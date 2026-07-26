@@ -71,8 +71,8 @@ GameLevel GameManager::EffectiveLevel() const {
   }
 }
 
-void GameManager::Update() {
-  if (count % 60 == 0) {
+void GameManager::Update(uint32_t stage_frame) {
+  if (stage_frame % 60 == 0) {
     AddRank(1);
   }
 }

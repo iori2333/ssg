@@ -259,3 +259,20 @@ add_custom_command(
 # Add generated source to GIAN07
 target_sources(GIAN07 PRIVATE "${SCRIPTS_DATA_CPP}")
 target_include_directories(GIAN07 PRIVATE "${SCRIPT_GEN_DIR}")
+
+# Stage format validator. MAP validation accepts an optional directory
+# containing pack_tool-extracted 000.bin...012.bin files.
+add_executable(stage_validator
+    tools/stage_validator.cpp
+    GIAN07/stage/scene_program.cpp
+    GIAN07/stage/stage_map.cpp
+    "${SCRIPTS_DATA_CPP}"
+)
+target_include_directories(stage_validator PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
+    ${SCRIPT_GEN_DIR}
+)
+set_target_properties(stage_validator PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)

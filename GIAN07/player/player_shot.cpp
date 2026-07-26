@@ -8,28 +8,35 @@
 ///
 
 #include "player_shot.h"
+#include "player.h"
+#include "weapon/weapon_form.h"
 
 #include "audio/snd.h"
+#include "core/game_manager.h"
 #include "core/gian.h"
 #include "effect/effect_manager.h"
 #include "effect/fragment.h"
 #include "enemy/enemy_manager.h"
-#include "core/game_manager.h"
 #include "gfx/graphics_backend.h"
-#include "player.h"
-#include "stage/scroll_manager.h"
+#include "stage/stage_session.h"
 #include "sys/input.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
-#include "weapon/weapon_form.h"
 
 // --- Damage table indexed by bullet ID (t->c) ---
 constexpr uint8_t TogeDamage[0x0c] = {
-    TDM_WIDE_MAIN,        TDM_WIDE_SUB,   TDM_HOMING_MAIN,
-    TDM_HOMING_SUB,       TDM_LASER_MAIN, TDM_LASER_SUB,
-    1,                    1,
-    TDM_WIDE_FOCUS_MAIN,  TDM_WIDE_FOCUS_SUB,
-    TDM_HOMING_FOCUS_MAIN, TDM_HOMING_FOCUS_SUB,
+    TDM_WIDE_MAIN,
+    TDM_WIDE_SUB,
+    TDM_HOMING_MAIN,
+    TDM_HOMING_SUB,
+    TDM_LASER_MAIN,
+    TDM_LASER_SUB,
+    1,
+    1,
+    TDM_WIDE_FOCUS_MAIN,
+    TDM_WIDE_FOCUS_SUB,
+    TDM_HOMING_FOCUS_MAIN,
+    TDM_HOMING_FOCUS_SUB,
 };
 
 // --- Fire dispatch ---
@@ -42,7 +49,7 @@ void Player::SetMaidShot() {
 
   if (((Key_Data & KEY_BOMB) != 0) && (bomb_time_ == 0) &&
       (muteki_ == 0 || deathbomb_time_ != 0) && (bomb_ != 0U) &&
-      (!Scroller.scene.MsgFlag)) {
+      (!stage_->DialogueActive())) {
     bomb_time_ = BaseForm_()->BombDuration();
     muteki_ = BOMBMUTEKI_VAL;
     bomb_--;
@@ -164,8 +171,9 @@ void Player::MoveMaidShot() {
       t.x_ = t.tx_;
       t.y_ = t.ty_;
       t.count_++;
-      if (((t.flag_ & PlayerFlag::CLIP) == 0) && ((t.x_) < GX_MIN || (t.x_) > GX_MAX ||
-                                        (t.y_) < GY_MIN || (t.y_) > GY_MAX)) {
+      if (((t.flag_ & PlayerFlag::CLIP) == 0) &&
+          ((t.x_) < GX_MIN || (t.x_) > GX_MAX || (t.y_) < GY_MIN ||
+           (t.y_) > GY_MAX)) {
         t.flag_ |= PlayerFlag::DEL;
       }
 
@@ -189,8 +197,9 @@ void Player::MoveMaidShot() {
       t.MoveByEffect();
     }
   }
-  maid_tama_.Compact(
-      [](const PlayerShot &t) { return static_cast<bool>(t.flag_ & PlayerFlag::DEL); });
+  maid_tama_.Compact([](const PlayerShot &t) {
+    return static_cast<bool>(t.flag_ & PlayerFlag::DEL);
+  });
 
   ActiveForm_()->OnCollisionTick();
 }
@@ -203,10 +212,10 @@ void Player::DrawMaidShot() {
   PIXEL_LTRB src;
   PIXEL_LTRB ltemp;
   static PIXEL_LTRB HomingBomb[5] = {{520, 104, 520 + 8, 104 + 8},
-                                      {528, 104, 528 + 16, 104 + 16},
-                                      {544, 104, 544 + 24, 104 + 24},
-                                      {568, 104, 568 + 32, 104 + 32},
-                                      {600, 104, 600 + 40, 104 + 40}};
+                                     {528, 104, 528 + 16, 104 + 16},
+                                     {544, 104, 544 + 24, 104 + 24},
+                                     {568, 104, 568 + 32, 104 + 32},
+                                     {600, 104, 600 + 40, 104 + 40}};
 
   for (auto &t : maid_tama_) {
 

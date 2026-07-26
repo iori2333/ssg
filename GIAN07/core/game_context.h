@@ -19,6 +19,7 @@
 #include "item/item_manager.h"
 #include "player/player.h"
 #include "stage/stage_loader.h"
+#include "stage/stage_session.h"
 #include "track_manager/track_manager.h"
 #include "ui/ui_manager.h"
 
@@ -27,7 +28,8 @@ struct GameContext {
   data::GraphicsLoader graphics{data};
   data::SfxLoader sound_effects{data};
   TrackManager tracks{data};
-  stage::StageLoader stages{data};
+  stage::StageLoader stage_loader{data};
+  stage::StageSession stage;
 
   BulletManager bullets;
   ItemManager items;

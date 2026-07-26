@@ -14,6 +14,7 @@
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "platform/text_backend.h"
+#include "stage/scene_program.h"
 
 struct EndingManager {
   // === Nested types (formerly static types in ENDING.cpp) ===
@@ -90,6 +91,8 @@ struct EndingManager {
   void Draw();
 
 private:
+  stage::SceneRunner scene_;
+
   // Internal helpers
   void UpdateGrpInfo();
   void UpdateStfInfo();

@@ -31,7 +31,6 @@ inline StageId &operator++(StageId &s) {
 }
 
 struct GameManager {
-  uint32_t count = 0;
   StageId stage = StageId::STAGE_1;
   GameLevel level = GameLevel::NORMAL;
   PracticeMode practice_mode = PracticeMode::OFF;
@@ -43,7 +42,7 @@ struct GameManager {
 
   [[nodiscard]] std::string_view LevelName() const;
   [[nodiscard]] GameLevel EffectiveLevel() const;
-  void Update();
+  void Update(uint32_t stage_frame);
   void AddRank(int n);
   void ResetRank();
 };

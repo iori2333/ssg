@@ -23,9 +23,8 @@
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "stage/scroll_manager.h"
+#include "stage/stage_session.h"
 #include "sys/input.h"
-
 
 // --- Player method implementations ---
 
@@ -632,7 +631,7 @@ void Player::OnDeath(bool play_se) {
   // dying
   if (game_->game_config_->practice_mode == PracticeMode::AUTOBOMB &&
       ((Key_Data & KEY_BOMB) == 0) && (bomb_time_ == 0) && (bomb_ > 0) &&
-      (!Scroller.scene.MsgFlag)) {
+      (!stage_->DialogueActive())) {
     static constexpr uint8_t bomb_time_tbl[4] = {60 * 4, 60 * 3, 60 * 2, 0};
     bomb_time_ = bomb_time_tbl[weapon_ & 3];
     muteki_ = BOMBMUTEKI_VAL;

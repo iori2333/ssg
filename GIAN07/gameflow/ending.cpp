@@ -9,13 +9,9 @@
 
 #include "audio/bgm.h"
 #include "core/gian.h"
-#include "enemy/enemy_manager.h"
 #include "gameflow/gameflow_manager.h"
 #include "platform/text_backend.h"
-#include "stage/scene.h"
-#include "stage/scroll_manager.h"
 #include "util/cast.h"
-#include "util/endian.h"
 
 // File-static variables moved to EndingManager in ending_manager.h
 
@@ -27,7 +23,7 @@ bool EndingManager::Init() {
   GrpBackend_Clear();
 
   if (!GameFlow.ctx.graphics.LoadEnding() ||
-      !GameFlow.ctx.stages.LoadEnding(Enemies, Scroller, GameFlow.ctx.game)) {
+      !GameFlow.ctx.stage_loader.LoadEnding(scene_)) {
     return false;
   }
   BGM_Stop();
@@ -212,33 +208,25 @@ void EndingManager::DrawFadeInfo() {
 
 // Ending SCL decode
 void EndingManager::SCLDecode() {
-  bool bFlag = true;
-
-  while (bFlag) {
-    const uint8_t *cmd = Enemies.scl_now;
-    switch (cmd[0]) {
-    case SCL_TIME: {
-      const auto temp = I32LEAt(&cmd[1]);
-      if (std::cmp_greater(temp, GameFlow.ctx.game.count)) {
-        bFlag = false;
-      } else {
-        Enemies.scl_now += 5; // cmd(1)+time(4)
+  while (const auto *instruction = scene_.Current()) {
+    switch (instruction->opcode) {
+    case stage::SceneOpcode::Time:
+      if (static_cast<uint32_t>(instruction->value) > scene_.Frame()) {
+        scene_.AdvanceFrame();
+        return;
       }
+      scene_.Advance();
       break;
-    }
 
-    case SCL_MSG: { // Output message
-      const auto *line_p = std::bit_cast<const char *>(cmd + 1);
-      std::string_view line = line_p;
-      text.Text[text.NumText++] = line;
-      text.TextStr += line_p;
+    case stage::SceneOpcode::Message:
+      text.Text[text.NumText++] = instruction->text;
+      text.TextStr += instruction->text;
       text.TextStr += '\n';
-      Enemies.scl_now += (line.length() + 2);
+      scene_.Advance();
       break;
-    }
 
-    case SCL_FACE: // Display face
-      switch (cmd[1]) {
+    case stage::SceneOpcode::Face:
+      switch (instruction->face_id) {
       case 0:
         grp_info.fadein = 0;
         grp_info.fadeout = 128 + 64 + 64 + 512;
@@ -270,15 +258,15 @@ void EndingManager::SCLDecode() {
         break;
       }
       grp_info.alpha = 0;
-      grp_info.picture_id = cmd[1];
+      grp_info.picture_id = instruction->face_id;
       grp_info.timer = 0;
       grp_info.bWantDisp = true;
-      Enemies.scl_now += 2;
+      scene_.Advance();
       break;
 
-    case SCL_STAFF: // Adding 128 specifies a role name
-      if (cmd[1] >= 128) {
-        switch (cmd[1] - 128) {
+    case stage::SceneOpcode::Staff: // Adding 128 specifies a role name
+      if (instruction->staff_id >= 128) {
+        switch (instruction->staff_id - 128) {
         case 0:
         case 4:
           stf_task.fadein = 0;
@@ -311,50 +299,47 @@ void EndingManager::SCLDecode() {
         stf_task.timer = 0;
         stf_task.timer = 0;
         stf_task.NumStf = 0;
-        stf_task.TitleID = cmd[1] - 128;
+        stf_task.TitleID = instruction->staff_id - 128;
         stf_task.bWantDisp = true;
       } else {
-        stf_task.StfID[stf_task.NumStf++] = cmd[1];
+        stf_task.StfID[stf_task.NumStf++] = instruction->staff_id;
       }
-      Enemies.scl_now += 2;
+      scene_.Advance();
       break;
 
-    case SCL_NPG: // Switch to new page
+    case stage::SceneOpcode::NewPage:
       text.Blank();
-      Enemies.scl_now++;
+      scene_.Advance();
       break;
 
-    case SCL_END: // Return without changing count
+    case stage::SceneOpcode::End:
       grp_info.bWantDisp = false;
       stf_task.bWantDisp = false;
       GameFlow.NameRegistInit(false);
       return;
 
-    case SCL_MUSIC:
-      GameFlow.ctx.tracks.Switch(cmd[1]);
-      Enemies.scl_now += 2;
+    case stage::SceneOpcode::Music:
+      GameFlow.ctx.tracks.Switch(instruction->track_id);
+      scene_.Advance();
       break;
 
-    case SCL_EFC:
-      switch (cmd[1]) {
-      case 0:
+    case stage::SceneOpcode::Effect:
+      switch (instruction->effect) {
+      case stage::SceneEffect::EndingFlash:
         flash_state = 256 * 2;
         break;
+      default:
+        break;
       }
-
-      Enemies.scl_now += 2;
+      scene_.Advance();
       break;
 
-    case SCL_STAGECLEAR: // Stage clear
+    case stage::SceneOpcode::StageClear:
+    case stage::SceneOpcode::GameClear:
       return;
 
-    case SCL_GAMECLEAR:
-      return;
-
-    default: // Unimplemented or bug
+    default:
       return;
     }
   }
-
-  GameFlow.ctx.game.count++;
 }

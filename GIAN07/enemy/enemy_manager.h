@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "enemy.h"
+
 #include "sys/buffer.h"
 
 struct BulletManager;
@@ -15,16 +16,18 @@ struct ItemManager;
 struct GameManager;
 class Player;
 
+namespace stage {
+class StageSession;
+}
+
 struct EnemyManager {
   // --- Enemy data ---
   std::array<EnemyData, ENEMY_MAX> entities; // Enemy[]
   std::array<uint16_t, ENEMY_MAX> indices;   // EnemyInd[]
   uint16_t count = 0;                        // EnemyNow
 
-  // --- ECL/SCL data ---
-  BYTE_BUFFER_BORROWED ecl_head;    // ECL_Head
-  BYTE_BUFFER_BORROWED scl_head;    // SCL_Head
-  const uint8_t *scl_now = nullptr; // SCL_Now
+  // --- ECL data ---
+  BYTE_BUFFER_BORROWED ecl_head;
 
   // --- Animation ---
   ANIME_DATA anime[ANIME_MAX]; // Anime[]
@@ -42,12 +45,14 @@ struct EnemyManager {
   ItemManager *items_ = nullptr;
   GameManager *game_ = nullptr;
   Player *player_ = nullptr;
+  stage::StageSession *stage_ = nullptr;
 
   // --- DI ---
   void Bind(BulletManager &bm) { bullets_ = &bm; }
   void Bind(ItemManager &im) { items_ = &im; }
   void Bind(GameManager &gm) { game_ = &gm; }
   void Bind(Player &p) { player_ = &p; }
+  void Bind(stage::StageSession &stage) { stage_ = &stage; }
 
   // === Methods ===
 
@@ -73,6 +78,7 @@ struct EnemyManager {
   // Enemy data initialization
   void InitDataX64(EnemyData *e, int x, int y, uint32_t EclID);
   void InitDataSTD(EnemyData *e, short x, short y, uint32_t EclID);
+  void SpawnFromScene(int16_t x, int16_t y, uint8_t script_id);
   void LongJump(EnemyData *e, uint32_t EclID);
 
   // Animation

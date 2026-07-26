@@ -7,19 +7,19 @@
 #include "data/game_data.h"
 
 struct EnemyManager;
-struct ScrollManager;
 
 namespace stage {
+
+class SceneRunner;
+class StageSession;
 
 class StageLoader {
 public:
   explicit StageLoader(const data::GameData &data) : data_(&data) {}
 
   [[nodiscard]] bool Load(StageId stage, EnemyManager &enemies,
-                          ScrollManager &scroller, GameManager &game) const;
-  [[nodiscard]] bool LoadEnding(EnemyManager &enemies,
-                                ScrollManager &scroller,
-                                GameManager &game) const;
+                          StageSession &session) const;
+  [[nodiscard]] bool LoadEnding(SceneRunner &scene) const;
 
 private:
   const data::GameData *data_;

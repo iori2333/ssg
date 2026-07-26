@@ -1,0 +1,277 @@
+///
+/// StageSession - owns the active stage timeline and background
+///
+#include <cstdint>
+#include <utility>
+
+#include "stage_session.h"
+
+#include "audio/bgm.h"
+#include "audio/snd.h"
+#include "core/game_manager.h"
+#include "core/gian.h"
+#include "data/graphics_loader.h"
+#include "effect/effect.h"
+#include "effect/effect_manager.h"
+#include "enemy/boss_manager.h"
+#include "enemy/enemy_manager.h"
+#include "track_manager/track_manager.h"
+#include "ui/ui_manager.h"
+
+namespace stage {
+
+bool StageSession::Load(BYTE_BUFFER_OWNED map, BYTE_BUFFER_BORROWED scene) {
+  SceneRunner next_scene;
+  StageBackground next_background;
+  if (!next_scene.Load(scene) || !next_background.LoadMap(std::move(map))) {
+    return false;
+  }
+  scene_ = std::move(next_scene);
+  background_ = std::move(next_background);
+  return true;
+}
+
+StageTransition StageSession::Update(StageUpdateContext context,
+                                     INPUT_BITS input) {
+  const auto result = RunScene(context, input);
+  if (result.advance_frame) {
+    scene_.AdvanceFrame();
+  }
+  background_.Update(context.effects);
+  return result.transition;
+}
+
+StageSession::SceneStepResult
+StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
+  while (const auto *instruction = scene_.Current()) {
+    switch (instruction->opcode) {
+    case SceneOpcode::KeyWait:
+      if (scene_.KeyReady((input & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) != 0)) {
+        scene_.Advance();
+        break;
+      }
+      return {.advance_frame = true};
+
+    case SceneOpcode::Time: {
+      const auto target = static_cast<uint32_t>(instruction->value);
+      if (!scene_.TimeReady(
+              target, (input & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) != 0)) {
+        return {.advance_frame = true};
+      }
+      scene_.Advance();
+      break;
+    }
+
+    case SceneOpcode::Enemy:
+      if (context.bosses.count == 0) {
+        context.enemies.SpawnFromScene(instruction->x, instruction->y,
+                                       instruction->script_id);
+      }
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::Boss:
+      context.bosses.Set(instruction->x, instruction->y,
+                         instruction->script_id);
+      scene_.Advance();
+      if (const auto timeout = FindBossTimeout(); timeout > 0) {
+        context.bosses.SetSCLTimeout(timeout);
+      }
+      break;
+
+    case SceneOpcode::BossDead:
+      context.bosses.KillAll();
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::MessageOpen:
+      if (!context.messages_disabled) {
+        context.ui.OpenMessageWindow();
+      }
+      scene_.SetMessageActive(true);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::MessageClose:
+      if (!context.messages_disabled) {
+        context.ui.CloseMessageWindow();
+      }
+      scene_.SetMessageActive(false);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::Message:
+      context.ui.ShowMessage(instruction->text);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::Face:
+      context.ui.SetMessageFace(instruction->face_id);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::LoadFace:
+      (void)context.graphics.LoadFace(instruction->surface_id,
+                                      instruction->file_id);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::NewPage:
+      context.ui.NewMessagePage();
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::End:
+      return {};
+
+    case SceneOpcode::ScrollSpeed:
+      background_.SetSpeed(instruction->value);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::Music:
+      if (!context.game.is_demoplay) {
+        BGM_Stop();
+        if (context.tracks.Switch(instruction->track_id)) {
+          BGM_Play();
+          const auto title = context.tracks.CurrentTitle();
+          if (!title.empty()) {
+            context.effects.SetMusicTitle(460, title);
+          }
+        }
+      }
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::DeleteEnemies:
+      context.enemies.InitIndices();
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::Effect:
+      ExecuteEffect(instruction->effect, context);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::Wait:
+      if (instruction->wait_condition == SceneWaitCondition::BossHp) {
+        if (context.bosses.GetHPSum() >
+            static_cast<uint32_t>(instruction->value)) {
+          return {};
+        }
+      } else if (instruction->wait_condition == SceneWaitCondition::BossCount) {
+        if (context.bosses.count > static_cast<uint32_t>(instruction->value)) {
+          return {};
+        }
+      }
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::StageClear:
+      return {.transition = StageTransition::NextStage};
+
+    case SceneOpcode::GameClear:
+      return {.transition = StageTransition::GameClear};
+
+    case SceneOpcode::ExtraClear:
+      return {.transition = StageTransition::ExtraClear};
+
+    case SceneOpcode::MapPalette:
+    case SceneOpcode::EnemyPalette:
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::Staff:
+      return {};
+    }
+  }
+  return {};
+}
+
+int32_t StageSession::FindBossTimeout() const {
+  int32_t timeout = -1;
+  const auto &instructions = scene_.Instructions();
+  for (size_t i = scene_.Position(); i < instructions.size(); ++i) {
+    const auto &instruction = instructions[i];
+    switch (instruction.opcode) {
+    case SceneOpcode::BossDead:
+    case SceneOpcode::Wait:
+    case SceneOpcode::StageClear:
+    case SceneOpcode::GameClear:
+    case SceneOpcode::End:
+      return timeout;
+    case SceneOpcode::Time:
+      timeout = instruction.value;
+      break;
+    default:
+      break;
+    }
+  }
+  return timeout;
+}
+
+void StageSession::ExecuteEffect(SceneEffect effect,
+                                 StageUpdateContext &context) {
+  switch (effect) {
+  case SceneEffect::Warning:
+    Snd_SEPlay(static_cast<SfxId>(8), GX_MID, true);
+    context.effects.SetWarningEffect();
+    break;
+  case SceneEffect::StopWarning:
+    Snd_SEStop(8);
+    break;
+  case SceneEffect::FadeMusic:
+    BGM_FadeOut(120);
+    break;
+  case SceneEffect::Stage2Boss:
+    background_.Command(BackgroundCommand::Stage2Boss, context.effects);
+    break;
+  case SceneEffect::RasterOn:
+    background_.Command(BackgroundCommand::RasterOn, context.effects);
+    break;
+  case SceneEffect::RasterOff:
+    background_.Command(BackgroundCommand::RasterOff, context.effects);
+    break;
+  case SceneEffect::CircleFadeIn:
+    context.effects.SetScreenEffect(SCNEFC_CFADEIN);
+    break;
+  case SceneEffect::CircleFadeOut:
+    context.effects.SetScreenEffect(SCNEFC_CFADEOUT);
+    break;
+  case SceneEffect::Stage3Boss:
+    background_.Command(BackgroundCommand::Stage3Boss, context.effects);
+    break;
+  case SceneEffect::Stage3Reset:
+    background_.Command(BackgroundCommand::Stage3Reset, context.effects);
+    break;
+  case SceneEffect::Stage6Cube:
+    background_.Command(BackgroundCommand::Stage6Cube, context.effects);
+    break;
+  case SceneEffect::Stage6RandomEcl:
+    background_.Command(BackgroundCommand::Stage6RandomEcl, context.effects);
+    break;
+  case SceneEffect::Stage4Rock:
+    background_.Command(BackgroundCommand::Stage4Rock, context.effects);
+    break;
+  case SceneEffect::Stage4Leave:
+    background_.Command(BackgroundCommand::Stage4Leave, context.effects);
+    break;
+  case SceneEffect::WhiteIn:
+    context.effects.SetScreenEffect(SCNEFC_WHITEIN);
+    break;
+  case SceneEffect::WhiteOut:
+    context.effects.SetScreenEffect(SCNEFC_WHITEOUT);
+    break;
+  case SceneEffect::LoadExtraBoss1:
+    (void)context.graphics.SwapEnemySurface(29);
+    break;
+  case SceneEffect::LoadExtraBoss2:
+    (void)context.graphics.SwapEnemySurface(30);
+    break;
+  case SceneEffect::Stage6Raster:
+    background_.Command(BackgroundCommand::Stage6Raster, context.effects);
+    break;
+  }
+}
+
+} // namespace stage

@@ -15,6 +15,10 @@ struct ItemManager;
 struct GameManager;
 class Player;
 
+namespace stage {
+class StageSession;
+}
+
 struct BossManager {
   std::array<BossData, BOSS_MAX> bosses; // Boss[]
   uint16_t count = 0;                    // BossNow
@@ -28,6 +32,7 @@ struct BossManager {
   ItemManager *items_ = nullptr;
   GameManager *game_ = nullptr;
   Player *player_ = nullptr;
+  stage::StageSession *stage_ = nullptr;
 
   // === Methods ===
 
@@ -36,6 +41,7 @@ struct BossManager {
   void Bind(ItemManager &im) { items_ = &im; }
   void Bind(GameManager &gm) { game_ = &gm; }
   void Bind(Player &p) { player_ = &p; }
+  void Bind(stage::StageSession &stage) { stage_ = &stage; }
 
   // Initialization and setup
   void Init();
@@ -46,7 +52,7 @@ struct BossManager {
   void Move();
   void Draw();
   void ClearCmd();
-  void DrawHPG();
+  void DrawHPG(uint32_t stage_frame);
 
   // Timer
   void SetSCLTimeout(int32_t timeout_end);

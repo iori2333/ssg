@@ -5,8 +5,9 @@
 #include <utility>
 
 #include "anime_data.h"
-#include "scroll_manager.h"
+#include "scene_program.h"
 #include "stage_loader.h"
+#include "stage_session.h"
 
 #include "enemy/enemy_manager.h"
 #include "scripts_data.h"
@@ -27,7 +28,7 @@ BYTE_BUFFER_BORROWED LoadEmbeddedScript(int file_no) {
 namespace stage {
 
 bool StageLoader::Load(StageId stage, EnemyManager &enemies,
-                       ScrollManager &scroller, GameManager &game) const {
+                       StageSession &session) const {
   const auto stage_index = std::to_underlying(stage);
   if (stage_index > std::to_underlying(StageId::EXTRA)) {
     return false;
@@ -41,35 +42,18 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
     return false;
   }
 
-  enemies.ecl_head = ecl;
-  enemies.scl_head = scl;
-  enemies.scl_now = scl.data();
-  scroller.scroll.DataHead = std::move(map);
-  if (!scroller.Init()) {
-    enemies.scl_now = nullptr;
-    enemies.ecl_head = {};
-    enemies.scl_head = {};
-    scroller.scroll.DataHead = nullptr;
+  if (!session.Load(std::move(map), scl)) {
     return false;
   }
 
-  game.count = 0;
+  enemies.ecl_head = ecl;
   anime_data::SetupStageAnime(stage);
   return true;
 }
 
-bool StageLoader::LoadEnding(EnemyManager &enemies, ScrollManager &scroller,
-                             GameManager &game) const {
+bool StageLoader::LoadEnding(SceneRunner &scene) const {
   auto scl = LoadEmbeddedScript(47);
-  if (scl.empty()) {
-    return false;
-  }
-  enemies.ecl_head = {};
-  enemies.scl_head = scl;
-  enemies.scl_now = scl.data();
-  scroller.scroll.DataHead = nullptr;
-  game.count = 0;
-  return true;
+  return !scl.empty() && scene.Load(scl);
 }
 
 } // namespace stage

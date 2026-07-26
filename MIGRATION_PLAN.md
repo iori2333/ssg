@@ -11,7 +11,8 @@ GameFlow (global transition coordinator)
       |-- graphics: GraphicsLoader
       |-- sound_effects: SfxLoader
       |-- tracks: TrackManager
-      |-- stages: StageLoader
+      |-- stage_loader: StageLoader
+      |-- stage: StageSession
       |-- bullets: BulletManager
       |-- items: ItemManager
       |-- game: GameManager
@@ -36,7 +37,14 @@ objects.
 - Removed the legacy loader and the later global `PackManager`, `GfxManager`,
   `MusicManager`, `SfxManager`, and `StageManager` replacements.
 - Separated required archive validation from optional audio-device startup.
-- Moved stage runtime installation to `stage::StageLoader`.
+- Moved stage asset selection and runtime installation to
+  `stage::StageLoader`.
+- Replaced the legacy `Scroller` and raw SCL cursor with `StageSession`, which
+  owns the validated scene timeline and background runtime. `SceneRunner`
+  owns stage-frame advancement; `StageBackground` owns map scrolling and
+  special background modes.
+- Ending owns a separate `SceneRunner`; it no longer borrows mutable stage
+  state or clears the active stage background when the ending begins.
 - Moved track selection and playback orchestration into the context-owned
   `TrackManager`; music metadata remains data owned by `GameData`.
 - Removed the legacy menu/window controller family and consolidated
@@ -49,9 +57,8 @@ objects.
 The remaining high-level global instances are:
 
 - `GameFlow`: application state-transition coordinator and composition root.
-- `Enemies`: enemy runtime and ECL/SCL execution state.
+- `Enemies`: enemy runtime and ECL execution state.
 - `Bosses`: boss runtime state.
-- `Scroller`: scene and map scrolling runtime state.
 - `Effects`: gameplay visual-effect runtime state.
 
 These systems already accept several dependencies through `Bind()` or explicit
@@ -60,3 +67,16 @@ time without introducing compatibility globals.
 
 Low-level process-wide backends such as input state, audio playback, graphics
 surfaces, and geometry rendering remain global platform abstractions for now.
+
+## Stage validation
+
+`stage_validator` validates all embedded SCL programs, timeline boundary
+behavior, and optionally real maps extracted from `MAP.PAK`:
+
+```powershell
+build\bin\stage_validator.exe build\map_inspect
+```
+
+The title-screen random Demo is not a Stage/Scroll acceptance test. Its replay
+data may no longer match the current stage configuration, so deterministic
+stage entry and the validator are the supported verification paths.

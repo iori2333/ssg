@@ -46,7 +46,7 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | --- | --- |
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
 | `GIAN07/data/` | Validated PAK ownership, music catalog data, and graphics/SFX loading adapters |
-| `GIAN07/stage/` | Stage scripts, runtime stage loading, scrolling, and scene processing |
+| `GIAN07/stage/` | Validated SCL/MAP parsing, stage asset installation, timeline execution, and background scrolling |
 | `GIAN07/ui/` | Application-wide UI ownership: menu controllers, menu definitions, and message windows |
 | `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
 | `game/sys/` | System wrappers – buffer, file, path, thread, log, input |
@@ -87,6 +87,18 @@ Do not edit the generated file directly.
 - **Formatter:** `.clang-format` uses `BasedOnStyle: LLVM`.
 - **Linter:** `.clang-tidy` is configured; see the file for enabled/disabled checks.
 - **No tests or CI** are currently wired up.
+
+### Stage validation
+
+`stage_validator` validates the embedded SCL programs and can additionally
+validate real maps extracted from `MAP.PAK`:
+
+```powershell
+build\bin\stage_validator.exe build\map_inspect
+```
+
+Do not use the title-screen random Demo as the primary Stage/Scroll regression
+test. Its replay input can diverge after stage configuration changes.
 
 ## Include guidelines
 

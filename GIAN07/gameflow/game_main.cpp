@@ -32,7 +32,7 @@
 #include "music_room/music_room.h"
 #include "platform/text_backend.h"
 #include "player/player.h"
-#include "stage/scroll_manager.h"
+#include "stage/stage_session.h"
 #include "sys/input.h"
 #include "ui/ui_manager.h"
 #include "util/debug.h"
@@ -107,8 +107,9 @@ void GameMove();
 // game_main initial values set in gameflow_manager.cpp
 
 GameLevel CurrentLevel() {
-  return ((GameFlow.ctx.game.stage == StageId::EXTRA) ? GameLevel::EXTRA
-                                                      : GameFlow.ctx.game.level);
+  return ((GameFlow.ctx.game.stage == StageId::EXTRA)
+              ? GameLevel::EXTRA
+              : GameFlow.ctx.game.level);
 }
 
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
@@ -165,8 +166,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SfxId::Select);
     current_dif = (current_dif + 4) % 5;
-    current_rank =
-        GameFlow.ctx.scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
+    current_rank = GameFlow.ctx.scores.SetScoreString(
+        nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case KEY_DOWN:
@@ -176,8 +177,8 @@ void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
     }
     Snd_SEPlay(SfxId::Select);
     current_dif = (current_dif + 1) % 5;
-    current_rank =
-        GameFlow.ctx.scores.SetScoreString(nullptr, static_cast<GameLevel>(current_dif));
+    current_rank = GameFlow.ctx.scores.SetScoreString(
+        nullptr, static_cast<GameLevel>(current_dif));
     break;
 
   case 0:
@@ -244,7 +245,8 @@ void GameFlowManager::ScoreDraw() {
 
     gx = (GameFlow.ctx.scores.score_strings[i].x >> 6) + 224 + 80;
     gy = (GameFlow.ctx.scores.score_strings[i].y >> 6) + 25;
-    src = PIXEL_LTWH{0, (400 + (GameFlow.ctx.scores.score_strings[i].Weapon * 8)), 48, 8};
+    src = PIXEL_LTWH{
+        0, (400 + (GameFlow.ctx.scores.score_strings[i].Weapon * 8)), 48, 8};
     GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::NAMEREG, src);
   }
 }
@@ -412,7 +414,8 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
       default:
         len = strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name);
         GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len] = c;
-        GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len + 1] = '\0';
+        GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len + 1] =
+            '\0';
         break;
       }
       break;
@@ -421,21 +424,26 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
     BACK_NR_PROC:
       len = strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name);
       if (len != 0) {
-        GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len - 1] = '\0';
+        GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len - 1] =
+            '\0';
       }
       break;
 
     // Name registration end processing
     EXIT_NR_PROC:
-      if (strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name) == 0) {
-        std::format_to_n(GameFlow.ctx.scores.score_strings[current_rank - 1].Name,
-                         NR_NAME_LEN, "Vivit!");
+      if (strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name) ==
+          0) {
+        std::format_to_n(
+            GameFlow.ctx.scores.score_strings[current_rank - 1].Name,
+            NR_NAME_LEN, "Vivit!");
       }
 
-      GameFlow.ctx.scores.score_strings[current_rank - 1].Name[NR_NAME_LEN - 1] = '\0';
+      GameFlow.ctx.scores.score_strings[current_rank - 1]
+          .Name[NR_NAME_LEN - 1] = '\0';
 
-      std::format_to_n(current_name.Name, NR_NAME_LEN, "{}",
-                       GameFlow.ctx.scores.score_strings[current_rank - 1].Name);
+      std::format_to_n(
+          current_name.Name, NR_NAME_LEN, "{}",
+          GameFlow.ctx.scores.score_strings[current_rank - 1].Name);
       GameFlow.ctx.scores.SaveScoreData(&current_name, CurrentLevel());
 
       key_time = END_WAIT;
@@ -478,8 +486,9 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
 
   if (time % 64 > 32) {
     GrpGeom->SetColor({4, 0, 0});
-    len = std::min(strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name),
-                   NR_NAME_LEN - 2);
+    len = std::min(
+        strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name),
+        NR_NAME_LEN - 2);
     gx += ((len * 16) + 88);
     gy += 4;
     GrpGeom->DrawBox(gx, gy, (gx + 14), (gy + 16));
@@ -509,8 +518,9 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
 
   //	GrpPut16(400,100,temps);
   //	for(i=0; i<5; i++){
-  //		GrpPut16(100, 100+i*32, GameFlow.ctx.scores.score_strings[i].Score);
-  //		if(current_rank == i+1) GrpPut16(85, 100+i*32, "!!");
+  //		GrpPut16(100, 100+i*32,
+  //GameFlow.ctx.scores.score_strings[i].Score); 		if(current_rank == i+1)
+  //GrpPut16(85, 100+i*32, "!!");
   //	}
   Grp_Flip();
 }
@@ -534,7 +544,8 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   Snd_SEStopAll();
 
   // If not a high score, transition to title
-  current_rank = GameFlow.ctx.scores.SetScoreString(&current_name, CurrentLevel());
+  current_rank =
+      GameFlow.ctx.scores.SetScoreString(&current_name, CurrentLevel());
   if (current_rank == 0) {
     return GameExit();
   }
@@ -563,7 +574,6 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
 
 // Initialization functions required when starting the game
 void GameSTD_Init() {
-  Scroller.key_wait_count = 0;
   GameFlow.ctx.ui.ForceCloseMessageWindow();
   // GrpBackend_Clear();
   // Grp_Flip();
@@ -575,19 +585,19 @@ void GameSTD_Init() {
   Enemies.Bind(GameFlow.ctx.items);
   Enemies.Bind(GameFlow.ctx.game);
   Enemies.Bind(GameFlow.ctx.player);
+  Enemies.Bind(GameFlow.ctx.stage);
   Bosses.Bind(GameFlow.ctx.bullets);
   Bosses.Bind(GameFlow.ctx.items);
   Bosses.Bind(GameFlow.ctx.game);
   Bosses.Bind(GameFlow.ctx.player);
+  Bosses.Bind(GameFlow.ctx.stage);
   GameFlow.ctx.player.Bind(GameFlow.ctx.bullets);
   GameFlow.ctx.player.Bind(GameFlow.ctx.game);
+  GameFlow.ctx.player.Bind(GameFlow.ctx.stage);
   GameFlow.ctx.items.Bind(GameFlow.ctx.player);
   GameFlow.ctx.bullets.Bind(GameFlow.ctx.items);
   GameFlow.ctx.bullets.Bind(GameFlow.ctx.game);
   GameFlow.ctx.bullets.Bind(GameFlow.ctx.player);
-  Scroller.Bind(GameFlow.ctx.game);
-  Scroller.Bind(GameFlow.ctx.player);
-  Scroller.Bind(*GameFlow.ctx.graphics_cfg);
   GameFlow.ctx.player.Bind(*GameFlow.ctx.game_cfg);
   GameFlow.ctx.player.Bind(*GameFlow.ctx.input_cfg);
 
@@ -617,13 +627,14 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameFlow.ctx.game.level = (ExStg ? GameLevel::EXTRA : GameFlow.ctx.game_cfg->game_level);
+  GameFlow.ctx.game.level =
+      (ExStg ? GameLevel::EXTRA : GameFlow.ctx.game_cfg->game_level);
 
   GameSTD_Init();
   GameFlow.ctx.game.ResetRank();
 
   GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
-                                  GameFlow.ctx.game_cfg->bomb_stock);
+                                 GameFlow.ctx.game_cfg->bomb_stock);
   GrpBackend_SetClip(GRP_RES_RECT);
 
   weapon_key_wait = 1;
@@ -687,8 +698,8 @@ bool GameNextStage() {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
-                                GameFlow.ctx.game)) {
+  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
+                                      GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -699,12 +710,13 @@ bool GameNextStage() {
 // Initialize for multi-stage replay
 bool GameReplayInitAll(const char *fn) {
   GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
-                                  GameFlow.ctx.game_cfg->bomb_stock);
+                                 GameFlow.ctx.game_cfg->bomb_stock);
   if (!GameFlow.ctx.demos.LoadReplayAll(fn)) {
     return false;
   }
 
-  GameFlow.ctx.game.stage = static_cast<StageId>(GameFlow.ctx.demos.multi_play_info.Stages[0]);
+  GameFlow.ctx.game.stage =
+      static_cast<StageId>(GameFlow.ctx.demos.multi_play_info.Stages[0]);
 
   GameFlow.ctx.game.ResetRank();
 
@@ -718,8 +730,8 @@ bool GameReplayInitAll(const char *fn) {
     GameFlow.ctx.demos.load_all_enable = false;
     return false;
   }
-  if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
-                                GameFlow.ctx.game)) {
+  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
+                                      GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
@@ -798,7 +810,7 @@ bool DemoInit() {
   GameSTD_Init();
 
   GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
-                                  GameFlow.ctx.game_cfg->bomb_stock);
+                                 GameFlow.ctx.game_cfg->bomb_stock);
   rnd_seed_set(Time_SteadyTicksMS());
   GameFlow.ctx.game.stage = static_cast<StageId>(rnd() % STAGE_MAX);
 
@@ -813,8 +825,8 @@ bool DemoInit() {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
-                                GameFlow.ctx.game)) {
+  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
+                                      GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -921,7 +933,7 @@ bool GameExit(bool bNeedChgMusic) {
   }
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  Snd_SEStop(8);      // Stop warning sound
+  Snd_SEStop(8); // Stop warning sound
 
   const auto flags = MsgWindowFlags::CENTER;
   GameFlow.ctx.ui.ForceCloseMessageWindow();
@@ -1161,8 +1173,9 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
   deg += spd;
   if (deg >= 85 || deg <= -85) {
     // if(deg>=64 || deg<=-64){
-    // if(spd<0) GameFlow.ctx.player.Weapon() = (GameFlow.ctx.player.Weapon()+3)%4;
-    // else      GameFlow.ctx.player.Weapon() = (GameFlow.ctx.player.Weapon()+1)%4;
+    // if(spd<0) GameFlow.ctx.player.Weapon() =
+    // (GameFlow.ctx.player.Weapon()+3)%4; else GameFlow.ctx.player.Weapon() =
+    // (GameFlow.ctx.player.Weapon()+1)%4;
     if (spd < 0) {
       GameFlow.ctx.player.RotateWeapon(-1);
     } else {
@@ -1258,8 +1271,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!GameFlow.ctx.stages.Load(GameFlow.ctx.game.stage, Enemies, Scroller,
-                                GameFlow.ctx.game)) {
+    if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
+                                        GameFlow.ctx.stage)) {
       DebugOut("MAP.PAK が破壊されています");
       return;
     }
@@ -1328,7 +1341,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     GameFlow.ctx.player.ClearInvincibility();
     GameFlow.ctx.player.SetPosition((400 * 64) + sinl((count / 3) * 6, 60 * 64),
-                        (350 * 64) + sinl((count / 3) * 4, 30 * 64));
+                                    (350 * 64) +
+                                        sinl((count / 3) * 4, 30 * 64));
 
     GameFlow.ctx.player.Update();
     GameFlow.ctx.player.MoveMaidShot();
@@ -1349,7 +1363,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, rc);
     GrpPutScore(
         500, 400,
-        std::format("{}", ((Cast::up<uint16_t>(GameFlow.ctx.player.Power()) + 1) >> 5))
+        std::format(
+            "{}", ((Cast::up<uint16_t>(GameFlow.ctx.player.Power()) + 1) >> 5))
             .c_str());
 
     GrpBackend_SetClip(GRP_RES_RECT);
@@ -1372,8 +1387,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     //	HDC		hdc;
     //	char	buf[100];
     //	DxObj.Back->GetDC(&hdc);
-    //	sprintf(buf,"GameFlow.ctx.player.Weapon() = %d",GameFlow.ctx.player.Weapon());
-    //	TextOut(hdc,0,0,buf,strlen(buf));
+    //	sprintf(buf,"GameFlow.ctx.player.Weapon() =
+    //%d",GameFlow.ctx.player.Weapon()); 	TextOut(hdc,0,0,buf,strlen(buf));
     //	DxObj.Back->ReleaseDC(hdc);
     //
     Grp_Flip();
@@ -1480,10 +1495,71 @@ void PauseProc(bool & /*unused*/) {
 //	RndBuf[id] += (random_ref-old);
 // }
 
+void HandleStageTransition(stage::StageTransition transition) {
+  switch (transition) {
+  case stage::StageTransition::None:
+    return;
+
+  case stage::StageTransition::NextStage:
+    if (GameFlow.ctx.demos.save_all_enable) {
+      GameFlow.ctx.demos.FlushStage();
+      (void)GameNextStage();
+      return;
+    }
+    if (GameFlow.ctx.demos.load_all_enable) {
+      if (GameFlow.ctx.game.stage < GameFlow.ctx.demos.playback_max_stage) {
+        (void)GameNextStage();
+      }
+      return;
+    }
+    (void)GameNextStage();
+    return;
+
+  case stage::StageTransition::GameClear:
+    if (GameFlow.ctx.demos.save_all_enable) {
+      GameFlow.ctx.demos.FlushStage();
+      GameFlow.ctx.demos.SaveReplayAll(false);
+    }
+    if (GameFlow.ctx.demos.load_all_enable) {
+      return;
+    }
+    if (GameFlow.ctx.game.level != GameLevel::EASY) {
+      GameFlow.ctx.game.extra_stg_flags |=
+          static_cast<uint8_t>(1U << GameFlow.ctx.player.Weapon());
+    }
+    GameFlow.ctx.save_config();
+    (void)GameFlow.ctx.ending.Init();
+    return;
+
+  case stage::StageTransition::ExtraClear:
+    if (GameFlow.ctx.demos.save_all_enable) {
+      GameFlow.ctx.demos.FlushStage();
+      GameFlow.ctx.demos.SaveReplayAll(true);
+    }
+    if (!GameFlow.ctx.demos.load_all_enable) {
+      GameFlow.NameRegistInit(true);
+    }
+    return;
+  }
+}
+
 void GameMove() {
   GameFlow.ctx.ui.TickMessageWindow();
 
-  Scroller.Move();
+  const auto transition = GameFlow.ctx.stage.Update(
+      {.enemies = Enemies,
+       .bosses = Bosses,
+       .effects = Effects,
+       .ui = GameFlow.ctx.ui,
+       .graphics = GameFlow.ctx.graphics,
+       .tracks = GameFlow.ctx.tracks,
+       .game = GameFlow.ctx.game,
+       .messages_disabled = GameFlow.ctx.graphics_cfg->msg_disable},
+      Key_Data);
+  if (transition != stage::StageTransition::None) {
+    HandleStageTransition(transition);
+    return;
+  }
 
   Bosses.Move();
   Enemies.Move();
@@ -1501,13 +1577,13 @@ void GameMove() {
   // Changed position of these two lines
   GameFlow.ctx.player.Update();
   GameFlow.ctx.player.MoveMaidShot();
-  GameFlow.ctx.game.Update();
+  GameFlow.ctx.game.Update(GameFlow.ctx.stage.Frame());
 }
 
 void GameDraw() {
   GrpBackend_Clear();
 
-  Scroller.Draw();
+  GameFlow.ctx.stage.Draw(Effects);
   Effects.DrawCircleEffects();
 
   Bosses.Draw();
@@ -1530,7 +1606,8 @@ void GameDraw() {
   GameFlow.ctx.bullets.Render();
 
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
-    GameFlow.ctx.bullets.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
+    GameFlow.ctx.bullets.RenderDebugHitboxes(
+        GameFlow.ctx.debug_cfg->hitbox_display);
     auto *gp = GrpGeom_Poly();
     if (gp != nullptr) {
       const RGB216 kBlack{0, 0, 0};
@@ -1554,7 +1631,7 @@ void GameDraw() {
   Effects.DrawStringEffects();
   GameFlow.ctx.player.DrawStatus();
 
-  Bosses.DrawHPG();
+  Bosses.DrawHPG(GameFlow.ctx.stage.Frame());
   Effects.DrawScreenEffect();
 
   GameFlow.ctx.ui.DrawMessageWindow();
@@ -1576,7 +1653,9 @@ bool GameFlowManager::IsDraw() {
   return true;
 }
 
-static void GalleryUpdateAngles() { GameFlow.ctx.bullets.RotateDisplayAngles(); }
+static void GalleryUpdateAngles() {
+  GameFlow.ctx.bullets.RotateDisplayAngles();
+}
 
 static void GalleryDrawLabels() {
   static constexpr int x0 = 160;
@@ -1650,7 +1729,8 @@ static void BulletGalleryProc(bool & /*quit*/) {
   GameFlow.ctx.bullets.Render();
 
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
-    GameFlow.ctx.bullets.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
+    GameFlow.ctx.bullets.RenderDebugHitboxes(
+        GameFlow.ctx.debug_cfg->hitbox_display);
     auto *gp = GrpGeom_Poly();
     if (gp != nullptr) {
       const RGB216 kBlack{0, 0, 0};

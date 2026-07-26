@@ -13,17 +13,19 @@
 #include <memory>
 #include <optional>
 
-#include "core/object_pool.h"
-#include "core/config.h"
 #include "player_shot.h"
 #include "weapon/weapon_form.h"
+
+#include "core/config.h"
+#include "core/object_pool.h"
 
 // [ Constants ]
 
 inline constexpr int VIVDEAD_VAL = 300;   // Viv death time
 inline constexpr int VIVMUTEKI_VAL = 180; // Viv invincibility time
 
-inline constexpr int PLAYER_HITBOX_RADIUS = 1.5 * 64;  // Player hitbox radius, x64 fixed-point (2 px)
+inline constexpr int PLAYER_HITBOX_RADIUS =
+    1.5 * 64; // Player hitbox radius, x64 fixed-point (2 px)
 
 inline constexpr int MAID_MOVE_DISABLE_TIME = 150; // Move-disabled duration
 
@@ -68,6 +70,10 @@ class LaserFocusForm;
 struct BulletManager;
 struct GameManager;
 
+namespace stage {
+class StageSession;
+}
+
 // [ Player class ]
 enum class PlayerReward : uint8_t { NONE, BOMB, EXTEND };
 
@@ -83,6 +89,7 @@ public:
   // --- Lifecycle ---
   void Bind(BulletManager &bm) { bullets_ = &bm; }
   void Bind(GameManager &gm) { game_ = &gm; }
+  void Bind(stage::StageSession &stage) { stage_ = &stage; }
   void Bind(const GameConfig &gc) { game_config_ = &gc; }
   void Bind(const InputConfig &ic) { input_config_ = &ic; }
   void Draw();
@@ -134,7 +141,9 @@ public:
   bool IsInvincible() const { return muteki_ != 0; }
   bool IsBombActive() const { return bomb_time_ != 0; }
   bool IsGameOver() const { return game_over_; }
-  uint16_t ShotCount() const { return static_cast<uint16_t>(maid_tama_.Size()); }
+  uint16_t ShotCount() const {
+    return static_cast<uint16_t>(maid_tama_.Size());
+  }
 
   // --- Setters / action methods ---
   void SetWeapon(uint8_t w) { weapon_ = w; }
@@ -247,6 +256,7 @@ private:
 
   BulletManager *bullets_ = nullptr;
   GameManager *game_ = nullptr;
+  stage::StageSession *stage_ = nullptr;
   const GameConfig *game_config_ = nullptr;
   const InputConfig *input_config_ = nullptr;
 

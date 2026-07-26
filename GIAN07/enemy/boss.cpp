@@ -11,19 +11,18 @@
 #include "boss_systems.h"
 
 #include "audio/snd.h"
+#include "bullet/bullet_manager.h"
 #include "core/gian.h"
 #include "effect/bomb_efc.h"
-#include "bullet/bullet_manager.h"
-#include "item/item_manager.h"
-#include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
-#include "gameflow/gameflow_manager.h"
-#include "stage/scroll_manager.h"
 #include "enemy/enemy_manager.h"
-#include "player/player.h"
+#include "gameflow/gameflow_manager.h"
 #include "gfx/font_uty.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
+#include "item/item_manager.h"
+#include "player/player.h"
+#include "stage/stage_session.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 
@@ -405,7 +404,7 @@ void BossManager::HPG_Close() {
 }
 
 // Draw the boss HP gauge
-void BossManager::DrawHPG() {
+void BossManager::DrawHPG(uint32_t stage_frame) {
   PIXEL_LTRB src;
   int i = 0;
 
@@ -507,8 +506,7 @@ void BossManager::DrawHPG() {
       }
     } else if (hpg.SCLTimerEnd > 0) {
       const int remain = std::min(
-          (hpg.SCLTimerEnd - static_cast<int32_t>(GameFlow.ctx.game.count)) / 60,
-          99);
+          (hpg.SCLTimerEnd - static_cast<int32_t>(stage_frame)) / 60, 99);
       if (remain >= 0) {
         if (remain <= 10 && remain != hpg.PrevTimerSeconds) {
           Snd_SEPlay(SfxId::Sblaser);
@@ -548,7 +546,10 @@ void BossManager::KillAll() {
       Effects.SpawnBombEffect(e->x, e->y, EXBOMB_STD);
       Snd_SEPlay(SfxId::Bossbomb, e->x);
       if (e->LLaserRef != 0U) {
-        bullets_->ControlLongLaser(e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+        bullets_->ControlLongLaser(
+            e, ECLCST_LLASERALL,
+            LongLaserUpdateInfo{
+                LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
       e->hp = 0;
       e->count = 0;
@@ -569,10 +570,13 @@ bool BossManager::ApplyDamage(BossData &b, EnemyData &e, int damage) {
     Enemies.Clear();
     Effects.SpawnFragment(e.x, e.y, FRG_FATCIRCLE);
     Effects.SpawnBombEffect(e.x, e.y, EXBOMB_STD);
-    Scroller.Command(SCMD_QUAKE);
+    stage_->Command(stage::BackgroundCommand::Quake, Effects);
     Snd_SEPlay(SfxId::Bossbomb, e.x);
     if (e.LLaserRef != 0U) {
-      bullets_->ControlLongLaser(&e, ECLCST_LLASERALL, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+      bullets_->ControlLongLaser(
+          &e, ECLCST_LLASERALL,
+          LongLaserUpdateInfo{
+              LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
     }
     player_->PowerUp(Cast::down<uint8_t>(e.hp));
     e.hp = 0;
