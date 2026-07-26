@@ -9,11 +9,13 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
+
+#include "menu_tree.h"
 
 #include "gfx/coords.h"
 #include "gfx/text.h"
-#include "menu_tree.h"
 #include "sys/input.h"
 
 namespace menu {
@@ -65,6 +67,7 @@ public:
   void SetY(int new_y) { y_ = new_y; }
   void AdjustYForTallMenu(int baseline_y, int max_visible);
   void SetLastKey(INPUT_BITS key) { last_key_ = key; }
+  void SetRootCancelEnabled(bool enabled) { root_cancel_enabled_ = enabled; }
 
   void ActivateListView(ListView &view);
   void DeactivateListView();
@@ -87,6 +90,7 @@ private:
   void ProcessInput(INPUT_BITS key);
   void ProcessListInput(INPUT_BITS key);
   void BuildPageFromEntry(EntryNode &entry);
+  void ResetNavigation(int initial_select);
   void InvalidateAllSlots();
   void RegisterTRRs();
   void RenderPage();
@@ -101,6 +105,7 @@ private:
   std::vector<MenuPage> stack_;
   std::vector<std::unique_ptr<IMenuNode>> exit_nodes_;
   std::vector<RenderSlot> slots_;
+  IMenuNode *root_node_ = nullptr;
   ListView *active_list_ = nullptr;
 
   int x_ = 0;
@@ -113,6 +118,7 @@ private:
   uint8_t key_wait_ = 0;
   uint8_t fast_repeat_wait_ = kMenuKeyWait;
   bool first_wait_ = false;
+  bool root_cancel_enabled_ = true;
 };
 
 } // namespace menu

@@ -5,40 +5,39 @@
 #include <chrono>
 #include <format>
 
-#include "audio/snd_backend.h"
 #include "demo_manager.h"
 #include "demo_play.h"
 #include "game_main.h"
 #include "gameflow_manager.h"
-#include "core/game_manager.h"
-#include "item/item_manager.h"
 #include "score.h"
 #include "score_manager.h"
 
 #include "audio/bgm.h"
-#include "track_manager/track_manager.h"
 #include "audio/snd.h"
+#include "audio/snd_backend.h"
 #include "bullet/bullet_manager.h"
 #include "core/config.h"
+#include "core/game_manager.h"
 #include "core/gian.h"
+#include "core/level.h"
 #include "data/gfx_manager.h"
 #include "data/stage_manager.h"
-#include "core/level.h"
 #include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
+#include "effect/lens.h"
 #include "enemy/boss_manager.h"
 #include "enemy/enemy_manager.h"
 #include "gfx/font_uty.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
-#include "effect/lens.h"
-#include "player/player.h"
-#include "platform/text_backend.h"
+#include "gfx/graphics_backend.h"
+#include "item/item_manager.h"
 #include "music_room/music_room.h"
+#include "platform/text_backend.h"
+#include "player/player.h"
 #include "stage/scroll_manager.h"
-#include "stage/menu/ui_manager.h"
-#include "stage/menu/window_sys.h"
 #include "sys/input.h"
+#include "track_manager/track_manager.h"
+#include "ui/ui_manager.h"
 #include "util/debug.h"
 #include "util/time.h"
 #include "util/ut_math.h"
@@ -127,7 +126,7 @@ bool ScoreNameInit() {
     return GameExit();
   }
 
-  GameFlow.ctx.ui.MsgForceClose();
+  GameFlow.ctx.ui.ForceCloseMessageWindow();
   GrpBackend_Clear();
   Grp_Flip();
 
@@ -543,7 +542,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
     return GameExit();
   }
 
-  GameFlow.ctx.ui.MsgForceClose();
+  GameFlow.ctx.ui.ForceCloseMessageWindow();
   GrpBackend_Clear();
   Grp_Flip();
 
@@ -568,7 +567,7 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
 // Initialization functions required when starting the game
 void GameSTD_Init() {
   Scroller.key_wait_count = 0;
-  GameFlow.ctx.ui.MsgForceClose();
+  GameFlow.ctx.ui.ForceCloseMessageWindow();
   // GrpBackend_Clear();
   // Grp_Flip();
 
@@ -654,9 +653,9 @@ bool GameInit(std::function<void(bool &)> next_proc) {
     // to do this.
     const auto flags = MsgWindowFlags::WITH_FACE;
     if (GameFlow.ctx.graphics_cfg->window_upper) {
-      GameFlow.ctx.ui.Msg().Init({128, 16, (640 - 128), 96}, flags);
+      GameFlow.ctx.ui.InitMessageWindow({128, 16, (640 - 128), 96}, flags);
     } else if (!GameFlow.ctx.graphics_cfg->msg_disable) {
-      GameFlow.ctx.ui.Msg().Init({128, 400, (640 - 128), 480}, flags);
+      GameFlow.ctx.ui.InitMessageWindow({128, 400, (640 - 128), 480}, flags);
     }
 
     if (GameFlow.current_state == GameState::Game) {
@@ -925,9 +924,10 @@ bool GameExit(bool bNeedChgMusic) {
   Snd_SEStop(8);      // Stop warning sound
 
   const auto flags = MsgWindowFlags::CENTER;
-  GameFlow.ctx.ui.MsgForceClose();
-  GameFlow.ctx.ui.Msg().Init({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480}, flags);
-  GameFlow.ctx.ui.Msg().Open();
+  GameFlow.ctx.ui.ForceCloseMessageWindow();
+  GameFlow.ctx.ui.InitMessageWindow(
+      {(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480}, flags);
+  GameFlow.ctx.ui.OpenMessageWindow();
   // MWinFace(0);
 
   GameFlow.demo_timer = 0;
@@ -1412,8 +1412,8 @@ void GameFlowManager::TitleProc(bool &quit) {
 
   auto *window_active = GameFlow.ctx.ui.ActiveMenu();
   window_active->Tick(Key_Data);
-  GameFlow.ctx.ui.MsgHelp();
-  GameFlow.ctx.ui.MsgTick();
+  GameFlow.ctx.ui.ShowMenuHelp();
+  GameFlow.ctx.ui.TickMessageWindow();
 
   // Start pending replay after menu closes
   if (!GameFlow.ctx.demos.pending_replay_file.empty()) {
@@ -1446,7 +1446,7 @@ void GameFlowManager::TitleProc(bool &quit) {
     GrpBackend_Clear();
     GrpSurface_Blit({0, 42}, SURFACE_ID::TITLE, src);
     // GrpSurface_Blit({ (320 - 175), 77 }, SURFACE_ID::TITLE, src);
-    GameFlow.ctx.ui.MsgDraw();
+    GameFlow.ctx.ui.DrawMessageWindow();
     window_active->Draw();
 
     // Placing this here avoids flickering with the Vulkan backend if any
@@ -1480,7 +1480,7 @@ void PauseProc(bool & /*unused*/) {
 // }
 
 void GameMove() {
-  GameFlow.ctx.ui.MsgTick();
+  GameFlow.ctx.ui.TickMessageWindow();
 
   Scroller.Move();
 
@@ -1556,7 +1556,7 @@ void GameDraw() {
   Bosses.DrawHPG();
   Effects.DrawScreenEffect();
 
-  GameFlow.ctx.ui.MsgDraw();
+  GameFlow.ctx.ui.DrawMessageWindow();
   // GrpBackend_SetClip(PLAYFIELD_CLIP);
 
   GrpBackend_SetClip(GRP_RES_RECT);

@@ -604,12 +604,12 @@ std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg) {
                                               return true;
                                             }));
 
-  auto music = std::make_unique<ActionNode>("Music", "音楽室に入ります",
-                                            [](MenuController &) {
-                                              GameFlow.ctx.ui.MsgForceClose();
-                                              MusicRoomInit();
-                                              return true;
-                                            });
+  auto music = std::make_unique<ActionNode>(
+      "Music", "音楽室に入ります", [](MenuController &) {
+        GameFlow.ctx.ui.ForceCloseMessageWindow();
+        MusicRoomInit();
+        return true;
+      });
   auto *music_raw = music.get();
   music->SetPoll([music_raw]() { music_raw->SetEnabled(BGM_Enabled()); });
   ch.push_back(std::move(music));

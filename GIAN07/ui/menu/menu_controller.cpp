@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <format>
 #include <string_view>
+#include <utility>
 
 #include "menu_controller.h"
 
@@ -38,6 +39,8 @@ void MenuController::Init(int window_width) {
 }
 
 void MenuController::Open(WINDOW_POINT topleft, int select) {
+  ResetNavigation(select);
+
   x_ = topleft.x;
   y_ = topleft.y;
 
@@ -58,11 +61,17 @@ void MenuController::InvalidateAllSlots() {
   }
 }
 
-void MenuController::Navigate(IMenuNode &root_node, int /*initial_select*/) {
+void MenuController::Navigate(IMenuNode &root_node, int initial_select) {
+  root_node_ = &root_node;
+  ResetNavigation(initial_select);
+}
+
+void MenuController::ResetNavigation(int initial_select) {
   stack_.clear();
   exit_nodes_.clear();
+  active_list_ = nullptr;
 
-  auto *entry = dynamic_cast<EntryNode *>(&root_node);
+  auto *entry = dynamic_cast<EntryNode *>(root_node_);
   if (entry == nullptr) {
     return;
   }
@@ -71,7 +80,8 @@ void MenuController::Navigate(IMenuNode &root_node, int /*initial_select*/) {
   MenuPage page;
   auto children = entry->Children();
   page.items.assign(children.begin(), children.end());
-  page.title = root_node.Title();
+  page.title = root_node_->Title();
+  page.selected = initial_select;
   stack_.push_back(std::move(page));
 
   InvalidateAllSlots();
@@ -218,7 +228,7 @@ void MenuController::ProcessInput(INPUT_BITS key) {
   if (Input_IsCancel(key)) {
     if (stack_.size() > 1) {
       PopPage();
-    } else {
+    } else if (root_cancel_enabled_) {
       closed_selection_ = -1;
       Close();
       last_key_ = 0;
@@ -244,7 +254,10 @@ void MenuController::PopPage() {
   }
 }
 
-void MenuController::Close() { stack_.clear(); }
+void MenuController::Close() {
+  stack_.clear();
+  active_list_ = nullptr;
+}
 
 void MenuController::BuildPageFromEntry(EntryNode &entry) {
   MenuPage page;
@@ -538,9 +551,8 @@ void MenuController::RenderList() {
       item_title = "Exit";
     }
 
-    std::string key =
-        std::format("{}|\x01{}|\x01{}{}{}{}", item_title, "",
-                    selected ? 'S' : 'N', 'E', 'N', 'N');
+    std::string key = std::format("{}|\x01{}|\x01{}{}{}{}", item_title, "",
+                                  selected ? 'S' : 'N', 'E', 'N', 'N');
 
     if (slot.cache_key != key) {
       slot.cache_key = key;

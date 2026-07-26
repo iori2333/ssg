@@ -6,15 +6,16 @@
 
 #include <functional>
 
-#include "bullet/bullet_manager.h"
 #include "config.h"
 #include "game_manager.h"
+
+#include "bullet/bullet_manager.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/ending_manager.h"
 #include "gameflow/score_manager.h"
 #include "item/item_manager.h"
 #include "player/player.h"
-#include "stage/menu/ui_manager.h"
+#include "ui/ui_manager.h"
 
 struct GameContext {
   BulletManager bullets;

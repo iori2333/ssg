@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "stage/menu/menu_tree.h"
+#include "menu_tree.h"
 
 struct ConfigData;
 

@@ -9,9 +9,36 @@
 #include "data/gfx_manager.h"
 #include "data/sfx_manager.h"
 #include "platform/text_backend.h"
-#include "stage/menu/menu_renderer.h"
-#include "stage/menu/window_sys.h"
 #include "util/ut_math.h"
+
+namespace {
+
+inline constexpr auto MWIN_DEAD = 0x00;
+inline constexpr auto MWIN_OPEN = 0x01;
+inline constexpr auto MWIN_CLOSE = 0x02;
+inline constexpr auto MWIN_FREE = 0x03;
+
+inline constexpr auto MFACE_NONE = 0x00;
+inline constexpr auto MFACE_OPEN = 0x01;
+inline constexpr auto MFACE_CLOSE = 0x02;
+inline constexpr auto MFACE_NEXT = 0x03;
+inline constexpr auto MFACE_WAIT = 0x04;
+
+constexpr PIXEL_COORD FACE_W = 96;
+constexpr PIXEL_COORD FACE_H = 96;
+
+void DrawWindowFrame(int x, int y, int w, int h) {
+  w >>= 1;
+  h >>= 1;
+
+  GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, {0, 0, w, h});
+  GrpSurface_Blit({x + w, y}, SURFACE_ID::SYSTEM, {384 - w, 0, 384, h});
+  GrpSurface_Blit({x, y + h}, SURFACE_ID::SYSTEM, {0, 80 - h, w, 80});
+  GrpSurface_Blit({x + w, y + h}, SURFACE_ID::SYSTEM,
+                  {384 - w, 80 - h, 384, 80});
+}
+
+} // namespace
 
 void MsgWindow::MsgBlank() {
   line = 0;
@@ -49,7 +76,7 @@ void MsgWindow::Open() {
   now_size.top = y_mid - 4;
   now_size.bottom = y_mid + 4;
 
-  Cmd(MWCMD_NORMALFONT); // Normal font
+  SetFont(FONT_ID::NORMAL);
 
   // Initialize display contents in the window
   MsgBlank();
@@ -229,7 +256,7 @@ void MsgWindow::Draw() {
   }
 }
 
-void MsgWindow::Msg(std::string_view s) {
+void MsgWindow::AppendMessage(std::string_view message) {
   int Line = 0;
   int i = 0;
 
@@ -240,10 +267,10 @@ void MsgWindow::Msg(std::string_view s) {
     for (i = 1; i < max_line - 1; i++) {
       msg[i] = msg[i + 1];
     }
-    msg[Line - 1] = s;
+    msg[Line - 1] = message;
   } else {
     // Set pointer and update line count
-    msg[Line] = s;
+    msg[Line] = message;
     line = Line + 1;
   }
 
@@ -255,11 +282,11 @@ void MsgWindow::Msg(std::string_view s) {
 }
 
 // Set the face
-void MsgWindow::Face(uint8_t faceID) {
+void MsgWindow::SetFace(uint8_t face_id) {
   if (state == MWIN_DEAD) {
     return; // Cannot display
   }
-  if (faceID / kFaceNumX >= FACE_MAX) {
+  if (face_id / kFaceNumX >= FACE_MAX) {
     return; // Impossible number
   }
 
@@ -267,58 +294,46 @@ void MsgWindow::Face(uint8_t faceID) {
 
   if (face_state == MFACE_NONE) {
     face_state = MFACE_OPEN;
-    face_id = faceID;
+    this->face_id = face_id;
   } else {
     face_state = MFACE_NEXT;
-    next_face = faceID;
+    next_face = face_id;
   }
 
   face_time = 0;
 }
 
-// Send command
-void MsgWindow::Cmd(uint8_t cmd) {
-  int temp = 0;
-  int Ysize = 0;
-
-  switch (cmd) {
-  case MWCMD_LARGEFONT: // Use large font
-    Ysize += 8;
-    [[fallthrough]];
-  case MWCMD_NORMALFONT: // Use normal font
-    Ysize += 2;
-    [[fallthrough]];
-  case MWCMD_SMALLFONT: // Use small font
-    Ysize += 14;
-    temp = max_size.bottom - max_size.top - 16;
-    max_line = temp / Ysize; // Max displayable lines
-    font_dy = ((temp % Ysize) / (temp / Ysize)) + Ysize + 1; // Y increment
-    font_id = Cast::down_enum<FONT_ID>(cmd);                 // Font to use
-    [[fallthrough]];
-
-  case MWCMD_NEWPAGE: // New page
-    // Invalidate strings, go to first line
-    MsgBlank();
+void MsgWindow::SetFont(FONT_ID font) {
+  int font_height = 0;
+  switch (font) {
+  case FONT_ID::SMALL:
+    font_height = 14;
     break;
-
-  default: // Bug if we get here...
+  case FONT_ID::NORMAL:
+    font_height = 16;
     break;
+  case FONT_ID::LARGE:
+    font_height = 24;
+    break;
+  case FONT_ID::TINY:
+    font_height = 10;
+    break;
+  case FONT_ID::COUNT:
+    return;
   }
+
+  const int text_height = max_size.bottom - max_size.top - 16;
+  max_line = text_height / font_height;
+  font_dy = ((text_height % font_height) / max_line) + font_height + 1;
+  font_id = font;
+  NewPage();
 }
 
-// Send help string
-void MsgWindow::Help(MenuController *ws) {
-  // Search active window and clear message area
-  const auto *p = ws->SearchActive();
-  MsgBlank();
+void MsgWindow::NewPage() { MsgBlank(); }
 
-  // Assign a single row of strings
-  Msg(p->ItemPtr[ws->CurrentSelection()]->Help);
-}
-
-void MsgWindow::HelpStr(const char *str) {
+void MsgWindow::ShowHelp(std::string_view help) {
   MsgBlank();
-  if (str && *str) {
-    Msg(str);
+  if (!help.empty()) {
+    AppendMessage(help);
   }
 }

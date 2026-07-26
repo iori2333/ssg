@@ -4,11 +4,12 @@
 
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 
 #include "gfx/text.h"
-#include "stage/menu/window_sys.h"
 
 // Message window flags
 enum class MsgWindowFlags : uint8_t {
@@ -25,18 +26,20 @@ enum class MsgWindowFlags : uint8_t {
 class MsgWindow {
 public:
   void Init(const WINDOW_LTRB &rc, MsgWindowFlags flags = MsgWindowFlags::NONE);
-  void Open();                    // Open the message window
-  void Close();                   // Close the message window
-  void ForceClose();              // Force close the message window
-  void Tick();                    // Run message window logic
-  void Draw();                    // Draw the message window
-  void Msg(std::string_view str); // Send a message string
-  void Face(uint8_t faceID);      // Set the face portrait
-  void Cmd(uint8_t cmd);          // Send a command
-  void Help(MenuController *ws);  // Send help text to the message window
-  void HelpStr(const char *str);   // Send help string directly
+  void Open();       // Open the message window
+  void Close();      // Close the message window
+  void ForceClose(); // Force close the message window
+  void Tick();       // Run message window logic
+  void Draw();       // Draw the message window
+  void AppendMessage(std::string_view message);
+  void SetFace(uint8_t face_id);
+  void SetFont(FONT_ID font);
+  void NewPage();
+  void ShowHelp(std::string_view help);
 
 private:
+  static constexpr auto kMessageLines = 5;
+
   void MsgBlank(); // Clear strings and reset to first line
 
   WINDOW_LTRB max_size{}; // Final window size
@@ -55,11 +58,10 @@ private:
   uint8_t face_state{}; // Face state
   uint8_t face_time{};  // Face display counter
 
-  std::string_view msg[MSG_HEIGHT]{}; // Pointers to displayed messages
+  std::string_view msg[kMessageLines]{}; // Pointers to displayed messages
 
   // Contains all text from [msg], concatenated with '\n'.
   std::string text;
 
   std::optional<TEXTRENDER_RECT_ID> trr;
 };
-

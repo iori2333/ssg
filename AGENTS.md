@@ -46,6 +46,7 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | Directory | Purpose |
 | --- | --- |
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
+| `GIAN07/ui/` | Application-wide UI ownership: menu controllers, menu definitions, and message windows |
 | `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
 | `game/sys/` | System wrappers – buffer, file, path, thread, log, input |
 | `game/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |

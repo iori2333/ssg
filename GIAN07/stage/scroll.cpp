@@ -7,30 +7,29 @@
 
 #include "scene.h"
 #include "scroll.h"
-#include "menu/ui_manager.h"
-#include "menu/window_sys.h"
+#include "scroll_manager.h"
 
 #include "audio/bgm.h"
-#include "track_manager/track_manager.h"
 #include "audio/snd.h"
 #include "core/config.h"
+#include "core/game_manager.h"
 #include "core/gian.h"
+#include "core/level.h"
 #include "data/gfx_manager.h"
 #include "effect/effect.h"
 #include "effect/effect_manager.h"
 #include "enemy/boss_manager.h"
 #include "enemy/enemy_manager.h"
-#include "core/level.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/demo_play.h"
-#include "core/game_manager.h"
-#include "gameflow/gameflow_manager.h"
 #include "gameflow/ending_manager.h"
 #include "gameflow/game_main.h"
-#include "player/player.h"
+#include "gameflow/gameflow_manager.h"
 #include "gfx/graphics_backend.h"
-#include "stage/scroll_manager.h"
+#include "player/player.h"
 #include "sys/input.h"
+#include "track_manager/track_manager.h"
+#include "ui/ui_manager.h"
 #include "util/cast.h"
 #include "util/debug.h"
 #include "util/endian.h"
@@ -284,7 +283,7 @@ static void enemy_set() {
 
     case SCL_MWOPEN: // Open message window
       if (!Scroller.graphics_cfg_->msg_disable) {
-        GameFlow.ctx.ui.Msg().Open();
+        GameFlow.ctx.ui.OpenMessageWindow();
       }
       Scroller.scene.MsgFlag = true;
       Enemies.scl_now++;
@@ -292,20 +291,19 @@ static void enemy_set() {
 
     case SCL_MWCLOSE: // Close message window
       if (!Scroller.graphics_cfg_->msg_disable) {
-        GameFlow.ctx.ui.Msg().Close();
+        GameFlow.ctx.ui.CloseMessageWindow();
       }
       Scroller.scene.MsgFlag = false;
       Enemies.scl_now++;
       break;
 
     case SCL_MSG: // Output message
-      // GameFlow.ctx.ui.Msg().Cmd(MWCMD_SMALLFONT);
-      GameFlow.ctx.ui.Msg().Msg(reinterpret_cast<const char *>(cmd + 1));
+      GameFlow.ctx.ui.ShowMessage(reinterpret_cast<const char *>(cmd + 1));
       Enemies.scl_now += (strlen(reinterpret_cast<const char *>(cmd + 1)) + 2);
       break;
 
     case SCL_FACE: // Display face
-      GameFlow.ctx.ui.Msg().Face(cmd[1]);
+      GameFlow.ctx.ui.SetMessageFace(cmd[1]);
       Enemies.scl_now += 2;
       break;
 
@@ -315,16 +313,16 @@ static void enemy_set() {
       break;
 
     case SCL_NPG: // Change to new page
-      GameFlow.ctx.ui.Msg().Cmd(MWCMD_NEWPAGE);
+      GameFlow.ctx.ui.NewMessagePage();
       Enemies.scl_now++;
       break;
 
     case SCL_END: // Return without changing count
                   //
-                  // GameFlow.ctx.ui.Msg().Open();
-                  // GameFlow.ctx.ui.Msg().Cmd(MWCMD_NEWPAGE);
-                  // GameFlow.ctx.ui.Msg().Cmd(MWCMD_LARGEFONT);
-                  // GameFlow.ctx.ui.Msg().Msg("SCL complete");
+                  // GameFlow.ctx.ui.OpenMessageWindow();
+                  // GameFlow.ctx.ui.NewMessagePage();
+                  // GameFlow.ctx.ui.SetLargeMessageFont();
+                  // GameFlow.ctx.ui.ShowMessage("SCL complete");
                   // SCL_DEBUG("--- SCL_END ---");
       return;
 
@@ -503,10 +501,10 @@ static void enemy_set() {
       break;
 
     default: // Not implemented or bug
-      GameFlow.ctx.ui.Msg().Open();
-      GameFlow.ctx.ui.Msg().Cmd(MWCMD_NEWPAGE);
-      GameFlow.ctx.ui.Msg().Cmd(MWCMD_LARGEFONT);
-      GameFlow.ctx.ui.Msg().Msg("バグ発生だにょ");
+      GameFlow.ctx.ui.OpenMessageWindow();
+      GameFlow.ctx.ui.NewMessagePage();
+      GameFlow.ctx.ui.SetLargeMessageFont();
+      GameFlow.ctx.ui.ShowMessage("バグ発生だにょ");
       SCL_DEBUG("---- SCL !BUG! ---");
       return;
     }
