@@ -123,11 +123,7 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "soundfont", cfg.audio.soundfont);
     bool midi_fix = false;
     LoadToml(*sec, "midi_fix_sysex_bugs", midi_fix);
-    if (midi_fix) {
-      cfg.audio.midi_flags |= MID_FLAGS::FIX_SYSEX_BUGS;
-    } else {
-      cfg.audio.midi_flags &= ~MID_FLAGS::FIX_SYSEX_BUGS;
-    }
+    cfg.audio.fix_sysex_bugs = midi_fix;
   }
 
   // [input]
@@ -182,9 +178,7 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("bgm_volume", cfg.audio.bgm_volume);
     sec.emplace("bgm_pack", cfg.audio.bgm_pack);
     sec.emplace("soundfont", cfg.audio.soundfont);
-    sec.emplace("midi_fix_sysex_bugs",
-                (cfg.audio.midi_flags & MID_FLAGS::FIX_SYSEX_BUGS) !=
-                    MID_FLAGS::NONE);
+    sec.emplace("midi_fix_sysex_bugs", cfg.audio.fix_sysex_bugs);
     tbl.emplace("sound", std::move(sec));
   }
 

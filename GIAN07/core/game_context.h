@@ -30,9 +30,7 @@ struct GameContext {
   const GraphicsConfig *graphics_cfg = nullptr;
   const AudioConfig *audio_cfg = nullptr;
   const InputConfig *input_cfg = nullptr;
-#ifdef PBG_DEBUG
   const DebugConfig *debug_cfg = nullptr;
-#endif
 
   std::function<void()> save_config;
   ConfigData *cfg = nullptr;

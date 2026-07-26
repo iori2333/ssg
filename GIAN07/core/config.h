@@ -53,7 +53,7 @@ struct AudioConfig {
   bool bgm_enabled = true;
   bool se_enabled = true;
   bool bgm_vol_norm = true;
-  MID_FLAGS midi_flags = MID_FLAGS::FIX_SYSEX_BUGS;
+  bool fix_sysex_bugs = true;
   std::string soundfont;
   VOLUME se_volume = ((VOLUME_MAX * 4) / 10);
   VOLUME bgm_volume = ((VOLUME_MAX * 4) / 10);
@@ -73,20 +73,16 @@ struct InputConfig {
   void UnpackInputFlags(uint8_t v);
 };
 
-#ifdef PBG_DEBUG
 struct DebugConfig {
   int32_t hitbox_display = 0;
 };
-#endif
 
 struct ConfigData {
   GameConfig game;
   GraphicsConfig graphics;
   AudioConfig audio;
   InputConfig input;
-#ifdef PBG_DEBUG
   DebugConfig debug;
-#endif
 
   void Load();
   void Save();

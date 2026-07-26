@@ -98,7 +98,8 @@ bool XInit() {
   // Load config
   g_config.Load();
   Grp_FPSDivisor = g_config.graphics.fps_divisor;
-  g_config.audio.midi_flags = Mid_SetFlags(g_config.audio.midi_flags);
+  Mid_SetFlags(g_config.audio.fix_sysex_bugs ? MID_FLAGS::FIX_SYSEX_BUGS
+                                             : MID_FLAGS::NONE);
 
   // Config-dependent initialization
   if (!GrpBackend_Enum()) {
@@ -129,9 +130,7 @@ bool XInit() {
   GameFlow.ctx.graphics_cfg = &g_config.graphics;
   GameFlow.ctx.audio_cfg = &g_config.audio;
   GameFlow.ctx.input_cfg = &g_config.input;
-#ifdef PBG_DEBUG
   GameFlow.ctx.debug_cfg = &g_config.debug;
-#endif
 
   GameFlow.ctx.save_config = [&] { SaveConfigFile(g_config); };
   GameFlow.ctx.cfg = &g_config;

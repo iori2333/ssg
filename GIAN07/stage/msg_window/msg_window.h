@@ -34,6 +34,7 @@ public:
   void Face(uint8_t faceID);      // Set the face portrait
   void Cmd(uint8_t cmd);          // Send a command
   void Help(MenuController *ws);  // Send help text to the message window
+  void HelpStr(const char *str);   // Send help string directly
 
 private:
   void MsgBlank(); // Clear strings and reset to first line

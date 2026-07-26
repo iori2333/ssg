@@ -1401,7 +1401,7 @@ void GameFlowManager::TitleProc(bool &quit) {
   } else {
     demo_timer = 0;
   }
-  if (GameFlow.ctx.ui.Main().Depth() != 0) {
+  if (GameFlow.ctx.ui.Main().Depth() > 1) {
     demo_timer = 0;
   }
 
@@ -1428,7 +1428,7 @@ void GameFlowManager::TitleProc(bool &quit) {
   }
 
   if (!GameFlow.ctx.ui.Main().Active()) {
-    switch (GameFlow.ctx.ui.Main().SelectionAt(0)) {
+    switch (GameFlow.ctx.ui.Main().ClosedSelection()) {
     case 0:
       WeaponSelectInit(false);
       return;
@@ -1528,7 +1528,6 @@ void GameDraw() {
 
   GameFlow.ctx.bullets.Render();
 
-#ifdef PBG_DEBUG
   if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(GameFlow.ctx.debug_cfg->hitbox_display);
     auto *gp = GrpGeom_Poly();
@@ -1542,7 +1541,6 @@ void GameDraw() {
       Geometry::CircleF_Approximated(*gp, {px, py}, pr, true);
     }
   }
-#endif
 
   // static uint8_t test = 0;
 
@@ -1577,7 +1575,6 @@ bool GameFlowManager::IsDraw() {
   return true;
 }
 
-#ifdef PBG_DEBUG
 static void GalleryUpdateAngles() { GameFlow.ctx.bullets.RotateDisplayAngles(); }
 
 static void GalleryDrawLabels() {
@@ -1685,4 +1682,3 @@ void BulletGalleryInit() {
   GameFlow.game_main = BulletGalleryProc;
   GameFlow.current_state = GameState::BulletGallery;
 }
-#endif

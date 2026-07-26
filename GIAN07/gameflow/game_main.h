@@ -45,6 +45,4 @@ GameReplayInitAll(const char *fn); // Initialize for multi-stage replay
 
 [[nodiscard]] bool GameNextStage(); // Move to next stage
 
-#ifdef PBG_DEBUG
 void BulletGalleryInit();
-#endif

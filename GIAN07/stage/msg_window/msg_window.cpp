@@ -315,3 +315,10 @@ void MsgWindow::Help(MenuController *ws) {
   // Assign a single row of strings
   Msg(p->ItemPtr[ws->CurrentSelection()]->Help);
 }
+
+void MsgWindow::HelpStr(const char *str) {
+  MsgBlank();
+  if (str && *str) {
+    Msg(str);
+  }
+}

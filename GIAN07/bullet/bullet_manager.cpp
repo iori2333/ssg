@@ -63,7 +63,8 @@ bool BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
       return false;
     }
     auto si2 = si;
-    si2.d = bullet_common::CalcSpreadDir(i % n, si.cmd_type, n, base_deg, si.dw);
+    si2.d =
+        bullet_common::CalcSpreadDir(i % n, si.cmd_type, n, base_deg, si.dw);
 
     int temp = 0;
     switch (si.vsp) {
@@ -99,8 +100,7 @@ bool BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
     si2.d = bullet_common::CalcSpreadDir(i % n, TC_WAY, n, si.d, si.dw);
 
     const int i_mod = (i % n) + 1;
-    const auto deg_factor =
-        ((i_mod >> 1) * si.dw * (1 - ((i_mod & 1) << 1)));
+    const auto deg_factor = ((i_mod >> 1) * si.dw * (1 - ((i_mod & 1) << 1)));
     const uint8_t deg =
         ((n & 1) != 0) ? deg_factor : -(si.dw >> 1) + deg_factor;
     int v_ret = cosDiv(deg, si.v_);
@@ -489,6 +489,9 @@ void BulletManager::RenderDebugHitboxes(int mode) const {
   gp->SetColor(kBlack);
   gp->SetAlphaNorm(kAlpha);
 
+  for (const auto &b : pool) {
+    b.RenderDebugHitbox(mode);
+  }
   for (const auto &r : reflect) {
     r.RenderDebugHitbox(mode);
   }
