@@ -10,9 +10,8 @@
 
 #include "sys/input.h"
 
-struct BossManager;
 struct EffectManager;
-struct EnemyManager;
+struct EnemySystem;
 struct GameManager;
 class TrackManager;
 class UIManager;
@@ -31,8 +30,7 @@ enum class StageTransition : uint8_t {
 };
 
 struct StageUpdateContext {
-  EnemyManager &enemies;
-  BossManager &bosses;
+  EnemySystem &enemies;
   EffectManager &effects;
   UIManager &ui;
   data::GraphicsLoader &graphics;

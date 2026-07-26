@@ -11,6 +11,7 @@
 #include <string_view>
 #include <vector>
 
+#include "enemy/ecl_program.h"
 #include "scripts_data.h"
 #include "stage/scene_program.h"
 #include "stage/stage_map.h"
@@ -18,6 +19,7 @@
 namespace {
 
 constexpr std::array kSceneIds = {6, 7, 8, 9, 10, 11, 25, 47};
+constexpr std::array kEnemyIds = {0, 1, 2, 3, 4, 5, 24};
 constexpr std::array kMapIds = {0, 1, 2, 3, 4, 5, 12};
 
 const EmbeddedScript *FindScript(int index) {
@@ -44,6 +46,57 @@ bool ValidateScenes() {
     }
   }
   std::cout << "validated " << kSceneIds.size() << " embedded SCL programs\n";
+  return true;
+}
+
+bool ValidateEnemies() {
+  for (const int index : kEnemyIds) {
+    const auto *script = FindScript(index);
+    if (script == nullptr) {
+      std::cerr << "missing embedded ECL " << index << '\n';
+      return false;
+    }
+    const auto program = EclProgram::Parse({script->data, script->size});
+    if (!program || !program->Entry(0)) {
+      std::cerr << "invalid embedded ECL " << index << '\n';
+      return false;
+    }
+  }
+  std::cout << "validated " << kEnemyIds.size() << " embedded ECL programs\n";
+  return true;
+}
+
+bool ValidateEnemyDecoderGuards() {
+  constexpr std::array<uint8_t, 9> minimal = {
+      1,
+      0,
+      0,
+      0, // one script
+      8,
+      0,
+      0,
+      0, // entry at first instruction
+      static_cast<uint8_t>(EclOpcode::End),
+  };
+  if (!EclProgram::Parse(minimal)) {
+    return false;
+  }
+
+  auto unknown_opcode = minimal;
+  unknown_opcode.back() = 0xff;
+  if (EclProgram::Parse(unknown_opcode)) {
+    return false;
+  }
+
+  constexpr std::array<uint8_t, 13> invalid_jump = {
+      1, 0, 0, 0, 8, 0, 0, 0, static_cast<uint8_t>(EclOpcode::Jump),
+      9, 0, 0, 0, // middle of the jump instruction
+  };
+  if (EclProgram::Parse(invalid_jump)) {
+    return false;
+  }
+
+  std::cout << "validated ECL opcode and branch guards\n";
   return true;
 }
 
@@ -109,6 +162,13 @@ bool ValidateMaps(const std::filesystem::path &directory) {
 } // namespace
 
 int main(int argc, char **argv) {
+  if (!ValidateEnemies()) {
+    return 1;
+  }
+  if (!ValidateEnemyDecoderGuards()) {
+    std::cerr << "invalid ECL fixture was accepted\n";
+    return 1;
+  }
   if (!ValidateScenes()) {
     return 1;
   }

@@ -14,7 +14,7 @@
 #include "core/gian.h"
 #include "core/level.h"
 #include "effect/effect_manager.h"
-#include "enemy/enemy_manager.h"
+#include "enemy/enemy_system.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "item/item_manager.h"
@@ -226,8 +226,8 @@ bool BulletManager::SpawnHoming(const HomingSpawnInfo &info) {
 
 // ── BulletManager: Update ─────────────────────────────────────────
 
-void BulletManager::Update() {
-  UpdateBullet();
+void BulletManager::Update(const EnemyHomingTarget &target) {
+  UpdateBullet(target);
   UpdateReflect();
   UpdateLong();
   UpdateHoming();
@@ -235,10 +235,9 @@ void BulletManager::Update() {
   HitCheck();
 }
 
-void BulletManager::UpdateBullet() {
-  const BulletUpdateInfo info{player_->X(), player_->Y(),
-                              Enemies.homing_flag != HOMING_DUMMY,
-                              Enemies.homing_x, Enemies.homing_y};
+void BulletManager::UpdateBullet(const EnemyHomingTarget &target) {
+  const BulletUpdateInfo info{player_->X(), player_->Y(), target.active,
+                              target.x, target.y};
 
   for (auto &b : pool) {
     auto r = b.Update(info);
@@ -437,7 +436,7 @@ void BulletManager::ToItems(uint8_t n) {
 
 // ── Laser control ─────────────────────────────────────────────────
 
-void BulletManager::ControlLongLaser(const EnemyData *e, uint8_t id,
+void BulletManager::ControlLongLaser(const EnemyActor *e, uint8_t id,
                                      const LongLaserUpdateInfo &info) {
   for (auto &ll : long_lasers) {
     if (!ll.BelongsTo(e, id)) {

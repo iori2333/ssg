@@ -23,8 +23,7 @@
 #include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
 #include "effect/lens.h"
-#include "enemy/boss_manager.h"
-#include "enemy/enemy_manager.h"
+#include "enemy/enemy_system.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
@@ -519,8 +518,8 @@ void GameFlowManager::NameRegistProc(bool & /*unused*/) {
   //	GrpPut16(400,100,temps);
   //	for(i=0; i<5; i++){
   //		GrpPut16(100, 100+i*32,
-  //GameFlow.ctx.scores.score_strings[i].Score); 		if(current_rank == i+1)
-  //GrpPut16(85, 100+i*32, "!!");
+  // GameFlow.ctx.scores.score_strings[i].Score); 		if(current_rank
+  // == i+1) GrpPut16(85, 100+i*32, "!!");
   //	}
   Grp_Flip();
 }
@@ -578,19 +577,7 @@ void GameSTD_Init() {
   // GrpBackend_Clear();
   // Grp_Flip();
 
-  Bosses.Init();
-
   // --- DI ---
-  Enemies.Bind(GameFlow.ctx.bullets);
-  Enemies.Bind(GameFlow.ctx.items);
-  Enemies.Bind(GameFlow.ctx.game);
-  Enemies.Bind(GameFlow.ctx.player);
-  Enemies.Bind(GameFlow.ctx.stage);
-  Bosses.Bind(GameFlow.ctx.bullets);
-  Bosses.Bind(GameFlow.ctx.items);
-  Bosses.Bind(GameFlow.ctx.game);
-  Bosses.Bind(GameFlow.ctx.player);
-  Bosses.Bind(GameFlow.ctx.stage);
   GameFlow.ctx.player.Bind(GameFlow.ctx.bullets);
   GameFlow.ctx.player.Bind(GameFlow.ctx.game);
   GameFlow.ctx.player.Bind(GameFlow.ctx.stage);
@@ -602,7 +589,7 @@ void GameSTD_Init() {
   GameFlow.ctx.player.Bind(*GameFlow.ctx.input_cfg);
 
   GameFlow.ctx.player.SetMaidShotIndices();
-  Enemies.InitIndices();
+  GameFlow.ctx.enemies.Reset();
   GameFlow.ctx.bullets.Init();
   Effects.InitStringEffects();
   Effects.InitCircleEffects();
@@ -698,8 +685,8 @@ bool GameNextStage() {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
-                                      GameFlow.ctx.stage)) {
+  if (!GameFlow.ctx.stage_loader.Load(
+          GameFlow.ctx.game.stage, GameFlow.ctx.enemies, GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -730,8 +717,8 @@ bool GameReplayInitAll(const char *fn) {
     GameFlow.ctx.demos.load_all_enable = false;
     return false;
   }
-  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
-                                      GameFlow.ctx.stage)) {
+  if (!GameFlow.ctx.stage_loader.Load(
+          GameFlow.ctx.game.stage, GameFlow.ctx.enemies, GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
@@ -825,8 +812,8 @@ bool DemoInit() {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
-                                      GameFlow.ctx.stage)) {
+  if (!GameFlow.ctx.stage_loader.Load(
+          GameFlow.ctx.game.stage, GameFlow.ctx.enemies, GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -1271,7 +1258,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage, Enemies,
+    if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage,
+                                        GameFlow.ctx.enemies,
                                         GameFlow.ctx.stage)) {
       DebugOut("MAP.PAK が破壊されています");
       return;
@@ -1336,7 +1324,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       GameFlow.ctx.player.ClearLaserState();
     }
 
-    Enemies.homing_flag = HOMING_DUMMY;
+    GameFlow.ctx.enemies.ResetHomingTarget();
     Key_Data = KEY_TAMA | shift_held;
 
     GameFlow.ctx.player.ClearInvincibility();
@@ -1344,8 +1332,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
                                     (350 * 64) +
                                         sinl((count / 3) * 4, 30 * 64));
 
-    GameFlow.ctx.player.Update();
-    GameFlow.ctx.player.MoveMaidShot();
+    GameFlow.ctx.player.Update(GameFlow.ctx.enemies);
+    GameFlow.ctx.player.MoveMaidShot(GameFlow.ctx.enemies);
 
     GrpBackend_SetClip({(400 - 110), (400 - 300 + 2), (400 + 110), (400 + 10)});
     for (x = 400 - 110 - 2; x < 400 + 110; x += 32) {
@@ -1388,7 +1376,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     //	char	buf[100];
     //	DxObj.Back->GetDC(&hdc);
     //	sprintf(buf,"GameFlow.ctx.player.Weapon() =
-    //%d",GameFlow.ctx.player.Weapon()); 	TextOut(hdc,0,0,buf,strlen(buf));
+    //%d",GameFlow.ctx.player.Weapon()); TextOut(hdc,0,0,buf,strlen(buf));
     //	DxObj.Back->ReleaseDC(hdc);
     //
     Grp_Flip();
@@ -1547,8 +1535,7 @@ void GameMove() {
   GameFlow.ctx.ui.TickMessageWindow();
 
   const auto transition = GameFlow.ctx.stage.Update(
-      {.enemies = Enemies,
-       .bosses = Bosses,
+      {.enemies = GameFlow.ctx.enemies,
        .effects = Effects,
        .ui = GameFlow.ctx.ui,
        .graphics = GameFlow.ctx.graphics,
@@ -1561,10 +1548,9 @@ void GameMove() {
     return;
   }
 
-  Bosses.Move();
-  Enemies.Move();
+  GameFlow.ctx.enemies.Update();
   GameFlow.ctx.items.Move();
-  GameFlow.ctx.bullets.Update();
+  GameFlow.ctx.bullets.Update(GameFlow.ctx.enemies.HomingTarget());
   Effects.MoveFragments();
   Effects.MoveStringEffects();
   Effects.MoveCircleEffects();
@@ -1575,8 +1561,8 @@ void GameMove() {
   Effects.MoveScreenEffect();
 
   // Changed position of these two lines
-  GameFlow.ctx.player.Update();
-  GameFlow.ctx.player.MoveMaidShot();
+  GameFlow.ctx.player.Update(GameFlow.ctx.enemies);
+  GameFlow.ctx.player.MoveMaidShot(GameFlow.ctx.enemies);
   GameFlow.ctx.game.Update(GameFlow.ctx.stage.Frame());
 }
 
@@ -1586,13 +1572,13 @@ void GameDraw() {
   GameFlow.ctx.stage.Draw(Effects);
   Effects.DrawCircleEffects();
 
-  Bosses.Draw();
+  GameFlow.ctx.enemies.DrawBosses();
 
   GameFlow.ctx.player.DrawWideBomb(); // Probably fine here but...
 
   Effects.DrawBombEffects();
 
-  Enemies.Draw();
+  GameFlow.ctx.enemies.DrawRegular();
 
   GameFlow.ctx.player.DrawMaidShot();
 
@@ -1631,7 +1617,7 @@ void GameDraw() {
   Effects.DrawStringEffects();
   GameFlow.ctx.player.DrawStatus();
 
-  Bosses.DrawHPG(GameFlow.ctx.stage.Frame());
+  GameFlow.ctx.enemies.DrawBossHud(GameFlow.ctx.stage.Frame());
   Effects.DrawScreenEffect();
 
   GameFlow.ctx.ui.DrawMessageWindow();

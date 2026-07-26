@@ -9,8 +9,8 @@
 
 #include "audio/snd.h"
 #include "enemy/ecl.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/ut_math.h"
 
@@ -193,9 +193,12 @@ HitResult LaserLong::CheckHit(int px, int py) const {
   const int len = cosl(d_, tx) + sinl(d_, ty);
   const int dist = std::abs(-sinl(d_, tx) + cosl(d_, ty));
 
-  if (len <= 0) return HitResult::Miss;
-  if (dist <= w_ + PLAYER_HITBOX_RADIUS) return HitResult::Hit;
-  if (dist <= w_ + kLongLaserEvadeWidth) return HitResult::Graze;
+  if (len <= 0)
+    return HitResult::Miss;
+  if (dist <= w_ + PLAYER_HITBOX_RADIUS)
+    return HitResult::Hit;
+  if (dist <= w_ + kLongLaserEvadeWidth)
+    return HitResult::Graze;
   return HitResult::Miss;
 }
 
@@ -317,7 +320,8 @@ void LaserLong::DrawPreviewLine() const {
 
 // ── Command dispatch ─────────────────────────────────────────────────
 
-void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle, int8_t delta) {
+void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
+                             int8_t delta) {
   using Cmd = LongLaserUpdateInfo::Command;
   switch (cmd) {
   case Cmd::Open:
@@ -368,8 +372,8 @@ void LaserLong::FixAngleGeometry() {
   RecalcGeometry();
 }
 
-bool LaserLong::BelongsTo(const EnemyData *e, uint8_t id) const {
-  return e_ == e && (enemy_id_ == id || id == ECLCST_LLASERALL);
+bool LaserLong::BelongsTo(const EnemyActor *e, uint8_t id) const {
+  return e_ == e && (enemy_id_ == id || id == ECL_ALL_LONG_LASERS);
 }
 
 // ── Debug ──────────────────────────────────────────────────────────

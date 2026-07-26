@@ -9,7 +9,7 @@
 #include "stage_loader.h"
 #include "stage_session.h"
 
-#include "enemy/enemy_manager.h"
+#include "enemy/enemy_system.h"
 #include "scripts_data.h"
 
 namespace {
@@ -27,7 +27,7 @@ BYTE_BUFFER_BORROWED LoadEmbeddedScript(int file_no) {
 
 namespace stage {
 
-bool StageLoader::Load(StageId stage, EnemyManager &enemies,
+bool StageLoader::Load(StageId stage, EnemySystem &enemies,
                        StageSession &session) const {
   const auto stage_index = std::to_underlying(stage);
   if (stage_index > std::to_underlying(StageId::EXTRA)) {
@@ -42,12 +42,19 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
     return false;
   }
 
+  auto enemy_program = EclProgram::Parse(ecl);
+  if (!enemy_program) {
+    return false;
+  }
+
+  EnemyAnimationSet animations{};
+  anime_data::SetupStageAnime(stage, animations);
+
   if (!session.Load(std::move(map), scl)) {
     return false;
   }
 
-  enemies.ecl_head = ecl;
-  anime_data::SetupStageAnime(stage);
+  enemies.InstallStageAssets(std::move(*enemy_program), std::move(animations));
   return true;
 }
 

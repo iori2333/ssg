@@ -7,12 +7,14 @@
 #include <cstdint>
 
 #include "bullet.h"
-#include "core/object_pool.h"
 #include "laser/homing.h"
 #include "laser/long.h"
 #include "laser/reflect.h"
 
-struct EnemyData;
+#include "core/object_pool.h"
+
+struct EnemyActor;
+struct EnemyHomingTarget;
 struct ItemManager;
 struct GameManager;
 class Player;
@@ -34,7 +36,7 @@ struct BulletManager {
   bool SpawnHoming(const HomingSpawnInfo &info);
 
   // --- Per-frame ---
-  void Update();
+  void Update(const EnemyHomingTarget &target);
   void HitCheck();
   void Clear();
 
@@ -42,7 +44,7 @@ struct BulletManager {
   void Render() const;
 
   // --- Laser control ---
-  void ControlLongLaser(const EnemyData *e, uint8_t id,
+  void ControlLongLaser(const EnemyActor *e, uint8_t id,
                         const LongLaserUpdateInfo &info);
 
   // --- Bullet items / scoring ---
@@ -69,7 +71,7 @@ private:
   ObjectPool<LaserLong, kLongLaserMax> long_lasers;
   ObjectPool<LaserHoming, kHomingMax> homing;
 
-  void UpdateBullet();
+  void UpdateBullet(const EnemyHomingTarget &target);
   void UpdateReflect();
 
   bool SpawnBulletNormal(const BulletSpawnInfo &si);

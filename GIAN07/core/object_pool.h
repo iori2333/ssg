@@ -26,6 +26,7 @@ struct ObjectPool {
 
     using DataPtr = std::conditional_t<IsConst, const T *, T *>;
 
+    constexpr Iterator() noexcept = default;
     constexpr Iterator(DataPtr data, const std::size_t *indices,
                        std::size_t pos) noexcept
         : data_(data), indices_(indices), pos_(pos) {}

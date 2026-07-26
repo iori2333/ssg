@@ -13,6 +13,7 @@
 #include "data/game_data.h"
 #include "data/graphics_loader.h"
 #include "data/sfx_loader.h"
+#include "enemy/enemy_system.h"
 #include "gameflow/demo_manager.h"
 #include "gameflow/ending_manager.h"
 #include "gameflow/score_manager.h"
@@ -35,6 +36,7 @@ struct GameContext {
   ItemManager items;
   GameManager game;
   Player player;
+  EnemySystem enemies{bullets, items, game, player, stage};
   EndingManager ending;
   ScoreManager scores;
   DemoManager demos{data};

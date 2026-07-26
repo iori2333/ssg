@@ -264,6 +264,7 @@ target_include_directories(GIAN07 PRIVATE "${SCRIPT_GEN_DIR}")
 # containing pack_tool-extracted 000.bin...012.bin files.
 add_executable(stage_validator
     tools/stage_validator.cpp
+    GIAN07/enemy/ecl_program.cpp
     GIAN07/stage/scene_program.cpp
     GIAN07/stage/stage_map.cpp
     "${SCRIPTS_DATA_CPP}"

@@ -11,10 +11,10 @@ public:
   explicit LaserForm(Player &p) : WeaponForm(p) {}
   void FireMain(uint8_t tier) override;
   void FireSub(uint8_t tier) override {}
-  void FireBomb() override;
+  void FireBomb(EnemySystem &enemies) override;
   uint16_t BombDuration() const override;
   void OnFireTick() override;
-  void OnCollisionTick() override;
+  void OnCollisionTick(EnemySystem &enemies) override;
 };
 
 class LaserFocusForm : public WeaponForm {
@@ -23,5 +23,5 @@ public:
   void FireMain(uint8_t tier) override;
   void FireSub(uint8_t tier) override {}
   void OnFireTick() override;
-  void OnCollisionTick() override;
+  void OnCollisionTick(EnemySystem &enemies) override;
 };

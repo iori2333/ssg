@@ -4,6 +4,11 @@
 
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <optional>
+
 // [Revision history]
 
 // 2000/10/17 : Fixed referencing wrong variable for play rank (was referencing
@@ -42,37 +47,39 @@ inline constexpr uint8_t ANM_NORM = 0x00;   // Normal animation
 inline constexpr uint8_t ANM_DEG = 0x01;    // Animate by angle
 inline constexpr uint8_t ANM_STOP = 0x02;   // Stop at final pattern
 
-// Interrupt vector structure
-struct InterruptVector {
-  uint32_t vect; // Interrupt vector (0 if disabled)
-  int value;     // Comparison value
+struct EclInterruptState {
+  std::optional<size_t> target;
+  uint32_t threshold = 0;
 };
 
-// Enemy data structure
-struct EnemyData {
+struct EclRuntime {
+  size_t position = 0;
+  size_t return_position = 0;
+  uint32_t interrupt_timer = 0;
+  std::array<uint32_t, ECL_REGISTER_COUNT> registers{};
+  std::array<EclInterruptState, ECL_INTERRUPT_COUNT> interrupts{};
+  uint16_t loop_counter = 0;
+  uint16_t wait_counter = 0;
+};
+
+// Shared actor core used by regular enemies, bosses, and boss parts.
+struct EnemyActor {
   WORLD_COORD x, y; // Display coordinates
   int vx, vy;       // Velocity (x,y) components (x64)
 
   int v; // Velocity component (x64)
 
-  uint32_t hp;   // Remaining HP (too large?)
-  uint32_t item; // Used for items etc.?
-  uint32_t cmd;  // ECL command absolute address (major change from DOS version)
-  uint32_t count;     // Multipurpose frame counter
-  uint32_t call_addr; // Address to jump to after RET execution
+  uint32_t hp;    // Remaining HP (too large?)
+  uint32_t item;  // Used for items etc.?
+  uint32_t count; // Multipurpose frame counter
 
   uint32_t score;   // Score (time-based score variation?)
   uint32_t evscore; // Graze score
 
-  uint32_t IntTimer; // Interrupt timer
-
-  uint32_t GR[ECLREG_MAX];           // Variable registers
-  InterruptVector Vect[ECLVECT_MAX]; // Interrupt vectors
+  EclRuntime script;
 
   uint16_t g_width;  // Graphic width /2*64 (also used for hit detection)
   uint16_t g_height; // Graphic height /2*64 (same as above)
-  uint16_t rep_c;    // REP instruction counter
-  uint16_t cmd_c;    // Current command repeat count
   uint16_t anm_c;    // Animation counter
 
   uint8_t d;         // Direction angle 256
@@ -91,15 +98,7 @@ struct EnemyData {
 
   BulletCommand t_cmd; // Bullet fire command
   LaserCommand l_cmd;  // Laser fire command
-
-  // --- Methods ---
-  void Draw() const;
-  void UpdateAnimation(); // EnemyAnimeMove()
 };
-
-// Backward compatibility aliases
-// (ENEMY_DATA alias removed — use EnemyData directly)
-// (INT_VECTOR alias removed — use InterruptVector directly)
 
 struct ANIME_DATA {
   uint8_t mode;                 // Animation mode
@@ -107,34 +106,27 @@ struct ANIME_DATA {
   PIXEL_SIZE size;              // Image width, image height
   PIXEL_LTRB ptn[ANIMEPTN_MAX]; // Rectangular areas for animation
 
-  template <uint8_t Count>
-  void SetSheet(PIXEL_POINT topleft, PIXEL_SIZE size, uint8_t mode) {
-    static_assert(Count <= ANIMEPTN_MAX);
+  void SetSheet(PIXEL_POINT topleft, uint8_t frame_count, PIXEL_SIZE frame_size,
+                uint8_t animation_mode) {
+    size = frame_size;
+    n = std::min(frame_count, ANIMEPTN_MAX);
+    mode = animation_mode;
 
-    this->size = size;
-    this->n = Count;
-    this->mode = mode;
-
-    for (auto i = decltype(Count){0}; i < Count; i++) {
-      ptn[i] = PIXEL_LTWH{topleft.x, topleft.y, size.w, size.h};
-      topleft.x += size.w;
+    for (uint8_t frame = 0; frame < n; ++frame) {
+      ptn[frame] = PIXEL_LTWH{topleft.x, topleft.y, frame_size.w, frame_size.h};
+      topleft.x += frame_size.w;
     }
   }
 
-  template <uint8_t Count, PIXEL_COORD Size>
-  void SetSheet(PIXEL_POINT topleft, uint8_t mode) {
-    SetSheet<Count>(topleft, {Size, Size}, mode);
+  void SetSquareSheet(PIXEL_POINT topleft, uint8_t frame_count,
+                      PIXEL_COORD frame_size, uint8_t animation_mode) {
+    SetSheet(topleft, frame_count, {.w = frame_size, .h = frame_size},
+             animation_mode);
   }
 
-  template <PIXEL_COORD Size> void SetSheetDeg(PIXEL_POINT topleft) {
-    SetSheet<16>(topleft, {.w = Size, .h = Size}, ANM_DEG);
+  void SetDirectionalSheet(PIXEL_POINT topleft, PIXEL_COORD frame_size) {
+    SetSquareSheet(topleft, ANIMEPTN_MAX, frame_size, ANM_DEG);
   }
 };
 
-// Enemy variables
-// Access directly via Enemies.entities, Enemies.indices, Enemies.count,
-// Enemies.anime
-
-// Enemy control functions
-// Backward-compatible inline wrapper moved to enemy_manager.h
-// Implementation migrated to EnemyManager methods
+using EnemyAnimationSet = std::array<ANIME_DATA, ANIME_MAX>;

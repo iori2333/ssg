@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+struct EnemyHomingTarget;
+
 // [ Constants ]
 
 // Maximum
@@ -36,7 +38,8 @@ inline constexpr auto TDM_LASER_SUB = 5;   // Laser sub shot damage
 
 inline constexpr auto TDM_WIDE_FOCUS_MAIN = 6; // Wide focus main shot damage
 inline constexpr auto TDM_WIDE_FOCUS_SUB = 4;  // Wide focus sub shot damage
-inline constexpr auto TDM_HOMING_FOCUS_MAIN = 6; // Homing focus main shot damage
+inline constexpr auto TDM_HOMING_FOCUS_MAIN =
+    6;                                          // Homing focus main shot damage
 inline constexpr auto TDM_HOMING_FOCUS_SUB = 7; // Homing focus sub shot damage
 
 // [ Player shot data ]
@@ -62,7 +65,7 @@ struct PlayerShot {
   uint8_t flag_{};
   uint8_t effect_{};
 
-  void MoveByType();
+  void MoveByType(const EnemyHomingTarget &target);
   void MoveByEffect();
 };
 

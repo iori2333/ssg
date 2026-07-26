@@ -13,8 +13,7 @@
 #include "data/graphics_loader.h"
 #include "effect/effect.h"
 #include "effect/effect_manager.h"
-#include "enemy/boss_manager.h"
-#include "enemy/enemy_manager.h"
+#include "enemy/enemy_system.h"
 #include "track_manager/track_manager.h"
 #include "ui/ui_manager.h"
 
@@ -63,7 +62,7 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
     }
 
     case SceneOpcode::Enemy:
-      if (context.bosses.count == 0) {
+      if (context.enemies.BossCount() == 0) {
         context.enemies.SpawnFromScene(instruction->x, instruction->y,
                                        instruction->script_id);
       }
@@ -71,16 +70,16 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
       break;
 
     case SceneOpcode::Boss:
-      context.bosses.Set(instruction->x, instruction->y,
-                         instruction->script_id);
+      context.enemies.SpawnBoss({instruction->x, instruction->y},
+                                instruction->script_id);
       scene_.Advance();
       if (const auto timeout = FindBossTimeout(); timeout > 0) {
-        context.bosses.SetSCLTimeout(timeout);
+        context.enemies.SetBossTimeout(timeout);
       }
       break;
 
     case SceneOpcode::BossDead:
-      context.bosses.KillAll();
+      context.enemies.KillBosses();
       scene_.Advance();
       break;
 
@@ -144,7 +143,7 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
       break;
 
     case SceneOpcode::DeleteEnemies:
-      context.enemies.InitIndices();
+      context.enemies.ResetRegular();
       scene_.Advance();
       break;
 
@@ -155,12 +154,13 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
 
     case SceneOpcode::Wait:
       if (instruction->wait_condition == SceneWaitCondition::BossHp) {
-        if (context.bosses.GetHPSum() >
+        if (context.enemies.BossHpSum() >
             static_cast<uint32_t>(instruction->value)) {
           return {};
         }
       } else if (instruction->wait_condition == SceneWaitCondition::BossCount) {
-        if (context.bosses.count > static_cast<uint32_t>(instruction->value)) {
+        if (context.enemies.BossCount() >
+            static_cast<uint32_t>(instruction->value)) {
           return {};
         }
       }

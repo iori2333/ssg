@@ -356,7 +356,7 @@ void Player::DrawStatus() const {
   }
 }
 
-void Player::Update() {
+void Player::Update(EnemySystem &enemies) {
   int vx = 0;
   int vy = 0;
   int v = 0;
@@ -509,7 +509,7 @@ void Player::Update() {
   opy_ = y_ + vy + (64 * 6);
 
   // Bullet & bomb_ setup
-  SetMaidShot();
+  SetMaidShot(enemies);
 
   if (bomb_time_ != 0U) {
     bullets_->Clear();

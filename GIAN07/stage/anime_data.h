@@ -4,9 +4,10 @@
 #pragma once
 
 #include "core/game_manager.h"
+#include "enemy/enemy.h"
 
 namespace anime_data {
 
-void SetupStageAnime(StageId stage);
+void SetupStageAnime(StageId stage, EnemyAnimationSet &animations);
 
 } // namespace anime_data

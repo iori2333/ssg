@@ -7,13 +7,12 @@
 #include <optional>
 #include <span>
 
-#include "../bullet_base.h"
-
+#include "bullet/bullet_base.h"
 #include "gfx/graphics_backend.h"
 
 struct LaserLong;
 
-// ── Backward-compat ECL command struct (used by EnemyData) ──────
+// ── Backward-compat ECL command struct (used by EnemyActor) ──────
 struct LaserCommand {
   int x{}, y{};
   int v{};
@@ -117,8 +116,7 @@ private:
   void UpdateClearing();
 
   [[nodiscard]] static UpdateResult
-  CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
-                 int dx, int dy);
+  CheckLongLaser(const LaserReflect &self, const LaserLong &ll, int dx, int dy);
 
   void DrawOuter() const;
   void DrawClearing() const;

@@ -11,6 +11,7 @@
 #include <cstdint>
 
 class Player;
+class EnemySystem;
 
 class WeaponForm {
 public:
@@ -25,7 +26,7 @@ public:
   // Bomb update, called every frame while bomb_time > 0.
   // Only base forms are dispatched for bombs; focus forms inherit
   // the empty default.
-  virtual void FireBomb() {}
+  virtual void FireBomb(EnemySystem & /*enemies*/) {}
 
   // Bomb duration in frames when this form's bomb is activated.
   virtual uint16_t BombDuration() const { return 0; }
@@ -36,7 +37,7 @@ public:
 
   // Per-frame collision check for weapon-specific continuous beams
   // (laser).  Called from MoveMaidShot after bullet hit detection.
-  virtual void OnCollisionTick() {}
+  virtual void OnCollisionTick(EnemySystem & /*enemies*/) {}
 
 protected:
   explicit WeaponForm(Player &player) : player_(player) {}

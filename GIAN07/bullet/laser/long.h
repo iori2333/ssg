@@ -6,8 +6,7 @@
 
 #include <span>
 
-#include "../bullet_base.h"
-
+#include "bullet/bullet_base.h"
 #include "enemy/enemy.h"
 #include "gfx/graphics_backend.h"
 
@@ -24,7 +23,7 @@ enum class LongLaserType : uint8_t {
 
 // ── Spawn parameter struct ──────────────────────────────────────
 struct LongLaserSpawnInfo {
-  const EnemyData *enemy{};
+  const EnemyActor *enemy{};
   uint8_t enemy_id{};
   int dx{};
   int dy{};
@@ -83,14 +82,14 @@ struct LaserLong : BulletBase<LongLaserSpawnInfo, LongLaserUpdateInfo> {
   void RenderDebugHitbox(int mode) const override;
 
 private:
-  [[nodiscard]] bool BelongsTo(const EnemyData *e, uint8_t id) const;
+  [[nodiscard]] bool BelongsTo(const EnemyActor *e, uint8_t id) const;
 
   void MarkDead() {
     state_ = LongState::Inactive;
     e_ = nullptr;
   }
 
-  const EnemyData *e_{};
+  const EnemyActor *e_{};
   int dx_{};
   int dy_{};
   int lx_{};
@@ -111,7 +110,8 @@ private:
   void UpdateOpening();
   void UpdateClosing();
   void TickUpdate();
-  void ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle, int8_t delta);
+  void ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
+                    int8_t delta);
   void FixAngleGeometry();
 
   void DrawBeam() const;

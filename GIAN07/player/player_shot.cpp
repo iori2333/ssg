@@ -16,7 +16,7 @@
 #include "core/gian.h"
 #include "effect/effect_manager.h"
 #include "effect/fragment.h"
-#include "enemy/enemy_manager.h"
+#include "enemy/enemy_system.h"
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
@@ -41,7 +41,7 @@ constexpr uint8_t TogeDamage[0x0c] = {
 
 // --- Fire dispatch ---
 
-void Player::SetMaidShot() {
+void Player::SetMaidShot(EnemySystem &enemies) {
   if (((Key_Data & KEY_TAMA) != 0) && toge_time_ == 0 &&
       muteki_ < MAID_MOVE_DISABLE_TIME) {
     toge_time_ = MAID_TAMA_START;
@@ -63,7 +63,7 @@ void Player::SetMaidShot() {
 
   if (bomb_time_ != 0U) {
     bomb_time_--;
-    BaseForm_()->FireBomb();
+    BaseForm_()->FireBomb(enemies);
   }
 
   if (toge_time_ != 0U) {
@@ -82,7 +82,7 @@ void Player::SetMaidShot() {
 
 // --- Movement helpers ---
 
-void PlayerShot::MoveByType() {
+void PlayerShot::MoveByType(const EnemyHomingTarget &target) {
   short deg_t = 0;
 
   switch (type_) {
@@ -97,8 +97,8 @@ void PlayerShot::MoveByType() {
     }
     tx_ += vx_;
     ty_ += vy_;
-    if (count_ < 70 && Enemies.homing_flag != HOMING_DUMMY) {
-      deg_t = atan8(Enemies.homing_x - x_, Enemies.homing_y - y_) - d_;
+    if (count_ < 70 && target.active) {
+      deg_t = atan8(target.x - x_, target.y - y_) - d_;
     } else if (count_ < 70) {
       deg_t = atan8(0, (-20 * 64) - y_) - d_;
     } else {
@@ -156,10 +156,10 @@ void PlayerShot::MoveByEffect() {
 
 // --- Bullet movement & hit check ---
 
-void Player::MoveMaidShot() {
+void Player::MoveMaidShot(EnemySystem &enemies) {
   for (auto &t : maid_tama_) {
     if (t.c_ == TID_HOMING_BOMB_B) {
-      Enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_]);
+      enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_]);
       t.count_++;
       if (t.count_ >= 19) {
         t.flag_ |= PlayerFlag::DEL;
@@ -167,7 +167,7 @@ void Player::MoveMaidShot() {
       continue;
     }
     if (t.effect_ == 0) {
-      t.MoveByType();
+      t.MoveByType(enemies.HomingTarget());
       t.x_ = t.tx_;
       t.y_ = t.ty_;
       t.count_++;
@@ -177,7 +177,7 @@ void Player::MoveMaidShot() {
         t.flag_ |= PlayerFlag::DEL;
       }
 
-      if (Enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_])) {
+      if (enemies.DamageAt(t.x_, t.y_, TogeDamage[t.c_])) {
         if (t.c_ == TID_HOMING_BOMB_A) {
           PlayerShotSpawnInfo si{.x = t.x_,
                                  .y = t.y_,
@@ -201,7 +201,7 @@ void Player::MoveMaidShot() {
     return static_cast<bool>(t.flag_ & PlayerFlag::DEL);
   });
 
-  ActiveForm_()->OnCollisionTick();
+  ActiveForm_()->OnCollisionTick(enemies);
 }
 
 // --- Bullet drawing ---

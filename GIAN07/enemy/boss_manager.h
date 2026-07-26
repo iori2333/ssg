@@ -4,13 +4,18 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
 
+#include "bit_formation.h"
 #include "boss.h"
-#include "boss_systems.h"
+#include "boss_health_gauge.h"
+#include "snake_formation.h"
+
+#include "core/object_pool.h"
+#include "gfx/coords.h"
 
 struct BulletManager;
+class EnemySystem;
 struct ItemManager;
 struct GameManager;
 class Player;
@@ -19,88 +24,64 @@ namespace stage {
 class StageSession;
 }
 
-struct BossManager {
-  std::array<BossData, BOSS_MAX> bosses; // Boss[]
-  uint16_t count = 0;                    // BossNow
-  BossHpgInfo hpg;                       // BossHPG
+class BossManager {
+  friend class EnemySystem;
 
-  // Snaky/Bit data (formerly file-static in EnemyExCtrl.cpp)
-  SNAKYMOVE_DATA<30> snake_data[SNAKE_MAX]; // SnakeData[]
-  BitData bit_data;                         // BitData
+  BossManager(EnemySystem &system, BulletManager &bullets, ItemManager &items,
+              GameManager &game, Player &player, stage::StageSession &stage);
 
-  BulletManager *bullets_ = nullptr;
-  ItemManager *items_ = nullptr;
-  GameManager *game_ = nullptr;
-  Player *player_ = nullptr;
-  stage::StageSession *stage_ = nullptr;
+  ObjectPool<BossData, BOSS_MAX> actors_;
+  BossHealthGauge health_gauge_;
+
+  SnakeFormation snakes_;
+  BitFormation bits_;
+
+  EnemySystem *system_;
+  BulletManager *bullets_;
+  ItemManager *items_;
+  GameManager *game_;
+  Player *player_;
+  stage::StageSession *stage_;
 
   // === Methods ===
 
-  // --- DI ---
-  void Bind(BulletManager &bm) { bullets_ = &bm; }
-  void Bind(ItemManager &im) { items_ = &im; }
-  void Bind(GameManager &gm) { game_ = &gm; }
-  void Bind(Player &p) { player_ = &p; }
-  void Bind(stage::StageSession &stage) { stage_ = &stage; }
-
   // Initialization and setup
-  void Init();
-  void Set(int x, int y, uint32_t BossID);
-  void SetEx(int x, int y, uint32_t BossID);
+  void Reset();
+  void Spawn(WORLD_POINT position, uint32_t script_id);
+  void SpawnFromEcl(WORLD_POINT position, uint32_t script_id);
 
   // Movement and drawing
-  void Move();
-  void Draw();
-  void ClearCmd();
-  void DrawHPG(uint32_t stage_frame);
+  void Update();
+  void DrawActors();
+  void ClearProjectiles();
+  void DrawHud(uint32_t stage_frame);
 
   // Timer
-  void SetSCLTimeout(int32_t timeout_end);
+  void SetStageTimeout(int32_t timeout_end);
 
   // HP
-  void KillAll();
-  uint32_t GetHPSum();
+  void KillActors();
+  [[nodiscard]] uint16_t ActiveCount() const {
+    return static_cast<uint16_t>(actors_.Size());
+  }
+  [[nodiscard]] uint32_t TotalHp() const;
 
   // Damage
-  bool ApplyDamage(BossData &b, EnemyData &e, int damage);
+  bool ApplyDamage(BossData &b, EnemyActor &e, int damage);
   bool DamageAt(int x, int y, int damage);
   bool DamageAt2(int x, int y, int damage);
   void DamageAt3(int x, int y, uint8_t d);
   void DamageAll(int damage);
 
   // Interrupts and bit control
-  void Interrupt(EnemyData *e, uint8_t IntID);
-  void BitAttack(EnemyData *e, uint32_t AtkID);
-  void BitLaser(EnemyData *e, uint8_t cmd);
-  void BitCommand(EnemyData *e, uint8_t Cmd, int Param);
-  int GetBitLeft() const;
+  void HandleAction(EnemyActor *actor, EclBossAction action);
+  void SetBitAttack(EnemyActor *actor, uint32_t script_id);
+  void ControlBitLaser(EnemyActor *actor, EclBitLaserCommand command);
+  void ControlBits(EnemyActor *actor, EclBitCommand command, int parameter);
+  [[nodiscard]] int BitCount() const;
 
-  // Snake-type enemy (was in EnemyExCtrl.cpp)
-  void SnakyInit();
-  void SnakySet(BossData *b, int len, uint32_t TailID);
-  void SnakyMove();
-  void SnakyDelete(const BossData *b);
-
-  // Bit (was in EnemyExCtrl.cpp)
-  void BitInit();
-  void BitSet(BossData *b, uint8_t NumBits, uint32_t BitID);
-  void BitMove();
-  void BitDelete();
-  void BitLineDraw();
-  void BitSelectAttack(uint32_t BitID);
-  void BitLaserCommand(uint8_t Command);
-  void BitSendCommand(uint8_t Command, int Param);
-  int BitGetNum() const;
-
-private:
-  void HPG_Open(uint32_t max);
-  void HPG_Move(uint32_t now);
-  void HPG_Close();
-  void HPG_Update(uint32_t next);
-  int PutBoss(int x, int y, uint32_t id);
-  static void STDMove(BossData *b);
-  void BitSTDRoll();
-  void BitSTDRad();
+  void SpawnActor(WORLD_POINT position, uint32_t script_id,
+                  bool open_health_gauge);
+  void UpdateActor(BossData &boss);
+  void RemoveDefeatedActors();
 };
-
-extern BossManager Bosses;
