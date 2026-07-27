@@ -15,7 +15,7 @@
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
-#include "item/item_manager.h"
+#include "item/item_system.h"
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "util/cast.h"
@@ -37,7 +37,7 @@ int RandomWorldY() {
 
 } // namespace
 
-EnemyManager::EnemyManager(BulletManager &bullets, ItemManager &items,
+EnemyManager::EnemyManager(BulletManager &bullets, ItemSystem &items,
                            GameSession &session, Player &player,
                            stage::StageSession &stage, EffectManager &effects)
     : renderer_(animations_, player), bullets_(&bullets), session_(&session),

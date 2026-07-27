@@ -133,7 +133,7 @@ bool XInit() {
     if (g_config.audio.se_enabled && !GameFlow.ctx.sound_effects.Load()) {
       g_config.audio.se_enabled = false;
     }
-    if (!GameFlow.ctx.tracks.PackSet(g_config.audio.bgm_pack)) {
+    if (!GameFlow.ctx.music.SetPack(g_config.audio.bgm_pack)) {
       g_config.audio.bgm_pack.clear();
     }
     SProjectInit();

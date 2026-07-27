@@ -1,12 +1,12 @@
 ///
-/// TrackManager — track selection, title lookup, BGM pack management
+/// MusicPlayer - track playback, metadata, and BGM pack selection
 ///
 #include <format>
 #include <utility>
 
 #include <SDL3/SDL_filesystem.h>
 
-#include "track_manager.h"
+#include "music_player.h"
 
 #include "audio/bgm.h"
 #include "audio/midi.h"
@@ -19,7 +19,7 @@ static constexpr std::string_view BGM_ROOT = "bgm/";
 // Track switching
 // ---------------------------------------------------------------------------
 
-bool TrackManager::Switch(unsigned int id) {
+bool MusicPlayer::Play(unsigned int id) {
   if (!BGM_Enabled()) {
     return false;
   }
@@ -27,7 +27,7 @@ bool TrackManager::Switch(unsigned int id) {
   BGM_ClearWaveform();
 
   // Always load MIDI for sequencer notes and fallback audio.
-  auto midi = data_->ExtractMusicMidi(id);
+  auto midi = data_.ExtractMusicMidi(id);
   if (!midi || !Mid_Load(std::move(midi))) {
     return false;
   }
@@ -45,18 +45,18 @@ bool TrackManager::Switch(unsigned int id) {
   return true;
 }
 
-std::string_view TrackManager::CurrentTitle() const {
+std::string_view MusicPlayer::CurrentTitle() const {
   auto wt = BGM_WaveformTitle();
   if (!wt.empty()) {
     return wt;
   }
   if (loaded_num_ > 0) {
-    return data_->TrackTitle(loaded_num_ - 1);
+    return data_.TrackTitle(loaded_num_ - 1);
   }
   return {};
 }
 
-size_t TrackManager::TrackCount() const { return data_->TrackCount(); }
+size_t MusicPlayer::TrackCount() const { return data_.TrackCount(); }
 
 // ---------------------------------------------------------------------------
 // BGM pack management
@@ -76,7 +76,7 @@ static bool PackIterator(std::invocable<std::string_view> auto callback) {
       &callback);
 }
 
-bool TrackManager::PacksAvailable(bool invalidate_cache) {
+bool MusicPlayer::HasPacks(bool invalidate_cache) {
   if (packs_available_.has_value() && !invalidate_cache) {
     return packs_available_.value();
   }
@@ -85,23 +85,14 @@ bool TrackManager::PacksAvailable(bool invalidate_cache) {
   return packs_available_.value();
 }
 
-size_t TrackManager::PackCount() {
-  size_t ret = 0;
-  PackIterator([&](std::string_view) {
-    ret++;
-    return SDL_ENUM_CONTINUE;
-  });
-  return ret;
-}
-
-void TrackManager::PackForeach(std::function<void(std::string_view)> func) {
+void MusicPlayer::ForEachPack(std::function<void(std::string_view)> func) {
   PackIterator([&](std::string_view pack) {
     func(pack);
     return SDL_ENUM_CONTINUE;
   });
 }
 
-bool TrackManager::PackSet(std::string_view pack) {
+bool MusicPlayer::SetPack(std::string_view pack) {
   std::string_view cur = pack_path_;
   if (!pack.empty()) {
     const auto path_data = PathForData();
@@ -125,7 +116,7 @@ bool TrackManager::PackSet(std::string_view pack) {
   }
 
   if ((loaded_num_ != 0) && (BGM_Playing() != BGM_PLAYING::NONE)) {
-    Switch(loaded_num_ - 1);
+    Play(loaded_num_ - 1);
   }
   return true;
 }

@@ -11,7 +11,7 @@
 #include "bullet/bullet_manager.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
-#include "item/item_manager.h"
+#include "item/item_system.h"
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "stage/stage_session.h"

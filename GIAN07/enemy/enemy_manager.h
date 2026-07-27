@@ -21,7 +21,7 @@
 struct BulletManager;
 class EffectManager;
 struct GameSession;
-struct ItemManager;
+class ItemSystem;
 struct PlayerAttack;
 class Player;
 
@@ -37,7 +37,7 @@ struct EnemyHomingTarget {
 
 class EnemyManager {
 public:
-  EnemyManager(BulletManager &bullets, ItemManager &items, GameSession &game,
+  EnemyManager(BulletManager &bullets, ItemSystem &items, GameSession &game,
                Player &player, stage::StageSession &stage,
                EffectManager &effects);
 
@@ -123,7 +123,7 @@ private:
 
   BulletManager *bullets_;
   GameSession *session_;
-  ItemManager *items_;
+  ItemSystem *items_;
   Player *player_;
   stage::StageSession *stage_;
   EffectManager *effects_;

@@ -17,7 +17,7 @@
 #include "gameplay/game_session.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "item/item_manager.h"
+#include "item/item_system.h"
 #include "player/player.h"
 #include "util/ut_math.h"
 

@@ -29,10 +29,9 @@
 #include "gameflow/gameflow_manager.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics_backend.h"
-#include "music_room/music_room.h"
+#include "music/music_player.h"
 #include "settings/config.h"
 #include "sys/input.h"
-#include "track_manager/track_manager.h"
 #include "util/enum_flags.h"
 
 namespace menu {
@@ -393,7 +392,7 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
                                             [](bool on) {
                                               if (on) {
                                                 if (BGM_Init()) {
-                                                  GameFlow.ctx.tracks.Switch(0);
+                                                  GameFlow.ctx.music.Play(0);
                                                 }
                                               } else {
                                                 BGM_Cleanup();
@@ -428,8 +427,8 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
 
   {
     auto packs = std::make_shared<std::vector<std::string>>();
-    if (GameFlow.ctx.tracks.PacksAvailable()) {
-      GameFlow.ctx.tracks.PackForeach(
+    if (GameFlow.ctx.music.HasPacks()) {
+      GameFlow.ctx.music.ForEachPack(
           [&](std::string_view p) { packs->emplace_back(p); });
       std::ranges::sort(*packs);
     }
@@ -448,13 +447,13 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
         [packs](size_t i) -> bool {
           if (i == 0) {
             GameFlow.ctx.config.audio.bgm_pack.clear();
-            GameFlow.ctx.tracks.PackSet(GameFlow.ctx.config.audio.bgm_pack);
+            GameFlow.ctx.music.SetPack(GameFlow.ctx.config.audio.bgm_pack);
           } else if (i == packs->size() + 1) {
             SDL_OpenURL("https://github.com/nmlgc/BGMPacks/"
                         "releases/tag/2024-10-05");
           } else {
             GameFlow.ctx.config.audio.bgm_pack = (*packs)[i - 1];
-            GameFlow.ctx.tracks.PackSet(GameFlow.ctx.config.audio.bgm_pack);
+            GameFlow.ctx.music.SetPack(GameFlow.ctx.config.audio.bgm_pack);
           }
           return false;
         });
@@ -588,8 +587,8 @@ std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg) {
       [] { return GameFlow.ctx.ui.replay_files_storage().size(); },
       [](size_t i) { return GameFlow.ctx.ui.replay_files_storage()[i]; },
       [](size_t i) -> bool {
-        GameFlow.ctx.demos.pending_replay_file =
-            GameFlow.ctx.ui.replay_files_storage()[i];
+        GameFlow.ctx.replay.QueuePlayback(
+            GameFlow.ctx.ui.replay_files_storage()[i]);
         return false;
       },
       -1, true);
@@ -604,16 +603,16 @@ std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg) {
   config->AddChild(BuildInputMenu(cfg.input));
   ch.push_back(std::move(config));
 
-  ch.push_back(std::make_unique<ActionNode>("Score", "スコアの表示をします",
-                                            [](MenuController &) {
-                                              ScoreNameInit();
-                                              return true;
-                                            }));
+  ch.push_back(std::make_unique<ActionNode>(
+      "Score", "スコアの表示をします", [](MenuController &) {
+        (void)GameFlow.ctx.score.ShowLeaderboard();
+        return true;
+      }));
 
   auto music = std::make_unique<ActionNode>(
       "Music", "音楽室に入ります", [](MenuController &) {
         GameFlow.ctx.ui.ForceCloseMessageWindow();
-        MusicRoomInit();
+        (void)GameFlow.ctx.music_room.Enter();
         return true;
       });
   auto *music_raw = music.get();

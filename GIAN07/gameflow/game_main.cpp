@@ -6,12 +6,8 @@
 #include <format>
 #include <utility>
 
-#include "demo_manager.h"
-#include "demo_play.h"
 #include "game_main.h"
 #include "gameflow_manager.h"
-#include "score.h"
-#include "score_manager.h"
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
@@ -26,8 +22,7 @@
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "item/item_manager.h"
-#include "music_room/music_room.h"
+#include "item/item_system.h"
 #include "platform/text_backend.h"
 #include "player/player.h"
 #include "settings/config.h"
@@ -82,14 +77,6 @@ void Render(PIXEL_COORD top) {
 }
 }; // namespace Version
 
-// GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
-// current_name, current_rank, current_dif, GameFlow.ctx.session.is_demoplay,
-// input_locked moved to GameFlowManager in gameflow_manager.cpp
-
-// Converted functions -> inline wrappers provided in gameflow_manager.h
-// (TitleProc, WeaponSelectProc, GameOverProc0, NameRegistProc, ScoreNameProc,
-// ScoreDraw)
-
 void GameProc(bool & /*unused*/);
 void GameOverProc(bool & /*unused*/); // Game over
 void PauseProc(bool & /*unused*/);
@@ -107,474 +94,6 @@ bool DemoInit();     // Initialize demo play
 void GameDraw();
 void GameMove();
 
-// game_main initial values set in gameflow_manager.cpp
-
-GameLevel CurrentLevel() {
-  return ((GameFlow.ctx.session.stage == StageId::Extra)
-              ? GameLevel::Extra
-              : GameFlow.ctx.session.level);
-}
-
-// input_locked moved to GameFlowManager in gameflow_manager.cpp
-
-// Prepare score name display
-bool ScoreNameInit() {
-  GameFlow.current_dif = std::to_underlying(CurrentLevel());
-
-  GameFlow.current_rank = GameFlow.ctx.scores.SetScoreString(
-      nullptr, static_cast<GameLevel>(GameFlow.current_dif));
-  if (GameFlow.current_rank == 0) {
-    return GameExit();
-  }
-
-  GameFlow.ctx.ui.ForceCloseMessageWindow();
-  GrpBackend_Clear();
-  Grp_Flip();
-
-  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
-    DebugOut("IMAGES.PAK が破壊されています");
-    return false;
-  }
-
-  GrpBackend_SetClip(GRP_RES_RECT);
-
-  GameFlow.input_locked = (Key_Data != 0U);
-  GameFlow.game_main = [](bool &q) { GameFlow.ScoreNameProc(q); };
-  GameFlow.current_state = GameState::ScoreName;
-
-  return true;
-}
-
-// Display score name
-void GameFlowManager::ScoreNameProc(bool & /*unused*/) {
-  static const char *ExString[5] = {"Easy", "Normal", "Hard", "Lunatic",
-                                    "Extra"};
-
-  switch (Key_Data) {
-  case KEY_RETURN:
-  case KEY_TAMA:
-  case KEY_BOMB:
-  case KEY_ESC:
-    if (input_locked) {
-      break;
-    }
-    Snd_SEPlay(SfxId::Cancel);
-    GameExit(false);
-    return;
-
-  case KEY_UP:
-  case KEY_LEFT:
-    if (GameFlow.ctx.scores.score_strings[4].bMoveEnable) {
-      break;
-    }
-    Snd_SEPlay(SfxId::Select);
-    current_dif = (current_dif + 4) % 5;
-    current_rank = GameFlow.ctx.scores.SetScoreString(
-        nullptr, static_cast<GameLevel>(current_dif));
-    break;
-
-  case KEY_DOWN:
-  case KEY_RIGHT:
-    if (GameFlow.ctx.scores.score_strings[4].bMoveEnable) {
-      break;
-    }
-    Snd_SEPlay(SfxId::Select);
-    current_dif = (current_dif + 1) % 5;
-    current_rank = GameFlow.ctx.scores.SetScoreString(
-        nullptr, static_cast<GameLevel>(current_dif));
-    break;
-
-  case 0:
-    input_locked = false;
-    break;
-  }
-
-  GrpBackend_Clear();
-  ScoreDraw();
-  GrpPut16(320, 450, ExString[current_dif]);
-  Grp_Flip();
-}
-
-// Draw score
-void GameFlowManager::ScoreDraw() {
-  int i = 0;
-  int gx = 0;
-  int gy = 0;
-  int v = 0;
-  PIXEL_LTRB src;
-
-  for (i = 0; i < 5; i++) {
-    v = (GameFlow.ctx.scores.score_strings[i].x - ((50 + (i * 24)) << 6)) / 12;
-    if (v > 2_px) {
-      // v = max(v,20*64);
-      GameFlow.ctx.scores.score_strings[i].x -= v;
-    } else {
-      GameFlow.ctx.scores.score_strings[i].bMoveEnable = false;
-    }
-
-    src = PIXEL_LTWH{0, (64 + (32 * i)), 400, 32};
-    const WINDOW_POINT topleft = {
-        (GameFlow.ctx.scores.score_strings[i].x >> 6),
-        (GameFlow.ctx.scores.score_strings[i].y >> 6),
-    };
-    GrpSurface_Blit(topleft, SURFACE_ID::NAMEREG, src);
-    // GrpSurface_Blit(
-    // 	{ (50 + (i * 24)), (100 + (i * 48) }, SURFACE_ID::NAMEREG, src
-    // );
-
-    gx = (GameFlow.ctx.scores.score_strings[i].x >> 6) + 88;
-    gy = (GameFlow.ctx.scores.score_strings[i].y >> 6) + 4;
-    GrpPut16c2(gx, gy, GameFlow.ctx.scores.score_strings[i].Name);
-
-    gx = (GameFlow.ctx.scores.score_strings[i].x >> 6) + 232 - 16;
-    gy = (GameFlow.ctx.scores.score_strings[i].y >> 6) + 4;
-    GrpPut16c2(gx, gy, GameFlow.ctx.scores.score_strings[i].Score.c_str());
-
-    gx = (GameFlow.ctx.scores.score_strings[i].x >> 6) + 120;
-    gy = (GameFlow.ctx.scores.score_strings[i].y >> 6) + 25;
-    GrpPutScore(gx, gy, GameFlow.ctx.scores.score_strings[i].Evade.c_str());
-
-    // I know there's no time, but...
-    gx = (GameFlow.ctx.scores.score_strings[i].x >> 6) + 224;
-    gy = (GameFlow.ctx.scores.score_strings[i].y >> 6) + 25;
-    if (GameFlow.ctx.scores.score_strings[i].Stage[0] == '7') {
-      src = {288, 88, (288 + 16), (88 + 8)};
-      GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::SYSTEM, src);
-    } else {
-      {
-        GrpPutScore(gx, gy, GameFlow.ctx.scores.score_strings[i].Stage.c_str());
-      }
-    }
-
-    gx = (GameFlow.ctx.scores.score_strings[i].x >> 6) + 224 + 80;
-    gy = (GameFlow.ctx.scores.score_strings[i].y >> 6) + 25;
-    src = PIXEL_LTWH{
-        0, (400 + (GameFlow.ctx.scores.score_strings[i].Weapon * 8)), 48, 8};
-    GrpSurface_Blit({gx, (gy - 1)}, SURFACE_ID::NAMEREG, src);
-  }
-}
-
-static constexpr auto NR_EXCHAR_BACK = 0;
-static constexpr auto NR_EXCHAR_END = -1;
-static constexpr auto NR_EXCHAR_ERROR = -2;
-
-// Get selected character from coordinates
-char GameFlowManager::GetAddr2Char(int x, int y) {
-  // Uppercase
-  if (y == 0) {
-    return ('A' + (x % 26));
-  }
-  // Lowercase
-  if (y == 1) {
-    return ('a' + (x % 26));
-  }
-  // Other symbols
-
-  switch (x) {
-  case 0:
-    return '0';
-  case 1:
-    return '1';
-  case 2:
-    return '2';
-  case 3:
-    return '3';
-  case 4:
-    return '4';
-  case 5:
-    return '5';
-  case 6:
-    return '6';
-  case 7:
-    return '7';
-  case 8:
-    return '8';
-  case 9:
-    return '9';
-  case 10:
-    return '!';
-  case 11:
-    return '?';
-  case 12:
-    return '#';
-  case 13:
-    return '\\';
-  case 14:
-    return '<';
-  case 15:
-    return '>';
-  case 16:
-    return '=';
-  case 17:
-    return ',';
-  case 18:
-    return '+';
-  case 19:
-    return '-';
-  case 20:
-    return ' '; // SPACE
-  // case 21:
-  case 22:
-    return NR_EXCHAR_BACK;
-  // case 23:
-  case 24:
-    return NR_EXCHAR_END;
-  // case 25:
-  default:
-    return NR_EXCHAR_ERROR;
-  }
-}
-
-// Name input
-void GameFlowManager::NameRegistProc(bool & /*unused*/) {
-  // <- Fix DemoInit()
-  PIXEL_LTRB src = {0, 0, 400, 64};
-  int gx = 0;
-  int gy = 0;
-  int len = 0;
-  static int x;
-  static int y;
-  static int8_t key_time;
-  static uint8_t count;
-  static uint8_t time;
-  // char	buf[100],
-  char c = 0;
-
-  constexpr int8_t END_WAIT = -1;
-
-  if (key_time == 0) {
-    key_time = 8; // 16;
-
-    switch (Key_Data) {
-    case KEY_UP:
-      y = (y + 2) % 3;
-      Snd_SEPlay(SfxId::Select);
-      break;
-
-    case KEY_DOWN:
-      y = (y + 1) % 3;
-      Snd_SEPlay(SfxId::Select);
-      break;
-
-    case KEY_LEFT:
-      if (y == 2 && x > 20) {
-        x = (x - 2) % 26;
-      } else {
-        x = (x + 25) % 26;
-      }
-      Snd_SEPlay(SfxId::Select);
-      break;
-
-    case KEY_RIGHT:
-      if (y == 2 && x >= 20) {
-        x = (x + 2) % 26;
-      } else {
-        x = (x + 1) % 26;
-      }
-      Snd_SEPlay(SfxId::Select);
-      break;
-
-    case KEY_BOMB:
-      Snd_SEPlay(SfxId::Cancel);
-      goto BACK_NR_PROC;
-
-    case KEY_TAMA:
-    case KEY_RETURN:
-      if (input_locked) {
-        break;
-      }
-      Snd_SEPlay(SfxId::Select);
-
-      // If at the last character
-      if (strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name) ==
-          NR_NAME_LEN - 1) {
-        switch (c = GetAddr2Char(x, y)) {
-        case NR_EXCHAR_END:
-        case NR_EXCHAR_ERROR:
-          goto EXIT_NR_PROC;
-
-        case NR_EXCHAR_BACK:
-          goto BACK_NR_PROC;
-
-        default:
-          x = 24;
-          y = 2;
-          break;
-        }
-
-        break;
-      }
-
-      // Otherwise
-      switch (c = GetAddr2Char(x, y)) {
-      case NR_EXCHAR_END:
-      case NR_EXCHAR_ERROR:
-        goto EXIT_NR_PROC;
-
-      case NR_EXCHAR_BACK:
-        goto BACK_NR_PROC;
-
-      default:
-        len = strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name);
-        GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len] = c;
-        GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len + 1] =
-            '\0';
-        break;
-      }
-      break;
-
-    // Go back one character
-    BACK_NR_PROC:
-      len = strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name);
-      if (len != 0) {
-        GameFlow.ctx.scores.score_strings[current_rank - 1].Name[len - 1] =
-            '\0';
-      }
-      break;
-
-    // Name registration end processing
-    EXIT_NR_PROC:
-      if (strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name) ==
-          0) {
-        std::format_to_n(
-            GameFlow.ctx.scores.score_strings[current_rank - 1].Name,
-            NR_NAME_LEN, "Vivit!");
-      }
-
-      GameFlow.ctx.scores.score_strings[current_rank - 1]
-          .Name[NR_NAME_LEN - 1] = '\0';
-
-      std::format_to_n(
-          current_name.Name, NR_NAME_LEN, "{}",
-          GameFlow.ctx.scores.score_strings[current_rank - 1].Name);
-      GameFlow.ctx.scores.SaveScoreData(&current_name, CurrentLevel());
-
-      key_time = END_WAIT;
-      break;
-
-    case 0:
-      input_locked = false;
-      break;
-    }
-
-    if (x > 20 && y == 2) {
-      x &= (~1);
-    }
-  } else if (key_time != END_WAIT) {
-    key_time--;
-  }
-
-  if (key_time == -1) {
-    if (Key_Data == 0) {
-      x = y = key_time = 0;
-      GameExit();
-      return;
-    }
-  } else {
-    if (Key_Data == 0) {
-      key_time = 0;
-    }
-    count = ((count + 1) % 24);
-    time++;
-  }
-
-  GrpBackend_Clear();
-
-  GrpGeom->Lock();
-
-  GrpGeom->SetColor({2, 0, 0});
-  gx = GameFlow.ctx.scores.score_strings[current_rank - 1].x >> 6;
-  gy = GameFlow.ctx.scores.score_strings[current_rank - 1].y >> 6;
-  GrpGeom->DrawBox(gx, gy, (gx + 400), (gy + 32));
-
-  if (time % 64 > 32) {
-    GrpGeom->SetColor({4, 0, 0});
-    len = std::min(
-        strlen(GameFlow.ctx.scores.score_strings[current_rank - 1].Name),
-        NR_NAME_LEN - 2);
-    gx += ((len * 16) + 88);
-    gy += 4;
-    GrpGeom->DrawBox(gx, gy, (gx + 14), (gy + 16));
-  }
-
-  GrpGeom->Unlock();
-
-  constexpr auto sid = SURFACE_ID::NAMEREG;
-  GrpSurface_Blit({120, 0}, sid, src);
-
-  ScoreDraw();
-
-  // Name input string group
-  src = {0, 432, 416, 480};
-  GrpSurface_Blit({112, 420}, sid, src);
-
-  // Cursor
-  if ((x >= 20) && (y == 2)) {
-    src = PIXEL_LTWH{432, (432 + ((count >> 3) << 4)), 32, 16};
-  } else {
-    src = PIXEL_LTWH{416, (432 + ((count >> 3) << 4)), 16, 16};
-  }
-  GrpSurface_Blit({(112 + (x << 4)), (420 + (y << 4))}, sid, src);
-
-  // sprintf(buf,"(%2d,%2d)", x, y);
-  // GrpPut16(0,0,buf);
-
-  //	GrpPut16(400,100,temps);
-  //	for(i=0; i<5; i++){
-  //		GrpPut16(100, 100+i*32,
-  // GameFlow.ctx.scores.score_strings[i].Score); 		if(current_rank
-  // == i+1) GrpPut16(85, 100+i*32, "!!");
-  //	}
-  Grp_Flip();
-}
-
-// Initialize name input
-bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
-  for (auto &it : current_name.Name) {
-    it = '\0';
-  }
-  current_name.Score = GameFlow.ctx.player.Score();
-  current_name.Evade = GameFlow.ctx.player.GrazeSum();
-  current_name.Weapon = PlayerTypeIndex(GameFlow.ctx.player.Type());
-  if (GameFlow.ctx.session.stage == StageId::Extra) {
-    current_name.Stage = 1;
-  } else {
-    current_name.Stage = std::to_underlying(GameFlow.ctx.session.stage) + 1;
-  }
-
-  // For debugging...
-  Snd_SEStop(8); // Stop warning sound
-  Snd_SEStopAll();
-
-  // If not a high score, transition to title
-  current_rank =
-      GameFlow.ctx.scores.SetScoreString(&current_name, CurrentLevel());
-  if (current_rank == 0) {
-    return GameExit();
-  }
-
-  GameFlow.ctx.ui.ForceCloseMessageWindow();
-  GrpBackend_Clear();
-  Grp_Flip();
-
-  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
-    DebugOut("IMAGES.PAK が破壊されています");
-    return false;
-  }
-
-  GrpBackend_SetClip(GRP_RES_RECT);
-
-  input_locked = (Key_Data != 0U);
-  game_main = [](bool &q) { GameFlow.NameRegistProc(q); };
-  current_state = GameState::NameRegist;
-
-  if (bNeedChgMusic) {
-    GameFlow.ctx.tracks.Switch(19);
-  }
-
-  return true;
-}
-
 // Initialization functions required when starting the game
 void GameSTD_Init() {
   GameFlow.ctx.ui.ForceCloseMessageWindow();
@@ -590,7 +109,7 @@ void GameSTD_Init() {
   GameFlow.ctx.enemies.Reset();
   GameFlow.ctx.ui.UpdateBossHud(GameFlow.ctx.enemies.BossHud());
   GameFlow.ctx.bullets.Init();
-  GameFlow.ctx.items.Init();
+  GameFlow.ctx.items.Reset();
   GameFlow.ctx.effects.Reset();
   GameFlow.ctx.effects.StartScreenTransition(ScreenTransition::CircleFadeIn);
   // WarningEffectSet();
@@ -651,7 +170,9 @@ bool GameInit(std::function<void(bool &)> next_proc) {
 
   // Wire up UI callbacks into the gameflow layer
   GameFlow.ctx.ui.on_game_exit = [] { GameExit(); };
-  GameFlow.ctx.ui.on_game_exit_no_save = [] { GameFlow.NameRegistInit(true); };
+  GameFlow.ctx.ui.on_game_exit_no_save = [] {
+    (void)GameFlow.ctx.score.StartNameRegistration(true);
+  };
   GameFlow.ctx.ui.on_game_restart = [] { GameRestart(); };
   GameFlow.ctx.ui.on_game_continue = [] { GameContinue(); };
 
@@ -686,12 +207,16 @@ bool GameNextStage() {
 bool GameReplayInitAll(const char *fn) {
   GameFlow.ctx.player.Initialize(GameFlow.ctx.config.game.player_stock,
                                  GameFlow.ctx.config.game.bomb_stock);
-  if (!GameFlow.ctx.demos.LoadReplayAll(fn)) {
+  if (!GameFlow.ctx.replay.LoadReplay(fn)) {
     return false;
   }
 
-  GameFlow.ctx.session.stage =
-      static_cast<StageId>(GameFlow.ctx.demos.multi_play_info.Stages[0]);
+  const auto first_stage = GameFlow.ctx.replay.FirstPlaybackStage();
+  if (!first_stage) {
+    GameFlow.ctx.replay.StopPlayback();
+    return false;
+  }
+  GameFlow.ctx.session.stage = first_stage.value();
 
   GameFlow.ctx.session.ResetRank();
 
@@ -701,16 +226,14 @@ bool GameReplayInitAll(const char *fn) {
 
   if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
-    GameFlow.ctx.demos.Cleanup();
-    GameFlow.ctx.demos.load_all_enable = false;
+    GameFlow.ctx.replay.StopPlayback();
     return false;
   }
   if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
                                       GameFlow.ctx.enemies,
                                       GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
-    GameFlow.ctx.demos.Cleanup();
-    GameFlow.ctx.demos.load_all_enable = false;
+    GameFlow.ctx.replay.StopPlayback();
     return false;
   }
 
@@ -732,12 +255,11 @@ void ReplayProcAll(bool & /*unused*/) {
 
   for (int i = 0; i < speed; i++) {
     if (Key_Data != KEY_ESC) {
-      Key_Data = GameFlow.ctx.demos.Move();
+      Key_Data = GameFlow.ctx.replay.NextInput();
     }
 
     if ((Key_Data & KEY_ESC) != 0) {
-      GameFlow.ctx.demos.Cleanup();
-      GameFlow.ctx.demos.load_all_enable = false;
+      GameFlow.ctx.replay.StopPlayback();
       GameExit();
       return;
     }
@@ -745,15 +267,13 @@ void ReplayProcAll(bool & /*unused*/) {
     GameMove();
 
     if (GameFlow.current_state != GameState::ReplayAll) {
-      GameFlow.ctx.demos.Cleanup();
-      GameFlow.ctx.demos.load_all_enable = false;
+      GameFlow.ctx.replay.StopPlayback();
       GameExit();
       return;
     }
 
-    if (!GameFlow.ctx.demos.load_enable) {
-      GameFlow.ctx.demos.Cleanup();
-      GameFlow.ctx.demos.load_all_enable = false;
+    if (!GameFlow.ctx.replay.IsPlaying()) {
+      GameFlow.ctx.replay.StopPlayback();
       GameExit();
       return;
     }
@@ -790,7 +310,7 @@ bool DemoInit() {
   rnd_seed_set(Time_SteadyTicksMS());
   GameFlow.ctx.session.stage = static_cast<StageId>(rnd() % kRegularStageCount);
 
-  if (!GameFlow.ctx.demos.LoadDemo(GameFlow.ctx.session.stage)) {
+  if (!GameFlow.ctx.replay.LoadStageDemo(GameFlow.ctx.session.stage)) {
     // DebugOut("Demo play data does not exist");
     return false;
   }
@@ -925,7 +445,7 @@ bool GameExit(bool bNeedChgMusic) {
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
-      GameFlow.ctx.tracks.Switch(0);
+      GameFlow.ctx.music.Play(0);
     }
   }
 
@@ -972,7 +492,7 @@ void GameContinue() {
 
 void GameProc(bool & /*unused*/) {
   // Record current input (always-on multi-stage or legacy single-stage)
-  GameFlow.ctx.demos.Record(Key_Data);
+  GameFlow.ctx.replay.Record(Key_Data);
 
   if ((Key_Data & KEY_ESC) != 0) {
     // Show exit dialog
@@ -994,14 +514,14 @@ void GameProc(bool & /*unused*/) {
   //		count = 30;
   //	}
   GameMove();
-  GameFlow.ctx.demos.UpdateLastRecordedInput(Key_Data);
+  GameFlow.ctx.replay.UpdateLastRecordedInput(Key_Data);
   if (GameFlow.current_state != GameState::Game) {
     return;
   }
 
   if (GameFlow.IsDraw()) {
     GameDraw();
-    if (GameFlow.ctx.demos.save_all_enable) {
+    if (GameFlow.ctx.replay.IsRecording()) {
       constexpr PIXEL_LTRB rc = PIXEL_LTWH{288, 80, 24, 8};
       GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, rc);
     }
@@ -1031,7 +551,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
     }
 
     // Multi-stage recording: show Save Replay dialog
-    if (GameFlow.ctx.demos.HasRecordedStages()) {
+    if (GameFlow.ctx.replay.HasRecordedStages()) {
       GameFlow.ctx.ui.GameOverSave().Open({250, 200}, 0);
       game_main = GameOverSaveProc;
       current_state = GameState::GameOverSave;
@@ -1039,7 +559,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
     }
 
     if (GameFlow.ctx.player.Credits() == 0) {
-      NameRegistInit(true);
+      (void)ctx.score.StartNameRegistration(true);
       // GameExit();
       return; // Temporary
     }
@@ -1098,14 +618,14 @@ void DemoProc(bool & /*unused*/) {
   if (Key_Data != 0U) {
     Key_Data = KEY_ESC;
   } else {
-    Key_Data = GameFlow.ctx.demos.Move();
+    Key_Data = GameFlow.ctx.replay.NextInput();
   }
 
   GameFlow.ctx.session.is_demoplay = true;
 
   // Exit immediately if ESC is pressed
   if ((Key_Data & KEY_ESC) != 0) {
-    GameFlow.ctx.demos.Cleanup();
+    GameFlow.ctx.replay.StopPlayback();
     GameFlow.ctx.session.is_demoplay = false;
     GameExit();
     return;
@@ -1114,7 +634,7 @@ void DemoProc(bool & /*unused*/) {
   GameMove();
 
   if (GameFlow.current_state != GameState::Demo) {
-    GameFlow.ctx.demos.Cleanup(); // Cleanup
+    GameFlow.ctx.replay.StopPlayback(); // Cleanup
     GameFlow.ctx.session.is_demoplay = false;
     GameExit(); // Force exit (game over countermeasure)
     return;
@@ -1238,7 +758,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       GameFlow.ctx.player.SetPower(255);
     }
 
-    GameFlow.ctx.demos.Init();
+    GameFlow.ctx.replay.BeginRecording();
 
     if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
       DebugOut("IMAGES.PAK が破壊されています");
@@ -1394,9 +914,7 @@ void GameFlowManager::TitleProc(bool &quit) {
   GameFlow.ctx.ui.TickMessageWindow();
 
   // Start pending replay after menu closes
-  if (!GameFlow.ctx.demos.pending_replay_file.empty()) {
-    auto fn = GameFlow.ctx.demos.pending_replay_file;
-    GameFlow.ctx.demos.pending_replay_file.clear();
+  if (auto fn = GameFlow.ctx.replay.TakePendingPlayback(); !fn.empty()) {
     GameReplayInitAll(fn.c_str());
     return;
   }
@@ -1463,13 +981,14 @@ void HandleStageTransition(stage::StageTransition transition) {
     return;
 
   case stage::StageTransition::NextStage:
-    if (GameFlow.ctx.demos.save_all_enable) {
-      GameFlow.ctx.demos.FlushStage();
+    if (GameFlow.ctx.replay.IsRecording()) {
+      GameFlow.ctx.replay.FlushStage();
       (void)GameNextStage();
       return;
     }
-    if (GameFlow.ctx.demos.load_all_enable) {
-      if (GameFlow.ctx.session.stage < GameFlow.ctx.demos.playback_max_stage) {
+    if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
+      if (GameFlow.ctx.session.stage <
+          GameFlow.ctx.replay.PlaybackLastStage()) {
         (void)GameNextStage();
       }
       return;
@@ -1478,11 +997,11 @@ void HandleStageTransition(stage::StageTransition transition) {
     return;
 
   case stage::StageTransition::GameClear:
-    if (GameFlow.ctx.demos.save_all_enable) {
-      GameFlow.ctx.demos.FlushStage();
-      GameFlow.ctx.demos.SaveReplayAll(false);
+    if (GameFlow.ctx.replay.IsRecording()) {
+      GameFlow.ctx.replay.FlushStage();
+      GameFlow.ctx.replay.SaveReplay(false);
     }
-    if (GameFlow.ctx.demos.load_all_enable) {
+    if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
       return;
     }
     if (GameFlow.ctx.session.level != GameLevel::Easy) {
@@ -1490,16 +1009,16 @@ void HandleStageTransition(stage::StageTransition transition) {
           1U << PlayerTypeIndex(GameFlow.ctx.player.Type()));
     }
     SaveConfigFile(GameFlow.ctx.config);
-    (void)GameFlow.ctx.ending.Init();
+    (void)GameFlow.ctx.ending.Enter();
     return;
 
   case stage::StageTransition::ExtraClear:
-    if (GameFlow.ctx.demos.save_all_enable) {
-      GameFlow.ctx.demos.FlushStage();
-      GameFlow.ctx.demos.SaveReplayAll(true);
+    if (GameFlow.ctx.replay.IsRecording()) {
+      GameFlow.ctx.replay.FlushStage();
+      GameFlow.ctx.replay.SaveReplay(true);
     }
-    if (!GameFlow.ctx.demos.load_all_enable) {
-      GameFlow.NameRegistInit(true);
+    if (!GameFlow.ctx.replay.IsMultiStagePlayback()) {
+      (void)GameFlow.ctx.score.StartNameRegistration(true);
     }
     return;
   }
@@ -1513,7 +1032,7 @@ void GameMove() {
        .effects = GameFlow.ctx.effects,
        .ui = GameFlow.ctx.ui,
        .graphics = GameFlow.ctx.graphics,
-       .tracks = GameFlow.ctx.tracks,
+       .music = GameFlow.ctx.music,
        .session = GameFlow.ctx.session,
        .messages_disabled = GameFlow.ctx.config.graphics.msg_disable},
       Key_Data);
@@ -1524,7 +1043,7 @@ void GameMove() {
 
   GameFlow.ctx.enemies.Update();
   GameFlow.ctx.ui.UpdateBossHud(GameFlow.ctx.enemies.BossHud());
-  GameFlow.ctx.items.Move();
+  GameFlow.ctx.items.Update();
   GameFlow.ctx.bullets.Update(GameFlow.ctx.enemies.HomingTarget());
   GameFlow.ctx.effects.Update();
 

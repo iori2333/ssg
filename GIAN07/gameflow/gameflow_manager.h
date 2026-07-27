@@ -10,7 +10,6 @@
 
 #include "game_context.h"
 #include "game_main.h"
-#include "score.h"
 
 ///// [ Game state enum ] /////
 enum class GameState {
@@ -22,8 +21,8 @@ enum class GameState {
   GameOver0,
   GameOverSave,
   GameOver,
-  ScoreName,
-  NameRegist,
+  Leaderboard,
+  NameRegistration,
   Ending,
   SProject,
   ReplayAll,
@@ -39,24 +38,15 @@ struct GameFlowManager {
   uint32_t draw_count = 0;
   uint8_t weapon_key_wait = 0;
   int game_over_timer = 0;
-  NrNameData current_name = {};
-  uint8_t current_rank = 0;
-  uint8_t current_dif = 0;
-  bool input_locked = false;
 
   GameContext ctx{};
 
   // === Methods ===
   void TitleProc(bool &);
-  void ScoreNameProc(bool &);
-  static void ScoreDraw();
-  void NameRegistProc(bool &);
-  bool NameRegistInit(bool bNeedChgMusic = false);
   bool WeaponSelectInit(bool ExStg);
   void WeaponSelectProc(bool &);
   void GameOverProc0(bool &);
   bool IsDraw();
-  static char GetAddr2Char(int x, int y);
 };
 
 extern GameFlowManager GameFlow;

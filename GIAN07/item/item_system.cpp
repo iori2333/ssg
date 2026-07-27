@@ -1,9 +1,8 @@
 ///
-/// Item - Item processing
+/// ItemSystem - collectible item entities and pickup processing
 ///
 
-#include "item.h"
-#include "item_manager.h"
+#include "item_system.h"
 
 #include "audio/snd.h"
 #include "effect/effect_manager.h"
@@ -12,7 +11,7 @@
 #include "player/player.h"
 #include "util/ut_math.h"
 
-int GetItemHitRadius(uint8_t type) {
+int ItemSystem::HitRadius(uint8_t type) {
   switch (type) {
   case ITEM_BOMB:
   case ITEM_EXTEND:
@@ -23,7 +22,7 @@ int GetItemHitRadius(uint8_t type) {
 }
 
 // Spawn an item
-void ItemManager::Spawn(int x, int y, uint8_t type) {
+void ItemSystem::Spawn(int x, int y, uint8_t type) {
   auto *ip = pool_.Alloc();
   if (!ip) {
     return;
@@ -55,7 +54,7 @@ void ItemManager::Spawn(int x, int y, uint8_t type) {
 }
 
 // Move items
-void ItemManager::Move() {
+void ItemSystem::Update() {
   int tx = 0;
   int ty = 0;
   int l = 0;
@@ -98,7 +97,7 @@ void ItemManager::Move() {
     {
       const int64_t dx = static_cast<int64_t>(ip.x) - player_.X();
       const int64_t dy = static_cast<int64_t>(ip.y) - player_.Y();
-      const int r = GetItemHitRadius(ip.type);
+      const int r = HitRadius(ip.type);
       if ((dx * dx + dy * dy) < (static_cast<int64_t>(r) * r)) {
         switch (ip.type) {
         case ITEM_SCORE: {
@@ -156,7 +155,7 @@ void ItemManager::Move() {
 }
 
 // Draw items
-void ItemManager::Draw() const {
+void ItemSystem::Draw() const {
   int j = 0;
   int x = 0;
   int y = 0;
@@ -211,4 +210,4 @@ void ItemManager::Draw() const {
 }
 
 // Initialize item pool
-void ItemManager::Init() { pool_.Reset(); }
+void ItemSystem::Reset() { pool_.Reset(); }

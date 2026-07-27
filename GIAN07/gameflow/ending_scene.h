@@ -1,5 +1,5 @@
 ///
-/// EndingManager - Centralized ending cinematic state and operations
+/// EndingScene - ending cinematic page state and operations
 ///
 
 #pragma once
@@ -9,16 +9,17 @@
 #include <string>
 #include <string_view>
 
-#include "ending.h"
-
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "platform/text_backend.h"
 #include "stage/scene_program.h"
 
-struct EndingManager {
-  // === Nested types (formerly static types in ENDING.cpp) ===
+class EndingScene {
+public:
+  [[nodiscard]] bool Enter();
+  void Update(bool &);
 
+private:
   struct GrpInfo {
     uint32_t timer = 0;
     uint32_t fadein = 0;
@@ -84,13 +85,7 @@ struct EndingManager {
       {0, 216, 336, 264},
   }};
 
-  // === Public methods ===
-
-  bool Init();
-  void Proc(bool &);
   void Draw();
-
-private:
   stage::SceneRunner scene_;
 
   // Internal helpers

@@ -1,11 +1,8 @@
-///
-/// Ending - Ending processing
-///
+/// Ending scene processing.
 
 #include <utility>
 
-#include "ending.h"
-#include "ending_manager.h"
+#include "ending_scene.h"
 
 #include "audio/bgm.h"
 #include "data/graphics_assets.h"
@@ -14,10 +11,8 @@
 #include "platform/text_backend.h"
 #include "util/cast.h"
 
-// File-static variables moved to EndingManager in ending_manager.h
-
 // Ending initialization
-bool EndingManager::Init() {
+bool EndingScene::Enter() {
   GrpBackend_SetClip(GRP_RES_RECT);
   GrpBackend_Clear();
   Grp_Flip();
@@ -29,7 +24,7 @@ bool EndingManager::Init() {
   }
   BGM_Stop();
 
-  GameFlow.game_main = [](bool &q) { GameFlow.ctx.ending.Proc(q); };
+  GameFlow.game_main = [](bool &q) { GameFlow.ctx.ending.Update(q); };
   GameFlow.current_state = GameState::Ending;
 
   flash_state = 0;
@@ -44,7 +39,7 @@ bool EndingManager::Init() {
   return true;
 }
 
-void EndingManager::Proc(bool & /*unused*/) {
+void EndingScene::Update(bool & /*unused*/) {
   if (flash_state != 0U) {
     flash_state -= 32;
   }
@@ -62,7 +57,7 @@ void EndingManager::Proc(bool & /*unused*/) {
 }
 
 // Ending draw processing
-void EndingManager::Draw() {
+void EndingScene::Draw() {
   // Clear screen
   GrpBackend_Clear(255, RGB{.r = 0, .g = 0, .b = 0});
 
@@ -78,7 +73,7 @@ void EndingManager::Draw() {
 }
 
 // Staff name fadeout function
-void EndingManager::UpdateGrpInfo() {
+void EndingScene::UpdateGrpInfo() {
   grp_info.timer++;
   if (grp_info.timer > grp_info.fadeout) {
     if (grp_info.alpha - 3 > 0) {
@@ -100,7 +95,7 @@ void EndingManager::UpdateGrpInfo() {
 }
 
 // Staff update (internal data)
-void EndingManager::UpdateStfInfo() {
+void EndingScene::UpdateStfInfo() {
   stf_task.timer++;
   if (stf_task.timer > stf_task.fadeout) {
     if (stf_task.alpha - 3 > 0) {
@@ -122,7 +117,7 @@ void EndingManager::UpdateStfInfo() {
 }
 
 // Graphic drawing
-void EndingManager::DrawGrpInfo() {
+void EndingScene::DrawGrpInfo() {
   if (!grp_info.bWantDisp) {
     return;
   }
@@ -134,7 +129,7 @@ void EndingManager::DrawGrpInfo() {
 }
 
 // Staff drawing
-void EndingManager::DrawStfInfo() {
+void EndingScene::DrawStfInfo() {
   if (!stf_task.bWantDisp) {
     return;
   }
@@ -152,7 +147,7 @@ void EndingManager::DrawStfInfo() {
 }
 
 // Text drawing
-void EndingManager::Text::Render(WINDOW_POINT topleft) {
+void EndingScene::Text::Render(WINDOW_POINT topleft) {
   TextObj.Render(topleft, Rect, TextStr, [this](TEXTRENDER_SESSION &s) {
     int max_px = 0;
 
@@ -179,7 +174,7 @@ void EndingManager::Text::Render(WINDOW_POINT topleft) {
 }
 
 // Apply fade I/O info
-void EndingManager::DrawFadeInfo() {
+void EndingScene::DrawFadeInfo() {
   GrpGeom->Lock();
 
   if (grp_info.bWantDisp) {
@@ -209,7 +204,7 @@ void EndingManager::DrawFadeInfo() {
 }
 
 // Ending SCL decode
-void EndingManager::SCLDecode() {
+void EndingScene::SCLDecode() {
   while (const auto *instruction = scene_.Current()) {
     switch (instruction->opcode) {
     case stage::SceneOpcode::Time:
@@ -317,11 +312,11 @@ void EndingManager::SCLDecode() {
     case stage::SceneOpcode::End:
       grp_info.bWantDisp = false;
       stf_task.bWantDisp = false;
-      GameFlow.NameRegistInit(false);
+      (void)GameFlow.ctx.score.StartNameRegistration(false);
       return;
 
     case stage::SceneOpcode::Music:
-      GameFlow.ctx.tracks.Switch(instruction->track_id);
+      GameFlow.ctx.music.Play(instruction->track_id);
       scene_.Advance();
       break;
 

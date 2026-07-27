@@ -1,13 +1,11 @@
-///
-/// Music - Music room
-///
+/// Music room scene.
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
 #include <cinttypes>
 #include <format>
 
-#include "music_room.h"
+#include "music_room_scene.h"
 
 #include "audio/bgm.h"
 #include "audio/midi.h"
@@ -33,24 +31,7 @@ static constexpr RGB ColorDefault = {.r = 153, .g = 204, .b = 255};
 // State
 // -----
 
-struct MUSICROOM_TEXT {
-  TEXTRENDER_RECT_ID mid_dev;
-  TEXTRENDER_RECT_ID title;
-  TEXTRENDER_RECT_ID comment;
-  TEXTRENDER_RECT_ID version;
-  std::string_view comment_text;
-
-  void RenderVersion(WINDOW_POINT topleft) const;
-  void RenderMidDev(WINDOW_POINT topleft) const;
-  void RenderTitle(WINDOW_POINT topleft) const;
-  void RenderComment(WINDOW_POINT topleft) const;
-};
-
-size_t MidiPlayID = 0;
-std::optional<MUSICROOM_TEXT> MusicRoomText;
-// -----
-
-void MUSICROOM_TEXT::RenderVersion(WINDOW_POINT topleft) const {
+void MusicRoomScene::Text::RenderVersion(WINDOW_POINT topleft) const {
   static constexpr std::string_view VERSION =
       "秋霜玉    Version 1.005     ★デモ対応版＃★";
   TextObj.Render(topleft, version, VERSION, [](TEXTRENDER_SESSION &s) {
@@ -60,7 +41,7 @@ void MUSICROOM_TEXT::RenderVersion(WINDOW_POINT topleft) const {
   });
 }
 
-void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
+void MusicRoomScene::Text::RenderMidDev(WINDOW_POINT topleft) const {
   const auto maybe_dev_full = MidBackend_DeviceName();
   if (!maybe_dev_full) {
     return;
@@ -74,15 +55,16 @@ void MUSICROOM_TEXT::RenderMidDev(WINDOW_POINT topleft) const {
   });
 }
 
-void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
+void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
+                                       std::size_t track_id) const {
   // Some modders might assign the same title to consecutive tracks, but it's
   // not possible to change the track title without switching to a different
   // track first.
-  auto num_str = std::format("#{:02}", (MidiPlayID + 1));
+  auto num_str = std::format("#{:02}", (track_id + 1));
   std::string_view num = num_str;
 
   TextObj.Render(topleft, title, num, [&num](TEXTRENDER_SESSION &s) {
-    const auto &title = GameFlow.ctx.tracks.CurrentTitle();
+    const auto &title = GameFlow.ctx.music.CurrentTitle();
 
     // GDI would calculate a trailing space as 4 pixels wide, not 8.
     const auto title_left = (s.Extent(num).w + 8);
@@ -95,7 +77,7 @@ void MUSICROOM_TEXT::RenderTitle(WINDOW_POINT topleft) const {
   });
 }
 
-void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
+void MusicRoomScene::Text::RenderComment(WINDOW_POINT topleft) const {
   if (comment_text.empty()) {
     return;
   }
@@ -120,7 +102,7 @@ void MUSICROOM_TEXT::RenderComment(WINDOW_POINT topleft) const {
   });
 }
 
-bool MusicRoomInit() {
+bool MusicRoomScene::Enter() {
   TextObj.Clear();
   GrpBackend_Clear();
   Grp_Flip();
@@ -132,7 +114,11 @@ bool MusicRoomInit() {
 
   GrpBackend_SetClip(GRP_RES_RECT);
 
-  MidiPlayID = 0;
+  track_id_ = 0;
+  previous_input_ = 0;
+  device_change_wait_ = false;
+  spectrum_peaks_.fill(0);
+  spectrum_decay_frame_ = 0;
 
   BGM_SetTempo(0);
 
@@ -144,11 +130,11 @@ bool MusicRoomInit() {
   const auto comment = GameFlow.ctx.data.TrackComment(0);
   if (comment.empty()) {
     DebugOut("MUSIC.PAK がはかいされています");
-    GameExit();
+    (void)GameExit();
     return false;
   }
 
-  MusicRoomText = MUSICROOM_TEXT{
+  text_ = Text{
       .mid_dev = TextObj.Register({.w = 98, .h = 13}),
       .title = TextObj.Register({.w = 240, .h = 16}),
       .comment = TextObj.Register({.w = 272, .h = 192}),
@@ -164,24 +150,21 @@ bool MusicRoomInit() {
   // }
   // BGM_Play();
 
-  GameFlow.game_main = MusicRoomProc;
+  GameFlow.game_main = [](bool &q) { GameFlow.ctx.music_room.Update(q); };
   GameFlow.current_state = GameState::MusicRoom;
 
   return true;
 }
 
 // Spectrum analyzer drawing
-void GrpDrawSpect(int x, int y) {
+void MusicRoomScene::DrawSpectrum(int x, int y) {
   uint16_t ftable[128 + 8 + 8];
   uint16_t ftable2[128];
-
-  static uint16_t ftable3[128 + 8 + 8];
-  static uint8_t ftable3flag;
 
   constexpr PIXEL_LTRB src = {(16 * 16), 0, ((16 * 16) + (8 * 21)),
                               8}; // ,,,8*4
 
-  ftable3flag = ((ftable3flag + 1) % 5);
+  spectrum_decay_frame_ = ((spectrum_decay_frame_ + 1) % 5);
 
   for (int i = 0; i < std::size(ftable2); i++) {
     int temp = 0;
@@ -241,10 +224,10 @@ void GrpDrawSpect(int x, int y) {
 
     ftable[i] >>= 3;
 
-    if (ftable3[i] < ftable[i]) {
-      ftable3[i] = ftable[i];
-    } else if ((ftable3flag == 0U) && (ftable3[i] != 0U)) {
-      ftable3[i]--;
+    if (spectrum_peaks_[i] < ftable[i]) {
+      spectrum_peaks_[i] = ftable[i];
+    } else if ((spectrum_decay_frame_ == 0U) && (spectrum_peaks_[i] != 0U)) {
+      spectrum_peaks_[i]--;
     }
   }
 
@@ -273,7 +256,7 @@ void GrpDrawSpect(int x, int y) {
 }
 
 // Display pressed notes
-void GrpDrawNote() {
+void MusicRoomScene::DrawNotes() {
   // 0123456789ab (Mod c)
   // o#o#oo#o#o#o
   // o o oo o o o
@@ -379,36 +362,33 @@ void GrpDrawNote() {
   }
 }
 
-void MusicRoomProc(bool & /*unused*/) {
-  if (!MusicRoomText) {
+void MusicRoomScene::Update(bool & /*unused*/) {
+  if (!text_) {
     assert(!"Music Room not initialized?");
     std::unreachable();
   }
-  auto &text = MusicRoomText.value();
-
-  static decltype(Key_Data) Old_Key;
-  static bool DevChgWait;
+  auto &text = text_.value();
 
   const auto playing = BGM_Playing();
 
-  if (Key_Data != Old_Key) {
+  if (Key_Data != previous_input_) {
     if (Input_IsCancel(Key_Data)) {
-      DevChgWait = false;
-      MusicRoomText = std::nullopt;
-      GameExit();
+      device_change_wait_ = false;
+      text_ = std::nullopt;
+      (void)GameExit();
       return;
     }
     if ((Key_Data == KEY_RIGHT) || (Key_Data == KEY_LEFT)) {
       if (Key_Data == KEY_RIGHT) {
-        MidiPlayID += 2;
+        track_id_ += 2;
       }
       BGM_Stop();
-      const auto track_count = GameFlow.ctx.tracks.TrackCount();
-      MidiPlayID = ((MidiPlayID + track_count - 1) % track_count);
-      GameFlow.ctx.tracks.Switch(MidiPlayID);
-      text.comment_text = GameFlow.ctx.data.TrackComment(MidiPlayID);
+      const auto track_count = GameFlow.ctx.music.TrackCount();
+      track_id_ = ((track_id_ + track_count - 1) % track_count);
+      GameFlow.ctx.music.Play(track_id_);
+      text.comment_text = GameFlow.ctx.data.TrackComment(track_id_);
     }
-    Old_Key = Key_Data;
+    previous_input_ = Key_Data;
   }
 
   switch (Key_Data) {
@@ -431,16 +411,16 @@ void MusicRoomProc(bool & /*unused*/) {
 
   if ((playing == BGM_PLAYING::MIDI) &&
       ((SystemKey_Data & SYSKEY_BGM_DEVICE) != 0)) {
-    if (!DevChgWait) {
+    if (!device_change_wait_) {
       BGM_ChangeMIDIDevice(1);
       if (auto sf = MidBackend_CurrentSoundFont()) {
         GameFlow.ctx.config.audio.soundfont = sf.value();
       }
-      DevChgWait = true;
+      device_change_wait_ = true;
     }
   } else {
     // Re-enable if not pressed
-    DevChgWait = false;
+    device_change_wait_ = false;
   }
 
   if (GameFlow.IsDraw()) {
@@ -468,8 +448,8 @@ void MusicRoomProc(bool & /*unused*/) {
       BlitLegend({176, 0, 176, 11}); // Device change key
 
       // GrpDrawSpect(0,480);
-      GrpDrawSpect(352, 128);
-      GrpDrawNote();
+      DrawSpectrum(352, 128);
+      DrawNotes();
     }
 
     const auto millis = BGM_PlayTime().count();
@@ -492,7 +472,7 @@ void MusicRoomProc(bool & /*unused*/) {
     if (playing == BGM_PLAYING::MIDI) {
       text.RenderMidDev({(540 + 2), (96 - 3)});
     }
-    text.RenderTitle({400, (144 + 2)});
+    text.RenderTitle({400, (144 + 2)}, track_id_);
     text.RenderComment({(400 - 40), (144 + 30)});
     text.RenderVersion({(200 - 50), 460});
 

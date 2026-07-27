@@ -1,5 +1,5 @@
 ///
-/// TrackManager — track selection, title lookup, BGM pack management
+/// MusicPlayer - track playback, metadata, and BGM pack selection
 ///
 /// Orchestrates the loading pipeline: pick a track → load MIDI (always,
 /// for sequencer + fallback audio) → optionally try waveform from a BGM
@@ -15,13 +15,13 @@
 
 #include "data/game_data.h"
 
-class TrackManager {
+class MusicPlayer {
 public:
-  explicit TrackManager(const data::GameData &data) : data_(&data) {}
+  explicit MusicPlayer(const data::GameData &data) : data_(data) {}
 
   // Track switching. Loads the MIDI track from MUSIC.PAK, then tries to
   // open a replacement waveform from the active BGM pack. Plays on success.
-  bool Switch(unsigned int id);
+  bool Play(unsigned int id);
 
   // Track title: waveform metadata title first, then GameData fallback.
   std::string_view CurrentTitle() const;
@@ -30,13 +30,12 @@ public:
   size_t TrackCount() const;
 
   // BGM pack management
-  bool PacksAvailable(bool invalidate_cache = false);
-  size_t PackCount();
-  void PackForeach(std::function<void(std::string_view)> func);
-  bool PackSet(std::string_view pack);
+  bool HasPacks(bool invalidate_cache = false);
+  void ForEachPack(std::function<void(std::string_view)> func);
+  bool SetPack(std::string_view pack);
 
 private:
-  const data::GameData *data_;
+  const data::GameData &data_;
   unsigned int loaded_num_ = 0; // 0 = nothing loaded
   std::string pack_path_;
   std::optional<bool> packs_available_{};

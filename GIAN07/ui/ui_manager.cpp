@@ -15,13 +15,13 @@ UIManager::UIManager() {
   std::vector<std::unique_ptr<menu::IMenuNode>> exit_items;
   exit_items.push_back(std::make_unique<menu::ActionNode>(
       "  Save && Exit  ", "", [](menu::MenuController &) {
-        GameFlow.ctx.demos.SaveReplayAll(false);
+        GameFlow.ctx.replay.SaveReplay(false);
         GameFlow.ctx.ui.on_game_exit();
         return false;
       }));
   exit_items.push_back(std::make_unique<menu::ActionNode>(
       "   お っ け ～ ", "", [](menu::MenuController &) {
-        GameFlow.ctx.demos.save_all_enable = false;
+        GameFlow.ctx.replay.CancelRecording();
         GameFlow.ctx.ui.on_game_exit();
         return false;
       }));
@@ -50,13 +50,13 @@ UIManager::UIManager() {
   std::vector<std::unique_ptr<menu::IMenuNode>> game_over_save_items;
   game_over_save_items.push_back(std::make_unique<menu::ActionNode>(
       "   お っ け ～ ", "", [](menu::MenuController &) {
-        GameFlow.ctx.demos.SaveReplayAll(false);
+        GameFlow.ctx.replay.SaveReplay(false);
         GameFlow.ctx.ui.on_game_exit();
         return false;
       }));
   game_over_save_items.push_back(std::make_unique<menu::ActionNode>(
       "   や だ や だ", "", [](menu::MenuController &) {
-        GameFlow.ctx.demos.save_all_enable = false;
+        GameFlow.ctx.replay.CancelRecording();
         GameFlow.ctx.ui.on_game_exit();
         return false;
       }));

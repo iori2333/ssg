@@ -13,7 +13,7 @@
 class EffectManager;
 class EnemyManager;
 struct GameSession;
-class TrackManager;
+class MusicPlayer;
 class UIManager;
 
 namespace data {
@@ -34,7 +34,7 @@ struct StageUpdateContext {
   EffectManager &effects;
   UIManager &ui;
   data::GraphicsLoader &graphics;
-  TrackManager &tracks;
+  MusicPlayer &music;
   const GameSession &session;
   bool messages_disabled;
 };

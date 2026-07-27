@@ -13,7 +13,7 @@
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
-#include "track_manager/track_manager.h"
+#include "music/music_player.h"
 #include "ui/ui_manager.h"
 
 namespace stage {
@@ -130,9 +130,9 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
     case SceneOpcode::Music:
       if (!context.session.is_demoplay) {
         BGM_Stop();
-        if (context.tracks.Switch(instruction->track_id)) {
+        if (context.music.Play(instruction->track_id)) {
           BGM_Play();
-          const auto title = context.tracks.CurrentTitle();
+          const auto title = context.music.CurrentTitle();
           if (!title.empty()) {
             context.effects.SetMusicTitle(460, title);
           }

@@ -2,7 +2,7 @@
 /// Format-independent background music interface — pure audio playback
 ///
 /// Track selection, title lookup, and BGM pack management live in
-/// GIAN07/track_manager/ — this module only plays what it is given.
+/// GIAN07/music/ - this module only plays what it is given.
 ///
 
 #include <chrono>
@@ -30,7 +30,7 @@ static unsigned int LoadedNum = 0;
 static std::chrono::milliseconds MIDITableUpdatePrev;
 
 static std::shared_ptr<BGM::TRACK> Waveform; // nullptr = playing MIDI
-static std::string_view WaveformTitle;        // cached from waveform metadata
+static std::string_view WaveformTitle;       // cached from waveform metadata
 // -----
 
 // External dependencies for MIDI tempo — exposed as global references

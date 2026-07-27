@@ -16,13 +16,13 @@
 struct EnemyActor;
 struct EnemyHomingTarget;
 class EffectManager;
-struct ItemManager;
+class ItemSystem;
 struct GameSession;
 class Player;
 
 class BulletManager {
 public:
-  BulletManager(ItemManager &items, GameSession &session, Player &player,
+  BulletManager(ItemSystem &items, GameSession &session, Player &player,
                 EffectManager &effects)
       : items_(items), session_(session), player_(player), effects_(effects) {}
 
@@ -59,7 +59,7 @@ public:
   void RotateDisplayAngles();
 
 private:
-  ItemManager &items_;
+  ItemSystem &items_;
   GameSession &session_;
   Player &player_;
   EffectManager &effects_;
