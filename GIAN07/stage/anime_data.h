@@ -3,8 +3,8 @@
 ///
 #pragma once
 
-#include "core/game_manager.h"
 #include "enemy/actor/enemy_actor.h"
+#include "gameplay/game_rules.h"
 
 namespace anime_data {
 

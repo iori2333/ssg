@@ -9,6 +9,7 @@
 
 // The game's native resolution.
 constexpr WINDOW_SIZE GRP_RES = {.w = 640, .h = 480};
+inline constexpr WINDOW_LTRB GRP_RES_RECT = {{.x = 0, .y = 0}, GRP_RES};
 
 constexpr auto GAME_TITLE = "秋霜玉";
 constexpr auto VERSION_TAG = "v1.0";
@@ -47,7 +48,7 @@ enum class SURFACE_ID : uint8_t {
   MAPCHIP = 1, // Background
   ENEMY = 2,   // Enemies (trash & bosses)
   FACE = 3,    // Face graphics
-  BOMBER = 6, // Bomb graphics
+  BOMBER = 6,  // Bomb graphics
 
   // Splash screen
   SPROJECT = 1, // Western Project display

@@ -8,8 +8,8 @@
 
 #include "game_data.h"
 
-#include "core/constants.h"
-#include "core/game_manager.h"
+#include "gameplay/game_rules.h"
+#include "gfx/constants.h"
 
 namespace data {
 

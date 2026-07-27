@@ -34,9 +34,9 @@ constexpr std::array kArchiveSpecs = {
 
 constexpr size_t ToIndex(ArchiveId id) { return std::to_underlying(id); }
 
-std::optional<PackFile> LoadArchive(std::string_view data_path,
-                                    const ArchiveSpec &spec,
-                                    data::LoadErrors &errors) {
+std::optional<data::PbgArchive> LoadArchive(std::string_view data_path,
+                                            const ArchiveSpec &spec,
+                                            data::LoadErrors &errors) {
   const auto path = std::string(data_path) + std::string(spec.filename);
   auto *stream = SDL_IOFromFile(path.c_str(), "rb");
   if (stream == nullptr) {
@@ -44,8 +44,8 @@ std::optional<PackFile> LoadArchive(std::string_view data_path,
     return std::nullopt;
   }
 
-  auto archive = PackFile::Open(*stream);
-  if (!archive || archive.Count() < spec.minimum_entries) {
+  auto archive = data::PbgArchive::Open(stream);
+  if (!archive || archive.EntryCount() < spec.minimum_entries) {
     errors.push_back({spec.id, LoadErrorKind::Invalid});
     return std::nullopt;
   }
@@ -67,7 +67,7 @@ LoadErrors GameData::Load(std::string_view data_path) {
   }
 
   LoadErrors errors;
-  std::array<PackFile, std::to_underlying(ArchiveId::Count)> archives;
+  std::array<PbgArchive, std::to_underlying(ArchiveId::Count)> archives;
   for (const auto &spec : kArchiveSpecs) {
     auto archive = LoadArchive(data_path, spec, errors);
     if (archive) {
@@ -80,8 +80,8 @@ LoadErrors GameData::Load(std::string_view data_path) {
 
   std::vector<MusicTrack> tracks;
   const auto &music = archives[ToIndex(ArchiveId::Music)];
-  tracks.reserve(music.Count());
-  for (uint32_t index = 0; index < music.Count(); ++index) {
+  tracks.reserve(music.EntryCount());
+  for (uint32_t index = 0; index < music.EntryCount(); ++index) {
     auto raw = music.Extract(index);
     if (!raw) {
       errors.push_back({ArchiveId::Music, LoadErrorKind::Invalid});
@@ -120,7 +120,7 @@ LoadErrors GameData::Load(std::string_view data_path) {
   return {};
 }
 
-const PackFile &GameData::Archive(ArchiveId id) const {
+const PbgArchive &GameData::Archive(ArchiveId id) const {
   return archives_[ToIndex(id)];
 }
 

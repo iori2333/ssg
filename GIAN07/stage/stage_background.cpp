@@ -7,9 +7,8 @@
 
 #include "stage_background.h"
 
-#include "core/gian.h"
-#include "effect/effect.h"
 #include "effect/effect_manager.h"
+#include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
@@ -92,8 +91,8 @@ void TileMapScroller::Draw(const std::array<int8_t, kVisibleMapRows> &raster_dx,
         if (tile == kEmptyMapTile) {
           continue;
         }
-        const int x =
-            (static_cast<int>(column) << 4) + X_MIN + quake_dx + raster;
+        const int x = (static_cast<int>(column) << 4) + playfield::kLeft +
+                      quake_dx + raster;
         const int y = (row_y << 4) + position.dy;
         const int source_x = (tile % (640 / 16)) << 4;
         const int source_y = (tile / (640 / 16)) << 4;
@@ -141,23 +140,23 @@ void StageBackground::Update(EffectManager &effects) {
     effect_count_ = (effect_count_ + 200) % 208;
     break;
   case Mode::Stage6Cube:
-    effects.Move3DCubes();
+    visuals_.UpdateCubes();
     break;
   case Mode::Stage6RandomEcl:
-    effects.MoveFakeECL();
+    visuals_.UpdateFakeEcl();
     break;
   case Mode::Stage4Rock:
-    effects.MoveStg4Rocks();
+    visuals_.UpdateRocks();
     break;
   case Mode::Stage6Raster:
-    effects.MoveStg6Rasters();
+    visuals_.UpdateRasters();
     break;
   case Mode::Stage3Stars:
     ++effect_count_;
     if (effect_count_ == 32) {
-      effects.SetScreenEffect(SCNEFC_WHITEOUT);
+      effects.StartScreenTransition(ScreenTransition::WhiteOut);
     }
-    effects.MoveStg3Stars();
+    visuals_.UpdateStars();
     break;
   }
 
@@ -167,22 +166,22 @@ void StageBackground::Update(EffectManager &effects) {
   map_.Update();
 }
 
-void StageBackground::Draw(EffectManager &effects) const {
+void StageBackground::Draw() const {
   switch (mode_) {
   case Mode::Stage3Boss:
     DrawStage3Boss();
     return;
   case Mode::Stage6Cube:
-    effects.Draw3DCubes();
+    visuals_.DrawCubes();
     return;
   case Mode::Stage6RandomEcl:
-    effects.DrawFakeECL();
+    visuals_.DrawFakeEcl();
     return;
   case Mode::Stage6Raster:
-    effects.DrawStg6Rasters();
+    visuals_.DrawRasters();
     return;
   case Mode::Stage3Stars:
-    effects.DrawStg3Stars();
+    visuals_.DrawStars();
     return;
   default:
     break;
@@ -191,7 +190,7 @@ void StageBackground::Draw(EffectManager &effects) const {
   const int quake_dx = quake_ == 0 ? 0 : sinl(quake_ * 16, (256 - quake_) >> 5);
   map_.Draw(raster_dx_, quake_dx);
   if (mode_ == Mode::Stage4Rock) {
-    effects.DrawStg4Rocks();
+    visuals_.DrawRocks();
   }
 }
 
@@ -224,34 +223,40 @@ void StageBackground::Command(BackgroundCommand command,
   case BackgroundCommand::Stage6Cube:
     mode_ = Mode::Stage6Cube;
     effect_count_ = 0;
-    effects.Init3DCubes();
+    visuals_.StartCubes();
     break;
   case BackgroundCommand::Stage6RandomEcl:
     mode_ = Mode::Stage6RandomEcl;
     effect_count_ = 0;
-    effects.InitFakeECL();
+    visuals_.StartFakeEcl();
     break;
   case BackgroundCommand::Stage4Rock:
     mode_ = Mode::Stage4Rock;
     effect_count_ = 0;
-    effects.InitStg4Rocks();
+    visuals_.StartRocks();
     break;
   case BackgroundCommand::Stage4Leave:
     if (mode_ == Mode::Stage4Rock) {
-      effects.SendCmdStg4Rocks(STG4ROCK_LEAVE, 0);
+      visuals_.CommandRocks(Stage4RockCommand::Leave);
     }
     break;
   case BackgroundCommand::Stage6Raster:
     mode_ = Mode::Stage6Raster;
     effect_count_ = 0;
-    effects.InitStg6Rasters();
+    visuals_.StartRasters();
     break;
   case BackgroundCommand::Stage3Stars:
     mode_ = Mode::Stage3Stars;
     effect_count_ = 0;
-    effects.InitStg3Stars();
-    effects.SetScreenEffect(SCNEFC_WHITEIN);
+    visuals_.StartStars();
+    effects.StartScreenTransition(ScreenTransition::WhiteIn);
     break;
+  }
+}
+
+void StageBackground::CommandRocks(Stage4RockCommand command) {
+  if (mode_ == Mode::Stage4Rock) {
+    visuals_.CommandRocks(command);
   }
 }
 
@@ -300,9 +305,10 @@ void StageBackground::UpdateRaster(bool opening) {
 }
 
 void StageBackground::DrawStage3Boss() const {
-  for (int y = Y_MIN - static_cast<int>(effect_count_); y < Y_MAX; y += 208) {
+  for (int y = playfield::kTop - static_cast<int>(effect_count_);
+       y < playfield::kBottom; y += 208) {
     constexpr PIXEL_LTRB source = {0, 272, (640 - 256), (272 + 208)};
-    GrpSurface_Blit({X_MIN, y}, SURFACE_ID::MAPCHIP, source);
+    GrpSurface_Blit({playfield::kLeft, y}, SURFACE_ID::MAPCHIP, source);
   }
 }
 

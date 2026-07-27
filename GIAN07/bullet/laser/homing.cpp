@@ -4,11 +4,12 @@
 
 #include <array>
 #include <cmath>
+#include <span>
 
 #include "homing.h"
 
 #include "audio/snd.h"
-#include "core/gian.h"
+#include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/ut_math.h"
@@ -48,13 +49,6 @@ void DrawTriangleFanAlpha(std::span<const VERTEX_XY, 4> src) {
 
 } // namespace
 
-uint8_t ComputeDeg(const HomingSpawnInfo &info, int i) {
-  if ((info.n & 1) != 0) {
-    return info.d + ((i >> 1) * info.dw * (1 - ((i & 1) << 1)));
-  }
-  return info.d - (info.dw >> 1) + ((i >> 1) * info.dw * (1 - ((i & 1) << 1)));
-}
-
 // ── Spawn ────────────────────────────────────────────────────────────
 
 void LaserHoming::Spawn(const HomingSpawnInfo &info) {
@@ -64,10 +58,11 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
   current_ = 0;
   left_ = 1;
   c_ = info.c;
-  subtype_ = static_cast<HomingType>(info.type);
+  subtype_ = info.type;
   state_ = HomingState::Normal;
 
-  auto deg = ComputeDeg(info, info.bullet_index);
+  const auto deg = bullet_common::CalcSpreadDir(
+      info.bullet_index, BulletPattern::Spread, info.n, info.d, info.dw);
 
   for (auto &j : p_) {
     j.x = info.x;
@@ -78,7 +73,7 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
 
 // ── State machine ──────────────────────────────────────────────────
 
-auto LaserHoming::Update(const UpdateInfo &info) -> UpdateResult {
+void LaserHoming::Update(const UpdateInfo &info) {
   int prev_x = p_[current_].x;
   int prev_y = p_[current_].y;
   int prev_deg = p_[current_].d;
@@ -133,11 +128,10 @@ auto LaserHoming::Update(const UpdateInfo &info) -> UpdateResult {
   int tail_i = GetNext(current_);
   int tx = p_[tail_i].x;
   int ty = p_[tail_i].y;
-  if (tx < GX_MIN - 4_px || tx > GX_MAX + 4_px || ty < GY_MIN - 4_px ||
-      ty > GY_MAX + 4_px) {
+  if (tx < playfield::kWorldLeft - 4_px || tx > playfield::kWorldRight + 4_px ||
+      ty < playfield::kWorldTop - 4_px || ty > playfield::kWorldBottom + 4_px) {
     state_ = HomingState::Dead;
   }
-  return {};
 }
 
 // ── Virtual overrides ──────────────────────────────────────────────
@@ -156,7 +150,7 @@ void LaserHoming::Render() const {
 
   int w = kHomingWidth;
   int cur = current_;
-  const DegPoint *pt = &p_[cur];
+  const auto *pt = &p_[cur];
 
   VERTEX_XY src[4];
   src[0].x = (pt->x + cosl(pt->d - 64, w)) >> 6;
@@ -242,17 +236,20 @@ HitResult LaserHoming::CheckHit(int px, int py, int player_radius) const {
     return HitResult::Miss;
   }
 
-  for (auto &j : p_) {
-    if (HITCHK(j.x, px, kHomingWidth + 15_px) &&
-        HITCHK(j.y, py, kHomingWidth + 15_px)) {
-      if (HITCHK(j.x, px, kHomingWidth * 2 / 3 + player_radius) &&
-          HITCHK(j.y, py, kHomingWidth * 2 / 3 + player_radius)) {
+  bool grazed = false;
+  for (const auto &j : p_) {
+    if (playfield::WithinAxisDistance(j.x, px, kHomingWidth + 15_px) &&
+        playfield::WithinAxisDistance(j.y, py, kHomingWidth + 15_px)) {
+      if (playfield::WithinAxisDistance(j.x, px,
+                                        kHomingWidth * 2 / 3 + player_radius) &&
+          playfield::WithinAxisDistance(j.y, py,
+                                        kHomingWidth * 2 / 3 + player_radius)) {
         return HitResult::Hit;
       }
-      return HitResult::Graze;
+      grazed = true;
     }
   }
-  return HitResult::Miss;
+  return grazed ? HitResult::Graze : HitResult::Miss;
 }
 
 // ── Debug ──────────────────────────────────────────────────────────

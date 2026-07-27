@@ -6,7 +6,7 @@
 
 #include "enemy_renderer.h"
 
-#include "core/gian.h"
+#include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
@@ -103,7 +103,8 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
         160 + (Cast::sign<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
     GrpBackend_SetClip(GRP_RES_RECT);
     GrpSurface_Blit({center.x - 20, center.y - 20}, surface, spirit);
-    GrpBackend_SetClip({X_MIN, Y_MIN, X_MAX + 1, Y_MAX + 1});
+    GrpBackend_SetClip({playfield::kLeft, playfield::kTop,
+                        playfield::kRight + 1, playfield::kBottom + 1});
     return true;
   }
 

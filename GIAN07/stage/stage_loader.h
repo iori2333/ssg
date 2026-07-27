@@ -3,8 +3,8 @@
 ///
 #pragma once
 
-#include "core/game_manager.h"
 #include "data/game_data.h"
+#include "gameplay/game_rules.h"
 
 class EnemyManager;
 

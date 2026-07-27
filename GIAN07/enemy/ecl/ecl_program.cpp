@@ -442,9 +442,18 @@ DecodeInstruction(BYTE_BUFFER_BORROWED bytes, size_t address,
   case EclOpcode::PlaySound:
   case EclOpcode::SetSequenceAngleDelta:
   case EclOpcode::SetItem:
-  case EclOpcode::Stage4Effect:
   case EclOpcode::SetDamageAnimation:
     return MakeInstruction(opcode, EclByteArguments{.value = reader.U8()});
+
+  case EclOpcode::Stage4Effect: {
+    const auto command = reader.U8();
+    if (command > static_cast<uint8_t>(stage::Stage4RockCommand::End)) {
+      return std::nullopt;
+    }
+    return MakeInstruction(
+        opcode, EclStage4EffectArguments{
+                    .command = static_cast<stage::Stage4RockCommand>(command)});
+  }
 
   case EclOpcode::SetSpeed:
   case EclOpcode::AddSpeed:
@@ -570,11 +579,20 @@ DecodeInstruction(BYTE_BUFFER_BORROWED bytes, size_t address,
     return MakeInstruction(opcode, EclScriptArguments{.script_id = script_id});
   }
 
-  case EclOpcode::SpawnCircleEffect:
-    return MakeInstruction(opcode,
-                           EclCircleEffectArguments{.offset_x = reader.I16(),
-                                                    .offset_y = reader.I16(),
-                                                    .effect = reader.U8()});
+  case EclOpcode::SpawnCircleEffect: {
+    const auto offset_x = reader.I16();
+    const auto offset_y = reader.I16();
+    const auto effect = reader.U8();
+    if (effect < static_cast<uint8_t>(CircleEffectKind::Star) ||
+        effect > static_cast<uint8_t>(CircleEffectKind::Diverging)) {
+      return std::nullopt;
+    }
+    return MakeInstruction(
+        opcode, EclCircleEffectArguments{
+                    .offset_x = offset_x,
+                    .offset_y = offset_y,
+                    .effect = static_cast<CircleEffectKind>(effect)});
+  }
 
   case EclOpcode::MoveValue: {
     const auto destination = DecodeValue(reader.U8());

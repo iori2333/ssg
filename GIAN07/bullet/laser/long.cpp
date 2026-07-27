@@ -4,10 +4,12 @@
 
 #include <array>
 #include <cmath>
+#include <ranges>
 
 #include "long.h"
 
 #include "audio/snd.h"
+#include "enemy/actor/enemy_actor.h"
 #include "enemy/ecl/ecl.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
@@ -92,13 +94,12 @@ void LaserLong::RecalcGeometry() {
 
 // ── Update ──────────────────────────────────────────────────────────
 
-LaserLong::UpdateResult LaserLong::Update(const UpdateInfo &info) {
+void LaserLong::Update(const UpdateInfo &info) {
   if (info.command == LongLaserUpdateInfo::Command::Tick) {
     TickUpdate();
   } else {
     ApplyCommand(info.command, info.angle, info.delta);
   }
-  return {};
 }
 
 // ── Per-frame tick ──────────────────────────────────────────────────

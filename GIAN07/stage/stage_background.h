@@ -9,8 +9,9 @@
 #include <vector>
 
 #include "stage_map.h"
+#include "stage_visuals.h"
 
-struct EffectManager;
+class EffectManager;
 
 namespace stage {
 
@@ -58,8 +59,9 @@ class StageBackground {
 public:
   [[nodiscard]] bool LoadMap(BYTE_BUFFER_OWNED data);
   void Update(EffectManager &effects);
-  void Draw(EffectManager &effects) const;
+  void Draw() const;
   void Command(BackgroundCommand command, EffectManager &effects);
+  void CommandRocks(Stage4RockCommand command);
   void SetSpeed(int speed) { map_.SetSpeed(speed); }
 
 private:
@@ -88,6 +90,7 @@ private:
   uint8_t quake_ = 0;
   uint8_t raster_width_ = 0;
   uint8_t raster_angle_ = 0;
+  StageVisuals visuals_;
 };
 
 } // namespace stage

@@ -9,18 +9,18 @@
 #include <SDL3/SDL_messagebox.h>
 
 #include "entry.h"
+#include "graphics_settings.h"
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
-#include "core/config.h"
-#include "core/gian.h"
-#include "core/graphics_settings.h"
 #include "data/game_data.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
+#include "gfx/constants.h"
 #include "gfx/graphics_backend.h"
 #include "gfx/window_backend.h"
 #include "platform/text_backend.h"
+#include "settings/config.h"
 #include "sys/input.h"
 #include "sys/path.h"
 #include "util/debug.h"
@@ -28,7 +28,7 @@
 // Screenshots
 // -----------
 
-static ConfigData g_config;
+static ConfigData &g_config = AppConfig();
 
 const uint8_t &Grp_ScreenshotEffort = g_config.graphics.screenshot_effort;
 
@@ -106,12 +106,11 @@ bool XInit() {
   }
 
   // Initialize graphics
-  const auto maybe_params =
-      Grp_InitOrFallback(g_config.graphics.GraphicsParams());
+  const auto maybe_params = Grp_InitOrFallback(g_config.graphics.ToParams());
   if (!maybe_params) {
     return false;
   }
-  g_config.graphics.GraphicsParamsApply(maybe_params.value().live);
+  g_config.graphics.ApplyParams(maybe_params.value().live);
   GrpBackend_SetClip(GRP_RES_RECT);
 
   // Accept keyboard (JoyPad) input
@@ -122,15 +121,6 @@ bool XInit() {
     BGM_Init(g_config.audio.soundfont);
   }
   BGM_SetGainApply(g_config.audio.bgm_vol_norm);
-  GameFlow.ctx.game_cfg = &g_config.game;
-  GameFlow.ctx.graphics_cfg = &g_config.graphics;
-  GameFlow.ctx.audio_cfg = &g_config.audio;
-  GameFlow.ctx.input_cfg = &g_config.input;
-  GameFlow.ctx.debug_cfg = &g_config.debug;
-
-  GameFlow.ctx.save_config = [&] { SaveConfigFile(g_config); };
-  GameFlow.ctx.cfg = &g_config;
-
   Grp_ScreenshotSetPrefix("screenshots/");
   const auto data_errors = GameFlow.ctx.data.Load(PathForData());
   if (!data_errors.empty()) {
@@ -163,18 +153,22 @@ void XCleanup() {
 bool GameFrame() {
 #ifdef SUPPORT_GRP_WINDOWED
   if ((SystemKey_Data & SYSKEY_GRP_FULLSCREEN) != 0) {
-    XGrpTryCycleDisp(g_config.graphics, GameFlow.ctx.graphics);
+    graphics_settings::ToggleFullscreen(g_config.graphics,
+                                        GameFlow.ctx.graphics);
   }
 #endif
 #ifdef SUPPORT_GRP_SCALING
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_UP) != 0) {
-    XGrpTryCycleScale(g_config.graphics, GameFlow.ctx.graphics, +1, false);
+    graphics_settings::CycleScale(g_config.graphics, GameFlow.ctx.graphics, +1,
+                                  false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_DOWN) != 0) {
-    XGrpTryCycleScale(g_config.graphics, GameFlow.ctx.graphics, -1, false);
+    graphics_settings::CycleScale(g_config.graphics, GameFlow.ctx.graphics, -1,
+                                  false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_MODE) != 0) {
-    XGrpTryCycleScMode(g_config.graphics, GameFlow.ctx.graphics);
+    graphics_settings::ToggleScalingMode(g_config.graphics,
+                                         GameFlow.ctx.graphics);
   }
 #endif
   if ((SystemKey_Data & SYSKEY_GRP_TURBO) != 0) {
@@ -189,9 +183,10 @@ bool GameFrame() {
   }
 #ifdef SUPPORT_GRP_API
   if ((SystemKey_Data & SYSKEY_GRP_API) != 0) {
-    XGrpTry(g_config.graphics, GameFlow.ctx.graphics, [](auto &params) {
-      params.api = ((params.api + 1) % GrpBackend_APICount());
-    });
+    graphics_settings::TryApply(
+        g_config.graphics, GameFlow.ctx.graphics, [](auto &params) {
+          params.api = ((params.api + 1) % GrpBackend_APICount());
+        });
   }
 #endif
 

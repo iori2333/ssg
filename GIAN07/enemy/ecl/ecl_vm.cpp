@@ -12,12 +12,13 @@
 #include "ecl_vm.h"
 
 #include "audio/snd.h"
+#include "bullet/bullet_common.h"
 #include "bullet/bullet_manager.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
-#include "core/level.h"
 #include "effect/effect_manager.h"
 #include "enemy/actor/enemy_actor.h"
+#include "gameplay/game_rules.h"
+#include "gameplay/game_session.h"
+#include "gameplay/playfield.h"
 #include "player/player.h"
 #include "stage/stage_session.h"
 #include "util/cast.h"
@@ -192,18 +193,18 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
 
   case EclOpcode::JumpDifficulty: {
     const auto &targets = Args<EclDifficultyJumpArguments>(instruction).targets;
-    switch (host_->Game().EffectiveLevel()) {
-    case GameLevel::EASY:
+    switch (host_->Session().EffectiveLevel()) {
+    case GameLevel::Easy:
       actor.script.position = targets[0];
       break;
     default:
-    case GameLevel::NORMAL:
+    case GameLevel::Normal:
       actor.script.position = targets[1];
       break;
-    case GameLevel::HARD:
+    case GameLevel::Hard:
       actor.script.position = targets[2];
       break;
-    case GameLevel::LUNATIC:
+    case GameLevel::Lunatic:
       actor.script.position = targets[3];
       break;
     }
@@ -440,15 +441,15 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.x += actor.vx;
       actor.y += actor.vy;
       actor.vy += actor.vd;
-      if (actor.x < GX_MIN || actor.x > GX_MAX) {
+      if (actor.x < playfield::kWorldLeft || actor.x > playfield::kWorldRight) {
         actor.vx = -actor.vx;
         actor.x += actor.vx;
       }
-      if (actor.y < GY_MIN) {
+      if (actor.y < playfield::kWorldTop) {
         actor.vy = -actor.vy;
         actor.y += actor.vy;
       }
-      if (actor.y > GY_MAX + actor.hitbox_half_height) {
+      if (actor.y > playfield::kWorldBottom + actor.hitbox_half_height) {
         actor.state = EnemyActorState::PendingRemoval;
       }
     }
@@ -503,8 +504,13 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
 
   case EclOpcode::RandomBoundedAngle: {
     const PIXEL_LTRB bounds = {
-        GX_MIN + 150_px, GY_MIN + ((GY_MID - GY_MIN - 40_px) / 3),
-        GX_MAX - 150_px, GY_MID - ((GY_MID - GY_MIN - 40_px) / 3) - 40_px};
+        playfield::kWorldLeft + 150_px,
+        playfield::kWorldTop +
+            ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3),
+        playfield::kWorldRight - 150_px,
+        playfield::kWorldCenterY -
+            ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3) -
+            40_px};
     uint16_t base = 0;
     constexpr uint16_t range = 32;
     if (actor.y < bounds.top) {
@@ -535,13 +541,16 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
   }
 
   case EclOpcode::RandomPosition:
-    if (actor.x > GX_MID) {
-      actor.x = PixelToWorld(X_MID) - ((rnd() % (X_MAX - X_MIN - 100)) * 32);
+    if (actor.x > playfield::kWorldCenterX) {
+      actor.x = PixelToWorld(playfield::kCenterX) -
+                ((rnd() % (playfield::kRight - playfield::kLeft - 100)) * 32);
     } else {
-      actor.x = PixelToWorld(X_MID) + ((rnd() % (X_MAX - X_MIN - 100)) * 32);
+      actor.x = PixelToWorld(playfield::kCenterX) +
+                ((rnd() % (playfield::kRight - playfield::kLeft - 100)) * 32);
     }
     actor.y =
-        PixelToWorld(rnd() % (Y_MID - Y_MIN - 160)) + PixelToWorld(Y_MIN + 40);
+        PixelToWorld(rnd() % (playfield::kCenterY - playfield::kTop - 160)) +
+        PixelToWorld(playfield::kTop + 40);
     return Step::Advance;
 
   case EclOpcode::MovePolar: {
@@ -562,7 +571,7 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
   const auto fire = [&](bool scale,
                         BulletSpawnType type = BulletSpawnType::Normal) {
     auto info = MakeBulletSpawnInfo(actor.bullet_command, actor.x, actor.y,
-                                    scale, host_->Game(), type);
+                                    scale, host_->Session(), type);
     host_->Bullets().SpawnBullet(info);
   };
 
@@ -657,7 +666,8 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
     host_->ClearRegular();
     break;
   case EclOpcode::BulletsToItems:
-    host_->Bullets().ToItems(Args<EclByteArguments>(instruction).value);
+    host_->Bullets().ConvertBulletsToItems(
+        Args<EclByteArguments>(instruction).value);
     break;
   default:
     return Step::Halt;
@@ -680,9 +690,10 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         .dw = actor.laser_command.dw,
         .n = actor.laser_command.n,
         .c = actor.laser_command.c,
-        .a = actor.laser_command.a,
-        .cmd = actor.laser_command.cmd,
-        .cmd_type = actor.laser_command.type,
+        .aimed = (actor.laser_command.cmd & 0x08) != 0,
+        .pattern = bullet_common::DecodePattern(actor.laser_command.cmd),
+        .type = actor.laser_command.type == 1 ? ReflectLaserType::Reflect
+                                              : ReflectLaserType::Short,
     });
   };
 
@@ -802,7 +813,8 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         .dw = actor.laser_command.dw,
         .n = actor.laser_command.n,
         .c = actor.laser_command.c,
-        .type = actor.laser_command.type,
+        .type = actor.laser_command.type == 1 ? HomingType::Type1
+                                              : HomingType::None,
     });
     return Step::Yield;
   default:
@@ -839,7 +851,7 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     actor.flag &= ~EF_HITSB;
     break;
   case EclOpcode::EnableHorizontalMirror:
-    if (actor.x < GX_MID) {
+    if (actor.x < playfield::kWorldCenterX) {
       actor.flag |= EF_RLCHG;
     } else {
       actor.flag &= ~EF_RLCHG;
@@ -895,9 +907,8 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     actor.item = Args<EclByteArguments>(instruction).value;
     return Step::Yield;
   case EclOpcode::Stage4Effect: {
-    const auto command = Args<EclByteArguments>(instruction).value;
-    effects_->SendCmdStg4Rocks(command,
-                               command == STG4ROCK_ACCMOVE2 ? actor.d : 0);
+    host_->Stage().CommandRocks(
+        Args<EclStage4EffectArguments>(instruction).command);
     break;
   }
   case EclOpcode::SetDamageAnimation:
@@ -929,9 +940,8 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
   }
   case EclOpcode::SpawnCircleEffect: {
     const auto &args = Args<EclCircleEffectArguments>(instruction);
-    effects_->SpawnCircleEffect(actor.x + PixelToWorld(args.offset_x),
-                                actor.y + PixelToWorld(args.offset_y),
-                                args.effect);
+    effects_->SpawnCircle(actor.x + PixelToWorld(args.offset_x),
+                          actor.y + PixelToWorld(args.offset_y), args.effect);
     break;
   }
   case EclOpcode::Stage3Effect:

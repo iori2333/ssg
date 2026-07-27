@@ -35,9 +35,3 @@ struct ItemData {
   bool auto_collect; // whether auto-collect is active
 };
 // (ITEM_DATA alias removed — use ItemData directly)
-
-// [ Functions ]
-// Migrated to ItemManager
-
-// [ Variables ]
-// Access via Items.pool

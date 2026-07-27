@@ -4,19 +4,16 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
 #include <utility>
 
-#include "core/entity.h"
-
-template <typename T, std::size_t N>
-struct ObjectPool {
-  // ── Forward iterator ─────────────────────────────────────────
-  template <bool IsConst>
-  struct Iterator {
+template <typename T, std::size_t N> struct ObjectPool {
+  // Forward iterator
+  template <bool IsConst> struct Iterator {
     using iterator_concept = std::forward_iterator_tag;
     using value_type = T;
     using difference_type = std::ptrdiff_t;
@@ -48,9 +45,7 @@ struct ObjectPool {
       return tmp;
     }
 
-    constexpr bool operator==(const Iterator &other) const noexcept {
-      return pos_ == other.pos_;
-    }
+    constexpr bool operator==(const Iterator &other) const noexcept = default;
 
   private:
     DataPtr data_{};
@@ -61,7 +56,9 @@ struct ObjectPool {
   using iterator = Iterator<false>;
   using const_iterator = Iterator<true>;
 
-  // ── Iteration ────────────────────────────────────────────────
+  ObjectPool() noexcept { Reset(); }
+
+  // Iteration
   constexpr iterator begin() noexcept {
     return {data_.data(), indices_.data(), 0};
   }
@@ -75,8 +72,8 @@ struct ObjectPool {
     return {data_.data(), indices_.data(), count_};
   }
 
-  // ── Operations ───────────────────────────────────────────────
-  void Init() noexcept {
+  // Operations
+  void Reset() noexcept {
     for (std::size_t i = 0; i < N; i++) {
       indices_[i] = i;
     }
@@ -95,19 +92,14 @@ struct ObjectPool {
     return data_[indices_[i]];
   }
 
-  [[nodiscard]] std::size_t RawIndex(std::size_t active_i) const noexcept {
-    return indices_[active_i];
-  }
-
-  [[nodiscard]] std::size_t RawIndexOf(const T *p) const noexcept {
-    return static_cast<std::size_t>(p - data_.data());
-  }
-
   template <typename Pred> void Compact(Pred is_dead) noexcept {
-    Indsort(indices_, count_, data_, std::move(is_dead));
+    const auto first_dead = std::stable_partition(
+        indices_.begin(), indices_.begin() + count_,
+        [this, &is_dead](std::size_t index) { return !is_dead(data_[index]); });
+    count_ =
+        static_cast<std::size_t>(std::distance(indices_.begin(), first_dead));
   }
 
-  [[nodiscard]] bool IsFull() const noexcept { return count_ == N; }
   [[nodiscard]] bool IsEmpty() const noexcept { return count_ == 0; }
   [[nodiscard]] std::size_t Size() const noexcept { return count_; }
 

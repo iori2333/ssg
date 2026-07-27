@@ -6,9 +6,9 @@
 
 #include "wide_loadout.h"
 
-#include "core/gian.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
+#include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "player/player_attack.h"
@@ -51,7 +51,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   case 0: {
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), 192, 0,
-        1,           SPEEDM(54),  0,   PlayerShotKind::WideMain};
+        1,           13.5_px,     0,   PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
   }
@@ -60,16 +60,21 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
     const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 0, 1,
-        SPEEDM(54),  0,           PlayerShotKind::WideMain};
+        13.5_px,     0,           PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
   }
   case 2: {
     shot_phase_ += 32;
     const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
-    PlayerShotSpawnInfo si{
-        player_.X() - 6_px, player_.Y(), static_cast<uint8_t>(-64 + dd), 0, 1,
-        SPEEDM(54),         0,           PlayerShotKind::WideMain};
+    PlayerShotSpawnInfo si{player_.X() - 6_px,
+                           player_.Y(),
+                           static_cast<uint8_t>(-64 + dd),
+                           0,
+                           1,
+                           13.5_px,
+                           0,
+                           PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     si.x += 12_px;
     player_.SpawnShot(si);
@@ -82,7 +87,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
     const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 4, 3,
-        SPEEDM(54),  0,           PlayerShotKind::WideMain};
+        13.5_px,     0,           PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
   }
@@ -91,7 +96,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
     const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 3, 5,
-        SPEEDM(54),  0,           PlayerShotKind::WideMain};
+        13.5_px,     0,           PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
   }
@@ -110,7 +115,7 @@ void WideLoadout::FireSubNormal(Player &player_, uint8_t tier) {
                            197,
                            0,
                            1,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideSub};
     player_.SpawnShot(si);
@@ -126,7 +131,7 @@ void WideLoadout::FireSubNormal(Player &player_, uint8_t tier) {
                            200,
                            7,
                            2,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideSub};
     player_.SpawnShot(si);
@@ -142,7 +147,7 @@ void WideLoadout::FireSubNormal(Player &player_, uint8_t tier) {
                            202,
                            8,
                            3,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideSub};
     player_.SpawnShot(si);
@@ -157,7 +162,7 @@ void WideLoadout::FireSubNormal(Player &player_, uint8_t tier) {
                            204,
                            8,
                            4,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideSub};
     player_.SpawnShot(si);
@@ -170,7 +175,7 @@ void WideLoadout::FireSubNormal(Player &player_, uint8_t tier) {
 }
 
 void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
-                             uint16_t remaining) {
+                             EffectManager &effects, uint16_t remaining) {
   int dx = 0, dy = 0, l = 0;
 
   if (remaining > BombDuration() - 30) {
@@ -179,12 +184,12 @@ void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
 
   const auto d = Cast::down<uint8_t>(remaining * 3U);
   l = (BombDuration() - remaining) * 26;
-  dx = GX_MID + 35_px + cosl(d, l << 1);
-  dy = GY_MID - 45_px + sinl(d << 1, l);
+  dx = playfield::kWorldCenterX + 35_px + cosl(d, l << 1);
+  dy = playfield::kWorldCenterY - 45_px + sinl(d << 1, l);
 
-  Effects.SpawnFragment(dx, dy, FRG_STAR1);
-  Effects.SpawnFragment(dx, dy, FRG_STAR1);
-  Effects.SpawnFragment(dx, dy, FRG_STAR2);
+  effects.SpawnFragment(dx, dy, FragmentKind::SmallStar);
+  effects.SpawnFragment(dx, dy, FragmentKind::SmallStar);
+  effects.SpawnFragment(dx, dy, FragmentKind::LargeStar);
 
   enemies.ApplyPlayerAttack(PlayerAttack::AllEnemies(1));
 }
@@ -195,13 +200,13 @@ void WideLoadout::FireMainFocused(Player &player_, uint8_t tier) {
   case 1: {
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), 192, 0,
-        1,           SPEEDM(54),  0,   PlayerShotKind::WideFocusMain};
+        1,           13.5_px,     0,   PlayerShotKind::WideFocusMain};
     player_.SpawnShot(si);
     break;
   }
   case 2: {
     PlayerShotSpawnInfo si{
-        player_.X() - 6_px,           player_.Y(), 192, 0, 1, SPEEDM(54), 0,
+        player_.X() - 6_px,           player_.Y(), 192, 0, 1, 13.5_px, 0,
         PlayerShotKind::WideFocusMain};
     player_.SpawnShot(si);
     si.x += 12_px;
@@ -212,7 +217,7 @@ void WideLoadout::FireMainFocused(Player &player_, uint8_t tier) {
     const int count = (tier <= 5) ? 3 : 4;
     const int spread = (count - 1) * 12_px;
     PlayerShotSpawnInfo si{
-        player_.X() - spread / 2,     player_.Y(), 192, 0, 1, SPEEDM(54), 0,
+        player_.X() - spread / 2,     player_.Y(), 192, 0, 1, 13.5_px, 0,
         PlayerShotKind::WideFocusMain};
     for (int i = 0; i < count; i++) {
       player_.SpawnShot(si);
@@ -235,7 +240,7 @@ void WideLoadout::FireSubFocused(Player &player_, uint8_t tier) {
                            194,
                            0,
                            1,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
@@ -251,7 +256,7 @@ void WideLoadout::FireSubFocused(Player &player_, uint8_t tier) {
                            194,
                            1,
                            2,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
@@ -267,7 +272,7 @@ void WideLoadout::FireSubFocused(Player &player_, uint8_t tier) {
                            195,
                            2,
                            3,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
@@ -282,7 +287,7 @@ void WideLoadout::FireSubFocused(Player &player_, uint8_t tier) {
                            196,
                            2,
                            4,
-                           SPEEDM(54),
+                           13.5_px,
                            0,
                            PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
@@ -311,6 +316,6 @@ void WideLoadout::DrawBombBackground(const Player & /*player*/,
   } else {
     frame = std::min<int>(remaining / 4, 5);
   }
-  GrpSurface_Blit({X_MIN + 100, Y_MIN + 100}, SURFACE_ID::BOMBER,
-                  frames[frame]);
+  GrpSurface_Blit({playfield::kLeft + 100, playfield::kTop + 100},
+                  SURFACE_ID::BOMBER, frames[frame]);
 }

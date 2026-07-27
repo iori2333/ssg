@@ -10,9 +10,9 @@
 
 #include "sys/input.h"
 
-struct EffectManager;
+class EffectManager;
 class EnemyManager;
-struct GameManager;
+struct GameSession;
 class TrackManager;
 class UIManager;
 
@@ -35,7 +35,7 @@ struct StageUpdateContext {
   UIManager &ui;
   data::GraphicsLoader &graphics;
   TrackManager &tracks;
-  const GameManager &game;
+  const GameSession &session;
   bool messages_disabled;
 };
 
@@ -45,9 +45,12 @@ public:
 
   [[nodiscard]] StageTransition Update(StageUpdateContext context,
                                        INPUT_BITS input);
-  void Draw(EffectManager &effects) const { background_.Draw(effects); }
+  void Draw() const { background_.Draw(); }
   void Command(BackgroundCommand command, EffectManager &effects) {
     background_.Command(command, effects);
+  }
+  void CommandRocks(Stage4RockCommand command) {
+    background_.CommandRocks(command);
   }
 
   [[nodiscard]] uint32_t Frame() const { return scene_.Frame(); }

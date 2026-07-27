@@ -41,7 +41,6 @@
 #include <iconv.h>
 #endif
 
-#include "core/lz_uty.h"
 #include "util/endian.h"
 
 namespace fs = std::filesystem;

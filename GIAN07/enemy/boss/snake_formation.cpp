@@ -29,7 +29,7 @@ void SnakeFormation::Spawn(BossActor &parent, uint32_t tail_script) {
   snake->head = 0;
 
   for (auto &point : snake->trail) {
-    point = {.x = parent.x, .y = parent.y, .d = parent.d};
+    point = {.x = parent.x, .y = parent.y, .direction = parent.d};
   }
 
   const WORLD_POINT position{&parent.x, &parent.y};
@@ -66,14 +66,14 @@ void SnakeFormation::Update() {
       const auto &point = snake.trail[trail_index];
       segment->x = point.x;
       segment->y = point.y;
-      segment->d = point.d;
+      segment->d = point.direction;
     }
 
     snake.head = (snake.head + 1) % point_count;
     snake.trail[snake.head] = {
         .x = parent->x,
         .y = parent->y,
-        .d = parent->d,
+        .direction = parent->d,
     };
   }
 }

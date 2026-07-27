@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <string_view>
 
-#include "core/config.h"
+#include "gameplay/game_rules.h"
 
 struct GameplayHudModel {
   int64_t score = 0;
@@ -23,7 +23,7 @@ struct GameplayHudModel {
   uint32_t star_threshold = 0;
   int rank = 0;
   std::string_view level_name;
-  PracticeMode practice_mode = PracticeMode::OFF;
+  PracticeMode practice_mode = PracticeMode::Off;
 };
 
 class GameplayHud {

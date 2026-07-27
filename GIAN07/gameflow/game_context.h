@@ -1,13 +1,12 @@
 ///
-/// GameContext — Centralized dependency holder (DI root)
+/// GameContext - assembles the application-lifetime game systems
 ///
 
 #pragma once
 
-#include <functional>
-
-#include "config.h"
-#include "game_manager.h"
+#include "demo_manager.h"
+#include "ending_manager.h"
+#include "score_manager.h"
 
 #include "bullet/bullet_manager.h"
 #include "data/game_data.h"
@@ -15,11 +14,10 @@
 #include "data/sfx_loader.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
-#include "gameflow/demo_manager.h"
-#include "gameflow/ending_manager.h"
-#include "gameflow/score_manager.h"
+#include "gameplay/game_session.h"
 #include "item/item_manager.h"
 #include "player/player.h"
+#include "settings/config.h"
 #include "stage/stage_loader.h"
 #include "stage/stage_session.h"
 #include "track_manager/track_manager.h"
@@ -33,22 +31,16 @@ struct GameContext {
   stage::StageLoader stage_loader{data};
   stage::StageSession stage;
 
-  BulletManager bullets;
-  ItemManager items;
-  GameManager game;
-  Player player;
-  EnemyManager enemies{bullets, items, game, player, stage, Effects};
+  EffectManager effects;
+  GameSession session;
+  Player player{effects};
+  ItemManager items{player, effects};
+  BulletManager bullets{items, session, player, effects};
+  EnemyManager enemies{bullets, items, session, player, stage, effects};
   EndingManager ending;
   ScoreManager scores;
   DemoManager demos{data};
   UIManager ui;
 
-  const GameConfig *game_cfg = nullptr;
-  const GraphicsConfig *graphics_cfg = nullptr;
-  const AudioConfig *audio_cfg = nullptr;
-  const InputConfig *input_cfg = nullptr;
-  const DebugConfig *debug_cfg = nullptr;
-
-  std::function<void()> save_config;
-  ConfigData *cfg = nullptr;
+  ConfigData &config = AppConfig();
 };

@@ -4,22 +4,25 @@
 
 #pragma once
 
-#include "core/object_pool.h"
 #include "item.h"
 
+#include "util/object_pool.h"
+
 class Player;
+class EffectManager;
 
-struct ItemManager {
-  ObjectPool<ItemData, ITEM_MAX> pool;
-  Player *player_ = nullptr;
-
-  void Bind(Player &p) { player_ = &p; }
+class ItemManager {
+public:
+  ItemManager(Player &player, EffectManager &effects)
+      : player_(player), effects_(effects) {}
 
   void Init();
   void Spawn(int x, int y, uint8_t type);
   void Move();
-  void Draw();
+  void Draw() const;
+
+private:
+  Player &player_;
+  EffectManager &effects_;
+  ObjectPool<ItemData, ITEM_MAX> pool_;
 };
-
-
-// === Backward-compatibility inline wrappers ===

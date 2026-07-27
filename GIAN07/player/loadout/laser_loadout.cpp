@@ -6,8 +6,8 @@
 
 #include "laser_loadout.h"
 
-#include "core/gian.h"
 #include "enemy/enemy_manager.h"
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
@@ -32,14 +32,14 @@ LaserLoadout::LaserLoadout() : PlayerLoadout(kLaserTraits) {}
 void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   switch (tier) {
   case 0: {
-    player.SpawnShot({player.X(), player.Y(), 192, 0, 1, SPEEDM(54), 0,
+    player.SpawnShot({player.X(), player.Y(), 192, 0, 1, 13.5_px, 0,
                       PlayerShotKind::LaserSub});
     break;
   }
   case 1:
   case 2: {
     PlayerShotSpawnInfo shot{
-        player.X() - 6_px,       player.Y(), 192, 0, 1, SPEEDM(54), 0,
+        player.X() - 6_px,       player.Y(), 192, 0, 1, 13.5_px, 0,
         PlayerShotKind::LaserSub};
     player.SpawnShot(shot);
     shot.x += 12_px;
@@ -50,7 +50,7 @@ void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   case 3:
   case 4:
     player.SpawnShot({player.X(), player.Y(), 192,
-                      static_cast<uint8_t>(focused ? 2 : 6), 3, SPEEDM(54), 0,
+                      static_cast<uint8_t>(focused ? 2 : 6), 3, 13.5_px, 0,
                       PlayerShotKind::LaserSub});
     StartBeam(player, 64 + 100);
     break;
@@ -62,7 +62,7 @@ void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
                              static_cast<uint8_t>(focused ? 190 : 187),
                              static_cast<uint8_t>(focused ? 4 : 10),
                              2,
-                             SPEEDM(54),
+                             13.5_px,
                              0,
                              PlayerShotKind::LaserSub};
     player.SpawnShot(shot);
@@ -75,7 +75,7 @@ void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   default:
     player.SpawnShot({player.X(), player.Y(), 192,
                       static_cast<uint8_t>(focused ? 2 : 6),
-                      static_cast<uint8_t>(focused ? 4 : 5), SPEEDM(54), 0,
+                      static_cast<uint8_t>(focused ? 4 : 5), 13.5_px, 0,
                       PlayerShotKind::LaserSub});
     StartBeam(player, 64 + 200);
     break;
@@ -149,7 +149,7 @@ uint8_t LaserLoadout::LeftAngle(uint8_t angle, int index) {
 }
 
 void LaserLoadout::UpdateBomb(Player &player, EnemyManager &enemies,
-                              uint16_t remaining) {
+                              EffectManager & /*effects*/, uint16_t remaining) {
   const auto angle = BombAngle(remaining);
 
   const int right_x = player.OpX() + PixelToWorld(OptionOffset(false));

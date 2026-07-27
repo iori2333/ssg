@@ -13,8 +13,8 @@
 #include "score.h"
 #include "score_manager.h"
 
-#include "core/level.h"
-#include "core/lz_uty.h"
+#include "gameplay/game_rules.h"
+#include "sys/bit_stream.h"
 #include "util/guard.h"
 
 // Type aliases moved to private in score_manager.h
@@ -148,7 +148,7 @@ bool ScoreManager::SaveScoreData(NrNameData *NData, GameLevel Dif) {
   temp[Rank - 1] = *NData;
 
   // Write to file
-  BIT_DEVICE_WRITE bd;
+  BitWriter bd;
   SaveSC(score_cache->Easy, bd);
   SaveSC(score_cache->Normal, bd);
   SaveSC(score_cache->Hard, bd);
@@ -156,7 +156,7 @@ bool ScoreManager::SaveScoreData(NrNameData *NData, GameLevel Dif) {
   SaveSC(score_cache->Extra, bd);
   ReleaseScoreData();
 
-  return bd.Write(ScoreFileName);
+  return bd.Save(ScoreFileName);
 }
 
 // Load score data
@@ -174,7 +174,7 @@ bool ScoreManager::LoadScoreData() {
   }
 
   // Open file in bit read mode
-  auto bd = BitFilCreateR(ScoreFileName);
+  auto bd = LoadBitFile(ScoreFileName);
   while (1) {
     if (!LoadSC(score_cache->Easy, bd)) {
       break;
@@ -218,15 +218,15 @@ ScoreManager::GetNList(GameLevel Dif) const {
   }
 
   switch (Dif) {
-  case GameLevel::EASY:
+  case GameLevel::Easy:
     return score_cache->Easy;
-  case GameLevel::NORMAL:
+  case GameLevel::Normal:
     return score_cache->Normal;
-  case GameLevel::HARD:
+  case GameLevel::Hard:
     return score_cache->Hard;
-  case GameLevel::LUNATIC:
+  case GameLevel::Lunatic:
     return score_cache->Lunatic;
-  case GameLevel::EXTRA:
+  case GameLevel::Extra:
     return score_cache->Extra;
   default:
     return {};
@@ -239,7 +239,7 @@ bool ScoreManager::SetDefaultScoreData() {
     return false;
   }
 
-  for (auto i = 0; i < std::to_underlying(GameLevel::EXTRA) + 1; i++) {
+  for (auto i = 0; i < std::to_underlying(GameLevel::Extra) + 1; i++) {
     auto maybe_temp = GetNList(static_cast<GameLevel>(i));
     if (!maybe_temp) {
       return false;
@@ -257,14 +257,14 @@ bool ScoreManager::SetDefaultScoreData() {
   return true;
 }
 
-bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
+bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BitReader &bd) {
   uint64_t CheckSum = 0;
   uint64_t Mask = PBG_MASK_VALUE;
   uint8_t flag = 0;
 
   for (auto &nd : NData) {
     CheckSum = 0;
-    if (flag != bd.GetBit()) {
+    if (flag != bd.ReadBit()) {
       return false;
     }
     flag = 1 - flag;
@@ -274,7 +274,7 @@ bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
       c = XGet<uint8_t>(bd, Mask);
       CheckSum += c;
     }
-    if (flag != bd.GetBit()) {
+    if (flag != bd.ReadBit()) {
       return false;
     }
     flag = 1 - flag;
@@ -282,7 +282,7 @@ bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
     // Acquire score
     nd.Score = XGet<uint64_t>(bd, Mask);
     CheckSum += nd.Score;
-    if (flag != bd.GetBit()) {
+    if (flag != bd.ReadBit()) {
       return false;
     }
     flag = 1 - flag;
@@ -290,7 +290,7 @@ bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
     // Acquire graze
     nd.Evade = XGet<uint32_t>(bd, Mask);
     CheckSum += nd.Evade;
-    if (flag != bd.GetBit()) {
+    if (flag != bd.ReadBit()) {
       return false;
     }
     flag = 1 - flag;
@@ -298,7 +298,7 @@ bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
     // Acquire stage
     nd.Stage = XGet<uint8_t>(bd, Mask);
     CheckSum += nd.Stage;
-    if (flag != bd.GetBit()) {
+    if (flag != bd.ReadBit()) {
       return false;
     }
     flag = 1 - flag;
@@ -306,7 +306,7 @@ bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
     // Acquire weapon
     nd.Weapon = XGet<uint8_t>(bd, Mask);
     CheckSum += nd.Weapon;
-    if (flag != bd.GetBit()) {
+    if (flag != bd.ReadBit()) {
       return false;
     }
     flag = 1 - flag;
@@ -320,14 +320,14 @@ bool ScoreManager::LoadSC(NR_SCORE_LIST NData, BIT_DEVICE_READ &bd) {
   return true;
 }
 
-void ScoreManager::SaveSC(NR_CONST_SCORE_LIST NData, BIT_DEVICE_WRITE &bd) {
+void ScoreManager::SaveSC(NR_CONST_SCORE_LIST NData, BitWriter &bd) {
   uint64_t CheckSum = 0;
   uint64_t Mask = PBG_MASK_VALUE;
   uint8_t flag = 0;
 
   for (const auto &nd : NData) {
     CheckSum = 0;
-    bd.PutBit(flag);
+    bd.WriteBit(flag);
     flag = 1 - flag; // Bit insertion
 
     // Output name
@@ -335,31 +335,31 @@ void ScoreManager::SaveSC(NR_CONST_SCORE_LIST NData, BIT_DEVICE_WRITE &bd) {
       CheckSum += c;
       XPut(bd, static_cast<unsigned char>(c), Mask);
     }
-    bd.PutBit(flag);
+    bd.WriteBit(flag);
     flag = 1 - flag; // Bit insertion
 
     // Output score
     CheckSum += nd.Score;
     XPut(bd, static_cast<uint64_t>(nd.Score), Mask);
-    bd.PutBit(flag);
+    bd.WriteBit(flag);
     flag = 1 - flag; // Bit insertion
 
     // Output graze
     CheckSum += nd.Evade;
     XPut(bd, nd.Evade, Mask);
-    bd.PutBit(flag);
+    bd.WriteBit(flag);
     flag = 1 - flag; // Bit insertion
 
     // Output stage
     CheckSum += nd.Stage;
     XPut(bd, nd.Stage, Mask);
-    bd.PutBit(flag);
+    bd.WriteBit(flag);
     flag = 1 - flag; // Bit insertion
 
     // Output weapon
     CheckSum += nd.Weapon;
     XPut(bd, nd.Weapon, Mask);
-    bd.PutBit(flag);
+    bd.WriteBit(flag);
     flag = 1 - flag; // Bit insertion
 
     // Output checksum

@@ -8,6 +8,7 @@
 
 class Player;
 class EnemyManager;
+class EffectManager;
 
 enum class PlayerType : uint8_t { Wide, Homing, Laser };
 
@@ -40,7 +41,8 @@ public:
   virtual void FireMain(Player &player, uint8_t tier, bool focused) = 0;
   virtual void FireSub(Player &player, uint8_t tier, bool focused) = 0;
   virtual void UpdateBomb(Player & /*player*/, EnemyManager & /*enemies*/,
-                          uint16_t /*remaining*/) {}
+                          EffectManager & /*effects*/, uint16_t /*remaining*/) {
+  }
   virtual void Tick(Player & /*player*/) {}
   virtual void ApplyContinuousAttack(const Player & /*player*/,
                                      EnemyManager & /*enemies*/,

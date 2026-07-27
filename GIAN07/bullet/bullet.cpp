@@ -1,12 +1,13 @@
 /// Bullet — Bullet class implementation
 
+#include <span>
 #include <utility>
 
 #include "bullet.h"
 #include "bullet_common.h"
 
-#include "core/game_manager.h"
-#include "core/gian.h"
+#include "gameplay/game_session.h"
+#include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
@@ -40,6 +41,46 @@ int GetBulletEvadeRadius(uint8_t c) {
 namespace {
 constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB {
   return {x, y, x + w, y + w};
+}
+
+constexpr auto kRapidFlag = 0x04;
+constexpr auto kAimFlag = 0x08;
+
+BulletMotion DecodeMotion(uint8_t value) {
+  value &= 0x0f;
+  if (value <= std::to_underlying(BulletMotion::Bomb)) {
+    return static_cast<BulletMotion>(value);
+  }
+  return BulletMotion::Normal;
+}
+
+BulletOptionKind DecodeOption(uint8_t value) {
+  value >>= 4;
+  if (value <= std::to_underlying(BulletOptionKind::Bomb)) {
+    return static_cast<BulletOptionKind>(value);
+  }
+  return BulletOptionKind::None;
+}
+
+BulletEffect DecodeEffect(uint8_t value) {
+  switch (value >> 4) {
+  case 1:
+    return BulletEffect::Roll1;
+  case 2:
+    return BulletEffect::Roll2;
+  case 3:
+    return BulletEffect::Warning;
+  case 4:
+    return BulletEffect::Rock;
+  case 5:
+    return BulletEffect::Circle1;
+  case 6:
+    return BulletEffect::Circle2;
+  case 15:
+    return BulletEffect::Clearing;
+  default:
+    return BulletEffect::None;
+  }
 }
 } // namespace
 
@@ -86,61 +127,65 @@ void Bullet::DrawEffect() const {
 
 // ── MakeBulletSpawnInfo ──────────────────────────────────────────
 
-BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd, int ox, int oy,
-                                    bool scaling, const GameManager &game,
+BulletSpawnInfo MakeBulletSpawnInfo(const EclBulletState &cmd, int ox, int oy,
+                                    bool scaling, const GameSession &game,
                                     BulletSpawnType spawn_type) {
-  BulletCommand scaled = cmd;
+  EclBulletState scaled = cmd;
   scaled.x += ox;
   scaled.y += oy;
 
   if (scaling) {
     switch (game.EffectiveLevel()) {
-    case GameLevel::EASY:
-      bullet_common::ApplyEasyCountSpread(scaled.cmd & bullet_common::kCmdMask,
-                                          scaled.n, scaled.dw);
+    case GameLevel::Easy:
+      bullet_common::ApplyEasyCountSpread(
+          bullet_common::DecodePattern(scaled.cmd), scaled.n, scaled.dw);
       bullet_common::ApplyEasyRapid(scaled.ns);
       break;
-    case GameLevel::HARD:
-    case GameLevel::EXTRA:
-      bullet_common::ApplyHardCountSpread(scaled.cmd & bullet_common::kCmdMask,
-                                          scaled.n, scaled.dw);
+    case GameLevel::Hard:
+    case GameLevel::Extra:
+      bullet_common::ApplyHardCountSpread(
+          bullet_common::DecodePattern(scaled.cmd), scaled.n, scaled.dw);
       bullet_common::ApplyHardRapid(scaled.ns);
       break;
-    case GameLevel::LUNATIC:
+    case GameLevel::Lunatic:
       bullet_common::ApplyLunaticCountSpread(
-          scaled.cmd & bullet_common::kCmdMask, scaled.n, scaled.dw);
+          bullet_common::DecodePattern(scaled.cmd), scaled.n, scaled.dw);
       bullet_common::ApplyLunaticRapid(scaled.ns);
       break;
-    case GameLevel::NORMAL:
+    case GameLevel::Normal:
     default:
       break;
     }
   }
 
-  int v = SPEEDM(scaled.v);
-  if (scaling && (scaled.type & 0x0f) == T_NORM) {
+  int v = bullet_common::DecodeSpeed(scaled.v);
+  if (scaling && DecodeMotion(scaled.type) == BulletMotion::Normal) {
     v = bullet_common::ScaleVelocityByRank(v, game.rank);
   }
 
-  return {scaled.x,
-          scaled.y,
-          v,
-          scaled.a,
-          scaled.d,
-          scaled.dw,
-          scaled.n,
-          scaled.ns,
-          scaled.c,
-          static_cast<uint8_t>(scaled.v & 0xc0),
-          scaled.option,
-          scaled.type,
-          scaled.rep,
-          scaled.vd,
-          static_cast<uint8_t>(scaled.cmd & 0xf0),
-          static_cast<uint8_t>(scaled.cmd & 0x03),
-          (scaled.cmd & TAMA_REN) != 0,
-          (scaled.cmd & TAMA_ZSET) != 0,
-          spawn_type};
+  return {
+      .x = scaled.x,
+      .y = scaled.y,
+      .speed = v,
+      .acceleration = scaled.a,
+      .angle = scaled.d,
+      .spread = scaled.dw,
+      .count = scaled.n,
+      .rapid_count = scaled.ns,
+      .visual = scaled.c,
+      .speed_variance =
+          static_cast<BulletSpeedVariance>((scaled.v & 0xc0) >> 6),
+      .option = DecodeOption(scaled.option),
+      .option_count = static_cast<uint8_t>(scaled.option & 0x0f),
+      .motion = DecodeMotion(scaled.type),
+      .repeat = scaled.rep,
+      .angular_velocity = scaled.vd,
+      .effect = DecodeEffect(scaled.cmd),
+      .pattern = bullet_common::DecodePattern(scaled.cmd),
+      .rapid = (scaled.cmd & kRapidFlag) != 0,
+      .aimed = (scaled.cmd & kAimFlag) != 0,
+      .spawn_type = spawn_type,
+  };
 }
 
 // ── Bullet: Spawn ────────────────────────────────────────────────
@@ -148,15 +193,16 @@ BulletSpawnInfo MakeBulletSpawnInfo(const BulletCommand &cmd, int ox, int oy,
 void Bullet::Spawn(const BulletSpawnInfo &info) {
   x_ = tx_ = info.x;
   y_ = ty_ = info.y;
-  v_ = v0_ = info.v_;
-  a_ = info.a;
-  d_ = info.d;
+  v_ = v0_ = info.speed;
+  a_ = info.acceleration;
+  d_ = info.angle;
   d16_ = static_cast<uint16_t>(d_) << 8;
-  vd_ = info.vd;
-  c_ = info.c;
-  rep_ = info.rep;
-  type_ = info.type;
+  vd_ = info.angular_velocity;
+  c_ = info.visual;
+  rep_ = info.repeat;
+  motion_ = info.motion;
   option_ = info.option;
+  option_count_ = info.option_count;
   effect_ = info.effect;
   vx_ = cosl(d_, v_);
   vy_ = sinl(d_, v_);
@@ -168,11 +214,13 @@ void Bullet::Spawn(const BulletSpawnInfo &info) {
 
 BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
   UpdateResult result;
-  if (effect_ == TE_NONE) {
+  if (effect_ == BulletEffect::None) {
     MoveByType(info, result);
     MoveByOption(result);
-    if ((flag_ & TF_CLIP) == 0 && (x_ < GX_MIN - 4_px || x_ > GX_MAX + 4_px ||
-                                   y_ < GY_MIN - 4_px || y_ > GY_MAX + 4_px)) {
+    if ((flag_ & TF_CLIP) == 0 && (x_ < playfield::kWorldLeft - 4_px ||
+                                   x_ > playfield::kWorldRight + 4_px ||
+                                   y_ < playfield::kWorldTop - 4_px ||
+                                   y_ > playfield::kWorldBottom + 4_px)) {
       flag_ |= TF_DELETE;
     }
   } else {
@@ -183,7 +231,7 @@ BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
 }
 
 void Bullet::RevertToNormal() {
-  type_ = (type_ & 0xf0) | T_NORM;
+  motion_ = BulletMotion::Normal;
   flag_ &= ~TF_CLIP;
   vx_ = cosl(d_, v_);
   vy_ = sinl(d_, v_);
@@ -192,12 +240,12 @@ void Bullet::RevertToNormal() {
 void Bullet::MoveByType(const BulletUpdateInfo &info,
                         BulletUpdateInfo::UpdateResult &result) {
   short deg_t = 0;
-  switch (type_ & 0x0f) {
-  case T_NORM:
+  switch (motion_) {
+  case BulletMotion::Normal:
     tx_ += vx_;
     ty_ += vy_;
     return;
-  case T_NORM_A:
+  case BulletMotion::Accelerating:
     v_ += a_;
     tx_ += cosl(d_, v_);
     ty_ += sinl(d_, v_);
@@ -205,7 +253,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       RevertToNormal();
     }
     return;
-  case T_HOMING:
+  case BulletMotion::Retargeting:
     v_ += a_;
     tx_ += cosl(d_, v_);
     ty_ += sinl(d_, v_);
@@ -220,7 +268,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       d_ = atan8(info.player_x - x_, info.player_y - y_);
     }
     return;
-  case T_HOMING_M:
+  case BulletMotion::Homing:
     if (count_ > 19 && count_ % 2 == 0) {
       deg_t = atan8(info.player_x - x_, info.player_y - y_) - d_;
       if (deg_t < -128) {
@@ -238,7 +286,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       RevertToNormal();
     }
     return;
-  case T_ROLL:
+  case BulletMotion::Turning:
     d_ += Cast::sign<uint8_t>(vd_);
     tx_ += cosl(d_, v_);
     ty_ += sinl(d_, v_);
@@ -246,7 +294,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       RevertToNormal();
     }
     return;
-  case T_ROLL_A:
+  case BulletMotion::TurningAccelerating:
     v_ += a_;
     if (a_ > 0) {
       d_ += Cast::sign<uint8_t>(vd_);
@@ -263,7 +311,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       }
     }
     return;
-  case T_ROLL_R:
+  case BulletMotion::TurningReversing:
     v_ += a_;
     d_ += Cast::sign<uint8_t>(vd_);
     tx_ += cosl(d_, v_);
@@ -279,12 +327,12 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       }
     }
     return;
-  case T_GRAVITY:
+  case BulletMotion::Gravity:
     vy_ += a_;
     tx_ += vx_;
     ty_ += vy_;
     return;
-  case T_CHANGE:
+  case BulletMotion::ChangeDirection:
     tx_ += vx_;
     ty_ += vy_;
     if (rep_ == static_cast<uint8_t>(count_)) {
@@ -292,7 +340,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       RevertToNormal();
     }
     return;
-  case T_SBHOMING:
+  case BulletMotion::SpecialHoming:
     if ((count_ & 1) != 0) {
       result.smoke_spawn = true;
       result.smoke_x = x_;
@@ -329,7 +377,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     vx_ = cosl(d_, v_);
     vy_ = sinl(d_, v_);
     return;
-  case T_SBHBOMB:
+  case BulletMotion::Bomb:
     if (count_ >= 49) {
       flag_ |= TF_DELETE;
     }
@@ -339,81 +387,93 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
 
 void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
   int op_temp = 0;
-  switch (option_ & 0xf0) {
-  case TOP_NONE:
+  switch (option_) {
+  case BulletOptionKind::None:
     x_ = tx_;
     y_ = ty_;
     return;
-  case TOP_WAVE:
+  case BulletOptionKind::Wave:
     op_temp = sinl(Cast::down_sign<uint8_t>(static_cast<int>(count_ << 2)),
-                   ((option_ & 0x0f) << 7));
+                   (option_count_ << 7));
     x_ = tx_ - sinl(d_, op_temp);
     y_ = ty_ + cosl(d_, op_temp);
     return;
-  case TOP_ROLL: {
+  case BulletOptionKind::Orbit: {
     const auto angle =
         Cast::down_sign<uint8_t>(static_cast<int>(d_ + (count_ << 1)));
-    op_temp = (option_ & 0x0f) << 8;
+    op_temp = option_count_ << 8;
     x_ = tx_ + cosl(angle, op_temp);
     y_ = ty_ + sinl(angle, op_temp);
   }
     return;
-  case TOP_PURU:
+  case BulletOptionKind::Stationary:
     return;
-  case TOP_REFX:
-    if (tx_ < GX_MIN || tx_ > GX_MAX) {
+  case BulletOptionKind::ReflectX:
+    if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
       d_ = 128 - d_;
       vx_ = -vx_;
       x_ = tx_ + cosl(d_, v_);
       y_ = ty_ + sinl(d_, v_);
-      op_temp = (option_ & 0x0f);
-      option_ = (op_temp == 0) ? TOP_NONE : TOP_REFX | (op_temp - 1);
+      if (option_count_ == 0) {
+        option_ = BulletOptionKind::None;
+      } else {
+        --option_count_;
+      }
     } else {
       x_ = tx_;
       y_ = ty_;
     }
     return;
-  case TOP_REFY:
-    if (ty_ < GY_MIN) {
+  case BulletOptionKind::ReflectY:
+    if (ty_ < playfield::kWorldTop) {
       d_ = -d_;
       vy_ = -vy_;
       x_ = tx_ + cosl(d_, v_);
       y_ = ty_ + sinl(d_, v_);
-      op_temp = (option_ & 0x0f);
-      option_ = (op_temp == 0) ? TOP_NONE : TOP_REFY | (op_temp - 1);
+      if (option_count_ == 0) {
+        option_ = BulletOptionKind::None;
+      } else {
+        --option_count_;
+      }
     } else {
       x_ = tx_;
       y_ = ty_;
     }
     return;
-  case TOP_REFXY:
-    if (tx_ < GX_MIN || tx_ > GX_MAX) {
+  case BulletOptionKind::ReflectXY:
+    if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
       d_ = 128 - d_;
       vx_ = -vx_;
       x_ = tx_ + cosl(d_, v_);
       y_ = ty_ + sinl(d_, v_);
-      op_temp = (option_ & 0x0f);
-      option_ = (op_temp == 0) ? TOP_NONE : TOP_REFXY | (op_temp - 1);
-    } else if (ty_ < GY_MIN) {
+      if (option_count_ == 0) {
+        option_ = BulletOptionKind::None;
+      } else {
+        --option_count_;
+      }
+    } else if (ty_ < playfield::kWorldTop) {
       d_ = -d_;
       vy_ = -vy_;
       x_ = tx_ + cosl(d_, v_);
       y_ = ty_ + sinl(d_, v_);
-      op_temp = (option_ & 0x0f);
-      option_ = (op_temp == 0) ? TOP_NONE : TOP_REFXY | (op_temp - 1);
+      if (option_count_ == 0) {
+        option_ = BulletOptionKind::None;
+      } else {
+        --option_count_;
+      }
     } else {
       x_ = tx_;
       y_ = ty_;
     }
     return;
-  case TOP_DIV: {
+  case BulletOptionKind::Divide: {
     x_ = tx_;
     y_ = ty_;
     uint8_t new_d = 0;
-    if (tx_ < GX_MIN || tx_ > GX_MAX) {
+    if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
       op_temp = 1;
       new_d = 128 - d_;
-    } else if (ty_ < GY_MIN) {
+    } else if (ty_ < playfield::kWorldTop) {
       op_temp = 1;
       new_d = -d_;
     }
@@ -421,32 +481,32 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
       flag_ |= TF_DELETE;
       const int cx = tx_ + cosl(new_d, v_);
       const int cy = ty_ + sinl(new_d, v_);
-      const uint8_t low = option_ & 0x0f;
-      const uint8_t ecmd = low | TE_CIRCLE1;
+      constexpr uint8_t kCircleEffect = 0x50;
+      const uint8_t ecmd = option_count_ | kCircleEffect;
       uint8_t n = 0, dw = 0;
       int sv = 0;
       uint8_t nd = new_d;
-      switch (ecmd & 0x03) {
-      case TC_WAY:
+      switch (bullet_common::DecodePattern(ecmd)) {
+      case BulletPattern::Spread:
         n = 3;
         dw = 16;
         sv = 13 - 2;
         break;
-      case TC_ALL:
+      case BulletPattern::Circle:
         n = 10;
         sv = 13;
         nd = Cast::down<uint8_t>(rnd());
-        if ((ecmd & TAMA_REN) != 0) {
+        if ((ecmd & kRapidFlag) != 0) {
           sv -= 2;
         }
         break;
-      case TC_RND:
+      case BulletPattern::Random:
         n = 4;
         dw = 128 - 32;
-        sv = 13 | TAMASP_RND2;
+        sv = 13 | (std::to_underlying(BulletSpeedVariance::Medium) << 6);
         break;
       }
-      if ((ecmd & TAMA_ZSET) != 0) {
+      if ((ecmd & kAimFlag) != 0) {
         nd = 0;
         dw -= 6;
       }
@@ -465,33 +525,35 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
                              0,
                              0,
                              ecmd,
-                             T_NORM,
-                             TOP_NONE};
+                             std::to_underlying(BulletMotion::Normal),
+                             0};
     }
     return;
   }
-  case TOP_BOMB:
+  case BulletOptionKind::Bomb:
     return;
   }
 }
 
 void Bullet::MoveByEffect() {
-  switch (effect_ & 0xf0) {
-  case TE_ROLL1:
-  case TE_ROLL2:
-  case TE_WARN:
-  case TE_ROCK:
+  switch (effect_) {
+  case BulletEffect::None:
     return;
-  case TE_CIRCLE1:
+  case BulletEffect::Roll1:
+  case BulletEffect::Roll2:
+  case BulletEffect::Warning:
+  case BulletEffect::Rock:
+    return;
+  case BulletEffect::Circle1:
     x_ = (tx_ += (vx_ >> 1));
     y_ = (ty_ += (vy_ >> 1));
     if (count_ >= 5 * 4 - 1) {
-      effect_ = 0;
+      effect_ = BulletEffect::None;
     }
     return;
-  case TE_CIRCLE2:
+  case BulletEffect::Circle2:
     return;
-  case TE_DELETE:
+  case BulletEffect::Clearing:
     x_ += (vx_ >> 1);
     y_ += (vy_ >> 1);
     if (count_ >= 47) {
@@ -515,7 +577,7 @@ void Bullet::Render() const {
   int y = (y_ >> 6) - (is_small ? 4 : 8);
 
   switch (effect_) {
-  case TE_DELETE:
+  case BulletEffect::Clearing:
     if (is_small) {
       GrpSurface_Blit(
           {x, y}, SURFACE_ID::SYSTEM,
@@ -526,9 +588,11 @@ void Bullet::Render() const {
           PIXEL_LTWH{384 + ((static_cast<int>(count_) / 6) << 4), 104, 16, 16});
     }
     return;
-  case TE_CIRCLE1:
+  case BulletEffect::Circle1:
     DrawEffect();
     return;
+  default:
+    break;
   }
 
   if (is_small) {
@@ -582,9 +646,30 @@ void Bullet::Render() const {
 
 bool Bullet::IsDead() const { return (flag_ & TF_DELETE) != 0; }
 
+bool Bullet::IsSmall() const { return (c_ & 0xf0) == TAMA_SMALL; }
+
+bool Bullet::IsClearing() const { return effect_ == BulletEffect::Clearing; }
+
+bool Bullet::RegisterGraze() {
+  if ((flag_ & TF_EVADE) != 0) {
+    return false;
+  }
+  flag_ |= TF_EVADE;
+  return true;
+}
+
+void Bullet::RemoveImmediately() { flag_ |= TF_DELETE; }
+
+void Bullet::UpdateDisplayAngle() {
+  const auto category = c_ & 0xf0;
+  if (category == TAMA_ANGLE || category == TAMA_EXTRA2) {
+    d_ += 4;
+  }
+}
+
 void Bullet::Kill() {
-  if (effect_ != TE_DELETE) {
-    effect_ = TE_DELETE;
+  if (effect_ != BulletEffect::Clearing) {
+    effect_ = BulletEffect::Clearing;
     count_ = 0;
     d_ = 0;
   }
@@ -592,7 +677,7 @@ void Bullet::Kill() {
 
 HitResult Bullet::CheckHit(int player_x, int player_y,
                            int player_radius) const {
-  if ((flag_ & TF_DELETE) != 0) {
+  if (effect_ == BulletEffect::Clearing || (flag_ & TF_DELETE) != 0) {
     return HitResult::Miss;
   }
   const int hit_radius = GetBulletHitRadius(c_);
@@ -613,7 +698,7 @@ HitResult Bullet::CheckHit(int player_x, int player_y,
 // ── Bullet: Debug ───────────────────────────────────────────────
 
 void Bullet::RenderDebugHitbox(int mode) const {
-  if ((flag_ & TF_DELETE) != 0) {
+  if (effect_ == BulletEffect::Clearing || (flag_ & TF_DELETE) != 0) {
     return;
   }
   auto *gp = GrpGeom_Poly();

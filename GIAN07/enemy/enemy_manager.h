@@ -15,12 +15,12 @@
 #include "ecl/ecl_vm.h"
 #include "render/enemy_renderer.h"
 
-#include "core/object_pool.h"
 #include "gfx/coords.h"
+#include "util/object_pool.h"
 
 struct BulletManager;
-struct EffectManager;
-struct GameManager;
+class EffectManager;
+struct GameSession;
 struct ItemManager;
 struct PlayerAttack;
 class Player;
@@ -37,7 +37,7 @@ struct EnemyHomingTarget {
 
 class EnemyManager {
 public:
-  EnemyManager(BulletManager &bullets, ItemManager &items, GameManager &game,
+  EnemyManager(BulletManager &bullets, ItemManager &items, GameSession &game,
                Player &player, stage::StageSession &stage,
                EffectManager &effects);
 
@@ -122,7 +122,7 @@ private:
   int homing_distance_ = HOMING_DUMMY;
 
   BulletManager *bullets_;
-  GameManager *game_;
+  GameSession *session_;
   ItemManager *items_;
   Player *player_;
   stage::StageSession *stage_;

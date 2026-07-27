@@ -8,8 +8,9 @@
 #include "ending_manager.h"
 
 #include "audio/bgm.h"
-#include "core/gian.h"
+#include "data/graphics_assets.h"
 #include "gameflow/gameflow_manager.h"
+#include "gfx/constants.h"
 #include "platform/text_backend.h"
 #include "util/cast.h"
 
@@ -127,7 +128,8 @@ void EndingManager::DrawGrpInfo() {
   }
 
   // Display image
-  const auto sid = SURFACE_ID::ENDING_PIC + grp_info.picture_id;
+  const auto sid =
+      data::graphics_assets::EndingPictureSurface(grp_info.picture_id);
   GrpSurface_BlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
 }
 

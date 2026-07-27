@@ -7,7 +7,7 @@
 
 #include "enemy_actor.h"
 
-#include "core/gian.h"
+#include "gameplay/playfield.h"
 #include "player/player_attack.h"
 #include "util/ut_math.h"
 
@@ -53,11 +53,15 @@ void EnemyActor::UpdateAnimation(const EnemyAnimationSet &animations) {
 bool EnemyActor::IsHitBy(const PlayerAttack &attack) const {
   switch (attack.shape) {
   case PlayerAttackShape::Point:
-    return HITCHK(attack.origin.x, x, hitbox_half_width) &&
-           HITCHK(attack.origin.y, y, hitbox_half_height);
+    return playfield::WithinAxisDistance(attack.origin.x, x,
+                                         hitbox_half_width) &&
+           playfield::WithinAxisDistance(attack.origin.y, y,
+                                         hitbox_half_height);
 
   case PlayerAttackShape::VerticalBeam:
-    return HITCHK(attack.origin.x, x, hitbox_half_width) && attack.origin.y > y;
+    return playfield::WithinAxisDistance(attack.origin.x, x,
+                                         hitbox_half_width) &&
+           attack.origin.y > y;
 
   case PlayerAttackShape::DirectedBeam: {
     const int hit_width =

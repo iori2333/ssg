@@ -7,7 +7,6 @@
 
 #include "lens.h"
 
-#include "core/constants.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
 #include "util/ut_math.h"

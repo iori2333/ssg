@@ -2,6 +2,10 @@
 /// Config - Config data
 ///
 
+#include <sstream>
+#include <type_traits>
+#include <utility>
+
 #include <SDL3/SDL_iostream.h>
 #include <toml++/toml.hpp>
 
@@ -13,24 +17,24 @@
 #include "util/guard.h"
 
 static constexpr auto CFG_FN = "SSG.TOML";
+static constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
+static constexpr auto kMaxLoadedBombStock = kMaxBombStock + 1;
 
 // Validation helpers
 
 static constexpr bool ValidGameLevel(GameLevel v) {
-  return std::to_underlying(v) <= std::to_underlying(GameLevel::LUNATIC);
+  return std::to_underlying(v) <= std::to_underlying(GameLevel::Lunatic);
 }
 static constexpr bool ValidPlayerStock(uint8_t v) {
-  return v <= (STOCK_PLAYER_MAX + 2);
+  return v <= kMaxLoadedPlayerStock;
 }
 static constexpr bool ValidBombStock(uint8_t v) {
-  return v <= (STOCK_BOMB_MAX + 1);
+  return v <= kMaxLoadedBombStock;
 }
 static constexpr bool ValidPracticeMode(PracticeMode v) {
-  return std::to_underlying(v) <= std::to_underlying(PracticeMode::INVINCIBLE);
+  return std::to_underlying(v) <= std::to_underlying(PracticeMode::Invincible);
 }
-static constexpr bool ValidFPSDivisor(uint8_t v) {
-  return v <= FPS_DIVISOR_MAX;
-}
+static constexpr bool ValidFPSDivisor(uint8_t v) { return v <= kMaxFpsDivisor; }
 static constexpr bool ValidScreenshotEffort(uint8_t v) {
   return v <= GRP_SCREENSHOT_EFFORT_MAX;
 }
@@ -121,7 +125,7 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "bgm_volume", cfg.audio.bgm_volume, ValidVolume);
     LoadToml(*sec, "bgm_pack", cfg.audio.bgm_pack);
     LoadToml(*sec, "soundfont", cfg.audio.soundfont);
-    bool midi_fix = false;
+    bool midi_fix = cfg.audio.fix_sysex_bugs;
     LoadToml(*sec, "midi_fix_sysex_bugs", midi_fix);
     cfg.audio.fix_sysex_bugs = midi_fix;
   }
@@ -208,7 +212,7 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
   SDL_MustWriteIO(f, str.data(), str.size());
 }
 
-GRAPHICS_PARAMS GraphicsConfig::GraphicsParams() const {
+GRAPHICS_PARAMS GraphicsConfig::ToParams() const {
   return {
       .flags = graphics_param_flags,
       .device_id = device_id,
@@ -221,7 +225,7 @@ GRAPHICS_PARAMS GraphicsConfig::GraphicsParams() const {
   };
 }
 
-void GraphicsConfig::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
+void GraphicsConfig::ApplyParams(const GRAPHICS_PARAMS &params) {
   graphics_param_flags = params.flags;
   device_id = params.device_id;
 #ifdef SUPPORT_GRP_API
@@ -232,7 +236,7 @@ void GraphicsConfig::GraphicsParamsApply(const GRAPHICS_PARAMS &params) {
   window_top = params.top;
 }
 
-uint8_t InputConfig::PackInputFlags() const {
+uint8_t InputConfig::PackFlags() const {
   uint8_t v = 0;
   if (joypad_enabled)
     v |= 1;
@@ -243,16 +247,15 @@ uint8_t InputConfig::PackInputFlags() const {
   return v;
 }
 
-void InputConfig::UnpackInputFlags(uint8_t v) {
-  joypad_enabled = (v & 1) != 0;
-  z_msg_skip_enabled = (v & 2) != 0;
-  z_spd_down_enabled = (v & 4) != 0;
+void InputConfig::UnpackFlags(uint8_t value) {
+  joypad_enabled = (value & 1) != 0;
+  z_msg_skip_enabled = (value & 2) != 0;
+  z_spd_down_enabled = (value & 4) != 0;
 }
 
-ConfigData LoadConfigFile() {
-  ConfigData cfg;
-  cfg.Load();
-  return cfg;
+ConfigData &AppConfig() {
+  static ConfigData config;
+  return config;
 }
 
 void SaveConfigFile(ConfigData &cfg) {
@@ -270,4 +273,4 @@ void SaveConfigFile(ConfigData &cfg) {
 
 void ConfigData::Load() { TOMLLoad(CFG_FN, *this); }
 
-void ConfigData::Save() { TOMLSave(CFG_FN, *this); }
+void ConfigData::Save() const { TOMLSave(CFG_FN, *this); }

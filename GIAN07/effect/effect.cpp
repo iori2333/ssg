@@ -1,753 +1,380 @@
 ///
-/// Effect - Effect management
+/// Text and circular gameplay effects.
 ///
 
 #include <algorithm>
-#include <cstring>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <format>
+#include <string_view>
 
-#include "effect.h"
 #include "effect_manager.h"
+#include "effect_types.h"
+
+#include "audio/snd.h"
+#include "gameplay/playfield.h"
+#include "gfx/coords.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-
-#include "audio/snd.h"
-#include "core/gian.h"
 #include "platform/text_backend.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 
-// string_effects[], circle_effects[], lock_info[], screen_info, mtitle_rect,
-// mtitle_strs[] moved to EffectManager in effect_manager.cpp
-
-// Circular effect initialization
-void EffectManager::InitCircleEffects() {
-  for (auto &it : circle_effects) {
-    it.type = CEFC_NONE;
+void EffectManager::ResetCircles() {
+  for (auto &effect : circles_) {
+    effect.active = false;
   }
 }
 
-// Move circular effects
-void EffectManager::MoveCircleEffects() {
-  for (auto &it : circle_effects) {
-    auto *ce = &it;
-    ce->count++;
+void EffectManager::SpawnCircle(int x, int y, CircleEffectKind kind) {
+  if (kind == CircleEffectKind::None) {
+    return;
+  }
+  const auto found = std::ranges::find(circles_, false, &CircleEffect::active);
+  if (found == circles_.end()) {
+    return;
+  }
 
-    switch (ce->type) {
-    case CEFC_STAR:
-      ce->r -= 3;
-      ce->d += 2;
-      if (ce->r <= 0) {
-        ce->type = CEFC_NONE;
-      }
+  *found = {.x = x >> 6, .y = y >> 6, .kind = kind, .active = true};
+  switch (kind) {
+  case CircleEffectKind::None:
+    return;
+  case CircleEffectKind::Star:
+    Snd_SEPlay(SfxId::Tamefast);
+    found->radius = 400;
+    break;
+  case CircleEffectKind::Converging:
+    found->radius = 650;
+    break;
+  case CircleEffectKind::Diverging:
+    found->radius = 0;
+    found->end_radius = 800;
+    break;
+  }
+}
+
+void EffectManager::UpdateCircles() {
+  for (auto &effect : circles_) {
+    if (!effect.active) {
+      continue;
+    }
+    ++effect.age;
+    switch (effect.kind) {
+    case CircleEffectKind::None:
+      effect.active = false;
       break;
-
-    case CEFC_CIRCLE1: // Converge
-      ce->r -= (10 + 5);
-      if (ce->r <= 0) {
-        ce->type = CEFC_NONE;
-      }
+    case CircleEffectKind::Star:
+      effect.radius -= 3;
+      effect.angle += 2;
+      effect.active = effect.radius > 0;
       break;
-
-    case CEFC_CIRCLE2: // Diverge
-      ce->r += (8 + 5);
-      if (ce->r >= ce->rmax) {
-        ce->type = CEFC_NONE;
-      }
+    case CircleEffectKind::Converging:
+      effect.radius -= 15;
+      effect.active = effect.radius > 0;
+      break;
+    case CircleEffectKind::Diverging:
+      effect.radius += 13;
+      effect.active = effect.radius < effect.end_radius;
       break;
     }
   }
 }
 
-// Draw circular effects
-void EffectManager::DrawCircleEffects() {
-  int j = 0;
-  int r = 0;
-  int x1 = 0;
-  int x2 = 0;
-  int y1 = 0;
-  int y2 = 0;
-  static constexpr uint8_t dtable[4] = {0, 1, 3, 7};
+void EffectManager::DrawCircles() const {
+  static constexpr std::array<uint8_t, 4> kAngleSpeeds = {0, 1, 3, 7};
 
   GrpGeom->Lock();
-
-  for (const auto &it : circle_effects) {
-    const auto *ce = &it;
-    switch (ce->type) {
-    case CEFC_STAR:
-      for (uint8_t k = 0; k < 4; k++) {
-        r = ce->r - (k * 7);
-        if (r < 0) {
+  for (const auto &effect : circles_) {
+    if (!effect.active) {
+      continue;
+    }
+    switch (effect.kind) {
+    case CircleEffectKind::None:
+      break;
+    case CircleEffectKind::Star: {
+      const int age = static_cast<int>(effect.age);
+      for (uint8_t layer = 0; layer < 4; ++layer) {
+        const int radius = effect.radius - layer * 7;
+        if (radius < 0) {
           continue;
         }
-        GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
-        for (j = 0; j < 5; j++) {
-          x1 = ce->x +
-               cosl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
-          y1 = ce->y +
-               sinl(ce->d + (dtable[k] * ce->count / 10) + (j * 256 / 5), r);
-          x2 = ce->x +
-               cosl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
-                    r);
-          y2 = ce->y +
-               sinl(ce->d + (dtable[k] * ce->count / 10) + ((j + 2) * 256 / 5),
-                    r);
-          GrpGeom->DrawLine(x1, y1, x2, y2);
+        GrpGeom->SetColor({5U, layer + 2U, layer + 2U});
+        for (int point = 0; point < 5; ++point) {
+          const int angle =
+              effect.angle + kAngleSpeeds[layer] * age / 10 + point * 256 / 5;
+          const int next_angle = effect.angle + kAngleSpeeds[layer] * age / 10 +
+                                 (point + 2) * 256 / 5;
+          GrpGeom->DrawLine(effect.x + cosl(angle, radius),
+                            effect.y + sinl(angle, radius),
+                            effect.x + cosl(next_angle, radius),
+                            effect.y + sinl(next_angle, radius));
         }
       }
       break;
-
-    case CEFC_CIRCLE1: // Converge
-      for (uint8_t k = 0; k < 4; k++) {
-        r = ce->r - std::max(2, (k * ce->r) / 8);
-        if (r < 0) {
+    }
+    case CircleEffectKind::Converging:
+    case CircleEffectKind::Diverging:
+      for (uint8_t layer = 0; layer < 4; ++layer) {
+        const int divisor =
+            effect.kind == CircleEffectKind::Converging ? 8 : 12;
+        const int radius =
+            effect.radius - std::max(2, layer * effect.radius / divisor);
+        if (radius < 0) {
           continue;
         }
-        GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
-        GeomCircle({ce->x, ce->y}, r);
-      }
-      break;
-
-    case CEFC_CIRCLE2: // Diverge
-      for (uint8_t k = 0; k < 4; k++) {
-        r = ce->r - std::max(2, (k * ce->r) / 12);
-        // r = ce->r - max(2, (k * (600-ce->r))/16);
-        if (r < 0) {
-          continue;
-        }
-        GrpGeom->SetColor({5U, (k + 2U), (k + 2U)});
-        GeomCircle({ce->x, ce->y}, r);
+        GrpGeom->SetColor({5U, layer + 2U, layer + 2U});
+        GeomCircle({effect.x, effect.y}, radius);
       }
       break;
     }
   }
-
   GrpGeom->Unlock();
 }
 
-// Spawn circular effect
-void EffectManager::SpawnCircleEffect(int x, int y, uint8_t type) {
-  auto ce = std::ranges::find_if(
-      circle_effects, [](const auto &ce) { return (ce.type == CEFC_NONE); });
-  if (ce == std::end(circle_effects)) {
+void EffectManager::InitializeTextRenderer() {
+  music_title_rect_ = TextObj.Register(
+      {.w = playfield::kRight + 1 - playfield::kLeft, .h = 20});
+}
+
+void EffectManager::ResetStrings() {
+  for (auto &effect : strings_) {
+    effect.state = StringEffectState::Inactive;
+  }
+}
+
+void EffectManager::SpawnString(int x, int y, std::string_view text) {
+  std::size_t free_index = 0;
+  for (std::size_t index = 0; index < text.size(); ++index) {
+    while (free_index < strings_.size() &&
+           strings_[free_index].state != StringEffectState::Inactive) {
+      ++free_index;
+    }
+    if (free_index == strings_.size()) {
+      return;
+    }
+    strings_[free_index] = {
+        .x = (x + static_cast<int>(index << 4) + 512) << 6,
+        .y = y << 6,
+        .velocity_x = -20_px,
+        .time = 26,
+        .state = StringEffectState::CharacterEntering,
+        .character = text[index],
+    };
+  }
+}
+
+void EffectManager::SpawnPointValue(int x, int y, uint32_t points) {
+  const auto found = std::ranges::find(strings_, StringEffectState::Inactive,
+                                       &StringEffect::state);
+  if (found == strings_.end()) {
+    return;
+  }
+  *found = {.x = x,
+            .y = y,
+            .velocity_y = -2.5_px,
+            .time = 90,
+            .points = points,
+            .state = StringEffectState::PointValue};
+}
+
+void EffectManager::SpawnGameOver() {
+  const auto found = std::ranges::find(strings_, StringEffectState::Inactive,
+                                       &StringEffect::state);
+  if (found != strings_.end()) {
+    *found = {.x = playfield::kWorldCenterX,
+              .y = playfield::kWorldCenterY - 100_px,
+              .time = 85,
+              .state = StringEffectState::GameOverEntering};
+  }
+}
+
+void EffectManager::SetMusicTitle(int y, std::string_view title) {
+  const auto found = std::ranges::find(strings_, StringEffectState::Inactive,
+                                       &StringEffect::state);
+  if (found == strings_.end()) {
     return;
   }
 
-  ce->x = x >> 6;
-  ce->y = y >> 6;
-  ce->type = type;
-  ce->count = ce->d = 0;
-
-  switch (type) {
-  case CEFC_STAR:
-    Snd_SEPlay(SfxId::Tamefast);
-    ce->rmax = ce->r = 400;
-    break;
-
-  case CEFC_CIRCLE1: // Converge
-    ce->rmax = ce->r = 600 + 50;
-    break;
-
-  case CEFC_CIRCLE2: // Diverge
-    ce->rmax = 900 - 100;
-    ce->r = 0;
-    break;
-
-  default:
-    break;
+  music_title_text_[1] = title;
+  PIXEL_SIZE extent{};
+  for (const auto text : music_title_text_) {
+    const auto text_extent = TextObj.TextExtent(FONT_ID::NORMAL, text);
+    extent.w += text_extent.w;
+    extent.h = text_extent.h;
   }
+  const int x = std::max(640 - 128 - 32 - extent.w, 128);
+  *found = {.x = PixelToWorld(x),
+            .y = PixelToWorld(y),
+            .velocity_x = extent.w,
+            .velocity_y = extent.h,
+            .time = 128,
+            .state = StringEffectState::MusicTitleEntering};
 }
 
-void EffectManager::InitMusicTitle() {
-  mtitle_rect = TextObj.Register({.w = ((X_MAX + 1) - X_MIN), .h = 20});
-}
-
-// Effect data initialization
-void EffectManager::InitStringEffects() {
-  for (auto &it : string_effects) {
-    // memset(string_effects+i,0,sizeof(SEFFECT_DATA));
-    it.cmd = SEFC_NONE;
-  }
-}
-
-// String effects
-void EffectManager::SpawnStringEffect(int x, int y, const char *s) {
-  int i = 0;
-  int j = 0;
-  int len = 0;
-
-  len = strlen(s);
-  for (i = j = 0; i < len; i++) {
-    while (string_effects[j].cmd != SEFC_NONE) {
-      j++;
-      if (j >= SEFFECT_MAX) {
-        return;
+void EffectManager::UpdateStrings() {
+  for (auto &effect : strings_) {
+    switch (effect.state) {
+    case StringEffectState::CharacterEntering:
+      effect.x += effect.velocity_x;
+      effect.y += effect.velocity_y;
+      if (effect.time == 0) {
+        effect.state = StringEffectState::CharacterPaused;
+        effect.time = 256;
       }
+      break;
+    case StringEffectState::CharacterPaused:
+      if (effect.time == 0) {
+        const uint8_t angle = static_cast<uint8_t>(128 + rnd() % 128);
+        effect.state = StringEffectState::CharacterScattering;
+        effect.time = 64;
+        effect.velocity_x = cosl(angle, 10_px);
+        effect.velocity_y = sinl(angle, 10_px);
+      }
+      break;
+    case StringEffectState::CharacterScattering:
+      effect.x += effect.velocity_x;
+      effect.y += (effect.velocity_y += 16);
+      if (effect.time == 0) {
+        effect.state = StringEffectState::Inactive;
+      }
+      break;
+    case StringEffectState::PointValue:
+      if (effect.time == 0) {
+        effect.state = StringEffectState::Inactive;
+      }
+      effect.x += effect.velocity_x;
+      effect.y += (effect.velocity_y += 3);
+      break;
+    case StringEffectState::GameOverEntering: {
+      if (effect.time == 0) {
+        effect.state = StringEffectState::GameOverHolding;
+        effect.time = 35;
+      }
+      break;
     }
-    string_effects[j].c = s[i];
-    string_effects[j].x = (x + (i << 4) + 512) << 6;
-    string_effects[j].y = y << 6;
-    string_effects[j].vx = (-20) << 6;
-    string_effects[j].vy = 0 << 6;
-    string_effects[j].cmd = SEFC_STR1;
-    string_effects[j].time = 26;
-  }
-}
-
-// Point display effect
-void EffectManager::SpawnPointEffect(int x, int y, uint32_t point) {
-  for (auto &it : string_effects) {
-    if (it.cmd != SEFC_NONE) {
-      continue;
+    case StringEffectState::MusicTitleEntering:
+      if (effect.time == 0) {
+        effect.state = StringEffectState::MusicTitleHolding;
+        effect.time = 256;
+      }
+      break;
+    case StringEffectState::MusicTitleHolding:
+      if (effect.time == 0) {
+        effect.state = StringEffectState::MusicTitleLeaving;
+        effect.time = 128;
+      }
+      break;
+    case StringEffectState::MusicTitleLeaving:
+      effect.x += 64;
+      if (effect.time == 0) {
+        effect.state = StringEffectState::Inactive;
+      }
+      break;
+    case StringEffectState::GameOverHolding:
+    case StringEffectState::Inactive:
+      break;
     }
-
-    it.point = point;
-    it.x = x;
-    it.y = y;
-    it.vx = 0;
-    it.vy = -2.5_px;
-    it.cmd = SEFC_STR2;
-    it.time = 90;
-    return;
-  }
-}
-
-// Game over display
-void EffectManager::SpawnGameOverEffect() {
-  for (auto &it : string_effects) {
-    if (it.cmd != SEFC_NONE) {
-      continue;
+    if (effect.state != StringEffectState::Inactive) {
+      --effect.time;
     }
-
-    it.x = GX_MID;
-    it.y = GY_MID - 100_px;
-    it.vx = 0;
-    it.vy = 0;
-    it.cmd = SEFC_GAMEOVER;
-    it.time = 120 - 35; // 100;
-    return;
   }
 }
 
-// Music title display
-void EffectManager::SetMusicTitle(int y, std::string_view s) {
-  // Find free buffer
-  auto e = std::ranges::find_if(
-      string_effects, [](const auto &e) { return (e.cmd == SEFC_NONE); });
-  if (e == std::end(string_effects)) {
-    return;
-  }
-
-  mtitle_strs[1] = s;
-  PIXEL_SIZE extent = {.w = 0, .h = 0};
-  for (const auto s : mtitle_strs) {
-    const auto s_extent = TextObj.TextExtent(FONT_ID::NORMAL, s);
-    extent.w += s_extent.w;
-    extent.h = s_extent.h;
-  };
-
-  // If title is too long, what should we do?
-  auto x = (std::max)((640 - 128 - 32 - extent.w), 128);
-
-  e->cmd = SEFC_MTITLE1;
-  e->x = PixelToWorld(x);
-  e->y = PixelToWorld(y);
-  e->time = (64 * 2);
-  e->vx = extent.w;
-  e->vy = extent.h;
-}
-
-void EffectManager::RenderMusicTitle(WINDOW_POINT topleft,
+void EffectManager::RenderMusicTitle(WINDOW_POINT top_left,
                                      const PIXEL_LTWH &subrect) {
-  const auto mtitle = mtitle_strs[1];
   TextObj.Render(
-      topleft, mtitle_rect, mtitle,
-      [](TEXTRENDER_SESSION &s) {
-        const auto gradient_func = [](PIXEL_COORD y) -> uint8_t {
-          return (255 + 8 - (y * 8));
+      top_left, music_title_rect_, music_title_text_[1],
+      [this](TEXTRENDER_SESSION &session) {
+        const auto gradient = [](PIXEL_COORD y) -> uint8_t {
+          return 255 + 8 - y * 8;
         };
-        DrawGrdFont(s, Effects.mtitle_strs, FONT_ID::NORMAL, true,
-                    gradient_func);
+        DrawGrdFont(session, music_title_text_, FONT_ID::NORMAL, true,
+                    gradient);
       },
       subrect);
 }
 
-// Move effects (spec may change)
-void EffectManager::MoveStringEffects() {
-  for (auto &it : string_effects) {
-    auto *e = &it;
-    switch (e->cmd) {
-    case SEFC_STR1:
-      e->x += e->vx;
-      e->y += e->vy;
-      if (e->time == 0) {
-        e->cmd = SEFC_STR1_2;
-        e->time = 256; // 128;
-      }
-      break;
+void EffectManager::DrawStrings() {
+  static constexpr std::string_view kGameOver = "GAME OVER";
 
-    case SEFC_STR1_3:
-      e->x += e->vx;
-      e->y += (e->vy += 16);
-      if (e->time == 0) {
-        e->cmd = SEFC_NONE;
-      }
+  for (const auto &effect : strings_) {
+    switch (effect.state) {
+    case StringEffectState::CharacterEntering:
+    case StringEffectState::CharacterPaused:
+    case StringEffectState::CharacterScattering:
+      GrpPutc(effect.x >> 6, effect.y >> 6, effect.character);
       break;
-
-    case SEFC_STR1_2:
-      if (e->time == 0) {
-        const uint8_t deg = (128 + (rnd() % 128));
-        e->cmd = SEFC_STR1_3;
-        e->time = 64;
-        e->vx = cosl(deg, 10_px);
-        e->vy = sinl(deg, 10_px);
-      }
-      break;
-
-    case SEFC_STR2:
-      if (e->time == 0) {
-        e->cmd = SEFC_NONE;
-      }
-      e->x += e->vx;
-      e->y += (e->vy += 3);
-      break;
-
-    case SEFC_GAMEOVER:
-      if (e->time == 0) {
-        e->cmd = SEFC_GAMEOVER2;
-        e->time = 35;
-      }
-      break;
-
-    case SEFC_MTITLE1: // Music title appear
-      // e->x -= 16;
-      if (e->time == 0) {
-        e->cmd = SEFC_MTITLE2;
-        e->time = 64 * 4;
-      }
-      break;
-
-    case SEFC_MTITLE2: // Music title stop
-      if (e->time == 0) {
-        e->cmd = SEFC_MTITLE3;
-        e->time = 64 * 2;
-      }
-      break;
-
-    case SEFC_MTITLE3: // Music title fade
-      e->x += 64;
-      if (e->time == 0) {
-        e->cmd = SEFC_NONE;
-      }
-      break;
-
-    case SEFC_NONE:
-    default:
+    case StringEffectState::PointValue: {
+      const auto points = std::format("{}", effect.points);
+      GrpPutScore(effect.x >> 6, effect.y >> 6, points.c_str());
       break;
     }
-    e->time--;
-  }
-}
-
-// Draw effects (spec may change)
-void EffectManager::DrawStringEffects() {
-  int j = 0;
-  int k = 0;
-  int x = 0;
-  int y = 0;
-  int temp = 0;
-  PIXEL_LTWH src;
-  static constexpr const char GAME_OVER[] = "GAME OVER";
-
-  for (const auto &it : string_effects) {
-    const auto *e = &it;
-    switch (e->cmd) {
-    case SEFC_STR1:
-    case SEFC_STR1_2:
-    case SEFC_STR1_3:
-      GrpPutc(e->x >> 6, e->y >> 6, e->c);
-      break;
-
-    case SEFC_STR2: {
-      auto point_str = std::format("{}", e->point);
-      GrpPutScore(e->x >> 6, e->y >> 6, point_str.c_str());
-      break;
-    }
-
-    case SEFC_GAMEOVER:
-      for (j = 0; j < 9; j++) {
-        // *37
-        const auto angle = Cast::down<uint8_t>((e->time * 3) + (j * 26));
-        x = (e->x >> 6) + cosl(angle, e->time * 4);
-        y = (e->y >> 6) + sinl(angle, e->time * 4);
-        GrpPutc(x, y, GAME_OVER[j]);
+    case StringEffectState::GameOverEntering: {
+      const int remaining = static_cast<int>(effect.time);
+      for (int index = 0; index < 9; ++index) {
+        const auto angle = Cast::down<uint8_t>(effect.time * 3 + index * 26);
+        const int x = (effect.x >> 6) + cosl(angle, remaining * 4);
+        const int y = (effect.y >> 6) + sinl(angle, remaining * 4);
+        GrpPutc(x, y, kGameOver[index]);
       }
       break;
-
-    case SEFC_GAMEOVER2:
-      x = (e->x >> 6) + 8;
-      y = (e->y >> 6) + 8;
-      j = (35 - e->time) / 2;
+    }
+    case StringEffectState::GameOverHolding: {
+      const int remaining = static_cast<int>(effect.time);
+      const int center_x = (effect.x >> 6) + 8;
+      const int center_y = (effect.y >> 6) + 8;
+      const int half_height = (35 - remaining) / 2;
       GrpGeom->Lock();
       GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->SetAlphaNorm(Cast::down<uint8_t>((35 - e->time) * 3));
-      GrpGeom->DrawBoxA((x - 170), (y - j), (x + 170), (y + j));
+      GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>((35 - remaining) * 3));
+      GrpGeom->DrawBoxA(center_x - 170, center_y - half_height, center_x + 170,
+                        center_y + half_height);
       GrpGeom->Unlock();
-
-      for (j = 0; j < 9; j++) {
-        // *37
-        x = (e->x >> 6) + ((j - 4) * (35 - e->time));
-        y = (e->y >> 6);
-        GrpPutc(x, y, GAME_OVER[j]);
+      for (int index = 0; index < 9; ++index) {
+        GrpPutc((effect.x >> 6) + (index - 4) * (35 - remaining), effect.y >> 6,
+                kGameOver[index]);
       }
       break;
-
-    case SEFC_MTITLE3: {
-      const auto degx = Cast::down<uint8_t>((64 * 2) - e->time);
-      for (j = 0; j < e->vx; j++) {
-        src = {j, 0, 1, e->vy};
-        temp = sinl(degx, 100);
-        const auto y = ((e->y >> 6) - sinl((degx + j), degx /*40*/));
-        for (k = 0; k < 2; k++) {
-          const auto x = ((e->x >> 6) + sinl((degx + (j / 2)), temp) + j + k);
-          RenderMusicTitle({x, y}, src);
+    }
+    case StringEffectState::MusicTitleEntering:
+    case StringEffectState::MusicTitleLeaving: {
+      const auto phase = effect.state == StringEffectState::MusicTitleEntering
+                             ? Cast::down<uint8_t>(effect.time)
+                             : Cast::down<uint8_t>(128 - effect.time);
+      const int amplitude =
+          effect.state == StringEffectState::MusicTitleEntering ? 160 : 100;
+      for (int column = 0; column < effect.velocity_x; ++column) {
+        const PIXEL_LTWH source = {column, 0, 1, effect.velocity_y};
+        const int wave = sinl(phase, amplitude);
+        const int y = (effect.y >> 6) - sinl(phase + column, phase);
+        for (int duplicate = 0; duplicate < 2; ++duplicate) {
+          const int x = (effect.x >> 6) + sinl(phase + column / 2, wave) +
+                        column + duplicate;
+          RenderMusicTitle({x, y}, source);
         }
       }
-    } break;
-
-    case SEFC_MTITLE1: {
-      const auto degx = Cast::down<uint8_t>(e->time);
-      for (j = 0; j < e->vx; j++) {
-        src = {j, 0, 1, e->vy};
-        temp = sinl(degx, 160);
-        const auto y = ((e->y >> 6) - sinl((degx + j), degx /*40*/));
-        for (k = 0; k < 2; k++) {
-          const auto x = ((e->x >> 6) + sinl((degx + (j / 2)), temp) + j + k);
-          RenderMusicTitle({x, y}, src);
-        }
-      }
-    } break;
-
-    case SEFC_MTITLE2: {
+      break;
+    }
+    case StringEffectState::MusicTitleHolding: {
       GrpGeom->Lock();
       GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->SetAlphaNorm((sinl(Cast::down<uint8_t>(e->time - 32), 80) + 80));
-      for (j = 0; j < 16; j++) {
-        temp = sinl(128 + (j * 16), 16);
-        GrpGeom->DrawBoxA(((e->x >> 6) + temp - 16), ((e->y >> 6) + j),
-                          ((X_MAX - 16) - temp), ((e->y >> 6) + j + 1));
+      GrpGeom->SetAlphaNorm(sinl(Cast::down<uint8_t>(effect.time - 32), 80) +
+                            80);
+      for (int row = 0; row < 16; ++row) {
+        const int inset = sinl(128 + row * 16, 16);
+        GrpGeom->DrawBoxA((effect.x >> 6) + inset - 16, (effect.y >> 6) + row,
+                          playfield::kRight - 16 - inset,
+                          (effect.y >> 6) + row + 1);
       }
       GrpGeom->Unlock();
-      src = {0, 0, e->vx, e->vy};
-      RenderMusicTitle({(e->x >> 6), (e->y >> 6)}, src);
-    } break;
-
-    case SEFC_NONE:
-    default:
+      RenderMusicTitle({effect.x >> 6, effect.y >> 6},
+                       {0, 0, effect.velocity_x, effect.velocity_y});
       break;
     }
-  }
-}
-
-// Initialize full-screen effects
-void EffectManager::InitScreenEffect() {
-  screen_info.cmd = SCNEFC_NONE;
-  screen_info.count = 0;
-
-  GrpBackend_SetClip(PLAYFIELD_CLIP);
-}
-
-// Set full-screen effect
-void EffectManager::SetScreenEffect(uint8_t cmd) {
-  // if(screen_info.cmd != SCNEFC_NONE) return;
-
-  screen_info.cmd = cmd;
-  screen_info.count = 0;
-
-  switch (cmd) {
-  case SCNEFC_CFADEIN:  // Circle fade in
-  case SCNEFC_CFADEOUT: // Circle fade out
-    break;
-
-  case SCNEFC_WHITEIN:  // White in
-  case SCNEFC_WHITEOUT: // White out
-    break;
-
-  default:                         // Buggy
-    screen_info.cmd = SCNEFC_NONE; // Just disable the effect
-    break;
-  }
-}
-
-// Animate full-screen effects
-void EffectManager::MoveScreenEffect() {
-  switch (screen_info.cmd) {
-  case SCNEFC_CFADEIN: // Circle fade in
-    screen_info.count += 10;
-    if (screen_info.count > 600) {
-      screen_info.cmd = SCNEFC_NONE;
-    }
-    break;
-
-  case SCNEFC_CFADEOUT: // Circle fade out
-    screen_info.count += 10;
-    screen_info.count = std::min<uint32_t>(
-        screen_info.count, 600); // screen_info.cmd = SCNEFC_NONE;
-
-    break;
-
-  case SCNEFC_WHITEIN: // White in
-    screen_info.count += 10;
-    if (screen_info.count >= 160) {
-      // screen_info.cmd   = SCNEFC_WHITEOUT;
-      // screen_info.count = 0;
-      screen_info.count = 150;
-    }
-    break;
-
-  case SCNEFC_WHITEOUT: // White out
-    screen_info.count += 10;
-    if (screen_info.count >= 160) {
-      screen_info.cmd = SCNEFC_NONE;
-    }
-    break;
-
-  default: // Buggy
-    break;
-  }
-}
-
-// Draw full-screen effects
-void EffectManager::DrawScreenEffect() {
-  int i = 0;
-  int j = 0;
-  PIXEL_LTRB src;
-
-  switch (screen_info.cmd) {
-  case SCNEFC_CFADEIN: // Circle fade in
-    CircleFadeOut(X_MID, Y_MID, screen_info.count);
-    break;
-
-  case SCNEFC_CFADEOUT: // Circle fade out
-    CircleFadeOut(X_MID, Y_MID, 400 - screen_info.count);
-    break;
-
-  case SCNEFC_WHITEIN: // White in
-    src = PIXEL_LTWH{((15 - (Cast::sign<int>(screen_info.count) / 10)) * 16),
-                     (128 + 16), 16, 16};
-    for (i = 128; i < 640 - 128; i += 16) {
-      for (j = 0; j < 480; j += 16) {
-        GrpSurface_Blit({i, j}, SURFACE_ID::SYSTEM, src);
-      }
-    }
-    break;
-
-  case SCNEFC_WHITEOUT: // White out
-    src = PIXEL_LTWH{((Cast::sign<int>(screen_info.count) / 10) * 16),
-                     (128 + 16), 16, 16};
-    for (i = 128; i < 640 - 128; i += 16) {
-      for (j = 0; j < 480; j += 16) {
-        GrpSurface_Blit({i, j}, SURFACE_ID::SYSTEM, src);
-      }
-    }
-    break;
-
-  default: // Buggy
-    break;
-  }
-}
-
-// Circle fade support function
-void EffectManager::CircleFadeOut(int x, int y, int r) {
-  PIXEL_LTRB src;
-  int temp = 0;
-
-  r = std::max(r, 0);
-
-  for (auto i = 0; i < GRP_RES.w; i += 16) {
-    for (auto j = 0; j < GRP_RES.h; j += 16) {
-      temp = isqrt(((i - x) * (i - x)) + ((j - y) * (j - y)));
-      if (temp < r && r - temp < 8 * 16 && temp >= 0) {
-        temp = (r - temp) >> 3;
-        // temp = (r-temp)>>4;
-        // src = PIXEL_LTWH{ ((temp << 4) + 256), 104, 16, 16 };
-        src = PIXEL_LTWH{(temp << 4), 128, 16, 16};
-        GrpSurface_Blit({i, j}, SURFACE_ID::SYSTEM, src);
-      } else if (temp >= r) {
-        // src = PIXEL_LTWH{ 256, 104, 16, 16 };
-        src = PIXEL_LTWH{0, 128, 16, 16};
-        GrpSurface_Blit({i, j}, SURFACE_ID::SYSTEM, src);
-      }
-    }
-  }
-
-  if (r != 0) {
-    const WINDOW_LTRB clip = {std::clamp((x - r), X_MIN, (X_MAX + 1)),
-                              (std::max)((y - r), Y_MIN),
-                              std::clamp((x + r + 1), X_MIN, (X_MAX + 1)),
-                              (std::min)((y + r + 1), (Y_MAX + 1))};
-    GrpBackend_SetClip(clip);
-  } else {
-    GrpBackend_SetClip({X_MID, Y_MID, X_MID, Y_MID});
-  }
-}
-
-// Initialize lock-on array
-void EffectManager::InitLockOn() {
-  for (auto &it : lock_info) {
-    // memset(lock_info+i,0,sizeof(LOCKON_INFO));
-    it.state = LOCKON_NONE;
-  }
-}
-
-// Lock on to something
-void EffectManager::LockOn(int *x, int *y, int wx64, int hx64) {
-  auto l = std::ranges::find_if(
-      lock_info, [](const auto &l) { return (l.state == LOCKON_NONE); });
-  if (l == std::end(lock_info)) {
-    return;
-  }
-
-  l->x = x;
-  l->y = y;
-
-  l->width = (wx64 << 2);
-  l->height = (hx64 << 2);
-
-  l->vx = -(wx64 * 4 / 30);
-  l->vy = -(hx64 * 4 / 30);
-  l->count = 30;
-
-  l->state = LOCKON_01;
-  // Snd_SEPlay(SfxId::Select);
-}
-
-// Lock-on animation update
-void EffectManager::MoveLockOn() {
-  for (auto &it : lock_info) {
-    auto *l = &it;
-    switch (l->state) {
-    case LOCKON_01:
-      l->count--;
-      l->width += l->vx;
-      l->height += l->vy;
-      if (l->count == 0) {
-        l->state = LOCKON_NONE; // LOCKON_02;
-        l->count = 30;          // 120;
-      }
-      break;
-    case LOCKON_02:
-      l->count--;
-      if (l->count == 0) {
-        l->state = LOCKON_NONE; // LOCKON_03;
-        l->count = 30;
-      }
-      break;
-    case LOCKON_03:
-      l->count--;
-      l->width -= l->vx;
-      l->height -= l->vy;
-      if (l->count == 0) {
-        l->state = LOCKON_NONE;
-      }
+    case StringEffectState::Inactive:
       break;
     }
-  }
-}
-
-// Draw lock-on frame
-void EffectManager::DrawLockOn() {
-  for (const auto &it : lock_info) {
-    const auto *l = &it;
-    if (l->state != LOCKON_NONE) {
-      GrpSurface_Blit({((*l->x >> 6) - 8), ((*l->y >> 6) - 8)},
-                      SURFACE_ID::SYSTEM, {208, 80, 272, 96});
-
-      GrpSurface_Blit(
-          {
-              (((*l->x - l->width) >> 6) - 4),
-              (((*l->y - l->height) >> 6) - 4),
-          },
-          SURFACE_ID::SYSTEM, {280, 88, 288, 96});
-      GrpSurface_Blit(
-          {
-              (((*l->x + l->width) >> 6) - 4),
-              (((*l->y + l->height) >> 6) - 4),
-          },
-          SURFACE_ID::SYSTEM, {272, 80, 280, 88});
-
-      GrpSurface_Blit(
-          {
-              (((*l->x - l->width) >> 6) - 4),
-              (((*l->y + l->height) >> 6) - 4),
-          },
-          SURFACE_ID::SYSTEM, {280, 80, 288, 88});
-      GrpSurface_Blit(
-          {
-              (((*l->x + l->width) >> 6) - 4),
-              (((*l->y - l->height) >> 6) - 4),
-          },
-          SURFACE_ID::SYSTEM, {272, 88, 280, 96});
-    }
-  }
-}
-
-// enable_warn_efc, warn_efc_time moved to EffectManager in effect_manager.cpp
-
-// Warning initialization
-void EffectManager::InitWarningEffect() { enable_warn_efc = false; }
-
-// Warning activation!!
-void EffectManager::SetWarningEffect() {
-  enable_warn_efc = true;
-  warn_efc_time = 0;
-  InitWarningText();
-}
-
-// Warning update
-void EffectManager::MoveWarningEffect() {
-  if (!enable_warn_efc) {
-    return;
-  }
-
-  if (warn_efc_time < 64 + 128) { // 64+256){
-    MoveWarningText(Cast::down<uint8_t>(warn_efc_time));
-  } else {
-    MoveWarningR(-1);
-  }
-
-  if ((warn_efc_time++) == (256 + 10)) {
-    enable_warn_efc = false;
-  }
-}
-
-// Warning rendering
-void EffectManager::DrawWarningEffect() {
-  int r = 0;
-
-  if (!enable_warn_efc) {
-    return;
-  }
-
-  if (warn_efc_time < 256 - 20) {
-    DrawWarningText();
-  }
-
-  if (warn_efc_time > 256 - 40) {
-    GrpGeom->Lock();
-
-    r = (warn_efc_time - (256 - 40)) * 3;
-    GrpGeom->SetColor({1, 1, 5});
-    GeomCircle({320, 100}, (r -= 4));
-    GrpGeom->SetColor({2, 2, 5});
-    GeomCircle({320, 100}, (r -= 4));
-    GrpGeom->SetColor({3, 3, 5});
-    GeomCircle({320, 100}, (r -= 6));
-    GrpGeom->SetColor({4, 4, 5});
-    GeomCircle({320, 100}, (r -= 6));
-    GrpGeom->SetColor({5, 5, 5});
-    GeomCircle({320, 100}, (r -= 8));
-
-    GrpGeom->Unlock();
   }
 }

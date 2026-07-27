@@ -9,9 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "core/game_manager.h"
 #include "data/game_data.h"
 #include "demo_play.h"
+#include "gameplay/game_rules.h"
 
 struct DemoManager {
   explicit DemoManager(const data::GameData &data) : data_(&data) {}
@@ -20,7 +20,7 @@ struct DemoManager {
   bool save_all_enable = false;
   bool load_all_enable = false;
   MULTI_REPLAY_INFO multi_play_info = {};
-  StageId playback_max_stage = StageId::STAGE_1;
+  StageId playback_max_stage = StageId::Stage1;
   std::string pending_replay_file;
   DemoPlayState demo_info = {};
   std::array<INPUT_BITS, DEMOBUF_MAX> demo_buffer = {};

@@ -14,6 +14,8 @@
 
 #include "ecl.h"
 
+#include "effect/effect_types.h"
+#include "stage/stage_visuals.h"
 #include "sys/buffer.h"
 
 struct EclNoArguments {};
@@ -174,7 +176,11 @@ struct EclCommandValueArguments {
 struct EclCircleEffectArguments {
   int16_t offset_x;
   int16_t offset_y;
-  uint8_t effect;
+  CircleEffectKind effect;
+};
+
+struct EclStage4EffectArguments {
+  stage::Stage4RockCommand command;
 };
 
 struct EclMoveValueArguments {
@@ -218,7 +224,7 @@ using EclArguments = std::variant<
     EclByteSignedByteArguments, EclLongLaserArguments, EclAnimationArguments,
     EclSpawnEnemyArguments, EclHitboxArguments, EclScriptArguments,
     EclBossActionArguments, EclBitLaserArguments, EclCommandValueArguments,
-    EclCircleEffectArguments, EclMoveValueArguments,
+    EclCircleEffectArguments, EclStage4EffectArguments, EclMoveValueArguments,
     EclRegisterConstantArguments, EclRegisterSignedConstantArguments,
     EclRegisterValueArguments, EclRegisterPairArguments, EclRegisterArguments>;
 

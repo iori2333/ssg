@@ -12,7 +12,7 @@
 #include "enemy/actor/enemy_actor.h"
 
 class EclHost;
-struct EffectManager;
+class EffectManager;
 
 class EclVm {
 public:

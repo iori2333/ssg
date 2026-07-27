@@ -9,8 +9,6 @@
 
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
-#include "core/gian.h"
-#include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
 #include "item/item_manager.h"
@@ -30,7 +28,7 @@ void EnemyManager::ResetBosses() {
   for (auto &boss : bosses_) {
     RetireActor(boss);
   }
-  bosses_.Init();
+  bosses_.Reset();
 
   const auto next_revision = boss_hud_.encounter_revision + 1;
   boss_hud_ = {.encounter_revision = next_revision};
@@ -132,8 +130,8 @@ void EnemyManager::KillBosses() {
 
   for (auto &boss : bosses_) {
     snakes_.Remove(boss);
-    effects_->SpawnFragment(boss.x, boss.y, FRG_FATCIRCLE);
-    effects_->SpawnBombEffect(boss.x, boss.y, EXBOMB_STD);
+    effects_->SpawnFragment(boss.x, boss.y, FragmentKind::ExpandingCircle);
+    effects_->SpawnBombExplosion(boss.x, boss.y);
     Snd_SEPlay(SfxId::Bossbomb, boss.x);
     if (boss.long_laser_count != 0U) {
       bullets_->ControlLongLaser(
@@ -145,7 +143,7 @@ void EnemyManager::KillBosses() {
     RetireActor(boss);
   }
 
-  bosses_.Init();
+  bosses_.Reset();
 }
 
 void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
@@ -158,8 +156,8 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
       bits->Destroy();
     }
     ClearRegular();
-    effects_->SpawnFragment(actor.x, actor.y, FRG_FATCIRCLE);
-    effects_->SpawnBombEffect(actor.x, actor.y, EXBOMB_STD);
+    effects_->SpawnFragment(actor.x, actor.y, FragmentKind::ExpandingCircle);
+    effects_->SpawnBombExplosion(actor.x, actor.y);
     stage_->Command(stage::BackgroundCommand::Quake, *effects_);
     Snd_SEPlay(SfxId::Bossbomb, actor.x);
     if (actor.long_laser_count != 0U) {
@@ -174,11 +172,11 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
     // If it was the last one //
     if (std::ranges::all_of(
             bosses_, [](const auto &boss) { return boss.IsDefeated(); })) {
-      const auto temp = bullets_->ScoreToItems(); // Bullet -> score effect
+      const auto temp = bullets_->ConvertBulletsToScore();
       // sprintf(buf, "%3d Evade  %5dPts", player_->GrazeCount(),
       // player_->evadesc);
-      effects_->SpawnStringEffect(
-          180, 60, std::format("  Bonus    {:7}Pts", temp).c_str());
+      effects_->SpawnString(180, 60,
+                            std::format("  Bonus    {:7}Pts", temp).c_str());
       player_->AddScore(temp);
     }
 

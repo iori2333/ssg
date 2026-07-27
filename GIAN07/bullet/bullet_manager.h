@@ -11,33 +11,33 @@
 #include "laser/long.h"
 #include "laser/reflect.h"
 
-#include "core/object_pool.h"
+#include "util/object_pool.h"
 
 struct EnemyActor;
 struct EnemyHomingTarget;
+class EffectManager;
 struct ItemManager;
-struct GameManager;
+struct GameSession;
 class Player;
 
-struct BulletManager {
+class BulletManager {
+public:
+  BulletManager(ItemManager &items, GameSession &session, Player &player,
+                EffectManager &effects)
+      : items_(items), session_(session), player_(player), effects_(effects) {}
+
   void Init();
 
-  // --- DI ---
-  void Bind(ItemManager &im) { items_ = &im; }
-  void Bind(GameManager &gm) { game_ = &gm; }
-  void Bind(Player &p) { player_ = &p; }
-
   // --- Bullet spawn ---
-  bool SpawnBullet(const BulletSpawnInfo &si);
+  void SpawnBullet(const BulletSpawnInfo &si);
 
   // --- Laser spawn ---
-  bool SpawnReflect(const ReflectSpawnInfo &info);
+  void SpawnReflect(const ReflectSpawnInfo &info);
   bool SpawnLongLaser(const LongLaserSpawnInfo &info);
-  bool SpawnHoming(const HomingSpawnInfo &info);
+  void SpawnHoming(const HomingSpawnInfo &info);
 
   // --- Per-frame ---
   void Update(const EnemyHomingTarget &target);
-  void HitCheck();
   void Clear();
 
   // --- Render ---
@@ -48,8 +48,8 @@ struct BulletManager {
                         const LongLaserUpdateInfo &info);
 
   // --- Bullet items / scoring ---
-  uint32_t ScoreToItems();
-  void ToItems(uint8_t n);
+  uint32_t ConvertBulletsToScore();
+  void ConvertBulletsToItems(uint8_t frequency);
 
   // --- Debug ---
   void RenderDebugHitboxes(int mode) const;
@@ -59,24 +59,23 @@ struct BulletManager {
   void RotateDisplayAngles();
 
 private:
-  ItemManager *items_ = nullptr;
-  GameManager *game_ = nullptr;
-  Player *player_ = nullptr;
+  ItemManager &items_;
+  GameSession &session_;
+  Player &player_;
+  EffectManager &effects_;
 
-  // Bullet pool
-  ObjectPool<Bullet, kBulletMax> pool;
-
-  // Laser pools
-  ObjectPool<LaserReflect, kReflectMax> reflect;
-  ObjectPool<LaserLong, kLongLaserMax> long_lasers;
-  ObjectPool<LaserHoming, kHomingMax> homing;
+  ObjectPool<Bullet, kBulletMax> bullets_;
+  ObjectPool<LaserReflect, kReflectMax> reflect_lasers_;
+  ObjectPool<LaserLong, kLongLaserMax> long_lasers_;
+  ObjectPool<LaserHoming, kHomingMax> homing_lasers_;
 
   void UpdateBullet(const EnemyHomingTarget &target);
   void UpdateReflect();
 
-  bool SpawnBulletNormal(const BulletSpawnInfo &si);
-  bool SpawnBulletLine(const BulletSpawnInfo &si);
-  bool SpawnBulletExtra01(const BulletSpawnInfo &si);
+  void SpawnBulletNormal(const BulletSpawnInfo &si);
+  void SpawnBulletLine(const BulletSpawnInfo &si);
+  void SpawnBulletExtra01(const BulletSpawnInfo &si);
   void UpdateLong();
   void UpdateHoming();
+  void HitCheck();
 };

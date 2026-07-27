@@ -8,7 +8,7 @@
 
 #include "gameplay_hud.h"
 
-#include "core/gian.h"
+#include "gameplay/playfield.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
@@ -20,7 +20,8 @@ void GameplayHud::DrawTop(const GameplayHudModel &model) const {
   GrpGeom->Lock();
   GrpGeom->SetColor({0, 0, 0});
   GrpGeom->SetAlphaNorm(128);
-  GrpGeom->DrawBoxA(X_MIN, Y_MIN, X_MAX + 1, 40);
+  GrpGeom->DrawBoxA(playfield::kLeft, playfield::kTop, playfield::kRight + 1,
+                    40);
   GrpGeom->Unlock();
 
   if (model.graze_wait_time != 0U) {
@@ -40,12 +41,19 @@ void GameplayHud::DrawTop(const GameplayHudModel &model) const {
   GrpPut57(128 + 95, 16 + 91 - 80,
            std::format("{:3}", model.graze_count).c_str());
   GrpPut16(128, 0, std::format("{:9}", model.score).c_str());
-  GrpPut16(280, 0, std::format("       Bomb {}", model.bombs).c_str());
 
-  constexpr PIXEL_LTWH life_icon = {608, 432, 16, 16};
+  constexpr PIXEL_LTWH life_icon = {448, 272, 16, 16};
+  constexpr PIXEL_LTWH bomb_icon = {512, 272, 16, 16};
+  constexpr PIXEL_LTWH star_icon = {624, 432, 16, 16};
   for (int i = 0; std::cmp_less(i, model.lives); i++) {
     GrpSurface_Blit({280 + i * 14, 0}, SURFACE_ID::SYSTEM, life_icon);
   }
+  for (int i = 0; std::cmp_less(i, model.bombs); i++) {
+    GrpSurface_Blit({280 + i * 14, 0}, SURFACE_ID::SYSTEM, bomb_icon);
+  }
+  GrpSurface_Blit({408, 0}, SURFACE_ID::SYSTEM, star_icon);
+  GrpPut16(424, 0,
+           std::format("{:<4}", std::min(model.star_counter, 9999U)).c_str());
 }
 
 void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
@@ -91,9 +99,9 @@ void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
   GrpPut16(right_column, 360, "Debug  ON");
 #endif
 
-  if (model.practice_mode == PracticeMode::AUTOBOMB) {
+  if (model.practice_mode == PracticeMode::AutoBomb) {
     GrpPut16(right_column, 380, "Prac AUTO");
-  } else if (model.practice_mode == PracticeMode::INVINCIBLE) {
+  } else if (model.practice_mode == PracticeMode::Invincible) {
     GrpPut16(right_column, 380, "Prac  INV");
   }
 

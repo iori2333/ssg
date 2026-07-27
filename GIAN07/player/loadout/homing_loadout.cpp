@@ -4,8 +4,8 @@
 
 #include "homing_loadout.h"
 
-#include "core/gian.h"
 #include "enemy/enemy_manager.h"
+#include "gfx/coords.h"
 #include "player/player.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
@@ -48,13 +48,13 @@ void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
     const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 4));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 0, 1,
-        SPEEDM(54),  0,           PlayerShotKind::HomingMain};
+        13.5_px,     0,           PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
   }
   case 1: {
     PlayerShotSpawnInfo si{
-        player_.X() - 6_px,        player_.Y(), 192, 0, 1, SPEEDM(54), 0,
+        player_.X() - 6_px,        player_.Y(), 192, 0, 1, 13.5_px, 0,
         PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     si.x += 12_px;
@@ -65,14 +65,14 @@ void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   case 3: {
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), 192, 7,
-        3,           SPEEDM(54),  0,   PlayerShotKind::HomingMain};
+        3,           13.5_px,     0,   PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
   }
   default: {
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), 192, 7,
-        5,           SPEEDM(54),  0,   PlayerShotKind::HomingMain};
+        5,           13.5_px,     0,   PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
   }
@@ -87,7 +87,7 @@ void HomingLoadout::FireSubNormal(Player &player_, uint8_t tier) {
   PlayerShotSpawnInfo si{};
   si.motion = PlayerShotMotion::Homing;
   si.turn_rate = 5;
-  si.speed = SPEEDM(28);
+  si.speed = 7_px;
   si.acceleration = 4;
   si.kind = PlayerShotKind::HomingSub;
 
@@ -116,6 +116,7 @@ void HomingLoadout::FireSubNormal(Player &player_, uint8_t tier) {
 }
 
 void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
+                               EffectManager & /*effects*/,
                                uint16_t remaining) {
   if (remaining % 30 == 1) {
     PlayerShotSpawnInfo si{
@@ -124,7 +125,7 @@ void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
         .direction = 64,
         .direction_step = 16,
         .count = 8,
-        .speed = SPEEDM(28),
+        .speed = 7_px,
         .acceleration = 4,
         .kind = PlayerShotKind::HomingBomb,
         .motion = PlayerShotMotion::Homing,
@@ -139,7 +140,7 @@ void HomingLoadout::FireMainFocused(Player &player_, uint8_t tier) {
   const int spread = (count - 1) * 12_px;
 
   PlayerShotSpawnInfo si{
-      player_.X() - spread / 2,       player_.Y(), 192, 0, 1, SPEEDM(54), 0,
+      player_.X() - spread / 2,       player_.Y(), 192, 0, 1, 13.5_px, 0,
       PlayerShotKind::HomingFocusMain};
   for (int i = 0; i < count; i++) {
     player_.SpawnShot(si);
@@ -157,7 +158,7 @@ void HomingLoadout::FireSubFocused(Player &player_, uint8_t tier) {
                          192,
                          0,
                          1,
-                         SPEEDM(54),
+                         13.5_px,
                          0,
                          PlayerShotKind::HomingFocusSub};
   player_.SpawnShot(si);

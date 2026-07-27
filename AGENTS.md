@@ -45,20 +45,22 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | Directory | Purpose |
 | --- | --- |
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
-| `GIAN07/data/` | Validated PAK ownership, music catalog data, and graphics/SFX loading adapters |
+| `GIAN07/app/` | Application entry point, subsystem initialization, and live display settings |
+| `GIAN07/data/` | Validated PBG/PAK ownership, music catalog data, and graphics/SFX loading adapters |
+| `GIAN07/gameflow/` | Application composition root, screen flow, replay, ending, and score persistence |
+| `GIAN07/gameplay/` | Shared gameplay rules, session state, rank policy, and playfield geometry |
+| `GIAN07/settings/` | Persistent application configuration models and TOML serialization |
 | `GIAN07/stage/` | Validated SCL/MAP parsing, stage asset installation, timeline execution, and background scrolling |
 | `GIAN07/ui/` | Application-wide UI ownership: menu controllers, menu definitions, and message windows |
 | `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
-| `game/sys/` | System wrappers – buffer, file, path, thread, log, input |
+| `game/sys/` | System wrappers – bit streams, buffer, file, path, thread, log, input |
 | `game/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |
 | `game/audio/` | Audio layer – sound effects, MIDI, BGM, codecs, volume, audio backends |
 | `game/util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
-| `platform/` | Platform-specific backends with no cross-platform equivalent (text rendering only) |
-| `platform/windows/` | Win32-native backends: GDI text |
-| `platform/linux/pangocairo/` | Linux text rendering via PangoCairo |
+| `game/platform/` | Platform-specific backends with no cross-platform equivalent |
 | `tools/` | Build tools: pack_tool (DAT pack manipulation + music data migration), script_tool (ECL/SCL disasm/asm) |
 
-Entry point: `game/main.cpp`.
+Entry point: `GIAN07/app/main.cpp`.
 
 ### Music data format
 
@@ -126,8 +128,7 @@ where the guard logic requires it.
 
 ## Known gotchas
 
-- `CMakeLists.txt` references `GIAN07/GIAN07.rc`, but the actual file is `GIAN07/gian07.rc` (lowercase). This will break on case-sensitive filesystems until reconciled.
-- `VERSION_TAG` is hardcoded in `GIAN07/core/constants.h` (currently `"v1.0"`). Build-script comments about a git-generated version header are outdated.
+- `VERSION_TAG` is hardcoded in `game/gfx/constants.h` (currently `"v1.0"`). Build-script comments about a git-generated version header are outdated.
 - `.vscode/launch.json` is stale: it references tasks that no longer exist in `.vscode/tasks.json` and expects binaries in `bin/` instead of `build/bin/`.
 - `README.md` mentions `install_linux.sh` and a Tup-based workflow; neither exists in this branch.
 

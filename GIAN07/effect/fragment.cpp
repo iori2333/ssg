@@ -1,210 +1,141 @@
 ///
-/// Fragment - Fragment processing functions
+/// Short-lived particle fragments.
 ///
 
-#include "fragment.h"
-#include "effect_manager.h"
+#include <cstdint>
 
+#include "effect_manager.h"
+#include "effect_types.h"
+
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/ut_math.h"
 
-// fragments[], fragment_ptr moved to EffectManager in effect_manager.cpp
+void EffectManager::ResetFragments() {
+  for (auto &fragment : fragments_) {
+    fragment.remaining = 0;
+  }
+  next_fragment_ = 0;
+}
 
-static void FDraw(const FragmentData *f);
+void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
+  auto &fragment = fragments_[next_fragment_];
+  fragment = {.x = x, .y = y, .kind = kind};
 
-void EffectManager::SpawnFragment(int x, int y, uint8_t cmd) {
-  int i = 0;
-  int l = 0;
-  uint8_t d = 0;
-  FragmentData *f = fragments.data() + fragment_ptr;
+  uint8_t angle = 0;
+  int speed = 0;
+  switch (kind) {
+  case FragmentKind::Hit:
+    angle = static_cast<uint8_t>(rnd());
+    speed = 1_px + rnd() % 3_px;
+    fragment.remaining = 24;
+    fragment.velocity_x = cosl(angle, speed);
+    fragment.velocity_y = sinl(angle, speed);
+    break;
+  case FragmentKind::Graze:
+    angle = static_cast<uint8_t>(rnd());
+    speed = 4_px + rnd() % 3_px;
+    fragment.remaining = 24;
+    fragment.velocity_x = cosl(angle, speed);
+    fragment.velocity_y = sinl(angle, speed);
+    break;
+  case FragmentKind::Smoke:
+    fragment.remaining = 24;
+    break;
+  case FragmentKind::SmallStar:
+    angle = static_cast<uint8_t>(rnd());
+    speed = 5_px + rnd() % 3_px;
+    fragment.remaining = 64;
+    fragment.velocity_x = cosl(angle, speed);
+    fragment.velocity_y = sinl(angle, speed);
+    break;
+  case FragmentKind::LargeStar:
+    angle = static_cast<uint8_t>(rnd());
+    speed = 4_px + rnd() % 3_px;
+    fragment.remaining = 64;
+    fragment.velocity_x = cosl(angle, speed);
+    fragment.velocity_y = sinl(angle, speed);
+    break;
+  case FragmentKind::RisingStar:
+    angle = static_cast<uint8_t>(-112 + rnd() % 96);
+    speed = 6_px + rnd() % 4_px;
+    fragment.remaining = 64;
+    fragment.velocity_x = cosl(angle, speed);
+    fragment.velocity_y = sinl(angle, speed);
+    break;
+  case FragmentKind::Heart:
+    angle = static_cast<uint8_t>(rnd());
+    speed = 2_px + rnd() % 5_px;
+    fragment.remaining = 105;
+    fragment.velocity_x = cosl(angle, speed);
+    fragment.velocity_y = sinl(angle, speed);
+    break;
+  case FragmentKind::ExpandingCircle:
+    fragment.remaining = 60;
+    break;
+  }
 
-  if (cmd == FRG_ESCAPE) {
-    for (i = 0; i < FRAGMENT_MAX; i++) {
-      f = fragments.data() + i;
-      if (f->count != 0U) {
-        f->vx = ((f->x - x) / 16); // f->count;
-        f->vy = ((f->y - y) / 16); // f->count;
+  next_fragment_ = (next_fragment_ + 1) % fragments_.size();
+}
+
+void EffectManager::UpdateFragments() {
+  for (auto &fragment : fragments_) {
+    if (fragment.remaining == 0) {
+      continue;
+    }
+    fragment.x += fragment.velocity_x;
+    fragment.y += fragment.velocity_y;
+    --fragment.remaining;
+  }
+}
+
+void EffectManager::DrawFragments() const {
+  for (const auto &fragment : fragments_) {
+    if (fragment.remaining == 0) {
+      continue;
+    }
+
+    const int x = fragment.x >> 6;
+    const int y = fragment.y >> 6;
+    switch (fragment.kind) {
+    case FragmentKind::Graze:
+      GrpSurface_Blit(
+          {x - 4, y - 4}, SURFACE_ID::SYSTEM,
+          PIXEL_LTWH{592 + ((24 - fragment.remaining) >> 2) * 8, 8, 8, 8});
+      break;
+    case FragmentKind::Hit:
+      GrpSurface_Blit(
+          {x - 4, y - 4}, SURFACE_ID::SYSTEM,
+          PIXEL_LTWH{592 + ((24 - fragment.remaining) >> 2) * 8, 16, 8, 8});
+      break;
+    case FragmentKind::Smoke:
+      GrpSurface_Blit(
+          {x - 4, y - 4}, SURFACE_ID::SYSTEM,
+          PIXEL_LTWH{592 + ((24 - fragment.remaining) >> 2) * 8, 0, 8, 8});
+      break;
+    case FragmentKind::SmallStar:
+      GrpSurface_Blit({x - 8, y - 8}, SURFACE_ID::SYSTEM,
+                      PIXEL_LTWH{624, 432, 16, 16});
+      break;
+    case FragmentKind::LargeStar:
+    case FragmentKind::RisingStar:
+      GrpSurface_Blit({x - 16, y - 16}, SURFACE_ID::SYSTEM,
+                      PIXEL_LTWH{608, 448, 32, 32});
+      break;
+    case FragmentKind::Heart:
+      GrpSurface_Blit({x - 16, y - 16}, SURFACE_ID::SYSTEM,
+                      PIXEL_LTWH{576, 448, 32, 32});
+      break;
+    case FragmentKind::ExpandingCircle:
+      if (auto *geometry = GrpGeom_Poly()) {
+        geometry->Lock();
+        geometry->SetColor({4, 0, 0});
+        geometry->SetAlphaOne();
+        GeomFatCircleA(*geometry, {x, y}, (60 - fragment.remaining) * 6, 5);
+        geometry->Unlock();
       }
+      break;
     }
-  } else if (cmd == FRG_APPROACH) {
-    for (i = 0; i < FRAGMENT_MAX; i++) {
-      f = fragments.data() + i;
-      if (f->count != 0U) {
-        f->vx = (x - f->x) / f->count;
-        f->vy = (x - f->y) / f->count;
-      }
-    }
-  }
-
-  f->cmd = cmd;
-  f->x = x;
-  f->y = y;
-
-  switch (cmd) {
-  case FRG_HIT:
-    d = rnd() & 0xff;
-    l = 1_px + (rnd() % 3_px);
-    f->count = 24;
-    f->vx = cosl(d, l);
-    f->vy = sinl(d, l);
-    break;
-
-  case FRG_EVADE:
-    d = rnd() & 0xff;
-    l = 4_px + (rnd() % 3_px);
-    f->count = 24;
-    f->vx = cosl(d, l);
-    f->vy = sinl(d, l);
-    break;
-
-  case FRG_SMOKE:
-    f->count = 24;
-    f->vx = 0; // cosl((BYTE)rnd(),rnd()&0xff);//cosl((BYTE)rnd()%256,64*6);
-    f->vy = 0; // sinl((BYTE)rnd(),rnd()&0xff);//sinl((BYTE)rnd()%256,64*6);
-    break;
-
-  case FRG_STAR1:
-    f->count = 64;
-    d = rnd() & 0xff;
-    l = 5_px + (rnd() % 3_px);
-    f->vx = cosl(d, l);
-    f->vy = sinl(d, l);
-    break;
-
-  case FRG_STAR2:
-    f->count = 64;
-    d = rnd() & 0xff;
-    l = 4_px + (rnd() % 3_px);
-    f->vx = cosl(d, l);
-    f->vy = sinl(d, l);
-    break;
-
-  case FRG_STAR3:
-    f->count = 64;
-    d = -64 - 48 + (rnd() % 96);
-    l = 6_px + (rnd() % 4_px);
-    f->vx = cosl(d, l);
-    f->vy = sinl(d, l);
-    break;
-
-  case FRG_HEART:
-    f->count = 105;
-    d = rnd() & 0xff;
-    l = 2_px + (rnd() % 5_px);
-    f->vx = cosl(d, l);
-    f->vy = sinl(d, l);
-    break;
-
-  case FRG_FATCIRCLE:
-    f->count = 60;
-    f->vx = 0;
-    f->vy = 0;
-    break;
-
-  default:
-    // It's a bug, but...
-    break;
-  }
-
-  fragment_ptr = (fragment_ptr + 1) % FRAGMENT_MAX;
-}
-
-void EffectManager::MoveFragments() {
-  for (auto &it : fragments) {
-    auto *f = &it;
-    if (f->count != 0U) {
-      f->x += f->vx;
-      f->y += f->vy;
-      f->count--;
-    }
-  }
-}
-
-void EffectManager::DrawFragments() {
-  for (const auto &it : fragments) {
-    if (it.count != 0U) {
-      FDraw(&it);
-    }
-  }
-}
-
-void EffectManager::InitFragments() {
-  for (auto &it : fragments) {
-    // memset(fragments+i,0,sizeof(FRAGMENT_DATA));
-    it.count = 0;
-  }
-
-  fragment_ptr = 0;
-}
-
-static void FDraw(const FragmentData *f) {
-  int x = 0;
-  int y = 0;
-  PIXEL_LTRB src;
-
-  switch (f->cmd) {
-  case FRG_EVADE:
-    x = (f->x >> 6) - 4;
-    y = (f->y >> 6) - 4;
-    src = PIXEL_LTWH{(592 + (((24 - f->count) >> 2) << 3)), 8, 8, 8};
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-    break;
-
-  case FRG_HIT:
-    x = (f->x >> 6) - 4;
-    y = (f->y >> 6) - 4;
-    src = PIXEL_LTWH{(592 + (((24 - f->count) >> 2) << 3)), (8 + 8), 8, 8};
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-    break;
-
-  case FRG_SMOKE:
-    x = (f->x >> 6) - 4;
-    y = (f->y >> 6) - 4;
-    src = PIXEL_LTWH{(592 + (((24 - f->count) >> 2) << 3)), 0, 8, 8};
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-    break;
-
-  case FRG_STAR1:
-    x = (f->x >> 6) - 8;
-    y = (f->y >> 6) - 8;
-    src = PIXEL_LTWH{624, 432, 16, 16};
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-    break;
-
-  case FRG_STAR2:
-    x = (f->x >> 6) - 16;
-    y = (f->y >> 6) - 16;
-    src = PIXEL_LTWH{608, 448, 32, 32};
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-    break;
-
-  case FRG_STAR3:
-    x = (f->x >> 6) - 16;
-    y = (f->y >> 6) - 16;
-    src = PIXEL_LTWH{608, 448, 32, 32};
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-    break;
-
-  case FRG_HEART:
-    x = (f->x >> 6) - 16;
-    y = (f->y >> 6) - 16;
-    src = PIXEL_LTWH{576, 448, 32, 32};
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
-    break;
-
-  case FRG_FATCIRCLE:
-    if (auto *gp = GrpGeom_Poly()) {
-      gp->Lock();
-      gp->SetColor({4, 0, 0});
-      gp->SetAlphaOne();
-      GeomFatCircleA(*gp, {(f->x >> 6), (f->y >> 6)}, ((60 - f->count) * 6), 5);
-      gp->Unlock();
-    }
-    break;
-
-  default:
-    // Shouldn't reach here, but...
-    break;
   }
 }

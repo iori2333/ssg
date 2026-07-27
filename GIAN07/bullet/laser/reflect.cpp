@@ -3,12 +3,14 @@
 ///
 
 #include <algorithm>
+#include <array>
+#include <utility>
 
 #include "long.h"
 #include "reflect.h"
 
 #include "bullet/bullet_common.h"
-#include "core/gian.h"
+#include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
@@ -87,16 +89,15 @@ LaserReflect::CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
                                           (static_cast<int>(ll.d_) << 1)),
                 .n = 1,
                 .c = self.c_,
-                .cmd = bullet_common::kCmdWay,
-                .cmd_type = static_cast<uint8_t>(ReflectLaserType::Reflect),
+                .pattern = BulletPattern::Spread,
+                .type = ReflectLaserType::Reflect,
             }};
 }
 
 // ── Spawn ────────────────────────────────────────────────────────────
 
 void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
-  d_ = bullet_common::CalcSpreadDir(info.bullet_index,
-                                    info.cmd & bullet_common::kCmdMask, info.n,
+  d_ = bullet_common::CalcSpreadDir(info.bullet_index, info.pattern, info.n,
                                     info.base_deg, info.dw);
 
   if (info.l2 != 0) {
@@ -108,8 +109,6 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
   }
 
   v_ = info.v;
-  a_ = info.a;
-
   vx_ = cosl(d_, v_);
   vy_ = sinl(d_, v_);
 
@@ -123,9 +122,10 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
 
   l_ = 0;
   count_ = 0;
+  grazed_ = false;
 
   c_ = info.c;
-  subtype_ = static_cast<ReflectLaserType>(info.cmd_type);
+  subtype_ = info.type;
 
   if (subtype_ == ReflectLaserType::Reflect) {
     state_ = ReflectState::Shooting;
@@ -144,8 +144,6 @@ auto LaserReflect::Update(const UpdateInfo &info) -> UpdateResult {
   UpdateResult result;
 
   switch (state_) {
-  case ReflectState::Idle:
-    break;
   case ReflectState::Growing:
     UpdateGrowing();
     break;
@@ -158,14 +156,16 @@ auto LaserReflect::Update(const UpdateInfo &info) -> UpdateResult {
   case ReflectState::Reflected:
     UpdateReflected();
     break;
-  case ReflectState::NoMove:
-    UpdateNoMove();
-    break;
   case ReflectState::Clearing:
     UpdateClearing();
     break;
   case ReflectState::Dead:
     break;
+  }
+
+  if (x_ < playfield::kWorldLeft || x_ > playfield::kWorldRight ||
+      y_ < playfield::kWorldTop || y_ > playfield::kWorldBottom) {
+    MarkDead();
   }
 
   return result;
@@ -226,7 +226,6 @@ auto LaserReflect::UpdateShooting(std::span<const LaserLong *> longs)
 
   for (const auto *ll : longs) {
     if (auto hit = CheckLongLaser(*this, *ll, dx, dy); hit.spawn_requested) {
-      ltemp_ = l_;
       state_ = ReflectState::Reflected;
       return hit;
     }
@@ -250,13 +249,6 @@ void LaserReflect::UpdateReflected() {
   p[0].y = p[1].y - ly_;
   p[3].x = p[2].x - lx_;
   p[3].y = p[2].y - ly_;
-}
-
-void LaserReflect::UpdateNoMove() {
-  ltemp_ += v_;
-  if (ltemp_ >= lmax_) {
-    state_ = ReflectState::Reflected;
-  }
 }
 
 void LaserReflect::UpdateClearing() {
@@ -345,6 +337,8 @@ void LaserReflect::DrawOuter() const {
 }
 
 bool LaserReflect::IsDead() const { return state_ == ReflectState::Dead; }
+
+bool LaserReflect::RegisterGraze() { return !std::exchange(grazed_, true); }
 
 void LaserReflect::Kill() {
   if (state_ != ReflectState::Clearing && state_ != ReflectState::Dead) {

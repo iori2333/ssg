@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/lz_uty.h"
+#include "pbg_archive.h"
 
 namespace data {
 
@@ -55,9 +55,9 @@ private:
     size_t midi_offset = 0;
   };
 
-  [[nodiscard]] const PackFile &Archive(ArchiveId id) const;
+  [[nodiscard]] const PbgArchive &Archive(ArchiveId id) const;
 
-  std::array<PackFile, std::to_underlying(ArchiveId::Count)> archives_;
+  std::array<PbgArchive, std::to_underlying(ArchiveId::Count)> archives_;
   std::vector<MusicTrack> music_tracks_;
   bool loaded_ = false;
 };

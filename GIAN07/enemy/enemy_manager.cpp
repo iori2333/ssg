@@ -12,25 +12,42 @@
 
 #include "audio/snd.h"
 #include "bullet/bullet_manager.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
-#include "core/level.h"
+#include "gameplay/game_rules.h"
+#include "gameplay/game_session.h"
+#include "gameplay/playfield.h"
 #include "item/item_manager.h"
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "util/cast.h"
 #include "util/ut_math.h"
 
+namespace {
+
+constexpr int kRandomCoordinate = -30000;
+
+int RandomWorldX() {
+  return PixelToWorld(playfield::kLeft +
+                      rnd() % (playfield::kRight - playfield::kLeft));
+}
+
+int RandomWorldY() {
+  return PixelToWorld(playfield::kTop +
+                      rnd() % (playfield::kBottom - playfield::kTop));
+}
+
+} // namespace
+
 EnemyManager::EnemyManager(BulletManager &bullets, ItemManager &items,
-                           GameManager &game, Player &player,
+                           GameSession &session, Player &player,
                            stage::StageSession &stage, EffectManager &effects)
-    : renderer_(animations_, player), bullets_(&bullets), game_(&game),
+    : renderer_(animations_, player), bullets_(&bullets), session_(&session),
       items_(&items), player_(&player), stage_(&stage), effects_(&effects),
-      ecl_host_(*this, bullets, game, player, stage), ecl_(ecl_host_, effects),
-      snakes_(*this, bullets), bits_{BitFormation(*this, bullets, player),
-                                     BitFormation(*this, bullets, player),
-                                     BitFormation(*this, bullets, player),
-                                     BitFormation(*this, bullets, player)} {
+      ecl_host_(*this, bullets, session, player, stage),
+      ecl_(ecl_host_, effects), snakes_(*this, bullets),
+      bits_{BitFormation(*this, bullets, player),
+            BitFormation(*this, bullets, player),
+            BitFormation(*this, bullets, player),
+            BitFormation(*this, bullets, player)} {
   Reset();
 }
 
@@ -109,7 +126,7 @@ void EnemyManager::BeginActorFrame(EnemyActor &actor,
       (actor.auto_fire_frame + 1) % actor.auto_fire_interval;
   if (actor.auto_fire_frame == 0) {
     auto spawn = MakeBulletSpawnInfo(actor.bullet_command, actor.x, actor.y,
-                                     true, *game_);
+                                     true, *session_);
     bullets_->SpawnBullet(spawn);
   }
 }
@@ -154,10 +171,10 @@ void EnemyManager::UpdateRegular() {
       CheckPlayerCollision(*e);
 
       // Out-of-bounds check
-      if ((e->y < GY_MIN - e->hitbox_half_height) ||
-          (e->y > GY_MAX + e->hitbox_half_height) ||
-          (e->x < GX_MIN - e->hitbox_half_width) ||
-          (e->x > GX_MAX + e->hitbox_half_width)) {
+      if ((e->y < playfield::kWorldTop - e->hitbox_half_height) ||
+          (e->y > playfield::kWorldBottom + e->hitbox_half_height) ||
+          (e->x < playfield::kWorldLeft - e->hitbox_half_width) ||
+          (e->x > playfield::kWorldRight + e->hitbox_half_width)) {
         if ((e->flag & EF_CLIP) == 0) {
           if (e->long_laser_count != 0U) {
             bullets_->ControlLongLaser(
@@ -239,7 +256,7 @@ void EnemyManager::ResetRegular() {
   for (auto &actor : regular_enemies_) {
     RetireActor(actor);
   }
-  regular_enemies_.Init();
+  regular_enemies_.Reset();
 }
 
 void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
@@ -314,10 +331,10 @@ void EnemyManager::InitializeActor(EnemyActor &actor, WORLD_POINT position,
                           .n = 1,
                           .ns = 1,
                           .v = 3,
-                          .cmd = TC_WAY,
-                          .type = T_NORM,
-                          .option = TE_NONE};
-  actor.laser_command = {.notr = 0xff};
+                          .cmd = std::to_underlying(BulletPattern::Spread),
+                          .type = std::to_underlying(BulletMotion::Normal),
+                          .option = 0};
+  actor.laser_command = {};
 }
 
 EnemyActor *EnemyManager::SpawnRegular(WORLD_POINT position,
@@ -332,7 +349,7 @@ EnemyActor *EnemyManager::SpawnRegular(WORLD_POINT position,
 
 void EnemyManager::SpawnFromScene(int16_t x, int16_t y, uint8_t script_id) {
   WORLD_POINT position;
-  position.x = x == X_RNDV ? GX_RND() : PixelToWorld(x);
-  position.y = y == Y_RNDV ? GY_RND() : PixelToWorld(y);
+  position.x = x == kRandomCoordinate ? RandomWorldX() : PixelToWorld(x);
+  position.y = y == kRandomCoordinate ? RandomWorldY() : PixelToWorld(y);
   SpawnRegular(position, script_id);
 }

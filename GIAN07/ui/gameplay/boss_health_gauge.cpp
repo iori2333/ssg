@@ -9,13 +9,13 @@
 #include "boss_health_gauge.h"
 
 #include "audio/snd.h"
-#include "core/gian.h"
+#include "gameplay/playfield.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 
 static constexpr auto BOSS_HEALTH_GAUGE_WIDTH = 256;
-static constexpr auto BOSS_HEALTH_GAUGE_START_X = X_MAX;
+static constexpr auto BOSS_HEALTH_GAUGE_START_X = playfield::kRight;
 static constexpr auto BOSS_HEALTH_GAUGE_END_X = 260;
 
 void BossHealthGauge::Sync(const BossHudModel &model) {

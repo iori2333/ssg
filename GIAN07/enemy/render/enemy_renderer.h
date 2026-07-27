@@ -6,10 +6,10 @@
 
 #include <array>
 
-#include "core/object_pool.h"
 #include "enemy/actor/enemy_actor.h"
 #include "enemy/boss/bit_formation.h"
 #include "enemy/boss/boss.h"
+#include "util/object_pool.h"
 
 class Player;
 

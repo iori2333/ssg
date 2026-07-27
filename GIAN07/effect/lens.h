@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include "gfx/coords.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
+
+#include "gfx/coords.h"
 
 // [Struct]
 

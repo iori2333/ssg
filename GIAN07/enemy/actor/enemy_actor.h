@@ -17,9 +17,9 @@
 // assignment to struct) 2000/02/25 : Added enemy hit-check function
 // enemy_damage() 2000/02/22 : Changed enemy clipping range.
 
-#include "bullet/bullet.h"
-#include "bullet/laser/reflect.h"
+#include "bullet/fire_state.h"
 #include "enemy/ecl/ecl.h"
+#include "gfx/coords.h"
 
 // Enemy constants
 inline constexpr uint16_t ENEMY_MAX = 50; // Maximum number of enemies
@@ -140,6 +140,6 @@ struct EnemyActor {
 
   uint8_t long_laser_count{};
 
-  BulletCommand bullet_command{};
-  LaserCommand laser_command{};
+  EclBulletState bullet_command{};
+  EclLaserState laser_command{};
 };

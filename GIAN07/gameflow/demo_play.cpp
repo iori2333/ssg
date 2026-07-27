@@ -13,12 +13,11 @@
 #include "demo_manager.h"
 #include "demo_play.h"
 
-#include "core/config.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
-#include "core/lz_uty.h"
+#include "data/pbg_archive.h"
 #include "gameflow/gameflow_manager.h"
+#include "gameplay/game_session.h"
 #include "player/player.h"
+#include "settings/config.h"
 #include "sys/file.h"
 #include "sys/input.h"
 #include "util/guard.h"
@@ -43,10 +42,10 @@ void DemoManager::Init() {
 
   demo_info.Exp = GameFlow.ctx.player.Power();
   demo_info.Weapon = std::to_underlying(GameFlow.ctx.player.Type());
-  demo_info.CfgDat.GameLevel = std::to_underlying(GameFlow.ctx.game.level);
+  demo_info.CfgDat.GameLevel = std::to_underlying(GameFlow.ctx.session.level);
   demo_info.CfgDat.PlayerStock = GameFlow.ctx.player.Lives();
-  demo_info.CfgDat.BombStock = GameFlow.ctx.cfg->game.bomb_stock;
-  demo_info.CfgDat.InputFlags = GameFlow.ctx.cfg->input.PackInputFlags();
+  demo_info.CfgDat.BombStock = GameFlow.ctx.config.game.bomb_stock;
+  demo_info.CfgDat.InputFlags = GameFlow.ctx.config.input.PackFlags();
 
   demo_frame_cur = 0;
   save_all_enable = true;
@@ -68,7 +67,7 @@ void DemoManager::FlushStage() {
 
   if (multi_stage_count < REPLAY_STAGE_MAX) {
     multi_stage_nums[multi_stage_count] =
-        std::to_underlying(GameFlow.ctx.game.stage);
+        std::to_underlying(GameFlow.ctx.session.stage);
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
 
     std::vector<INPUT_BITS> stage_data(demo_buffer.data(),
@@ -87,20 +86,21 @@ bool DemoManager::LoadSetup() {
 
   // Initialize config
   // Preserve current config
-  config_temp.PlayerStock = GameFlow.ctx.cfg->game.player_stock;
-  config_temp.BombStock = GameFlow.ctx.cfg->game.bomb_stock;
-  config_temp.InputFlags = GameFlow.ctx.cfg->input.PackInputFlags();
+  config_temp.PlayerStock = GameFlow.ctx.config.game.player_stock;
+  config_temp.BombStock = GameFlow.ctx.config.game.bomb_stock;
+  config_temp.InputFlags = GameFlow.ctx.config.input.PackFlags();
 
   // Transfer recorded config
-  GameFlow.ctx.cfg->game.bomb_stock = demo_info.CfgDat.BombStock;
-  GameFlow.ctx.cfg->game.player_stock = demo_info.CfgDat.PlayerStock;
-  GameFlow.ctx.cfg->input.UnpackInputFlags(demo_info.CfgDat.InputFlags);
-  GameFlow.ctx.game.level = static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
+  GameFlow.ctx.config.game.bomb_stock = demo_info.CfgDat.BombStock;
+  GameFlow.ctx.config.game.player_stock = demo_info.CfgDat.PlayerStock;
+  GameFlow.ctx.config.input.UnpackFlags(demo_info.CfgDat.InputFlags);
+  GameFlow.ctx.session.level =
+      static_cast<GameLevel>(demo_info.CfgDat.GameLevel);
 
   // Restore player stats
   GameFlow.ctx.player.ApplyReplayState(demo_info.Weapon, demo_info.Exp,
-                                       GameFlow.ctx.cfg->game.player_stock,
-                                       GameFlow.ctx.cfg->game.bomb_stock);
+                                       GameFlow.ctx.config.game.player_stock,
+                                       GameFlow.ctx.config.game.bomb_stock);
 
   // Initialize random number
   // Sync random seed last
@@ -139,7 +139,7 @@ void DemoManager::SaveDemo() {
   demo_info.FrameCount = (demo_frame_cur + 1);
 
   char fn[] = "STG_Demo.DAT";
-  fn[3] = ('0' + static_cast<int>(GameFlow.ctx.game.stage) + 1);
+  fn[3] = ('0' + static_cast<int>(GameFlow.ctx.session.stage) + 1);
 
   auto *f = SDL_IOFromFile(fn, "wb");
   if (f != nullptr) {
@@ -187,9 +187,9 @@ INPUT_BITS DemoManager::Move() {
 }
 
 void DemoManager::Cleanup() {
-  GameFlow.ctx.cfg->game.player_stock = config_temp.PlayerStock;
-  GameFlow.ctx.cfg->game.bomb_stock = config_temp.BombStock;
-  GameFlow.ctx.cfg->input.UnpackInputFlags(config_temp.InputFlags);
+  GameFlow.ctx.config.game.player_stock = config_temp.PlayerStock;
+  GameFlow.ctx.config.game.bomb_stock = config_temp.BombStock;
+  GameFlow.ctx.config.input.UnpackFlags(config_temp.InputFlags);
 
   load_enable = false;
   load_all_enable = false;
@@ -203,7 +203,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
   // Flush current stage data if any (not yet flushed by stage clear)
   if (demo_frame_cur > 0 && multi_stage_count < REPLAY_STAGE_MAX) {
     multi_stage_nums[multi_stage_count] =
-        std::to_underlying(GameFlow.ctx.game.stage);
+        std::to_underlying(GameFlow.ctx.session.stage);
     multi_stage_frames[multi_stage_count] = demo_frame_cur;
     stage_record_bufs.emplace_back(demo_buffer.data(),
                                    demo_buffer.data() + demo_frame_cur);
@@ -224,7 +224,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
     info.FrameCounts[i] = multi_stage_frames[i];
   }
 
-  PackWriter out;
+  data::PbgArchiveWriter out;
   out.Add(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(&info),
                                    sizeof(info)));
   for (auto &buf : stage_record_bufs) {
@@ -241,7 +241,7 @@ void DemoManager::SaveReplayAll(bool exstg) {
 }
 
 bool DemoManager::LoadReplayAll(const char *fn) {
-  const auto in = PackFile::Open(fn);
+  const auto in = data::PbgArchive::Open(fn);
   if (!in) {
     return false;
   }
@@ -256,17 +256,17 @@ bool DemoManager::LoadReplayAll(const char *fn) {
   // EXTRA). Convert to new 0-based StageId format on load.
   if (multi_play_info.StageCount > 0) {
     auto first = multi_play_info.Stages[0];
-    if (first >= 1 && first <= STAGE_MAX) {
+    if (first >= 1 && first <= kRegularStageCount) {
       for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
         multi_play_info.Stages[i]--;
       }
-    } else if (first > STAGE_MAX) {
-      multi_play_info.Stages[0] = std::to_underlying(StageId::EXTRA);
+    } else if (first > kRegularStageCount) {
+      multi_play_info.Stages[0] = std::to_underlying(StageId::Extra);
     }
   }
 
   // Compute max stage for stage transition gating
-  playback_max_stage = StageId::STAGE_1;
+  playback_max_stage = StageId::Stage1;
   for (uint8_t i = 0; i < multi_play_info.StageCount; i++) {
     playback_max_stage = std::max(
         static_cast<StageId>(multi_play_info.Stages[i]), playback_max_stage);

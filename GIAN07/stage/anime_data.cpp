@@ -20,7 +20,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
   int i = 0;
 
   switch (stage_num) {
-  case StageId::EXTRA:
+  case StageId::Extra:
     animations[0].SetSquareSheet({.x = 0, .y = 0}, 4, 80, ANM_NORM);
     animations[1].SetSquareSheet({.x = 320, .y = 0}, 4, 80, ANM_NORM);
     animations[2].SetSquareSheet({.x = 0, .y = 80}, 6, 80, ANM_STOP);
@@ -94,7 +94,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[42].ptn[2] = PIXEL_LTWH{552, 0, 24, 24};
     animations[42].ptn[3] = PIXEL_LTWH{552, 48, 24, 24};
     break;
-  case StageId::STAGE_1:
+  case StageId::Stage1:
     animations[0].size = {.w = 72, .h = 56};
     animations[0].n = 2;
     animations[0].mode = ANM_NORM;
@@ -118,7 +118,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[7].mode = ANM_NORM;
     animations[7].ptn[0] = {72, 184, (72 * 2), 248};
     break;
-  case StageId::STAGE_2:
+  case StageId::Stage2:
     animations[0].SetDirectionalSheet({.x = 0, .y = 0}, 32);
     animations[1].SetDirectionalSheet({.x = 0, .y = 32}, 32);
     animations[2].SetDirectionalSheet({.x = 0, .y = 64}, 32);
@@ -165,7 +165,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     SetAnimeRect(animations[20], 560, 160, 639, 270);
     SetAnimeRect(animations[21], 576, 320, 639, 399);
     break;
-  case StageId::STAGE_3:
+  case StageId::Stage3:
     animations[0].size = {.w = 56, .h = 56};
     animations[0].n = 16;
     animations[0].mode = ANM_DEG;
@@ -201,7 +201,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[9].mode = ANM_NORM;
     animations[9].ptn[0] = {512, 164, 640, 240};
     break;
-  case StageId::STAGE_4:
+  case StageId::Stage4:
     animations[0].SetDirectionalSheet({.x = 0, .y = 0}, 32);
     animations[1].SetDirectionalSheet({.x = 0, .y = 32}, 32);
     animations[2].SetDirectionalSheet({.x = 0, .y = 64}, 32);
@@ -217,7 +217,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[7].mode = ANM_NORM;
     animations[7].ptn[0] = {0, 296, 304, 480};
     break;
-  case StageId::STAGE_5:
+  case StageId::Stage5:
     animations[0].SetDirectionalSheet({.x = 0, .y = 0}, 32);
     animations[1].SetDirectionalSheet({.x = 0, .y = 32}, 32);
     animations[2].SetDirectionalSheet({.x = 0, .y = 64}, 32);
@@ -237,7 +237,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[9].SetSheet({.x = 304, .y = 256}, 1, {.w = 336, .h = 224},
                            ANM_NORM);
     break;
-  case StageId::STAGE_6:
+  case StageId::Stage6:
     animations[0].size = {.w = 56, .h = 72};
     animations[0].n = 6;
     animations[0].mode = ANM_STOP;

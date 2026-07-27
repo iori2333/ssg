@@ -12,14 +12,13 @@
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
-#include "core/config.h"
-#include "core/gian.h"
-#include "effect/effect.h"
 #include "gameflow/game_main.h"
 #include "gameflow/gameflow_manager.h"
+#include "gfx/constants.h"
 #include "gfx/font_uty.h"
 #include "gfx/text.h"
 #include "platform/text_backend.h"
+#include "settings/config.h"
 #include "sys/input.h"
 #include "util/debug.h"
 #include "util/ut_math.h"
@@ -435,7 +434,7 @@ void MusicRoomProc(bool & /*unused*/) {
     if (!DevChgWait) {
       BGM_ChangeMIDIDevice(1);
       if (auto sf = MidBackend_CurrentSoundFont()) {
-        GameFlow.ctx.cfg->audio.soundfont = sf.value();
+        GameFlow.ctx.config.audio.soundfont = sf.value();
       }
       DevChgWait = true;
     }

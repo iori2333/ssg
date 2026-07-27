@@ -10,7 +10,6 @@
 
 #include "boss.h"
 
-#include "core/point.h"
 #include "enemy/actor/enemy_actor.h"
 
 struct BulletManager;
@@ -32,8 +31,14 @@ public:
   void OnActorRetired(const EnemyActor &actor);
 
 private:
+  struct TrailPoint {
+    int x{};
+    int y{};
+    uint8_t direction{};
+  };
+
   struct Snake {
-    std::array<DegPoint, SNAKE_LENGTH * SNAKE_POINTS_PER_SEGMENT> trail{};
+    std::array<TrailPoint, SNAKE_LENGTH * SNAKE_POINTS_PER_SEGMENT> trail{};
     std::array<EnemyActor *, SNAKE_LENGTH> segments{};
     EnemyActor *parent = nullptr;
     std::size_t head = 0;

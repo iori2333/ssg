@@ -1,170 +1,172 @@
 ///
-/// EffectManager - Centralized visual effects system state
+/// EffectManager - owns transient gameplay and overlay effects.
 ///
 
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <span>
 #include <string_view>
 
-#include "bomb_efc.h"
-#include "effect.h"
-#include "effect3d.h"
-#include "fragment.h"
+#include "effect_types.h"
 
+#include "gfx/coords.h"
 #include "gfx/text.h"
 
-// EFFECT3D constants (moved from EFFECT3D.cpp)
-inline constexpr auto CIRCLE_MAX = 40;
-inline constexpr auto CUBE_MAX = 8;
-inline constexpr auto STAR_MAX = 40;
-inline constexpr auto ROCK_MAX = 28;
-inline constexpr auto FAKE_ECLSTR_MAX = 80;
-inline constexpr auto S6RASTER_MAX = 28;
-inline constexpr auto S6STAR_MAX = 60;
-inline constexpr auto S3STAR_MAX = 180;
+class EffectManager {
+public:
+  void Reset();
+  void ClearTextEffects() { ResetStrings(); }
+  void InitializeTextRenderer();
+  void Update();
+  void UpdateGameOver();
 
-// Stg6 types (moved from EFFECT3D.cpp)
-struct Stg6Raster {
-  int x, y;
-  char vy;
-  uint8_t type;
-  uint8_t deg;
-  uint8_t amp;
-};
-struct Stg6Star {
-  int x, y;
-  int vy;
-};
+  void SpawnString(int x, int y, std::string_view text);
+  void SpawnPointValue(int x, int y, uint32_t points);
+  void SpawnGameOver();
+  void SetMusicTitle(int y, std::string_view title);
+  void SpawnCircle(int x, int y, CircleEffectKind kind);
+  void SpawnFragment(int x, int y, FragmentKind kind);
+  void SpawnBombExplosion(int x, int y);
+  void StartScreenTransition(ScreenTransition transition);
+  void StartBossWarning();
 
-struct EffectManager {
-  // ========================================================================
-  // Data members
-  // ========================================================================
-
-  // EFFECT.cpp
-  std::array<StringEffectData, SEFFECT_MAX> string_effects;
-  std::array<CircleEffectData, CIRCLE_EFC_MAX> circle_effects;
-  std::array<LockOnInfo, LOCKON_MAX> lock_info;
-  ScreenEffectState screen_info;
-  TEXTRENDER_RECT_ID mtitle_rect = {};
-  std::string_view mtitle_strs[2] = {"♪ "};
-  bool enable_warn_efc = false;
-  uint16_t warn_efc_time = 0;
-
-  // FRAGMENT.cpp
-  std::array<FragmentData, FRAGMENT_MAX> fragments;
-  int fragment_ptr = 0;
-
-  // BOMBEFC.cpp
-  std::array<BombEfcCtrl, EXBOMB_MAX> bomb_effects;
-
-  // EFFECT3D.cpp
-  std::array<Circle3D, CIRCLE_MAX> circles;
-  std::array<Cube3D, CUBE_MAX> cubes;
-  std::array<Star2D, STAR_MAX> stars;
-  std::array<Rock3D, ROCK_MAX> rocks;
-  WFLine2D wf_line;
-  std::array<FakeECLString, FAKE_ECLSTR_MAX> fake_ecl_strs;
-  std::array<Stg6Raster, S6RASTER_MAX> s6_ras;
-  std::array<Stg6Star, S3STAR_MAX> s6_stars;
-
-  // EFFECT3D.cpp — warning wireframe state (was file-static Warning[8])
-  LineList3D warning_lines[8];
-
-  // EFFECT3D.cpp — Move3DCube animation state (was static locals)
-  uint16_t cube_anim_d = 0;
-  uint16_t cube_anim_dx = 0;
-  uint16_t cube_anim_dy = 0;
-  uint16_t cube_anim_dz = 0;
-
-  // ========================================================================
-  // EFFECT.cpp methods (string/circle/screen/lockon/warning effects)
-  // ========================================================================
-
-  void InitMusicTitle();
-  void InitStringEffects();
-  void SpawnStringEffect(int x, int y, const char *s);
-  void SpawnPointEffect(int x, int y, uint32_t point);
-  void SpawnGameOverEffect();
-  void SetMusicTitle(int y, std::string_view s);
-  void MoveStringEffects();
-  void DrawStringEffects();
-
-  void InitCircleEffects();
-  void MoveCircleEffects();
-  void DrawCircleEffects();
-  void SpawnCircleEffect(int x, int y, uint8_t type);
-
-  void InitScreenEffect();
-  void SetScreenEffect(uint8_t cmd);
-  void MoveScreenEffect();
-  void DrawScreenEffect();
-
-  void InitLockOn();
-  void LockOn(int *x, int *y, int wx64, int hx64);
-  void MoveLockOn();
-  void DrawLockOn();
-
-  void InitWarningEffect();
-  void SetWarningEffect();
-  void MoveWarningEffect();
-  void DrawWarningEffect();
-
-  static void CircleFadeOut(int x, int y, int r);
-
-  void RenderMusicTitle(WINDOW_POINT topleft, const PIXEL_LTWH &subrect);
-
-  // ========================================================================
-  // FRAGMENT.cpp methods
-  // ========================================================================
-
-  void InitFragments();
-  void SpawnFragment(int x, int y, uint8_t cmd);
-  void MoveFragments();
-  void DrawFragments();
-
-  // ========================================================================
-  // BOMBEFC.cpp methods
-  // ========================================================================
-
-  void InitBombEffects();
-  void SpawnBombEffect(int x, int y, uint8_t type);
-  void DrawBombEffects();
-  void MoveBombEffects();
-
-  // ========================================================================
-  // EFFECT3D.cpp methods (3D effects)
-  // ========================================================================
-
-  void Init3DCubes();
-  void Draw3DCubes();
-  void Move3DCubes();
-  void InitFakeECL();
-  void MoveFakeECL();
-  void DrawFakeECL();
-  void InitStg4Rocks();
-  void MoveStg4Rocks();
-  void DrawStg4Rocks();
-  void SendCmdStg4Rocks(uint8_t cmd, uint8_t param);
-  void InitStg6Rasters();
-  void MoveStg6Rasters();
-  void DrawStg6Rasters();
-  void InitStg3Stars();
-  void MoveStg3Stars();
-  void DrawStg3Stars();
-
-  // Warning wireframe 3D text
-  void InitWarningText();
-  void DrawWarningText();
-  void MoveWarningText(uint8_t count);
+  void DrawCircles() const;
+  void DrawBombExplosions() const;
+  void DrawFragments() const;
+  void DrawForeground();
+  void DrawScreenTransition() const;
 
 private:
-  // Internal helpers (BOMBEFC.cpp)
-  static void InitBombEffectSTD(BombEfcCtrl *p);
-  static void DrawBombEffectSTD(BombEfcCtrl *p);
-  static void MoveBombEffectSTD(BombEfcCtrl *p);
-};
+  static constexpr std::size_t kStringEffectCapacity = 1000;
+  static constexpr std::size_t kCircleEffectCapacity = 10;
+  static constexpr std::size_t kFragmentCapacity = 1000;
+  static constexpr std::size_t kBombEffectCapacity = 3;
+  static constexpr std::size_t kBombParticleCount = 200;
 
-extern EffectManager Effects;
+  enum class StringEffectState : uint8_t {
+    Inactive,
+    CharacterEntering,
+    CharacterPaused,
+    CharacterScattering,
+    MusicTitleEntering,
+    MusicTitleHolding,
+    MusicTitleLeaving,
+    GameOverEntering,
+    GameOverHolding,
+    PointValue,
+  };
+
+  struct StringEffect {
+    int x = 0;
+    int y = 0;
+    int velocity_x = 0;
+    int velocity_y = 0;
+    uint32_t time = 0;
+    uint32_t points = 0;
+    StringEffectState state = StringEffectState::Inactive;
+    char character = 0;
+  };
+
+  struct CircleEffect {
+    int x = 0;
+    int y = 0;
+    int radius = 0;
+    int end_radius = 0;
+    uint32_t age = 0;
+    CircleEffectKind kind = CircleEffectKind::Star;
+    uint8_t angle = 0;
+    bool active = false;
+  };
+
+  struct Fragment {
+    int x = 0;
+    int y = 0;
+    int velocity_x = 0;
+    int velocity_y = 0;
+    uint8_t remaining = 0;
+    FragmentKind kind = FragmentKind::Graze;
+  };
+
+  struct BombParticle {
+    int x = 0;
+    int y = 0;
+    int velocity_x = 0;
+    int velocity_y = 0;
+    uint8_t frame = 0;
+  };
+
+  struct BombExplosion {
+    int x = 0;
+    int y = 0;
+    uint32_t age = 0;
+    std::array<BombParticle, kBombParticleCount> particles{};
+    bool active = false;
+  };
+
+  struct ScreenEffect {
+    ScreenTransition transition = ScreenTransition::CircleFadeIn;
+    uint32_t age = 0;
+    bool active = false;
+  };
+
+  struct WarningLine {
+    PIXEL_POINT center{};
+    std::span<WORLD_POINT> points;
+    uint8_t angle_x = 0;
+    uint8_t angle_y = 0;
+    uint8_t angle_z = 0;
+  };
+
+  void ResetStrings();
+  void ResetCircles();
+  void ResetFragments();
+  void ResetBombExplosions();
+  void ResetScreenTransition();
+  void ResetBossWarning();
+
+  void UpdateStrings();
+  void UpdateCircles();
+  void UpdateFragments();
+  void UpdateBombExplosions();
+  void UpdateScreenTransition();
+  void UpdateBossWarning();
+
+  void DrawStrings();
+  void DrawBossWarning();
+  void RenderMusicTitle(WINDOW_POINT top_left, const PIXEL_LTWH &subrect);
+  static void DrawCircleFade(int x, int y, int radius);
+  static void InitializeBombExplosion(BombExplosion &effect);
+  static void UpdateBombExplosion(BombExplosion &effect);
+  static void DrawBombExplosion(const BombExplosion &effect);
+
+  void InitializeWarningText();
+  void UpdateWarningText(uint8_t age);
+  void RotateWarningText(int amount);
+  void DrawWarningText();
+
+  std::array<StringEffect, kStringEffectCapacity> strings_{};
+  std::array<CircleEffect, kCircleEffectCapacity> circles_{};
+  std::array<Fragment, kFragmentCapacity> fragments_{};
+  std::array<BombExplosion, kBombEffectCapacity> bomb_explosions_{};
+  std::size_t next_fragment_ = 0;
+
+  ScreenEffect screen_{};
+  TEXTRENDER_RECT_ID music_title_rect_{};
+  std::array<std::string_view, 2> music_title_text_{"\xE2\x99\xAA ", ""};
+
+  std::array<WORLD_POINT, 11> warning_w_{};
+  std::array<WORLD_POINT, 8> warning_a_outer_{};
+  std::array<WORLD_POINT, 4> warning_a_inner_{};
+  std::array<WORLD_POINT, 14> warning_r_{};
+  std::array<WORLD_POINT, 9> warning_n_left_{};
+  std::array<WORLD_POINT, 5> warning_i_{};
+  std::array<WORLD_POINT, 9> warning_n_right_{};
+  std::array<WORLD_POINT, 17> warning_g_{};
+  std::array<WarningLine, 8> warning_lines_{};
+  uint16_t warning_age_ = 0;
+  mutable uint16_t warning_pulse_ = 0;
+  bool warning_active_ = false;
+};

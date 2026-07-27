@@ -8,9 +8,9 @@
 
 #include "graphics_loader.h"
 
-#include "core/constants.h"
 #include "gfx/format_bmp.h"
 #include "gfx/graphics_backend.h"
+#include "graphics_assets.h"
 
 namespace data {
 
@@ -36,8 +36,9 @@ bool GraphicsLoader::Load(Set set) {
     break;
   case Set::Ending:
     loaded = LoadBmp(32, SURFACE_ID::ENDING_CREDITS);
-    for (uint8_t i = 0; loaded && i < ENDING_PIC_MAX; ++i) {
-      loaded = LoadBmp(33 + i, SURFACE_ID::ENDING_PIC + i);
+    for (uint8_t i = 0; loaded && i < graphics_assets::kEndingPictureCount;
+         ++i) {
+      loaded = LoadBmp(33 + i, graphics_assets::EndingPictureSurface(i));
     }
     break;
   case Set::Extra:
@@ -67,7 +68,7 @@ bool GraphicsLoader::Load(Set set) {
 
 bool GraphicsLoader::LoadStage(StageId stage) {
   const auto value = std::to_underlying(stage);
-  if (value > std::to_underlying(StageId::EXTRA)) {
+  if (value > std::to_underlying(StageId::Extra)) {
     return false;
   }
   return Load(static_cast<Set>(value));
@@ -124,8 +125,8 @@ bool GraphicsLoader::LoadGalleryEnemySurface() const {
 }
 
 bool GraphicsLoader::LoadFace(uint8_t face_id, uint8_t file_no) {
-  return face_id < FACE_MAX &&
-         LoadBmp(13 + file_no, SURFACE_ID::FACE + face_id);
+  return face_id < graphics_assets::kFaceSurfaceCount &&
+         LoadBmp(13 + file_no, graphics_assets::FaceSurface(face_id));
 }
 
 } // namespace data

@@ -37,7 +37,7 @@ BYTE_BUFFER_OWNED SDL_LoadFile(const char *file) {
 
 BYTE_BUFFER_OWNED SDL_LoadFile_IO(SDL_IOStream *src, bool closeio) {
   size_t size;
-  auto *buf = SDL_LoadFile_IO(src, &size, true);
+  auto *buf = SDL_LoadFile_IO(src, &size, closeio);
   if (!buf) {
     return {};
   }

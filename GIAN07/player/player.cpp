@@ -12,21 +12,32 @@
 #include "player.h"
 
 #include "audio/snd.h"
-#include "bullet/bullet_manager.h"
-#include "core/config.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
-#include "core/level.h"
 #include "effect/effect_manager.h"
 #include "gameflow/game_main.h"
+#include "gameplay/game_rules.h"
+#include "gameplay/game_session.h"
+#include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
+#include "util/ut_math.h"
+
+namespace {
+
+inline constexpr auto kMovementLeft = playfield::kWorldLeft + 10_px;
+inline constexpr auto kMovementRight = playfield::kWorldRight - 10_px;
+inline constexpr auto kMovementTop = playfield::kWorldTop + 40_px;
+inline constexpr auto kMovementBottom = playfield::kWorldBottom - 10_px;
+inline constexpr auto kStartX = playfield::kWorldCenterX;
+inline constexpr auto kStartY = playfield::kWorldBottom + 180_px;
+
+} // namespace
 
 // --- Player method implementations ---
 
-Player::Player() : loadout_(std::make_unique<WideLoadout>()) {}
+Player::Player(EffectManager &effects)
+    : loadout_(std::make_unique<WideLoadout>()), effects_(effects) {}
 
 bool Player::IsMainShotFrame_(uint16_t t) const {
   return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
@@ -160,7 +171,7 @@ void Player::UpdateStatus_() {
 
     if (evade_c_ == 0) {
       if (evade_ > 100) {
-        Effects.SpawnStringEffect(
+        effects_.SpawnString(
             180, 40,
             std::format("{:3} Evade  {:7} Pts", evade_, evadesc_).c_str());
       }
@@ -205,7 +216,7 @@ void Player::UpdateStatus_() {
 }
 
 INPUT_BITS Player::PrepareInput_(INPUT_BITS input) {
-  if (input_config_->z_spd_down_enabled) {
+  if (focus_while_firing_) {
     if ((input & KEY_TAMA) != 0) {
       if (shift_counter_ < 8) {
         shift_counter_++;
@@ -250,16 +261,16 @@ void Player::UpdateMovement_(INPUT_BITS input) {
       y_ += (vy >> 2);
     }
 
-    if (y_ < SY_MIN) {
-      y_ = SY_MIN;
-    } else if (y_ > SY_MAX) {
-      y_ = SY_MAX;
+    if (y_ < kMovementTop) {
+      y_ = kMovementTop;
+    } else if (y_ > kMovementBottom) {
+      y_ = kMovementBottom;
     }
 
-    if (x_ < SX_MIN) {
-      x_ = SX_MIN;
-    } else if (x_ > SX_MAX) {
-      x_ = SX_MAX;
+    if (x_ < kMovementLeft) {
+      x_ = kMovementLeft;
+    } else if (x_ > kMovementRight) {
+      x_ = kMovementRight;
     }
   } else {
     vx = 0;
@@ -299,18 +310,20 @@ void Player::UpdateOptionPosition_(int movement_x, int movement_y) {
   opy_ = y_ + option_lag_y_ + 6_px;
 }
 
-void Player::Update(EnemyManager &enemies, INPUT_BITS input) {
+bool Player::Update(EnemyManager &enemies, INPUT_BITS input) {
   UpdateStatus_();
   input = PrepareInput_(input);
   UpdateMovement_(input);
   UpdateWeapons_(enemies, input);
 
   if (bomb_time_ != 0U) {
-    bullets_->Clear();
+    clear_bullets_requested_ = true;
   }
 
   buzz_sound_ = false;
   UpdateProjectiles_(enemies);
+
+  return std::exchange(clear_bullets_requested_, false);
 }
 
 void Player::Initialize(int player_stock, int bomb_stock) {
@@ -320,7 +333,8 @@ void Player::Initialize(int player_stock, int bomb_stock) {
   dscore_ = 0;
   exp_ = 0;
   exp2_ = 0;
-  bomb_ = bomb_stock;
+  initial_bomb_stock_ = static_cast<uint8_t>(bomb_stock);
+  bomb_ = initial_bomb_stock_;
   left_ = player_stock;
   credit_ = 4;
 
@@ -351,13 +365,13 @@ void Player::Initialize(int player_stock, int bomb_stock) {
 }
 
 void Player::PrepareNextStage() {
-  x_ = opx_ = SX_START;
-  y_ = opy_ = SY_START;
+  x_ = opx_ = kStartX;
+  y_ = opy_ = kStartY;
   option_lag_x_ = option_lag_y_ = 0;
 
   toge_time_ = 0;
   loadout_->Reset();
-  maid_tama_.Init();
+  maid_tama_.Reset();
 
   invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
   bomb_time_ = 0;
@@ -373,12 +387,12 @@ void Player::OnHit() {
     return;
   }
 
-  switch (game_config_->practice_mode) {
-  case PracticeMode::OFF:
-  case PracticeMode::AUTOBOMB:
+  switch (practice_mode_) {
+  case PracticeMode::Off:
+  case PracticeMode::AutoBomb:
     if (bomb_ != 0U && bomb_time_ == 0U) {
       EnterDeathbombWindow_();
-      if (game_config_->practice_mode == PracticeMode::AUTOBOMB) {
+      if (practice_mode_ == PracticeMode::AutoBomb) {
         Key_Data |= KEY_BOMB;
       }
     } else {
@@ -386,10 +400,10 @@ void Player::OnHit() {
       CommitDeath_();
     }
     return;
-  case PracticeMode::INVINCIBLE:
+  case PracticeMode::Invincible:
     PlayHitFeedback_();
     for (int i = 0; i < 50; i++) {
-      Effects.SpawnFragment(x_, y_, FRG_HEART);
+      effects_.SpawnFragment(x_, y_, FragmentKind::Heart);
     }
     invincibility_time_ = PRACTICE_HIT_INVINCIBILITY_DURATION;
     return;
@@ -398,15 +412,15 @@ void Player::OnHit() {
 
 void Player::PlayHitFeedback_() const {
   Snd_SEPlay(SfxId::Dead);
-  Effects.SpawnFragment(x_, y_, FRG_FATCIRCLE);
+  effects_.SpawnFragment(x_, y_, FragmentKind::ExpandingCircle);
 }
 
 void Player::EnterDeathbombWindow_() {
   PlayHitFeedback_();
-  const auto window =
-      DEATHBOMB_WINDOW + (static_cast<int>(GameLevel::LUNATIC) -
-                          static_cast<int>(std::to_underlying(game_->level))) *
-                             2;
+  const auto window = DEATHBOMB_WINDOW +
+                      (static_cast<int>(GameLevel::Lunatic) -
+                       static_cast<int>(std::to_underlying(session_->level))) *
+                          2;
   deathbomb_time_ = static_cast<uint16_t>(window);
   life_state_ = LifeState::DeathbombWindow;
 }
@@ -438,29 +452,29 @@ bool Player::ActivateBomb_(BombTrigger trigger) {
   }
   deathbomb_time_ = 0;
   life_state_ = LifeState::Active;
-  game_->AddRank(-BOMB_RANK_DECR);
-  bullets_->Clear();
+  session_->AddRank(-BOMB_RANK_DECR);
+  clear_bullets_requested_ = true;
   return true;
 }
 
 void Player::CommitDeath_() {
   for (int i = 0; i < 50; i++) {
-    Effects.SpawnFragment(x_, y_, FRG_HEART);
+    effects_.SpawnFragment(x_, y_, FragmentKind::Heart);
   }
 
-  x_ = opx_ = SX_START;
-  y_ = opy_ = SY_START;
+  x_ = opx_ = kStartX;
+  y_ = opy_ = kStartY;
   option_lag_x_ = option_lag_y_ = 0;
 
   loadout_->Reset();
 
-  bomb_ = game_config_->bomb_stock;
+  bomb_ = initial_bomb_stock_;
   bomb_time_ = 0;
   deathbomb_time_ = 0;
   invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
   life_state_ = LifeState::Respawning;
 
-  game_->AddRank(-DEATH_RANK_DECR); // death decreases rank
+  session_->AddRank(-DEATH_RANK_DECR); // death decreases rank
 
   if (left_ != 0U) {
     left_ -= 1;
@@ -476,7 +490,7 @@ void Player::CommitDeath_() {
     GameOverInit();
   }
 
-  bullets_->Clear();
+  clear_bullets_requested_ = true;
 }
 
 void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }
@@ -487,9 +501,9 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
       Snd_SEPlay(SfxId::Buzz, ex);
       buzz_sound_ = true;
     }
-    Effects.SpawnFragment(ex, ey, FRG_EVADE);
-    Effects.SpawnFragment(ex, ey, FRG_EVADE);
-    Effects.SpawnFragment(ex, ey, FRG_EVADE);
+    effects_.SpawnFragment(ex, ey, FragmentKind::Graze);
+    effects_.SpawnFragment(ex, ey, FragmentKind::Graze);
+    effects_.SpawnFragment(ex, ey, FragmentKind::Graze);
   }
 
   for (uint8_t i = 0; i < n; i++) {

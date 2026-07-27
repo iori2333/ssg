@@ -8,10 +8,9 @@
 #include <cstdint>
 #include <functional>
 
+#include "game_context.h"
 #include "game_main.h"
 #include "score.h"
-
-#include "core/game_context.h"
 
 ///// [ Game state enum ] /////
 enum class GameState {
@@ -29,7 +28,7 @@ enum class GameState {
   SProject,
   ReplayAll,
   MusicRoom,
-  External, // External specification via GameInit(), etc.
+  External,      // External specification via GameInit(), etc.
   BulletGallery, // Debug bullet gallery
 };
 

@@ -17,14 +17,12 @@
 #include "audio/snd.h"
 #include "audio/snd_backend.h"
 #include "bullet/bullet_manager.h"
-#include "core/config.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
-#include "core/level.h"
-#include "effect/bomb_efc.h"
 #include "effect/effect_manager.h"
 #include "effect/lens.h"
 #include "enemy/enemy_manager.h"
+#include "gameplay/game_rules.h"
+#include "gameplay/game_session.h"
+#include "gameplay/playfield.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
@@ -32,6 +30,7 @@
 #include "music_room/music_room.h"
 #include "platform/text_backend.h"
 #include "player/player.h"
+#include "settings/config.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
 #include "ui/ui_manager.h"
@@ -84,7 +83,7 @@ void Render(PIXEL_COORD top) {
 }; // namespace Version
 
 // GameFlow.demo_timer, draw_count, weapon_key_wait, GameFlow.game_over_timer,
-// current_name, current_rank, current_dif, GameFlow.ctx.game.is_demoplay,
+// current_name, current_rank, current_dif, GameFlow.ctx.session.is_demoplay,
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
 
 // Converted functions -> inline wrappers provided in gameflow_manager.h
@@ -111,9 +110,9 @@ void GameMove();
 // game_main initial values set in gameflow_manager.cpp
 
 GameLevel CurrentLevel() {
-  return ((GameFlow.ctx.game.stage == StageId::EXTRA)
-              ? GameLevel::EXTRA
-              : GameFlow.ctx.game.level);
+  return ((GameFlow.ctx.session.stage == StageId::Extra)
+              ? GameLevel::Extra
+              : GameFlow.ctx.session.level);
 }
 
 // input_locked moved to GameFlowManager in gameflow_manager.cpp
@@ -537,10 +536,10 @@ bool GameFlowManager::NameRegistInit(bool bNeedChgMusic) {
   current_name.Score = GameFlow.ctx.player.Score();
   current_name.Evade = GameFlow.ctx.player.GrazeSum();
   current_name.Weapon = PlayerTypeIndex(GameFlow.ctx.player.Type());
-  if (GameFlow.ctx.game.stage == StageId::EXTRA) {
+  if (GameFlow.ctx.session.stage == StageId::Extra) {
     current_name.Stage = 1;
   } else {
-    current_name.Stage = std::to_underlying(GameFlow.ctx.game.stage) + 1;
+    current_name.Stage = std::to_underlying(GameFlow.ctx.session.stage) + 1;
   }
 
   // For debugging...
@@ -583,31 +582,17 @@ void GameSTD_Init() {
   // Grp_Flip();
 
   // --- DI ---
-  GameFlow.ctx.player.Bind(GameFlow.ctx.bullets);
-  GameFlow.ctx.player.Bind(GameFlow.ctx.game);
+  GameFlow.ctx.player.Bind(GameFlow.ctx.session);
   GameFlow.ctx.player.Bind(GameFlow.ctx.stage);
-  GameFlow.ctx.items.Bind(GameFlow.ctx.player);
-  GameFlow.ctx.bullets.Bind(GameFlow.ctx.items);
-  GameFlow.ctx.bullets.Bind(GameFlow.ctx.game);
-  GameFlow.ctx.bullets.Bind(GameFlow.ctx.player);
-  GameFlow.ctx.player.Bind(*GameFlow.ctx.game_cfg);
-  GameFlow.ctx.player.Bind(*GameFlow.ctx.input_cfg);
+  GameFlow.ctx.player.Configure(GameFlow.ctx.config.game.practice_mode,
+                                GameFlow.ctx.config.input.z_spd_down_enabled);
 
   GameFlow.ctx.enemies.Reset();
   GameFlow.ctx.ui.UpdateBossHud(GameFlow.ctx.enemies.BossHud());
   GameFlow.ctx.bullets.Init();
-  Effects.InitStringEffects();
-  Effects.InitCircleEffects();
-  Effects.InitLockOn();
   GameFlow.ctx.items.Init();
-  Effects.InitFragments();
-  Effects.InitScreenEffect();
-  Effects.SetScreenEffect(SCNEFC_CFADEIN);
-
-  Effects.InitBombEffects();
-
-  Effects.InitWarningText();
-  Effects.InitWarningEffect();
+  GameFlow.ctx.effects.Reset();
+  GameFlow.ctx.effects.StartScreenTransition(ScreenTransition::CircleFadeIn);
   // WarningEffectSet();
 
   BGM_SetTempo(0);
@@ -619,22 +604,22 @@ bool GameFlowManager::WeaponSelectInit(bool ExStg) {
   GrpBackend_Clear();
   Grp_Flip();
 
-  GameFlow.ctx.game.level =
-      (ExStg ? GameLevel::EXTRA : GameFlow.ctx.game_cfg->game_level);
+  GameFlow.ctx.session.level =
+      (ExStg ? GameLevel::Extra : GameFlow.ctx.config.game.game_level);
 
   GameSTD_Init();
-  GameFlow.ctx.game.ResetRank();
+  GameFlow.ctx.session.ResetRank();
 
   GameFlow.ctx.player.SelectType(PlayerType::Wide);
-  GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
-                                 GameFlow.ctx.game_cfg->bomb_stock);
+  GameFlow.ctx.player.Initialize(GameFlow.ctx.config.game.player_stock,
+                                 GameFlow.ctx.config.game.bomb_stock);
   GrpBackend_SetClip(GRP_RES_RECT);
 
   weapon_key_wait = 1;
   game_main = [](bool &q) { GameFlow.WeaponSelectProc(q); };
   current_state = GameState::WeaponSelect;
   if (ExStg) {
-    GameFlow.ctx.game.stage = StageId::EXTRA;
+    GameFlow.ctx.session.stage = StageId::Extra;
   }
 
   return true;
@@ -644,7 +629,7 @@ bool GameInit(std::function<void(bool &)> next_proc) {
   TextObj.Clear();
   if (GameFlow.current_state != GameState::Demo) {
     BGM_FadeOut(240);
-    Effects.InitMusicTitle();
+    GameFlow.ctx.effects.InitializeTextRenderer();
   }
   if (GameFlow.current_state == GameState::Game ||
       GameFlow.current_state == GameState::ReplayAll) {
@@ -652,9 +637,9 @@ bool GameInit(std::function<void(bool &)> next_proc) {
     // Replays don't show dialog, so this is the only place where we need
     // to do this.
     const auto flags = MsgWindowFlags::WITH_FACE;
-    if (GameFlow.ctx.graphics_cfg->window_upper) {
+    if (GameFlow.ctx.config.graphics.window_upper) {
       GameFlow.ctx.ui.InitMessageWindow({128, 16, (640 - 128), 96}, flags);
-    } else if (!GameFlow.ctx.graphics_cfg->msg_disable) {
+    } else if (!GameFlow.ctx.config.graphics.msg_disable) {
       GameFlow.ctx.ui.InitMessageWindow({128, 400, (640 - 128), 480}, flags);
     }
 
@@ -670,28 +655,26 @@ bool GameInit(std::function<void(bool &)> next_proc) {
   GameFlow.ctx.ui.on_game_restart = [] { GameRestart(); };
   GameFlow.ctx.ui.on_game_continue = [] { GameContinue(); };
 
-  GrpBackend_SetClip(PLAYFIELD_CLIP);
+  GrpBackend_SetClip(playfield::kClip);
   GameFlow.game_main = std::move(next_proc);
   return true;
 }
 
 // Transition to next stage
 bool GameNextStage() {
-  ++GameFlow.ctx.game.stage;
-  // SCL_STAGECLEAR is never issued after STAGE_6; SCL_GAMECLEAR handles it.
-  if (GameFlow.ctx.game.stage > StageId::STAGE_6) {
-    GameFlow.ctx.game.stage = StageId::STAGE_6;
-  }
+  // SCL_STAGECLEAR is never issued after Stage 6; SCL_GAMECLEAR handles it.
+  GameFlow.ctx.session.AdvanceStage();
 
   GameSTD_Init();
   GameFlow.ctx.player.PrepareNextStage();
 
-  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
+  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!GameFlow.ctx.stage_loader.Load(
-          GameFlow.ctx.game.stage, GameFlow.ctx.enemies, GameFlow.ctx.stage)) {
+  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
+                                      GameFlow.ctx.enemies,
+                                      GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -701,36 +684,37 @@ bool GameNextStage() {
 
 // Initialize for multi-stage replay
 bool GameReplayInitAll(const char *fn) {
-  GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
-                                 GameFlow.ctx.game_cfg->bomb_stock);
+  GameFlow.ctx.player.Initialize(GameFlow.ctx.config.game.player_stock,
+                                 GameFlow.ctx.config.game.bomb_stock);
   if (!GameFlow.ctx.demos.LoadReplayAll(fn)) {
     return false;
   }
 
-  GameFlow.ctx.game.stage =
+  GameFlow.ctx.session.stage =
       static_cast<StageId>(GameFlow.ctx.demos.multi_play_info.Stages[0]);
 
-  GameFlow.ctx.game.ResetRank();
+  GameFlow.ctx.session.ResetRank();
 
   GrpBackend_Clear();
   Grp_Flip();
   GameSTD_Init();
 
-  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
+  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
     return false;
   }
-  if (!GameFlow.ctx.stage_loader.Load(
-          GameFlow.ctx.game.stage, GameFlow.ctx.enemies, GameFlow.ctx.stage)) {
+  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
+                                      GameFlow.ctx.enemies,
+                                      GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     GameFlow.ctx.demos.Cleanup();
     GameFlow.ctx.demos.load_all_enable = false;
     return false;
   }
 
-  if (GameFlow.ctx.game.stage == StageId::EXTRA) {
+  if (GameFlow.ctx.session.stage == StageId::Extra) {
     GameFlow.ctx.player.SetCredits(0);
   }
 
@@ -801,24 +785,25 @@ bool DemoInit() {
 
   GameSTD_Init();
 
-  GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
-                                 GameFlow.ctx.game_cfg->bomb_stock);
+  GameFlow.ctx.player.Initialize(GameFlow.ctx.config.game.player_stock,
+                                 GameFlow.ctx.config.game.bomb_stock);
   rnd_seed_set(Time_SteadyTicksMS());
-  GameFlow.ctx.game.stage = static_cast<StageId>(rnd() % STAGE_MAX);
+  GameFlow.ctx.session.stage = static_cast<StageId>(rnd() % kRegularStageCount);
 
-  if (!GameFlow.ctx.demos.LoadDemo(GameFlow.ctx.game.stage)) {
+  if (!GameFlow.ctx.demos.LoadDemo(GameFlow.ctx.session.stage)) {
     // DebugOut("Demo play data does not exist");
     return false;
   }
 
-  GameFlow.ctx.game.ResetRank();
+  GameFlow.ctx.session.ResetRank();
 
-  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
+  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
-  if (!GameFlow.ctx.stage_loader.Load(
-          GameFlow.ctx.game.stage, GameFlow.ctx.enemies, GameFlow.ctx.stage)) {
+  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
+                                      GameFlow.ctx.enemies,
+                                      GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
     return false;
   }
@@ -936,7 +921,7 @@ bool GameExit(bool bNeedChgMusic) {
 
   GameFlow.demo_timer = 0;
 
-  GameFlow.ctx.game.stage = StageId::STAGE_1;
+  GameFlow.ctx.session.stage = StageId::Stage1;
 
   if (GameFlow.current_state != GameState::Demo) {
     if (bNeedChgMusic) {
@@ -961,7 +946,7 @@ bool GameExit(bool bNeedChgMusic) {
 
 // Game over preprocessing
 void GameOverInit() {
-  Effects.SpawnGameOverEffect();
+  GameFlow.ctx.effects.SpawnGameOver();
 
   GameFlow.game_over_timer = 120;
 
@@ -973,7 +958,7 @@ void GameOverInit() {
 void GameContinue() {
   BGM_Resume();
   SndBackend_ResumeAll();
-  GameFlow.ctx.player.ResetForContinue(GameFlow.ctx.game_cfg->player_stock);
+  GameFlow.ctx.player.ResetForContinue(GameFlow.ctx.config.game.player_stock);
 
   GameFlow.game_main = GameProc;
   GameFlow.current_state = GameState::Game;
@@ -1029,8 +1014,7 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
   switch (game_over_timer) {
   default:
     game_over_timer--;
-    Effects.MoveFragments();
-    Effects.MoveStringEffects();
+    GameFlow.ctx.effects.UpdateGameOver();
     break;
 
   case 0:
@@ -1090,7 +1074,7 @@ void GameOverSaveProc(bool & /*unused*/) {
 void GameOverProc(bool & /*unused*/) {
   GameFlow.ctx.ui.Continue().Tick(Key_Data);
   if (GameFlow.current_state != GameState::GameOver) {
-    Effects.InitStringEffects();
+    GameFlow.ctx.effects.ClearTextEffects();
     return;
   }
 
@@ -1117,12 +1101,12 @@ void DemoProc(bool & /*unused*/) {
     Key_Data = GameFlow.ctx.demos.Move();
   }
 
-  GameFlow.ctx.game.is_demoplay = true;
+  GameFlow.ctx.session.is_demoplay = true;
 
   // Exit immediately if ESC is pressed
   if ((Key_Data & KEY_ESC) != 0) {
     GameFlow.ctx.demos.Cleanup();
-    GameFlow.ctx.game.is_demoplay = false;
+    GameFlow.ctx.session.is_demoplay = false;
     GameExit();
     return;
   }
@@ -1131,7 +1115,7 @@ void DemoProc(bool & /*unused*/) {
 
   if (GameFlow.current_state != GameState::Demo) {
     GameFlow.ctx.demos.Cleanup(); // Cleanup
-    GameFlow.ctx.game.is_demoplay = false;
+    GameFlow.ctx.session.is_demoplay = false;
     GameExit(); // Force exit (game over countermeasure)
     return;
   }
@@ -1225,28 +1209,28 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     if (spd != 0) {
       break;
     }
-    if (GameFlow.ctx.game.stage == StageId::EXTRA) {
+    if (GameFlow.ctx.session.stage == StageId::Extra) {
       if (((1 << PlayerTypeIndex(GameFlow.ctx.player.Type()))) == 0) {
         break;
       }
     }
 
-    GameFlow.ctx.player.Initialize(GameFlow.ctx.game_cfg->player_stock,
-                                   GameFlow.ctx.game_cfg->bomb_stock);
+    GameFlow.ctx.player.Initialize(GameFlow.ctx.config.game.player_stock,
+                                   GameFlow.ctx.config.game.bomb_stock);
     count = 0;
 
     Snd_SEPlay(SfxId::Select);
-    if (GameFlow.ctx.game.stage != StageId::EXTRA) {
+    if (GameFlow.ctx.session.stage != StageId::Extra) {
       if (forceStage != 0) {
-        GameFlow.ctx.game.stage = static_cast<StageId>(forceStage - 1);
-        if (GameFlow.ctx.game.stage == StageId::STAGE_2) {
+        GameFlow.ctx.session.stage = static_cast<StageId>(forceStage - 1);
+        if (GameFlow.ctx.session.stage == StageId::Stage2) {
           GameFlow.ctx.player.SetPower(160);
         }
-        if (GameFlow.ctx.game.stage >= StageId::STAGE_3) {
+        if (GameFlow.ctx.session.stage >= StageId::Stage3) {
           GameFlow.ctx.player.SetPower(255);
         }
       } else {
-        GameFlow.ctx.game.stage = StageId::STAGE_1;
+        GameFlow.ctx.session.stage = StageId::Stage1;
       }
     } else {
       GameFlow.ctx.player.SetCredits(0);
@@ -1256,11 +1240,11 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
 
     GameFlow.ctx.demos.Init();
 
-    if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.game.stage)) {
+    if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
       DebugOut("IMAGES.PAK が破壊されています");
       return;
     }
-    if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.game.stage,
+    if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
                                         GameFlow.ctx.enemies,
                                         GameFlow.ctx.stage)) {
       DebugOut("MAP.PAK が破壊されています");
@@ -1307,8 +1291,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GrpGeom->SetColor({0, 0, 1});
     GrpGeom->SetAlphaNorm(128);
     for (i = 0; i < 3; i++) {
-      if ((GameFlow.ctx.game.stage != StageId::EXTRA) ||
-          (((1 << i) & GameFlow.ctx.game.extra_stg_flags) != 0)) {
+      if ((GameFlow.ctx.session.stage != StageId::Extra) ||
+          (((1 << i) & GameFlow.ctx.session.extra_stg_flags) != 0)) {
         continue;
       }
 
@@ -1331,7 +1315,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
     GameFlow.ctx.player.SetPosition(400_px + sinl((count / 3) * 6, 60_px),
                                     350_px + sinl((count / 3) * 4, 30_px));
 
-    GameFlow.ctx.player.Update(GameFlow.ctx.enemies, Key_Data);
+    static_cast<void>(
+        GameFlow.ctx.player.Update(GameFlow.ctx.enemies, Key_Data));
 
     GrpBackend_SetClip({(400 - 110), (400 - 300 + 2), (400 + 110), (400 + 10)});
     for (x = 400 - 110 - 2; x < 400 + 110; x += 32) {
@@ -1461,7 +1446,7 @@ void PauseProc(bool & /*unused*/) {
 
     GrpBackend_SetClip(GRP_RES_RECT);
     GameFlow.ctx.ui.Exit().Draw();
-    GrpBackend_SetClip(PLAYFIELD_CLIP);
+    GrpBackend_SetClip(playfield::kClip);
 
     Grp_Flip();
   }
@@ -1484,7 +1469,7 @@ void HandleStageTransition(stage::StageTransition transition) {
       return;
     }
     if (GameFlow.ctx.demos.load_all_enable) {
-      if (GameFlow.ctx.game.stage < GameFlow.ctx.demos.playback_max_stage) {
+      if (GameFlow.ctx.session.stage < GameFlow.ctx.demos.playback_max_stage) {
         (void)GameNextStage();
       }
       return;
@@ -1500,11 +1485,11 @@ void HandleStageTransition(stage::StageTransition transition) {
     if (GameFlow.ctx.demos.load_all_enable) {
       return;
     }
-    if (GameFlow.ctx.game.level != GameLevel::EASY) {
-      GameFlow.ctx.game.extra_stg_flags |= static_cast<uint8_t>(
+    if (GameFlow.ctx.session.level != GameLevel::Easy) {
+      GameFlow.ctx.session.extra_stg_flags |= static_cast<uint8_t>(
           1U << PlayerTypeIndex(GameFlow.ctx.player.Type()));
     }
-    GameFlow.ctx.save_config();
+    SaveConfigFile(GameFlow.ctx.config);
     (void)GameFlow.ctx.ending.Init();
     return;
 
@@ -1525,12 +1510,12 @@ void GameMove() {
 
   const auto transition = GameFlow.ctx.stage.Update(
       {.enemies = GameFlow.ctx.enemies,
-       .effects = Effects,
+       .effects = GameFlow.ctx.effects,
        .ui = GameFlow.ctx.ui,
        .graphics = GameFlow.ctx.graphics,
        .tracks = GameFlow.ctx.tracks,
-       .game = GameFlow.ctx.game,
-       .messages_disabled = GameFlow.ctx.graphics_cfg->msg_disable},
+       .session = GameFlow.ctx.session,
+       .messages_disabled = GameFlow.ctx.config.graphics.msg_disable},
       Key_Data);
   if (transition != stage::StageTransition::None) {
     HandleStageTransition(transition);
@@ -1541,17 +1526,12 @@ void GameMove() {
   GameFlow.ctx.ui.UpdateBossHud(GameFlow.ctx.enemies.BossHud());
   GameFlow.ctx.items.Move();
   GameFlow.ctx.bullets.Update(GameFlow.ctx.enemies.HomingTarget());
-  Effects.MoveFragments();
-  Effects.MoveStringEffects();
-  Effects.MoveCircleEffects();
-  Effects.MoveBombEffects();
-  Effects.MoveLockOn();
+  GameFlow.ctx.effects.Update();
 
-  Effects.MoveWarningEffect();
-  Effects.MoveScreenEffect();
-
-  GameFlow.ctx.player.Update(GameFlow.ctx.enemies, Key_Data);
-  GameFlow.ctx.game.Update(GameFlow.ctx.stage.Frame());
+  if (GameFlow.ctx.player.Update(GameFlow.ctx.enemies, Key_Data)) {
+    GameFlow.ctx.bullets.Clear();
+  }
+  GameFlow.ctx.session.UpdateRank(GameFlow.ctx.stage.Frame());
 }
 
 void GameDraw() {
@@ -1567,21 +1547,21 @@ void GameDraw() {
       .deathbomb_count = GameFlow.ctx.player.DeathbombCount(),
       .star_counter = GameFlow.ctx.player.StarCounter(),
       .star_threshold = GameFlow.ctx.player.StarThreshold(),
-      .rank = GameFlow.ctx.game.rank,
-      .level_name = GameFlow.ctx.game.LevelName(),
-      .practice_mode = GameFlow.ctx.game_cfg->practice_mode,
+      .rank = GameFlow.ctx.session.rank,
+      .level_name = GameFlow.ctx.session.DifficultyName(),
+      .practice_mode = GameFlow.ctx.config.game.practice_mode,
   };
 
   GrpBackend_Clear();
 
-  GameFlow.ctx.stage.Draw(Effects);
-  Effects.DrawCircleEffects();
+  GameFlow.ctx.stage.Draw();
+  GameFlow.ctx.effects.DrawCircles();
 
   GameFlow.ctx.enemies.DrawBosses();
 
   GameFlow.ctx.player.DrawBombBackground();
 
-  Effects.DrawBombEffects();
+  GameFlow.ctx.effects.DrawBombExplosions();
 
   GameFlow.ctx.enemies.DrawRegular();
 
@@ -1589,16 +1569,14 @@ void GameDraw() {
 
   GameFlow.ctx.player.Draw();
 
-  Effects.DrawLockOn();
-
-  Effects.DrawFragments();
+  GameFlow.ctx.effects.DrawFragments();
   GameFlow.ctx.items.Draw();
 
   GameFlow.ctx.bullets.Render();
 
-  if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
+  if (GameFlow.ctx.config.debug.hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(
-        GameFlow.ctx.debug_cfg->hitbox_display);
+        GameFlow.ctx.config.debug.hitbox_display);
     GameFlow.ctx.player.DrawDebugHitbox();
   }
 
@@ -1606,22 +1584,19 @@ void GameDraw() {
 
   // if((Key_Data&KEY_UP  ) && test<64) test++;
   // if((Key_Data&KEY_DOWN) && test!=0 ) test--;
-  Effects.DrawWarningEffect();
-  // MoveWarning(test++);
-  // DrawWarning();
-
-  Effects.DrawStringEffects();
+  GameFlow.ctx.effects.DrawForeground();
   GameFlow.ctx.ui.DrawTopHud(hud_model);
 
   GameFlow.ctx.ui.DrawBossHud(GameFlow.ctx.stage.Frame());
-  Effects.DrawScreenEffect();
+  GameFlow.ctx.effects.DrawScreenTransition();
 
   GameFlow.ctx.ui.DrawMessageWindow();
-  // GrpBackend_SetClip(PLAYFIELD_CLIP);
+  // GrpBackend_SetClip(playfield::kClip);
 
   GrpBackend_SetClip(GRP_RES_RECT);
   GameFlow.ctx.ui.DrawSidebarHud(hud_model);
-  GrpBackend_SetClip({X_MIN, Y_MIN, (X_MAX + 1), (Y_MAX + 1)});
+  GrpBackend_SetClip({playfield::kLeft, playfield::kTop,
+                      (playfield::kRight + 1), (playfield::kBottom + 1)});
 }
 
 bool GameFlowManager::IsDraw() {
@@ -1710,9 +1685,9 @@ static void BulletGalleryProc(bool & /*quit*/) {
   GrpBackend_Clear();
   GameFlow.ctx.bullets.Render();
 
-  if (GameFlow.ctx.debug_cfg->hitbox_display != 0) {
+  if (GameFlow.ctx.config.debug.hitbox_display != 0) {
     GameFlow.ctx.bullets.RenderDebugHitboxes(
-        GameFlow.ctx.debug_cfg->hitbox_display);
+        GameFlow.ctx.config.debug.hitbox_display);
     GameFlow.ctx.player.DrawDebugHitbox();
   }
 
@@ -1720,7 +1695,8 @@ static void BulletGalleryProc(bool & /*quit*/) {
 
   GrpBackend_SetClip(GRP_RES_RECT);
   GrpPut16(140, 460, "Bullet Gallery  |  ESC to exit");
-  GrpBackend_SetClip({X_MIN, Y_MIN, (X_MAX + 1), (Y_MAX + 1)});
+  GrpBackend_SetClip({playfield::kLeft, playfield::kTop,
+                      (playfield::kRight + 1), (playfield::kBottom + 1)});
 
   Grp_Flip();
 }

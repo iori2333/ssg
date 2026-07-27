@@ -30,11 +30,11 @@ namespace stage {
 bool StageLoader::Load(StageId stage, EnemyManager &enemies,
                        StageSession &session) const {
   const auto stage_index = std::to_underlying(stage);
-  if (stage_index > std::to_underlying(StageId::EXTRA)) {
+  if (stage_index > std::to_underlying(StageId::Extra)) {
     return false;
   }
 
-  const bool extra = stage == StageId::EXTRA;
+  const bool extra = stage == StageId::Extra;
   auto ecl = LoadEmbeddedScript(extra ? 24 : stage_index);
   auto scl = LoadEmbeddedScript(extra ? 25 : stage_index + 6);
   auto map = data_->ExtractMap(extra ? 12 : stage_index);

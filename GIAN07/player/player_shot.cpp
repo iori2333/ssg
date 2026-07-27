@@ -14,11 +14,10 @@
 #include "player_shot.h"
 
 #include "audio/snd.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
 #include "effect/effect_manager.h"
-#include "effect/fragment.h"
 #include "enemy/enemy_manager.h"
+#include "gameplay/game_session.h"
+#include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
@@ -62,7 +61,7 @@ void Player::UpdateWeapons_(EnemyManager &enemies, INPUT_BITS input) {
 
   if (bomb_time_ != 0U) {
     bomb_time_--;
-    loadout_->UpdateBomb(*this, enemies, bomb_time_);
+    loadout_->UpdateBomb(*this, enemies, effects_, bomb_time_);
   }
 
   if (toge_time_ != 0U) {
@@ -81,19 +80,17 @@ void Player::UpdateWeapons_(EnemyManager &enemies, INPUT_BITS input) {
 
 // --- Movement helpers ---
 
-void PlayerShot::Move(const EnemyHomingTarget &target) {
+bool PlayerShot::Move(const EnemyHomingTarget &target) {
   short deg_t = 0;
 
   switch (motion_) {
   case PlayerShotMotion::Straight:
     x_ += velocity_x_;
     y_ += velocity_y_;
-    return;
+    return false;
 
   case PlayerShotMotion::Homing: {
-    if ((age_ & 1) != 0) {
-      Effects.SpawnFragment(x_, y_, FRG_SMOKE);
-    }
+    const bool spawn_smoke = (age_ & 1) != 0;
     const int previous_x = x_;
     const int previous_y = y_;
     x_ += velocity_x_;
@@ -125,12 +122,13 @@ void PlayerShot::Move(const EnemyHomingTarget &target) {
     direction_ += (deg_t * Cast::sign<uint8_t>(turn_rate_) / 255);
     velocity_x_ = cosl(direction_, speed_);
     velocity_y_ = sinl(direction_, speed_);
-    return;
+    return spawn_smoke;
   }
 
   case PlayerShotMotion::Stationary:
-    return;
+    return false;
   }
+  return false;
 }
 
 // --- Bullet movement & hit check ---
@@ -147,9 +145,12 @@ void Player::UpdateProjectiles_(EnemyManager &enemies) {
       continue;
     }
 
-    t.Move(enemies.HomingTarget());
+    if (t.Move(enemies.HomingTarget())) {
+      effects_.SpawnFragment(t.x_, t.y_, FragmentKind::Smoke);
+    }
     t.age_++;
-    if (t.x_ < GX_MIN || t.x_ > GX_MAX || t.y_ < GY_MIN || t.y_ > GY_MAX) {
+    if (t.x_ < playfield::kWorldLeft || t.x_ > playfield::kWorldRight ||
+        t.y_ < playfield::kWorldTop || t.y_ > playfield::kWorldBottom) {
       t.pending_removal_ = true;
     }
 
@@ -162,7 +163,7 @@ void Player::UpdateProjectiles_(EnemyManager &enemies) {
             .direction = 192,
             .direction_step = 16,
             .count = 1,
-            .speed = SPEEDM(10),
+            .speed = 2.5_px,
             .acceleration = 0,
             .kind = PlayerShotKind::HomingBombBlast,
             .motion = PlayerShotMotion::Stationary,
@@ -170,7 +171,7 @@ void Player::UpdateProjectiles_(EnemyManager &enemies) {
         SpawnShot(si);
       }
       t.pending_removal_ = true;
-      Effects.SpawnFragment(t.x_, t.y_, FRG_HIT);
+      effects_.SpawnFragment(t.x_, t.y_, FragmentKind::Hit);
     }
   }
   maid_tama_.Compact([](const PlayerShot &t) { return t.pending_removal_; });

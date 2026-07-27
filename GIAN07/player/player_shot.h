@@ -44,7 +44,7 @@ struct PlayerShot {
   uint16_t age_{};
   bool pending_removal_{};
 
-  void Move(const EnemyHomingTarget &target);
+  [[nodiscard]] bool Move(const EnemyHomingTarget &target);
 };
 
 struct PlayerShotSpawnInfo {

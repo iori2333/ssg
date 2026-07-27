@@ -4,8 +4,14 @@
 
 #pragma once
 
-#include "bullet/bullet_base.h"
-#include "core/point.h"
+#include <cstdint>
+
+#include "bullet/bullet_common.h"
+
+enum class HomingType : uint8_t {
+  None,
+  Type1,
+};
 
 // ── Spawn parameter struct ─────────────────────────────────────
 struct HomingSpawnInfo {
@@ -14,7 +20,7 @@ struct HomingSpawnInfo {
   uint8_t dw{};
   uint8_t n{};
   uint8_t c{};
-  uint8_t type{};
+  HomingType type{HomingType::None};
 
   // Per-bullet context (set by manager before Spawn)
   int bullet_index{};
@@ -25,12 +31,6 @@ inline constexpr auto kHomingMax = 162;
 inline constexpr auto kHomingLen = 7;
 inline constexpr auto kHomingSection = 4;
 
-// ── Type / state enums ──────────────────────────────────────────
-enum class HomingType : uint8_t {
-  None = 0,
-  Type1 = 1,
-};
-
 enum class HomingState : uint8_t {
   Normal = 0x00,
   Dead = 0xff,
@@ -38,32 +38,37 @@ enum class HomingState : uint8_t {
 
 struct HomingUpdateInfo {
   int player_x, player_y;
-  struct UpdateResult {};
 };
 
 // ── LaserHoming ─────────────────────────────────────────────────
-struct LaserHoming : BulletBase<HomingSpawnInfo, HomingUpdateInfo> {
+struct LaserHoming {
   using SpawnInfo = HomingSpawnInfo;
   using UpdateInfo = HomingUpdateInfo;
 
-  friend struct BulletManager;
-
-  void Render() const override;
-  bool IsDead() const override;
-  void Kill() override;
-  void Spawn(const HomingSpawnInfo &info) override;
+  void Render() const;
+  bool IsDead() const;
+  void Kill();
+  void Spawn(const HomingSpawnInfo &info);
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
-                                   int player_radius) const override;
-  [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
-  void RenderDebugHitbox(int mode) const override;
+                                   int player_radius) const;
+  void Update(const UpdateInfo &info = {});
+  void RenderDebugHitbox(int mode) const;
 
 private:
-  void MarkDead() { state_ = HomingState::Dead; }
+  struct TrailPoint {
+    int x{};
+    int y{};
+    uint8_t d{};
+  };
+
+  int v_{};
+  uint8_t c_{};
+  uint32_t count_{};
 
   int current_{};
   int a_{};
   uint8_t left_{};
-  DegPoint p_[kHomingLen * kHomingSection]{};
+  TrailPoint p_[kHomingLen * kHomingSection]{};
 
   HomingType subtype_{HomingType::None};
   HomingState state_{HomingState::Normal};

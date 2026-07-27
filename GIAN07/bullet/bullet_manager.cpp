@@ -3,6 +3,7 @@
 ///
 
 #include <array>
+#include <cstdlib>
 #include <span>
 
 #include "bullet.h"
@@ -10,193 +11,189 @@
 #include "bullet_manager.h"
 
 #include "audio/snd.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
-#include "core/level.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
+#include "gameplay/game_rules.h"
+#include "gameplay/game_session.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "item/item_manager.h"
 #include "player/player.h"
 #include "util/ut_math.h"
 
-namespace {
-inline constexpr auto kZSetFlag = 0x08;
-} // namespace
-
 // ── BulletManager: Init ──────────────────────────────────────────
 
 void BulletManager::Init() {
-  pool.Init();
-  reflect.Init();
-  long_lasers.Init();
-  homing.Init();
+  bullets_.Reset();
+  reflect_lasers_.Reset();
+  long_lasers_.Reset();
+  homing_lasers_.Reset();
   Snd_SEStop(2);
 }
 
 // ── BulletManager: Spawn (bullets) ────────────────────────────────
 
-bool BulletManager::SpawnBullet(const BulletSpawnInfo &si) {
+void BulletManager::SpawnBullet(const BulletSpawnInfo &si) {
   switch (si.spawn_type) {
   case BulletSpawnType::Normal:
-    return SpawnBulletNormal(si);
+    SpawnBulletNormal(si);
+    return;
   case BulletSpawnType::Line:
-    return SpawnBulletLine(si);
+    SpawnBulletLine(si);
+    return;
   case BulletSpawnType::Extra01:
-    return SpawnBulletExtra01(si);
+    SpawnBulletExtra01(si);
+    return;
   }
-  return false;
 }
 
-bool BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
-  const auto n = si.n;
-  const uint16_t setmax = n * (si.rapid ? si.ns : 1U);
+void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
+  const auto n = si.count;
+  const uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
 
   auto base_deg =
-      si.zset ? atan8(player_->X() - si.x, player_->Y() - si.y) : uint8_t{0};
-  base_deg = static_cast<uint8_t>(base_deg + si.d);
+      si.aimed ? atan8(player_.X() - si.x, player_.Y() - si.y) : uint8_t{0};
+  base_deg = static_cast<uint8_t>(base_deg + si.angle);
 
   for (uint16_t i = 0; i < setmax; i++) {
-    auto *t = pool.Alloc();
+    auto *t = bullets_.Alloc();
     if (t == nullptr) {
-      return false;
+      return;
     }
     auto si2 = si;
-    si2.d =
-        bullet_common::CalcSpreadDir(i % n, si.cmd_type, n, base_deg, si.dw);
+    si2.angle =
+        bullet_common::CalcSpreadDir(i % n, si.pattern, n, base_deg, si.spread);
 
     int temp = 0;
-    switch (si.vsp) {
-    case TAMASP_RND1:
+    switch (si.speed_variance) {
+    case BulletSpeedVariance::None:
+      break;
+    case BulletSpeedVariance::Small:
       temp = (rnd() % 16) - 8;
       break;
-    case TAMASP_RND2:
+    case BulletSpeedVariance::Medium:
       temp = (rnd() % 32) - 16;
       break;
-    case TAMASP_RND3:
+    case BulletSpeedVariance::Large:
       temp = (rnd() % 64) - 32;
       break;
     }
-    si2.v_ = si.v_ + temp;
+    si2.speed = si.speed + temp;
     if (si.rapid) {
-      si2.v_ += (si.v_ >> 3) * (i / n);
+      si2.speed += (si.speed >> 3) * (i / n);
     }
     t->Spawn(si2);
   }
-  return true;
 }
 
-bool BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
-  const auto n = si.n;
-  uint16_t setmax = n * (si.rapid ? si.ns : 1U);
+void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
+  const auto n = si.count;
+  uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
 
   for (uint16_t i = 0; i < setmax; i++) {
-    auto *t = pool.Alloc();
+    auto *t = bullets_.Alloc();
     if (t == nullptr) {
-      return false;
+      return;
     }
     auto si2 = si;
-    si2.d = bullet_common::CalcSpreadDir(i % n, TC_WAY, n, si.d, si.dw);
+    si2.angle = bullet_common::CalcSpreadDir(i % n, BulletPattern::Spread, n,
+                                             si.angle, si.spread);
 
     const int i_mod = (i % n) + 1;
-    const auto deg_factor = ((i_mod >> 1) * si.dw * (1 - ((i_mod & 1) << 1)));
+    const auto deg_factor =
+        ((i_mod >> 1) * si.spread * (1 - ((i_mod & 1) << 1)));
     const uint8_t deg =
-        ((n & 1) != 0) ? deg_factor : -(si.dw >> 1) + deg_factor;
-    int v_ret = cosDiv(deg, si.v_);
+        ((n & 1) != 0) ? deg_factor : -(si.spread >> 1) + deg_factor;
+    int v_ret = cosDiv(deg, si.speed);
     if (si.rapid) {
       v_ret += (v_ret >> 3) * (i_mod - 1);
     }
-    si2.v_ = v_ret;
+    si2.speed = v_ret;
 
     t->Spawn(si2);
   }
-  return true;
 }
 
-bool BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
-  const auto n = si.n;
-  const uint16_t setmax = n * (si.rapid ? si.ns : 1U);
+void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
+  const auto n = si.count;
+  const uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
 
   for (uint16_t i = 0; i < setmax; i++) {
-    auto *t = pool.Alloc();
+    auto *t = bullets_.Alloc();
     if (t == nullptr) {
-      return false;
+      return;
     }
     auto si2 = si;
-    si2.d = bullet_common::CalcSpreadDir(i % n, si.cmd_type, n, si.d, si.dw);
+    si2.angle =
+        bullet_common::CalcSpreadDir(i % n, si.pattern, n, si.angle, si.spread);
 
     int temp = 0;
-    switch (si.vsp) {
-    case TAMASP_RND1:
+    switch (si.speed_variance) {
+    case BulletSpeedVariance::None:
+      break;
+    case BulletSpeedVariance::Small:
       temp = (rnd() % 16) - 8;
       break;
-    case TAMASP_RND2:
+    case BulletSpeedVariance::Medium:
       temp = (rnd() % 32) - 16;
       break;
-    case TAMASP_RND3:
+    case BulletSpeedVariance::Large:
       temp = (rnd() % 64) - 32;
       break;
     }
-    int delta = static_cast<int>(si.d) - static_cast<int>(si2.d);
+    int delta = static_cast<int>(si.angle) - static_cast<int>(si2.angle);
     if (delta > 128) {
       delta -= 256;
     }
     if (delta < -128) {
       delta += 256;
     }
-    si2.v_ = si.v_ - ((si.v_ * abs(delta)) / 23) + temp;
+    si2.speed = si.speed - ((si.speed * std::abs(delta)) / 23) + temp;
 
     t->Spawn(si2);
   }
-  return true;
 }
 
 // ── BulletManager: Spawn (lasers) ─────────────────────────────────
 
-bool BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
+void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
   auto cmd = info;
   if (!cmd.no_scaling) {
-    switch (game_->EffectiveLevel()) {
-    case GameLevel::EASY:
-      bullet_common::ApplyEasyCountSpread(cmd.cmd & bullet_common::kCmdMask,
-                                          cmd.n, cmd.dw);
+    switch (session_.EffectiveLevel()) {
+    case GameLevel::Easy:
+      bullet_common::ApplyEasyCountSpread(cmd.pattern, cmd.n, cmd.dw);
       cmd.l = bullet_common::ScaleLengthEasy(cmd.l);
       break;
-    case GameLevel::HARD:
-    case GameLevel::EXTRA:
-      bullet_common::ApplyHardCountSpread(cmd.cmd & bullet_common::kCmdMask,
-                                          cmd.n, cmd.dw);
+    case GameLevel::Hard:
+    case GameLevel::Extra:
+      bullet_common::ApplyHardCountSpread(cmd.pattern, cmd.n, cmd.dw);
       cmd.l = bullet_common::ScaleLengthHard(cmd.l);
       break;
-    case GameLevel::LUNATIC:
-      bullet_common::ApplyLunaticCountSpread(cmd.cmd & bullet_common::kCmdMask,
-                                             cmd.n, cmd.dw);
+    case GameLevel::Lunatic:
+      bullet_common::ApplyLunaticCountSpread(cmd.pattern, cmd.n, cmd.dw);
       cmd.l = bullet_common::ScaleLengthLunatic(cmd.l);
       break;
-    case GameLevel::NORMAL:
+    case GameLevel::Normal:
     default:
       break;
     }
-    cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, game_->rank);
+    cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, session_.rank);
   }
 
-  auto base_deg = (cmd.cmd & kZSetFlag) != 0
-                      ? atan8(player_->X() - cmd.x, player_->Y() - cmd.y)
-                      : 0;
+  auto base_deg =
+      cmd.aimed ? atan8(player_.X() - cmd.x, player_.Y() - cmd.y) : 0;
   base_deg += cmd.d;
 
   for (uint8_t i = 0; i < cmd.n; i++) {
-    auto *r = reflect.Alloc();
+    auto *r = reflect_lasers_.Alloc();
     if (r == nullptr) {
-      return false;
+      return;
     }
     auto si = cmd;
     si.base_deg = base_deg;
     si.bullet_index = i;
     r->Spawn(si);
   }
-  return true;
 }
 
 bool BulletManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
@@ -204,9 +201,9 @@ bool BulletManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
     return false;
   }
   auto si = info;
-  si.player_x = player_->X();
-  si.player_y = player_->Y();
-  auto *lp = long_lasers.Alloc();
+  si.player_x = player_.X();
+  si.player_y = player_.Y();
+  auto *lp = long_lasers_.Alloc();
   if (lp == nullptr) {
     return false;
   }
@@ -214,17 +211,16 @@ bool BulletManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
   return true;
 }
 
-bool BulletManager::SpawnHoming(const HomingSpawnInfo &info) {
-  for (int i = 1; i <= static_cast<int>(info.n); i++) {
-    auto *p = homing.Alloc();
+void BulletManager::SpawnHoming(const HomingSpawnInfo &info) {
+  for (int i = 0; i < static_cast<int>(info.n); i++) {
+    auto *p = homing_lasers_.Alloc();
     if (p == nullptr) {
-      return false;
+      return;
     }
     auto si = info;
     si.bullet_index = i;
     p->Spawn(si);
   }
-  return true;
 }
 
 // ── BulletManager: Update ─────────────────────────────────────────
@@ -239,80 +235,76 @@ void BulletManager::Update(const EnemyHomingTarget &target) {
 }
 
 void BulletManager::UpdateBullet(const EnemyHomingTarget &target) {
-  const BulletUpdateInfo info{player_->X(), player_->Y(), target.active,
-                              target.x, target.y};
+  const BulletUpdateInfo info{player_.X(), player_.Y(), target.active, target.x,
+                              target.y};
 
-  for (auto &b : pool) {
+  for (auto &b : bullets_) {
     auto r = b.Update(info);
     if (r.smoke_spawn) {
-      Effects.SpawnFragment(r.smoke_x, r.smoke_y, FRG_SMOKE);
+      effects_.SpawnFragment(r.smoke_x, r.smoke_y, FragmentKind::Smoke);
     }
     if (r.division_requested) {
       Snd_SEPlay(static_cast<SfxId>(12), r.division_cx);
-      auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true, *game_);
+      auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true, session_);
       SpawnBullet(si);
     }
   }
-  pool.Compact([](const Bullet &b) { return b.IsDead(); });
+  bullets_.Compact([](const Bullet &b) { return b.IsDead(); });
 }
 
 void BulletManager::UpdateReflect() {
   std::array<const LaserLong *, kLongLaserMax> active_longs{};
   std::size_t long_count = 0;
-  for (const auto &ll : long_lasers) {
+  for (const auto &ll : long_lasers_) {
     active_longs[long_count++] = &ll;
   }
   std::span<const LaserLong *> long_span(active_longs.data(), long_count);
 
-  for (auto &r : reflect) {
+  for (auto &r : reflect_lasers_) {
     auto result = r.Update(ReflectUpdateInfo{long_span});
     if (result.spawn_requested) {
       SpawnReflect(result.spawn_info);
     }
-    if (r.X() < GX_MIN || r.X() > GX_MAX || r.Y() < GY_MIN || r.Y() > GY_MAX) {
-      r.MarkDead();
-    }
   }
-  reflect.Compact([](const LaserReflect &l) { return l.IsDead(); });
+  reflect_lasers_.Compact([](const LaserReflect &l) { return l.IsDead(); });
 }
 
 void BulletManager::UpdateLong() {
-  for (auto &ll : long_lasers) {
+  for (auto &ll : long_lasers_) {
     ll.Update();
   }
-  long_lasers.Compact([](const LaserLong &l) { return l.IsDead(); });
+  long_lasers_.Compact([](const LaserLong &l) { return l.IsDead(); });
 }
 
 void BulletManager::UpdateHoming() {
-  const auto pi = HomingUpdateInfo{player_->X(), player_->Y()};
-  for (auto &h : homing) {
+  const auto pi = HomingUpdateInfo{player_.X(), player_.Y()};
+  for (auto &h : homing_lasers_) {
     h.Update(pi);
   }
-  homing.Compact([](const LaserHoming &h) { return h.IsDead(); });
+  homing_lasers_.Compact([](const LaserHoming &h) { return h.IsDead(); });
 }
 
 // ── BulletManager: HitCheck ───────────────────────────────────────
 
 void BulletManager::HitCheck() {
-  if (player_->IsInvincible()) {
+  if (player_.IsInvincible()) {
     return;
   }
-  const int px = player_->X();
-  const int py = player_->Y();
-  const int player_radius = player_->HitRadius();
+  const int px = player_.X();
+  const int py = player_.Y();
+  const int player_radius = player_.HitRadius();
 
-  for (auto &b : pool) {
+  for (auto &b : bullets_) {
     switch (b.CheckHit(px, py, player_radius)) {
     case HitResult::Hit:
-      b.MarkDead();
-      player_->OnHit();
+      b.RemoveImmediately();
+      player_.OnHit();
       return;
     case HitResult::Graze:
-      if (!b.HasGrazed()) {
-        b.MarkGrazed();
-        player_->AddEvadeEx(b.X(), b.Y(), TAMA_EVADE);
+      if (b.RegisterGraze()) {
+        player_.AddEvadeEx(b.X(), b.Y(), TAMA_EVADE);
       } else {
-        player_->AddEvadeEx(b.X(), b.Y(), 0);
+        player_.AddEvadeEx(b.X(), b.Y(), 0);
       }
       break;
     default:
@@ -320,42 +312,57 @@ void BulletManager::HitCheck() {
     }
   }
 
-  auto check_lasers = [&](const auto &lpool) {
+  for (auto &laser : reflect_lasers_) {
+    switch (laser.CheckHit(px, py, player_radius)) {
+    case HitResult::Hit:
+      player_.OnHit();
+      return;
+    case HitResult::Graze:
+      player_.AddEvade(laser.RegisterGraze() ? 3 : 0);
+      break;
+    case HitResult::Miss:
+      break;
+    }
+  }
+
+  const auto check_lasers = [&](const auto &lpool) {
     for (const auto &laser : lpool) {
       switch (laser.CheckHit(px, py, player_radius)) {
       case HitResult::Hit:
-        player_->OnHit();
-        return;
+        player_.OnHit();
+        return true;
       case HitResult::Graze:
-        player_->AddEvade(kBulletEvadeValue);
+        player_.AddEvade(kBulletEvadeValue);
         break;
       case HitResult::Miss:
         break;
       }
     }
+    return false;
   };
 
-  check_lasers(reflect);
-  check_lasers(long_lasers);
-  check_lasers(homing);
+  if (check_lasers(long_lasers_)) {
+    return;
+  }
+  check_lasers(homing_lasers_);
 }
 
 // ── BulletManager: Render ─────────────────────────────────────────
 
 void BulletManager::Render() const {
   GrpGeom->Lock();
-  for (const auto &ll : long_lasers) {
+  for (const auto &ll : long_lasers_) {
     ll.Render();
   }
-  for (const auto &h : homing) {
+  for (const auto &h : homing_lasers_) {
     h.Render();
   }
-  for (const auto &r : reflect) {
+  for (const auto &r : reflect_lasers_) {
     r.Render();
   }
   GrpGeom->Unlock();
 
-  for (const auto &b : pool) {
+  for (const auto &b : bullets_) {
     b.Render();
   }
 }
@@ -363,86 +370,79 @@ void BulletManager::Render() const {
 // ── BulletManager: Clear / Score / Items ──────────────────────────
 
 void BulletManager::Clear() {
-  for (auto &b : pool) {
+  for (auto &b : bullets_) {
     b.Kill();
   }
-  pool.Compact([](const Bullet &b) { return b.IsDead(); });
+  bullets_.Compact([](const Bullet &b) { return b.IsDead(); });
 
-  for (auto &r : reflect) {
+  for (auto &r : reflect_lasers_) {
     r.Kill();
   }
-  for (auto &ll : long_lasers) {
+  for (auto &ll : long_lasers_) {
     ll.Kill();
   }
   Snd_SEStop(2);
-  for (auto &h : homing) {
+  for (auto &h : homing_lasers_) {
     h.Kill();
   }
-  homing.Compact([](const LaserHoming &h) { return h.IsDead(); });
+  homing_lasers_.Compact([](const LaserHoming &h) { return h.IsDead(); });
 }
 
-uint32_t BulletManager::ScoreToItems() {
+uint32_t BulletManager::ConvertBulletsToScore() {
   uint32_t sum = 0;
-  uint32_t score = TAMA1_POINT + player_->GrazeCount() * 100;
-  for (auto &b : pool) {
-    if ((b.c_ & 0xf0) != TAMA_SMALL) {
+  uint32_t score = TAMA1_POINT + player_.GrazeCount() * 100;
+  for (auto &b : bullets_) {
+    if (!b.IsSmall()) {
       continue;
     }
-    if (b.effect_ != TE_DELETE) {
-      Effects.SpawnPointEffect(b.x_ - 4_px, b.y_ - 4_px, score);
+    if (!b.IsClearing()) {
+      effects_.SpawnPointValue(b.X() - 4_px, b.Y() - 4_px, score);
       sum += score;
-      b.flag_ = TF_DELETE;
-      b.count_ = 0;
-      b.c_ = 0x25;
+      b.RemoveImmediately();
     }
   }
-  pool.Compact([](const Bullet &b) { return b.IsDead(); });
+  bullets_.Compact([](const Bullet &b) { return b.IsDead(); });
 
-  score = TAMA2_POINT + player_->GrazeCount() * 100;
-  for (auto &b : pool) {
-    if ((b.c_ & 0xf0) == TAMA_SMALL) {
+  score = TAMA2_POINT + player_.GrazeCount() * 100;
+  for (auto &b : bullets_) {
+    if (b.IsSmall()) {
       continue;
     }
-    if (b.effect_ != TE_DELETE) {
-      Effects.SpawnPointEffect(b.x_ - 8_px, b.y_ - 8_px, score);
+    if (!b.IsClearing()) {
+      effects_.SpawnPointValue(b.X() - 8_px, b.Y() - 8_px, score);
       sum += score;
-      b.flag_ = TF_DELETE;
-      b.count_ = 0;
-      b.c_ = 0x25;
+      b.RemoveImmediately();
     }
   }
-  pool.Compact([](const Bullet &b) { return b.IsDead(); });
+  bullets_.Compact([](const Bullet &b) { return b.IsDead(); });
 
   return sum;
 }
 
-void BulletManager::ToItems(uint8_t n) {
-  if (n == 0) {
+void BulletManager::ConvertBulletsToItems(uint8_t frequency) {
+  if (frequency == 0) {
     Clear();
     return;
   }
 
-  for (auto &b : pool) {
-    if (b.effect_ != TE_DELETE) {
-      b.count_ = 0;
-      if (rnd() % n == 0) {
-        items_->Spawn(b.x_, b.y_, ITEM_SCORE);
-        b.flag_ = TF_DELETE;
-        b.c_ = 0x25;
+  for (auto &b : bullets_) {
+    if (!b.IsClearing()) {
+      if (rnd() % frequency == 0) {
+        items_.Spawn(b.X(), b.Y(), ITEM_SCORE);
+        b.RemoveImmediately();
       } else {
-        b.effect_ = TE_DELETE;
-        b.count_ = 0;
+        b.Kill();
       }
     }
   }
-  pool.Compact([](const Bullet &b) { return b.IsDead(); });
+  bullets_.Compact([](const Bullet &b) { return b.IsDead(); });
 }
 
 // ── Laser control ─────────────────────────────────────────────────
 
 void BulletManager::ControlLongLaser(const EnemyActor *e, uint8_t id,
                                      const LongLaserUpdateInfo &info) {
-  for (auto &ll : long_lasers) {
+  for (auto &ll : long_lasers_) {
     if (!ll.BelongsTo(e, id)) {
       continue;
     }
@@ -465,20 +465,15 @@ void BulletManager::ControlLongLaser(const EnemyActor *e, uint8_t id,
 // ── Gallery / debug helpers ───────────────────────────────────────
 
 void BulletManager::PlaceDisplayBullet(int x, int y, uint8_t color) {
-  auto *t = pool.Alloc();
+  auto *t = bullets_.Alloc();
   if (t != nullptr) {
-    t->x_ = x;
-    t->y_ = y;
-    t->c_ = color;
+    t->Spawn(BulletSpawnInfo{.x = x, .y = y, .visual = color});
   }
 }
 
 void BulletManager::RotateDisplayAngles() {
-  for (auto &t : pool) {
-    const auto cat = t.c_ & 0xF0;
-    if (cat == TAMA_ANGLE || cat == TAMA_EXTRA2) {
-      t.d_ += 4;
-    }
+  for (auto &t : bullets_) {
+    t.UpdateDisplayAngle();
   }
 }
 
@@ -492,16 +487,16 @@ void BulletManager::RenderDebugHitboxes(int mode) const {
   gp->SetColor(kBlack);
   gp->SetAlphaNorm(kAlpha);
 
-  for (const auto &b : pool) {
+  for (const auto &b : bullets_) {
     b.RenderDebugHitbox(mode);
   }
-  for (const auto &r : reflect) {
+  for (const auto &r : reflect_lasers_) {
     r.RenderDebugHitbox(mode);
   }
-  for (const auto &ll : long_lasers) {
+  for (const auto &ll : long_lasers_) {
     ll.RenderDebugHitbox(mode);
   }
-  for (const auto &h : homing) {
+  for (const auto &h : homing_lasers_) {
     h.RenderDebugHitbox(mode);
   }
 }

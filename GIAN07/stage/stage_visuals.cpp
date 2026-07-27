@@ -1,0 +1,412 @@
+///
+/// Specialized animated stage backgrounds.
+///
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+
+#include "stage_visuals.h"
+
+#include "gameplay/playfield.h"
+#include "gfx/coords.h"
+#include "gfx/graphics_backend.h"
+#include "util/ut_math.h"
+
+namespace stage {
+
+void StageVisuals::Transform(Point3D &point, uint8_t angle_x, uint8_t angle_y,
+                             uint8_t angle_z) {
+  int old_y = point.y;
+  int old_z = point.z;
+  point.y = cosl(angle_x, old_y) - sinl(angle_x, old_z);
+  point.z = sinl(angle_x, old_y) + cosl(angle_x, old_z);
+
+  int old_x = point.x;
+  old_z = point.z;
+  point.x = cosl(angle_y, old_x) + sinl(angle_y, old_z);
+  point.z = -sinl(angle_y, old_x) + cosl(angle_y, old_z);
+
+  old_x = point.x;
+  old_y = point.y;
+  point.x = cosl(angle_z, old_x) - sinl(angle_z, old_y);
+  point.y = sinl(angle_z, old_x) + cosl(angle_z, old_y);
+}
+
+void StageVisuals::StartCubes() {
+  constexpr int cube_count = static_cast<int>(kCubeCount);
+  cube_phase_ = 0;
+  cube_angle_x_ = 0;
+  cube_angle_y_ = 0;
+  cube_angle_z_ = 0;
+  for (std::size_t index = 0; index < cubes_.size(); ++index) {
+    auto &cube = cubes_[index];
+    cube.half_size = 30_px;
+    cube.rotation = {.x = rnd(), .y = rnd(), .z = rnd()};
+    cube.position.x = cosl(static_cast<int>(index) * 256 / cube_count, 200_px);
+    cube.position.y = sinl(static_cast<int>(index) * 256 / cube_count, 200_px);
+    cube.position.z = 0;
+  }
+  for (auto &star : cube_stars_) {
+    star.x = rnd() % (640 - 256) + 128;
+    star.y = -(rnd() % 480);
+    star.velocity_y = rnd() % 10 + 10;
+  }
+}
+
+void StageVisuals::UpdateCubes() {
+  constexpr int cube_count = static_cast<int>(kCubeCount);
+  cube_phase_ += 256;
+  cube_angle_x_ += 128;
+  cube_angle_y_ -= 64;
+
+  const int angle_offset = sinl(cube_phase_ >> 8, 512 / cube_count);
+  const int radius = sinl(cube_phase_ >> 7, 100_px) + 180_px;
+  for (std::size_t index = 0; index < cubes_.size(); ++index) {
+    auto &cube = cubes_[index];
+    cube.half_size = 15_px + (radius >> 4) + static_cast<int>(index) * 128;
+    cube.rotation.x += 4;
+    cube.rotation.y -= 4;
+    cube.position.x =
+        cosl(static_cast<int>(index) * 500 / cube_count + angle_offset, radius);
+    cube.position.y =
+        sinl(static_cast<int>(index) * 500 / cube_count + angle_offset, radius);
+    cube.position.z =
+        (static_cast<int>(index) - static_cast<int>(cubes_.size() / 2)) * 40_px;
+    Transform(cube.position, cube_angle_x_ >> 8, cube_angle_y_ >> 8,
+              cube_angle_z_ >> 8);
+  }
+
+  for (auto &star : cube_stars_) {
+    star.y += star.velocity_y;
+    if (star.y > 480) {
+      star.x = rnd() % (640 - 256) + 128;
+      star.y = 0;
+      star.velocity_y = rnd() % 10 + 10;
+    }
+  }
+}
+
+void StageVisuals::DrawCubes() const {
+  for (const auto &star : cube_stars_) {
+    GrpSurface_Blit({star.x, star.y}, SURFACE_ID::SYSTEM,
+                    PIXEL_LTWH{136, 272, 16, 24});
+  }
+  GrpGeom->Lock();
+  for (const auto &cube : cubes_) {
+    DrawCube(cube);
+  }
+  GrpGeom->Unlock();
+}
+
+void StageVisuals::DrawCube(const Cube &cube) {
+  const auto project = [&cube](Point3D point) {
+    Transform(point, cube.rotation.x, cube.rotation.y, cube.rotation.z);
+    point.x = ((point.x + cube.position.x) >> 6) + 320;
+    point.y = ((point.y + cube.position.y) >> 6) + 240;
+    return point;
+  };
+  const int length = cube.half_size;
+
+  GrpGeom->SetColor({1, 1, 3});
+  for (int x = -1; x <= 1; ++x) {
+    for (int y = -1; y <= 1; ++y) {
+      const auto front = project({x * length, y * length, -length});
+      const auto back = project({x * length, y * length, length});
+      GrpGeom->DrawLine(front.x, front.y, back.x, back.y);
+    }
+  }
+  GrpGeom->SetColor({0, 0, 3});
+  for (int y = -1; y <= 1; ++y) {
+    for (int z = -1; z <= 1; ++z) {
+      const auto left = project({-length, y * length, z * length});
+      const auto right = project({length, y * length, z * length});
+      GrpGeom->DrawLine(left.x, left.y, right.x, right.y);
+    }
+  }
+  GrpGeom->SetColor({1, 1, 4});
+  for (int x = -1; x <= 1; ++x) {
+    for (int z = -1; z <= 1; ++z) {
+      const auto top = project({x * length, -length, z * length});
+      const auto bottom = project({x * length, length, z * length});
+      GrpGeom->DrawLine(top.x, top.y, bottom.x, bottom.y);
+    }
+  }
+}
+
+void StageVisuals::StartFakeEcl() {
+  grid_offset_x_ = 320_px;
+  grid_offset_y_ = 240_px;
+  for (auto &line : fake_ecl_) {
+    static_cast<void>(rnd() % 128);
+    const int speed = rnd() % 5_px + 5_px;
+    line.source_x = rnd() % 7 * 9 * 8;
+    line.source_y = rnd() % 16 * 16;
+    line.x = PixelToWorld(28 + rnd() % 484);
+    line.y = -PixelToWorld(rnd() % 640);
+    line.velocity_x = 0;
+    line.velocity_y = speed;
+  }
+}
+
+void StageVisuals::UpdateFakeEcl() {
+  grid_offset_x_ = (grid_offset_x_ + 1) % 64;
+  grid_offset_y_ = (grid_offset_y_ + 62) % 64;
+  for (auto &line : fake_ecl_) {
+    line.x += line.velocity_x;
+    line.y += line.velocity_y;
+    if (line.y < 480_px) {
+      continue;
+    }
+    static_cast<void>(rnd() % 128);
+    const int speed = rnd() % 5_px + 5_px;
+    line.source_x = rnd() % 7 * 9 * 8;
+    line.source_y = rnd() % 16 * 16;
+    line.x = PixelToWorld(28 + rnd() % 484);
+    line.y = -PixelToWorld(rnd() % 640);
+    line.velocity_x = 0;
+    line.velocity_y = speed;
+  }
+}
+
+void StageVisuals::DrawFakeEcl() const {
+  GrpGeom->Lock();
+  GrpGeom->SetColor({0, 2, 0});
+  for (int x = 128 - grid_offset_x_ / 2; x < 512; x += 32) {
+    GrpGeom->DrawLine(x, 0, x, 480);
+  }
+  for (int y = grid_offset_y_ / 2; y < 480; y += 32) {
+    GrpGeom->DrawLine(128, y, 512, y);
+  }
+  GrpGeom->SetColor({0, 3, 0});
+  for (int x = 128 - grid_offset_x_; x < 512; x += 64) {
+    GrpGeom->DrawLine(x, 0, x, 480);
+  }
+  for (int y = -grid_offset_y_; y < 480; y += 64) {
+    GrpGeom->DrawLine(128, y, 512, y);
+  }
+  GrpGeom->Unlock();
+
+  for (const auto &line : fake_ecl_) {
+    GrpSurface_Blit({line.x >> 6, line.y >> 6}, SURFACE_ID::MAPCHIP,
+                    PIXEL_LTWH{line.source_x, line.source_y, 72, 16});
+  }
+  GrpSurface_Blit({128, 400}, SURFACE_ID::MAPCHIP,
+                  PIXEL_LTRB{0, 272, 416, 352});
+}
+
+void StageVisuals::StartRocks() {
+  constexpr int row_spacing = 500 * (64 / 4);
+  int sprite = 2;
+  for (std::size_t index = 0; index < rocks_.size(); ++index) {
+    if (index == rocks_.size() * 5 / 8 || index == rocks_.size() * 7 / 8) {
+      --sprite;
+    }
+    const int y_offset =
+        static_cast<int>(index % 4) * row_spacing + rnd() % (row_spacing / 2);
+    const int x = rnd() % 500_px - 250_px;
+    // Depth was never rendered, but this draw must remain in the RNG stream.
+    static_cast<void>(rnd() % 500_px);
+    auto &rock = rocks_[index];
+    rock = {.x = x,
+            .y = -250_px - y_offset,
+            .velocity_y = (4 - sprite) * 16,
+            .speed = (4 - sprite) * 16,
+            .sprite = static_cast<uint8_t>(sprite)};
+  }
+}
+
+void StageVisuals::UpdateRocks() {
+  const auto reset_above = [](Rock &rock, int velocity_scale) {
+    rock.x = rnd() % 500_px - 250_px;
+    rock.y = -PixelToWorld(290 + rnd() % 250);
+    rock.velocity_y = (4 - rock.sprite) * velocity_scale;
+    rock.speed = rock.velocity_y;
+  };
+
+  for (auto &rock : rocks_) {
+    ++rock.age;
+    switch (rock.state) {
+    case RockState::Normal:
+      rock.y += rock.velocity_y;
+      if (rock.y > 290_px) {
+        reset_above(rock, 16);
+      }
+      break;
+    case RockState::Accelerating:
+      rock.speed += rock.acceleration;
+      rock.velocity_y = rock.speed;
+      rock.y += rock.velocity_y;
+      if (rock.y > 290_px) {
+        reset_above(rock, 96);
+        rock.acceleration = 0;
+      }
+      break;
+    case RockState::Reversing:
+      rock.speed -= rock.acceleration;
+      rock.velocity_y = rock.speed;
+      rock.y += rock.velocity_y;
+      if (rock.age > 120) {
+        if (rock.y > 290_px || rock.y < -290_px) {
+          reset_above(rock, 32);
+        }
+        rock.velocity_y = (4 - rock.sprite) * 32;
+        rock.speed = rock.velocity_y;
+        rock.acceleration = 2;
+        rock.state = RockState::Accelerating;
+      } else if (rock.y > 290_px || rock.y < -290_px) {
+        rock.x = rnd() % 500_px - 250_px;
+        rock.y = 290_px + rnd() % 250;
+        rock.velocity_y = -(4 - rock.sprite) * 96;
+        rock.speed = rock.velocity_y;
+        rock.acceleration = 0;
+      }
+      break;
+    case RockState::Leaving:
+      if (rock.y <= 540_px) {
+        rock.y += rock.velocity_y;
+      }
+      break;
+    case RockState::Ending:
+      if (rock.y <= 540_px) {
+        rock.y += (4 - rock.sprite) * 192;
+      }
+      break;
+    }
+  }
+}
+
+void StageVisuals::DrawRocks() const {
+  static constexpr std::array sources = {PIXEL_LTRB{0, 224, 80, 288},
+                                         PIXEL_LTRB{0, 288, 48, 336},
+                                         PIXEL_LTRB{48, 288, 80, 320}};
+  static constexpr std::array half_widths = {40, 24, 16};
+  static constexpr std::array half_heights = {32, 24, 16};
+  for (const auto &rock : rocks_) {
+    const int x = (rock.x + playfield::kWorldCenterX) >> 6;
+    const int y = (rock.y + playfield::kWorldCenterY) >> 6;
+    GrpSurface_Blit(
+        {x - half_widths[rock.sprite], y - half_heights[rock.sprite]},
+        SURFACE_ID::MAPCHIP, sources[rock.sprite]);
+  }
+}
+
+void StageVisuals::CommandRocks(Stage4RockCommand command) {
+  for (auto &rock : rocks_) {
+    switch (command) {
+    case Stage4RockCommand::Accelerate:
+      rock.state = RockState::Accelerating;
+      rock.acceleration = static_cast<int8_t>(rock.speed / 24);
+      rock.age = 0;
+      break;
+    case Stage4RockCommand::Reverse:
+      rock.state = RockState::Reversing;
+      rock.acceleration = static_cast<int8_t>(rock.speed / 12);
+      rock.age = 0;
+      break;
+    case Stage4RockCommand::Leave:
+      rock.state = RockState::Leaving;
+      break;
+    case Stage4RockCommand::End:
+      rock.state = RockState::Ending;
+      break;
+    case Stage4RockCommand::Normal:
+    case Stage4RockCommand::Rotate:
+      break;
+    }
+  }
+}
+
+void StageVisuals::StartRasters() {
+  for (std::size_t index = 0; index < rasters_.size(); ++index) {
+    const int x = rnd() % (640 - 256) + 128;
+    const int y = -(rnd() % (480 + 160));
+    const auto angle = static_cast<uint8_t>(rnd());
+    const auto amplitude = static_cast<uint8_t>(rnd() % 80 + 70);
+    const auto velocity_y = static_cast<int8_t>(2 + rnd() % 3);
+    rasters_[index] = {
+        .x = x,
+        .y = y,
+        .velocity_y = velocity_y,
+        .type = static_cast<uint8_t>(index % 3),
+        .angle = angle,
+        .amplitude = amplitude,
+    };
+  }
+  for (auto &star : raster_stars_) {
+    star = {.x = rnd() % (640 - 256) + 128,
+            .y = rnd() % 480,
+            .velocity_y = rnd() % 20 + 8};
+  }
+}
+
+void StageVisuals::UpdateRasters() {
+  for (std::size_t index = 0; index < rasters_.size(); ++index) {
+    auto &raster = rasters_[index];
+    raster.angle += static_cast<uint8_t>((index & 1) != 0 ? 2 : -2);
+    raster.y += raster.velocity_y;
+    if (raster.y > 480) {
+      raster.x = rnd() % (640 - 256) + 128;
+      raster.y = -160;
+      raster.angle = static_cast<uint8_t>(rnd());
+      raster.amplitude = static_cast<uint8_t>(rnd() % 80 + 70);
+    }
+  }
+  for (auto &star : raster_stars_) {
+    star.y += star.velocity_y;
+    if (star.y > 480) {
+      star.x = rnd() % (640 - 256) + 128;
+      star.y -= 480;
+      star.velocity_y = rnd() % 20 + 8;
+    }
+  }
+}
+
+void StageVisuals::DrawRasters() const {
+  static constexpr std::array sources = {PIXEL_LTRB{608, 272, 640, 352},
+                                         PIXEL_LTRB{592, 160, 640, 272},
+                                         PIXEL_LTRB{576, 0, 640, 160}};
+  for (const auto &star : raster_stars_) {
+    GrpSurface_Blit({star.x, star.y}, SURFACE_ID::MAPCHIP,
+                    PIXEL_LTRB{624, 352, 640, 368});
+  }
+  for (const auto &raster : rasters_) {
+    const auto target = sources[raster.type];
+    const int height = target.bottom - target.top;
+    const int half_width = (target.right - target.left) / 2;
+    for (int row = 0; row < height; row += 2) {
+      const int offset = sinl(raster.angle + row, raster.amplitude);
+      GrpSurface_Blit(
+          {raster.x + offset - half_width, raster.y + row}, SURFACE_ID::MAPCHIP,
+          PIXEL_LTRB{target.left, target.top + row, target.right, row + 2});
+    }
+  }
+}
+
+void StageVisuals::StartStars() {
+  for (auto &star : fast_stars_) {
+    star = {.x = rnd() % (640 - 256) + 128,
+            .y = rnd() % 480,
+            .velocity_y = rnd() % 20 + 8};
+  }
+}
+
+void StageVisuals::UpdateStars() {
+  for (auto &star : fast_stars_) {
+    star.y += star.velocity_y;
+    if (star.y > 480) {
+      star.x = rnd() % (640 - 256) + 128;
+      star.y -= 480;
+      star.velocity_y = rnd() % 20 + 8;
+    }
+  }
+}
+
+void StageVisuals::DrawStars() const {
+  for (const auto &star : fast_stars_) {
+    GrpSurface_Blit({star.x, star.y}, SURFACE_ID::MAPCHIP,
+                    PIXEL_LTRB{624, 0, 640, 16});
+  }
+}
+
+} // namespace stage

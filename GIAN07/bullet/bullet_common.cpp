@@ -10,91 +10,89 @@
 
 namespace bullet_common {
 
-uint8_t CalcSpreadDir(uint16_t i, uint8_t cmd_type, uint8_t n,
+BulletPattern DecodePattern(uint8_t command) {
+  switch (command & kCmdMask) {
+  case 1:
+    return BulletPattern::Circle;
+  case 2:
+    return BulletPattern::Random;
+  default:
+    return BulletPattern::Spread;
+  }
+}
+
+uint8_t CalcSpreadDir(uint16_t i, BulletPattern pattern, uint8_t n,
                       uint8_t base_deg, uint8_t dw) {
-  switch (cmd_type) {
-  case kCmdWay: {
+  switch (pattern) {
+  case BulletPattern::Spread: {
     i++;
     if ((n & 1) != 0) {
       return base_deg + ((i >> 1) * dw * (1 - ((i & 1) << 1)));
     }
     return base_deg - (dw >> 1) + ((i >> 1) * dw * (1 - ((i & 1) << 1)));
   }
-  case kCmdAll: {
+  case BulletPattern::Circle: {
     return base_deg + ((i << 8) / n);
   }
-  case kCmdRnd: {
+  case BulletPattern::Random: {
     return base_deg + (rnd() % dw) - (dw >> 1);
   }
-  default:
-    return 0;
   }
+  return base_deg;
 }
 
 // — Difficulty scaling ————————————————————————————
 
-bool ApplyEasyCountSpread(uint8_t cmd_type, uint8_t &n, uint8_t &dw) {
-  switch (cmd_type) {
-  case kCmdWay:
+void ApplyEasyCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
+  switch (pattern) {
+  case BulletPattern::Spread:
     if (n >= 3) {
       n -= 2;
     }
     dw += (dw >> 2);
-    return true;
-  case kCmdAll:
-  case kCmdRnd:
+    return;
+  case BulletPattern::Circle:
+  case BulletPattern::Random:
     n >>= 1;
-    return true;
-  default:
-    return false;
+    return;
   }
 }
 
-bool ApplyHardCountSpread(uint8_t cmd_type, uint8_t &n, uint8_t &dw) {
-  switch (cmd_type) {
-  case kCmdWay:
+void ApplyHardCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
+  switch (pattern) {
+  case BulletPattern::Spread:
     n += 2;
     dw -= (dw >> 3);
-    return true;
-  case kCmdAll:
+    return;
+  case BulletPattern::Circle:
     n += std::min<uint8_t>(n >> 2, 6);
-    return true;
-  case kCmdRnd:
+    return;
+  case BulletPattern::Random:
     n += (n >> 1);
-    return true;
-  default:
-    return false;
+    return;
   }
 }
 
-bool ApplyLunaticCountSpread(uint8_t cmd_type, uint8_t &n, uint8_t &dw) {
-  switch (cmd_type) {
-  case kCmdWay:
+void ApplyLunaticCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
+  switch (pattern) {
+  case BulletPattern::Spread:
     n += 4;
     dw -= (dw / 3);
-    return true;
-  case kCmdAll:
+    return;
+  case BulletPattern::Circle:
     n += std::min<uint8_t>(n / 3, 12);
-    return true;
-  case kCmdRnd:
+    return;
+  case BulletPattern::Random:
     n <<= 1;
-    return true;
-  default:
-    return false;
+    return;
   }
 }
 
-int ScaleLengthEasy(int l) {
-  return l - (l >> 2);
-}
+int ScaleLengthEasy(int l) { return l - (l >> 2); }
 
-int ScaleLengthHard(int l) {
-  return l + (l >> 2);
-}
+int ScaleLengthHard(int l) { return l + (l >> 2); }
 
-int ScaleLengthLunatic(int l) {
-  return l + (l >> 1);
-}
+int ScaleLengthLunatic(int l) { return l + (l >> 1); }
 
 void ApplyEasyRapid(uint8_t &ns) {
   if (ns >= 2) {
@@ -102,13 +100,9 @@ void ApplyEasyRapid(uint8_t &ns) {
   }
 }
 
-void ApplyHardRapid(uint8_t &ns) {
-  ns++;
-}
+void ApplyHardRapid(uint8_t &ns) { ns++; }
 
-void ApplyLunaticRapid(uint8_t &ns) {
-  ns += 2;
-}
+void ApplyLunaticRapid(uint8_t &ns) { ns += 2; }
 
 int ScaleVelocityByRank(int v, int rank) {
   return (((v >> 1) * rank) >> (5 + 8)) + (v >> 1);

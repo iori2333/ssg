@@ -6,7 +6,7 @@
 
 #include "msg_window.h"
 
-#include "core/constants.h"
+#include "data/graphics_assets.h"
 #include "platform/text_backend.h"
 #include "util/ut_math.h"
 
@@ -213,7 +213,7 @@ void MsgWindow::Draw() {
   DrawWindowFrame(x, y, w, h);
 
   // Draw face (only when display is requested)
-  const auto sid = (SURFACE_ID::FACE + (face_id / kFaceColumns));
+  const auto sid = data::graphics_assets::FaceSurface(face_id / kFaceColumns);
   switch (face_state) {
   case MFACE_WAIT:
     oy = max_size.bottom - 100;
@@ -287,7 +287,7 @@ void MsgWindow::SetFace(uint8_t face_id) {
   if (state == MWIN_DEAD) {
     return; // Cannot display
   }
-  if (face_id / kFaceColumns >= FACE_MAX) {
+  if (face_id / kFaceColumns >= data::graphics_assets::kFaceSurfaceCount) {
     return; // Impossible number
   }
 

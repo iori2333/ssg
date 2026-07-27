@@ -8,8 +8,8 @@
 #include "ui_manager.h"
 
 #include "audio/bgm.h"
-#include "core/config.h"
 #include "gameflow/gameflow_manager.h"
+#include "settings/config.h"
 
 UIManager::UIManager() {
   std::vector<std::unique_ptr<menu::IMenuNode>> exit_items;
@@ -92,7 +92,7 @@ void UIManager::SetLargeMessageFont() { msg_window_.SetFont(FONT_ID::LARGE); }
 void UIManager::NewMessagePage() { msg_window_.NewPage(); }
 
 void UIManager::InitMain() {
-  root_menu_ = menu::BuildMainMenuTree(*GameFlow.ctx.cfg);
+  root_menu_ = menu::BuildMainMenuTree(GameFlow.ctx.config);
   main_window_.Init(200);
   main_window_.Navigate(*root_menu_, 0);
 }

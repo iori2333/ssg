@@ -10,10 +10,10 @@
 #include "loadout/player_loadout.h"
 #include "player_shot.h"
 
-#include "core/config.h"
-#include "core/object_pool.h"
+#include "gameplay/game_rules.h"
 #include "gfx/coords.h"
 #include "sys/input.h"
+#include "util/object_pool.h"
 
 // [ Constants ]
 
@@ -40,9 +40,9 @@ inline constexpr auto STAR_COLLECT_EVADETIME = 128;
 inline constexpr auto BOMB_RANK_DECR = 25;
 inline constexpr auto DEATH_RANK_DECR = 100;
 
-struct BulletManager;
 class EnemyManager;
-struct GameManager;
+class EffectManager;
+struct GameSession;
 
 namespace stage {
 class StageSession;
@@ -56,7 +56,7 @@ class Player {
   enum class BombTrigger : uint8_t { Manual, Deathbomb };
 
 public:
-  Player();
+  explicit Player(EffectManager &effects);
   ~Player() = default;
   Player(const Player &other) = delete;
   Player(Player &&other) = delete;
@@ -64,16 +64,17 @@ public:
   Player &operator=(Player &&other) = delete;
 
   // --- Lifecycle ---
-  void Bind(BulletManager &bm) { bullets_ = &bm; }
-  void Bind(GameManager &gm) { game_ = &gm; }
+  void Bind(GameSession &session) { session_ = &session; }
   void Bind(stage::StageSession &stage) { stage_ = &stage; }
-  void Bind(const GameConfig &gc) { game_config_ = &gc; }
-  void Bind(const InputConfig &ic) { input_config_ = &ic; }
+  void Configure(PracticeMode practice_mode, bool focus_while_firing) {
+    practice_mode_ = practice_mode;
+    focus_while_firing_ = focus_while_firing;
+  }
   void Draw();
   void DrawBombBackground() const;
   void DrawDebugHitbox() const;
   void DrawProjectiles() const;
-  void Update(EnemyManager &enemies, INPUT_BITS input);
+  [[nodiscard]] bool Update(EnemyManager &enemies, INPUT_BITS input);
   void Initialize(int player_stock, int bomb_stock);
   void PrepareNextStage();
   void OnHit();
@@ -149,6 +150,7 @@ public:
 
 private:
   std::unique_ptr<PlayerLoadout> loadout_;
+  EffectManager &effects_;
 
   bool IsMainShotFrame_(uint16_t t) const;
   bool IsSubShotFrame_(uint16_t t) const;
@@ -207,13 +209,14 @@ private:
   bool game_over_ = false;
   bool buzz_sound_ = false;
   bool focused_ = false;
+  bool clear_bullets_requested_ = false;
   LifeState life_state_ = LifeState::Respawning;
 
-  BulletManager *bullets_ = nullptr;
-  GameManager *game_ = nullptr;
+  GameSession *session_ = nullptr;
   stage::StageSession *stage_ = nullptr;
-  const GameConfig *game_config_ = nullptr;
-  const InputConfig *input_config_ = nullptr;
+  PracticeMode practice_mode_ = PracticeMode::Off;
+  bool focus_while_firing_ = false;
+  uint8_t initial_bomb_stock_ = 0;
 
   // --- Shot pool ---
   ObjectPool<PlayerShot, kPlayerShotCapacity> maid_tama_{};

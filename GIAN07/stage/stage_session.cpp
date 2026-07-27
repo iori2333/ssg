@@ -8,12 +8,11 @@
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
-#include "core/game_manager.h"
-#include "core/gian.h"
 #include "data/graphics_loader.h"
-#include "effect/effect.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
+#include "gameplay/game_session.h"
+#include "gameplay/playfield.h"
 #include "track_manager/track_manager.h"
 #include "ui/ui_manager.h"
 
@@ -129,7 +128,7 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
       break;
 
     case SceneOpcode::Music:
-      if (!context.game.is_demoplay) {
+      if (!context.session.is_demoplay) {
         BGM_Stop();
         if (context.tracks.Switch(instruction->track_id)) {
           BGM_Play();
@@ -214,8 +213,8 @@ void StageSession::ExecuteEffect(SceneEffect effect,
                                  StageUpdateContext &context) {
   switch (effect) {
   case SceneEffect::Warning:
-    Snd_SEPlay(static_cast<SfxId>(8), GX_MID, true);
-    context.effects.SetWarningEffect();
+    Snd_SEPlay(static_cast<SfxId>(8), playfield::kWorldCenterX, true);
+    context.effects.StartBossWarning();
     break;
   case SceneEffect::StopWarning:
     Snd_SEStop(8);
@@ -233,10 +232,10 @@ void StageSession::ExecuteEffect(SceneEffect effect,
     background_.Command(BackgroundCommand::RasterOff, context.effects);
     break;
   case SceneEffect::CircleFadeIn:
-    context.effects.SetScreenEffect(SCNEFC_CFADEIN);
+    context.effects.StartScreenTransition(ScreenTransition::CircleFadeIn);
     break;
   case SceneEffect::CircleFadeOut:
-    context.effects.SetScreenEffect(SCNEFC_CFADEOUT);
+    context.effects.StartScreenTransition(ScreenTransition::CircleFadeOut);
     break;
   case SceneEffect::Stage3Boss:
     background_.Command(BackgroundCommand::Stage3Boss, context.effects);
@@ -257,10 +256,10 @@ void StageSession::ExecuteEffect(SceneEffect effect,
     background_.Command(BackgroundCommand::Stage4Leave, context.effects);
     break;
   case SceneEffect::WhiteIn:
-    context.effects.SetScreenEffect(SCNEFC_WHITEIN);
+    context.effects.StartScreenTransition(ScreenTransition::WhiteIn);
     break;
   case SceneEffect::WhiteOut:
-    context.effects.SetScreenEffect(SCNEFC_WHITEOUT);
+    context.effects.StartScreenTransition(ScreenTransition::WhiteOut);
     break;
   case SceneEffect::LoadExtraBoss1:
     (void)context.graphics.SwapEnemySurface(29);

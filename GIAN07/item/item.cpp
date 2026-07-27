@@ -6,9 +6,8 @@
 #include "item_manager.h"
 
 #include "audio/snd.h"
-#include "core/gian.h"
 #include "effect/effect_manager.h"
-#include "effect/fragment.h"
+#include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/ut_math.h"
@@ -25,7 +24,7 @@ int GetItemHitRadius(uint8_t type) {
 
 // Spawn an item
 void ItemManager::Spawn(int x, int y, uint8_t type) {
-  auto *ip = pool.Alloc();
+  auto *ip = pool_.Alloc();
   if (!ip) {
     return;
   }
@@ -65,17 +64,18 @@ void ItemManager::Move() {
 
   // point = 100+(player_->GrazeCount())*100;
   const uint32_t point =
-      ((((SY_MAX - player_->Y()) >> 6) + (player_->GrazeCount() * 4)) * 160);
+      (((((playfield::kWorldBottom - 10_px) - player_.Y()) >> 6) +
+        (player_.GrazeCount() * 4)) *
+       160);
 
-  for (auto &ip : pool) {
-    if (!player_->IsBombActive()) {
-      if (player_->Y() < STAR_COLLECT_LINE ||
-          player_->GrazeWaitTime() > STAR_COLLECT_EVADETIME ||
-          ip.auto_collect) {
+  for (auto &ip : pool_) {
+    if (!player_.IsBombActive()) {
+      if (player_.Y() < STAR_COLLECT_LINE ||
+          player_.GrazeWaitTime() > STAR_COLLECT_EVADETIME || ip.auto_collect) {
         // Player above collect line or auto-collect already active
         ip.auto_collect = true;
-        tx = (player_->X() - ip.x);
-        ty = (player_->Y() - ip.y);
+        tx = (player_.X() - ip.x);
+        ty = (player_.Y() - ip.y);
         l = 1 + (isqrt((tx * tx) + (ty * ty)) / 500);
         ip.x += tx / l;
         ip.y += ty / l;
@@ -84,8 +84,8 @@ void ItemManager::Move() {
         ip.y += ip.vy;
       }
     } else {
-      tx = (player_->X() - ip.x);
-      ty = (player_->Y() - ip.y);
+      tx = (player_.X() - ip.x);
+      ty = (player_.Y() - ip.y);
       l = 1 + (isqrt((tx * tx) + (ty * ty)) / 700); // 512(3+6)
       ip.x += tx / l;
       ip.y += ty / l;
@@ -96,30 +96,30 @@ void ItemManager::Move() {
     }
     ip.count++;
     {
-      const int64_t dx = static_cast<int64_t>(ip.x) - player_->X();
-      const int64_t dy = static_cast<int64_t>(ip.y) - player_->Y();
+      const int64_t dx = static_cast<int64_t>(ip.x) - player_.X();
+      const int64_t dy = static_cast<int64_t>(ip.y) - player_.Y();
       const int r = GetItemHitRadius(ip.type);
       if ((dx * dx + dy * dy) < (static_cast<int64_t>(r) * r)) {
         switch (ip.type) {
         case ITEM_SCORE: {
           Snd_SEPlay(SfxId::Select, ip.x);
-          // Ranking.Add((SY_MAX-player_->Y())>>10);	// Item pickup no longer
+          // Item pickup no longer increases rank.
           // increases Rank
-          player_->AddScore(point);
-          Effects.SpawnPointEffect(ip.x, ip.y, point);
-          if (player_->GrazeCount() != 0U) {
-            Effects.SpawnFragment(ip.x, ip.y, FRG_STAR3);
-            Effects.SpawnFragment(ip.x, ip.y, FRG_STAR3);
+          player_.AddScore(point);
+          effects_.SpawnPointValue(ip.x, ip.y, point);
+          if (player_.GrazeCount() != 0U) {
+            effects_.SpawnFragment(ip.x, ip.y, FragmentKind::RisingStar);
+            effects_.SpawnFragment(ip.x, ip.y, FragmentKind::RisingStar);
           }
 
-          const uint32_t star_amt = (player_->GrazeCount() != 0U) ? 2 : 1;
-          const auto reward = player_->AddStar(star_amt);
+          const uint32_t star_amt = (player_.GrazeCount() != 0U) ? 2 : 1;
+          const auto reward = player_.AddStar(star_amt);
           switch (reward) {
           case PlayerReward::EXTEND:
-            Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
+            effects_.SpawnString(180 + 64, 80, "E x t e n d  !");
             break;
           case PlayerReward::BOMB:
-            Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
+            effects_.SpawnString(120 + 64, 80, "B o m b   E x t e n d  !");
             break;
           case PlayerReward::NONE:
             break;
@@ -130,14 +130,14 @@ void ItemManager::Move() {
 
         case ITEM_EXTEND:
           Snd_SEPlay(SfxId::Select, ip.x);
-          Effects.SpawnStringEffect(180 + 64, 80, "E x t e n d  !");
-          player_->PickupExtend();
+          effects_.SpawnString(180 + 64, 80, "E x t e n d  !");
+          player_.PickupExtend();
           break;
 
         case ITEM_BOMB:
           Snd_SEPlay(SfxId::Select, ip.x);
-          Effects.SpawnStringEffect(120 + 64, 80, "B o m b   E x t e n d  !");
-          player_->PickupBomb();
+          effects_.SpawnString(120 + 64, 80, "B o m b   E x t e n d  !");
+          player_.PickupBomb();
           break;
         }
         ip.type = ITEM_DELETE;
@@ -145,23 +145,24 @@ void ItemManager::Move() {
     }
 
     // Do not delete upward
-    if ((ip.x) < GX_MIN - 8_px || (ip.x) > GX_MAX + 8_px ||
-        (ip.y) > GY_MAX + 8_px) {
+    if ((ip.x) < playfield::kWorldLeft - 8_px ||
+        (ip.x) > playfield::kWorldRight + 8_px ||
+        (ip.y) > playfield::kWorldBottom + 8_px) {
       ip.type = ITEM_DELETE;
     }
   }
 
-  pool.Compact([](const ItemData &i) { return (i.type == ITEM_DELETE); });
+  pool_.Compact([](const ItemData &i) { return (i.type == ITEM_DELETE); });
 }
 
 // Draw items
-void ItemManager::Draw() {
+void ItemManager::Draw() const {
   int j = 0;
   int x = 0;
   int y = 0;
   PIXEL_LTRB src;
 
-  for (auto &ip : pool) {
+  for (const auto &ip : pool_) {
     const uint8_t ptn = ((ip.count >> 2) & 3);
     switch (ip.type) {
     case ITEM_SCORE:
@@ -210,4 +211,4 @@ void ItemManager::Draw() {
 }
 
 // Initialize item pool
-void ItemManager::Init() { pool.Init(); }
+void ItemManager::Init() { pool_.Reset(); }

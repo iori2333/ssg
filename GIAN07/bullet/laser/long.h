@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include <span>
+#include <cstdint>
 
-#include "bullet/bullet_base.h"
-#include "enemy/actor/enemy_actor.h"
+#include "bullet/bullet_common.h"
 #include "gfx/graphics_backend.h"
+
+struct EnemyActor;
 
 // ── Pool capacity ────────────────────────────────────────────────
 inline constexpr auto kLongLaserMax = 20;
@@ -38,12 +39,12 @@ struct LongLaserSpawnInfo {
 
 // ── State machine ────────────────────────────────────────────────
 enum class LongState : uint8_t {
-  Inactive = 0x00,
-  Active = 0x01,
-  Opening = 0x02,
-  Closing = 0x04,
-  ClosingToLine = 0x08,
-  Line = 0x10,
+  Inactive,
+  Active,
+  Opening,
+  Closing,
+  ClosingToLine,
+  Line,
 };
 
 // ── Update info (per-frame tick or external control command) ─────
@@ -60,34 +61,39 @@ struct LongLaserUpdateInfo {
   Command command = Command::Tick;
   uint8_t angle = 0;
   int8_t delta = 0;
-
-  struct UpdateResult {};
 };
 
 // ── LaserLong ────────────────────────────────────────────────────
-struct LaserLong : BulletBase<LongLaserSpawnInfo, LongLaserUpdateInfo> {
+struct LaserLong {
   using SpawnInfo = LongLaserSpawnInfo;
   using UpdateInfo = LongLaserUpdateInfo;
 
-  friend struct BulletManager;
   friend struct LaserReflect; // for reflection on long lasers, must keep
 
-  void Render() const override;
-  bool IsDead() const override;
-  void Kill() override;
-  void Spawn(const LongLaserSpawnInfo &info) override;
+  void Render() const;
+  bool IsDead() const;
+  void Kill();
+  void Spawn(const LongLaserSpawnInfo &info);
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
-                                   int player_radius) const override;
-  [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {}) override;
-  void RenderDebugHitbox(int mode) const override;
+                                   int player_radius) const;
+  void Update(const UpdateInfo &info = {});
+  void RenderDebugHitbox(int mode) const;
+
+  [[nodiscard]] int X() const { return x_; }
+  [[nodiscard]] bool BelongsTo(const EnemyActor *enemy, uint8_t id) const;
 
 private:
-  [[nodiscard]] bool BelongsTo(const EnemyActor *e, uint8_t id) const;
-
   void MarkDead() {
     state_ = LongState::Inactive;
     e_ = nullptr;
   }
+
+  int x_{};
+  int y_{};
+  int v_{};
+  uint8_t d_{};
+  uint8_t c_{};
+  uint32_t count_{};
 
   const EnemyActor *e_{};
   int dx_{};

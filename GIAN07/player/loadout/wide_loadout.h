@@ -12,7 +12,7 @@ public:
 
   void FireMain(Player &player, uint8_t tier, bool focused) override;
   void FireSub(Player &player, uint8_t tier, bool focused) override;
-  void UpdateBomb(Player &player, EnemyManager &enemies,
+  void UpdateBomb(Player &player, EnemyManager &enemies, EffectManager &effects,
                   uint16_t remaining) override;
   void DrawBombBackground(const Player &player,
                           uint16_t remaining) const override;
