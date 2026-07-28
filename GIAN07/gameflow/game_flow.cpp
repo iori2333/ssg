@@ -52,9 +52,8 @@ private:
 class TitleFlowState {
 public:
   explicit TitleFlowState(GameContext &context)
-      : context_(context), scene_(context.config, context.display,
-                                  context.graphics, context.sound_effects,
-                                  context.music, context.session, context.ui) {}
+      : context_(context),
+        scene_(context.graphics, context.music, context.session, context.ui) {}
 
   [[nodiscard]] bool Enter(INPUT_BITS initial_input, bool change_music) {
     return scene_.Enter(initial_input, change_music);
@@ -174,7 +173,7 @@ private:
 class MusicRoomFlowState {
 public:
   explicit MusicRoomFlowState(GameContext &context)
-      : scene_(context.data, context.graphics, context.music, context.config) {}
+      : scene_(context.data, context.graphics, context.music) {}
 
   [[nodiscard]] bool Enter() { return scene_.Enter(); }
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
@@ -283,7 +282,7 @@ using FlowState = std::variant<std::monostate, StartupFlowState, TitleFlowState,
 
 struct GameFlow::Impl {
   explicit Impl(GameContext &context) : context_(context) {}
-  ~Impl() { context_.records.StopPlayback(context_.config, context_.session); }
+  ~Impl() { context_.records.StopPlayback(); }
   Impl(const Impl &) = delete;
   Impl(Impl &&) = delete;
   Impl &operator=(const Impl &) = delete;

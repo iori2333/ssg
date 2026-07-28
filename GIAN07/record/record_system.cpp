@@ -37,6 +37,9 @@ constexpr uint16_t kScoreVersion = 1;
 constexpr auto kScoreDirectory = "scores";
 constexpr auto kMaxSignedRecordValue =
     static_cast<uint64_t>(std::numeric_limits<int64_t>::max());
+constexpr uint8_t kInputFlagJoypad = 1 << 0;
+constexpr uint8_t kInputFlagMessageSkip = 1 << 1;
+constexpr uint8_t kInputFlagSpeedDown = 1 << 2;
 
 struct ScoreRecordFile {
   std::array<uint8_t, 4> magic{};
@@ -294,7 +297,10 @@ void RecordSystem::BeginRecording(const Player &player,
       .practice_mode = config.game.practice_mode,
       .player_stock = config.game.player_stock,
       .bomb_stock = config.game.bomb_stock,
-      .input_flags = config.input.PackFlags(),
+      .input_flags = static_cast<uint8_t>(
+          (config.input.joypad_enabled ? kInputFlagJoypad : 0) |
+          (config.input.z_msg_skip_enabled ? kInputFlagMessageSkip : 0) |
+          (config.input.z_spd_down_enabled ? kInputFlagSpeedDown : 0)),
   };
   frame_cursor_ = 0;
   recording_ = true;
@@ -593,27 +599,16 @@ bool RecordSystem::LoadReplay(std::string_view path, StageId start_stage) {
   return true;
 }
 
-bool RecordSystem::ConfigurePlayback(ConfigData &config, GameSession &session) {
+bool RecordSystem::ConfigurePlayback(Player &player, GameSession &session) {
   if (playback_stages_.empty() ||
       playback_stage_index_ >= playback_stages_.size()) {
     return false;
   }
-  saved_config_ = {
-      .difficulty = config.game.game_level,
-      .practice_mode = config.game.practice_mode,
-      .player_stock = config.game.player_stock,
-      .bomb_stock = config.game.bomb_stock,
-      .input_flags = config.input.PackFlags(),
-  };
-  config_overridden_ = true;
-
-  config.game.game_level = settings_.difficulty;
-  config.game.practice_mode = settings_.practice_mode == PracticeMode::AutoBomb
-                                  ? PracticeMode::Off
-                                  : settings_.practice_mode;
-  config.game.player_stock = settings_.player_stock;
-  config.game.bomb_stock = settings_.bomb_stock;
-  config.input.UnpackFlags(settings_.input_flags);
+  const auto practice_mode = settings_.practice_mode == PracticeMode::AutoBomb
+                                 ? PracticeMode::Off
+                                 : settings_.practice_mode;
+  player.Configure(practice_mode,
+                   (settings_.input_flags & kInputFlagSpeedDown) != 0);
   session.level = settings_.difficulty;
   session.stage = CurrentPlaybackStage();
   multi_stage_playback_ = true;
@@ -650,7 +645,7 @@ StageId RecordSystem::CurrentPlaybackStage() const {
 }
 
 bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
-                                 GameSession &session, ConfigData &config) {
+                                 GameSession &session) {
   playing_ = false;
   multi_stage_playback_ = false;
   playback_stages_.clear();
@@ -677,6 +672,7 @@ bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
       .bomb_stock = header.config.bomb_stock,
       .input_flags = header.config.input_flags,
   };
+  player.Initialize(settings_.player_stock, settings_.bomb_stock);
   auto progress = player.CaptureProgress();
   progress.player_type = header.weapon;
   progress.power = header.power;
@@ -695,20 +691,9 @@ bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
   playback_stages_.push_back(std::move(replay_stage));
   playback_stage_index_ = 0;
 
-  saved_config_ = {
-      .difficulty = config.game.game_level,
-      .practice_mode = config.game.practice_mode,
-      .player_stock = config.game.player_stock,
-      .bomb_stock = config.game.bomb_stock,
-      .input_flags = config.input.PackFlags(),
-  };
-  config_overridden_ = true;
-  config.game.practice_mode = PracticeMode::Off;
-  config.game.player_stock = settings_.player_stock;
-  config.game.bomb_stock = settings_.bomb_stock;
-  config.input.UnpackFlags(settings_.input_flags);
   session.level = settings_.difficulty;
-  player.Configure(PracticeMode::Off, config.input.z_spd_down_enabled);
+  player.Configure(PracticeMode::Off,
+                   (settings_.input_flags & kInputFlagSpeedDown) != 0);
   player.RestoreProgress(progress);
   rnd_seed_set(header.random_seed);
   playing_ = true;
@@ -727,16 +712,7 @@ INPUT_BITS RecordSystem::NextInput() {
   return inputs[frame_cursor_++];
 }
 
-void RecordSystem::StopPlayback(ConfigData &config, GameSession &session) {
-  if (config_overridden_) {
-    config.game.game_level = saved_config_.difficulty;
-    config.game.practice_mode = saved_config_.practice_mode;
-    config.game.player_stock = saved_config_.player_stock;
-    config.game.bomb_stock = saved_config_.bomb_stock;
-    config.input.UnpackFlags(saved_config_.input_flags);
-    session.level = saved_config_.difficulty;
-    config_overridden_ = false;
-  }
+void RecordSystem::StopPlayback() {
   playing_ = false;
   multi_stage_playback_ = false;
   playback_stages_.clear();

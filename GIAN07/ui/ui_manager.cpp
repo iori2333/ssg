@@ -85,11 +85,15 @@ void UIManager::SetLargeMessageFont() { msg_window_.SetFont(FONT_ID::LARGE); }
 
 void UIManager::NewMessagePage() { msg_window_.NewPage(); }
 
-void UIManager::InitMain(ConfigData &config, menu::MainMenuServices services) {
-  main_menu_action_.reset();
+void UIManager::ConfigureMain(ConfigData &config,
+                              menu::MainMenuServices services) {
   root_menu_ = menu::BuildMainMenuTree(
       config, services,
       [this](menu::MainMenuAction action) { main_menu_action_ = action; });
+}
+
+void UIManager::InitMain() {
+  main_menu_action_.reset();
   main_window_.Init(200);
   main_window_.Navigate(*root_menu_, 0);
 }

@@ -12,6 +12,7 @@
 #include <memory>
 #include <ranges>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <SDL3/SDL_misc.h>
@@ -46,6 +47,29 @@ static std::string PadButtonLabel(INPUT_PAD_BUTTON v) {
 }
 
 static std::string FmtLabel(const char *s) { return s; }
+
+static void AdjustScaleFactor(GraphicsConfig &config, int delta) {
+  const bool fullscreen =
+      !!(config.graphics_param_flags & GRAPHICS_PARAM_FLAGS::FULLSCREEN);
+  const bool exclusive = !!(config.graphics_param_flags &
+                            GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE);
+  if (fullscreen && !exclusive) {
+    using Fit = GRAPHICS_FULLSCREEN_FIT;
+    constexpr auto count = std::to_underlying(Fit::COUNT);
+    const auto current =
+        std::to_underlying(config.graphics_param_flags &
+                           GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT) >>
+        2;
+    const auto fit = (current + count + delta) % count;
+    EnumFlagSet(config.graphics_param_flags,
+                GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT, fit);
+  } else if (!fullscreen) {
+    const auto count = Grp_WindowScale4xMax() + 1;
+    if (count > 0) {
+      config.window_scale_4x = (config.window_scale_4x + count + delta) % count;
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Difficulty
@@ -116,14 +140,15 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display) {
 
 static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
                                               DisplayController &display) {
-  auto init_sel = static_cast<int>(gfx_cfg.ToParams().api);
+  auto init_sel = static_cast<int>(GrpBackend_APIID(gfx_cfg.graphics_api));
   auto node = std::make_unique<ListNode>(
       "API", "Select rendering API", [] { return GrpBackend_APICount(); },
       [](size_t i) {
         return std::string(GrpBackend_APILabel(GrpBackend_APIString(i)));
       },
-      [&display](size_t i) {
-        (void)display.SelectApi(static_cast<int8_t>(i));
+      [&gfx_cfg, &display](size_t i) {
+        gfx_cfg.graphics_api = GrpBackend_APIString(i);
+        (void)display.ApplyConfig(gfx_cfg);
         return false;
       },
       init_sel);
@@ -149,27 +174,38 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
   ch.push_back(std::move(dev));
 
   {
-    static uint8_t disp_state = 0;
-    auto disp = std::make_unique<ChoiceNode>(
-        "Display", "Switch between window and fullscreen modes", &disp_state, 0,
-        1, std::vector<std::string>{"Window", "Fullscreen"},
-        [&display] { (void)display.ToggleFullscreen(); });
-    disp->SetPoll([&gfx_cfg]() {
-      disp_state = gfx_cfg.ToParams().FullscreenFlags().fullscreen ? 1 : 0;
+    auto disp = std::make_unique<ActionNode>(
+        "Display", "Switch between window and fullscreen modes",
+        [](MenuController &) { return true; },
+        [&gfx_cfg, &display](MenuController &, int) {
+          gfx_cfg.graphics_param_flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+          (void)display.ApplyConfig(gfx_cfg);
+        });
+    auto *disp_raw = disp.get();
+    disp->SetPoll([disp_raw, &gfx_cfg]() {
+      disp_raw->SetValue(
+          !!(gfx_cfg.graphics_param_flags & GRAPHICS_PARAM_FLAGS::FULLSCREEN)
+              ? "Fullscreen"
+              : "Window");
     });
     ch.push_back(std::move(disp));
   }
   {
-    static uint8_t fs_state = 0;
-    auto fs_mode = std::make_unique<ChoiceNode>(
-        "FullScr", "Fullscreen mode", &fs_state, 0, 1,
-        std::vector<std::string>{"Borderless", "Exclusive"},
-        [&display] { (void)display.ToggleExclusiveFullscreen(); });
+    auto fs_mode = std::make_unique<ActionNode>(
+        "FullScr", "Fullscreen mode", [](MenuController &) { return true; },
+        [&gfx_cfg, &display](MenuController &, int) {
+          gfx_cfg.graphics_param_flags ^=
+              GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+          (void)display.ApplyConfig(gfx_cfg);
+        });
     auto *fs_raw = fs_mode.get();
     fs_mode->SetPoll([fs_raw, &gfx_cfg]() {
-      fs_state = !!(gfx_cfg.graphics_param_flags &
-                    GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE);
-      fs_raw->SetEnabled(gfx_cfg.ToParams().FullscreenFlags().fullscreen);
+      fs_raw->SetValue(!!(gfx_cfg.graphics_param_flags &
+                          GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE)
+                           ? "Exclusive"
+                           : "Borderless");
+      fs_raw->SetEnabled(
+          !!(gfx_cfg.graphics_param_flags & GRAPHICS_PARAM_FLAGS::FULLSCREEN));
     });
     ch.push_back(std::move(fs_mode));
   }
@@ -177,19 +213,23 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
   {
     auto scale = std::make_unique<ActionNode>(
         "ScaleFact", "Window scaling factor",
-        [&display](MenuController &) {
-          (void)display.CycleScale(0, true);
-          return true;
-        },
-        [&display](MenuController &, int delta) {
-          (void)display.CycleScale(static_cast<int_fast8_t>(delta), true);
+        [](MenuController &) { return true; },
+        [&gfx_cfg, &display](MenuController &, int delta) {
+          AdjustScaleFactor(gfx_cfg, delta);
+          (void)display.ApplyConfig(gfx_cfg);
         });
     auto *scale_raw = scale.get();
     scale->SetPoll([scale_raw, &gfx_cfg]() {
-      const auto params = gfx_cfg.ToParams();
-      const auto fs = params.FullscreenFlags();
-      if (fs.fullscreen && !fs.exclusive) {
-        switch (fs.fit) {
+      const bool fullscreen =
+          !!(gfx_cfg.graphics_param_flags & GRAPHICS_PARAM_FLAGS::FULLSCREEN);
+      const bool exclusive = !!(gfx_cfg.graphics_param_flags &
+                                GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE);
+      if (fullscreen && !exclusive) {
+        const auto fit = static_cast<GRAPHICS_FULLSCREEN_FIT>(
+            std::to_underlying(gfx_cfg.graphics_param_flags &
+                               GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT) >>
+            2);
+        switch (fit) {
         case GRAPHICS_FULLSCREEN_FIT::INTEGER:
           scale_raw->SetValue("Integer");
           break;
@@ -203,7 +243,7 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
           break;
         }
       } else {
-        const auto sv = params.window_scale_4x;
+        const auto sv = gfx_cfg.window_scale_4x;
         if (sv == 0) {
           scale_raw->SetValue("Screen");
         } else {
@@ -214,18 +254,22 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
     });
     ch.push_back(std::move(scale));
 
-    static uint8_t sc_state = 0;
-    auto sc_mode = std::make_unique<ChoiceNode>(
-        "ScaleMode", "Scaling method", &sc_state, 0, 1,
-        std::vector<std::string>{"FrameBuf", "Geometry"},
-        [&display] { (void)display.ToggleScalingMode(); });
+    auto sc_mode = std::make_unique<ActionNode>(
+        "ScaleMode", "Scaling method", [](MenuController &) { return true; },
+        [&gfx_cfg, &display](MenuController &, int) {
+          gfx_cfg.graphics_param_flags ^= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
+          (void)display.ApplyConfig(gfx_cfg);
+        });
     auto *sc_raw = sc_mode.get();
     sc_mode->SetPoll([sc_raw, &gfx_cfg]() {
-      sc_state = !!(gfx_cfg.graphics_param_flags &
-                    GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY);
-      const auto params = gfx_cfg.ToParams();
-      bool exclusive = params.FullscreenFlags().fullscreen &&
-                       params.FullscreenFlags().exclusive;
+      sc_raw->SetValue(!!(gfx_cfg.graphics_param_flags &
+                          GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY)
+                           ? "Geometry"
+                           : "FrameBuf");
+      const bool exclusive =
+          !!(gfx_cfg.graphics_param_flags & GRAPHICS_PARAM_FLAGS::FULLSCREEN) &&
+          !!(gfx_cfg.graphics_param_flags &
+             GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE);
       sc_raw->SetEnabled(!exclusive);
     });
     ch.push_back(std::move(sc_mode));

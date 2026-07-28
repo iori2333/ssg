@@ -222,43 +222,10 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
   SDL_MustWriteIO(f, str.data(), str.size());
 }
 
-GRAPHICS_PARAMS GraphicsConfig::ToParams() const {
-  return {
-      .flags = graphics_param_flags,
-      .device_id = device_id,
-      .api = GrpBackend_APIID(graphics_api),
-      .window_scale_4x = window_scale_4x,
-      .left = window_left,
-      .top = window_top,
-  };
+ConfigData LoadConfig() {
+  ConfigData config;
+  TOMLLoad(CFG_FN, config);
+  return config;
 }
 
-void GraphicsConfig::ApplyParams(const GRAPHICS_PARAMS &params) {
-  graphics_param_flags = params.flags;
-  device_id = params.device_id;
-  graphics_api = GrpBackend_APIString(params.api);
-  window_scale_4x = params.window_scale_4x;
-  window_left = params.left;
-  window_top = params.top;
-}
-
-uint8_t InputConfig::PackFlags() const {
-  uint8_t v = 0;
-  if (joypad_enabled)
-    v |= 1;
-  if (z_msg_skip_enabled)
-    v |= 2;
-  if (z_spd_down_enabled)
-    v |= 4;
-  return v;
-}
-
-void InputConfig::UnpackFlags(uint8_t value) {
-  joypad_enabled = (value & 1) != 0;
-  z_msg_skip_enabled = (value & 2) != 0;
-  z_spd_down_enabled = (value & 4) != 0;
-}
-
-void ConfigData::Load() { TOMLLoad(CFG_FN, *this); }
-
-void ConfigData::Save() const { TOMLSave(CFG_FN, *this); }
+void SaveConfig(const ConfigData &config) { TOMLSave(CFG_FN, config); }

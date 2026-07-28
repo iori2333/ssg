@@ -60,16 +60,16 @@ bool GameApplication::Initialize() {
   DebugSetup();
   debug_initialized_ = true;
 
-  auto &config = context_.config;
-  config.Load();
+  config_ = LoadConfig();
   config_loaded_ = true;
+  const auto &config = config_;
   ApplyPadBindings(config.input);
   (void)Mid_SetFlags(config.audio.fix_sysex_bugs ? MID_FLAGS::FIX_SYSEX_BUGS
                                                  : MID_FLAGS::NONE);
   Mid_SetVolume(config.audio.bgm_volume);
   Snd_SetVolumes(config.audio.bgm_volume, config.audio.se_volume);
 
-  if (!context_.display.Initialize()) {
+  if (!context_.display.Initialize(config_.graphics)) {
     SDL_LogCritical(SDL_LOG_CATEGORY_VIDEO,
                     "Failed to initialize the graphics backend");
     return false;
@@ -95,6 +95,9 @@ bool GameApplication::Initialize() {
     SDL_LogWarn(SDL_LOG_CATEGORY_AUDIO, "Failed to load sound effects");
   }
   (void)context_.music.SetPack(config.audio.bgm_pack);
+  context_.ui.ConfigureMain(config_, {.display = context_.display,
+                                      .sound_effects = context_.sound_effects,
+                                      .music = context_.music});
 
   flow_ = std::make_unique<gameflow::GameFlow>(context_);
   if (!flow_->Start()) {
@@ -110,44 +113,14 @@ int GameApplication::Run() {
   return WndBackend_Run([this] { return Tick(); });
 }
 
-bool GameApplication::Tick() {
-  if ((SystemKey_Data & SYSKEY_GRP_FULLSCREEN) != 0) {
-    (void)context_.display.ToggleFullscreen();
-  }
-  if ((SystemKey_Data & SYSKEY_GRP_SCALE_UP) != 0) {
-    (void)context_.display.CycleScale(+1, false);
-  }
-  if ((SystemKey_Data & SYSKEY_GRP_SCALE_DOWN) != 0) {
-    (void)context_.display.CycleScale(-1, false);
-  }
-  if ((SystemKey_Data & SYSKEY_GRP_SCALE_MODE) != 0) {
-    (void)context_.display.ToggleScalingMode();
-  }
-  if ((SystemKey_Data & SYSKEY_GRP_TURBO) != 0) {
-    context_.display.ToggleTurbo();
-  }
-  if ((SystemKey_Data & SYSKEY_GRP_API) != 0) {
-    (void)context_.display.CycleApi();
-  }
+bool GameApplication::Tick() { return flow_->Tick(Key_Data, SystemKey_Data); }
 
-  SystemKey_Data &=
-      ~(SYSKEY_GRP_FULLSCREEN | SYSKEY_GRP_SCALE_UP | SYSKEY_GRP_SCALE_DOWN |
-        SYSKEY_GRP_SCALE_MODE | SYSKEY_GRP_TURBO | SYSKEY_GRP_API);
-  return flow_->Tick(Key_Data, SystemKey_Data);
-}
-
-void GameApplication::SaveConfig() {
-  if (const auto topleft = WndBackend_Topleft()) {
-    context_.config.graphics.window_left = topleft->first;
-    context_.config.graphics.window_top = topleft->second;
-  }
-  context_.config.Save();
-}
+void GameApplication::PersistConfig() { SaveConfig(config_); }
 
 void GameApplication::Shutdown() {
   flow_.reset();
   if (running_ && config_loaded_) {
-    SaveConfig();
+    PersistConfig();
   }
   running_ = false;
 

@@ -105,8 +105,7 @@ bool GameplayState::EnterLive(GameContext &context) {
 
 bool GameplayState::EnterReplay(GameContext &context, std::string_view path,
                                 StageId stage) {
-  if (!context.records.LoadReplay(path, stage) ||
-      !context.records.ConfigurePlayback(context.config, context.session)) {
+  if (!context.records.LoadReplay(path, stage)) {
     return false;
   }
 
@@ -115,6 +114,9 @@ bool GameplayState::EnterReplay(GameContext &context, std::string_view path,
   mode_ = Mode::Replay;
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
+  if (!context.records.ConfigurePlayback(context.player, context.session)) {
+    return false;
+  }
   context.records.RestorePlaybackStage(context.player, context.session);
   if (!LoadCurrentStage(context)) {
     StopPlayback(context);
@@ -131,12 +133,10 @@ bool GameplayState::EnterDemo(GameContext &context) {
   mode_ = Mode::Demo;
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
-  context.player.Initialize(context.config.game.player_stock,
-                            context.config.game.bomb_stock);
   rnd_seed_set(Time_SteadyTicksMS());
   context.session.stage = static_cast<StageId>(rnd() % kRegularStageCount);
   if (!context.records.LoadStageDemo(context.session.stage, context.player,
-                                     context.session, context.config)) {
+                                     context.session)) {
     return false;
   }
   context.session.ResetRank();
@@ -162,6 +162,9 @@ bool GameplayState::LoadNextReplayStage(GameContext &context) {
     return false;
   }
   ResetGameplayRuntime(context);
+  if (!context.records.ConfigurePlayback(context.player, context.session)) {
+    return false;
+  }
   context.records.RestorePlaybackStage(context.player, context.session);
   if (!LoadCurrentStage(context)) {
     StopPlayback(context);
@@ -424,7 +427,10 @@ FlowEvent GameplayState::UpdateGameOverMenu(GameContext &context,
 }
 
 void GameplayState::StopPlayback(GameContext &context) {
-  context.records.StopPlayback(context.config, context.session);
+  context.records.StopPlayback();
+  context.session.level = context.config.game.game_level;
+  context.player.Configure(context.config.game.practice_mode,
+                           context.config.input.z_spd_down_enabled);
   context.session.is_demoplay = false;
 }
 
@@ -509,7 +515,7 @@ void GameplayState::Draw(GameContext &context) const {
       .star_threshold = context.player.StarThreshold(),
       .rank = context.session.rank,
       .level_name = GameLevelName(context.session.level),
-      .practice_mode = context.config.game.practice_mode,
+      .practice_mode = context.player.Practice(),
   };
 
   GrpBackend_Clear();

@@ -133,6 +133,7 @@ public:
   [[nodiscard]] uint16_t GrazeWaitTime() const { return evade_c_; }
   [[nodiscard]] uint32_t StarCounter() const { return star_counter_; }
   [[nodiscard]] uint32_t StarThreshold() const { return star_threshold_; }
+  [[nodiscard]] PracticeMode Practice() const { return practice_mode_; }
   [[nodiscard]] bool IsInvincible() const {
     return invincibility_time_ != 0 ||
            life_state_ == LifeState::DeathbombWindow ||

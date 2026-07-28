@@ -17,7 +17,6 @@
 #include "gfx/text.h"
 #include "music/music_player.h"
 #include "platform/text_backend.h"
-#include "settings/config.h"
 #include "sys/input.h"
 #include "util/debug.h"
 #include "util/ut_math.h"
@@ -403,9 +402,6 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
       ((system_input & SYSKEY_BGM_DEVICE) != 0)) {
     if (!device_change_wait_) {
       BGM_ChangeMIDIDevice(1);
-      if (auto sf = MidBackend_CurrentSoundFont()) {
-        config_.audio.soundfont = sf.value();
-      }
       device_change_wait_ = true;
     }
   } else {

@@ -13,7 +13,6 @@
 #include "sys/input.h"
 
 class MusicPlayer;
-struct ConfigData;
 
 namespace data {
 class GameData;
@@ -23,8 +22,8 @@ class GraphicsLoader;
 class MusicRoomScene {
 public:
   MusicRoomScene(data::GameData &data, data::GraphicsLoader &graphics,
-                 MusicPlayer &music, ConfigData &config)
-      : data_(data), graphics_(graphics), music_(music), config_(config) {}
+                 MusicPlayer &music)
+      : data_(data), graphics_(graphics), music_(music) {}
 
   [[nodiscard]] bool Enter();
   [[nodiscard]] bool Update(INPUT_BITS input, INPUT_BITS system_input,
@@ -58,5 +57,4 @@ private:
   data::GameData &data_;
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
-  ConfigData &config_;
 };

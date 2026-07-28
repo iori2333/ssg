@@ -25,9 +25,10 @@ public:
 private:
   [[nodiscard]] bool Tick();
   void Shutdown();
-  void SaveConfig();
+  void PersistConfig();
 
-  GameContext context_;
+  ConfigData config_;
+  GameContext context_{config_};
   std::unique_ptr<gameflow::GameFlow> flow_;
   bool config_loaded_ = false;
   bool display_initialized_ = false;

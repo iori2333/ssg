@@ -55,7 +55,8 @@ public:
   menu::MenuController &GameOver() { return game_over_window_; }
 
   // --- Initialization ---
-  void InitMain(ConfigData &config, menu::MainMenuServices services);
+  void ConfigureMain(ConfigData &config, menu::MainMenuServices services);
+  void InitMain();
   void InitExit();
   void InitGameOver();
   void PrepareExitMenu(bool can_save_replay);

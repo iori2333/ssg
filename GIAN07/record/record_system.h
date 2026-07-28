@@ -69,17 +69,16 @@ public:
 
   [[nodiscard]] std::vector<ReplayRecord> ListReplays() const;
   [[nodiscard]] bool LoadReplay(std::string_view path, StageId start_stage);
-  [[nodiscard]] bool ConfigurePlayback(ConfigData &config,
-                                       GameSession &session);
+  [[nodiscard]] bool ConfigurePlayback(Player &player, GameSession &session);
   void RestorePlaybackStage(Player &player, GameSession &session);
   [[nodiscard]] bool HasNextPlaybackStage() const;
   [[nodiscard]] bool AdvancePlaybackStage();
   [[nodiscard]] StageId CurrentPlaybackStage() const;
 
   [[nodiscard]] bool LoadStageDemo(StageId stage, Player &player,
-                                   GameSession &session, ConfigData &config);
+                                   GameSession &session);
   [[nodiscard]] INPUT_BITS NextInput();
-  void StopPlayback(ConfigData &config, GameSession &session);
+  void StopPlayback();
   [[nodiscard]] bool IsPlaying() const { return playing_; }
   [[nodiscard]] bool IsRecording() const { return recording_; }
   [[nodiscard]] bool IsMultiStagePlayback() const {
@@ -108,14 +107,6 @@ private:
     std::vector<INPUT_BITS> inputs;
   };
 
-  struct SavedConfig {
-    GameLevel difficulty = GameLevel::Normal;
-    PracticeMode practice_mode = PracticeMode::Off;
-    uint8_t player_stock = 0;
-    uint8_t bomb_stock = 0;
-    uint8_t input_flags = 0;
-  } saved_config_;
-
   [[nodiscard]] bool LoadArchive(std::string_view path,
                                  std::optional<ReplayRecord> *record,
                                  ReplaySettings *settings,
@@ -128,7 +119,6 @@ private:
   bool playing_ = false;
   bool recording_ = false;
   bool multi_stage_playback_ = false;
-  bool config_overridden_ = false;
   std::vector<INPUT_BITS> current_inputs_;
   std::vector<ReplayStage> recorded_stages_;
   std::vector<ReplayStage> playback_stages_;

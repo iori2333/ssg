@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include "gfx/graphics.h"
+
 struct GraphicsConfig;
 
 namespace data {
@@ -12,25 +14,18 @@ class GraphicsLoader;
 
 class DisplayController {
 public:
-  DisplayController(GraphicsConfig &config, data::GraphicsLoader &graphics)
-      : config_(config), graphics_(graphics) {}
+  explicit DisplayController(data::GraphicsLoader &graphics)
+      : graphics_(graphics) {}
 
-  [[nodiscard]] bool Initialize();
-  [[nodiscard]] bool ToggleFullscreen();
-  [[nodiscard]] bool ToggleExclusiveFullscreen();
-  [[nodiscard]] bool ToggleScalingMode();
-  [[nodiscard]] bool CycleScale(int_fast8_t delta, bool include_max);
-  [[nodiscard]] bool SelectApi(int8_t api);
-  [[nodiscard]] bool CycleApi();
+  [[nodiscard]] bool Initialize(GraphicsConfig &config);
+  [[nodiscard]] bool ApplyConfig(const GraphicsConfig &config);
 
   void SetFrameRate(uint8_t divisor);
   void SetScreenshotEffort(uint8_t effort);
-  void ToggleTurbo();
 
 private:
-  template <typename Modify> [[nodiscard]] bool Apply(Modify &&modify);
+  [[nodiscard]] bool Apply(GRAPHICS_PARAMS requested);
 
-  GraphicsConfig &config_;
   data::GraphicsLoader &graphics_;
-  uint8_t turbo_restore_divisor_ = 1;
+  GRAPHICS_PARAMS params_{};
 };

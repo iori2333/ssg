@@ -21,11 +21,13 @@
 #include "ui/ui_manager.h"
 
 struct GameContext {
-  ConfigData config;
+  explicit GameContext(const ConfigData &config) : config(config) {}
+
+  const ConfigData &config;
 
   data::GameData data;
   data::GraphicsLoader graphics{data};
-  DisplayController display{config.graphics, graphics};
+  DisplayController display{graphics};
   data::SfxLoader sound_effects{data};
   MusicPlayer music{data};
   stage::StageLoader stage_loader{data};

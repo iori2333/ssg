@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <string>
 
-#include "audio/midi.h"
 #include "audio/volume.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics.h"
@@ -35,9 +34,6 @@ struct GraphicsConfig {
   uint8_t fps_divisor = 1;
   GRAPHICS_PARAM_FLAGS graphics_param_flags{};
   uint8_t screenshot_effort = 0;
-
-  [[nodiscard]] GRAPHICS_PARAMS ToParams() const;
-  void ApplyParams(const GRAPHICS_PARAMS &params);
 };
 
 struct UiConfig {
@@ -64,9 +60,6 @@ struct InputConfig {
   INPUT_PAD_BUTTON pad_bomb = 2;
   INPUT_PAD_BUTTON pad_shift = 0;
   INPUT_PAD_BUTTON pad_cancel = 0;
-
-  [[nodiscard]] uint8_t PackFlags() const;
-  void UnpackFlags(uint8_t value);
 };
 
 struct DebugConfig {
@@ -80,7 +73,7 @@ struct ConfigData {
   AudioConfig audio;
   InputConfig input;
   DebugConfig debug;
-
-  void Load();
-  void Save() const;
 };
+
+[[nodiscard]] ConfigData LoadConfig();
+void SaveConfig(const ConfigData &config);
