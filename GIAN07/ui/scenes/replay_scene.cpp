@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -16,8 +15,7 @@
 
 #include "audio/constants.h"
 #include "audio/snd.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
+#include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/constants.h"
 #include "gfx/coords.h"
@@ -31,6 +29,7 @@
 #include "ui/menu/menu_controller.h"
 #include "ui/menu/menu_tree.h"
 #include "ui/name_entry.h"
+#include "ui/ui_manager.h"
 #include "util/debug.h"
 
 namespace {
@@ -57,11 +56,11 @@ uint8_t DetailGradient(PIXEL_COORD y) {
 }
 } // namespace
 
-bool ReplayScene::EnterBrowser() {
-  GameFlow.ctx.ui.ForceCloseMessageWindow();
+bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
+  ui_.ForceCloseMessageWindow();
   GrpBackend_Clear();
   Grp_Flip();
-  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
+  if (!graphics_.LoadNameRegistration()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -76,98 +75,87 @@ bool ReplayScene::EnterBrowser() {
   }
   replays_ = record_system_.ListReplays();
   selected_ = 0;
-  previous_input_ = Key_Data;
+  previous_input_ = initial_input;
   ResetRows();
   mode_ = Mode::Browser;
-  GameFlow.game_main = [](bool &quit) {
-    GameFlow.ctx.replay_scene.Update(quit);
-  };
-  GameFlow.current_state = GameState::ReplayBrowser;
   return true;
 }
 
-void ReplayScene::BeginSave(bool extra_stage,
-                            std::function<void(bool)> on_complete) {
-  GameFlow.ctx.ui.ForceCloseMessageWindow();
+bool ReplayScene::BeginSave(bool extra_stage, INPUT_BITS initial_input) {
+  ui_.ForceCloseMessageWindow();
   GrpBackend_Clear();
   Grp_Flip();
-  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
+  if (!graphics_.LoadNameRegistration()) {
     record_system_.CancelRecording();
-    on_complete(false);
-    return;
+    return false;
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
   save_extra_stage_ = extra_stage;
-  save_complete_ = std::move(on_complete);
-  name_entry_.Begin(true);
+  name_entry_.Begin(true, initial_input);
   mode_ = Mode::NameEntry;
-  GameFlow.game_main = [](bool &quit) {
-    GameFlow.ctx.replay_scene.Update(quit);
-  };
-  GameFlow.current_state = GameState::ReplayNameEntry;
+  return true;
 }
 
-void ReplayScene::Update(bool & /*quit*/) {
+ReplaySceneResult ReplayScene::Update(INPUT_BITS input, bool should_draw) {
   switch (mode_) {
   case Mode::Browser:
-    UpdateBrowser();
-    break;
+    return UpdateBrowser(input, should_draw);
   case Mode::StageSelect:
-    UpdateStageSelect();
-    break;
+    return UpdateStageSelect(input, should_draw);
   case Mode::NameEntry:
-    UpdateNameEntry();
-    break;
+    return UpdateNameEntry(input, should_draw);
   }
+  std::unreachable();
 }
 
-void ReplayScene::UpdateBrowser() {
-  if (Key_Data == 0) {
+ReplaySceneResult ReplayScene::UpdateBrowser(INPUT_BITS input,
+                                             bool should_draw) {
+  if (input == 0) {
     previous_input_ = 0;
   } else if (previous_input_ == 0) {
-    previous_input_ = Key_Data;
-    if (Key_Data == KEY_ESC || Key_Data == KEY_BOMB) {
+    previous_input_ = input;
+    if (input == KEY_ESC || input == KEY_BOMB) {
       Snd_SEPlay(SfxId::Cancel);
-      (void)GameExit(false);
-      return;
+      return {.type = ReplaySceneResult::Type::ExitRequested};
     }
     if (!replays_.empty()) {
       const auto page_count = (replays_.size() + kPageSize - 1) / kPageSize;
       const auto page = selected_ / kPageSize;
       const auto row = selected_ % kPageSize;
-      if (Key_Data == KEY_UP) {
+      if (input == KEY_UP) {
         const auto page_start = page * kPageSize;
         const auto page_size =
             std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + page_size - 1) % page_size;
         Snd_SEPlay(SfxId::Select);
-      } else if (Key_Data == KEY_DOWN) {
+      } else if (input == KEY_DOWN) {
         const auto page_start = page * kPageSize;
         const auto page_size =
             std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + 1) % page_size;
         Snd_SEPlay(SfxId::Select);
-      } else if (Key_Data == KEY_LEFT || Key_Data == KEY_RIGHT) {
+      } else if (input == KEY_LEFT || input == KEY_RIGHT) {
         if (page_count > 1 && !rows_.back().moving) {
-          const auto direction = Key_Data == KEY_LEFT ? page_count - 1 : 1;
+          const auto direction = input == KEY_LEFT ? page_count - 1 : 1;
           const auto next_page = (page + direction) % page_count;
           selected_ =
               std::min(next_page * kPageSize + row, replays_.size() - 1);
           ResetRows();
           Snd_SEPlay(SfxId::Select);
         }
-      } else if (Key_Data == KEY_RETURN || Key_Data == KEY_TAMA) {
+      } else if (input == KEY_RETURN || input == KEY_TAMA) {
         Snd_SEPlay(SfxId::Select);
         OpenStageSelect();
       }
     }
   }
 
-  if (GameFlow.IsDraw()) {
+  if (should_draw) {
     DrawBrowser();
     Grp_Flip();
   }
+  return {};
 }
 
 void ReplayScene::OpenStageSelect() {
@@ -189,36 +177,41 @@ void ReplayScene::OpenStageSelect() {
   stage_menu_.Init(160);
   stage_menu_.Navigate(*stage_menu_root_,
                        std::to_underlying(replay.stages.front()));
-  stage_menu_.Open({240, 150}, std::to_underlying(replay.stages.front()));
+  stage_menu_.Open({240, 150}, std::to_underlying(replay.stages.front()),
+                   previous_input_);
   pending_stage_.reset();
   mode_ = Mode::StageSelect;
 }
 
-void ReplayScene::UpdateStageSelect() {
-  stage_menu_.Tick(Key_Data);
+ReplaySceneResult ReplayScene::UpdateStageSelect(INPUT_BITS input,
+                                                 bool should_draw) {
+  stage_menu_.Tick(input);
   if (pending_stage_) {
     const auto path = replays_[selected_].path;
     const auto stage = *pending_stage_;
     pending_stage_.reset();
-    if (!GameReplayInit(path.c_str(), stage)) {
-      (void)EnterBrowser();
-    }
-    return;
+    return {
+        .type = ReplaySceneResult::Type::PlaybackRequested,
+        .replay_path = path,
+        .stage = stage,
+    };
   }
   if (!stage_menu_.Active()) {
     mode_ = Mode::Browser;
-    previous_input_ = Key_Data;
+    previous_input_ = input;
   }
 
-  if (GameFlow.IsDraw()) {
+  if (should_draw) {
     DrawBrowser();
     stage_menu_.Draw();
     Grp_Flip();
   }
+  return {};
 }
 
-void ReplayScene::UpdateNameEntry() {
-  const auto result = name_entry_.Update(Key_Data);
+ReplaySceneResult ReplayScene::UpdateNameEntry(INPUT_BITS input,
+                                               bool should_draw) {
+  const auto result = name_entry_.Update(input);
   if (result != NameEntryResult::Editing) {
     const bool saved =
         result == NameEntryResult::Confirmed &&
@@ -226,15 +219,14 @@ void ReplayScene::UpdateNameEntry() {
     if (result == NameEntryResult::Cancelled) {
       record_system_.CancelRecording();
     }
-    auto completion = std::move(save_complete_);
-    completion(saved);
-    return;
+    return {.type = ReplaySceneResult::Type::SaveComplete, .saved = saved};
   }
 
-  if (GameFlow.IsDraw()) {
+  if (should_draw) {
     DrawNameEntry();
     Grp_Flip();
   }
+  return {};
 }
 
 void ReplayScene::ResetRows() {

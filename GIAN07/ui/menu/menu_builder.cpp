@@ -25,7 +25,8 @@
 #include "audio/midi_backend.h"
 #include "audio/snd.h"
 #include "audio/volume.h"
-#include "gameflow/gameflow_manager.h"
+#include "data/graphics_loader.h"
+#include "data/sfx_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics_backend.h"
 #include "music/music_player.h"
@@ -110,17 +111,18 @@ static std::unique_ptr<EntryNode> BuildScreenshotMenu(GraphicsConfig &gfx_cfg) {
 // Graphics API (dynamic)
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg) {
+static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
+                                              data::GraphicsLoader &graphics) {
   auto init_sel = static_cast<int>(gfx_cfg.ToParams().api);
   auto node = std::make_unique<ListNode>(
       "API", "Select rendering API", [] { return GrpBackend_APICount(); },
       [](size_t i) {
         return std::string(GrpBackend_APILabel(GrpBackend_APIString(i)));
       },
-      [&gfx_cfg](size_t i) {
-        graphics_settings::TryApply(
-            gfx_cfg, GameFlow.ctx.graphics,
-            [i](auto &params) { params.api = static_cast<int>(i); });
+      [&gfx_cfg, &graphics](size_t i) {
+        graphics_settings::TryApply(gfx_cfg, graphics, [i](auto &params) {
+          params.api = static_cast<int>(i);
+        });
         return false;
       },
       init_sel);
@@ -131,7 +133,8 @@ static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg) {
 // Graphics
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
+static std::unique_ptr<EntryNode>
+BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(10);
 
@@ -148,8 +151,9 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
     static uint8_t disp_state = 0;
     auto disp = std::make_unique<ChoiceNode>(
         "Display", "Switch between window and fullscreen modes", &disp_state, 0,
-        1, std::vector<std::string>{"Window", "Fullscreen"}, [&gfx_cfg] {
-          graphics_settings::ToggleFullscreen(gfx_cfg, GameFlow.ctx.graphics);
+        1, std::vector<std::string>{"Window", "Fullscreen"},
+        [&gfx_cfg, &graphics] {
+          graphics_settings::ToggleFullscreen(gfx_cfg, graphics);
         });
     disp->SetPoll([&gfx_cfg]() {
       disp_state = gfx_cfg.ToParams().FullscreenFlags().fullscreen ? 1 : 0;
@@ -160,11 +164,11 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
     static uint8_t fs_state = 0;
     auto fs_mode = std::make_unique<ChoiceNode>(
         "FullScr", "Fullscreen mode", &fs_state, 0, 1,
-        std::vector<std::string>{"Borderless", "Exclusive"}, [&gfx_cfg] {
-          graphics_settings::TryApply(
-              gfx_cfg, GameFlow.ctx.graphics, [](auto &params) {
-                params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
-              });
+        std::vector<std::string>{"Borderless", "Exclusive"},
+        [&gfx_cfg, &graphics] {
+          graphics_settings::TryApply(gfx_cfg, graphics, [](auto &params) {
+            params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+          });
         });
     auto *fs_raw = fs_mode.get();
     fs_mode->SetPoll([fs_raw, &gfx_cfg]() {
@@ -180,14 +184,12 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
   {
     auto scale = std::make_unique<ActionNode>(
         "ScaleFact", "Window scaling factor",
-        [&gfx_cfg](MenuController &) {
-          graphics_settings::CycleScale(gfx_cfg, GameFlow.ctx.graphics, 0,
-                                        true);
+        [&gfx_cfg, &graphics](MenuController &) {
+          graphics_settings::CycleScale(gfx_cfg, graphics, 0, true);
           return true;
         },
-        [&gfx_cfg](MenuController &, int delta) {
-          graphics_settings::CycleScale(gfx_cfg, GameFlow.ctx.graphics, delta,
-                                        true);
+        [&gfx_cfg, &graphics](MenuController &, int delta) {
+          graphics_settings::CycleScale(gfx_cfg, graphics, delta, true);
         });
     auto *scale_raw = scale.get();
     scale->SetPoll([scale_raw, &gfx_cfg]() {
@@ -222,8 +224,9 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
     static uint8_t sc_state = 0;
     auto sc_mode = std::make_unique<ChoiceNode>(
         "ScaleMode", "Scaling method", &sc_state, 0, 1,
-        std::vector<std::string>{"FrameBuf", "Geometry"}, [&gfx_cfg] {
-          graphics_settings::ToggleScalingMode(gfx_cfg, GameFlow.ctx.graphics);
+        std::vector<std::string>{"FrameBuf", "Geometry"},
+        [&gfx_cfg, &graphics] {
+          graphics_settings::ToggleScalingMode(gfx_cfg, graphics);
         });
     auto *sc_raw = sc_mode.get();
     sc_mode->SetPoll([sc_raw, &gfx_cfg]() {
@@ -251,7 +254,7 @@ static std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg) {
 
 #ifdef SUPPORT_GRP_API
   {
-    auto api_entry = BuildApiMenu(gfx_cfg);
+    auto api_entry = BuildApiMenu(gfx_cfg, graphics);
     api_entry->SetPoll([raw = api_entry.get()]() {
       raw->SetEnabled(GrpBackend_APICount() >= 2);
     });
@@ -329,12 +332,12 @@ static std::unique_ptr<EntryNode> BuildMidiMenu(AudioConfig &audio_cfg) {
         }
         return std::string();
       },
-      [](size_t i) -> bool {
+      [&audio_cfg](size_t i) -> bool {
         if (BGM_Enabled()) {
           Mid_Stop();
           MidBackend_DeviceSelect(i);
           if (auto sf = MidBackend_CurrentSoundFont()) {
-            GameFlow.ctx.config.audio.soundfont = sf.value();
+            audio_cfg.soundfont = sf.value();
           }
           if (BGM_Playing() == BGM_PLAYING::MIDI) {
             Mid_Play();
@@ -370,15 +373,17 @@ static std::unique_ptr<EntryNode> BuildMidiMenu(AudioConfig &audio_cfg) {
 // Sound / Music
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
+static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
+                                                 data::SfxLoader &sound_effects,
+                                                 MusicPlayer &music) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(7);
 
   ch.push_back(std::make_unique<ToggleNode>(
       "Sound / SE", "SEを鳴らすかどうかの設定", std::ref(audio_cfg.se_enabled),
-      [&audio_cfg](bool on) {
+      [&audio_cfg, &sound_effects](bool on) {
         if (on) {
-          if (!GameFlow.ctx.sound_effects.Load()) {
+          if (!sound_effects.Load()) {
             audio_cfg.se_enabled = false;
           }
         } else {
@@ -388,10 +393,10 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
 
   ch.push_back(std::make_unique<ToggleNode>("BGM", "BGMを鳴らすかどうかの設定",
                                             std::ref(audio_cfg.bgm_enabled),
-                                            [](bool on) {
+                                            [&music](bool on) {
                                               if (on) {
                                                 if (BGM_Init()) {
-                                                  GameFlow.ctx.music.Play(0);
+                                                  music.Play(0);
                                                 }
                                               } else {
                                                 BGM_Cleanup();
@@ -426,9 +431,8 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
 
   {
     auto packs = std::make_shared<std::vector<std::string>>();
-    if (GameFlow.ctx.music.HasPacks()) {
-      GameFlow.ctx.music.ForEachPack(
-          [&](std::string_view p) { packs->emplace_back(p); });
+    if (music.HasPacks()) {
+      music.ForEachPack([&](std::string_view p) { packs->emplace_back(p); });
       std::ranges::sort(*packs);
     }
     auto bgm_pack = std::make_unique<ListNode>(
@@ -443,16 +447,16 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg) {
           }
           return (*packs)[i - 1];
         },
-        [packs](size_t i) -> bool {
+        [packs, &audio_cfg, &music](size_t i) -> bool {
           if (i == 0) {
-            GameFlow.ctx.config.audio.bgm_pack.clear();
-            GameFlow.ctx.music.SetPack(GameFlow.ctx.config.audio.bgm_pack);
+            audio_cfg.bgm_pack.clear();
+            music.SetPack(audio_cfg.bgm_pack);
           } else if (i == packs->size() + 1) {
             SDL_OpenURL("https://github.com/nmlgc/BGMPacks/"
                         "releases/tag/2024-10-05");
           } else {
-            GameFlow.ctx.config.audio.bgm_pack = (*packs)[i - 1];
-            GameFlow.ctx.music.SetPack(GameFlow.ctx.config.audio.bgm_pack);
+            audio_cfg.bgm_pack = (*packs)[i - 1];
+            music.SetPack(audio_cfg.bgm_pack);
           }
           return false;
         });
@@ -526,7 +530,9 @@ static std::unique_ptr<EntryNode> BuildInputMenu(InputConfig &input_cfg) {
 // ---------------------------------------------------------------------------
 // Debug (PBG_DEBUG only)
 // ---------------------------------------------------------------------------
-static std::unique_ptr<EntryNode> BuildDebugMenu(DebugConfig &debug_cfg) {
+static std::unique_ptr<EntryNode>
+BuildDebugMenu(DebugConfig &debug_cfg,
+               std::function<void(MainMenuAction)> on_action) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(2);
 
@@ -537,8 +543,9 @@ static std::unique_ptr<EntryNode> BuildDebugMenu(DebugConfig &debug_cfg) {
                                FmtLabel("All")}));
 
   ch.push_back(std::make_unique<ActionNode>(
-      "Bullet Gallery", "Debug bullet type gallery", [](MenuController &) {
-        BulletGalleryInit();
+      "Bullet Gallery", "Debug bullet type gallery",
+      [on_action](MenuController &) {
+        on_action(MainMenuAction::OpenBulletGallery);
         return true;
       }));
 
@@ -550,25 +557,28 @@ static std::unique_ptr<EntryNode> BuildDebugMenu(DebugConfig &debug_cfg) {
 // Public entry point
 // ---------------------------------------------------------------------------
 
-std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg) {
+std::unique_ptr<IMenuNode>
+BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
+                  std::function<void(MainMenuAction)> on_action) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(9);
 
-  ch.push_back(std::make_unique<ActionNode>("Game Start", "ゲームを開始します",
-                                            [](MenuController &) {
-                                              GameFlow.WeaponSelectInit(false);
-                                              return true;
-                                            }));
-
   ch.push_back(std::make_unique<ActionNode>(
-      "Extra Start", "ゲームを開始します(Extra)", [](MenuController &) {
-        GameFlow.WeaponSelectInit(true);
+      "Game Start", "ゲームを開始します", [on_action](MenuController &) {
+        on_action(MainMenuAction::StartGame);
         return true;
       }));
 
+  ch.push_back(
+      std::make_unique<ActionNode>("Extra Start", "ゲームを開始します(Extra)",
+                                   [on_action](MenuController &) {
+                                     on_action(MainMenuAction::StartExtra);
+                                     return true;
+                                   }));
+
   ch.push_back(std::make_unique<ActionNode>(
-      "Replay", "リプレイファイルの管理", [](MenuController &) {
-        (void)GameFlow.ctx.replay_scene.EnterBrowser();
+      "Replay", "リプレイファイルの管理", [on_action](MenuController &) {
+        on_action(MainMenuAction::OpenReplay);
         return true;
       }));
 
@@ -576,31 +586,28 @@ std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg) {
       std::make_unique<EntryNode>("Config", "各種設定を変更します",
                                   std::vector<std::unique_ptr<IMenuNode>>{});
   config->AddChild(BuildDifficultyMenu(cfg.game));
-  config->AddChild(BuildGraphicsMenu(cfg.graphics));
-  config->AddChild(BuildSoundMenu(cfg.audio));
+  config->AddChild(BuildGraphicsMenu(cfg.graphics, services.graphics));
+  config->AddChild(
+      BuildSoundMenu(cfg.audio, services.sound_effects, services.music));
   config->AddChild(BuildInputMenu(cfg.input));
   ch.push_back(std::move(config));
 
   ch.push_back(std::make_unique<ActionNode>(
-      "Score", "スコアの表示をします", [](MenuController &) {
-        const auto difficulty = GameFlow.ctx.session.stage == StageId::Extra
-                                    ? GameLevel::Extra
-                                    : GameFlow.ctx.session.level;
-        (void)GameFlow.ctx.score.ShowLeaderboard(difficulty);
+      "Score", "スコアの表示をします", [on_action](MenuController &) {
+        on_action(MainMenuAction::OpenScore);
         return true;
       }));
 
   auto music = std::make_unique<ActionNode>(
-      "Music", "音楽室に入ります", [](MenuController &) {
-        GameFlow.ctx.ui.ForceCloseMessageWindow();
-        (void)GameFlow.ctx.music_room.Enter();
+      "Music", "音楽室に入ります", [on_action](MenuController &) {
+        on_action(MainMenuAction::OpenMusicRoom);
         return true;
       });
   auto *music_raw = music.get();
   music->SetPoll([music_raw]() { music_raw->SetEnabled(BGM_Enabled()); });
   ch.push_back(std::move(music));
 
-  ch.push_back(BuildDebugMenu(cfg.debug));
+  ch.push_back(BuildDebugMenu(cfg.debug, on_action));
 
   ch.push_back(std::make_unique<ActionNode>(
       "Exit", "ゲームを終了します", [](MenuController &) { return false; }));

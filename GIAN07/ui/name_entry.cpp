@@ -16,14 +16,14 @@ constexpr int kFinish = -1;
 constexpr int kInvalid = -2;
 } // namespace
 
-void NameEntry::Begin(bool allow_cancel) {
+void NameEntry::Begin(bool allow_cancel, INPUT_BITS initial_input) {
   name_.fill('\0');
   cursor_x_ = 0;
   cursor_y_ = 0;
   key_repeat_ = 0;
   cursor_frame_ = 0;
   elapsed_ = 0;
-  input_locked_ = Key_Data != 0U;
+  input_locked_ = initial_input != 0U;
   allow_cancel_ = allow_cancel;
   awaiting_release_ = false;
   release_result_ = NameEntryResult::Confirmed;

@@ -5,23 +5,42 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <optional>
 #include <vector>
 
 #include "record/record_system.h"
 #include "ui/name_entry.h"
 
+class MusicPlayer;
+class UIManager;
+
+namespace data {
+class GraphicsLoader;
+}
+
+enum class ScoreSceneResult : uint8_t {
+  Running,
+  ExitRequested,
+  RegistrationComplete,
+};
+
+enum class ScoreRegistrationStart : uint8_t { Active, Complete };
+
 class ScoreScene {
 public:
-  explicit ScoreScene(RecordSystem &records) : record_system_(records) {}
+  ScoreScene(RecordSystem &records, data::GraphicsLoader &graphics,
+             MusicPlayer &music, UIManager &ui)
+      : record_system_(records), graphics_(graphics), music_(music), ui_(ui) {}
 
-  [[nodiscard]] bool ShowLeaderboard(GameLevel initial_difficulty);
-  [[nodiscard]] bool
-  StartNameRegistration(ScoreRecord record, bool change_music = false,
-                        std::function<void()> on_complete = {});
-  void UpdateLeaderboard(bool &quit);
-  void UpdateNameRegistration(bool &quit);
+  [[nodiscard]] bool ShowLeaderboard(GameLevel initial_difficulty,
+                                     INPUT_BITS initial_input);
+  [[nodiscard]] ScoreRegistrationStart
+  StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
+                        bool change_music = false);
+  [[nodiscard]] ScoreSceneResult UpdateLeaderboard(INPUT_BITS input,
+                                                   bool should_draw);
+  [[nodiscard]] ScoreSceneResult UpdateNameRegistration(INPUT_BITS input,
+                                                        bool should_draw);
 
 private:
   static constexpr std::size_t kRowCount = 5;
@@ -33,7 +52,6 @@ private:
   };
 
   void LoadLeaderboard(GameLevel difficulty);
-  void FinishRegistration();
   void ResetRows();
   void DrawLeaderboard(bool show_selection);
   void DrawDetail() const;
@@ -48,5 +66,7 @@ private:
   bool input_locked_ = false;
   bool detail_open_ = false;
   NameEntry name_entry_;
-  std::function<void()> on_registration_complete_;
+  data::GraphicsLoader &graphics_;
+  MusicPlayer &music_;
+  UIManager &ui_;
 };

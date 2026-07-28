@@ -5,10 +5,11 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
 #include <memory>
+#include <optional>
 #include <string_view>
 
+#include "menu/menu_builder.h"
 #include "menu/menu_controller.h"
 #include "menu/menu_tree.h"
 #include "msg_window/msg_window.h"
@@ -16,15 +17,14 @@
 #include "gameplay/boss_health_gauge.h"
 #include "gameplay/gameplay_hud.h"
 
+struct ConfigData;
+
 class UIManager {
 public:
   UIManager();
 
-  // --- Game flow callbacks (injected by gameflow layer) ---
-  std::function<void()> on_game_exit;
-  std::function<void()> on_game_restart;
-  std::function<void()> on_game_continue;
-  std::function<void(bool)> on_game_over_exit;
+  enum class PauseAction { SaveReplayAndExit, Exit, Resume };
+  enum class GameOverAction { Continue, SaveReplayAndExit, Exit };
 
   // --- Message window ---
   void InitMessageWindow(const WINDOW_LTRB &rect,
@@ -55,9 +55,14 @@ public:
   menu::MenuController &GameOver() { return game_over_window_; }
 
   // --- Initialization ---
-  void InitMain();
+  void InitMain(ConfigData &config, menu::MainMenuServices services);
   void InitExit();
   void InitGameOver();
+  void PrepareExitMenu(bool can_save_replay);
+  void PrepareGameOverMenu(bool can_continue, bool can_save_replay);
+  [[nodiscard]] std::optional<PauseAction> TakePauseAction();
+  [[nodiscard]] std::optional<GameOverAction> TakeGameOverAction();
+  [[nodiscard]] std::optional<menu::MainMenuAction> TakeMainMenuAction();
 
   // --- Active menu on title screen ---
   menu::MenuController *ActiveMenu() { return &main_window_; }
@@ -72,12 +77,18 @@ private:
   // --- Main menu ---
   std::unique_ptr<menu::IMenuNode> root_menu_;
   menu::MenuController main_window_;
+  std::optional<menu::MainMenuAction> main_menu_action_;
 
   // --- Exit dialog ---
   std::unique_ptr<menu::IMenuNode> exit_menu_;
   menu::MenuController exit_window_;
+  menu::ActionNode *save_and_exit_item_ = nullptr;
+  std::optional<PauseAction> pause_action_;
 
   // --- Game over dialog ---
   std::unique_ptr<menu::IMenuNode> game_over_menu_;
   menu::MenuController game_over_window_;
+  menu::ActionNode *continue_item_ = nullptr;
+  menu::ActionNode *save_replay_item_ = nullptr;
+  std::optional<GameOverAction> game_over_action_;
 };

@@ -10,11 +10,12 @@
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
+#include "data/game_data.h"
+#include "data/graphics_loader.h"
 #include "gfx/constants.h"
 #include "gfx/font_uty.h"
 #include "gfx/text.h"
+#include "music/music_player.h"
 #include "platform/text_backend.h"
 #include "settings/config.h"
 #include "sys/input.h"
@@ -56,25 +57,25 @@ void MusicRoomScene::Text::RenderMidDev(WINDOW_POINT topleft) const {
 }
 
 void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
-                                       std::size_t track_id) const {
+                                       std::size_t track_id,
+                                       std::string_view track_title) const {
   // Some modders might assign the same title to consecutive tracks, but it's
   // not possible to change the track title without switching to a different
   // track first.
   auto num_str = std::format("#{:02}", (track_id + 1));
   std::string_view num = num_str;
 
-  TextObj.Render(topleft, title, num, [&num](TEXTRENDER_SESSION &s) {
-    const auto &title = GameFlow.ctx.music.CurrentTitle();
+  TextObj.Render(
+      topleft, title, num, [&num, track_title](TEXTRENDER_SESSION &s) {
+        // GDI would calculate a trailing space as 4 pixels wide, not 8.
+        const auto title_left = (s.Extent(num).w + 8);
 
-    // GDI would calculate a trailing space as 4 pixels wide, not 8.
-    const auto title_left = (s.Extent(num).w + 8);
-
-    s.SetFont(FONT_ID::NORMAL);
-    s.Put({.x = 1, .y = 0}, num, ColorHighlight);
-    s.Put({.x = (title_left + 1), .y = 0}, title, ColorHighlight);
-    s.Put({.x = 0, .y = 0}, num, ColorDefault);
-    s.Put({.x = (title_left + 0), .y = 0}, title, ColorDefault);
-  });
+        s.SetFont(FONT_ID::NORMAL);
+        s.Put({.x = 1, .y = 0}, num, ColorHighlight);
+        s.Put({.x = (title_left + 1), .y = 0}, track_title, ColorHighlight);
+        s.Put({.x = 0, .y = 0}, num, ColorDefault);
+        s.Put({.x = (title_left + 0), .y = 0}, track_title, ColorDefault);
+      });
 }
 
 void MusicRoomScene::Text::RenderComment(WINDOW_POINT topleft) const {
@@ -107,7 +108,7 @@ bool MusicRoomScene::Enter() {
   GrpBackend_Clear();
   Grp_Flip();
 
-  if (!GameFlow.ctx.graphics.LoadMusicRoom()) {
+  if (!graphics_.LoadMusicRoom()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
@@ -127,10 +128,9 @@ bool MusicRoomScene::Enter() {
   Mid_TableInit();
 
   // BGM_Stop();
-  const auto comment = GameFlow.ctx.data.TrackComment(0);
+  const auto comment = data_.TrackComment(0);
   if (comment.empty()) {
     DebugOut("MUSIC.PAK がはかいされています");
-    (void)GameExit();
     return false;
   }
 
@@ -142,16 +142,6 @@ bool MusicRoomScene::Enter() {
 
       .comment_text = comment,
   };
-
-  // if(!LoadMusic(0)) {
-  //         DebugOut("MUSIC.DAT has been corrupted");
-  //         GameExit();
-  //         return false;
-  // }
-  // BGM_Play();
-
-  GameFlow.game_main = [](bool &q) { GameFlow.ctx.music_room.Update(q); };
-  GameFlow.current_state = GameState::MusicRoom;
 
   return true;
 }
@@ -362,7 +352,8 @@ void MusicRoomScene::DrawNotes() {
   }
 }
 
-void MusicRoomScene::Update(bool & /*unused*/) {
+bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
+                            bool should_draw) {
   if (!text_) {
     assert(!"Music Room not initialized?");
     std::unreachable();
@@ -371,27 +362,26 @@ void MusicRoomScene::Update(bool & /*unused*/) {
 
   const auto playing = BGM_Playing();
 
-  if (Key_Data != previous_input_) {
-    if (Input_IsCancel(Key_Data)) {
+  if (input != previous_input_) {
+    if (Input_IsCancel(input)) {
       device_change_wait_ = false;
       text_ = std::nullopt;
-      (void)GameExit();
-      return;
+      return true;
     }
-    if ((Key_Data == KEY_RIGHT) || (Key_Data == KEY_LEFT)) {
-      if (Key_Data == KEY_RIGHT) {
+    if ((input == KEY_RIGHT) || (input == KEY_LEFT)) {
+      if (input == KEY_RIGHT) {
         track_id_ += 2;
       }
       BGM_Stop();
-      const auto track_count = GameFlow.ctx.music.TrackCount();
+      const auto track_count = music_.TrackCount();
       track_id_ = ((track_id_ + track_count - 1) % track_count);
-      GameFlow.ctx.music.Play(track_id_);
-      text.comment_text = GameFlow.ctx.data.TrackComment(track_id_);
+      music_.Play(track_id_);
+      text.comment_text = data_.TrackComment(track_id_);
     }
-    previous_input_ = Key_Data;
+    previous_input_ = input;
   }
 
-  switch (Key_Data) {
+  switch (input) {
   case KEY_UP:
     BGM_SetTempo(BGM_GetTempo() + 1);
     break;
@@ -403,18 +393,18 @@ void MusicRoomScene::Update(bool & /*unused*/) {
     break;
   }
 
-  if ((SystemKey_Data & SYSKEY_BGM_FADE) != 0) {
+  if ((system_input & SYSKEY_BGM_FADE) != 0) {
     BGM_FadeOut(120);
   }
 
   BGM_UpdateMIDITables();
 
   if ((playing == BGM_PLAYING::MIDI) &&
-      ((SystemKey_Data & SYSKEY_BGM_DEVICE) != 0)) {
+      ((system_input & SYSKEY_BGM_DEVICE) != 0)) {
     if (!device_change_wait_) {
       BGM_ChangeMIDIDevice(1);
       if (auto sf = MidBackend_CurrentSoundFont()) {
-        GameFlow.ctx.config.audio.soundfont = sf.value();
+        config_.audio.soundfont = sf.value();
       }
       device_change_wait_ = true;
     }
@@ -423,7 +413,7 @@ void MusicRoomScene::Update(bool & /*unused*/) {
     device_change_wait_ = false;
   }
 
-  if (GameFlow.IsDraw()) {
+  if (should_draw) {
     GrpBackend_Clear();
 
     auto BlitBG = [](const PIXEL_LTWH &rect) {
@@ -472,10 +462,11 @@ void MusicRoomScene::Update(bool & /*unused*/) {
     if (playing == BGM_PLAYING::MIDI) {
       text.RenderMidDev({(540 + 2), (96 - 3)});
     }
-    text.RenderTitle({400, (144 + 2)}, track_id_);
+    text.RenderTitle({400, (144 + 2)}, track_id_, music_.CurrentTitle());
     text.RenderComment({(400 - 40), (144 + 30)});
     text.RenderVersion({(200 - 50), 460});
 
     Grp_Flip();
   }
+  return false;
 }

@@ -76,7 +76,8 @@ public:
   [[nodiscard]] bool AdvancePlaybackStage();
   [[nodiscard]] StageId CurrentPlaybackStage() const;
 
-  [[nodiscard]] bool LoadStageDemo(StageId stage);
+  [[nodiscard]] bool LoadStageDemo(StageId stage, Player &player,
+                                   GameSession &session, ConfigData &config);
   [[nodiscard]] INPUT_BITS NextInput();
   void StopPlayback(ConfigData &config, GameSession &session);
   [[nodiscard]] bool IsPlaying() const { return playing_; }

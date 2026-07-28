@@ -4,18 +4,18 @@
 
 #include <chrono>
 #include <filesystem>
+#include <memory>
 
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_messagebox.h>
 
 #include "entry.h"
+#include "game_application.h"
 #include "graphics_settings.h"
 
 #include "audio/bgm.h"
 #include "audio/snd.h"
 #include "data/game_data.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
 #include "gfx/constants.h"
 #include "gfx/graphics_backend.h"
 #include "gfx/window_backend.h"
@@ -29,6 +29,7 @@
 // -----------
 
 static ConfigData &g_config = AppConfig();
+static std::unique_ptr<GameApplication> g_application;
 
 const uint8_t &Grp_ScreenshotEffort = g_config.graphics.screenshot_effort;
 
@@ -96,6 +97,8 @@ bool XInit() {
 
   // Load config
   g_config.Load();
+  g_application = std::make_unique<GameApplication>();
+  auto &context = g_application->Context();
   Grp_FPSDivisor = g_config.graphics.fps_divisor;
   Mid_SetFlags(g_config.audio.fix_sysex_bugs ? MID_FLAGS::FIX_SYSEX_BUGS
                                              : MID_FLAGS::NONE);
@@ -122,26 +125,27 @@ bool XInit() {
   }
   BGM_SetGainApply(g_config.audio.bgm_vol_norm);
   Grp_ScreenshotSetPrefix("screenshots/");
-  const auto data_errors = GameFlow.ctx.data.Load(PathForData());
+  const auto data_errors = context.data.Load(PathForData());
   if (!data_errors.empty()) {
     const auto message = data::FormatLoadErrors(data_errors);
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Invalid game data",
                              message.c_str(), nullptr);
-    GameFlow.game_main = [](bool &quit) { quit = true; };
-    GameFlow.current_state = GameState::External;
   } else {
-    if (g_config.audio.se_enabled && !GameFlow.ctx.sound_effects.Load()) {
+    if (g_config.audio.se_enabled && !context.sound_effects.Load()) {
       g_config.audio.se_enabled = false;
     }
-    if (!GameFlow.ctx.music.SetPack(g_config.audio.bgm_pack)) {
+    if (!context.music.SetPack(g_config.audio.bgm_pack)) {
       g_config.audio.bgm_pack.clear();
     }
-    SProjectInit();
+    if (!g_application->Start()) {
+      return false;
+    }
   }
   return true;
 }
 
 void XCleanup() {
+  g_application.reset();
   SaveConfigFile(g_config);
   TextBackend_Cleanup();
   GrpBackend_Cleanup();
@@ -151,24 +155,23 @@ void XCleanup() {
 }
 
 bool GameFrame() {
+  auto &context = g_application->Context();
 #ifdef SUPPORT_GRP_WINDOWED
   if ((SystemKey_Data & SYSKEY_GRP_FULLSCREEN) != 0) {
-    graphics_settings::ToggleFullscreen(g_config.graphics,
-                                        GameFlow.ctx.graphics);
+    graphics_settings::ToggleFullscreen(g_config.graphics, context.graphics);
   }
 #endif
 #ifdef SUPPORT_GRP_SCALING
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_UP) != 0) {
-    graphics_settings::CycleScale(g_config.graphics, GameFlow.ctx.graphics, +1,
+    graphics_settings::CycleScale(g_config.graphics, context.graphics, +1,
                                   false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_DOWN) != 0) {
-    graphics_settings::CycleScale(g_config.graphics, GameFlow.ctx.graphics, -1,
+    graphics_settings::CycleScale(g_config.graphics, context.graphics, -1,
                                   false);
   }
   if ((SystemKey_Data & SYSKEY_GRP_SCALE_MODE) != 0) {
-    graphics_settings::ToggleScalingMode(g_config.graphics,
-                                         GameFlow.ctx.graphics);
+    graphics_settings::ToggleScalingMode(g_config.graphics, context.graphics);
   }
 #endif
   if ((SystemKey_Data & SYSKEY_GRP_TURBO) != 0) {
@@ -184,7 +187,7 @@ bool GameFrame() {
 #ifdef SUPPORT_GRP_API
   if ((SystemKey_Data & SYSKEY_GRP_API) != 0) {
     graphics_settings::TryApply(
-        g_config.graphics, GameFlow.ctx.graphics, [](auto &params) {
+        g_config.graphics, context.graphics, [](auto &params) {
           params.api = ((params.api + 1) % GrpBackend_APICount());
         });
   }
@@ -197,7 +200,5 @@ bool GameFrame() {
       ~(SYSKEY_GRP_FULLSCREEN | SYSKEY_GRP_SCALE_UP | SYSKEY_GRP_SCALE_DOWN |
         SYSKEY_GRP_SCALE_MODE | SYSKEY_GRP_TURBO | SYSKEY_GRP_API);
 
-  bool quit = false;
-  GameFlow.game_main(quit);
-  return !quit;
+  return g_application->Tick(Key_Data, SystemKey_Data);
 }

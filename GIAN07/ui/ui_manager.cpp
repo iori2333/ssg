@@ -8,33 +8,25 @@
 #include "menu/menu_builder.h"
 #include "ui_manager.h"
 
-#include "audio/bgm.h"
-#include "gameflow/gameflow_manager.h"
 #include "settings/config.h"
 
 UIManager::UIManager() {
   std::vector<std::unique_ptr<menu::IMenuNode>> exit_items;
   auto save_and_exit = std::make_unique<menu::ActionNode>(
-      "  Save & Exit  ", "", [](menu::MenuController &) {
-        const bool extra_stage = GameFlow.ctx.session.stage == StageId::Extra;
-        GameFlow.ctx.replay_scene.BeginSave(
-            extra_stage, [](bool) { GameFlow.ctx.ui.on_game_exit(); });
+      "  Save & Exit  ", "", [this](menu::MenuController &) {
+        pause_action_ = PauseAction::SaveReplayAndExit;
         return false;
       });
-  auto *save_and_exit_item = save_and_exit.get();
-  save_and_exit->SetPoll([save_and_exit_item] {
-    save_and_exit_item->SetEnabled(GameFlow.ctx.records.HasRecordedStages());
-  });
+  save_and_exit_item_ = save_and_exit.get();
   exit_items.push_back(std::move(save_and_exit));
   exit_items.push_back(std::make_unique<menu::ActionNode>(
-      "   お っ け ～ ", "", [](menu::MenuController &) {
-        GameFlow.ctx.records.CancelRecording();
-        GameFlow.ctx.ui.on_game_exit();
+      "   お っ け ～ ", "", [this](menu::MenuController &) {
+        pause_action_ = PauseAction::Exit;
         return false;
       }));
   exit_items.push_back(std::make_unique<menu::ActionNode>(
-      "   だ め だ め", "", [](menu::MenuController &) {
-        GameFlow.ctx.ui.on_game_restart();
+      "   だ め だ め", "", [this](menu::MenuController &) {
+        pause_action_ = PauseAction::Resume;
         return false;
       }));
   exit_menu_ = std::make_unique<menu::EntryNode>("終了するの？", "",
@@ -42,30 +34,24 @@ UIManager::UIManager() {
 
   std::vector<std::unique_ptr<menu::IMenuNode>> game_over_items;
   auto continue_game = std::make_unique<menu::ActionNode>(
-      "Continue", "", [](menu::MenuController &) {
-        GameFlow.ctx.ui.on_game_continue();
+      "Continue", "", [this](menu::MenuController &) {
+        game_over_action_ = GameOverAction::Continue;
         return false;
       });
-  auto *continue_item = continue_game.get();
-  continue_game->SetPoll([continue_item] {
-    continue_item->SetEnabled(GameFlow.ctx.player.Credits() != 0U);
-  });
+  continue_item_ = continue_game.get();
   game_over_items.push_back(std::move(continue_game));
 
   auto save_replay = std::make_unique<menu::ActionNode>(
-      "Save Replay & Exit", "", [](menu::MenuController &) {
-        GameFlow.ctx.ui.on_game_over_exit(true);
+      "Save Replay & Exit", "", [this](menu::MenuController &) {
+        game_over_action_ = GameOverAction::SaveReplayAndExit;
         return false;
       });
-  auto *save_replay_item = save_replay.get();
-  save_replay->SetPoll([save_replay_item] {
-    save_replay_item->SetEnabled(GameFlow.ctx.records.HasRecordedStages());
-  });
+  save_replay_item_ = save_replay.get();
   game_over_items.push_back(std::move(save_replay));
 
   game_over_items.push_back(std::make_unique<menu::ActionNode>(
-      "Exit Without Replay", "", [](menu::MenuController &) {
-        GameFlow.ctx.ui.on_game_over_exit(false);
+      "Exit Without Replay", "", [this](menu::MenuController &) {
+        game_over_action_ = GameOverAction::Exit;
         return false;
       }));
   game_over_menu_ = std::make_unique<menu::EntryNode>(
@@ -99,8 +85,11 @@ void UIManager::SetLargeMessageFont() { msg_window_.SetFont(FONT_ID::LARGE); }
 
 void UIManager::NewMessagePage() { msg_window_.NewPage(); }
 
-void UIManager::InitMain() {
-  root_menu_ = menu::BuildMainMenuTree(GameFlow.ctx.config);
+void UIManager::InitMain(ConfigData &config, menu::MainMenuServices services) {
+  main_menu_action_.reset();
+  root_menu_ = menu::BuildMainMenuTree(
+      config, services,
+      [this](menu::MainMenuAction action) { main_menu_action_ = action; });
   main_window_.Init(200);
   main_window_.Navigate(*root_menu_, 0);
 }
@@ -115,6 +104,29 @@ void UIManager::InitGameOver() {
   game_over_window_.Init(240);
   game_over_window_.SetRootCancelEnabled(false);
   game_over_window_.Navigate(*game_over_menu_);
+}
+
+void UIManager::PrepareExitMenu(bool can_save_replay) {
+  pause_action_.reset();
+  save_and_exit_item_->SetEnabled(can_save_replay);
+}
+
+void UIManager::PrepareGameOverMenu(bool can_continue, bool can_save_replay) {
+  game_over_action_.reset();
+  continue_item_->SetEnabled(can_continue);
+  save_replay_item_->SetEnabled(can_save_replay);
+}
+
+std::optional<UIManager::PauseAction> UIManager::TakePauseAction() {
+  return std::exchange(pause_action_, std::nullopt);
+}
+
+std::optional<UIManager::GameOverAction> UIManager::TakeGameOverAction() {
+  return std::exchange(game_over_action_, std::nullopt);
+}
+
+std::optional<menu::MainMenuAction> UIManager::TakeMainMenuAction() {
+  return std::exchange(main_menu_action_, std::nullopt);
 }
 
 void UIManager::ShowMenuHelp() {

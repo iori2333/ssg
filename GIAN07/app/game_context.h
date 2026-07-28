@@ -1,6 +1,4 @@
-///
-/// GameContext - assembles the application-lifetime game systems
-///
+/// Application-lifetime game systems and gameplay runtime ownership.
 
 #pragma once
 
@@ -18,13 +16,16 @@
 #include "settings/config.h"
 #include "stage/stage_loader.h"
 #include "stage/stage_session.h"
-#include "ui/scenes/ending_scene.h"
-#include "ui/scenes/music_room_scene.h"
-#include "ui/scenes/replay_scene.h"
-#include "ui/scenes/score_scene.h"
 #include "ui/ui_manager.h"
 
 struct GameContext {
+  GameContext() {
+    player.Bind(session);
+    player.Bind(stage);
+  }
+
+  ConfigData &config = AppConfig();
+
   data::GameData data;
   data::GraphicsLoader graphics{data};
   data::SfxLoader sound_effects{data};
@@ -39,11 +40,5 @@ struct GameContext {
   ItemSystem items{player, effects};
   BulletManager bullets{items, session, player, effects};
   EnemyManager enemies{bullets, items, session, player, stage, effects};
-  EndingScene ending;
-  MusicRoomScene music_room;
-  ScoreScene score{records};
-  ReplayScene replay_scene{records};
   UIManager ui;
-
-  ConfigData &config = AppConfig();
 };

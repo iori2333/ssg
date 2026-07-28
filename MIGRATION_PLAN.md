@@ -2,81 +2,78 @@
 
 ## Composition root
 
-Application-owned systems are composed under `GameFlow.ctx`:
+`GameApplication` is the application-lifetime composition root:
 
 ```text
-GameFlow (global transition coordinator)
-  `-- ctx: GameContext
-      |-- data: GameData
-      |-- graphics: GraphicsLoader
-      |-- sound_effects: SfxLoader
-      |-- tracks: TrackManager
-      |-- stage_loader: StageLoader
-      |-- stage: StageSession
-      |-- bullets: BulletManager
-      |-- items: ItemManager
-      |-- game: GameManager
-      |-- player: Player
-      |-- ending: EndingManager
-      |-- scores: ScoreManager
-      |-- demos: DemoManager
-      `-- ui: UIManager
+GameApplication
+  |-- context: GameContext
+  |   |-- data, graphics, sound, and music services
+  |   |-- record persistence and playback
+  |   |-- stage loader and active StageSession
+  |   |-- player, enemies, bullets, items, and effects
+  |   `-- application-wide UIManager
+  `-- flow: gameflow::GameFlow
+      `-- exactly one active variant state
 ```
 
-`GameData` is the sole owner of `MAP.PAK`, `IMAGES.PAK`, `MUSIC.PAK`, and
-`SOUND.PAK`. It validates archives and exposes data-only extraction and music
-catalog APIs. Graphics, sound, track, demo, and stage services receive that
-owner explicitly; there are no data-layer global manager instances.
+`GameApplication` is private to `app/entry.cpp`; gameplay and UI modules do
+not access it as a service locator. `GameContext` contains systems only. UI
+scenes are constructed and destroyed with their active flow state.
 
-`UIManager` owns menu controllers, menu trees, replay-list storage, and the
-message window. Callers use its semantic APIs rather than concrete global UI
-objects.
+## Flow state model
+
+`gameflow::GameFlow` is the sole screen-transition authority. Its active state
+is a closed `std::variant`, and states return semantic `FlowEvent` values
+instead of installing frame callbacks or mutating a parallel state enum.
+
+```text
+Project -> Title
+Title -> WeaponSelect -> Gameplay(Live)
+Title -> ReplayBrowser -> Gameplay(Replay)
+Title -> Score / MusicRoom / BulletGallery
+Title -> Gameplay(Demo)
+
+Gameplay
+  |-- mode: Live / Replay / Demo
+  `-- phase: Running / Paused / GameOverIntro / GameOverMenu
+```
+
+Live, Replay, and Demo share the same gameplay step and rendering order.
+Pause and Game Over are phases of the active gameplay state rather than
+independent application screens.
 
 ## Completed migrations
 
-- Removed the legacy loader and the later global `PackManager`, `GfxManager`,
-  `MusicManager`, `SfxManager`, and `StageManager` replacements.
-- Separated required archive validation from optional audio-device startup.
-- Moved stage asset selection and runtime installation to
-  `stage::StageLoader`.
-- Replaced the legacy `Scroller` and raw SCL cursor with `StageSession`, which
-  owns the validated scene timeline and background runtime. `SceneRunner`
-  owns stage-frame advancement; `StageBackground` owns map scrolling and
-  special background modes.
-- Ending owns a separate `SceneRunner`; it no longer borrows mutable stage
-  state or clears the active stage background when the ending begins.
-- Moved track selection and playback orchestration into the context-owned
-  `TrackManager`; music metadata remains data owned by `GameData`.
-- Removed the legacy menu/window controller family and consolidated
-  application UI under `UIManager`.
-- Moved bullet, item, player, game, ending, score, demo, and UI ownership into
-  `GameContext`.
+- Removed the global `GameFlowManager`, mutable frame-function routing, and
+  the duplicate `GameState` tag.
+- Removed `game_main.*`; front-end flow and gameplay flow now have separate,
+  cohesive implementations.
+- Moved application ownership from `GameFlow.ctx` into `GameApplication`.
+- Changed Player, RecordSystem, menus, and UI scenes to use explicit
+  dependencies, inputs, actions, and completion results.
+- Kept automatic deathbomb input in the effective frame input so Replay
+  recording sees the same bomb input as gameplay.
+- Preserved the gameplay update order and the Stage-transition early-return
+  boundary across Live, Replay, and Demo modes.
+- Replaced scene completion callback chains with explicit score and Replay
+  result-flow states.
+- Kept `GameData` as the sole validated owner of PAK data and retained the
+  context-owned Stage, Enemy, Bullet, Item, Effect, Player, and Record systems.
 
-## Remaining global runtime systems
+## Remaining process-wide state
 
-The remaining high-level global instances are:
-
-- `GameFlow`: application state-transition coordinator and composition root.
-- `Enemies`: enemy runtime and ECL execution state.
-- `Bosses`: boss runtime state.
-- `Effects`: gameplay visual-effect runtime state.
-
-These systems already accept several dependencies through `Bind()` or explicit
-method parameters. Future migration should move ownership one subsystem at a
-time without introducing compatibility globals.
-
-Low-level process-wide backends such as input state, audio playback, graphics
-surfaces, and geometry rendering remain global platform abstractions for now.
+Low-level input, audio, graphics-surface, and geometry backends remain global
+platform abstractions. `AppConfig()` also remains the persistent configuration
+owner. These are no longer used to route application screens.
 
 ## Stage validation
 
-`stage_validator` validates all embedded SCL programs, timeline boundary
-behavior, and optionally real maps extracted from `MAP.PAK`:
+`stage_validator` validates embedded programs, timeline boundaries, and maps
+extracted from `MAP.PAK`:
 
 ```powershell
 build\bin\stage_validator.exe build\map_inspect
 ```
 
-The title-screen random Demo is not a Stage/Scroll acceptance test. Its replay
-data may no longer match the current stage configuration, so deterministic
-stage entry and the validator are the supported verification paths.
+The title-screen random Demo is not a Stage/Scroll acceptance test because its
+recorded input may differ after stage configuration changes.

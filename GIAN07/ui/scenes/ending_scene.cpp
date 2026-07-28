@@ -6,9 +6,11 @@
 
 #include "audio/bgm.h"
 #include "data/graphics_assets.h"
-#include "gameflow/gameflow_manager.h"
+#include "data/graphics_loader.h"
 #include "gfx/constants.h"
+#include "music/music_player.h"
 #include "platform/text_backend.h"
+#include "stage/stage_loader.h"
 #include "util/cast.h"
 
 // Ending initialization
@@ -18,14 +20,10 @@ bool EndingScene::Enter() {
   Grp_Flip();
   GrpBackend_Clear();
 
-  if (!GameFlow.ctx.graphics.LoadEnding() ||
-      !GameFlow.ctx.stage_loader.LoadEnding(scene_)) {
+  if (!graphics_.LoadEnding() || !stage_loader_.LoadEnding(scene_)) {
     return false;
   }
   BGM_Stop();
-
-  GameFlow.game_main = [](bool &q) { GameFlow.ctx.ending.Update(q); };
-  GameFlow.current_state = GameState::Ending;
 
   flash_state = 0;
 
@@ -39,21 +37,21 @@ bool EndingScene::Enter() {
   return true;
 }
 
-void EndingScene::Update(bool & /*unused*/) {
+bool EndingScene::Update(bool should_draw) {
   if (flash_state != 0U) {
     flash_state -= 32;
   }
 
-  SCLDecode();
-  if (GameFlow.current_state != GameState::Ending) {
-    return;
+  if (SCLDecode()) {
+    return true;
   }
 
-  if (GameFlow.IsDraw()) {
+  if (should_draw) {
     UpdateGrpInfo();
     UpdateStfInfo();
     Draw();
   }
+  return false;
 }
 
 // Ending draw processing
@@ -204,13 +202,13 @@ void EndingScene::DrawFadeInfo() {
 }
 
 // Ending SCL decode
-void EndingScene::SCLDecode() {
+bool EndingScene::SCLDecode() {
   while (const auto *instruction = scene_.Current()) {
     switch (instruction->opcode) {
     case stage::SceneOpcode::Time:
       if (static_cast<uint32_t>(instruction->value) > scene_.Frame()) {
         scene_.AdvanceFrame();
-        return;
+        return false;
       }
       scene_.Advance();
       break;
@@ -312,11 +310,10 @@ void EndingScene::SCLDecode() {
     case stage::SceneOpcode::End:
       grp_info.bWantDisp = false;
       stf_task.bWantDisp = false;
-      GameClearResults(false, false);
-      return;
+      return true;
 
     case stage::SceneOpcode::Music:
-      GameFlow.ctx.music.Play(instruction->track_id);
+      music_.Play(instruction->track_id);
       scene_.Advance();
       break;
 
@@ -333,10 +330,11 @@ void EndingScene::SCLDecode() {
 
     case stage::SceneOpcode::StageClear:
     case stage::SceneOpcode::GameClear:
-      return;
+      return false;
 
     default:
-      return;
+      return false;
     }
   }
+  return false;
 }

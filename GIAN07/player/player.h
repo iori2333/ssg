@@ -51,6 +51,12 @@ class StageSession;
 // [ Player class ]
 enum class PlayerReward : uint8_t { NONE, BOMB, EXTEND };
 
+struct PlayerUpdateResult {
+  INPUT_BITS effective_input;
+  bool clear_bullets;
+  bool game_over;
+};
+
 struct PlayerProgress {
   int64_t score = 0;
   int64_t pending_score = 0;
@@ -96,7 +102,8 @@ public:
   void DrawBombBackground() const;
   void DrawDebugHitbox() const;
   void DrawProjectiles() const;
-  [[nodiscard]] bool Update(EnemyManager &enemies, INPUT_BITS input);
+  [[nodiscard]] PlayerUpdateResult Update(EnemyManager &enemies,
+                                          INPUT_BITS input);
   void Initialize(int player_stock, int bomb_stock);
   void PrepareNextStage();
   void OnHit();
@@ -232,6 +239,7 @@ private:
   bool buzz_sound_ = false;
   bool focused_ = false;
   bool clear_bullets_requested_ = false;
+  bool auto_bomb_requested_ = false;
   LifeState life_state_ = LifeState::Respawning;
 
   GameSession *session_ = nullptr;

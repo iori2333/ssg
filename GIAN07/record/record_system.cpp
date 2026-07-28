@@ -18,8 +18,8 @@
 
 #include "record_system.h"
 
+#include "data/game_data.h"
 #include "data/pbg_archive.h"
-#include "gameflow/gameflow_manager.h"
 #include "gameplay/game_session.h"
 #include "settings/config.h"
 #include "sys/file.h"
@@ -649,7 +649,8 @@ StageId RecordSystem::CurrentPlaybackStage() const {
   return playback_stages_[playback_stage_index_].checkpoint.stage;
 }
 
-bool RecordSystem::LoadStageDemo(StageId stage) {
+bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
+                                 GameSession &session, ConfigData &config) {
   playing_ = false;
   multi_stage_playback_ = false;
   playback_stages_.clear();
@@ -676,7 +677,7 @@ bool RecordSystem::LoadStageDemo(StageId stage) {
       .bomb_stock = header.config.bomb_stock,
       .input_flags = header.config.input_flags,
   };
-  auto progress = GameFlow.ctx.player.CaptureProgress();
+  auto progress = player.CaptureProgress();
   progress.player_type = header.weapon;
   progress.power = header.power;
   progress.lives = header.config.player_stock;
@@ -688,28 +689,27 @@ bool RecordSystem::LoadStageDemo(StageId stage) {
       .frame_count = header.frame_count,
       .rng = {.seed = header.random_seed, .draw_count = 0},
       .player = progress,
-      .rank = GameFlow.ctx.session.rank,
+      .rank = session.rank,
   };
   replay_stage.inputs.assign(inputs->begin(), inputs->end());
   playback_stages_.push_back(std::move(replay_stage));
   playback_stage_index_ = 0;
 
   saved_config_ = {
-      .difficulty = GameFlow.ctx.config.game.game_level,
-      .practice_mode = GameFlow.ctx.config.game.practice_mode,
-      .player_stock = GameFlow.ctx.config.game.player_stock,
-      .bomb_stock = GameFlow.ctx.config.game.bomb_stock,
-      .input_flags = GameFlow.ctx.config.input.PackFlags(),
+      .difficulty = config.game.game_level,
+      .practice_mode = config.game.practice_mode,
+      .player_stock = config.game.player_stock,
+      .bomb_stock = config.game.bomb_stock,
+      .input_flags = config.input.PackFlags(),
   };
   config_overridden_ = true;
-  GameFlow.ctx.config.game.practice_mode = PracticeMode::Off;
-  GameFlow.ctx.config.game.player_stock = settings_.player_stock;
-  GameFlow.ctx.config.game.bomb_stock = settings_.bomb_stock;
-  GameFlow.ctx.config.input.UnpackFlags(settings_.input_flags);
-  GameFlow.ctx.session.level = settings_.difficulty;
-  GameFlow.ctx.player.Configure(PracticeMode::Off,
-                                GameFlow.ctx.config.input.z_spd_down_enabled);
-  GameFlow.ctx.player.RestoreProgress(progress);
+  config.game.practice_mode = PracticeMode::Off;
+  config.game.player_stock = settings_.player_stock;
+  config.game.bomb_stock = settings_.bomb_stock;
+  config.input.UnpackFlags(settings_.input_flags);
+  session.level = settings_.difficulty;
+  player.Configure(PracticeMode::Off, config.input.z_spd_down_enabled);
+  player.RestoreProgress(progress);
   rnd_seed_set(header.random_seed);
   playing_ = true;
   return true;

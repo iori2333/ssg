@@ -14,10 +14,24 @@
 #include "platform/text_backend.h"
 #include "stage/scene_program.h"
 
+class MusicPlayer;
+
+namespace data {
+class GraphicsLoader;
+}
+
+namespace stage {
+class StageLoader;
+}
+
 class EndingScene {
 public:
+  EndingScene(data::GraphicsLoader &graphics, stage::StageLoader &stage_loader,
+              MusicPlayer &music)
+      : graphics_(graphics), stage_loader_(stage_loader), music_(music) {}
+
   [[nodiscard]] bool Enter();
-  void Update(bool &);
+  [[nodiscard]] bool Update(bool should_draw);
 
 private:
   struct GrpInfo {
@@ -94,5 +108,9 @@ private:
   void DrawGrpInfo();
   void DrawStfInfo();
   void DrawFadeInfo();
-  void SCLDecode();
+  [[nodiscard]] bool SCLDecode();
+
+  data::GraphicsLoader &graphics_;
+  stage::StageLoader &stage_loader_;
+  MusicPlayer &music_;
 };

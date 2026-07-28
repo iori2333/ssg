@@ -45,9 +45,9 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | Directory | Purpose |
 | --- | --- |
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
-| `GIAN07/app/` | Application entry point, subsystem initialization, and live display settings |
+| `GIAN07/app/` | Application entry point, composition root, subsystem initialization, and live display settings |
 | `GIAN07/data/` | Validated PBG/PAK ownership, music catalog data, and graphics/SFX loading adapters |
-| `GIAN07/gameflow/` | Application composition root, gameplay loop, and screen routing |
+| `GIAN07/gameflow/` | Variant-based screen state machine, front-end states, and live/replay/demo gameplay flow |
 | `GIAN07/gameplay/` | Shared gameplay rules, session state, rank policy, and playfield geometry |
 | `GIAN07/item/` | Collectible item entities, movement, pickup rules, and rendering |
 | `GIAN07/music/` | Music playback, track metadata, and replacement BGM pack selection |

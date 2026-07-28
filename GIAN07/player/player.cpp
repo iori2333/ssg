@@ -13,7 +13,6 @@
 
 #include "audio/snd.h"
 #include "effect/effect_manager.h"
-#include "gameflow/game_main.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
@@ -216,6 +215,10 @@ void Player::UpdateStatus_() {
 }
 
 INPUT_BITS Player::PrepareInput_(INPUT_BITS input) {
+  if (std::exchange(auto_bomb_requested_, false)) {
+    input |= KEY_BOMB;
+  }
+
   if (focus_while_firing_) {
     if ((input & KEY_TAMA) != 0) {
       if (shift_counter_ < 8) {
@@ -310,7 +313,7 @@ void Player::UpdateOptionPosition_(int movement_x, int movement_y) {
   opy_ = y_ + option_lag_y_ + 6_px;
 }
 
-bool Player::Update(EnemyManager &enemies, INPUT_BITS input) {
+PlayerUpdateResult Player::Update(EnemyManager &enemies, INPUT_BITS input) {
   UpdateStatus_();
   input = PrepareInput_(input);
   UpdateMovement_(input);
@@ -323,7 +326,11 @@ bool Player::Update(EnemyManager &enemies, INPUT_BITS input) {
   buzz_sound_ = false;
   UpdateProjectiles_(enemies);
 
-  return std::exchange(clear_bullets_requested_, false);
+  return {
+      .effective_input = input,
+      .clear_bullets = std::exchange(clear_bullets_requested_, false),
+      .game_over = game_over_,
+  };
 }
 
 void Player::Initialize(int player_stock, int bomb_stock) {
@@ -362,6 +369,7 @@ void Player::Initialize(int player_stock, int bomb_stock) {
   shift_counter_ = 0;
 
   buzz_sound_ = false;
+  auto_bomb_requested_ = false;
 }
 
 void Player::PrepareNextStage() {
@@ -380,6 +388,7 @@ void Player::PrepareNextStage() {
   shift_counter_ = 0;
   focused_ = false;
   buzz_sound_ = false;
+  auto_bomb_requested_ = false;
 }
 
 void Player::OnHit() {
@@ -393,7 +402,7 @@ void Player::OnHit() {
     if (bomb_ != 0U && bomb_time_ == 0U) {
       EnterDeathbombWindow_();
       if (practice_mode_ == PracticeMode::AutoBomb) {
-        Key_Data |= KEY_BOMB;
+        auto_bomb_requested_ = true;
       }
     } else {
       PlayHitFeedback_();
@@ -486,8 +495,6 @@ void Player::CommitDeath_() {
     evade_c_ = 0;
     evade_ = 0;
     evadesc_ = 0;
-
-    GameOverInit();
   }
 
   clear_bullets_requested_ = true;

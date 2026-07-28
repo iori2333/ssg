@@ -5,9 +5,9 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "gfx/text.h"
@@ -16,22 +16,45 @@
 #include "ui/menu/menu_tree.h"
 #include "ui/name_entry.h"
 
+class UIManager;
+
+namespace data {
+class GraphicsLoader;
+}
+
+struct ReplaySceneResult {
+  enum class Type : uint8_t {
+    Running,
+    ExitRequested,
+    PlaybackRequested,
+    SaveComplete,
+  } type = Type::Running;
+  std::string replay_path;
+  std::optional<StageId> stage;
+  bool saved = false;
+};
+
 class ReplayScene {
 public:
-  explicit ReplayScene(RecordSystem &records) : record_system_(records) {}
+  ReplayScene(RecordSystem &records, data::GraphicsLoader &graphics,
+              UIManager &ui)
+      : record_system_(records), graphics_(graphics), ui_(ui) {}
 
-  [[nodiscard]] bool EnterBrowser();
-  void BeginSave(bool extra_stage, std::function<void(bool)> on_complete);
-  void Update(bool &quit);
+  [[nodiscard]] bool EnterBrowser(INPUT_BITS initial_input);
+  [[nodiscard]] bool BeginSave(bool extra_stage, INPUT_BITS initial_input);
+  [[nodiscard]] ReplaySceneResult Update(INPUT_BITS input, bool should_draw);
 
 private:
   static constexpr std::size_t kPageSize = 5;
 
   enum class Mode : uint8_t { Browser, StageSelect, NameEntry };
 
-  void UpdateBrowser();
-  void UpdateStageSelect();
-  void UpdateNameEntry();
+  [[nodiscard]] ReplaySceneResult UpdateBrowser(INPUT_BITS input,
+                                                bool should_draw);
+  [[nodiscard]] ReplaySceneResult UpdateStageSelect(INPUT_BITS input,
+                                                    bool should_draw);
+  [[nodiscard]] ReplaySceneResult UpdateNameEntry(INPUT_BITS input,
+                                                  bool should_draw);
   void OpenStageSelect();
   void ResetRows();
   void DrawBrowser();
@@ -44,6 +67,8 @@ private:
   };
 
   RecordSystem &record_system_;
+  data::GraphicsLoader &graphics_;
+  UIManager &ui_;
   Mode mode_ = Mode::Browser;
   std::vector<ReplayRecord> replays_;
   std::size_t selected_ = 0;
@@ -58,5 +83,4 @@ private:
 
   NameEntry name_entry_;
   bool save_extra_stage_ = false;
-  std::function<void(bool)> save_complete_;
 };

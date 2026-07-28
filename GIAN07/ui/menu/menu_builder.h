@@ -4,14 +4,38 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "menu_tree.h"
 
 struct ConfigData;
+class MusicPlayer;
+
+namespace data {
+class GraphicsLoader;
+class SfxLoader;
+} // namespace data
 
 namespace menu {
 
-std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg);
+enum class MainMenuAction {
+  StartGame,
+  StartExtra,
+  OpenReplay,
+  OpenScore,
+  OpenMusicRoom,
+  OpenBulletGallery,
+};
+
+struct MainMenuServices {
+  data::GraphicsLoader &graphics;
+  data::SfxLoader &sound_effects;
+  MusicPlayer &music;
+};
+
+std::unique_ptr<IMenuNode>
+BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
+                  std::function<void(MainMenuAction)> on_action);
 
 } // namespace menu

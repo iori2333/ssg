@@ -47,7 +47,7 @@ public:
   MenuController() = default;
 
   void Init(int window_width);
-  void Open(WINDOW_POINT topleft, int select);
+  void Open(WINDOW_POINT topleft, int select, INPUT_BITS initial_input);
   void Navigate(IMenuNode &root_node, int initial_select = 0);
 
   void Tick(INPUT_BITS key);

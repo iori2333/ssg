@@ -36,7 +36,8 @@ void MenuController::Init(int window_width) {
   RegisterTRRs();
 }
 
-void MenuController::Open(WINDOW_POINT topleft, int select) {
+void MenuController::Open(WINDOW_POINT topleft, int select,
+                          INPUT_BITS initial_input) {
   ResetNavigation(select);
 
   x_ = topleft.x;
@@ -45,7 +46,7 @@ void MenuController::Open(WINDOW_POINT topleft, int select) {
   frame_count_ = 0;
   closed_selection_ = 0;
 
-  last_key_ = Key_Data;
+  last_key_ = initial_input;
   key_wait_ = kMenuKeyWait;
   fast_repeat_wait_ = kMenuKeyWait;
   first_wait_ = true;

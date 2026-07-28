@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <functional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -16,18 +15,19 @@
 
 #include "audio/constants.h"
 #include "audio/snd.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
+#include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/font_uty.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
+#include "music/music_player.h"
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
 #include "ui/name_entry.h"
+#include "ui/ui_manager.h"
 #include "util/debug.h"
 
 namespace {
@@ -46,73 +46,71 @@ void ScoreScene::LoadLeaderboard(GameLevel difficulty) {
   ResetRows();
 }
 
-bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty) {
+bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty,
+                                 INPUT_BITS initial_input) {
   current_difficulty_ = std::to_underlying(initial_difficulty);
   LoadLeaderboard(static_cast<GameLevel>(current_difficulty_));
 
-  GameFlow.ctx.ui.ForceCloseMessageWindow();
+  ui_.ForceCloseMessageWindow();
   GrpBackend_Clear();
   Grp_Flip();
-  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
+  if (!graphics_.LoadNameRegistration()) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  input_locked_ = Key_Data != 0U;
-  GameFlow.game_main = [](bool &quit) {
-    GameFlow.ctx.score.UpdateLeaderboard(quit);
-  };
-  GameFlow.current_state = GameState::Leaderboard;
+  input_locked_ = initial_input != 0U;
   return true;
 }
 
-void ScoreScene::UpdateLeaderboard(bool & /*unused*/) {
-  if (Key_Data == 0U) {
+ScoreSceneResult ScoreScene::UpdateLeaderboard(INPUT_BITS input,
+                                               bool should_draw) {
+  if (input == 0U) {
     input_locked_ = false;
   } else if (!input_locked_) {
     input_locked_ = true;
     if (detail_open_) {
-      if (Input_IsOK(Key_Data) || Input_IsCancel(Key_Data)) {
+      if (Input_IsOK(input) || Input_IsCancel(input)) {
         detail_open_ = false;
         Snd_SEPlay(SfxId::Cancel);
       }
-    } else if (Key_Data == KEY_ESC || Key_Data == KEY_BOMB) {
+    } else if (input == KEY_ESC || input == KEY_BOMB) {
       Snd_SEPlay(SfxId::Cancel);
-      (void)GameExit(false);
-      return;
-    } else if (Key_Data == KEY_UP && !scores_.empty()) {
+      return ScoreSceneResult::ExitRequested;
+    } else if (input == KEY_UP && !scores_.empty()) {
       selected_ = (selected_ + scores_.size() - 1) % scores_.size();
       Snd_SEPlay(SfxId::Select);
-    } else if (Key_Data == KEY_DOWN && !scores_.empty()) {
+    } else if (input == KEY_DOWN && !scores_.empty()) {
       selected_ = (selected_ + 1) % scores_.size();
       Snd_SEPlay(SfxId::Select);
-    } else if ((Key_Data == KEY_LEFT || Key_Data == KEY_RIGHT) &&
+    } else if ((input == KEY_LEFT || input == KEY_RIGHT) &&
                !rows_.back().moving) {
       const auto level_count = kGameLevelNames.size();
-      const auto direction = Key_Data == KEY_LEFT ? level_count - 1 : 1;
+      const auto direction = input == KEY_LEFT ? level_count - 1 : 1;
       current_difficulty_ =
           static_cast<uint8_t>((current_difficulty_ + direction) % level_count);
       LoadLeaderboard(static_cast<GameLevel>(current_difficulty_));
       Snd_SEPlay(SfxId::Select);
-    } else if (Input_IsOK(Key_Data) && !scores_.empty()) {
+    } else if (Input_IsOK(input) && !scores_.empty()) {
       detail_open_ = true;
       Snd_SEPlay(SfxId::Select);
     }
   }
 
-  if (GameFlow.IsDraw()) {
+  if (should_draw) {
     DrawLeaderboard(true);
     if (detail_open_) {
       DrawDetail();
     }
     Grp_Flip();
   }
+  return ScoreSceneResult::Running;
 }
 
-bool ScoreScene::StartNameRegistration(ScoreRecord record, bool change_music,
-                                       std::function<void()> on_complete) {
-  on_registration_complete_ = std::move(on_complete);
+ScoreRegistrationStart
+ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
+                                  bool change_music) {
   current_record_.emplace(std::move(record));
   scores_ = record_system_.ListScores(current_record_->difficulty, kRowCount);
   const auto position =
@@ -123,8 +121,8 @@ bool ScoreScene::StartNameRegistration(ScoreRecord record, bool change_music,
   if (pending_rank_ >= kRowCount) {
     current_record_->name = kDefaultScoreName;
     (void)record_system_.SaveScore(*current_record_);
-    FinishRegistration();
-    return true;
+    current_record_.reset();
+    return ScoreRegistrationStart::Complete;
   }
   scores_.insert(position, *current_record_);
   if (scores_.size() > kRowCount) {
@@ -134,55 +132,44 @@ bool ScoreScene::StartNameRegistration(ScoreRecord record, bool change_music,
 
   Snd_SEStop(8);
   Snd_SEStopAll();
-  GameFlow.ctx.ui.ForceCloseMessageWindow();
+  ui_.ForceCloseMessageWindow();
   GrpBackend_Clear();
   Grp_Flip();
-  if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
+  if (!graphics_.LoadNameRegistration()) {
     DebugOut("IMAGES.PAK が破壊されています");
-    FinishRegistration();
-    return false;
+    current_record_.reset();
+    return ScoreRegistrationStart::Complete;
   }
 
   current_difficulty_ = std::to_underlying(current_record_->difficulty);
   ResetRows();
   GrpBackend_SetClip(GRP_RES_RECT);
-  name_entry_.Begin(false);
-  GameFlow.game_main = [](bool &quit) {
-    GameFlow.ctx.score.UpdateNameRegistration(quit);
-  };
-  GameFlow.current_state = GameState::NameRegistration;
+  name_entry_.Begin(false, initial_input);
   if (change_music) {
-    GameFlow.ctx.music.Play(19);
+    music_.Play(19);
   }
-  return true;
+  return ScoreRegistrationStart::Active;
 }
 
-void ScoreScene::FinishRegistration() {
-  auto completion = std::move(on_registration_complete_);
-  if (completion) {
-    completion();
-  } else {
-    (void)GameExit();
-  }
-}
-
-void ScoreScene::UpdateNameRegistration(bool & /*unused*/) {
-  const auto result = name_entry_.Update(Key_Data);
+ScoreSceneResult ScoreScene::UpdateNameRegistration(INPUT_BITS input,
+                                                    bool should_draw) {
+  const auto result = name_entry_.Update(input);
   scores_[pending_rank_].name = name_entry_.Name();
   if (result == NameEntryResult::Confirmed) {
     current_record_->name = name_entry_.Name();
     (void)record_system_.SaveScore(*current_record_);
-    FinishRegistration();
-    return;
+    current_record_.reset();
+    return ScoreSceneResult::RegistrationComplete;
   }
 
-  if (GameFlow.IsDraw()) {
+  if (should_draw) {
     DrawLeaderboard(false);
     const auto gx = rows_[pending_rank_].x >> 6;
     const auto gy = rows_[pending_rank_].y >> 6;
     name_entry_.Draw(gx + 88, gy + 4);
     Grp_Flip();
   }
+  return ScoreSceneResult::Running;
 }
 
 void ScoreScene::ResetRows() {
