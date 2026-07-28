@@ -22,7 +22,11 @@ bool EntryNode::OnAction(MenuController &ctrl) {
 
 bool ListNode::OnAction(MenuController &ctrl) {
   list_view_.title = title_;
-  list_view_.selected = current_idx_;
+  const auto current = CurrentIndex();
+  list_view_.selected =
+      current >= 0 && current < static_cast<int>(list_view_.titles.size())
+          ? current
+          : 0;
   ctrl.ActivateListView(list_view_);
   return true;
 }
@@ -103,11 +107,6 @@ void MenuController::ResetNavigation(int initial_select) {
 void MenuController::Tick(INPUT_BITS key) {
   if (stack_.empty()) {
     return;
-  }
-
-  auto &page = stack_.back();
-  for (auto *node : page.items) {
-    node->Poll();
   }
 
   if (InListView()) {
@@ -393,9 +392,10 @@ void MenuController::RenderPage() {
     bool selected = (i == page.selected);
     bool enabled = node.Enabled();
     bool highlighted = node.Highlighted();
+    const auto value = node.Value();
 
     std::string key =
-        std::format("{}|\x01[{}]|\x01{}{}{}{}", node.Title(), node.Value(),
+        std::format("{}|\x01[{}]|\x01{}{}{}{}", node.Title(), value,
                     selected ? 'S' : 'N', enabled ? 'E' : 'D',
                     highlighted ? 'H' : 'N', node.Centered() ? 'C' : 'N');
 
@@ -404,8 +404,8 @@ void MenuController::RenderPage() {
     }
 
     TextObj.Render(pos, slot.trr, slot.cache_key, [&](TEXTRENDER_SESSION &s) {
-      DrawItem(s, node.Title(), node.Value(), w_, selected, enabled,
-               highlighted, node.Centered());
+      DrawItem(s, node.Title(), value, w_, selected, enabled, highlighted,
+               node.Centered());
     });
 
     pos.y += kMenuItemH;

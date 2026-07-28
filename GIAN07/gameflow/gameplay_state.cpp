@@ -80,9 +80,9 @@ void GameplayState::InitializeGameplayView(GameContext &context,
 
   if (mode_ != Mode::Demo) {
     const auto flags = MsgWindowFlags::WITH_FACE;
-    if (context.config.ui.message_window_upper) {
+    if (context.config.ui.message_window == MessageWindowMode::Upper) {
       context.ui.InitMessageWindow({128, 16, 640 - 128, 96}, flags);
-    } else if (!context.config.ui.messages_disabled) {
+    } else if (context.config.ui.message_window == MessageWindowMode::Lower) {
       context.ui.InitMessageWindow({128, 400, 640 - 128, 480}, flags);
     }
     if (interactive) {
@@ -225,7 +225,8 @@ GameplayState::StepResult GameplayState::Step(GameContext &context,
        .graphics = context.graphics,
        .music = context.music,
        .session = context.session,
-       .messages_disabled = context.config.ui.messages_disabled},
+       .messages_disabled =
+           context.config.ui.message_window == MessageWindowMode::Hidden},
       input);
   if (transition != stage::StageTransition::None) {
     return HandleStageTransition(context, transition);

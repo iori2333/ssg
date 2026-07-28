@@ -7,26 +7,6 @@
 namespace menu {
 
 // ---------------------------------------------------------------------------
-// Utility
-// ---------------------------------------------------------------------------
-
-void RingStepU8(uint8_t &var, int_fast8_t delta, uint8_t min, uint8_t max) {
-  if (delta < 0) {
-    if (var <= min) {
-      var = max;
-    } else {
-      var = static_cast<uint8_t>(var - 1);
-    }
-  } else {
-    if (var == max) {
-      var = min;
-    } else {
-      var = static_cast<uint8_t>(var + 1);
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
 // IMenuNode defaults
 // ---------------------------------------------------------------------------
 
@@ -75,8 +55,7 @@ void EntryNode::AddChild(std::unique_ptr<IMenuNode> child) {
 // ---------------------------------------------------------------------------
 
 ToggleNode::ToggleNode(std::string_view title, std::string_view help,
-                       std::reference_wrapper<bool> ref,
-                       std::function<void(bool)> on_change)
+                       std::reference_wrapper<bool> ref, ChangeFn on_change)
     : IMenuNode(title, help), ref_(ref), on_change_(std::move(on_change)) {}
 
 bool ToggleNode::OnAction(MenuController & /*ctrl*/) {
@@ -98,15 +77,13 @@ void ToggleNode::OnAdjust(MenuController & /*ctrl*/, int /*delta*/) {
 // ChoiceNode
 // ---------------------------------------------------------------------------
 
-ChoiceNode::ChoiceNode(std::string_view title, std::string_view help,
-                       uint8_t *value, uint8_t min, uint8_t max,
-                       std::vector<std::string> labels,
-                       std::function<void()> on_change)
-    : IMenuNode(title, help), value_(value), min_(min), max_(max),
-      labels_(std::move(labels)), on_change_(std::move(on_change)) {}
+std::string ChoiceNode::Value() const {
+  const auto index = value_fn_();
+  return index < labels_.size() ? labels_[index] : std::string{};
+}
 
 void ChoiceNode::OnAdjust(MenuController & /*ctrl*/, int delta) {
-  RingStepU8(*value_, static_cast<int_fast8_t>(delta), min_, max_);
+  adjust_fn_(delta);
   if (on_change_) {
     on_change_();
   }
@@ -117,8 +94,7 @@ void ChoiceNode::OnAdjust(MenuController & /*ctrl*/, int delta) {
 // ---------------------------------------------------------------------------
 
 ActionNode::ActionNode(std::string_view title, std::string_view help,
-                       ActionFn action,
-                       std::function<void(MenuController &, int)> adjust_fn)
+                       ActionFn action, AdjustFn adjust_fn)
     : IMenuNode(title, help), action_(std::move(action)),
       adjust_fn_(std::move(adjust_fn)) {}
 
@@ -189,14 +165,19 @@ ListNode::ListNode(std::string_view title, std::string_view help,
 }
 
 std::string ListNode::Value() const {
-  if (current_idx_ < 0 || disable_value_) {
+  const auto current = CurrentIndex();
+  if (current < 0 || disable_value_) {
     return {};
   }
-  auto idx = static_cast<size_t>(current_idx_);
+  auto idx = static_cast<size_t>(current);
   if (idx < list_view_.titles.size()) {
     return list_view_.titles[idx];
   }
   return {};
+}
+
+int ListNode::CurrentIndex() const {
+  return selection_fn_ ? selection_fn_() : current_idx_;
 }
 
 } // namespace menu

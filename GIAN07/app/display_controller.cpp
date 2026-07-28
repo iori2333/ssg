@@ -14,8 +14,20 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
   if (!GrpBackend_Enum()) {
     return false;
   }
+  GRAPHICS_PARAM_FLAGS flags{};
+  if (config.display_mode == DisplayMode::Fullscreen) {
+    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+  }
+  if (config.fullscreen_mode == FullscreenMode::Exclusive) {
+    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+  }
+  if (config.scaling_mode == ScalingMode::Geometry) {
+    flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
+  }
+  EnumFlagSet(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+              std::to_underlying(config.fullscreen_fit));
   const GRAPHICS_PARAMS requested{
-      .flags = config.graphics_param_flags,
+      .flags = flags,
       .device_id = config.device_id,
       .api = GrpBackend_APIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,
@@ -27,7 +39,14 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
     return false;
   }
   params_ = result->live;
-  config.graphics_param_flags = params_.flags;
+  const auto fullscreen = params_.FullscreenFlags();
+  config.display_mode =
+      fullscreen.fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed;
+  config.fullscreen_mode = fullscreen.exclusive ? FullscreenMode::Exclusive
+                                                : FullscreenMode::Borderless;
+  config.fullscreen_fit = fullscreen.fit;
+  config.scaling_mode = params_.ScaleGeometry() ? ScalingMode::Geometry
+                                                : ScalingMode::Framebuffer;
   config.device_id = params_.device_id;
   config.graphics_api = GrpBackend_APIString(params_.api);
   config.window_scale_4x = params_.window_scale_4x;
@@ -64,8 +83,20 @@ bool DisplayController::Apply(GRAPHICS_PARAMS requested) {
 }
 
 bool DisplayController::ApplyConfig(const GraphicsConfig &config) {
+  GRAPHICS_PARAM_FLAGS flags{};
+  if (config.display_mode == DisplayMode::Fullscreen) {
+    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+  }
+  if (config.fullscreen_mode == FullscreenMode::Exclusive) {
+    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+  }
+  if (config.scaling_mode == ScalingMode::Geometry) {
+    flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
+  }
+  EnumFlagSet(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+              std::to_underlying(config.fullscreen_fit));
   return Apply({
-      .flags = config.graphics_param_flags,
+      .flags = flags,
       .device_id = config.device_id,
       .api = GrpBackend_APIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,

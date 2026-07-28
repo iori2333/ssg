@@ -25,20 +25,43 @@ struct GameConfig {
   uint8_t bomb_stock = 2;
 };
 
+enum class DisplayMode : uint8_t {
+  Windowed,
+  Fullscreen,
+};
+
+enum class FullscreenMode : uint8_t {
+  Borderless,
+  Exclusive,
+};
+
+enum class ScalingMode : uint8_t {
+  Framebuffer,
+  Geometry,
+};
+
 struct GraphicsConfig {
   uint8_t device_id = 0;
   std::string graphics_api;
+  DisplayMode display_mode = DisplayMode::Windowed;
+  FullscreenMode fullscreen_mode = FullscreenMode::Borderless;
+  GRAPHICS_FULLSCREEN_FIT fullscreen_fit = GRAPHICS_FULLSCREEN_FIT::INTEGER;
+  ScalingMode scaling_mode = ScalingMode::Framebuffer;
   uint8_t window_scale_4x = 0;
   int16_t window_left = GRAPHICS_TOPLEFT_UNDEFINED;
   int16_t window_top = GRAPHICS_TOPLEFT_UNDEFINED;
   uint8_t fps_divisor = 1;
-  GRAPHICS_PARAM_FLAGS graphics_param_flags{};
   uint8_t screenshot_effort = 0;
 };
 
+enum class MessageWindowMode : uint8_t {
+  Upper,
+  Lower,
+  Hidden,
+};
+
 struct UiConfig {
-  bool message_window_upper = false;
-  bool messages_disabled = false;
+  MessageWindowMode message_window = MessageWindowMode::Lower;
 };
 
 struct AudioConfig {

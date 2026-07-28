@@ -104,20 +104,45 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "window_left", cfg.graphics.window_left);
     LoadToml(*sec, "window_top", cfg.graphics.window_top);
     LoadToml(*sec, "fps_divisor", cfg.graphics.fps_divisor, ValidFPSDivisor);
-    LoadToml(*sec, "window_upper", cfg.ui.message_window_upper);
-    LoadToml(*sec, "msg_disable", cfg.ui.messages_disabled);
-    LoadToml(*sec, "graphics_param_flags", cfg.graphics.graphics_param_flags,
+    GRAPHICS_PARAM_FLAGS stored_flags{};
+    LoadToml(*sec, "graphics_param_flags", stored_flags,
              [](GRAPHICS_PARAM_FLAGS f) {
                return (std::to_underlying(f) &
                        ~std::to_underlying(GRAPHICS_PARAM_FLAGS::MASK)) == 0;
              });
+    const auto fullscreen =
+        GRAPHICS_PARAMS{.flags = stored_flags}.FullscreenFlags();
+    cfg.graphics.display_mode =
+        fullscreen.fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed;
+    cfg.graphics.fullscreen_mode = fullscreen.exclusive
+                                       ? FullscreenMode::Exclusive
+                                       : FullscreenMode::Borderless;
+    cfg.graphics.fullscreen_fit = fullscreen.fit;
+    cfg.graphics.scaling_mode =
+        !!(stored_flags & GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY)
+            ? ScalingMode::Geometry
+            : ScalingMode::Framebuffer;
     LoadToml(*sec, "screenshot_effort", cfg.graphics.screenshot_effort,
              ValidScreenshotEffort);
+
+    bool legacy_upper = cfg.ui.message_window == MessageWindowMode::Upper;
+    bool legacy_disabled = cfg.ui.message_window == MessageWindowMode::Hidden;
+    LoadToml(*sec, "window_upper", legacy_upper);
+    LoadToml(*sec, "msg_disable", legacy_disabled);
+    cfg.ui.message_window = legacy_disabled
+                                ? MessageWindowMode::Hidden
+                                : (legacy_upper ? MessageWindowMode::Upper
+                                                : MessageWindowMode::Lower);
   }
 
   if (auto *sec = tbl["ui"].as_table()) {
-    LoadToml(*sec, "message_window_upper", cfg.ui.message_window_upper);
-    LoadToml(*sec, "messages_disabled", cfg.ui.messages_disabled);
+    bool upper = cfg.ui.message_window == MessageWindowMode::Upper;
+    bool disabled = cfg.ui.message_window == MessageWindowMode::Hidden;
+    LoadToml(*sec, "message_window_upper", upper);
+    LoadToml(*sec, "messages_disabled", disabled);
+    cfg.ui.message_window = disabled ? MessageWindowMode::Hidden
+                                     : (upper ? MessageWindowMode::Upper
+                                              : MessageWindowMode::Lower);
   }
 
   // [sound]
@@ -168,8 +193,19 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("window_left", cfg.graphics.window_left);
     sec.emplace("window_top", cfg.graphics.window_top);
     sec.emplace("fps_divisor", cfg.graphics.fps_divisor);
-    sec.emplace("graphics_param_flags",
-                std::to_underlying(cfg.graphics.graphics_param_flags));
+    GRAPHICS_PARAM_FLAGS flags{};
+    if (cfg.graphics.display_mode == DisplayMode::Fullscreen) {
+      flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+    }
+    if (cfg.graphics.fullscreen_mode == FullscreenMode::Exclusive) {
+      flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+    }
+    if (cfg.graphics.scaling_mode == ScalingMode::Geometry) {
+      flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
+    }
+    EnumFlagSet(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+                std::to_underlying(cfg.graphics.fullscreen_fit));
+    sec.emplace("graphics_param_flags", std::to_underlying(flags));
     sec.emplace("screenshot_effort", cfg.graphics.screenshot_effort);
     tbl.emplace("graphics", std::move(sec));
   }
@@ -177,8 +213,10 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
   // [ui]
   {
     toml::table sec;
-    sec.emplace("message_window_upper", cfg.ui.message_window_upper);
-    sec.emplace("messages_disabled", cfg.ui.messages_disabled);
+    sec.emplace("message_window_upper",
+                cfg.ui.message_window == MessageWindowMode::Upper);
+    sec.emplace("messages_disabled",
+                cfg.ui.message_window == MessageWindowMode::Hidden);
     tbl.emplace("ui", std::move(sec));
   }
 

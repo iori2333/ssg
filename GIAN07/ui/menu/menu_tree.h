@@ -10,6 +10,8 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace menu {
@@ -19,6 +21,8 @@ inline constexpr auto kMaxVisibleItems = 20;
 
 class IMenuNode {
 public:
+  using EnabledFn = std::function<bool()>;
+
   IMenuNode(std::string_view title, std::string_view help)
       : title_(title), help_(help) {}
   virtual ~IMenuNode() = default;
@@ -31,22 +35,18 @@ public:
   virtual std::string Value() const = 0;
   std::string_view Help() const { return help_; }
 
-  virtual bool Enabled() const { return enabled_; }
+  virtual bool Enabled() const {
+    return enabled_ && (!enabled_fn_ || enabled_fn_());
+  }
   virtual bool Highlighted() const { return false; }
   virtual bool FastRepeat() const { return false; }
   virtual bool Centered() const { return false; }
 
   void SetEnabled(bool e) { enabled_ = e; }
-  void SetPoll(std::function<void()> fn) { poll_fn_ = std::move(fn); }
+  void BindEnabled(EnabledFn fn) { enabled_fn_ = std::move(fn); }
 
   virtual bool OnAction(MenuController &ctrl);
   virtual void OnAdjust(MenuController &ctrl, int delta);
-
-  virtual void Poll() {
-    if (poll_fn_) {
-      poll_fn_();
-    }
-  }
 
   virtual std::span<IMenuNode *const> Children() const { return {}; }
 
@@ -56,7 +56,7 @@ protected:
   std::string_view title_;
   std::string_view help_;
   bool enabled_ = true;
-  std::function<void()> poll_fn_;
+  EnabledFn enabled_fn_;
 };
 
 // ---------------------------------------------------------------------------
@@ -86,9 +86,10 @@ private:
 // ---------------------------------------------------------------------------
 class ToggleNode : public IMenuNode {
 public:
+  using ChangeFn = std::function<void(bool)>;
+
   ToggleNode(std::string_view title, std::string_view help,
-             std::reference_wrapper<bool> ref,
-             std::function<void(bool)> on_change = {});
+             std::reference_wrapper<bool> ref, ChangeFn on_change = {});
 
   std::string Value() const override { return ref_.get() ? "ON" : "OFF"; }
 
@@ -97,7 +98,7 @@ public:
 
 private:
   std::reference_wrapper<bool> ref_;
-  std::function<void(bool)> on_change_;
+  ChangeFn on_change_;
 };
 
 // ---------------------------------------------------------------------------
@@ -105,21 +106,51 @@ private:
 // ---------------------------------------------------------------------------
 class ChoiceNode : public IMenuNode {
 public:
-  ChoiceNode(std::string_view title, std::string_view help, uint8_t *value,
-             uint8_t min, uint8_t max, std::vector<std::string> labels,
-             std::function<void()> on_change = {});
+  using ChangeFn = std::function<void()>;
 
-  std::string Value() const override { return labels_[*value_]; }
+  template <typename T>
+    requires(std::is_integral_v<T> || std::is_enum_v<T>)
+  ChoiceNode(std::string_view title, std::string_view help, T &value,
+             std::type_identity_t<T> min, std::type_identity_t<T> max,
+             std::vector<std::string> labels, ChangeFn on_change = {})
+      : IMenuNode(title, help), labels_(std::move(labels)),
+        on_change_(std::move(on_change)) {
+    const auto as_integer = [](T choice) -> int64_t {
+      if constexpr (std::is_enum_v<T>) {
+        return static_cast<int64_t>(std::to_underlying(choice));
+      } else {
+        return static_cast<int64_t>(choice);
+      }
+    };
+    const auto min_value = as_integer(min);
+    const auto max_value = as_integer(max);
+    value_fn_ = [&value, min_value, as_integer] {
+      return static_cast<size_t>(as_integer(value) - min_value);
+    };
+    adjust_fn_ = [&value, min_value, max_value, as_integer](int delta) {
+      auto current = as_integer(value);
+      if (delta < 0) {
+        current = current <= min_value ? max_value : current - 1;
+      } else {
+        current = current >= max_value ? min_value : current + 1;
+      }
+      value = static_cast<T>(current);
+    };
+  }
+
+  std::string Value() const override;
 
   void OnAdjust(MenuController &ctrl, int delta) override;
   bool FastRepeat() const override { return true; }
 
 private:
-  uint8_t *value_;
-  uint8_t min_;
-  uint8_t max_;
+  using IndexFn = std::function<size_t()>;
+  using AdjustFn = std::function<void(int)>;
+
+  IndexFn value_fn_;
+  AdjustFn adjust_fn_;
   std::vector<std::string> labels_;
-  std::function<void()> on_change_;
+  ChangeFn on_change_;
 };
 
 // ---------------------------------------------------------------------------
@@ -128,23 +159,25 @@ private:
 class ActionNode : public IMenuNode {
 public:
   using ActionFn = std::function<bool(MenuController &ctrl)>;
+  using AdjustFn = std::function<void(MenuController &ctrl, int delta)>;
+  using ValueFn = std::function<std::string()>;
 
   ActionNode(std::string_view title, std::string_view help, ActionFn action,
-             std::function<void(MenuController &, int)> adjust_fn = {});
+             AdjustFn adjust_fn = {});
 
-  std::string Value() const override { return value_; }
+  std::string Value() const override {
+    return value_fn_ ? value_fn_() : std::string{};
+  }
 
   bool OnAction(MenuController &ctrl) override;
   void OnAdjust(MenuController &ctrl, int delta) override;
 
-  void SetEnabled(bool e) { enabled_ = e; }
-  void SetValue(std::string v) { value_ = std::move(v); }
-  void SetActionFn(ActionFn fn) { action_ = std::move(fn); }
+  void BindValue(ValueFn fn) { value_fn_ = std::move(fn); }
 
 private:
-  std::string value_;
+  ValueFn value_fn_;
   ActionFn action_;
-  std::function<void(MenuController &, int)> adjust_fn_;
+  AdjustFn adjust_fn_;
 };
 
 // ---------------------------------------------------------------------------
@@ -162,9 +195,11 @@ public:
 // ListView — item container + navigation, owned by ListNode
 // ---------------------------------------------------------------------------
 struct ListView {
+  using ConfirmFn = std::function<bool(size_t)>;
+
   std::string_view title;
   std::vector<std::string> titles;
-  std::function<bool(size_t)> on_confirm;
+  ConfirmFn on_confirm;
   int selected = 0;
   int scroll = 0;
 
@@ -187,6 +222,7 @@ public:
   using SizeFn = std::function<size_t()>;
   using GenFn = std::function<std::string(size_t index)>;
   using HandleFn = std::function<bool(size_t index)>;
+  using SelectionFn = std::function<int()>;
 
   ListNode(std::string_view title, std::string_view help, SizeFn size_fn,
            GenFn gen_fn, HandleFn handle_fn, int init_sel = -1,
@@ -196,18 +232,19 @@ public:
 
   bool OnAction(MenuController &ctrl) override;
 
+  void BindSelection(SelectionFn fn) { selection_fn_ = std::move(fn); }
+
   ListView &GetListView() { return list_view_; }
 
 private:
+  [[nodiscard]] int CurrentIndex() const;
+
   int current_idx_ = -1;
   bool disable_value_ = false;
   HandleFn handle_fn_;
+  SelectionFn selection_fn_;
   ListView list_view_;
 };
 
 // ---------------------------------------------------------------------------
-// Utility
-// ---------------------------------------------------------------------------
-void RingStepU8(uint8_t &var, int_fast8_t delta, uint8_t min, uint8_t max);
-
 } // namespace menu
