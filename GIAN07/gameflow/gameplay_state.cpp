@@ -1,7 +1,10 @@
 /// Active gameplay flow: live runs, replays, demos, pause, and game over.
 
+#include <cstdint>
+#include <string_view>
 #include <utility>
 
+#include "flow_types.h"
 #include "gameplay_state.h"
 
 #include "app/game_context.h"
@@ -13,6 +16,7 @@
 #include "gfx/font_uty.h"
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
+#include "player/loadout/player_loadout.h"
 #include "settings/config.h"
 #include "sys/input.h"
 #include "util/debug.h"
@@ -39,6 +43,18 @@ void ResetGameplayRuntime(GameContext &context) {
   context.effects.Reset();
   context.effects.StartScreenTransition(ScreenTransition::CircleFadeIn);
   BGM_SetTempo(0);
+}
+
+bool GameplayState::EnterLive() { return EnterLive(context_); }
+
+bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
+  return EnterReplay(context_, path, stage);
+}
+
+bool GameplayState::EnterDemo() { return EnterDemo(context_); }
+
+FlowEvent GameplayState::Update(const FrameInput &frame) {
+  return Update(context_, frame);
 }
 
 bool GameplayState::LoadCurrentStage(GameContext &context) {

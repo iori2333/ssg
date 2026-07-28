@@ -7,25 +7,150 @@
 #include <variant>
 
 #include "flow_types.h"
-#include "frontend_states.h"
 #include "game_flow.h"
 #include "gameplay_state.h"
 
 #include "app/game_context.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics.h"
+#include "gfx/graphics_backend.h"
+#include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
+#include "ui/scenes/bullet_gallery_scene.h"
 #include "ui/scenes/ending_scene.h"
 #include "ui/scenes/music_room_scene.h"
 #include "ui/scenes/replay_scene.h"
 #include "ui/scenes/score_scene.h"
+#include "ui/scenes/startup_scene.h"
+#include "ui/scenes/title_scene.h"
+#include "ui/scenes/weapon_select_scene.h"
 
 namespace gameflow {
 namespace {
 
 template <class... Ts> struct Overload : Ts... {
   using Ts::operator()...;
+};
+
+class StartupFlowState {
+public:
+  explicit StartupFlowState(GameContext &context) : scene_(context.graphics) {}
+
+  [[nodiscard]] bool Enter() { return scene_.Enter(); }
+  [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
+    if (scene_.Update(frame.should_draw) == StartupSceneResult::Complete) {
+      return ReturnToTitle{.change_music = true};
+    }
+    return NoEvent{};
+  }
+
+private:
+  StartupScene scene_;
+};
+
+class TitleFlowState {
+public:
+  explicit TitleFlowState(GameContext &context)
+      : context_(context),
+        scene_(context.config, context.graphics, context.sound_effects,
+               context.music, context.session, context.ui) {}
+
+  [[nodiscard]] bool Enter(INPUT_BITS initial_input, bool change_music) {
+    return scene_.Enter(initial_input, change_music);
+  }
+
+  [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
+    switch (scene_.Update(frame.gameplay, frame.should_draw)) {
+    case TitleSceneResult::Running:
+      return NoEvent{};
+    case TitleSceneResult::QuitRequested:
+      return QuitRequested{};
+    case TitleSceneResult::StartGame:
+      return StartWeaponSelect{.extra_stage = false};
+    case TitleSceneResult::StartExtra:
+      return StartWeaponSelect{.extra_stage = true};
+    case TitleSceneResult::StartDemo:
+      return StartDemo{};
+    case TitleSceneResult::OpenReplay:
+      return OpenReplayBrowser{};
+    case TitleSceneResult::OpenScore:
+      return OpenScoreBrowser{
+          .difficulty = context_.session.stage == StageId::Extra
+                            ? GameLevel::Extra
+                            : context_.session.level,
+      };
+    case TitleSceneResult::OpenMusicRoom:
+      return OpenMusicRoom{};
+    case TitleSceneResult::OpenBulletGallery:
+      return OpenBulletGallery{};
+    }
+    std::unreachable();
+  }
+
+private:
+  GameContext &context_;
+  TitleScene scene_;
+};
+
+class WeaponSelectFlowState {
+public:
+  explicit WeaponSelectFlowState(GameContext &context)
+      : context_(context), scene_(context.config, context.enemies,
+                                  context.session, context.player) {}
+
+  void Enter(bool extra_stage) {
+    GrpBackend_Clear();
+    Grp_Flip();
+    context_.session.level =
+        extra_stage ? GameLevel::Extra : context_.config.game.game_level;
+    ResetGameplayRuntime(context_);
+    context_.session.ResetRank();
+    context_.player.SelectType(PlayerType::Wide);
+    context_.player.Initialize(context_.config.game.player_stock,
+                               context_.config.game.bomb_stock);
+    if (extra_stage) {
+      context_.session.stage = StageId::Extra;
+    }
+    scene_.Enter();
+  }
+
+  [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
+    switch (scene_.Update(frame.gameplay, frame.should_draw)) {
+    case WeaponSelectSceneResult::Running:
+      return NoEvent{};
+    case WeaponSelectSceneResult::StartGame:
+      context_.records.BeginRecording(context_.player, context_.session,
+                                      context_.config);
+      return StartLiveGame{};
+    case WeaponSelectSceneResult::Cancelled:
+      return ReturnToTitle{.change_music = false};
+    }
+    std::unreachable();
+  }
+
+private:
+  GameContext &context_;
+  WeaponSelectScene scene_;
+};
+
+class BulletGalleryFlowState {
+public:
+  explicit BulletGalleryFlowState(GameContext &context)
+      : scene_(context.config, context.graphics, context.bullets,
+               context.player) {}
+
+  [[nodiscard]] bool Enter() { return scene_.Enter(); }
+  [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
+    if (scene_.Update(frame.gameplay, frame.should_draw) ==
+        BulletGallerySceneResult::ExitRequested) {
+      return ReturnToTitle{.change_music = false};
+    }
+    return NoEvent{};
+  }
+
+private:
+  BulletGalleryScene scene_;
 };
 
 class EndingFlowState {
@@ -149,20 +274,24 @@ private:
   ReplayScene scene_;
 };
 
-using FlowState =
-    std::variant<std::monostate, ProjectState, TitleState, WeaponSelectState,
-                 GameplayState, EndingFlowState, ScoreFlowState,
-                 ReplayFlowState, MusicRoomFlowState, BulletGalleryState>;
+using FlowState = std::variant<std::monostate, StartupFlowState, TitleFlowState,
+                               WeaponSelectFlowState, GameplayState,
+                               EndingFlowState, ScoreFlowState, ReplayFlowState,
+                               MusicRoomFlowState, BulletGalleryFlowState>;
 
 } // namespace
 
 struct GameFlow::Impl {
   explicit Impl(GameContext &context) : context_(context) {}
   ~Impl() { context_.records.StopPlayback(context_.config, context_.session); }
+  Impl(const Impl &) = delete;
+  Impl(Impl &&) = delete;
+  Impl &operator=(const Impl &) = delete;
+  Impl &operator=(Impl &&) = delete;
 
   [[nodiscard]] bool Start() {
-    auto &project = state_.emplace<ProjectState>();
-    if (project.Enter(context_)) {
+    auto &startup = state_.emplace<StartupFlowState>(context_);
+    if (startup.Enter()) {
       return true;
     }
     return EnterTitle(true);
@@ -181,19 +310,7 @@ struct GameFlow::Impl {
     auto event = std::visit(
         Overload{
             [](std::monostate &) -> FlowEvent { return QuitRequested{}; },
-            [&](ProjectState &state) { return state.Update(context_, frame); },
-            [&](TitleState &state) { return state.Update(context_, frame); },
-            [&](WeaponSelectState &state) {
-              return state.Update(context_, frame);
-            },
-            [&](GameplayState &state) { return state.Update(context_, frame); },
-            [&](EndingFlowState &state) { return state.Update(frame); },
-            [&](ScoreFlowState &state) { return state.Update(frame); },
-            [&](ReplayFlowState &state) { return state.Update(frame); },
-            [&](MusicRoomFlowState &state) { return state.Update(frame); },
-            [&](BulletGalleryState &state) {
-              return state.Update(context_, frame);
-            },
+            [&](auto &state) -> FlowEvent { return state.Update(frame); },
         },
         state_);
     Handle(std::move(event));
@@ -210,8 +327,8 @@ private:
   }
 
   [[nodiscard]] bool EnterTitle(bool change_music) {
-    auto &title = state_.emplace<TitleState>();
-    if (title.Enter(context_, current_input_, change_music)) {
+    auto &title = state_.emplace<TitleFlowState>(context_);
+    if (title.Enter(current_input_, change_music)) {
       return true;
     }
     quit_ = true;
@@ -250,27 +367,25 @@ private:
             [&](QuitRequested) { quit_ = true; },
             [&](ReturnToTitle event) { (void)EnterTitle(event.change_music); },
             [&](StartWeaponSelect event) {
-              auto &state = state_.emplace<WeaponSelectState>();
-              if (!state.Enter(context_, event.extra_stage)) {
-                (void)EnterTitle(true);
-              }
+              auto &state = state_.emplace<WeaponSelectFlowState>(context_);
+              state.Enter(event.extra_stage);
             },
             [&](StartLiveGame) {
-              auto &state = state_.emplace<GameplayState>();
-              if (!state.EnterLive(context_)) {
+              auto &state = state_.emplace<GameplayState>(context_);
+              if (!state.EnterLive()) {
                 context_.records.CancelRecording();
                 (void)EnterTitle(true);
               }
             },
             [&](StartDemo) {
-              auto &state = state_.emplace<GameplayState>();
-              if (!state.EnterDemo(context_)) {
+              auto &state = state_.emplace<GameplayState>(context_);
+              if (!state.EnterDemo()) {
                 (void)EnterTitle(false);
               }
             },
-            [&](StartReplay &&event) {
-              auto &state = state_.emplace<GameplayState>();
-              if (!state.EnterReplay(context_, event.path, event.stage)) {
+            [&](const StartReplay &event) {
+              auto &state = state_.emplace<GameplayState>(context_);
+              if (!state.EnterReplay(event.path, event.stage)) {
                 auto &browser = state_.emplace<ReplayFlowState>(context_);
                 if (!browser.EnterBrowser(current_input_)) {
                   (void)EnterTitle(false);
@@ -297,8 +412,8 @@ private:
               }
             },
             [&](OpenBulletGallery) {
-              auto &state = state_.emplace<BulletGalleryState>();
-              if (!state.Enter(context_)) {
+              auto &state = state_.emplace<BulletGalleryFlowState>(context_);
+              if (!state.Enter()) {
                 (void)EnterTitle(false);
               }
             },

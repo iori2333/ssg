@@ -19,11 +19,12 @@ class GameplayState {
 public:
   enum class Mode : uint8_t { Live, Replay, Demo };
 
-  [[nodiscard]] bool EnterLive(GameContext &context);
-  [[nodiscard]] bool EnterReplay(GameContext &context, std::string_view path,
-                                 StageId stage);
-  [[nodiscard]] bool EnterDemo(GameContext &context);
-  [[nodiscard]] FlowEvent Update(GameContext &context, const FrameInput &frame);
+  explicit GameplayState(GameContext &context) : context_(context) {}
+
+  [[nodiscard]] bool EnterLive();
+  [[nodiscard]] bool EnterReplay(std::string_view path, StageId stage);
+  [[nodiscard]] bool EnterDemo();
+  [[nodiscard]] FlowEvent Update(const FrameInput &frame);
 
 private:
   enum class Phase : uint8_t { Running, Paused, GameOverIntro, GameOverMenu };
@@ -35,6 +36,11 @@ private:
     LoadFailed,
   };
 
+  [[nodiscard]] bool EnterLive(GameContext &context);
+  [[nodiscard]] bool EnterReplay(GameContext &context, std::string_view path,
+                                 StageId stage);
+  [[nodiscard]] bool EnterDemo(GameContext &context);
+  [[nodiscard]] FlowEvent Update(GameContext &context, const FrameInput &frame);
   [[nodiscard]] bool LoadCurrentStage(GameContext &context);
   [[nodiscard]] bool LoadNextStage(GameContext &context);
   [[nodiscard]] bool LoadNextReplayStage(GameContext &context);
@@ -59,6 +65,7 @@ private:
   void StopPlayback(GameContext &context);
   void Draw(GameContext &context) const;
 
+  GameContext &context_;
   Mode mode_ = Mode::Live;
   Phase phase_ = Phase::Running;
   int game_over_timer_ = 0;

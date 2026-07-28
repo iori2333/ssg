@@ -57,6 +57,8 @@ independent application screens.
   boundary across Live, Replay, and Demo modes.
 - Replaced scene completion callback chains with explicit score and Replay
   result-flow states.
+- Moved the startup logo, title, weapon selection, and bullet gallery into
+  UI scenes that return semantic results to thin GameFlow adapters.
 - Kept `GameData` as the sole validated owner of PAK data and retained the
   context-owned Stage, Enemy, Bullet, Item, Effect, Player, and Record systems.
 
