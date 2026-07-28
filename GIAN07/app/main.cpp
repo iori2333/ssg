@@ -18,9 +18,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "entry.h"
+#include "game_application.h"
 #include "gfx/constants.h"
-#include "gfx/window_backend.h"
 #include "sys/log.h"
 #include "util/guard.h"
 
@@ -65,16 +64,9 @@ int main(int argc, char **args) {
   // 	https://github.com/nmlgc/ssg/issues/74
   SDL_SetHint(SDL_HINT_RENDER_LINE_METHOD, "2");
 
-  if (!XInit()) {
-    // This is not a SDL error.
-    constexpr auto str = ("Something went wrong during initialization.\n"
-                          "Please help fund better error reporting:\n"
-                          "\n"
-                          "        https://github.com/nmlgc/ssg/issues/23");
-    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s", str);
+  GameApplication application;
+  if (!application.Initialize()) {
     return 1;
   }
-  auto app_guard = make_guard(XCleanup);
-
-  return WndBackend_Run(GameFrame);
+  return application.Run();
 }

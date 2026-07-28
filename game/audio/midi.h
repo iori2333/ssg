@@ -61,7 +61,6 @@ struct MID_PLAYTIME {
 };
 
 // External dependencies
-extern const VOLUME &Mid_Volume;
 extern const uint8_t &Mid_TempoNum;
 extern const uint8_t &Mid_TempoDenom;
 
@@ -69,6 +68,7 @@ extern const uint8_t &Mid_TempoDenom;
 
 // Returns the new current MIDI flags.
 [[nodiscard]] MID_FLAGS Mid_SetFlags(MID_FLAGS flags_new);
+void Mid_SetVolume(VOLUME volume);
 
 // Starts outputting the loaded MIDI to the backend.
 void Mid_Play(void); // Starts playback

@@ -63,21 +63,18 @@ constexpr INPUT_SYSTEM_BITS SYSKEY_GRP_SCALE_MODE = {0x0080};
 constexpr INPUT_SYSTEM_BITS SYSKEY_GRP_TURBO = {0x0100};
 constexpr INPUT_SYSTEM_BITS SYSKEY_GRP_API = {0x0200};
 
-using INPUT_PAD_BINDING = std::pair<const INPUT_PAD_BUTTON &, INPUT_BITS>;
+using INPUT_PAD_BINDING = std::pair<INPUT_PAD_BUTTON, INPUT_BITS>;
 
 // Global variables (Public)
 extern INPUT_BITS Key_Data;
 extern INPUT_BITS Pad_Data;
 extern INPUT_SYSTEM_BITS SystemKey_Data;
 
-// Initialized by game code.
-extern std::span<const INPUT_PAD_BINDING> Key_PadBindings;
-
 ///
 /// Input backend interface
 ///
 
-bool Key_Start(void);
+void Key_SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings);
 void Key_End(void);
 void Key_Read(void);
 

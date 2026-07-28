@@ -10,6 +10,7 @@
 #include "menu_tree.h"
 
 struct ConfigData;
+class DisplayController;
 class MusicPlayer;
 
 namespace data {
@@ -29,7 +30,7 @@ enum class MainMenuAction {
 };
 
 struct MainMenuServices {
-  data::GraphicsLoader &graphics;
+  DisplayController &display;
   data::SfxLoader &sound_effects;
   MusicPlayer &music;
 };

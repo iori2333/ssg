@@ -207,10 +207,10 @@ std::vector<JOYPAD>::iterator Pad_Find(SDL_JoystickID id) {
   return it;
 }
 
-bool Key_Start(void) {
-  // SDL will send a SDL_EVENT_JOYSTICK_ADDED event for every joystick
-  // attached at startup.
-  return true;
+static std::vector<INPUT_PAD_BINDING> PadBindings;
+
+void Key_SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings) {
+  PadBindings.assign(bindings.begin(), bindings.end());
 }
 
 void Key_End(void) {
@@ -250,7 +250,7 @@ void Key_Read(void) {
     case SDL_EVENT_JOYSTICK_BUTTON_UP: {
       // SDL's numbering starts at 0.
       const INPUT_PAD_BUTTON id = (event.jbutton.button + 1);
-      for (const auto &binding : Key_PadBindings) {
+      for (const auto &binding : PadBindings) {
         if (id == binding.first) {
           Key_Flip(Pad_Data, event.jbutton, binding.second);
         }

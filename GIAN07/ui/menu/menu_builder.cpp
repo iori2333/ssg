@@ -19,7 +19,7 @@
 #include "menu_builder.h"
 #include "menu_controller.h"
 
-#include "app/graphics_settings.h"
+#include "app/display_controller.h"
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
@@ -87,7 +87,8 @@ static std::unique_ptr<EntryNode> BuildDifficultyMenu(GameConfig &game_cfg) {
 // Screenshot
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode> BuildScreenshotMenu(GraphicsConfig &gfx_cfg) {
+static std::unique_ptr<EntryNode>
+BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(2);
 
@@ -99,7 +100,9 @@ static std::unique_ptr<EntryNode> BuildScreenshotMenu(GraphicsConfig &gfx_cfg) {
   }
   ch.push_back(std::make_unique<ChoiceNode>(
       "Format", "Screenshot format", &gfx_cfg.screenshot_effort, 0,
-      GRP_SCREENSHOT_EFFORT_MAX, std::move(labels)));
+      GRP_SCREENSHOT_EFFORT_MAX, std::move(labels), [&gfx_cfg, &display] {
+        display.SetScreenshotEffort(gfx_cfg.screenshot_effort);
+      }));
 
   ch.push_back(std::make_unique<SeparatorNode>());
 
@@ -112,17 +115,15 @@ static std::unique_ptr<EntryNode> BuildScreenshotMenu(GraphicsConfig &gfx_cfg) {
 // ---------------------------------------------------------------------------
 
 static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
-                                              data::GraphicsLoader &graphics) {
+                                              DisplayController &display) {
   auto init_sel = static_cast<int>(gfx_cfg.ToParams().api);
   auto node = std::make_unique<ListNode>(
       "API", "Select rendering API", [] { return GrpBackend_APICount(); },
       [](size_t i) {
         return std::string(GrpBackend_APILabel(GrpBackend_APIString(i)));
       },
-      [&gfx_cfg, &graphics](size_t i) {
-        graphics_settings::TryApply(gfx_cfg, graphics, [i](auto &params) {
-          params.api = static_cast<int>(i);
-        });
+      [&display](size_t i) {
+        (void)display.SelectApi(static_cast<int8_t>(i));
         return false;
       },
       init_sel);
@@ -134,7 +135,8 @@ static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
 // ---------------------------------------------------------------------------
 
 static std::unique_ptr<EntryNode>
-BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
+BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
+                  DisplayController &display) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(10);
 
@@ -146,15 +148,12 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
   });
   ch.push_back(std::move(dev));
 
-#ifdef SUPPORT_GRP_WINDOWED
   {
     static uint8_t disp_state = 0;
     auto disp = std::make_unique<ChoiceNode>(
         "Display", "Switch between window and fullscreen modes", &disp_state, 0,
         1, std::vector<std::string>{"Window", "Fullscreen"},
-        [&gfx_cfg, &graphics] {
-          graphics_settings::ToggleFullscreen(gfx_cfg, graphics);
-        });
+        [&display] { (void)display.ToggleFullscreen(); });
     disp->SetPoll([&gfx_cfg]() {
       disp_state = gfx_cfg.ToParams().FullscreenFlags().fullscreen ? 1 : 0;
     });
@@ -165,11 +164,7 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
     auto fs_mode = std::make_unique<ChoiceNode>(
         "FullScr", "Fullscreen mode", &fs_state, 0, 1,
         std::vector<std::string>{"Borderless", "Exclusive"},
-        [&gfx_cfg, &graphics] {
-          graphics_settings::TryApply(gfx_cfg, graphics, [](auto &params) {
-            params.flags ^= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
-          });
-        });
+        [&display] { (void)display.ToggleExclusiveFullscreen(); });
     auto *fs_raw = fs_mode.get();
     fs_mode->SetPoll([fs_raw, &gfx_cfg]() {
       fs_state = !!(gfx_cfg.graphics_param_flags &
@@ -178,18 +173,16 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
     });
     ch.push_back(std::move(fs_mode));
   }
-#endif
 
-#ifdef SUPPORT_GRP_SCALING
   {
     auto scale = std::make_unique<ActionNode>(
         "ScaleFact", "Window scaling factor",
-        [&gfx_cfg, &graphics](MenuController &) {
-          graphics_settings::CycleScale(gfx_cfg, graphics, 0, true);
+        [&display](MenuController &) {
+          (void)display.CycleScale(0, true);
           return true;
         },
-        [&gfx_cfg, &graphics](MenuController &, int delta) {
-          graphics_settings::CycleScale(gfx_cfg, graphics, delta, true);
+        [&display](MenuController &, int delta) {
+          (void)display.CycleScale(static_cast<int_fast8_t>(delta), true);
         });
     auto *scale_raw = scale.get();
     scale->SetPoll([scale_raw, &gfx_cfg]() {
@@ -225,9 +218,7 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
     auto sc_mode = std::make_unique<ChoiceNode>(
         "ScaleMode", "Scaling method", &sc_state, 0, 1,
         std::vector<std::string>{"FrameBuf", "Geometry"},
-        [&gfx_cfg, &graphics] {
-          graphics_settings::ToggleScalingMode(gfx_cfg, graphics);
-        });
+        [&display] { (void)display.ToggleScalingMode(); });
     auto *sc_raw = sc_mode.get();
     sc_mode->SetPoll([sc_raw, &gfx_cfg]() {
       sc_state = !!(gfx_cfg.graphics_param_flags &
@@ -239,7 +230,6 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
     });
     ch.push_back(std::move(sc_mode));
   }
-#endif
 
   {
     ch.push_back(std::make_unique<ChoiceNode>(
@@ -247,49 +237,50 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, data::GraphicsLoader &graphics) {
         kMaxFpsDivisor,
         std::vector<std::string>{FmtLabel("おまけ"), FmtLabel("60Fps"),
                                  FmtLabel("30Fps"), FmtLabel("20Fps")},
-        [&gfx_cfg] { Grp_FPSDivisor = gfx_cfg.fps_divisor; }));
+        [&gfx_cfg, &display] { display.SetFrameRate(gfx_cfg.fps_divisor); }));
   }
 
-  ch.push_back(BuildScreenshotMenu(gfx_cfg));
+  ch.push_back(BuildScreenshotMenu(gfx_cfg, display));
 
-#ifdef SUPPORT_GRP_API
   {
-    auto api_entry = BuildApiMenu(gfx_cfg, graphics);
+    auto api_entry = BuildApiMenu(gfx_cfg, display);
     api_entry->SetPoll([raw = api_entry.get()]() {
       raw->SetEnabled(GrpBackend_APICount() >= 2);
     });
     ch.push_back(std::move(api_entry));
   }
-#endif
 
   ch.push_back(std::make_unique<SeparatorNode>());
 
   {
     auto msg = std::make_unique<ActionNode>(
         "MsgWindow", "ウィンドウの表示位置を決めます",
-        [&gfx_cfg](MenuController &) {
-          if (gfx_cfg.msg_disable) {
-            gfx_cfg.msg_disable = false;
-            gfx_cfg.window_upper = false;
-          } else if (gfx_cfg.window_upper) {
-            gfx_cfg.msg_disable = true;
-            gfx_cfg.window_upper = false;
+        [&ui_cfg](MenuController &) {
+          if (ui_cfg.messages_disabled) {
+            ui_cfg.messages_disabled = false;
+            ui_cfg.message_window_upper = false;
+          } else if (ui_cfg.message_window_upper) {
+            ui_cfg.messages_disabled = true;
+            ui_cfg.message_window_upper = false;
           } else {
-            gfx_cfg.window_upper = true;
+            ui_cfg.message_window_upper = true;
           }
           return true;
         },
-        [&gfx_cfg](MenuController &, int delta) {
-          int state = gfx_cfg.msg_disable ? 2 : (gfx_cfg.window_upper ? 0 : 1);
+        [&ui_cfg](MenuController &, int delta) {
+          int state = ui_cfg.messages_disabled
+                          ? 2
+                          : (ui_cfg.message_window_upper ? 0 : 1);
           state = (delta < 0) ? ((state + 2) % 3) : ((state + 1) % 3);
-          gfx_cfg.window_upper = (state == 0);
-          gfx_cfg.msg_disable = (state == 2);
+          ui_cfg.message_window_upper = (state == 0);
+          ui_cfg.messages_disabled = (state == 2);
         });
     auto *msg_raw = msg.get();
-    msg->SetPoll([msg_raw, &gfx_cfg]() {
+    msg->SetPoll([msg_raw, &ui_cfg]() {
       static constexpr const char *labels[] = {"下のほう", "上のほう",
                                                "描画せず"};
-      int state = gfx_cfg.msg_disable ? 2 : (gfx_cfg.window_upper ? 0 : 1);
+      int state =
+          ui_cfg.messages_disabled ? 2 : (ui_cfg.message_window_upper ? 0 : 1);
       msg_raw->SetValue(labels[state]);
     });
     ch.push_back(std::move(msg));
@@ -362,7 +353,7 @@ static std::unique_ptr<EntryNode> BuildMidiMenu(AudioConfig &audio_cfg) {
   ch.push_back(std::make_unique<ToggleNode>(
       "SC88ProFXCompat", "Retain SC-88Pro echo on other Roland synths",
       std::ref(audio_cfg.fix_sysex_bugs), [&audio_cfg](bool on) {
-        Mid_SetFlags(on ? MID_FLAGS::FIX_SYSEX_BUGS : MID_FLAGS::NONE);
+        (void)Mid_SetFlags(on ? MID_FLAGS::FIX_SYSEX_BUGS : MID_FLAGS::NONE);
       }));
 
   return std::make_unique<EntryNode>("MIDI", "Change MIDI playback options",
@@ -411,7 +402,9 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
     }
     ch.push_back(std::make_unique<ChoiceNode>(
         "SoundVolume", "効果音の音量", &audio_cfg.se_volume, 0, VOLUME_MAX,
-        std::move(vol_labels), [] { Snd_UpdateVolumes(); }));
+        std::move(vol_labels), [&audio_cfg] {
+          Snd_SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
+        }));
   }
 
   {
@@ -422,7 +415,10 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
     }
     ch.push_back(std::make_unique<ChoiceNode>(
         "BGMVolume", "音楽の音量", &audio_cfg.bgm_volume, 0, VOLUME_MAX,
-        std::move(vol_labels), [] { BGM_UpdateVolume(); }));
+        std::move(vol_labels), [&audio_cfg] {
+          Mid_SetVolume(audio_cfg.bgm_volume);
+          Snd_SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
+        }));
   }
 
   ch.push_back(std::make_unique<ToggleNode>(
@@ -473,21 +469,32 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
 // JoyPad
 // ---------------------------------------------------------------------------
 
+static void ApplyPadBindings(const InputConfig &input_cfg) {
+  const std::array bindings = {
+      INPUT_PAD_BINDING{input_cfg.pad_tama, KEY_TAMA},
+      INPUT_PAD_BINDING{input_cfg.pad_bomb, KEY_BOMB},
+      INPUT_PAD_BINDING{input_cfg.pad_shift, KEY_SHIFT},
+      INPUT_PAD_BINDING{input_cfg.pad_cancel, KEY_ESC},
+  };
+  Key_SetPadBindings(bindings);
+}
+
 static std::unique_ptr<EntryNode> BuildPadMenu(InputConfig &input_cfg) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(4);
 
   static constexpr const char *kPadHelp = "パッド上のボタンを押すと変更";
 
-  auto make_pad = [](const char *label, INPUT_PAD_BUTTON &btn) {
+  auto make_pad = [&input_cfg](const char *label, INPUT_PAD_BUTTON &btn) {
     auto node = std::make_unique<ActionNode>(
         label, kPadHelp, [](MenuController &) { return true; });
     auto *raw = node.get();
-    raw->SetActionFn([raw, &btn](MenuController &ctrl) {
+    raw->SetActionFn([raw, &btn, &input_cfg](MenuController &ctrl) {
       INPUT_BITS key = ctrl.LastKey();
       key &= static_cast<INPUT_BITS>(~Pad_Data);
       if (auto temp = Key_PadSingle()) {
         btn = temp.value();
+        ApplyPadBindings(input_cfg);
         raw->SetValue(PadButtonLabel(btn));
       }
       return !Input_IsOK(key);
@@ -586,7 +593,7 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
       std::make_unique<EntryNode>("Config", "各種設定を変更します",
                                   std::vector<std::unique_ptr<IMenuNode>>{});
   config->AddChild(BuildDifficultyMenu(cfg.game));
-  config->AddChild(BuildGraphicsMenu(cfg.graphics, services.graphics));
+  config->AddChild(BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display));
   config->AddChild(
       BuildSoundMenu(cfg.audio, services.sound_effects, services.music));
   config->AddChild(BuildInputMenu(cfg.input));

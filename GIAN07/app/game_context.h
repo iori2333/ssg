@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "display_controller.h"
+
 #include "bullet/bullet_manager.h"
 #include "data/game_data.h"
 #include "data/graphics_loader.h"
@@ -19,10 +21,11 @@
 #include "ui/ui_manager.h"
 
 struct GameContext {
-  ConfigData &config = AppConfig();
+  ConfigData config;
 
   data::GameData data;
   data::GraphicsLoader graphics{data};
+  DisplayController display{config.graphics, graphics};
   data::SfxLoader sound_effects{data};
   MusicPlayer music{data};
   stage::StageLoader stage_loader{data};

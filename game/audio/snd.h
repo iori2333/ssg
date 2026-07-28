@@ -17,10 +17,10 @@ using SND_INSTANCE_ID = uint8_t;
 extern const uint8_t &Snd_BGMTempoNum;
 extern const uint8_t &Snd_BGMTempoDenom;
 
-extern const VOLUME &Snd_VolumeBGM;
-extern const VOLUME &Snd_VolumeSE;
-
 void Snd_Cleanup(void);
+void Snd_SetVolumes(VOLUME bgm, VOLUME se);
+[[nodiscard]] VOLUME Snd_BGMVolume(void);
+[[nodiscard]] VOLUME Snd_SEVolume(void);
 void Snd_UpdateVolumes(void);
 
 // BGM

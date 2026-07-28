@@ -80,9 +80,9 @@ void GameplayState::InitializeGameplayView(GameContext &context,
 
   if (mode_ != Mode::Demo) {
     const auto flags = MsgWindowFlags::WITH_FACE;
-    if (context.config.graphics.window_upper) {
+    if (context.config.ui.message_window_upper) {
       context.ui.InitMessageWindow({128, 16, 640 - 128, 96}, flags);
-    } else if (!context.config.graphics.msg_disable) {
+    } else if (!context.config.ui.messages_disabled) {
       context.ui.InitMessageWindow({128, 400, 640 - 128, 480}, flags);
     }
     if (interactive) {
@@ -196,7 +196,6 @@ GameplayState::HandleStageTransition(GameContext &context,
       context.session.extra_stg_flags |=
           static_cast<uint8_t>(1U << PlayerTypeIndex(context.player.Type()));
     }
-    SaveConfigFile(context.config);
     if (context.records.IsRecording()) {
       context.records.FlushStage();
     }
@@ -223,7 +222,7 @@ GameplayState::StepResult GameplayState::Step(GameContext &context,
        .graphics = context.graphics,
        .music = context.music,
        .session = context.session,
-       .messages_disabled = context.config.graphics.msg_disable},
+       .messages_disabled = context.config.ui.messages_disabled},
       input);
   if (transition != stage::StageTransition::None) {
     return HandleStageTransition(context, transition);

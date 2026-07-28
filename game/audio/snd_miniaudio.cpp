@@ -196,8 +196,8 @@ void SndBackend_BGMUpdateVolume(void) {
   if (!BGMObj.track) {
     return;
   }
-  ma_sound_set_volume(&BGMObj.sound,
-                      (Snd_BGMGainFactor * VolumeFactorSquare(Snd_VolumeBGM)));
+  ma_sound_set_volume(
+      &BGMObj.sound, (Snd_BGMGainFactor * VolumeFactorSquare(Snd_BGMVolume())));
 }
 
 void SndBackend_BGMUpdateTempo(void) {
@@ -222,7 +222,7 @@ void SndBackend_SECleanup(void) {
 }
 
 void SndBackend_SEUpdateVolume(void) {
-  ma_sound_group_set_volume(&SEGroup, VolumeFactorSquare(Snd_VolumeSE));
+  ma_sound_group_set_volume(&SEGroup, VolumeFactorSquare(Snd_SEVolume()));
 }
 
 bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,

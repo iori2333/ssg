@@ -54,9 +54,9 @@ bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
     music_.Play(0);
   }
 
-  ui_.InitMain(config_, {.graphics = graphics_,
-                         .sound_effects = sound_effects_,
-                         .music = music_});
+  ui_.InitMain(
+      config_,
+      {.display = display_, .sound_effects = sound_effects_, .music = music_});
   ui_.Main().Open(kMainWindowTopLeft, 0, initial_input);
   InitVersion();
   return true;

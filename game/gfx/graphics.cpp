@@ -21,6 +21,7 @@
 #include "util/guard.h"
 
 uint8_t Grp_FPSDivisor = 0;
+static uint8_t Grp_ScreenshotEffort = 0;
 std::chrono::steady_clock::duration
     Grp_ScreenshotTimes[GRP_SCREENSHOT_EFFORT_COUNT];
 
@@ -280,6 +281,10 @@ bool Grp_ScreenshotSave(SDL_Surface *src,
 
   return ret;
 }
+
+void Grp_ScreenshotSetEffort(uint8_t effort) {
+  Grp_ScreenshotEffort = std::min(effort, GRP_SCREENSHOT_EFFORT_MAX);
+}
 // -----------
 
 GRAPHICS_FULLSCREEN_FLAGS GRAPHICS_PARAMS::FullscreenFlags(void) const {
@@ -355,7 +360,10 @@ Grp_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
   if ((api_count > 0) && (params.api >= api_count)) {
     params.api = -1;
   }
-  params.device_id = std::min(GrpBackend_DeviceCount(), uint8_t{0});
+  params.device_id =
+      device_count == 0
+          ? 0
+          : std::min(params.device_id, static_cast<uint8_t>(device_count - 1));
   return GrpBackend_Init(maybe_prev, params);
 }
 

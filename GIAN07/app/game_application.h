@@ -1,23 +1,36 @@
-/// Top-level application composition root.
+/// Top-level application lifetime and composition root.
 
 #pragma once
 
+#include <memory>
+
 #include "game_context.h"
 
-#include "gameflow/game_flow.h"
+namespace gameflow {
+class GameFlow;
+}
 
 class GameApplication {
 public:
-  GameApplication() : flow_(context_) {}
+  GameApplication();
+  ~GameApplication();
+  GameApplication(const GameApplication &) = delete;
+  GameApplication(GameApplication &&) = delete;
+  GameApplication &operator=(const GameApplication &) = delete;
+  GameApplication &operator=(GameApplication &&) = delete;
 
-  [[nodiscard]] bool Start() { return flow_.Start(); }
-  [[nodiscard]] bool Tick(INPUT_BITS input, INPUT_BITS system_input) {
-    return flow_.Tick(input, system_input);
-  }
-
-  GameContext &Context() { return context_; }
+  [[nodiscard]] bool Initialize();
+  [[nodiscard]] int Run();
 
 private:
+  [[nodiscard]] bool Tick();
+  void Shutdown();
+  void SaveConfig();
+
   GameContext context_;
-  gameflow::GameFlow flow_;
+  std::unique_ptr<gameflow::GameFlow> flow_;
+  bool config_loaded_ = false;
+  bool display_initialized_ = false;
+  bool debug_initialized_ = false;
+  bool running_ = false;
 };

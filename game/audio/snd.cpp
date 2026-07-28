@@ -2,6 +2,7 @@
 /// Sound interface
 ///
 
+#include <algorithm>
 #include <cassert>
 
 #include <SDL3/SDL_audio.h>
@@ -13,6 +14,8 @@
 #include "util/guard.h"
 
 float Snd_BGMGainFactor = 1.0f;
+static VOLUME BGMVolume = VOLUME_MAX;
+static VOLUME SEVolume = VOLUME_MAX;
 
 static enum class SND_SYS {
   HAS_BITFLAG_OPERATORS,
@@ -64,6 +67,16 @@ void Snd_Cleanup(SND_SYS sys) {
 }
 
 void Snd_Cleanup(void) { Snd_Cleanup(SND_SYS::BGM | SND_SYS::SE); }
+
+void Snd_SetVolumes(VOLUME bgm, VOLUME se) {
+  BGMVolume = std::min(bgm, VOLUME_MAX);
+  SEVolume = std::min(se, VOLUME_MAX);
+  Snd_UpdateVolumes();
+}
+
+VOLUME Snd_BGMVolume(void) { return BGMVolume; }
+
+VOLUME Snd_SEVolume(void) { return SEVolume; }
 
 void Snd_UpdateVolumes(void) {
   if (!!(Initialized & SND_SYS::BGM)) {

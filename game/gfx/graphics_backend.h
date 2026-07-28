@@ -151,10 +151,6 @@ class GRAPHICS_GEOMETRY_SDL;
 #define OPENGL_TARGET_ES1_MIN 1
 #define OPENGL_TARGET_ES2_MIN 0
 
-#define SUPPORT_GRP_SCALING
-#define SUPPORT_GRP_WINDOWED
-#define SUPPORT_GRP_API
-
 extern GRAPHICS_GEOMETRY_SDL GrpGeomSDL;
 
 // Convenience macro for the common case — use GrpGeom_FB() for framebuffer ops.

@@ -4,8 +4,8 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
 #include <thread>
 
 #include <malloc.h>
@@ -203,6 +203,7 @@ uint8_t Mid_NoteWTable[16][128]; // For note display (2)
 uint8_t Mid_PanpodTable[16];     // Panpot
 uint8_t Mid_ExpressionTable[16]; // Expression
 uint8_t Mid_VolumeTable[16];     // Volume
+static VOLUME Mid_Volume = VOLUME_MAX;
 
 MID_PLAYTIME Mid_PlayTime;
 
@@ -321,6 +322,11 @@ void Mid_TableInit(void) {
 VOLUME Mid_GetFadeVolume(void) { return Mid_Dev.FadeNowVolume; }
 
 void Mid_UpdateVolume(void) { Mid_Dev.ApplyVolume(); }
+
+void Mid_SetVolume(VOLUME volume) {
+  Mid_Volume = std::min(volume, VOLUME_MAX);
+  Mid_UpdateVolume();
+}
 
 void Mid_FadeOut(VOLUME volume_start, std::chrono::milliseconds duration) {
   Mid_Dev.FadeStartVolume = volume_start;

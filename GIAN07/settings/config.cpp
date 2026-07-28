@@ -11,8 +11,7 @@
 
 #include "config.h"
 
-#include "audio/bgm.h"
-#include "gfx/window_backend.h"
+#include "gfx/graphics_backend.h"
 #include "sys/file.h"
 #include "util/guard.h"
 
@@ -105,8 +104,8 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "window_left", cfg.graphics.window_left);
     LoadToml(*sec, "window_top", cfg.graphics.window_top);
     LoadToml(*sec, "fps_divisor", cfg.graphics.fps_divisor, ValidFPSDivisor);
-    LoadToml(*sec, "window_upper", cfg.graphics.window_upper);
-    LoadToml(*sec, "msg_disable", cfg.graphics.msg_disable);
+    LoadToml(*sec, "window_upper", cfg.ui.message_window_upper);
+    LoadToml(*sec, "msg_disable", cfg.ui.messages_disabled);
     LoadToml(*sec, "graphics_param_flags", cfg.graphics.graphics_param_flags,
              [](GRAPHICS_PARAM_FLAGS f) {
                return (std::to_underlying(f) &
@@ -114,6 +113,11 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
              });
     LoadToml(*sec, "screenshot_effort", cfg.graphics.screenshot_effort,
              ValidScreenshotEffort);
+  }
+
+  if (auto *sec = tbl["ui"].as_table()) {
+    LoadToml(*sec, "message_window_upper", cfg.ui.message_window_upper);
+    LoadToml(*sec, "messages_disabled", cfg.ui.messages_disabled);
   }
 
   // [sound]
@@ -164,12 +168,18 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("window_left", cfg.graphics.window_left);
     sec.emplace("window_top", cfg.graphics.window_top);
     sec.emplace("fps_divisor", cfg.graphics.fps_divisor);
-    sec.emplace("window_upper", cfg.graphics.window_upper);
-    sec.emplace("msg_disable", cfg.graphics.msg_disable);
     sec.emplace("graphics_param_flags",
                 std::to_underlying(cfg.graphics.graphics_param_flags));
     sec.emplace("screenshot_effort", cfg.graphics.screenshot_effort);
     tbl.emplace("graphics", std::move(sec));
+  }
+
+  // [ui]
+  {
+    toml::table sec;
+    sec.emplace("message_window_upper", cfg.ui.message_window_upper);
+    sec.emplace("messages_disabled", cfg.ui.messages_disabled);
+    tbl.emplace("ui", std::move(sec));
   }
 
   // [sound]
@@ -216,9 +226,7 @@ GRAPHICS_PARAMS GraphicsConfig::ToParams() const {
   return {
       .flags = graphics_param_flags,
       .device_id = device_id,
-#ifdef SUPPORT_GRP_API
       .api = GrpBackend_APIID(graphics_api),
-#endif
       .window_scale_4x = window_scale_4x,
       .left = window_left,
       .top = window_top,
@@ -228,9 +236,7 @@ GRAPHICS_PARAMS GraphicsConfig::ToParams() const {
 void GraphicsConfig::ApplyParams(const GRAPHICS_PARAMS &params) {
   graphics_param_flags = params.flags;
   device_id = params.device_id;
-#ifdef SUPPORT_GRP_API
   graphics_api = GrpBackend_APIString(params.api);
-#endif
   window_scale_4x = params.window_scale_4x;
   window_left = params.left;
   window_top = params.top;
@@ -251,24 +257,6 @@ void InputConfig::UnpackFlags(uint8_t value) {
   joypad_enabled = (value & 1) != 0;
   z_msg_skip_enabled = (value & 2) != 0;
   z_spd_down_enabled = (value & 4) != 0;
-}
-
-ConfigData &AppConfig() {
-  static ConfigData config;
-  return config;
-}
-
-void SaveConfigFile(ConfigData &cfg) {
-  cfg.audio.bgm_enabled = BGM_Enabled();
-  cfg.audio.bgm_vol_norm = BGM_GainApply();
-
-  if (const auto maybe_topleft = WndBackend_Topleft()) {
-    const auto &topleft = maybe_topleft.value();
-    cfg.graphics.window_left = topleft.first;
-    cfg.graphics.window_top = topleft.second;
-  }
-
-  cfg.Save();
 }
 
 void ConfigData::Load() { TOMLLoad(CFG_FN, *this); }

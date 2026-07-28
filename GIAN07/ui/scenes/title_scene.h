@@ -9,6 +9,7 @@
 #include "sys/input.h"
 
 class GameSession;
+class DisplayController;
 class MusicPlayer;
 class UIManager;
 struct ConfigData;
@@ -32,11 +33,12 @@ enum class TitleSceneResult : uint8_t {
 
 class TitleScene {
 public:
-  TitleScene(ConfigData &config, data::GraphicsLoader &graphics,
-             data::SfxLoader &sound_effects, MusicPlayer &music,
-             GameSession &session, UIManager &ui)
-      : config_(config), graphics_(graphics), sound_effects_(sound_effects),
-        music_(music), session_(session), ui_(ui) {}
+  TitleScene(ConfigData &config, DisplayController &display,
+             data::GraphicsLoader &graphics, data::SfxLoader &sound_effects,
+             MusicPlayer &music, GameSession &session, UIManager &ui)
+      : config_(config), display_(display), graphics_(graphics),
+        sound_effects_(sound_effects), music_(music), session_(session),
+        ui_(ui) {}
 
   [[nodiscard]] bool Enter(INPUT_BITS initial_input, bool change_music);
   [[nodiscard]] TitleSceneResult Update(INPUT_BITS input, bool should_draw);
@@ -46,6 +48,7 @@ private:
   void DrawVersion(PIXEL_COORD top) const;
 
   ConfigData &config_;
+  DisplayController &display_;
   data::GraphicsLoader &graphics_;
   data::SfxLoader &sound_effects_;
   MusicPlayer &music_;

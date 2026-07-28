@@ -115,11 +115,11 @@ struct RGB216 {
 constexpr uint8_t GRP_SCREENSHOT_EFFORT_COUNT = 11;
 constexpr uint8_t GRP_SCREENSHOT_EFFORT_MAX = (GRP_SCREENSHOT_EFFORT_COUNT - 1);
 
-extern const uint8_t &Grp_ScreenshotEffort;
-
 // 0 = not yet tried, -1 = last attempt failed.
 extern std::chrono::steady_clock::duration
     Grp_ScreenshotTimes[GRP_SCREENSHOT_EFFORT_COUNT];
+
+void Grp_ScreenshotSetEffort(uint8_t effort);
 
 // Required to enable the screenshot feature as a whole.
 void Grp_ScreenshotSetPrefix(std::string_view prefix);

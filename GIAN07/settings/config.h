@@ -33,13 +33,16 @@ struct GraphicsConfig {
   int16_t window_left = GRAPHICS_TOPLEFT_UNDEFINED;
   int16_t window_top = GRAPHICS_TOPLEFT_UNDEFINED;
   uint8_t fps_divisor = 1;
-  bool window_upper = false;
-  bool msg_disable = false;
   GRAPHICS_PARAM_FLAGS graphics_param_flags{};
   uint8_t screenshot_effort = 0;
 
   [[nodiscard]] GRAPHICS_PARAMS ToParams() const;
   void ApplyParams(const GRAPHICS_PARAMS &params);
+};
+
+struct UiConfig {
+  bool message_window_upper = false;
+  bool messages_disabled = false;
 };
 
 struct AudioConfig {
@@ -73,6 +76,7 @@ struct DebugConfig {
 struct ConfigData {
   GameConfig game;
   GraphicsConfig graphics;
+  UiConfig ui;
   AudioConfig audio;
   InputConfig input;
   DebugConfig debug;
@@ -80,6 +84,3 @@ struct ConfigData {
   void Load();
   void Save() const;
 };
-
-[[nodiscard]] ConfigData &AppConfig();
-void SaveConfigFile(ConfigData &cfg);

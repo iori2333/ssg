@@ -52,9 +52,9 @@ private:
 class TitleFlowState {
 public:
   explicit TitleFlowState(GameContext &context)
-      : context_(context),
-        scene_(context.config, context.graphics, context.sound_effects,
-               context.music, context.session, context.ui) {}
+      : context_(context), scene_(context.config, context.display,
+                                  context.graphics, context.sound_effects,
+                                  context.music, context.session, context.ui) {}
 
   [[nodiscard]] bool Enter(INPUT_BITS initial_input, bool change_music) {
     return scene_.Enter(initial_input, change_music);
