@@ -19,11 +19,6 @@
 #include "ui/ui_manager.h"
 
 struct GameContext {
-  GameContext() {
-    player.Bind(session);
-    player.Bind(stage);
-  }
-
   ConfigData &config = AppConfig();
 
   data::GameData data;
@@ -36,7 +31,7 @@ struct GameContext {
 
   EffectManager effects;
   GameSession session;
-  Player player{effects};
+  Player player{effects, session, stage};
   ItemSystem items{player, effects};
   BulletManager bullets{items, session, player, effects};
   EnemyManager enemies{bullets, items, session, player, stage, effects};

@@ -84,7 +84,8 @@ class Player {
   enum class BombTrigger : uint8_t { Manual, Deathbomb };
 
 public:
-  explicit Player(EffectManager &effects);
+  Player(EffectManager &effects, GameSession &session,
+         stage::StageSession &stage);
   ~Player() = default;
   Player(const Player &other) = delete;
   Player(Player &&other) = delete;
@@ -92,8 +93,6 @@ public:
   Player &operator=(Player &&other) = delete;
 
   // --- Lifecycle ---
-  void Bind(GameSession &session) { session_ = &session; }
-  void Bind(stage::StageSession &stage) { stage_ = &stage; }
   void Configure(PracticeMode practice_mode, bool focus_while_firing) {
     practice_mode_ = practice_mode;
     focus_while_firing_ = focus_while_firing;
@@ -115,37 +114,33 @@ public:
   void PowerUp(uint8_t damage);
 
   // --- Read-only accessors ---
-  int X() const { return x_; }
-  int Y() const { return y_; }
-  int OpX() const { return opx_; }
-  int OpY() const { return opy_; }
-  int64_t Score() const { return score_; }
-  PlayerType Type() const { return loadout_->Type(); }
-  int HitRadius() const { return loadout_->HitRadius(); }
-  uint8_t Power() const { return exp_; }
-  uint8_t Bombs() const { return bomb_; }
-  uint8_t Lives() const { return left_; }
-  uint8_t Credits() const { return credit_; }
-  uint16_t MissCount() const { return miss_count_; }
-  uint16_t BombUsed() const { return bomb_used_; }
-  uint16_t DeathbombCount() const { return deathbomb_count_; }
-  uint16_t GrazeCount() const { return evade_; }
-  uint32_t GrazeSum() const { return evade_sum_; }
-  uint16_t GrazeWaitTime() const { return evade_c_; }
-  uint32_t StarCounter() const { return star_counter_; }
-  uint32_t StarThreshold() const { return star_threshold_; }
-  bool IsInvincible() const {
+  [[nodiscard]] int X() const { return x_; }
+  [[nodiscard]] int Y() const { return y_; }
+  [[nodiscard]] int OpX() const { return opx_; }
+  [[nodiscard]] int OpY() const { return opy_; }
+  [[nodiscard]] int64_t Score() const { return score_; }
+  [[nodiscard]] PlayerType Type() const { return loadout_->Type(); }
+  [[nodiscard]] int HitRadius() const { return loadout_->HitRadius(); }
+  [[nodiscard]] uint8_t Power() const { return exp_; }
+  [[nodiscard]] uint8_t Bombs() const { return bomb_; }
+  [[nodiscard]] uint8_t Lives() const { return left_; }
+  [[nodiscard]] uint8_t Credits() const { return credit_; }
+  [[nodiscard]] uint16_t MissCount() const { return miss_count_; }
+  [[nodiscard]] uint16_t BombUsed() const { return bomb_used_; }
+  [[nodiscard]] uint16_t DeathbombCount() const { return deathbomb_count_; }
+  [[nodiscard]] uint16_t GrazeCount() const { return evade_; }
+  [[nodiscard]] uint32_t GrazeSum() const { return evade_sum_; }
+  [[nodiscard]] uint16_t GrazeWaitTime() const { return evade_c_; }
+  [[nodiscard]] uint32_t StarCounter() const { return star_counter_; }
+  [[nodiscard]] uint32_t StarThreshold() const { return star_threshold_; }
+  [[nodiscard]] bool IsInvincible() const {
     return invincibility_time_ != 0 ||
            life_state_ == LifeState::DeathbombWindow ||
            life_state_ == LifeState::Respawning;
   }
-  bool IsBombActive() const { return bomb_time_ != 0; }
-  bool IsMovementDisabled() const {
+  [[nodiscard]] bool IsBombActive() const { return bomb_time_ != 0; }
+  [[nodiscard]] bool IsMovementDisabled() const {
     return life_state_ == LifeState::Respawning;
-  }
-  bool IsGameOver() const { return game_over_; }
-  uint16_t ShotCount() const {
-    return static_cast<uint16_t>(maid_tama_.Size());
   }
 
   // --- Setters / action methods ---
@@ -153,10 +148,8 @@ public:
   void RotateType(int dir);
   void SetPower(uint8_t p) { exp_ = p; }
   void SetLives(uint8_t n) { left_ = n; }
-  void SetBombs(uint8_t b) { bomb_ = b; }
   void SetCredits(uint8_t c) { credit_ = c; }
   void UseCredit() { credit_--; }
-  void SetScore(int64_t s) { score_ = s; }
   void ResetForContinue(int player_stock);
   void ClearInvincibility() {
     invincibility_time_ = 0;
@@ -242,8 +235,8 @@ private:
   bool auto_bomb_requested_ = false;
   LifeState life_state_ = LifeState::Respawning;
 
-  GameSession *session_ = nullptr;
-  stage::StageSession *stage_ = nullptr;
+  GameSession &session_;
+  stage::StageSession &stage_;
   PracticeMode practice_mode_ = PracticeMode::Off;
   bool focus_while_firing_ = false;
   uint8_t initial_bomb_stock_ = 0;

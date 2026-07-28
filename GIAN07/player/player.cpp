@@ -35,8 +35,10 @@ inline constexpr auto kStartY = playfield::kWorldBottom + 180_px;
 
 // --- Player method implementations ---
 
-Player::Player(EffectManager &effects)
-    : loadout_(std::make_unique<WideLoadout>()), effects_(effects) {}
+Player::Player(EffectManager &effects, GameSession &session,
+               stage::StageSession &stage)
+    : loadout_(std::make_unique<WideLoadout>()), effects_(effects),
+      session_(session), stage_(stage) {}
 
 bool Player::IsMainShotFrame_(uint16_t t) const {
   return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
@@ -428,14 +430,14 @@ void Player::EnterDeathbombWindow_() {
   PlayHitFeedback_();
   const auto window = DEATHBOMB_WINDOW +
                       (static_cast<int>(GameLevel::Lunatic) -
-                       static_cast<int>(std::to_underlying(session_->level))) *
+                       static_cast<int>(std::to_underlying(session_.level))) *
                           2;
   deathbomb_time_ = static_cast<uint16_t>(window);
   life_state_ = LifeState::DeathbombWindow;
 }
 
 bool Player::ActivateBomb_(BombTrigger trigger) {
-  if (bomb_time_ != 0U || bomb_ == 0U || stage_->DialogueActive()) {
+  if (bomb_time_ != 0U || bomb_ == 0U || stage_.DialogueActive()) {
     return false;
   }
 
@@ -461,7 +463,7 @@ bool Player::ActivateBomb_(BombTrigger trigger) {
   }
   deathbomb_time_ = 0;
   life_state_ = LifeState::Active;
-  session_->AddRank(-BOMB_RANK_DECR);
+  session_.AddRank(-BOMB_RANK_DECR);
   clear_bullets_requested_ = true;
   return true;
 }
@@ -483,7 +485,7 @@ void Player::CommitDeath_() {
   invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
   life_state_ = LifeState::Respawning;
 
-  session_->AddRank(-DEATH_RANK_DECR); // death decreases rank
+  session_.AddRank(-DEATH_RANK_DECR); // death decreases rank
 
   if (left_ != 0U) {
     left_ -= 1;
