@@ -1,4 +1,4 @@
-/// Music room page state and rendering.
+/// Music room UI state and rendering.
 
 #pragma once
 

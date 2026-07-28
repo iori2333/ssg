@@ -1,32 +1,59 @@
-/// Replay recording, catalog, persistence, and playback.
+/// Game record persistence, Replay recording, and playback.
 
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <concepts>
 #include <cstring>
 #include <filesystem>
 #include <format>
 #include <limits>
 #include <optional>
 #include <ranges>
-#include <span>
 #include <string>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
-#include "replay_system.h"
+#include <SDL3/SDL_iostream.h>
+
+#include "record_system.h"
 
 #include "data/pbg_archive.h"
 #include "gameflow/gameflow_manager.h"
 #include "gameplay/game_session.h"
 #include "settings/config.h"
+#include "sys/file.h"
+#include "util/byte_io.h"
+#include "util/endian.h"
 #include "util/ut_math.h"
 
 namespace {
 
 constexpr std::array<uint8_t, 4> kReplayMagic = {'G', '7', 'R', 'P'};
 constexpr uint16_t kReplayVersion = 2;
+constexpr auto kReplayDirectory = "replays";
+constexpr std::array<uint8_t, 4> kScoreMagic = {'G', '7', 'S', 'C'};
+constexpr uint16_t kScoreVersion = 1;
+constexpr auto kScoreDirectory = "scores";
+constexpr auto kMaxSignedRecordValue =
+    static_cast<uint64_t>(std::numeric_limits<int64_t>::max());
+
+struct ScoreRecordFile {
+  std::array<uint8_t, 4> magic{};
+  ENDIAN_LITTLE<uint16_t> version = 0;
+  ENDIAN_LITTLE<uint64_t> created_at = 0;
+  ENDIAN_LITTLE<uint64_t> score = 0;
+  ENDIAN_LITTLE<uint32_t> graze = 0;
+  ENDIAN_LITTLE<uint16_t> miss_count = 0;
+  ENDIAN_LITTLE<uint16_t> bomb_used = 0;
+  ENDIAN_LITTLE<uint16_t> deathbomb_count = 0;
+  uint8_t difficulty = 0;
+  uint8_t stage = 0;
+  uint8_t player_type = 0;
+  uint8_t name_length = 0;
+  std::array<char, kRecordNameLength> name{};
+};
+static_assert(sizeof(ScoreRecordFile) == 44);
 
 struct DemoReplayConfig {
   uint8_t game_level;
@@ -47,57 +74,7 @@ struct DemoReplayHeader {
 };
 static_assert(sizeof(DemoReplayHeader) == 36);
 
-class ByteWriter {
-public:
-  template <std::unsigned_integral T> void Write(T value) {
-    for (std::size_t i = 0; i < sizeof(T); i++) {
-      bytes_.push_back(static_cast<uint8_t>(value >> (i * 8)));
-    }
-  }
-
-  void WriteBytes(std::span<const uint8_t> bytes) {
-    bytes_.insert(bytes_.end(), bytes.begin(), bytes.end());
-  }
-
-  [[nodiscard]] const std::vector<uint8_t> &Bytes() const { return bytes_; }
-
-private:
-  std::vector<uint8_t> bytes_;
-};
-
-class ByteReader {
-public:
-  explicit ByteReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
-
-  template <std::unsigned_integral T> [[nodiscard]] std::optional<T> Read() {
-    if (bytes_.size() - position_ < sizeof(T)) {
-      return std::nullopt;
-    }
-    T value = 0;
-    for (std::size_t i = 0; i < sizeof(T); i++) {
-      value |= static_cast<T>(bytes_[position_++]) << (i * 8);
-    }
-    return value;
-  }
-
-  [[nodiscard]] std::optional<std::span<const uint8_t>>
-  ReadBytes(std::size_t size) {
-    if (bytes_.size() - position_ < size) {
-      return std::nullopt;
-    }
-    const auto result = bytes_.subspan(position_, size);
-    position_ += size;
-    return result;
-  }
-
-  [[nodiscard]] bool Empty() const { return position_ == bytes_.size(); }
-
-private:
-  std::span<const uint8_t> bytes_;
-  std::size_t position_ = 0;
-};
-
-template <typename T> bool ReadValue(ByteReader &reader, T &value) {
+template <typename T> bool ReadValue(util::ByteReader &reader, T &value) {
   using U = std::make_unsigned_t<T>;
   const auto encoded = reader.Read<U>();
   if (!encoded) {
@@ -107,7 +84,8 @@ template <typename T> bool ReadValue(ByteReader &reader, T &value) {
   return true;
 }
 
-void WritePlayerProgress(ByteWriter &writer, const PlayerProgress &progress) {
+void WritePlayerProgress(util::ByteWriter &writer,
+                         const PlayerProgress &progress) {
   writer.Write<uint64_t>(static_cast<uint64_t>(progress.score));
   writer.Write<uint64_t>(static_cast<uint64_t>(progress.pending_score));
   writer.Write(progress.graze_sum);
@@ -129,7 +107,7 @@ void WritePlayerProgress(ByteWriter &writer, const PlayerProgress &progress) {
   writer.Write(progress.initial_bomb_stock);
 }
 
-bool ReadPlayerProgress(ByteReader &reader, PlayerProgress &progress) {
+bool ReadPlayerProgress(util::ByteReader &reader, PlayerProgress &progress) {
   return ReadValue(reader, progress.score) &&
          ReadValue(reader, progress.pending_score) &&
          ReadValue(reader, progress.graze_sum) &&
@@ -154,7 +132,7 @@ bool ReadPlayerProgress(ByteReader &reader, PlayerProgress &progress) {
 std::string ReplayFilename(bool extra_stage,
                            std::chrono::system_clock::time_point now) {
   const auto *prefix = extra_stage ? "replay_ex" : "replay";
-  return std::format("{}_{:%Y%m%d_%H%M%S}.DAT", prefix,
+  return std::format("{}_{:%Y%m%d_%H%M%S}.dat", prefix,
                      std::chrono::floor<std::chrono::seconds>(now));
 }
 
@@ -162,13 +140,145 @@ bool IsReplayFilename(std::string_view name) {
   const auto replay_prefix = name.starts_with("replay_");
   const auto extra_prefix = name.starts_with("replay_ex_");
   const auto extension = std::filesystem::path{name}.extension().string();
-  return (replay_prefix || extra_prefix) &&
-         (extension == ".DAT" || extension == ".dat");
+  return (replay_prefix || extra_prefix) && extension == ".dat";
+}
+
+bool IsScoreFilename(const std::filesystem::path &path) {
+  const auto filename = path.filename().string();
+  return filename.starts_with("score_") && path.extension().string() == ".dat";
+}
+
+std::optional<ScoreRecord> LoadScoreRecord(const std::filesystem::path &path) {
+  const auto bytes = SDL_LoadFile(path.string().c_str());
+  if (bytes.size() != sizeof(ScoreRecordFile)) {
+    return std::nullopt;
+  }
+  auto cursor = bytes.cursor();
+  const auto file = cursor.next<ScoreRecordFile>();
+  if (!file || file->front().magic != kScoreMagic ||
+      file->front().version != kScoreVersion ||
+      file->front().created_at > kMaxSignedRecordValue ||
+      file->front().score > kMaxSignedRecordValue ||
+      file->front().difficulty > std::to_underlying(GameLevel::Extra) ||
+      file->front().stage > std::to_underlying(StageId::Extra) ||
+      file->front().player_type > std::to_underlying(PlayerType::Laser) ||
+      file->front().name_length > kRecordNameLength) {
+    return std::nullopt;
+  }
+
+  const auto &data = file->front();
+  return ScoreRecord{
+      .name = std::string{data.name.data(), data.name_length},
+      .created_at = static_cast<int64_t>(data.created_at),
+      .score = static_cast<int64_t>(data.score),
+      .graze = data.graze,
+      .miss_count = data.miss_count,
+      .bomb_used = data.bomb_used,
+      .deathbomb_count = data.deathbomb_count,
+      .difficulty = static_cast<GameLevel>(data.difficulty),
+      .stage = static_cast<StageId>(data.stage),
+      .player_type = static_cast<PlayerType>(data.player_type),
+  };
 }
 
 } // namespace
 
-void ReplaySystem::BeginRecording(const Player &player,
+ScoreRecord RecordSystem::CaptureScore(const Player &player,
+                                       const GameSession &session) const {
+  const auto now = std::chrono::system_clock::now();
+  return ScoreRecord{
+      .name = "",
+      .created_at = std::chrono::duration_cast<std::chrono::seconds>(
+                        now.time_since_epoch())
+                        .count(),
+      .score = player.Score(),
+      .graze = player.GrazeSum(),
+      .miss_count = player.MissCount(),
+      .bomb_used = player.BombUsed(),
+      .deathbomb_count = player.DeathbombCount(),
+      .difficulty =
+          session.stage == StageId::Extra ? GameLevel::Extra : session.level,
+      .stage = session.stage,
+      .player_type = player.Type(),
+  };
+}
+
+std::vector<ScoreRecord> RecordSystem::ListScores(GameLevel difficulty,
+                                                  std::size_t limit) const {
+  std::vector<ScoreRecord> records;
+  std::error_code error;
+  for (const auto &entry :
+       std::filesystem::directory_iterator{kScoreDirectory, error}) {
+    if (error || !entry.is_regular_file(error) ||
+        !IsScoreFilename(entry.path())) {
+      continue;
+    }
+    auto record = LoadScoreRecord(entry.path());
+    if (record && record->difficulty == difficulty) {
+      records.push_back(std::move(*record));
+    }
+  }
+  std::ranges::sort(records,
+                    [](const ScoreRecord &left, const ScoreRecord &right) {
+                      if (left.score != right.score) {
+                        return left.score > right.score;
+                      }
+                      return left.created_at < right.created_at;
+                    });
+  if (records.size() > limit) {
+    records.erase(records.begin() + static_cast<std::ptrdiff_t>(limit),
+                  records.end());
+  }
+  return records;
+}
+
+bool RecordSystem::SaveScore(const ScoreRecord &record) const {
+  std::error_code error;
+  std::filesystem::create_directories(kScoreDirectory, error);
+  if (error) {
+    return false;
+  }
+
+  const auto now = std::chrono::system_clock::now();
+  const auto file_id = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           now.time_since_epoch())
+                           .count();
+  auto path = std::filesystem::path{kScoreDirectory} /
+              std::format("score_{}.dat", file_id);
+  for (uint32_t suffix = 1; std::filesystem::exists(path, error); suffix++) {
+    if (error) {
+      return false;
+    }
+    path = std::filesystem::path{kScoreDirectory} /
+           std::format("score_{}_{}.dat", file_id, suffix);
+  }
+
+  ScoreRecordFile file{
+      .magic = kScoreMagic,
+      .version = kScoreVersion,
+      .created_at = static_cast<uint64_t>(record.created_at),
+      .score = static_cast<uint64_t>(record.score),
+      .graze = record.graze,
+      .miss_count = record.miss_count,
+      .bomb_used = record.bomb_used,
+      .deathbomb_count = record.deathbomb_count,
+      .difficulty = std::to_underlying(record.difficulty),
+      .stage = std::to_underlying(record.stage),
+      .player_type = std::to_underlying(record.player_type),
+      .name_length = static_cast<uint8_t>(
+          std::min(record.name.size(), std::size_t{kRecordNameLength})),
+  };
+  std::ranges::copy_n(record.name.begin(), file.name_length, file.name.begin());
+
+  auto *stream = SDL_IOFromFile(path.string().c_str(), "wb");
+  if (stream == nullptr) {
+    return false;
+  }
+  const bool written = SDL_MustWriteIO(stream, &file, sizeof(file));
+  return SDL_CloseIO(stream) && written;
+}
+
+void RecordSystem::BeginRecording(const Player &player,
                                   const GameSession &session,
                                   const ConfigData &config) {
   playing_ = false;
@@ -193,7 +303,7 @@ void ReplaySystem::BeginRecording(const Player &player,
   BeginStage(player, session);
 }
 
-void ReplaySystem::BeginStage(const Player &player,
+void RecordSystem::BeginStage(const Player &player,
                               const GameSession &session) {
   if (!recording_) {
     return;
@@ -210,11 +320,11 @@ void ReplaySystem::BeginStage(const Player &player,
   frame_cursor_ = 0;
 }
 
-bool ReplaySystem::HasRecordedStages() const {
+bool RecordSystem::HasRecordedStages() const {
   return recording_ && (!recorded_stages_.empty() || !current_inputs_.empty());
 }
 
-void ReplaySystem::FlushStage() {
+void RecordSystem::FlushStage() {
   if (!recording_ || !has_current_checkpoint_ || current_inputs_.empty()) {
     return;
   }
@@ -232,7 +342,7 @@ void ReplaySystem::FlushStage() {
   frame_cursor_ = 0;
 }
 
-void ReplaySystem::Record(INPUT_BITS input) {
+void RecordSystem::Record(INPUT_BITS input) {
   if (!recording_ || (input & KEY_ESC) != 0 ||
       current_inputs_.size() >= kReplayBufferCapacity) {
     return;
@@ -240,20 +350,20 @@ void ReplaySystem::Record(INPUT_BITS input) {
   current_inputs_.push_back(input);
 }
 
-void ReplaySystem::UpdateLastRecordedInput(INPUT_BITS input) {
+void RecordSystem::UpdateLastRecordedInput(INPUT_BITS input) {
   if (recording_ && !current_inputs_.empty()) {
     current_inputs_.back() = input;
   }
 }
 
-void ReplaySystem::CancelRecording() {
+void RecordSystem::CancelRecording() {
   recording_ = false;
   has_current_checkpoint_ = false;
   current_inputs_.clear();
   recorded_stages_.clear();
 }
 
-bool ReplaySystem::SaveReplay(std::string_view name, bool extra_stage) {
+bool RecordSystem::SaveReplay(std::string_view name, bool extra_stage) {
   if (!recording_) {
     return false;
   }
@@ -263,7 +373,7 @@ bool ReplaySystem::SaveReplay(std::string_view name, bool extra_stage) {
     return false;
   }
 
-  std::string replay_name{name.substr(0, kReplayNameLength)};
+  std::string replay_name{name.substr(0, kRecordNameLength)};
   if (replay_name.empty()) {
     replay_name = "Vivit!";
   }
@@ -273,7 +383,7 @@ bool ReplaySystem::SaveReplay(std::string_view name, bool extra_stage) {
       std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch())
           .count();
 
-  ByteWriter manifest;
+  util::ByteWriter manifest;
   manifest.WriteBytes(kReplayMagic);
   manifest.Write(kReplayVersion);
   manifest.Write<uint64_t>(static_cast<uint64_t>(created_at));
@@ -300,24 +410,29 @@ bool ReplaySystem::SaveReplay(std::string_view name, bool extra_stage) {
   data::PbgArchiveWriter archive;
   archive.Add(manifest.Bytes());
   for (const auto &stage : recorded_stages_) {
-    ByteWriter inputs;
+    util::ByteWriter inputs;
     for (const auto input : stage.inputs) {
       inputs.Write(static_cast<uint16_t>(input));
     }
     archive.Add(inputs.Bytes());
   }
 
-  const auto saved = archive.Write(ReplayFilename(extra_stage, now).c_str());
+  std::error_code error;
+  std::filesystem::create_directories(kReplayDirectory, error);
+  const auto replay_path = std::filesystem::path{kReplayDirectory} /
+                           ReplayFilename(extra_stage, now);
+  const auto saved = !error && archive.Write(replay_path.string().c_str());
   recorded_stages_.clear();
   current_inputs_.clear();
   has_current_checkpoint_ = false;
   return saved;
 }
 
-std::vector<ReplayMetadata> ReplaySystem::ListReplays() const {
-  std::vector<ReplayMetadata> replays;
+std::vector<ReplayRecord> RecordSystem::ListReplays() const {
+  std::vector<ReplayRecord> replays;
   std::error_code error;
-  for (const auto &entry : std::filesystem::directory_iterator{".", error}) {
+  for (const auto &entry :
+       std::filesystem::directory_iterator{kReplayDirectory, error}) {
     if (error || !entry.is_regular_file(error)) {
       continue;
     }
@@ -325,16 +440,18 @@ std::vector<ReplayMetadata> ReplaySystem::ListReplays() const {
     if (!IsReplayFilename(filename)) {
       continue;
     }
-    ReplayMetadata metadata;
-    if (LoadArchive(filename, &metadata, nullptr, nullptr)) {
-      replays.push_back(std::move(metadata));
+    std::optional<ReplayRecord> record;
+    const auto path = entry.path().string();
+    if (LoadArchive(path, &record, nullptr, nullptr)) {
+      replays.push_back(std::move(*record));
     }
   }
-  std::ranges::sort(replays, std::greater{}, &ReplayMetadata::created_at);
+  std::ranges::sort(replays, std::greater{}, &ReplayRecord::created_at);
   return replays;
 }
 
-bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
+bool RecordSystem::LoadArchive(std::string_view path,
+                               std::optional<ReplayRecord> *record,
                                ReplaySettings *settings,
                                std::vector<ReplayStage> *stages) const {
   const auto archive = data::PbgArchive::Open(std::string{path}.c_str());
@@ -345,7 +462,7 @@ bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
   if (!manifest_data) {
     return false;
   }
-  ByteReader reader{{manifest_data.get(), manifest_data.size()}};
+  util::ByteReader reader{{manifest_data.get(), manifest_data.size()}};
   const auto magic = reader.ReadBytes(kReplayMagic.size());
   uint16_t version = 0;
   uint64_t created_at = 0;
@@ -360,7 +477,7 @@ bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
       !ReadValue(reader, created_at) || !ReadValue(reader, difficulty) ||
       !ReadValue(reader, practice_mode) || !ReadValue(reader, player_stock) ||
       !ReadValue(reader, bomb_stock) || !ReadValue(reader, input_flags) ||
-      !ReadValue(reader, name_length) || name_length > kReplayNameLength) {
+      !ReadValue(reader, name_length) || name_length > kRecordNameLength) {
     return false;
   }
   const auto name_bytes = reader.ReadBytes(name_length);
@@ -373,13 +490,9 @@ bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
     return false;
   }
 
-  ReplayMetadata parsed_metadata;
-  parsed_metadata.path = path;
-  parsed_metadata.name.assign(
-      reinterpret_cast<const char *>(name_bytes->data()), name_bytes->size());
-  parsed_metadata.created_at = static_cast<int64_t>(created_at);
-  parsed_metadata.difficulty = static_cast<GameLevel>(difficulty);
-  parsed_metadata.stages.reserve(stage_count);
+  std::vector<StageId> stage_ids;
+  stage_ids.reserve(stage_count);
+  std::optional<PlayerType> player_type;
 
   std::vector<ReplayStage> parsed_stages;
   parsed_stages.reserve(stage_count);
@@ -401,14 +514,13 @@ bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
     checkpoint.stage = static_cast<StageId>(stage_id);
     checkpoint.rank = static_cast<int32_t>(rank);
     if ((checkpoint.stage == StageId::Extra && stage_count != 1) ||
-        (!parsed_metadata.stages.empty() &&
-         stage_id != std::to_underlying(parsed_metadata.stages.back()) + 1)) {
+        (!stage_ids.empty() &&
+         stage_id != std::to_underlying(stage_ids.back()) + 1)) {
       return false;
     }
-    parsed_metadata.stages.push_back(checkpoint.stage);
+    stage_ids.push_back(checkpoint.stage);
     if (i == 0) {
-      parsed_metadata.player_type =
-          static_cast<PlayerType>(checkpoint.player.player_type);
+      player_type = static_cast<PlayerType>(checkpoint.player.player_type);
     }
 
     ReplayStage replay_stage{.checkpoint = checkpoint};
@@ -418,7 +530,7 @@ bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
           input_data.size() != checkpoint.frame_count * sizeof(uint16_t)) {
         return false;
       }
-      ByteReader input_reader{{input_data.get(), input_data.size()}};
+      util::ByteReader input_reader{{input_data.get(), input_data.size()}};
       replay_stage.inputs.reserve(checkpoint.frame_count);
       for (uint32_t frame = 0; frame < checkpoint.frame_count; frame++) {
         uint16_t input = 0;
@@ -434,8 +546,16 @@ bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
     return false;
   }
 
-  if (metadata != nullptr) {
-    *metadata = std::move(parsed_metadata);
+  if (record != nullptr) {
+    record->emplace(ReplayRecord{
+        .path = std::string{path},
+        .name = std::string{reinterpret_cast<const char *>(name_bytes->data()),
+                            name_bytes->size()},
+        .created_at = static_cast<int64_t>(created_at),
+        .difficulty = static_cast<GameLevel>(difficulty),
+        .player_type = *player_type,
+        .stages = std::move(stage_ids),
+    });
   }
   if (settings != nullptr) {
     *settings = {
@@ -452,28 +572,28 @@ bool ReplaySystem::LoadArchive(std::string_view path, ReplayMetadata *metadata,
   return true;
 }
 
-bool ReplaySystem::LoadReplay(std::string_view path, StageId start_stage) {
+bool RecordSystem::LoadReplay(std::string_view path, StageId start_stage) {
   playing_ = false;
   multi_stage_playback_ = false;
   playback_stages_.clear();
 
-  ReplayMetadata metadata;
-  if (!LoadArchive(path, &metadata, &settings_, &playback_stages_)) {
+  std::optional<ReplayRecord> record;
+  if (!LoadArchive(path, &record, &settings_, &playback_stages_)) {
     return false;
   }
-  const auto selected = std::ranges::find(metadata.stages, start_stage);
-  if (selected == metadata.stages.end()) {
+  const auto selected = std::ranges::find(record->stages, start_stage);
+  if (selected == record->stages.end()) {
     playback_stages_.clear();
     return false;
   }
 
   playback_stage_index_ =
-      static_cast<std::size_t>(selected - metadata.stages.begin());
+      static_cast<std::size_t>(selected - record->stages.begin());
   frame_cursor_ = 0;
   return true;
 }
 
-bool ReplaySystem::ConfigurePlayback(ConfigData &config, GameSession &session) {
+bool RecordSystem::ConfigurePlayback(ConfigData &config, GameSession &session) {
   if (playback_stages_.empty() ||
       playback_stage_index_ >= playback_stages_.size()) {
     return false;
@@ -500,7 +620,7 @@ bool ReplaySystem::ConfigurePlayback(ConfigData &config, GameSession &session) {
   return true;
 }
 
-void ReplaySystem::RestorePlaybackStage(Player &player, GameSession &session) {
+void RecordSystem::RestorePlaybackStage(Player &player, GameSession &session) {
   const auto &checkpoint = playback_stages_[playback_stage_index_].checkpoint;
   session.stage = checkpoint.stage;
   session.rank = checkpoint.rank;
@@ -510,12 +630,12 @@ void ReplaySystem::RestorePlaybackStage(Player &player, GameSession &session) {
   playing_ = true;
 }
 
-bool ReplaySystem::HasNextPlaybackStage() const {
+bool RecordSystem::HasNextPlaybackStage() const {
   return multi_stage_playback_ &&
          playback_stage_index_ + 1 < playback_stages_.size();
 }
 
-bool ReplaySystem::AdvancePlaybackStage() {
+bool RecordSystem::AdvancePlaybackStage() {
   if (!HasNextPlaybackStage()) {
     return false;
   }
@@ -525,11 +645,11 @@ bool ReplaySystem::AdvancePlaybackStage() {
   return true;
 }
 
-StageId ReplaySystem::CurrentPlaybackStage() const {
+StageId RecordSystem::CurrentPlaybackStage() const {
   return playback_stages_[playback_stage_index_].checkpoint.stage;
 }
 
-bool ReplaySystem::LoadStageDemo(StageId stage) {
+bool RecordSystem::LoadStageDemo(StageId stage) {
   playing_ = false;
   multi_stage_playback_ = false;
   playback_stages_.clear();
@@ -595,7 +715,7 @@ bool ReplaySystem::LoadStageDemo(StageId stage) {
   return true;
 }
 
-INPUT_BITS ReplaySystem::NextInput() {
+INPUT_BITS RecordSystem::NextInput() {
   if (!playing_ || playback_stages_.empty()) {
     return KEY_ESC;
   }
@@ -607,7 +727,7 @@ INPUT_BITS ReplaySystem::NextInput() {
   return inputs[frame_cursor_++];
 }
 
-void ReplaySystem::StopPlayback(ConfigData &config, GameSession &session) {
+void RecordSystem::StopPlayback(ConfigData &config, GameSession &session) {
   if (config_overridden_) {
     config.game.game_level = saved_config_.difficulty;
     config.game.practice_mode = saved_config_.practice_mode;

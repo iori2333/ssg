@@ -14,6 +14,8 @@ void GameRestart(); // Restart the game (from ESC exit)
 [[nodiscard]] bool GameExit(bool bNeedChgMusic = true); // Exit the game
 void GameOverInit(); // Game over pre-processing
 void GameContinue(); // Perform continue
+void GameOverExit(bool save_replay);
+void GameClearResults(bool extra_stage, bool change_music);
 
 [[nodiscard]] bool GameReplayInit(const char *path, StageId stage);
 

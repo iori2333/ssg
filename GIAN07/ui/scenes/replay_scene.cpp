@@ -1,56 +1,59 @@
-/// Replay browser, stage selection, and replay naming scene.
+/// Replay browser, stage selection, and replay naming UI scene.
 
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <format>
-#include <ranges>
+#include <functional>
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "game_main.h"
-#include "gameflow_manager.h"
 #include "replay_scene.h"
 
+#include "audio/constants.h"
 #include "audio/snd.h"
+#include "gameflow/game_main.h"
+#include "gameflow/gameflow_manager.h"
+#include "gameplay/game_rules.h"
+#include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/font_uty.h"
-#include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/text.h"
 #include "platform/text_backend.h"
+#include "record/record_system.h"
 #include "sys/input.h"
+#include "ui/menu/menu_controller.h"
+#include "ui/menu/menu_tree.h"
+#include "ui/name_entry.h"
 #include "util/debug.h"
 
 namespace {
-constexpr std::size_t kReplayPageSize = 5;
-constexpr std::array<std::string_view, 7> kStageNames = {
-    "Stage 1", "Stage 2", "Stage 3", "Stage 4", "Stage 5", "Stage 6", "Extra"};
-
-std::string_view DifficultyName(GameLevel difficulty) {
-  constexpr std::array names = {"Easy", "Normal", "Hard", "Lunatic", "Extra"};
-  return names[std::to_underlying(difficulty)];
-}
-
-std::string_view PlayerName(PlayerType type) {
-  constexpr std::array names = {"Wide", "Homing", "Laser"};
-  return names[std::to_underlying(type)];
-}
-
-std::string StageList(const ReplayMetadata &replay) {
+std::string StageList(const ReplayRecord &replay) {
   std::string result;
   for (const auto stage : replay.stages) {
     if (!result.empty()) {
       result += ' ';
     }
-    result += stage == StageId::Extra
-                  ? "EX"
-                  : std::to_string(std::to_underlying(stage) + 1);
+    if (stage == StageId::Extra) {
+      result += "EX";
+    } else {
+      result += std::to_string(std::to_underlying(stage) + 1);
+    }
   }
   return result;
 }
 
 uint8_t DetailGradient(PIXEL_COORD y) {
-  return (y <= 3) ? 254 : (y <= 6) ? 220 : 180;
+  if (y <= 3) {
+    return 254;
+  }
+  return y <= 6 ? 220 : 180;
 }
 } // namespace
 
@@ -71,7 +74,7 @@ bool ReplayScene::EnterBrowser() {
   for (auto &text : player_text_) {
     text = TextObj.Register({.w = 80, .h = 10});
   }
-  replays_ = replay_.ListReplays();
+  replays_ = record_system_.ListReplays();
   selected_ = 0;
   previous_input_ = Key_Data;
   ResetRows();
@@ -89,7 +92,7 @@ void ReplayScene::BeginSave(bool extra_stage,
   GrpBackend_Clear();
   Grp_Flip();
   if (!GameFlow.ctx.graphics.LoadNameRegistration()) {
-    replay_.CancelRecording();
+    record_system_.CancelRecording();
     on_complete(false);
     return;
   }
@@ -130,20 +133,19 @@ void ReplayScene::UpdateBrowser() {
       return;
     }
     if (!replays_.empty()) {
-      const auto page_count =
-          (replays_.size() + kReplayPageSize - 1) / kReplayPageSize;
-      const auto page = selected_ / kReplayPageSize;
-      const auto row = selected_ % kReplayPageSize;
+      const auto page_count = (replays_.size() + kPageSize - 1) / kPageSize;
+      const auto page = selected_ / kPageSize;
+      const auto row = selected_ % kPageSize;
       if (Key_Data == KEY_UP) {
-        const auto page_start = page * kReplayPageSize;
+        const auto page_start = page * kPageSize;
         const auto page_size =
-            std::min(kReplayPageSize, replays_.size() - page_start);
+            std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + page_size - 1) % page_size;
         Snd_SEPlay(SfxId::Select);
       } else if (Key_Data == KEY_DOWN) {
-        const auto page_start = page * kReplayPageSize;
+        const auto page_start = page * kPageSize;
         const auto page_size =
-            std::min(kReplayPageSize, replays_.size() - page_start);
+            std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + 1) % page_size;
         Snd_SEPlay(SfxId::Select);
       } else if (Key_Data == KEY_LEFT || Key_Data == KEY_RIGHT) {
@@ -151,7 +153,7 @@ void ReplayScene::UpdateBrowser() {
           const auto direction = Key_Data == KEY_LEFT ? page_count - 1 : 1;
           const auto next_page = (page + direction) % page_count;
           selected_ =
-              std::min(next_page * kReplayPageSize + row, replays_.size() - 1);
+              std::min(next_page * kPageSize + row, replays_.size() - 1);
           ResetRows();
           Snd_SEPlay(SfxId::Select);
         }
@@ -171,11 +173,11 @@ void ReplayScene::UpdateBrowser() {
 void ReplayScene::OpenStageSelect() {
   const auto &replay = replays_[selected_];
   std::vector<std::unique_ptr<menu::IMenuNode>> items;
-  items.reserve(7);
+  items.reserve(kStageNames.size());
   for (uint8_t id = 0; id <= std::to_underlying(StageId::Extra); id++) {
     const auto stage = static_cast<StageId>(id);
     auto item = std::make_unique<menu::ActionNode>(
-        kStageNames[id], "", [this, stage](menu::MenuController &) {
+        StageName(stage), "", [this, stage](menu::MenuController &) {
           pending_stage_ = stage;
           return false;
         });
@@ -220,9 +222,9 @@ void ReplayScene::UpdateNameEntry() {
   if (result != NameEntryResult::Editing) {
     const bool saved =
         result == NameEntryResult::Confirmed &&
-        replay_.SaveReplay(name_entry_.Name(), save_extra_stage_);
+        record_system_.SaveReplay(name_entry_.Name(), save_extra_stage_);
     if (result == NameEntryResult::Cancelled) {
-      replay_.CancelRecording();
+      record_system_.CancelRecording();
     }
     auto completion = std::move(save_complete_);
     completion(saved);
@@ -248,9 +250,9 @@ void ReplayScene::ResetRows() {
 void ReplayScene::DrawBrowser() {
   GrpBackend_Clear();
 
-  const auto page = replays_.empty() ? 0 : selected_ / kReplayPageSize;
-  const auto first = page * kReplayPageSize;
-  const auto last = std::min(first + kReplayPageSize, replays_.size());
+  const auto page = replays_.empty() ? 0 : selected_ / kPageSize;
+  const auto first = page * kPageSize;
+  const auto last = std::min(first + kPageSize, replays_.size());
   for (std::size_t row = 0; row < rows_.size(); row++) {
     auto &display = rows_[row];
     const auto target_x = static_cast<int>((50 + (row * 24)) << 6);
@@ -283,7 +285,7 @@ void ReplayScene::DrawBrowser() {
     const auto &replay = replays_[index];
     GrpPut16c2(x + 88, y + 4, replay.name.c_str());
 
-    const auto difficulty = DifficultyName(replay.difficulty);
+    const auto difficulty = GameLevelName(replay.difficulty);
     const auto difficulty_x =
         x + 384 - static_cast<int>(difficulty.size() * 14);
     GrpPut16(difficulty_x, y + 4, std::string{difficulty}.c_str());
@@ -302,7 +304,7 @@ void ReplayScene::DrawBrowser() {
                                  DetailGradient);
                    });
 
-    const auto player = PlayerName(replay.player_type);
+    const auto player = PlayerTypeName(replay.player_type);
     TextObj.Render({x + 304, y + detail_y - 2}, player_text_[row], player,
                    [player](TEXTRENDER_SESSION &session) {
                      std::array<std::string_view, 1> text = {player};
@@ -316,8 +318,7 @@ void ReplayScene::DrawBrowser() {
     return;
   }
 
-  const auto page_count =
-      (replays_.size() + kReplayPageSize - 1) / kReplayPageSize;
+  const auto page_count = (replays_.size() + kPageSize - 1) / kPageSize;
   const auto page_label = std::format("Replay  {}/{}", page + 1, page_count);
   GrpPut16(272, 450, page_label.c_str());
 }

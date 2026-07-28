@@ -4,13 +4,24 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
+#include <string_view>
+#include <utility>
 
 class Player;
 class EnemyManager;
 class EffectManager;
 
 enum class PlayerType : uint8_t { Wide, Homing, Laser };
+
+inline constexpr std::array<std::string_view, 3> kPlayerTypeNames = {
+    "Wide", "Homing", "Laser"};
+
+[[nodiscard]] constexpr std::string_view PlayerTypeName(PlayerType type) {
+  const auto index = std::to_underlying(type);
+  return index < kPlayerTypeNames.size() ? kPlayerTypeNames[index] : "Unknown";
+}
 
 struct PlayerTraits {
   PlayerType type;

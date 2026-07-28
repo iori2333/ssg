@@ -3,7 +3,6 @@
 ///
 
 #include <algorithm>
-#include <string_view>
 #include <utility>
 
 #include "game_rules.h"
@@ -28,22 +27,6 @@ constexpr auto kRankLunaticMin = 44 * 256;
 constexpr auto kRankLunaticMax = 64 * 256;
 
 } // namespace
-
-std::string_view GameSession::DifficultyName() const {
-  switch (level) {
-  case GameLevel::Easy:
-    return "Easy";
-  case GameLevel::Normal:
-    return "Normal";
-  case GameLevel::Hard:
-    return "Hard";
-  case GameLevel::Extra:
-    return "Extra";
-  case GameLevel::Lunatic:
-    return "Lunatic";
-  }
-  return "Unknown";
-}
 
 GameLevel GameSession::EffectiveLevel() const {
   switch (level) {

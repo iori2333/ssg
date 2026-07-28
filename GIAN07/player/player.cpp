@@ -622,6 +622,7 @@ void Player::ResetForContinue(int player_stock) {
   star_counter_ = 0;
   star_threshold_ = STAR_THRESHOLD_INIT;
   star_extend_count_ = 0;
+  game_over_ = false;
 }
 
 PlayerProgress Player::CaptureProgress() const {

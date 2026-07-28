@@ -1,5 +1,5 @@
 ///
-/// EndingScene - ending cinematic page state and operations
+/// EndingScene - ending cinematic UI state and operations
 ///
 
 #pragma once

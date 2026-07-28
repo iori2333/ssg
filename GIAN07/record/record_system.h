@@ -1,9 +1,10 @@
-/// Replay recording, catalog, persistence, and playback.
+/// Game record persistence, Replay recording, and playback.
 
 #pragma once
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,20 +23,39 @@ struct GameSession;
 
 inline constexpr auto kReplayBufferCapacity = 60 * 60 * 30;
 inline constexpr auto kReplayStageCapacity = 6;
-inline constexpr auto kReplayNameLength = 8;
+inline constexpr auto kRecordNameLength = 8;
 
-struct ReplayMetadata {
+struct ScoreRecord {
+  std::string name;
+  int64_t created_at;
+  int64_t score;
+  uint32_t graze;
+  uint16_t miss_count;
+  uint16_t bomb_used;
+  uint16_t deathbomb_count;
+  GameLevel difficulty;
+  StageId stage;
+  PlayerType player_type;
+};
+
+struct ReplayRecord {
   std::string path;
   std::string name;
-  int64_t created_at = 0;
-  GameLevel difficulty = GameLevel::Normal;
-  PlayerType player_type = PlayerType::Wide;
+  int64_t created_at;
+  GameLevel difficulty;
+  PlayerType player_type;
   std::vector<StageId> stages;
 };
 
-class ReplaySystem {
+class RecordSystem {
 public:
-  explicit ReplaySystem(const data::GameData &data) : data_(data) {}
+  explicit RecordSystem(const data::GameData &data) : data_(data) {}
+
+  [[nodiscard]] ScoreRecord CaptureScore(const Player &player,
+                                         const GameSession &session) const;
+  [[nodiscard]] std::vector<ScoreRecord> ListScores(GameLevel difficulty,
+                                                    std::size_t limit) const;
+  [[nodiscard]] bool SaveScore(const ScoreRecord &record) const;
 
   void BeginRecording(const Player &player, const GameSession &session,
                       const ConfigData &config);
@@ -47,7 +67,7 @@ public:
   void CancelRecording();
   [[nodiscard]] bool SaveReplay(std::string_view name, bool extra_stage);
 
-  [[nodiscard]] std::vector<ReplayMetadata> ListReplays() const;
+  [[nodiscard]] std::vector<ReplayRecord> ListReplays() const;
   [[nodiscard]] bool LoadReplay(std::string_view path, StageId start_stage);
   [[nodiscard]] bool ConfigurePlayback(ConfigData &config,
                                        GameSession &session);
@@ -96,7 +116,7 @@ private:
   } saved_config_;
 
   [[nodiscard]] bool LoadArchive(std::string_view path,
-                                 ReplayMetadata *metadata,
+                                 std::optional<ReplayRecord> *record,
                                  ReplaySettings *settings,
                                  std::vector<ReplayStage> *stages) const;
 

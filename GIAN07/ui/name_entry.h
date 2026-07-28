@@ -3,12 +3,14 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string_view>
 
 #include "sys/input.h"
 
 enum class NameEntryResult : uint8_t { Editing, Confirmed, Cancelled };
+inline constexpr std::size_t kNameEntryLength = 8;
 
 class NameEntry {
 public:
@@ -22,7 +24,7 @@ private:
   [[nodiscard]] int SelectedCharacter() const;
   void Backspace();
 
-  std::array<char, 9> name_{};
+  std::array<char, kNameEntryLength + 1> name_{};
   int cursor_x_ = 0;
   int cursor_y_ = 0;
   int8_t key_repeat_ = 0;

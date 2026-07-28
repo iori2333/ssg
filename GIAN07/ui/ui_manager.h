@@ -22,9 +22,9 @@ public:
 
   // --- Game flow callbacks (injected by gameflow layer) ---
   std::function<void()> on_game_exit;
-  std::function<void()> on_game_exit_no_save;
   std::function<void()> on_game_restart;
   std::function<void()> on_game_continue;
+  std::function<void(bool)> on_game_over_exit;
 
   // --- Message window ---
   void InitMessageWindow(const WINDOW_LTRB &rect,
@@ -52,13 +52,12 @@ public:
   // --- Menu window access ---
   menu::MenuController &Main() { return main_window_; }
   menu::MenuController &Exit() { return exit_window_; }
-  menu::MenuController &Continue() { return continue_window_; }
-  menu::MenuController &GameOverSave() { return game_over_save_window_; }
+  menu::MenuController &GameOver() { return game_over_window_; }
 
   // --- Initialization ---
   void InitMain();
   void InitExit();
-  void InitContinue();
+  void InitGameOver();
 
   // --- Active menu on title screen ---
   menu::MenuController *ActiveMenu() { return &main_window_; }
@@ -78,11 +77,7 @@ private:
   std::unique_ptr<menu::IMenuNode> exit_menu_;
   menu::MenuController exit_window_;
 
-  // --- Continue dialog ---
-  std::unique_ptr<menu::IMenuNode> continue_menu_;
-  menu::MenuController continue_window_;
-
-  // --- GameOverSave dialog ---
-  std::unique_ptr<menu::IMenuNode> game_over_save_menu_;
-  menu::MenuController game_over_save_window_;
+  // --- Game over dialog ---
+  std::unique_ptr<menu::IMenuNode> game_over_menu_;
+  menu::MenuController game_over_window_;
 };

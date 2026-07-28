@@ -83,7 +83,6 @@ void PauseProc(bool & /*unused*/);
 void DemoProc(bool & /*unused*/); // Demo play
 
 void ReplayProcAll(bool & /*unused*/);
-void GameOverSaveProc(bool & /*unused*/);
 
 // West Project initialization section
 void SProjectProc(bool & /*unused*/); // West Project display operation section
@@ -164,17 +163,17 @@ bool GameInit(std::function<void(bool &)> next_proc) {
 
     if (GameFlow.current_state == GameState::Game) {
       GameFlow.ctx.ui.InitExit();
-      GameFlow.ctx.ui.InitContinue();
+      GameFlow.ctx.ui.InitGameOver();
     }
   }
 
   // Wire up UI callbacks into the gameflow layer
   GameFlow.ctx.ui.on_game_exit = [] { GameExit(); };
-  GameFlow.ctx.ui.on_game_exit_no_save = [] {
-    (void)GameFlow.ctx.score.StartNameRegistration(true);
-  };
   GameFlow.ctx.ui.on_game_restart = [] { GameRestart(); };
   GameFlow.ctx.ui.on_game_continue = [] { GameContinue(); };
+  GameFlow.ctx.ui.on_game_over_exit = [](bool save_replay) {
+    GameOverExit(save_replay);
+  };
 
   GrpBackend_SetClip(playfield::kClip);
   GameFlow.game_main = std::move(next_proc);
@@ -188,7 +187,7 @@ bool GameNextStage() {
 
   GameSTD_Init();
   GameFlow.ctx.player.PrepareNextStage();
-  GameFlow.ctx.replay.BeginStage(GameFlow.ctx.player, GameFlow.ctx.session);
+  GameFlow.ctx.records.BeginStage(GameFlow.ctx.player, GameFlow.ctx.session);
 
   if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
@@ -205,23 +204,25 @@ bool GameNextStage() {
 }
 
 bool GameNextReplayStage() {
-  if (!GameFlow.ctx.replay.AdvancePlaybackStage()) {
+  if (!GameFlow.ctx.records.AdvancePlaybackStage()) {
     return false;
   }
 
   GameSTD_Init();
-  GameFlow.ctx.replay.RestorePlaybackStage(GameFlow.ctx.player,
-                                           GameFlow.ctx.session);
+  GameFlow.ctx.records.RestorePlaybackStage(GameFlow.ctx.player,
+                                            GameFlow.ctx.session);
   if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
-    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                      GameFlow.ctx.session);
     return false;
   }
   if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
                                       GameFlow.ctx.enemies,
                                       GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
-    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                      GameFlow.ctx.session);
     return false;
   }
   return true;
@@ -229,28 +230,30 @@ bool GameNextReplayStage() {
 
 // Initialize a replay from the selected stage checkpoint.
 bool GameReplayInit(const char *path, StageId stage) {
-  if (!GameFlow.ctx.replay.LoadReplay(path, stage) ||
-      !GameFlow.ctx.replay.ConfigurePlayback(GameFlow.ctx.config,
-                                             GameFlow.ctx.session)) {
+  if (!GameFlow.ctx.records.LoadReplay(path, stage) ||
+      !GameFlow.ctx.records.ConfigurePlayback(GameFlow.ctx.config,
+                                              GameFlow.ctx.session)) {
     return false;
   }
 
   GrpBackend_Clear();
   Grp_Flip();
   GameSTD_Init();
-  GameFlow.ctx.replay.RestorePlaybackStage(GameFlow.ctx.player,
-                                           GameFlow.ctx.session);
+  GameFlow.ctx.records.RestorePlaybackStage(GameFlow.ctx.player,
+                                            GameFlow.ctx.session);
 
   if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
-    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                      GameFlow.ctx.session);
     return false;
   }
   if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
                                       GameFlow.ctx.enemies,
                                       GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
-    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                      GameFlow.ctx.session);
     return false;
   }
 
@@ -268,12 +271,12 @@ void ReplayProcAll(bool & /*unused*/) {
 
   for (int i = 0; i < speed; i++) {
     if (Key_Data != KEY_ESC) {
-      Key_Data = GameFlow.ctx.replay.NextInput();
+      Key_Data = GameFlow.ctx.records.NextInput();
     }
 
     if ((Key_Data & KEY_ESC) != 0) {
-      GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
-                                       GameFlow.ctx.session);
+      GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                        GameFlow.ctx.session);
       GameExit();
       return;
     }
@@ -281,15 +284,15 @@ void ReplayProcAll(bool & /*unused*/) {
     GameMove();
 
     if (GameFlow.current_state != GameState::ReplayAll) {
-      GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
-                                       GameFlow.ctx.session);
+      GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                        GameFlow.ctx.session);
       GameExit();
       return;
     }
 
-    if (!GameFlow.ctx.replay.IsPlaying()) {
-      GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
-                                       GameFlow.ctx.session);
+    if (!GameFlow.ctx.records.IsPlaying()) {
+      GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                        GameFlow.ctx.session);
       GameExit();
       return;
     }
@@ -326,7 +329,7 @@ bool DemoInit() {
   rnd_seed_set(Time_SteadyTicksMS());
   GameFlow.ctx.session.stage = static_cast<StageId>(rnd() % kRegularStageCount);
 
-  if (!GameFlow.ctx.replay.LoadStageDemo(GameFlow.ctx.session.stage)) {
+  if (!GameFlow.ctx.records.LoadStageDemo(GameFlow.ctx.session.stage)) {
     // DebugOut("Demo play data does not exist");
     return false;
   }
@@ -492,8 +495,13 @@ void GameOverInit() {
 
 // When continuing
 void GameContinue() {
+  if (GameFlow.ctx.player.Credits() == 0U) {
+    return;
+  }
+
   BGM_Resume();
   SndBackend_ResumeAll();
+  GameFlow.ctx.records.CancelRecording();
   GameFlow.ctx.player.ResetForContinue(GameFlow.ctx.config.game.player_stock);
 
   GameFlow.game_main = GameProc;
@@ -506,9 +514,42 @@ void GameContinue() {
   }
 }
 
+void GameOverExit(bool save_replay) {
+  const bool extra_stage = GameFlow.ctx.session.stage == StageId::Extra;
+  if (!save_replay) {
+    GameFlow.ctx.records.CancelRecording();
+  }
+  auto score = GameFlow.ctx.records.CaptureScore(GameFlow.ctx.player,
+                                                 GameFlow.ctx.session);
+  (void)GameFlow.ctx.score.StartNameRegistration(
+      std::move(score), true, [save_replay, extra_stage] {
+        if (save_replay && GameFlow.ctx.records.HasRecordedStages()) {
+          GameFlow.ctx.replay_scene.BeginSave(extra_stage,
+                                              [](bool) { (void)GameExit(); });
+        } else {
+          (void)GameExit();
+        }
+      });
+}
+
+void GameClearResults(bool extra_stage, bool change_music) {
+  auto score = GameFlow.ctx.records.CaptureScore(GameFlow.ctx.player,
+                                                 GameFlow.ctx.session);
+  (void)GameFlow.ctx.score.StartNameRegistration(
+      std::move(score), change_music, [extra_stage] {
+        if (GameFlow.ctx.records.HasRecordedStages()) {
+          GameFlow.ctx.replay_scene.BeginSave(extra_stage,
+                                              [](bool) { (void)GameExit(); });
+        } else {
+          GameFlow.ctx.records.CancelRecording();
+          (void)GameExit();
+        }
+      });
+}
+
 void GameProc(bool & /*unused*/) {
   // Record current input (always-on multi-stage or legacy single-stage)
-  GameFlow.ctx.replay.Record(Key_Data);
+  GameFlow.ctx.records.Record(Key_Data);
 
   if ((Key_Data & KEY_ESC) != 0) {
     // Show exit dialog
@@ -530,14 +571,14 @@ void GameProc(bool & /*unused*/) {
   //		count = 30;
   //	}
   GameMove();
-  GameFlow.ctx.replay.UpdateLastRecordedInput(Key_Data);
+  GameFlow.ctx.records.UpdateLastRecordedInput(Key_Data);
   if (GameFlow.current_state != GameState::Game) {
     return;
   }
 
   if (GameFlow.IsDraw()) {
     GameDraw();
-    if (GameFlow.ctx.replay.IsRecording()) {
+    if (GameFlow.ctx.records.IsRecording()) {
       constexpr PIXEL_LTRB rc = PIXEL_LTWH{288, 80, 24, 8};
       GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, rc);
     }
@@ -566,21 +607,9 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
       break;
     }
 
-    // Multi-stage recording: show Save Replay dialog
-    if (GameFlow.ctx.replay.HasRecordedStages()) {
-      GameFlow.ctx.ui.GameOverSave().Open({250, 200}, 0);
-      game_main = GameOverSaveProc;
-      current_state = GameState::GameOverSave;
-      return;
-    }
-
-    if (GameFlow.ctx.player.Credits() == 0) {
-      (void)ctx.score.StartNameRegistration(true);
-      // GameExit();
-      return; // Temporary
-    }
-
-    GameFlow.ctx.ui.Continue().Open({250, 200}, 0);
+    BGM_Pause();
+    SndBackend_PauseAll();
+    GameFlow.ctx.ui.GameOver().Open({200, 176}, 0);
     game_main = GameOverProc;
     current_state = GameState::GameOver;
     return;
@@ -592,23 +621,9 @@ void GameFlowManager::GameOverProc0(bool & /*unused*/) {
   }
 }
 
-// Save Replay dialog for Game Over
-void GameOverSaveProc(bool & /*unused*/) {
-  GameFlow.ctx.ui.GameOverSave().Tick(Key_Data);
-  if (GameFlow.current_state != GameState::GameOverSave) {
-    return;
-  }
-
-  if (GameFlow.IsDraw()) {
-    GameDraw();
-    GameFlow.ctx.ui.GameOverSave().Draw();
-    Grp_Flip();
-  }
-}
-
 // Game over
 void GameOverProc(bool & /*unused*/) {
-  GameFlow.ctx.ui.Continue().Tick(Key_Data);
+  GameFlow.ctx.ui.GameOver().Tick(Key_Data);
   if (GameFlow.current_state != GameState::GameOver) {
     GameFlow.ctx.effects.ClearTextEffects();
     return;
@@ -616,7 +631,7 @@ void GameOverProc(bool & /*unused*/) {
 
   if (GameFlow.IsDraw()) {
     GameDraw();
-    GameFlow.ctx.ui.Continue().Draw();
+    GameFlow.ctx.ui.GameOver().Draw();
     //	if(DemoplaySaveEnable){
     //		constexpr PIXEL_LTRB rc = PIXEL_LTWH{ 288, 80, 24, 8 };
     //		GrpSurface_Blit({ 128, 470 }, SURFACE_ID::SYSTEM, rc);
@@ -634,14 +649,15 @@ void DemoProc(bool & /*unused*/) {
   if (Key_Data != 0U) {
     Key_Data = KEY_ESC;
   } else {
-    Key_Data = GameFlow.ctx.replay.NextInput();
+    Key_Data = GameFlow.ctx.records.NextInput();
   }
 
   GameFlow.ctx.session.is_demoplay = true;
 
   // Exit immediately if ESC is pressed
   if ((Key_Data & KEY_ESC) != 0) {
-    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                      GameFlow.ctx.session);
     GameFlow.ctx.session.is_demoplay = false;
     GameExit();
     return;
@@ -650,8 +666,8 @@ void DemoProc(bool & /*unused*/) {
   GameMove();
 
   if (GameFlow.current_state != GameState::Demo) {
-    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
-                                     GameFlow.ctx.session); // Cleanup
+    GameFlow.ctx.records.StopPlayback(GameFlow.ctx.config,
+                                      GameFlow.ctx.session); // Cleanup
     GameFlow.ctx.session.is_demoplay = false;
     GameExit(); // Force exit (game over countermeasure)
     return;
@@ -775,7 +791,7 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       GameFlow.ctx.player.SetPower(255);
     }
 
-    GameFlow.ctx.replay.BeginRecording(
+    GameFlow.ctx.records.BeginRecording(
         GameFlow.ctx.player, GameFlow.ctx.session, GameFlow.ctx.config);
 
     if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
@@ -993,12 +1009,12 @@ void HandleStageTransition(stage::StageTransition transition) {
     return;
 
   case stage::StageTransition::NextStage:
-    if (GameFlow.ctx.replay.IsRecording()) {
-      GameFlow.ctx.replay.FlushStage();
+    if (GameFlow.ctx.records.IsRecording()) {
+      GameFlow.ctx.records.FlushStage();
       (void)GameNextStage();
       return;
     }
-    if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
+    if (GameFlow.ctx.records.IsMultiStagePlayback()) {
       (void)GameNextReplayStage();
       return;
     }
@@ -1006,7 +1022,7 @@ void HandleStageTransition(stage::StageTransition transition) {
     return;
 
   case stage::StageTransition::GameClear:
-    if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
+    if (GameFlow.ctx.records.IsMultiStagePlayback()) {
       return;
     }
     if (GameFlow.ctx.session.level != GameLevel::Easy) {
@@ -1014,27 +1030,20 @@ void HandleStageTransition(stage::StageTransition transition) {
           1U << PlayerTypeIndex(GameFlow.ctx.player.Type()));
     }
     SaveConfigFile(GameFlow.ctx.config);
-    if (GameFlow.ctx.replay.IsRecording()) {
-      GameFlow.ctx.replay.FlushStage();
-      GameFlow.ctx.replay_scene.BeginSave(
-          false, [](bool) { (void)GameFlow.ctx.ending.Enter(); });
-      return;
+    if (GameFlow.ctx.records.IsRecording()) {
+      GameFlow.ctx.records.FlushStage();
     }
     (void)GameFlow.ctx.ending.Enter();
     return;
 
   case stage::StageTransition::ExtraClear:
-    if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
+    if (GameFlow.ctx.records.IsMultiStagePlayback()) {
       return;
     }
-    if (GameFlow.ctx.replay.IsRecording()) {
-      GameFlow.ctx.replay.FlushStage();
-      GameFlow.ctx.replay_scene.BeginSave(true, [](bool) {
-        (void)GameFlow.ctx.score.StartNameRegistration(true);
-      });
-      return;
+    if (GameFlow.ctx.records.IsRecording()) {
+      GameFlow.ctx.records.FlushStage();
     }
-    (void)GameFlow.ctx.score.StartNameRegistration(true);
+    GameClearResults(true, true);
     return;
   }
 }
@@ -1082,7 +1091,7 @@ void GameDraw() {
       .star_counter = GameFlow.ctx.player.StarCounter(),
       .star_threshold = GameFlow.ctx.player.StarThreshold(),
       .rank = GameFlow.ctx.session.rank,
-      .level_name = GameFlow.ctx.session.DifficultyName(),
+      .level_name = GameLevelName(GameFlow.ctx.session.level),
       .practice_mode = GameFlow.ctx.config.game.practice_mode,
   };
 

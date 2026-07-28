@@ -19,7 +19,6 @@ enum class GameState {
   Pause,
   Demo,
   GameOver0,
-  GameOverSave,
   GameOver,
   Leaderboard,
   NameRegistration,

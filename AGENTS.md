@@ -47,14 +47,14 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
 | `GIAN07/app/` | Application entry point, subsystem initialization, and live display settings |
 | `GIAN07/data/` | Validated PBG/PAK ownership, music catalog data, and graphics/SFX loading adapters |
-| `GIAN07/gameflow/` | Application composition root, screen routing, and ending/music room/score scenes |
+| `GIAN07/gameflow/` | Application composition root, gameplay loop, and screen routing |
 | `GIAN07/gameplay/` | Shared gameplay rules, session state, rank policy, and playfield geometry |
 | `GIAN07/item/` | Collectible item entities, movement, pickup rules, and rendering |
 | `GIAN07/music/` | Music playback, track metadata, and replacement BGM pack selection |
-| `GIAN07/replay/` | Input recording, demo playback, and replay persistence |
+| `GIAN07/record/` | Score and Replay persistence, input recording, and Replay playback |
 | `GIAN07/settings/` | Persistent application configuration models and TOML serialization |
 | `GIAN07/stage/` | Validated SCL/MAP parsing, stage asset installation, timeline execution, and background scrolling |
-| `GIAN07/ui/` | Application-wide UI ownership: menu controllers, menu definitions, and message windows |
+| `GIAN07/ui/` | Application-wide UI ownership: scenes, menus, HUD, and message windows |
 | `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
 | `game/sys/` | System wrappers – bit streams, buffer, file, path, thread, log, input |
 | `game/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |

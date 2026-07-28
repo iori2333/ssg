@@ -583,7 +583,10 @@ std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg) {
 
   ch.push_back(std::make_unique<ActionNode>(
       "Score", "スコアの表示をします", [](MenuController &) {
-        (void)GameFlow.ctx.score.ShowLeaderboard();
+        const auto difficulty = GameFlow.ctx.session.stage == StageId::Extra
+                                    ? GameLevel::Extra
+                                    : GameFlow.ctx.session.level;
+        (void)GameFlow.ctx.score.ShowLeaderboard(difficulty);
         return true;
       }));
 

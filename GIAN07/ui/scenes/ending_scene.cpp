@@ -1,4 +1,4 @@
-/// Ending scene processing.
+/// Ending cinematic UI scene.
 
 #include <utility>
 
@@ -312,7 +312,7 @@ void EndingScene::SCLDecode() {
     case stage::SceneOpcode::End:
       grp_info.bWantDisp = false;
       stf_task.bWantDisp = false;
-      (void)GameFlow.ctx.score.StartNameRegistration(false);
+      GameClearResults(false, false);
       return;
 
     case stage::SceneOpcode::Music:
