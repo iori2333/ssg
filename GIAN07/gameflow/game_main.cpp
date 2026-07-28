@@ -188,6 +188,7 @@ bool GameNextStage() {
 
   GameSTD_Init();
   GameFlow.ctx.player.PrepareNextStage();
+  GameFlow.ctx.replay.BeginStage(GameFlow.ctx.player, GameFlow.ctx.session);
 
   if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
@@ -203,42 +204,54 @@ bool GameNextStage() {
   return true;
 }
 
-// Initialize for multi-stage replay
-bool GameReplayInitAll(const char *fn) {
-  GameFlow.ctx.player.Initialize(GameFlow.ctx.config.game.player_stock,
-                                 GameFlow.ctx.config.game.bomb_stock);
-  if (!GameFlow.ctx.replay.LoadReplay(fn)) {
+bool GameNextReplayStage() {
+  if (!GameFlow.ctx.replay.AdvancePlaybackStage()) {
     return false;
   }
 
-  const auto first_stage = GameFlow.ctx.replay.FirstPlaybackStage();
-  if (!first_stage) {
-    GameFlow.ctx.replay.StopPlayback();
-    return false;
-  }
-  GameFlow.ctx.session.stage = first_stage.value();
-
-  GameFlow.ctx.session.ResetRank();
-
-  GrpBackend_Clear();
-  Grp_Flip();
   GameSTD_Init();
-
+  GameFlow.ctx.replay.RestorePlaybackStage(GameFlow.ctx.player,
+                                           GameFlow.ctx.session);
   if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
-    GameFlow.ctx.replay.StopPlayback();
+    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
     return false;
   }
   if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
                                       GameFlow.ctx.enemies,
                                       GameFlow.ctx.stage)) {
     DebugOut("MAP.PAK が破壊されています");
-    GameFlow.ctx.replay.StopPlayback();
+    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    return false;
+  }
+  return true;
+}
+
+// Initialize a replay from the selected stage checkpoint.
+bool GameReplayInit(const char *path, StageId stage) {
+  if (!GameFlow.ctx.replay.LoadReplay(path, stage) ||
+      !GameFlow.ctx.replay.ConfigurePlayback(GameFlow.ctx.config,
+                                             GameFlow.ctx.session)) {
     return false;
   }
 
-  if (GameFlow.ctx.session.stage == StageId::Extra) {
-    GameFlow.ctx.player.SetCredits(0);
+  GrpBackend_Clear();
+  Grp_Flip();
+  GameSTD_Init();
+  GameFlow.ctx.replay.RestorePlaybackStage(GameFlow.ctx.player,
+                                           GameFlow.ctx.session);
+
+  if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
+    DebugOut("IMAGES.PAK が破壊されています");
+    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    return false;
+  }
+  if (!GameFlow.ctx.stage_loader.Load(GameFlow.ctx.session.stage,
+                                      GameFlow.ctx.enemies,
+                                      GameFlow.ctx.stage)) {
+    DebugOut("MAP.PAK が破壊されています");
+    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
+    return false;
   }
 
   GameFlow.current_state = GameState::ReplayAll;
@@ -259,7 +272,8 @@ void ReplayProcAll(bool & /*unused*/) {
     }
 
     if ((Key_Data & KEY_ESC) != 0) {
-      GameFlow.ctx.replay.StopPlayback();
+      GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
+                                       GameFlow.ctx.session);
       GameExit();
       return;
     }
@@ -267,13 +281,15 @@ void ReplayProcAll(bool & /*unused*/) {
     GameMove();
 
     if (GameFlow.current_state != GameState::ReplayAll) {
-      GameFlow.ctx.replay.StopPlayback();
+      GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
+                                       GameFlow.ctx.session);
       GameExit();
       return;
     }
 
     if (!GameFlow.ctx.replay.IsPlaying()) {
-      GameFlow.ctx.replay.StopPlayback();
+      GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
+                                       GameFlow.ctx.session);
       GameExit();
       return;
     }
@@ -625,7 +641,7 @@ void DemoProc(bool & /*unused*/) {
 
   // Exit immediately if ESC is pressed
   if ((Key_Data & KEY_ESC) != 0) {
-    GameFlow.ctx.replay.StopPlayback();
+    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config, GameFlow.ctx.session);
     GameFlow.ctx.session.is_demoplay = false;
     GameExit();
     return;
@@ -634,7 +650,8 @@ void DemoProc(bool & /*unused*/) {
   GameMove();
 
   if (GameFlow.current_state != GameState::Demo) {
-    GameFlow.ctx.replay.StopPlayback(); // Cleanup
+    GameFlow.ctx.replay.StopPlayback(GameFlow.ctx.config,
+                                     GameFlow.ctx.session); // Cleanup
     GameFlow.ctx.session.is_demoplay = false;
     GameExit(); // Force exit (game over countermeasure)
     return;
@@ -758,7 +775,8 @@ void GameFlowManager::WeaponSelectProc(bool & /*unused*/) {
       GameFlow.ctx.player.SetPower(255);
     }
 
-    GameFlow.ctx.replay.BeginRecording();
+    GameFlow.ctx.replay.BeginRecording(
+        GameFlow.ctx.player, GameFlow.ctx.session, GameFlow.ctx.config);
 
     if (!GameFlow.ctx.graphics.LoadStage(GameFlow.ctx.session.stage)) {
       DebugOut("IMAGES.PAK が破壊されています");
@@ -913,12 +931,6 @@ void GameFlowManager::TitleProc(bool &quit) {
   GameFlow.ctx.ui.ShowMenuHelp();
   GameFlow.ctx.ui.TickMessageWindow();
 
-  // Start pending replay after menu closes
-  if (auto fn = GameFlow.ctx.replay.TakePendingPlayback(); !fn.empty()) {
-    GameReplayInitAll(fn.c_str());
-    return;
-  }
-
   if (current_state != GameState::Title) {
     return;
   }
@@ -987,20 +999,13 @@ void HandleStageTransition(stage::StageTransition transition) {
       return;
     }
     if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
-      if (GameFlow.ctx.session.stage <
-          GameFlow.ctx.replay.PlaybackLastStage()) {
-        (void)GameNextStage();
-      }
+      (void)GameNextReplayStage();
       return;
     }
     (void)GameNextStage();
     return;
 
   case stage::StageTransition::GameClear:
-    if (GameFlow.ctx.replay.IsRecording()) {
-      GameFlow.ctx.replay.FlushStage();
-      GameFlow.ctx.replay.SaveReplay(false);
-    }
     if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
       return;
     }
@@ -1009,17 +1014,27 @@ void HandleStageTransition(stage::StageTransition transition) {
           1U << PlayerTypeIndex(GameFlow.ctx.player.Type()));
     }
     SaveConfigFile(GameFlow.ctx.config);
+    if (GameFlow.ctx.replay.IsRecording()) {
+      GameFlow.ctx.replay.FlushStage();
+      GameFlow.ctx.replay_scene.BeginSave(
+          false, [](bool) { (void)GameFlow.ctx.ending.Enter(); });
+      return;
+    }
     (void)GameFlow.ctx.ending.Enter();
     return;
 
   case stage::StageTransition::ExtraClear:
+    if (GameFlow.ctx.replay.IsMultiStagePlayback()) {
+      return;
+    }
     if (GameFlow.ctx.replay.IsRecording()) {
       GameFlow.ctx.replay.FlushStage();
-      GameFlow.ctx.replay.SaveReplay(true);
+      GameFlow.ctx.replay_scene.BeginSave(true, [](bool) {
+        (void)GameFlow.ctx.score.StartNameRegistration(true);
+      });
+      return;
     }
-    if (!GameFlow.ctx.replay.IsMultiStagePlayback()) {
-      (void)GameFlow.ctx.score.StartNameRegistration(true);
-    }
+    (void)GameFlow.ctx.score.StartNameRegistration(true);
     return;
   }
 }

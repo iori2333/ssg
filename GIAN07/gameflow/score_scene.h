@@ -14,6 +14,7 @@
 
 #include "gameplay/game_rules.h"
 #include "sys/bit_stream.h"
+#include "ui/name_entry.h"
 
 inline constexpr std::size_t kScoreNameLength = 9;
 inline constexpr std::size_t kScoreRankCount = 5;
@@ -60,7 +61,6 @@ private:
   static constexpr uint64_t kScoreMask = 0xb97eb2c6542d3a41;
 
   [[nodiscard]] GameLevel CurrentLevel() const;
-  [[nodiscard]] int SelectedCharacter() const;
   void DrawScores();
 
   [[nodiscard]] uint8_t BuildRows(ScoreEntry *entry, GameLevel difficulty);
@@ -85,11 +85,7 @@ private:
   uint8_t current_rank_ = 0;
   uint8_t current_difficulty_ = 0;
   bool input_locked_ = false;
-  int cursor_x_ = 0;
-  int cursor_y_ = 0;
-  int8_t key_repeat_ = 0;
-  uint8_t cursor_frame_ = 0;
-  uint8_t elapsed_ = 0;
+  NameEntry name_entry_;
 };
 
 template <std::unsigned_integral T>

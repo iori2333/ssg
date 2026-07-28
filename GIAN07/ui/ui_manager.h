@@ -7,15 +7,14 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <string>
 #include <string_view>
-#include <vector>
 
-#include "gameplay/boss_health_gauge.h"
-#include "gameplay/gameplay_hud.h"
 #include "menu/menu_controller.h"
 #include "menu/menu_tree.h"
 #include "msg_window/msg_window.h"
+
+#include "gameplay/boss_health_gauge.h"
+#include "gameplay/gameplay_hud.h"
 
 class UIManager {
 public:
@@ -65,9 +64,6 @@ public:
   menu::MenuController *ActiveMenu() { return &main_window_; }
   void ShowMenuHelp();
 
-  // --- Replay file storage (for inline list) ---
-  std::vector<std::string> &replay_files_storage() { return replay_files_; }
-
 private:
   // --- Message window ---
   MsgWindow msg_window_;
@@ -89,7 +85,4 @@ private:
   // --- GameOverSave dialog ---
   std::unique_ptr<menu::IMenuNode> game_over_save_menu_;
   menu::MenuController game_over_save_window_;
-
-  // --- Replay files storage ---
-  std::vector<std::string> replay_files_;
 };

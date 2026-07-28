@@ -6,6 +6,7 @@
 
 #include "ending_scene.h"
 #include "music_room_scene.h"
+#include "replay_scene.h"
 #include "score_scene.h"
 
 #include "bullet/bullet_manager.h"
@@ -42,6 +43,7 @@ struct GameContext {
   MusicRoomScene music_room;
   ScoreScene score;
   ReplaySystem replay{data};
+  ReplayScene replay_scene{replay};
   UIManager ui;
 
   ConfigData &config = AppConfig();

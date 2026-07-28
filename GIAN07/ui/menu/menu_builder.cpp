@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-#include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_misc.h>
 
 #include "menu_builder.h"
@@ -567,32 +566,11 @@ std::unique_ptr<IMenuNode> BuildMainMenuTree(ConfigData &cfg) {
         return true;
       }));
 
-  {
-    auto &files = GameFlow.ctx.ui.replay_files_storage();
-    files.clear();
-    SDL_EnumerateDirectory(
-        ".",
-        [](void *ctx, const char *, const char *name) {
-          if (strstr(name, "replay_") == name && strstr(name, ".DAT")) {
-            auto &f = *static_cast<std::vector<std::string> *>(ctx);
-            f.emplace_back(name);
-          }
-          return SDL_ENUM_CONTINUE;
-        },
-        &files);
-    std::ranges::sort(files, std::greater{});
-  }
-  auto replay_node = std::make_unique<ListNode>(
-      "Replay", "リプレイファイルの管理",
-      [] { return GameFlow.ctx.ui.replay_files_storage().size(); },
-      [](size_t i) { return GameFlow.ctx.ui.replay_files_storage()[i]; },
-      [](size_t i) -> bool {
-        GameFlow.ctx.replay.QueuePlayback(
-            GameFlow.ctx.ui.replay_files_storage()[i]);
-        return false;
-      },
-      -1, true);
-  ch.push_back(std::move(replay_node));
+  ch.push_back(std::make_unique<ActionNode>(
+      "Replay", "リプレイファイルの管理", [](MenuController &) {
+        (void)GameFlow.ctx.replay_scene.EnterBrowser();
+        return true;
+      }));
 
   auto config =
       std::make_unique<EntryNode>("Config", "各種設定を変更します",

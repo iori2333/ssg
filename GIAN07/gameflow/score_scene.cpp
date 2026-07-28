@@ -10,11 +10,11 @@
 #include <ranges>
 #include <utility>
 
+#include "game_main.h"
+#include "gameflow_manager.h"
 #include "score_scene.h"
 
 #include "audio/snd.h"
-#include "gameflow/game_main.h"
-#include "gameflow/gameflow_manager.h"
 #include "gameplay/game_rules.h"
 #include "gfx/constants.h"
 #include "gfx/font_uty.h"
@@ -30,10 +30,6 @@ constexpr char ScoreFileName[] = "秋霜SC.DAT"; // Score data file name
 namespace {
 constexpr char kDifficultyNames[5][8] = {"Easy", "Normal", "Hard", "Lunatic",
                                          "Extra"};
-constexpr int kBackspace = 0;
-constexpr int kFinish = -1;
-constexpr int kInvalid = -2;
-constexpr int8_t kEndWait = -1;
 } // namespace
 
 GameLevel ScoreScene::CurrentLevel() const {
@@ -152,31 +148,6 @@ void ScoreScene::DrawScores() {
   }
 }
 
-int ScoreScene::SelectedCharacter() const {
-  if (cursor_y_ == 0) {
-    return 'A' + (cursor_x_ % 26);
-  }
-  if (cursor_y_ == 1) {
-    return 'a' + (cursor_x_ % 26);
-  }
-
-  if (cursor_x_ >= 0 && cursor_x_ <= 9) {
-    return '0' + cursor_x_;
-  }
-  constexpr std::array<char, 11> symbols = {'!', '?', '#', '\\', '<', '>',
-                                            '=', ',', '+', '-',  ' '};
-  if (cursor_x_ >= 10 && cursor_x_ <= 20) {
-    return symbols[cursor_x_ - 10];
-  }
-  if (cursor_x_ == 22) {
-    return kBackspace;
-  }
-  if (cursor_x_ == 24) {
-    return kFinish;
-  }
-  return kInvalid;
-}
-
 bool ScoreScene::StartNameRegistration(bool change_music) {
   current_entry_ = {};
   current_entry_.score = GameFlow.ctx.player.Score();
@@ -205,12 +176,7 @@ bool ScoreScene::StartNameRegistration(bool change_music) {
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  input_locked_ = Key_Data != 0U;
-  cursor_x_ = 0;
-  cursor_y_ = 0;
-  key_repeat_ = 0;
-  cursor_frame_ = 0;
-  elapsed_ = 0;
+  name_entry_.Begin(false);
   GameFlow.game_main = [](bool &q) {
     GameFlow.ctx.score.UpdateNameRegistration(q);
   };
@@ -223,98 +189,17 @@ bool ScoreScene::StartNameRegistration(bool change_music) {
 }
 
 void ScoreScene::UpdateNameRegistration(bool & /*unused*/) {
+  const auto result = name_entry_.Update(Key_Data);
   auto &name = rows_[current_rank_ - 1].name;
-  bool finish = false;
+  std::ranges::fill(name, '\0');
+  const auto entered_name = name_entry_.Name();
+  std::ranges::copy(entered_name, name);
 
-  if (key_repeat_ == 0) {
-    key_repeat_ = 8;
-    switch (Key_Data) {
-    case KEY_UP:
-      cursor_y_ = (cursor_y_ + 2) % 3;
-      Snd_SEPlay(SfxId::Select);
-      break;
-    case KEY_DOWN:
-      cursor_y_ = (cursor_y_ + 1) % 3;
-      Snd_SEPlay(SfxId::Select);
-      break;
-    case KEY_LEFT:
-      cursor_x_ = cursor_y_ == 2 && cursor_x_ > 20 ? (cursor_x_ - 2) % 26
-                                                   : (cursor_x_ + 25) % 26;
-      Snd_SEPlay(SfxId::Select);
-      break;
-    case KEY_RIGHT:
-      cursor_x_ = cursor_y_ == 2 && cursor_x_ >= 20 ? (cursor_x_ + 2) % 26
-                                                    : (cursor_x_ + 1) % 26;
-      Snd_SEPlay(SfxId::Select);
-      break;
-    case KEY_BOMB: {
-      Snd_SEPlay(SfxId::Cancel);
-      const auto length = std::strlen(name);
-      if (length != 0) {
-        name[length - 1] = '\0';
-      }
-      break;
-    }
-    case KEY_TAMA:
-    case KEY_RETURN: {
-      if (input_locked_) {
-        break;
-      }
-      Snd_SEPlay(SfxId::Select);
-      const auto selected = SelectedCharacter();
-      if (selected == kFinish || selected == kInvalid) {
-        finish = true;
-      } else if (selected == kBackspace) {
-        const auto length = std::strlen(name);
-        if (length != 0) {
-          name[length - 1] = '\0';
-        }
-      } else if (std::strlen(name) == kScoreNameLength - 1) {
-        cursor_x_ = 24;
-        cursor_y_ = 2;
-      } else {
-        const auto length = std::strlen(name);
-        name[length] = selected;
-        name[length + 1] = '\0';
-      }
-      break;
-    }
-    case 0:
-      input_locked_ = false;
-      break;
-    }
-
-    if (cursor_x_ > 20 && cursor_y_ == 2) {
-      cursor_x_ &= ~1;
-    }
-  } else if (key_repeat_ != kEndWait) {
-    key_repeat_--;
-  }
-
-  if (finish) {
-    if (std::strlen(name) == 0) {
-      std::copy_n("Vivit!", 7, name);
-    }
-    name[kScoreNameLength - 1] = '\0';
+  if (result == NameEntryResult::Confirmed) {
     std::copy_n(name, kScoreNameLength, current_entry_.name);
     (void)Save(current_entry_, CurrentLevel());
-    key_repeat_ = kEndWait;
-  }
-
-  if (key_repeat_ == kEndWait) {
-    if (Key_Data == 0) {
-      cursor_x_ = 0;
-      cursor_y_ = 0;
-      key_repeat_ = 0;
-      (void)GameExit();
-      return;
-    }
-  } else {
-    if (Key_Data == 0) {
-      key_repeat_ = 0;
-    }
-    cursor_frame_ = (cursor_frame_ + 1) % 24;
-    elapsed_++;
+    (void)GameExit();
+    return;
   }
 
   GrpBackend_Clear();
@@ -324,28 +209,10 @@ void ScoreScene::UpdateNameRegistration(bool & /*unused*/) {
   auto gy = rows_[current_rank_ - 1].y >> 6;
   GrpGeom->DrawBox(gx, gy, (gx + 400), (gy + 32));
 
-  if (elapsed_ % 64 > 32) {
-    GrpGeom->SetColor({4, 0, 0});
-    const auto length = std::min(std::strlen(name), kScoreNameLength - 2);
-    gx += ((length * 16) + 88);
-    gy += 4;
-    GrpGeom->DrawBox(gx, gy, (gx + 14), (gy + 16));
-  }
   GrpGeom->Unlock();
 
-  constexpr auto sid = SURFACE_ID::NAMEREG;
-  GrpSurface_Blit({120, 0}, sid, {0, 0, 400, 64});
   DrawScores();
-  GrpSurface_Blit({112, 420}, sid, {0, 432, 416, 480});
-
-  PIXEL_LTRB cursor_src;
-  if (cursor_x_ >= 20 && cursor_y_ == 2) {
-    cursor_src = PIXEL_LTWH{432, (432 + ((cursor_frame_ >> 3) << 4)), 32, 16};
-  } else {
-    cursor_src = PIXEL_LTWH{416, (432 + ((cursor_frame_ >> 3) << 4)), 16, 16};
-  }
-  GrpSurface_Blit({(112 + (cursor_x_ << 4)), (420 + (cursor_y_ << 4))}, sid,
-                  cursor_src);
+  name_entry_.Draw(gx + 88, gy + 4);
   Grp_Flip();
 }
 

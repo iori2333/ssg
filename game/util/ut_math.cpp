@@ -55,6 +55,10 @@ uint8_t atan8(int x, int y) {
 
 void rnd_seed_set(uint32_t val) { g_rng.seed(val); }
 
+RandomState rnd_state() { return g_rng.state(); }
+
+void rnd_state_restore(RandomState state) { g_rng.restore(state); }
+
 int32_t isqrt(int32_t s) {
   // Near-constant-time integer square root algorithm, adapted from
   //

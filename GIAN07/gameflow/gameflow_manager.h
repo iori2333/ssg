@@ -26,6 +26,8 @@ enum class GameState {
   Ending,
   SProject,
   ReplayAll,
+  ReplayBrowser,
+  ReplayNameEntry,
   MusicRoom,
   External,      // External specification via GameInit(), etc.
   BulletGallery, // Debug bullet gallery

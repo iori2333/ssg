@@ -1,105 +1,116 @@
-///
-/// ReplaySystem - input recording, demo playback, and replay persistence
-///
+/// Replay recording, catalog, persistence, and playback.
 
 #pragma once
 
-#include <array>
+#include <cstddef>
 #include <cstdint>
-#include <optional>
 #include <string>
-#include <utility>
+#include <string_view>
 #include <vector>
 
-#include "data/game_data.h"
 #include "gameplay/game_rules.h"
+#include "player/player.h"
 #include "sys/input.h"
+#include "util/ut_math.h"
+
+namespace data {
+class GameData;
+}
+
+struct ConfigData;
+struct GameSession;
 
 inline constexpr auto kReplayBufferCapacity = 60 * 60 * 30;
 inline constexpr auto kReplayStageCapacity = 6;
+inline constexpr auto kReplayNameLength = 8;
 
-struct ReplayConfig {
-  uint8_t game_level;
-  uint8_t player_stock;
-  uint8_t bomb_stock;
-  uint8_t padding_1[5] = {0};
-  uint8_t input_flags;
-  uint8_t padding_2[15] = {0};
+struct ReplayMetadata {
+  std::string path;
+  std::string name;
+  int64_t created_at = 0;
+  GameLevel difficulty = GameLevel::Normal;
+  PlayerType player_type = PlayerType::Wide;
+  std::vector<StageId> stages;
 };
-static_assert(sizeof(ReplayConfig) == 24);
-
-struct ReplayState {
-  uint32_t random_seed;
-  uint32_t frame_count;
-  ReplayConfig config;
-  uint8_t power;
-  uint8_t weapon;
-};
-static_assert(sizeof(ReplayState) == 36);
-
-struct ReplayArchiveHeader {
-  uint32_t random_seed;
-  uint8_t stage_count;
-  ReplayConfig config;
-  uint8_t power;
-  uint8_t weapon;
-  uint8_t stages[kReplayStageCapacity];
-  uint32_t frame_counts[kReplayStageCapacity];
-};
-static_assert(sizeof(ReplayArchiveHeader) == 64);
 
 class ReplaySystem {
 public:
   explicit ReplaySystem(const data::GameData &data) : data_(data) {}
 
-  void BeginRecording();
+  void BeginRecording(const Player &player, const GameSession &session,
+                      const ConfigData &config);
+  void BeginStage(const Player &player, const GameSession &session);
   [[nodiscard]] bool HasRecordedStages() const;
   void FlushStage();
   void Record(INPUT_BITS input);
   void UpdateLastRecordedInput(INPUT_BITS input);
+  void CancelRecording();
+  [[nodiscard]] bool SaveReplay(std::string_view name, bool extra_stage);
+
+  [[nodiscard]] std::vector<ReplayMetadata> ListReplays() const;
+  [[nodiscard]] bool LoadReplay(std::string_view path, StageId start_stage);
+  [[nodiscard]] bool ConfigurePlayback(ConfigData &config,
+                                       GameSession &session);
+  void RestorePlaybackStage(Player &player, GameSession &session);
+  [[nodiscard]] bool HasNextPlaybackStage() const;
+  [[nodiscard]] bool AdvancePlaybackStage();
+  [[nodiscard]] StageId CurrentPlaybackStage() const;
 
   [[nodiscard]] bool LoadStageDemo(StageId stage);
-  void SaveReplay(bool extra_stage);
-  [[nodiscard]] bool LoadReplay(const char *path);
-
   [[nodiscard]] INPUT_BITS NextInput();
-  void StopPlayback();
-  void CancelRecording() { recording_ = false; }
+  void StopPlayback(ConfigData &config, GameSession &session);
   [[nodiscard]] bool IsPlaying() const { return playing_; }
   [[nodiscard]] bool IsRecording() const { return recording_; }
   [[nodiscard]] bool IsMultiStagePlayback() const {
     return multi_stage_playback_;
   }
-  [[nodiscard]] StageId PlaybackLastStage() const {
-    return playback_last_stage_;
-  }
-  [[nodiscard]] std::optional<StageId> FirstPlaybackStage() const;
-
-  void QueuePlayback(std::string path) { pending_playback_ = std::move(path); }
-  [[nodiscard]] std::string TakePendingPlayback();
 
 private:
+  struct ReplaySettings {
+    GameLevel difficulty = GameLevel::Normal;
+    PracticeMode practice_mode = PracticeMode::Off;
+    uint8_t player_stock = 0;
+    uint8_t bomb_stock = 0;
+    uint8_t input_flags = 0;
+  };
+
+  struct StageCheckpoint {
+    StageId stage = StageId::Stage1;
+    uint32_t frame_count = 0;
+    RandomState rng{};
+    PlayerProgress player{};
+    int32_t rank = 0;
+  };
+
+  struct ReplayStage {
+    StageCheckpoint checkpoint;
+    std::vector<INPUT_BITS> inputs;
+  };
+
   struct SavedConfig {
+    GameLevel difficulty = GameLevel::Normal;
+    PracticeMode practice_mode = PracticeMode::Off;
     uint8_t player_stock = 0;
     uint8_t bomb_stock = 0;
     uint8_t input_flags = 0;
   } saved_config_;
 
-  [[nodiscard]] bool PreparePlayback();
+  [[nodiscard]] bool LoadArchive(std::string_view path,
+                                 ReplayMetadata *metadata,
+                                 ReplaySettings *settings,
+                                 std::vector<ReplayStage> *stages) const;
 
   const data::GameData &data_;
+  ReplaySettings settings_{};
+  StageCheckpoint current_checkpoint_{};
+  bool has_current_checkpoint_ = false;
   bool playing_ = false;
   bool recording_ = false;
   bool multi_stage_playback_ = false;
-  ReplayArchiveHeader archive_header_{};
-  StageId playback_last_stage_ = StageId::Stage1;
-  std::string pending_playback_;
-  ReplayState state_{};
-  std::array<INPUT_BITS, kReplayBufferCapacity> input_buffer_{};
-  uint32_t frame_cursor_ = 0;
-  std::vector<std::vector<INPUT_BITS>> recorded_stages_;
-  uint8_t recorded_stage_count_ = 0;
-  std::array<uint8_t, kReplayStageCapacity> recorded_stage_ids_{};
-  std::array<uint32_t, kReplayStageCapacity> recorded_stage_frames_{};
-  std::vector<INPUT_BITS> playback_buffer_;
+  bool config_overridden_ = false;
+  std::vector<INPUT_BITS> current_inputs_;
+  std::vector<ReplayStage> recorded_stages_;
+  std::vector<ReplayStage> playback_stages_;
+  std::size_t playback_stage_index_ = 0;
+  std::size_t frame_cursor_ = 0;
 };

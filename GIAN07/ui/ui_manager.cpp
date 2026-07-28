@@ -3,6 +3,7 @@
 ///
 
 #include <utility>
+#include <vector>
 
 #include "menu/menu_builder.h"
 #include "ui_manager.h"
@@ -15,8 +16,8 @@ UIManager::UIManager() {
   std::vector<std::unique_ptr<menu::IMenuNode>> exit_items;
   exit_items.push_back(std::make_unique<menu::ActionNode>(
       "  Save && Exit  ", "", [](menu::MenuController &) {
-        GameFlow.ctx.replay.SaveReplay(false);
-        GameFlow.ctx.ui.on_game_exit();
+        GameFlow.ctx.replay_scene.BeginSave(
+            false, [](bool) { GameFlow.ctx.ui.on_game_exit(); });
         return false;
       }));
   exit_items.push_back(std::make_unique<menu::ActionNode>(
@@ -50,8 +51,8 @@ UIManager::UIManager() {
   std::vector<std::unique_ptr<menu::IMenuNode>> game_over_save_items;
   game_over_save_items.push_back(std::make_unique<menu::ActionNode>(
       "   お っ け ～ ", "", [](menu::MenuController &) {
-        GameFlow.ctx.replay.SaveReplay(false);
-        GameFlow.ctx.ui.on_game_exit();
+        GameFlow.ctx.replay_scene.BeginSave(
+            false, [](bool) { GameFlow.ctx.ui.on_game_exit(); });
         return false;
       }));
   game_over_save_items.push_back(std::make_unique<menu::ActionNode>(

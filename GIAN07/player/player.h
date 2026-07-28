@@ -51,6 +51,28 @@ class StageSession;
 // [ Player class ]
 enum class PlayerReward : uint8_t { NONE, BOMB, EXTEND };
 
+struct PlayerProgress {
+  int64_t score = 0;
+  int64_t pending_score = 0;
+  uint32_t graze_sum = 0;
+  int32_t pending_graze_score = 0;
+  uint32_t star_counter = 0;
+  uint32_t star_threshold = 0;
+  uint16_t graze_count = 0;
+  uint16_t graze_wait = 0;
+  uint16_t power_progress = 0;
+  uint16_t miss_count = 0;
+  uint16_t bomb_used = 0;
+  uint16_t deathbomb_count = 0;
+  uint8_t player_type = 0;
+  uint8_t power = 0;
+  uint8_t bombs = 0;
+  uint8_t lives = 0;
+  uint8_t credits = 0;
+  uint8_t star_extend_count = 0;
+  uint8_t initial_bomb_stock = 0;
+};
+
 class Player {
   enum class LifeState : uint8_t { Active, DeathbombWindow, Respawning };
   enum class BombTrigger : uint8_t { Manual, Deathbomb };
@@ -142,8 +164,8 @@ public:
   void PickupBomb() { bomb_++; }
   void PickupExtend() { left_++; }
   [[nodiscard]] PlayerReward AddStar(uint32_t n);
-  void ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
-                        uint8_t bombs);
+  [[nodiscard]] PlayerProgress CaptureProgress() const;
+  void RestoreProgress(const PlayerProgress &progress);
 
   // Loadouts emit projectiles through the owning Player.
   void SpawnShot(const PlayerShotSpawnInfo &si);

@@ -624,10 +624,52 @@ void Player::ResetForContinue(int player_stock) {
   star_extend_count_ = 0;
 }
 
-void Player::ApplyReplayState(uint8_t weapon, uint8_t exp, uint8_t left,
-                              uint8_t bombs) {
-  SelectType(static_cast<PlayerType>(std::min<uint8_t>(weapon, 2)));
-  exp_ = exp;
-  left_ = left;
-  bomb_ = bombs;
+PlayerProgress Player::CaptureProgress() const {
+  return {
+      .score = score_,
+      .pending_score = dscore_,
+      .graze_sum = evade_sum_,
+      .pending_graze_score = evadesc_,
+      .star_counter = star_counter_,
+      .star_threshold = star_threshold_,
+      .graze_count = evade_,
+      .graze_wait = evade_c_,
+      .power_progress = exp2_,
+      .miss_count = miss_count_,
+      .bomb_used = bomb_used_,
+      .deathbomb_count = deathbomb_count_,
+      .player_type = std::to_underlying(Type()),
+      .power = exp_,
+      .bombs = bomb_,
+      .lives = left_,
+      .credits = credit_,
+      .star_extend_count = star_extend_count_,
+      .initial_bomb_stock = initial_bomb_stock_,
+  };
+}
+
+void Player::RestoreProgress(const PlayerProgress &progress) {
+  SelectType(
+      static_cast<PlayerType>(std::min<uint8_t>(progress.player_type, 2)));
+  PrepareNextStage();
+
+  score_ = progress.score;
+  dscore_ = progress.pending_score;
+  evade_sum_ = progress.graze_sum;
+  evadesc_ = progress.pending_graze_score;
+  star_counter_ = progress.star_counter;
+  star_threshold_ = progress.star_threshold;
+  evade_ = progress.graze_count;
+  evade_c_ = progress.graze_wait;
+  exp2_ = progress.power_progress;
+  miss_count_ = progress.miss_count;
+  bomb_used_ = progress.bomb_used;
+  deathbomb_count_ = progress.deathbomb_count;
+  exp_ = progress.power;
+  bomb_ = progress.bombs;
+  left_ = progress.lives;
+  credit_ = progress.credits;
+  star_extend_count_ = progress.star_extend_count;
+  initial_bomb_stock_ = progress.initial_bomb_stock;
+  game_over_ = false;
 }

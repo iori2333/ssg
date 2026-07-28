@@ -6,6 +6,8 @@
 
 #include <functional>
 
+#include "gameplay/game_rules.h"
+
 [[nodiscard]] bool
 GameInit(std::function<void(bool &)> next_proc); // Initialize the game
 void GameRestart(); // Restart the game (from ESC exit)
@@ -13,8 +15,7 @@ void GameRestart(); // Restart the game (from ESC exit)
 void GameOverInit(); // Game over pre-processing
 void GameContinue(); // Perform continue
 
-[[nodiscard]] bool
-GameReplayInitAll(const char *fn); // Initialize for multi-stage replay
+[[nodiscard]] bool GameReplayInit(const char *path, StageId stage);
 
 [[nodiscard]] bool SProjectInit(); // Initialize West Project display
 
