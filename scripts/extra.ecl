@@ -68,7 +68,7 @@
 @script_57:  ; shared
 @script_58:  ; shared
 @script_59:  ; shared
-    SETUP hp=100000 score=100
+    SETUP hp=150000 score=100
     DAMAGE_OFF
     HITSB_OFF
 .org 0x00FF
@@ -78,9 +78,9 @@
     JMP jmp=@label_00FF
 .org 0x010A
 @script_1:
-    SETUP hp=12000 score=50000
-    STI jmp=@label_02C6 vector=HP val=8000
-    STI jmp=@label_02C8 vector=TIMER val=3600
+    SETUP hp=18000 score=50000
+    STI jmp=@label_02C6 vector=HP val=12000
+    STI jmp=@label_02C8 vector=TIMER val=7200
     ITEM type=2
     INT id=5
     ANM pattern=0 speed=10
@@ -209,9 +209,9 @@
     T2ITEM pct=3
 .org 0x02C8
 @label_02C8:
-    SETUP hp=8000 score=50000
-    STI jmp=@label_049C vector=HP val=1500
-    STI jmp=@label_049E vector=TIMER val=9000
+    SETUP hp=12000 score=50000
+    STI jmp=@label_049C vector=HP val=2250
+    STI jmp=@label_049E vector=TIMER val=18000
     CLI vector=BITLEFT
     TCLR
     DAMAGE_OFF
@@ -349,10 +349,10 @@
     T2ITEM pct=3
 .org 0x049E
 @label_049E:
-    SETUP hp=1500 score=50000
+    SETUP hp=2250 score=50000
     CLI vector=BITLEFT
     CLI vector=HP
-    STI jmp=@label_05B1 vector=TIMER val=3600
+    STI jmp=@label_05B1 vector=TIMER val=7200
     TCLR
     DAMAGE_OFF
     SPDA speed=80
@@ -910,7 +910,7 @@
 @script_15:  ; shared
 @script_16:  ; shared
 @script_17:  ; shared
-    SETUP hp=750 score=50000
+    SETUP hp=1125 score=50000
     DAMAGE_ON
     DEGX2
     CALL jmp=@label_069B
@@ -969,7 +969,7 @@
     JMP jmp=@label_0AA9
 .org 0x0B37
 @script_18:
-    SETUP hp=9999 score=0
+    SETUP hp=14999 score=0
     STI jmp=@label_0B86 vector=BOSSLEFT val=0
     ANM pattern=0 speed=0
     CLIP_ON
@@ -1007,7 +1007,7 @@
     END
 .org 0x0B88
 @script_19:
-    SETUP hp=9999 score=0
+    SETUP hp=14999 score=0
     STI jmp=@label_0BD1 vector=BOSSLEFT val=0
     ANM pattern=0 speed=0
     CLIP_ON
@@ -1030,7 +1030,7 @@
     END
 .org 0x0BD3
 @script_20:
-    SETUP hp=100000 score=100
+    SETUP hp=150000 score=100
     DAMAGE_OFF
     HITSB_OFF
 .org 0x0BDE
@@ -1040,12 +1040,12 @@
     JMP jmp=@label_0BDE
 .org 0x0BE9
 @script_21:
-    SETUP hp=20500 score=900000
+    SETUP hp=30750 score=900000
     INT id=6
     CALL jmp=@label_1A2B
     MXYA x=319 y=89 count=36
-    STI jmp=@label_0C4F vector=HP val=15700
-    STI jmp=@label_0C51 vector=TIMER val=4200
+    STI jmp=@label_0C4F vector=HP val=23550
+    STI jmp=@label_0C51 vector=TIMER val=8400
 .org 0x0C14
 @label_0C14:
     CALL jmp=@label_1A9B
@@ -1066,9 +1066,9 @@
     T2ITEM pct=1
 .org 0x0C51
 @label_0C51:
-    SETUP hp=15700 score=900000
-    STI jmp=@label_0F65 vector=HP val=12700
-    STI jmp=@label_0F67 vector=TIMER val=6000
+    SETUP hp=23550 score=900000
+    STI jmp=@label_0F65 vector=HP val=19050
+    STI jmp=@label_0F67 vector=TIMER val=12000
     TCLR
     TXYR dx=0 dy=0
     TAUTO interval=0
@@ -1270,9 +1270,9 @@
     T2ITEM pct=1
 .org 0x0F67
 @label_0F67:
-    SETUP hp=12700 score=900000
-    STI jmp=@label_100D vector=HP val=8200
-    STI jmp=@label_100F vector=TIMER val=4200
+    SETUP hp=19050 score=900000
+    STI jmp=@label_100D vector=HP val=12300
+    STI jmp=@label_100F vector=TIMER val=8400
     TCLR
     TXYR dx=0 dy=0
     TAUTO interval=0
@@ -1310,9 +1310,9 @@
     T2ITEM pct=1
 .org 0x100F
 @label_100F:
-    SETUP hp=8200 score=900000
-    STI jmp=@label_11E3 vector=HP val=5200
-    STI jmp=@label_11E5 vector=TIMER val=6000
+    SETUP hp=12300 score=900000
+    STI jmp=@label_11E3 vector=HP val=7800
+    STI jmp=@label_11E5 vector=TIMER val=12000
     TCLR
     TXYR dx=0 dy=0
     TAUTO interval=0
@@ -1440,8 +1440,8 @@
     T2ITEM pct=1
 .org 0x11E5
 @label_11E5:
-    SETUP hp=5200 score=900000
-    STI jmp=@label_12F8 vector=HP val=5000
+    SETUP hp=7800 score=900000
+    STI jmp=@label_12F8 vector=HP val=7500
     CLI vector=TIMER
     TCLR
     TXYR dx=0 dy=0
@@ -1501,9 +1501,9 @@
 .org 0x12F8
 @label_12F8:
     T2ITEM pct=1
-    SETUP hp=5000 score=900000
-    STI jmp=@label_13B5 vector=HP val=3000
-    STI jmp=@label_13B7 vector=TIMER val=4200
+    SETUP hp=7500 score=900000
+    STI jmp=@label_13B5 vector=HP val=4500
+    STI jmp=@label_13B7 vector=TIMER val=8400
     TCLR
     TXYR dx=0 dy=0
     TAUTO interval=0
@@ -1548,8 +1548,8 @@
     T2ITEM pct=1
 .org 0x13B7
 @label_13B7:
-    SETUP hp=3000 score=900000
-    STI jmp=@label_14B1 vector=TIMER val=6000
+    SETUP hp=4500 score=900000
+    STI jmp=@label_14B1 vector=TIMER val=12000
     CLI vector=HP
     TCLR
     TXYR dx=0 dy=0
@@ -2291,7 +2291,7 @@
     RET
 .org 0x1B37
 @script_23:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=28 speed=3
     SPDA speed=192
@@ -2302,7 +2302,7 @@
     JMP jmp=@label_1B4B
 .org 0x1B53
 @script_24:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=29 speed=4
     SPDA speed=128
@@ -2316,7 +2316,7 @@
     JMP jmp=@label_1B73
 .org 0x1B7B
 @script_25:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=29 speed=4
     SPDA speed=128
@@ -2330,7 +2330,7 @@
     JMP jmp=@label_1B9B
 .org 0x1BA3
 @script_26:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=30 speed=4
     SPDA speed=128
@@ -2344,7 +2344,7 @@
     JMP jmp=@label_1BC3
 .org 0x1BCB
 @script_27:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=30 speed=4
     SPDA speed=128
@@ -2358,7 +2358,7 @@
     JMP jmp=@label_1BEB
 .org 0x1BF3
 @script_28:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=31 speed=4
     SPDA speed=192
@@ -2369,7 +2369,7 @@
     JMP jmp=@label_1C07
 .org 0x1C0F
 @script_29:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=32 speed=4
     TCMD cmd=1
@@ -2407,7 +2407,7 @@
     JMP jmp=@label_1C70
 .org 0x1C7A
 @script_30:
-    SETUP hp=80 score=1000
+    SETUP hp=120 score=1000
     RLCHG_ON
     CLIP_ON
     ANM pattern=33 speed=0
@@ -2435,7 +2435,7 @@
     JMP jmp=@label_1CD0
 .org 0x1CD8
 @script_31:
-    SETUP hp=12 score=1000
+    SETUP hp=18 score=1000
     CLIP_ON
     ANM pattern=34 speed=0
     TCMD cmd=89
@@ -2462,7 +2462,7 @@
 @script_32:
 @script_33:  ; shared
 @script_34:  ; shared
-    SETUP hp=10000 score=10000
+    SETUP hp=15000 score=10000
     CLIP_ON
     ANM pattern=37 speed=0
     TCMD cmd=81
@@ -2487,7 +2487,7 @@
     JMP jmp=@label_1D4E
 .org 0x1D57
 @script_35:
-    SETUP hp=10000 score=10000
+    SETUP hp=15000 score=10000
     CLIP_ON
     RLCHG_ON
     ANM pattern=37 speed=0
@@ -2516,7 +2516,7 @@
     JMP jmp=@label_1D95
 .org 0x1D9E
 @script_36:
-    SETUP hp=10000 score=10000
+    SETUP hp=15000 score=10000
     CLIP_ON
     RLCHG_ON
     ANM pattern=37 speed=0
@@ -2545,7 +2545,7 @@
     JMP jmp=@label_1DDC
 .org 0x1DE5
 @script_37:
-    SETUP hp=24 score=600
+    SETUP hp=36 score=600
     RLCHG_ON
     CLIP_ON
     ANM pattern=35 speed=0
@@ -2570,7 +2570,7 @@
     JMP jmp=@label_1E1C
 .org 0x1E25
 @script_38:
-    SETUP hp=120 score=1000
+    SETUP hp=180 score=1000
     RLCHG_ON
     CLIP_ON
     ANM pattern=36 speed=0
@@ -2631,7 +2631,7 @@
     JMP jmp=@script_38
 .org 0x1EB3
 @script_44:
-    SETUP hp=7 score=600
+    SETUP hp=11 score=600
     RLCHG_ON
     CLIP_ON
     ANM pattern=35 speed=0
@@ -2659,7 +2659,7 @@
     JMP jmp=@label_1EF5
 .org 0x1EFE
 @script_45:
-    SETUP hp=80 score=10000
+    SETUP hp=120 score=10000
     RLCHG_ON
     CLIP_ON
     ANM pattern=38 speed=0
@@ -2692,8 +2692,8 @@
     JMP jmp=@label_1F47
 .org 0x1F50
 @script_46:
-    SETUP hp=2900 score=500000
-    STI jmp=@label_2001 vector=HP val=900
+    SETUP hp=3480 score=500000
+    STI jmp=@label_2001 vector=HP val=1080
     ITEM type=2
     RLCHG_ON
     CLIP_ON
@@ -2928,7 +2928,7 @@
     RET
 .org 0x219C
 @script_48:
-    SETUP hp=8 score=600
+    SETUP hp=12 score=600
     RLCHG_ON
     CLIP_ON
     ANM pattern=35 speed=0
@@ -2942,7 +2942,7 @@
     JMP jmp=@label_21B5
 .org 0x21BE
 @script_49:
-    SETUP hp=90 score=800
+    SETUP hp=135 score=800
     RLCHG_ON
     CLIP_ON
     ANM pattern=36 speed=0
@@ -2964,7 +2964,7 @@
     JMP jmp=@label_21ED
 .org 0x21F6
 @script_50:
-    SETUP hp=200 score=50000
+    SETUP hp=240 score=50000
     RLCHG_ON
     CLIP_ON
     ITEM type=3
@@ -3030,7 +3030,7 @@
     JMP jmp=@label_22A6
 .org 0x22AF
 @script_51:
-    SETUP hp=99999 score=0
+    SETUP hp=149999 score=0
     RLCHG_ON
     CLIP_ON
     DAMAGE_OFF
@@ -3062,7 +3062,7 @@
     JMP jmp=@label_22FC
 .org 0x2305
 @script_52:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=28 speed=4
     TCMD cmd=81
@@ -3098,7 +3098,7 @@
     JMP jmp=0x2363
 .org 0x236C
 @script_53:
-    SETUP hp=99999 score=99999
+    SETUP hp=149999 score=99999
     CLIP_ON
     ANM pattern=28 speed=4
     TCMD cmd=81
