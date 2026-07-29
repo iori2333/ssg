@@ -6,10 +6,10 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <span>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 struct BYTE_BUFFER_BORROWED : public std::span<const uint8_t> {
@@ -39,10 +39,10 @@ struct BYTE_BUFFER_CURSOR : public std::span<ConstOrNonConstByte> {
   // objects are safe to access.
   template <typename T>
   std::optional<std::span<transfer_const<T>>> next(size_t n = 1) {
-    const auto cursor_new = (cursor + (sizeof(T) * n));
-    if ((cursor_new > this->size()) || (cursor_new < cursor)) {
+    if (cursor > this->size() || n > (this->size() - cursor) / sizeof(T)) {
       return std::nullopt;
     }
+    const auto cursor_new = cursor + (sizeof(T) * n);
 #pragma warning(suppress : 26473) // type.1
     auto ret = std::span<transfer_const<T>>{
         reinterpret_cast<transfer_const<T> *>(this->data() + cursor), n};
@@ -51,45 +51,26 @@ struct BYTE_BUFFER_CURSOR : public std::span<ConstOrNonConstByte> {
   }
 };
 
-// We can't #include SDL headers here because of GCC 15's import-then-#include
-// limitations, and SDL_malloc() and SDL_free() are declared with tons of
-// attributes we'd rather keep.
-void *SDL_malloc_wrap(size_t);
-
-struct SDL_FREE_DELETER {
-  void operator()(void *);
-};
-
-// Same semantics as the underlying unique_ptr: Can be either allocated or
-// empty.
-struct BYTE_BUFFER_OWNED : public std::unique_ptr<uint8_t[], SDL_FREE_DELETER> {
-private:
-  size_t size_;
-
+class BYTE_BUFFER_OWNED {
 public:
-  // Creates an empty buffer, with no allocation.
-  BYTE_BUFFER_OWNED(std::nullptr_t null = nullptr) noexcept
-      : std::unique_ptr<uint8_t[], SDL_FREE_DELETER>(null), size_(0) {}
+  BYTE_BUFFER_OWNED(std::nullptr_t = nullptr) noexcept {}
+  explicit BYTE_BUFFER_OWNED(size_t size) : data_(size) {}
+  explicit BYTE_BUFFER_OWNED(std::vector<uint8_t> data)
+      : data_(std::move(data)) {}
 
-  // Adopts a SDL-allocated buffer.
-  BYTE_BUFFER_OWNED(void *&&buf, size_t size)
-      : std::unique_ptr<uint8_t[], SDL_FREE_DELETER>(
-            static_cast<uint8_t *>(buf)),
-        size_(size) {}
-
-  // Tries to allocate [size] bytes, and leaves the buffer empty on failure.
-  BYTE_BUFFER_OWNED(size_t size)
-      : std::unique_ptr<uint8_t[], SDL_FREE_DELETER>(
-            static_cast<uint8_t *>(SDL_malloc_wrap(size))),
-        size_(get() ? size : 0) {}
-
-  auto size() const { return size_; }
+  [[nodiscard]] explicit operator bool() const { return !data_.empty(); }
+  [[nodiscard]] uint8_t *get() { return data_.data(); }
+  [[nodiscard]] const uint8_t *get() const { return data_.data(); }
+  [[nodiscard]] size_t size() const { return data_.size(); }
 
   // Borrows a buffer with an immutable cursor.
   BYTE_BUFFER_CURSOR<const uint8_t> cursor() const { return {get(), size()}; }
 
   // Borrows a buffer with a mutable cursor.
   BYTE_BUFFER_CURSOR<uint8_t> cursor_mut() { return {get(), size()}; }
+
+private:
+  std::vector<uint8_t> data_;
 };
 
 using BYTE_BUFFER_GROWABLE = std::vector<uint8_t>;

@@ -4,11 +4,11 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
+#include <filesystem>
 #include <span>
 #include <vector>
 
-#include "sys/file.h"
+#include "sys/buffer.h"
 #include "util/endian.h"
 
 namespace data {
@@ -28,15 +28,13 @@ class PbgArchive {
 public:
   PbgArchive() = default;
 
-  static PbgArchive Open(const char *path);
-  // Takes ownership of stream and closes it after reading.
-  static PbgArchive Open(SDL_IOStream *stream);
+  [[nodiscard]] static PbgArchive Open(const std::filesystem::path &path);
 
   // Decompresses entry [index] into a freshly allocated buffer.
   [[nodiscard]] BYTE_BUFFER_OWNED Extract(uint32_t index) const;
 
   [[nodiscard]] uint32_t EntryCount() const;
-  explicit operator bool() const { return data_.get() != nullptr; }
+  explicit operator bool() const { return static_cast<bool>(data_); }
 
 private:
   BYTE_BUFFER_OWNED data_;
@@ -50,9 +48,7 @@ private:
 class PbgArchiveWriter {
 public:
   void Add(std::span<const uint8_t> data);
-  [[nodiscard]] bool
-  Write(const char *path,
-        std::optional<FILE_TIMESTAMPS> timestamps = std::nullopt) const;
+  [[nodiscard]] bool Write(const std::filesystem::path &path) const;
 
 private:
   std::vector<std::vector<uint8_t>> files_;

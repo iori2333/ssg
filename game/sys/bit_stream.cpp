@@ -2,8 +2,6 @@
 /// BitStream - bit-level buffer and file I/O
 ///
 
-#include <SDL3/SDL_iostream.h>
-
 #include "bit_stream.h"
 #include "file.h"
 
@@ -75,9 +73,9 @@ void BitWriter::WriteBits(uint32_t bits, unsigned int bit_count) {
 }
 
 bool BitWriter::Save(const char *path) const {
-  return SDL_SaveFile(path, buffer_.data(), buffer_.size());
+  return File_Save(path, buffer_);
 }
 
 BitFileReader LoadBitFile(const char *path) {
-  return BitFileReader{SDL_LoadFile(path)};
+  return BitFileReader{File_Load(path)};
 }

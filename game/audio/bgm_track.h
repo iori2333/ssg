@@ -6,11 +6,14 @@
 #include <chrono>
 #include <compare>
 #include <cstdint>
+#include <fstream>
 #include <functional>
+#include <memory>
 #include <optional>
+#include <span>
+#include <string>
+#include <string_view>
 #include <utility>
-
-#include "sys/file.h"
 
 // PCM sample format
 // -----------------
@@ -33,8 +36,6 @@ struct PCM_FORMAT {
   }
 };
 // -----------------
-
-struct SDL_IOStream;
 
 namespace BGM {
 
@@ -135,29 +136,29 @@ struct PCM_PART {
 // Generic implementation for PCM-based codecs, with separate intro and loop
 // files.
 struct TRACK_PCM : public TRACK {
-  SDL_IOStream &intro_stream;
-  SDL_IOStream *loop_stream;
+  std::unique_ptr<std::ifstream> intro_stream;
+  std::unique_ptr<std::ifstream> loop_stream;
   std::unique_ptr<PCM_PART> intro_part;
   std::unique_ptr<PCM_PART> loop_part;
   PCM_PART *cur;
 
   virtual size_t DecodeSingle(std::span<std::byte> buf) override;
 
-  TRACK_PCM(TRACK_METADATA &&metadata, SDL_IOStream &intro_stream,
-            SDL_IOStream *loop_stream, std::unique_ptr<PCM_PART> intro_part,
+  TRACK_PCM(TRACK_METADATA &&metadata,
+            std::unique_ptr<std::ifstream> intro_stream,
+            std::unique_ptr<std::ifstream> loop_stream,
+            std::unique_ptr<PCM_PART> intro_part,
             std::unique_ptr<PCM_PART> loop_part)
       : TRACK(std::move(metadata), intro_part->pcmf),
-        intro_stream(intro_stream), loop_stream(loop_stream),
-        intro_part(std::move(intro_part)), loop_part(std::move(loop_part)),
-        cur(this->intro_part.get()) {}
-
-  virtual ~TRACK_PCM();
+        intro_stream(std::move(intro_stream)),
+        loop_stream(std::move(loop_stream)), intro_part(std::move(intro_part)),
+        loop_part(std::move(loop_part)), cur(this->intro_part.get()) {}
 };
 
 // Tries to opens [stream] as a part of a modded track, using a specific codec.
 // `TRACK_PCM` retains ownership of [stream].
 using PCM_PART_OPEN = std::unique_ptr<PCM_PART>(
-    SDL_IOStream &stream, std::optional<METADATA_CALLBACK> on_metadata);
+    std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata);
 // ----------------------------
 
 // Tries to open a waveform track whose name starts with [base_fn] and has one

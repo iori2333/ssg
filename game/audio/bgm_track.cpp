@@ -11,9 +11,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
+#include <fstream>
 #include <version>
-
-#include <SDL3/SDL_iostream.h>
 
 #include "bgm_track.h"
 #include "volume.h"
@@ -107,11 +107,6 @@ size_t TRACK_PCM::DecodeSingle(std::span<std::byte> buf) {
   return ret;
 }
 
-TRACK_PCM::~TRACK_PCM() {
-  SDL_CloseIO(loop_stream);
-  SDL_CloseIO(&intro_stream);
-}
-
 // Codecs
 // ------
 
@@ -121,9 +116,9 @@ struct CODEC_PCM {
 };
 
 std::unique_ptr<PCM_PART>
-FLAC_Open(SDL_IOStream &stream, std::optional<METADATA_CALLBACK> on_metadata);
+FLAC_Open(std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata);
 std::unique_ptr<PCM_PART>
-Vorbis_Open(SDL_IOStream &stream, std::optional<METADATA_CALLBACK> on_metadata);
+Vorbis_Open(std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata);
 
 // Sorted in order of preference.
 static constexpr const CODEC_PCM CODECS_PCM[] = {
@@ -139,8 +134,10 @@ static constexpr size_t EXT_CAP =
     })->ext.size();
 
 static bool TagEquals(std::string_view a, std::string_view b) {
-  return ((a.size() == b.size()) &&
-          !SDL_strncasecmp(a.data(), b.data(), b.size()));
+  return std::ranges::equal(a, b, [](char left, char right) {
+    return std::tolower(static_cast<unsigned char>(left)) ==
+           std::tolower(static_cast<unsigned char>(right));
+  });
 }
 
 std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
@@ -154,8 +151,8 @@ std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
   for (const auto &codec : CODECS_PCM) {
     fn.resize(base_len);
     fn += codec.ext;
-    auto intro_stream = SDL_IOFromFile(fn.c_str(), "rb");
-    if (!intro_stream) {
+    auto intro_stream = std::make_unique<std::ifstream>(fn, std::ios::binary);
+    if (!*intro_stream) {
       continue;
     }
 
@@ -207,20 +204,23 @@ std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
     fn.resize(base_len);
     fn += LOOP_INFIX;
     fn += codec.ext;
-    auto loop_stream = SDL_IOFromFile(fn.c_str(), "rb");
-    if (loop_stream) {
+    auto loop_stream = std::make_unique<std::ifstream>(fn, std::ios::binary);
+    if (*loop_stream) {
       loop_part = codec.open(*loop_stream, std::nullopt);
       if (!loop_part) {
         continue;
       }
       if (intro_part->pcmf != loop_part->pcmf) {
         assert(!"PCM format mismatch between intro and loop parts!");
+        loop_part.reset();
         continue;
       }
+    } else {
+      loop_stream.reset();
     }
-    return std::make_unique<TRACK_PCM>(std::move(meta), *intro_stream,
-                                       loop_stream, std::move(intro_part),
-                                       std::move(loop_part));
+    return std::make_unique<TRACK_PCM>(
+        std::move(meta), std::move(intro_stream), std::move(loop_stream),
+        std::move(intro_part), std::move(loop_part));
   }
   return nullptr;
 }

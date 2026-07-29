@@ -7,8 +7,10 @@
 #include "coords.h"
 #include "pixelformat.h"
 
-#include "sys/file.h"
+#include "sys/buffer.h"
 #include "util/endian.h"
+
+struct SDL_IOStream;
 
 // Platform-independent .BMP header types
 // --------------------------------------

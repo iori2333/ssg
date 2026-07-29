@@ -6,6 +6,7 @@
 #include <cstring>
 #include <filesystem>
 #include <format>
+#include <fstream>
 #include <limits>
 #include <optional>
 #include <ranges>
@@ -14,15 +15,12 @@
 #include <type_traits>
 #include <utility>
 
-#include <SDL3/SDL_iostream.h>
-
 #include "record_system.h"
 
 #include "data/game_data.h"
 #include "data/pbg_archive.h"
 #include "gameplay/game_session.h"
 #include "settings/config.h"
-#include "sys/file.h"
 #include "util/byte_io.h"
 #include "util/endian.h"
 #include "util/ut_math.h"
@@ -168,35 +166,35 @@ bool IsScoreFilename(const std::filesystem::path &path) {
 }
 
 std::optional<ScoreRecord> LoadScoreRecord(const std::filesystem::path &path) {
-  const auto bytes = SDL_LoadFile(path.string().c_str());
-  if (bytes.size() != sizeof(ScoreRecordFile)) {
+  std::error_code error;
+  if (std::filesystem::file_size(path, error) != sizeof(ScoreRecordFile) ||
+      error) {
     return std::nullopt;
   }
-  auto cursor = bytes.cursor();
-  const auto file = cursor.next<ScoreRecordFile>();
-  if (!file || file->front().magic != kScoreMagic ||
-      file->front().version != kScoreVersion ||
-      file->front().created_at > kMaxSignedRecordValue ||
-      file->front().score > kMaxSignedRecordValue ||
-      file->front().difficulty > std::to_underlying(GameLevel::Extra) ||
-      file->front().stage > std::to_underlying(StageId::Extra) ||
-      file->front().player_type > std::to_underlying(PlayerType::Laser) ||
-      file->front().name_length > kRecordNameLength) {
+  ScoreRecordFile file;
+  std::ifstream stream(path, std::ios::binary);
+  stream.read(reinterpret_cast<char *>(&file), sizeof(file));
+  if (!stream || file.magic != kScoreMagic || file.version != kScoreVersion ||
+      file.created_at > kMaxSignedRecordValue ||
+      file.score > kMaxSignedRecordValue ||
+      file.difficulty > std::to_underlying(GameLevel::Extra) ||
+      file.stage > std::to_underlying(StageId::Extra) ||
+      file.player_type > std::to_underlying(PlayerType::Laser) ||
+      file.name_length > kRecordNameLength) {
     return std::nullopt;
   }
 
-  const auto &data = file->front();
   return ScoreRecord{
-      .name = std::string{data.name.data(), data.name_length},
-      .created_at = static_cast<int64_t>(data.created_at),
-      .score = static_cast<int64_t>(data.score),
-      .graze = data.graze,
-      .miss_count = data.miss_count,
-      .bomb_used = data.bomb_used,
-      .deathbomb_count = data.deathbomb_count,
-      .difficulty = static_cast<GameLevel>(data.difficulty),
-      .stage = static_cast<StageId>(data.stage),
-      .player_type = static_cast<PlayerType>(data.player_type),
+      .name = std::string{file.name.data(), file.name_length},
+      .created_at = static_cast<int64_t>(file.created_at),
+      .score = static_cast<int64_t>(file.score),
+      .graze = file.graze,
+      .miss_count = file.miss_count,
+      .bomb_used = file.bomb_used,
+      .deathbomb_count = file.deathbomb_count,
+      .difficulty = static_cast<GameLevel>(file.difficulty),
+      .stage = static_cast<StageId>(file.stage),
+      .player_type = static_cast<PlayerType>(file.player_type),
   };
 }
 
@@ -271,6 +269,9 @@ RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) const {
     path = std::filesystem::path{kScoreDirectory} /
            std::format("score_{}_{}.dat", file_id, suffix);
   }
+  if (error) {
+    return RecordSaveResult::IoError;
+  }
 
   ScoreRecordFile file{
       .magic = kScoreMagic,
@@ -289,13 +290,13 @@ RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) const {
   };
   std::ranges::copy_n(record.name.begin(), file.name_length, file.name.begin());
 
-  auto *stream = SDL_IOFromFile(path.string().c_str(), "wb");
-  if (stream == nullptr) {
+  std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+  if (!stream) {
     return RecordSaveResult::IoError;
   }
-  const bool written = SDL_MustWriteIO(stream, &file, sizeof(file));
-  return SDL_CloseIO(stream) && written ? RecordSaveResult::Saved
-                                        : RecordSaveResult::IoError;
+  stream.write(reinterpret_cast<const char *>(&file), sizeof(file));
+  stream.close();
+  return stream ? RecordSaveResult::Saved : RecordSaveResult::IoError;
 }
 
 void RecordSystem::BeginRecording(const Player &player,
@@ -443,7 +444,7 @@ RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
   std::error_code error;
   std::filesystem::create_directories(kReplayDirectory, error);
   const auto replay_path = UniqueReplayPath(extra_stage, now);
-  if (error || !replay_path || !archive.Write(replay_path->string().c_str())) {
+  if (error || !replay_path || !archive.Write(*replay_path)) {
     return RecordSaveResult::IoError;
   }
   state_.emplace<IdleState>();
@@ -476,7 +477,7 @@ bool RecordSystem::LoadArchive(std::string_view path,
                                std::optional<ReplayRecord> *record,
                                ReplaySettings *settings,
                                std::vector<ReplayStage> *stages) const {
-  const auto archive = data::PbgArchive::Open(std::string{path}.c_str());
+  const auto archive = data::PbgArchive::Open(path);
   if (!archive) {
     return false;
   }

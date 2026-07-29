@@ -3,11 +3,12 @@
 ///
 
 #include <cassert>
+#include <istream>
+#include <limits>
 
 // GCC 15 throws an internal compiler error if this appears after a module
 // import.
 #define OV_EXCLUDE_STATIC_CALLBACKS
-#include <SDL3/SDL_iostream.h>
 #include <vorbis/vorbisfile.h>
 
 #include "audio/bgm_track.h"
@@ -19,35 +20,58 @@ namespace BGM {
 
 static size_t CB_Vorbis_Read(void *ptr, size_t size, size_t nmemb,
                              void *datasource) {
-  auto *stream = static_cast<SDL_IOStream *>(datasource);
-  return SDL_ReadIO(stream, ptr, (size * nmemb));
+  if (size == 0 || nmemb == 0) {
+    return 0;
+  }
+  if (nmemb > std::numeric_limits<size_t>::max() / size) {
+    return 0;
+  }
+  const auto byte_count = size * nmemb;
+  if (static_cast<uintmax_t>(byte_count) >
+      static_cast<uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
+    return 0;
+  }
+  auto &stream = *static_cast<std::istream *>(datasource);
+  stream.read(static_cast<char *>(ptr),
+              static_cast<std::streamsize>(byte_count));
+  return static_cast<size_t>(stream.gcount()) / size;
 }
 
 int CB_Vorbis_Seek(void *datasource, ogg_int64_t offset, int ov_whence) {
-  auto *stream = static_cast<SDL_IOStream *>(datasource);
+  auto &stream = *static_cast<std::istream *>(datasource);
 
 #pragma warning(suppress : 26494) // type.5
-  SDL_IOWhence whence;
+  std::ios_base::seekdir whence;
   switch (ov_whence) {
   case 0:
-    whence = SDL_IO_SEEK_SET;
+    whence = std::ios::beg;
     break;
   case 1:
-    whence = SDL_IO_SEEK_CUR;
+    whence = std::ios::cur;
     break;
   case 2:
-    whence = SDL_IO_SEEK_END;
+    whence = std::ios::end;
     break;
   default:
     assert(!"Invalid seek origin?");
     return -1;
   }
-  return SDL_SeekIO(stream, offset, whence);
+  if (offset < std::numeric_limits<std::streamoff>::min() ||
+      offset > std::numeric_limits<std::streamoff>::max()) {
+    return -1;
+  }
+  stream.clear();
+  stream.seekg(static_cast<std::streamoff>(offset), whence);
+  return stream ? 0 : -1;
 }
 
 long CB_Vorbis_Tell(void *datasource) {
-  auto *stream = static_cast<SDL_IOStream *>(datasource);
-  return SDL_TellIO(stream);
+  auto &stream = *static_cast<std::istream *>(datasource);
+  const std::streamoff offset = stream.tellg();
+  if (offset < 0 || offset > std::numeric_limits<long>::max()) {
+    return -1;
+  }
+  return static_cast<long>(offset);
 }
 
 static const ov_callbacks VORBIS_CALLBACKS = {
@@ -83,7 +107,7 @@ void PCM_PART_VORBIS::PartSeekToSample(size_t sample) {
 PCM_PART_VORBIS::~PCM_PART_VORBIS() { ov_clear(&vf); }
 
 std::unique_ptr<BGM::PCM_PART>
-Vorbis_Open(SDL_IOStream &stream,
+Vorbis_Open(std::istream &stream,
             std::optional<BGM::METADATA_CALLBACK> on_metadata) {
   OggVorbis_File vf = {0};
   const auto ret =

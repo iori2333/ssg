@@ -11,7 +11,6 @@
 #include "surface_gdi.h"
 
 #include "gfx/format_bmp.h"
-#include "sys/file.h"
 
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")

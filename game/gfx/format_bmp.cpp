@@ -4,11 +4,18 @@
 
 #include <cassert>
 
+#include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_pixels.h>
 
 #include "format_bmp.h"
 
-#include "sys/file.h"
+namespace {
+
+bool WriteExact(SDL_IOStream *stream, const void *data, size_t size) {
+  return SDL_WriteIO(stream, data, size) == size;
+}
+
+} // namespace
 
 uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {
   const auto ret = [bpp]() -> uint16_t {
@@ -116,9 +123,8 @@ bool BMPSave(SDL_IOStream *stream, PIXEL_SIZE size, uint16_t planes,
       .bfReserved2 = 0,
       .bfOffBits = pixel_offset,
   };
-  return (stream &&
-          SDL_MustWriteIO(stream, &header_file, sizeof(header_file)) &&
-          SDL_MustWriteIO(stream, &header_info, sizeof(header_info)) &&
-          SDL_MustWriteIO(stream, palette.data(), palette.size_bytes()) &&
-          SDL_MustWriteIO(stream, pixels.data(), pixels.size_bytes()));
+  return (stream && WriteExact(stream, &header_file, sizeof(header_file)) &&
+          WriteExact(stream, &header_info, sizeof(header_info)) &&
+          WriteExact(stream, palette.data(), palette.size_bytes()) &&
+          WriteExact(stream, pixels.data(), pixels.size_bytes()));
 }

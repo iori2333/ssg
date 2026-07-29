@@ -2,52 +2,43 @@
 /// File I/O
 ///
 
-#include <SDL3/SDL_filesystem.h>
-#include <SDL3/SDL_iostream.h>
+#include <fstream>
+#include <limits>
 
-#include "buffer.h"
 #include "file.h"
 
-std::optional<FILE_TIMESTAMPS> File_TimestampsGet(const char *fn) {
-  std::error_code ec;
-  auto time = std::filesystem::last_write_time(fn, ec);
-  if (ec) {
-    return std::nullopt;
-  }
-  return time;
-}
-
-bool File_CloseWithTimestamps(SDL_IOStream *&&context, const char *path,
-                              std::optional<FILE_TIMESTAMPS> maybe_time) {
-  const bool ret = SDL_CloseIO(context);
-  if (maybe_time) {
-    std::error_code ec;
-    std::filesystem::last_write_time(path, *maybe_time, ec);
-  }
-  return ret;
-}
-
-BYTE_BUFFER_OWNED SDL_LoadFile(const char *file) {
-  auto *f = SDL_IOFromFile(file, "rb");
-  if (!f) {
+BYTE_BUFFER_OWNED File_Load(const std::filesystem::path &path) {
+  std::ifstream stream(path, std::ios::binary | std::ios::ate);
+  if (!stream) {
     return {};
   }
-  return SDL_LoadFile_IO(f, true);
-}
 
-BYTE_BUFFER_OWNED SDL_LoadFile_IO(SDL_IOStream *src, bool closeio) {
-  size_t size;
-  auto *buf = SDL_LoadFile_IO(src, &size, closeio);
-  if (!buf) {
+  const auto end = stream.tellg();
+  if (end <= 0 ||
+      static_cast<uintmax_t>(end) > std::numeric_limits<size_t>::max() ||
+      static_cast<uintmax_t>(end) >
+          std::numeric_limits<std::streamsize>::max()) {
     return {};
   }
-  return {std::move(buf), size};
+  BYTE_BUFFER_OWNED data(static_cast<size_t>(end));
+  stream.seekg(0);
+  stream.read(reinterpret_cast<char *>(data.get()),
+              static_cast<std::streamsize>(data.size()));
+  return stream ? std::move(data) : BYTE_BUFFER_OWNED{};
 }
 
-bool SDL_MustReadIO(SDL_IOStream *context, void *ptr, size_t size) {
-  return (SDL_ReadIO(context, ptr, size) == size);
-}
-
-bool SDL_MustWriteIO(SDL_IOStream *context, const void *ptr, size_t size) {
-  return (SDL_WriteIO(context, ptr, size) == size);
+bool File_Save(const std::filesystem::path &path,
+               std::span<const uint8_t> data) {
+  if (static_cast<uintmax_t>(data.size()) >
+      static_cast<uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
+    return false;
+  }
+  std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+  if (!stream) {
+    return false;
+  }
+  stream.write(reinterpret_cast<const char *>(data.data()),
+               static_cast<std::streamsize>(data.size()));
+  stream.close();
+  return static_cast<bool>(stream);
 }

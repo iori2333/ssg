@@ -17,9 +17,3 @@ std::string_view PathForData(void) {
   PathDataView = SDL_GetBasePath();
   return PathDataView;
 }
-
-bool PathIsDirectory(const char *path) {
-  SDL_PathInfo pi;
-  const auto ret = SDL_GetPathInfo(path, &pi);
-  return (ret && (pi.type == SDL_PATHTYPE_DIRECTORY));
-}

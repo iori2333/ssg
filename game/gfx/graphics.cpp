@@ -6,16 +6,18 @@
 // max_align_t'` if this appears after a module import.
 #include <webp/encode.h>
 
-#include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_surface.h>
 
+#include <cctype>
+#include <charconv>
+#include <filesystem>
 #include <format>
 
 #include "format_bmp.h"
 #include "graphics.h"
 #include "graphics_backend.h"
 
-#include "sys/file.h"
 #include "sys/input.h"
 #include "sys/path.h"
 #include "util/guard.h"
@@ -52,22 +54,29 @@ static NUM_TYPE ScreenshotNum = 0;
 static std::string ScreenshotBuf;
 
 static void ScreenshotFindLastFor(std::string_view ext) {
-  SDL_EnumerateDirectory(
-      ScreenshotBuf.c_str(),
-      [](void *ext_p, const char *, const char *basename_p) {
-        const auto *ext = static_cast<std::string_view *>(ext_p);
-        const auto *basename_ext = SDL_strrchr(basename_p, '.');
-        if (!basename_ext) {
-          return SDL_ENUM_CONTINUE;
-        }
-        if (SDL_strncasecmp(basename_ext, ext->data(), ext->size())) {
-          return SDL_ENUM_CONTINUE;
-        }
-        const NUM_TYPE num = SDL_strtoul(basename_p, nullptr, 10);
-        ScreenshotNum = (std::max)(ScreenshotNum, (num + 1));
-        return SDL_ENUM_CONTINUE;
-      },
-      &ext);
+  const auto extension_matches = [ext](std::string_view candidate) {
+    return std::ranges::equal(candidate, ext, [](char left, char right) {
+      return std::tolower(static_cast<unsigned char>(left)) ==
+             std::tolower(static_cast<unsigned char>(right));
+    });
+  };
+
+  std::error_code error;
+  for (const auto &entry :
+       std::filesystem::directory_iterator{ScreenshotBuf, error}) {
+    if (error || !entry.is_regular_file(error) ||
+        !extension_matches(entry.path().extension().string())) {
+      continue;
+    }
+    const auto stem = entry.path().stem().string();
+    NUM_TYPE number = 0;
+    const auto [end, result] =
+        std::from_chars(stem.data(), stem.data() + stem.size(), number);
+    if (result == std::errc{} && end == stem.data() + stem.size() &&
+        number < (std::numeric_limits<NUM_TYPE>::max)()) {
+      ScreenshotNum = (std::max)(ScreenshotNum, number + 1);
+    }
+  }
 }
 
 void Grp_ScreenshotSetPrefix(std::string_view prefix) {
@@ -82,7 +91,9 @@ SDL_IOStream *Grp_NextScreenshotStream(std::string_view ext) {
   }
 
   // Users might delete the directory while the game is running, after all.
-  if (!SDL_CreateDirectory(ScreenshotBuf.c_str())) {
+  std::error_code error;
+  std::filesystem::create_directories(ScreenshotBuf, error);
+  if (error) {
     ScreenshotBuf.clear();
     return nullptr;
   }
@@ -247,7 +258,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
     return false;
   }
   auto stream_guard2 = make_guard(stream, SDL_CloseIO);
-  return SDL_MustWriteIO(stream, wrt.mem, wrt.size);
+  return SDL_WriteIO(stream, wrt.mem, wrt.size) == wrt.size;
 }
 
 bool Grp_ScreenshotSave(SDL_Surface *src,

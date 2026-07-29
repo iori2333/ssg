@@ -5,6 +5,7 @@
 /// GIAN07/music/ - this module only plays what it is given.
 ///
 
+#include <algorithm>
 #include <chrono>
 #include <utility>
 

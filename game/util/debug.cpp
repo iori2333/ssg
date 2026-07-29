@@ -3,13 +3,10 @@
 ///
 
 #include <format>
-
-#include <SDL3/SDL_iostream.h>
+#include <fstream>
 
 #include "debug.h"
 #include "time.h"
-
-#include "sys/file.h"
 // Global variables
 constexpr auto ErrorOut = "ErrLOG_UTF8.TXT";
 static bool ErrorActive = false;
@@ -18,14 +15,11 @@ void DebugLog(std::string_view prefix, std::string_view s) {
   if (!ErrorActive) {
     return;
   }
-  auto *f = SDL_IOFromFile(ErrorOut, "ab");
-  if (!f) {
+  std::ofstream file(ErrorOut, std::ios::binary | std::ios::app);
+  if (!file) {
     return;
   }
-  SDL_WriteIO(f, prefix.data(), prefix.size());
-  SDL_WriteIO(f, s.data(), s.size());
-  SDL_WriteIO(f, "\n", 1);
-  SDL_CloseIO(f);
+  file << prefix << s << '\n';
 }
 
 extern void DebugSetup() {

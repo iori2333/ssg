@@ -1,19 +1,19 @@
 ///
 /// PbgArchive - validated PBG packfile access
 ///
+#include <algorithm>
 #include <array>
+#include <fstream>
+#include <limits>
 #include <numeric>
 #include <optional>
 #include <utility>
 #include <vector>
 
-#include <SDL3/SDL_iostream.h>
-
 #include "pbg_archive.h"
 
 #include "sys/bit_stream.h"
 #include "sys/file.h"
-#include "util/guard.h"
 
 namespace data {
 
@@ -66,7 +66,7 @@ CompressedEntry(const BYTE_BUFFER_OWNED &packfile,
 
 static BYTE_BUFFER_OWNED Decompress(const BYTE_BUFFER_BORROWED &compressed,
                                     uint32_t size_uncompressed) {
-  BYTE_BUFFER_OWNED uncompressed = {size_uncompressed};
+  BYTE_BUFFER_OWNED uncompressed(size_uncompressed);
   if (!uncompressed) {
     return nullptr;
   }
@@ -165,12 +165,8 @@ uint32_t PbgArchive::EntryCount() const {
   return static_cast<uint32_t>(entries_.size());
 }
 
-PbgArchive PbgArchive::Open(const char *path) {
-  return FromBuffer(SDL_LoadFile(path));
-}
-
-PbgArchive PbgArchive::Open(SDL_IOStream *stream) {
-  return FromBuffer(SDL_LoadFile_IO(stream, true));
+PbgArchive PbgArchive::Open(const std::filesystem::path &path) {
+  return FromBuffer(File_Load(path));
 }
 
 PbgArchive PbgArchive::FromBuffer(BYTE_BUFFER_OWNED packfile) {
@@ -232,50 +228,68 @@ void PbgArchiveWriter::Add(std::span<const uint8_t> data) {
   files_.emplace_back(data.begin(), data.end());
 }
 
-bool PbgArchiveWriter::Write(
-    const char *path, std::optional<FILE_TIMESTAMPS> maybe_timestamps) const {
+bool PbgArchiveWriter::Write(const std::filesystem::path &path) const {
+  if (files_.size() > std::numeric_limits<uint32_t>::max() ||
+      std::ranges::any_of(files_, [](const auto &file) {
+        return file.size() > std::numeric_limits<uint32_t>::max();
+      })) {
+    return false;
+  }
   PbgHeader head = {.n = static_cast<uint32_t>(files_.size())};
   std::vector<PbgEntryHeader> info(files_.size());
   uint32_t sum = 0;
 
-  auto write_header = [&head, &info](SDL_IOStream *stream) {
-    return (SDL_MustWriteIO(stream, &head, sizeof(head)) &&
-            SDL_MustWriteIO(stream, info.data(),
-                            (info.size() * sizeof(PbgEntryHeader))));
+  std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+  if (!stream) {
+    return false;
+  }
+
+  const auto write = [&stream](const void *data, size_t size) {
+    if (static_cast<uintmax_t>(size) >
+        static_cast<uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
+      return false;
+    }
+    stream.write(static_cast<const char *>(data),
+                 static_cast<std::streamsize>(size));
+    return static_cast<bool>(stream);
+  };
+  const auto write_header = [&] {
+    return write(&head, sizeof(head)) &&
+           write(info.data(), info.size() * sizeof(PbgEntryHeader));
   };
 
-  auto *stream = SDL_IOFromFile(path, "wb");
-  if (stream == nullptr) {
-    return false;
-  }
-  auto close_guard = make_guard([&] {
-    File_CloseWithTimestamps(std::move(stream), path,
-                             std::move(maybe_timestamps));
-  });
-
-  if (!write_header(stream)) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < files_.size(); i++) {
-    auto compressed = Compress(BYTE_BUFFER_BORROWED{files_[i]});
-
-    const auto offset = SDL_TellIO(stream);
-    if (offset == -1) {
+  const bool written = [&] {
+    if (!write_header()) {
       return false;
     }
-    info[i].offset = offset;
-    info[i].size_uncompressed = static_cast<uint32_t>(files_[i].size());
-    info[i].checksum_compressed = AccumulateEntryChecksum(
-        sum, info[i].offset, info[i].size_uncompressed, compressed);
-    if (!SDL_MustWriteIO(stream, compressed.data(), compressed.size())) {
+
+    for (size_t i = 0; i < files_.size(); i++) {
+      auto compressed = Compress(BYTE_BUFFER_BORROWED{files_[i]});
+      const auto offset = stream.tellp();
+      if (offset < 0 || static_cast<uintmax_t>(offset) >
+                            std::numeric_limits<uint32_t>::max()) {
+        return false;
+      }
+      info[i].offset = static_cast<uint32_t>(offset);
+      info[i].size_uncompressed = static_cast<uint32_t>(files_[i].size());
+      info[i].checksum_compressed = AccumulateEntryChecksum(
+          sum, info[i].offset, info[i].size_uncompressed, compressed);
+      if (!write(compressed.data(), compressed.size())) {
+        return false;
+      }
+    }
+
+    head.sum = sum;
+    stream.seekp(0);
+    if (!stream) {
       return false;
     }
-  }
+    return write_header();
+  }();
 
-  head.sum = sum;
-  return ((SDL_SeekIO(stream, 0, SDL_IO_SEEK_SET) != -1) &&
-          write_header(stream));
+  stream.close();
+  const bool closed = static_cast<bool>(stream);
+  return written && closed;
 }
 
 } // namespace data

@@ -4,11 +4,10 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <filesystem>
 #include <format>
 #include <optional>
 #include <utility>
-
-#include <SDL3/SDL_iostream.h>
 
 #include "game_data.h"
 
@@ -38,13 +37,13 @@ std::optional<data::PbgArchive> LoadArchive(std::string_view data_path,
                                             const ArchiveSpec &spec,
                                             data::LoadErrors &errors) {
   const auto path = std::string(data_path) + std::string(spec.filename);
-  auto *stream = SDL_IOFromFile(path.c_str(), "rb");
-  if (stream == nullptr) {
+  std::error_code error;
+  if (!std::filesystem::is_regular_file(path, error)) {
     errors.push_back({spec.id, LoadErrorKind::Missing});
     return std::nullopt;
   }
 
-  auto archive = data::PbgArchive::Open(stream);
+  auto archive = data::PbgArchive::Open(path);
   if (!archive || archive.EntryCount() < spec.minimum_entries) {
     errors.push_back({spec.id, LoadErrorKind::Invalid});
     return std::nullopt;

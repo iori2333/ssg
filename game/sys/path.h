@@ -10,5 +10,3 @@
 // native directory separator. Can be the empty string on platforms with no
 // concept of a base data directory.
 std::string_view PathForData(void);
-
-bool PathIsDirectory(const char *path);

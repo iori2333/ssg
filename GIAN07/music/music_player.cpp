@@ -1,16 +1,14 @@
 ///
 /// MusicPlayer - track playback, metadata, and BGM pack selection
 ///
+#include <filesystem>
 #include <format>
 #include <utility>
-
-#include <SDL3/SDL_filesystem.h>
 
 #include "music_player.h"
 
 #include "audio/bgm.h"
 #include "audio/midi.h"
-#include "sys/file.h"
 #include "sys/path.h"
 
 static constexpr std::string_view BGM_ROOT = "bgm/";
@@ -62,34 +60,37 @@ size_t MusicPlayer::TrackCount() const { return data_.TrackCount(); }
 // BGM pack management
 // ---------------------------------------------------------------------------
 
-static bool PackIterator(std::invocable<std::string_view> auto callback) {
-  return SDL_EnumerateDirectory(
-      BGM_ROOT.data(),
-      [](void *cb, const char *bgm_root, const char *basename) {
-        auto fn = std::format("{}{}", bgm_root, basename);
-        if (!PathIsDirectory(fn.c_str())) {
-          return SDL_ENUM_CONTINUE;
-        }
-        return (std::bit_cast<decltype(callback) *>(cb))
-            ->operator()(std::string_view{basename});
-      },
-      &callback);
-}
-
 bool MusicPlayer::HasPacks(bool invalidate_cache) {
   if (packs_available_.has_value() && !invalidate_cache) {
     return packs_available_.value();
   }
-  packs_available_ =
-      PackIterator([](std::string_view) { return SDL_ENUM_SUCCESS; });
+  std::error_code error;
+  packs_available_ = false;
+  for (const auto &entry :
+       std::filesystem::directory_iterator{BGM_ROOT, error}) {
+    if (error) {
+      break;
+    }
+    if (entry.is_directory(error)) {
+      packs_available_ = true;
+      break;
+    }
+  }
   return packs_available_.value();
 }
 
 void MusicPlayer::ForEachPack(std::function<void(std::string_view)> func) {
-  PackIterator([&](std::string_view pack) {
-    func(pack);
-    return SDL_ENUM_CONTINUE;
-  });
+  std::error_code error;
+  for (const auto &entry :
+       std::filesystem::directory_iterator{BGM_ROOT, error}) {
+    if (error) {
+      break;
+    }
+    if (entry.is_directory(error)) {
+      const auto name = entry.path().filename().string();
+      func(name);
+    }
+  }
 }
 
 bool MusicPlayer::SetPack(std::string_view pack) {
@@ -104,7 +105,8 @@ bool MusicPlayer::SetPack(std::string_view pack) {
     }
     pack_path_ = std::format("{}{}{}/", path_data, BGM_ROOT, pack);
 
-    if (!PathIsDirectory(pack_path_.c_str())) {
+    std::error_code error;
+    if (!std::filesystem::is_directory(pack_path_, error)) {
       pack_path_.clear();
       return false;
     }

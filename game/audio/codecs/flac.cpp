@@ -5,9 +5,13 @@
 #define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_STDIO
 
+#include <cstdint>
+#include <istream>
+#include <limits>
+#include <memory>
+
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
-#include <SDL3/SDL_iostream.h>
 #include <dr_flac.h>
 
 #include "audio/bgm_track.h"
@@ -27,45 +31,59 @@ namespace BGM {
 // two cases...
 template <class T>
 concept CB_DATA = requires(T t) {
-  { t.stream() } -> std::same_as<SDL_IOStream &>;
+  { t.stream() } -> std::same_as<std::istream &>;
 };
 
 struct CB_DATA_STREAM {
-  SDL_IOStream &stream() { return *std::bit_cast<SDL_IOStream *>(this); }
+  std::istream &input;
+
+  std::istream &stream() { return input; }
 };
 
 struct CB_DATA_STREAM_AND_METADATA {
-  SDL_IOStream &_stream;
+  std::istream &_stream;
   METADATA_CALLBACK on_metadata;
 
-  SDL_IOStream &stream() { return _stream; }
+  std::istream &stream() { return _stream; }
 };
 
 template <CB_DATA CB>
 static size_t CB_FLAC_Read(void *user_data, void *buf, size_t size) {
+  if (static_cast<uintmax_t>(size) >
+      static_cast<uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
+    return 0;
+  }
   auto &stream = static_cast<CB *>(user_data)->stream();
-  return SDL_ReadIO(&stream, buf, size);
+  stream.read(static_cast<char *>(buf), static_cast<std::streamsize>(size));
+  return static_cast<size_t>(stream.gcount());
 }
 
 template <CB_DATA CB>
 static drflac_bool32 CB_FLAC_Seek(void *user_data, int offset,
                                   drflac_seek_origin origin) {
   auto &stream = static_cast<CB *>(user_data)->stream();
-  static_assert(std::to_underlying(DRFLAC_SEEK_SET) ==
-                std::to_underlying(SDL_IO_SEEK_SET));
-  static_assert(std::to_underlying(DRFLAC_SEEK_CUR) ==
-                std::to_underlying(SDL_IO_SEEK_CUR));
-  static_assert(std::to_underlying(DRFLAC_SEEK_END) ==
-                std::to_underlying(SDL_IO_SEEK_END));
-  const auto whence = static_cast<SDL_IOWhence>(origin);
-  return (SDL_SeekIO(&stream, offset, whence) != -1);
+  std::ios_base::seekdir whence;
+  switch (origin) {
+  case DRFLAC_SEEK_SET:
+    whence = std::ios::beg;
+    break;
+  case DRFLAC_SEEK_CUR:
+    whence = std::ios::cur;
+    break;
+  case DRFLAC_SEEK_END:
+    whence = std::ios::end;
+    break;
+  }
+  stream.clear();
+  stream.seekg(offset, whence);
+  return stream ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
 template <CB_DATA CB>
 static drflac_bool32 CB_FLAC_Tell(void *user_data, drflac_int64 *cursor) {
   auto &stream = static_cast<CB *>(user_data)->stream();
-  const auto offset = SDL_TellIO(&stream);
-  if (!cursor || (offset == -1)) {
+  const std::streamoff offset = stream.tellg();
+  if (!cursor || offset < 0) {
     return DRFLAC_FALSE;
   }
   *cursor = offset;
@@ -94,15 +112,17 @@ static void CB_FLAC_Meta(void *user_data, drflac_metadata *metadata) {
 typedef drflac_uint64 drflac_read_func_t(drflac *, drflac_uint64, void *);
 
 struct PCM_PART_FLAC : public PCM_PART {
+  std::unique_ptr<CB_DATA_STREAM> callback_data;
   drflac *ff;
   drflac_read_func_t &read_func;
 
   size_t PartDecodeSingle(std::span<std::byte> buf) override;
   void PartSeekToSample(size_t sample) override;
 
-  PCM_PART_FLAC(drflac *ff, const PCM_FORMAT &pcmf,
-                drflac_read_func_t &read_func)
-      : PCM_PART(pcmf), ff(ff), read_func(read_func) {}
+  PCM_PART_FLAC(std::unique_ptr<CB_DATA_STREAM> callback_data, drflac *ff,
+                const PCM_FORMAT &pcmf, drflac_read_func_t &read_func)
+      : PCM_PART(pcmf), callback_data(std::move(callback_data)), ff(ff),
+        read_func(read_func) {}
   virtual ~PCM_PART_FLAC();
 };
 
@@ -119,10 +139,10 @@ void PCM_PART_FLAC::PartSeekToSample(size_t sample) {
 PCM_PART_FLAC::~PCM_PART_FLAC() { drflac_close(ff); }
 
 std::unique_ptr<PCM_PART>
-FLAC_Open(SDL_IOStream &stream, std::optional<METADATA_CALLBACK> on_metadata) {
+FLAC_Open(std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata) {
   if (const auto &metadata_cb = on_metadata) {
-    const auto initial_offset = SDL_TellIO(&stream);
-    if (initial_offset == -1) {
+    const std::streamoff initial_offset = stream.tellg();
+    if (initial_offset < 0) {
       return nullptr;
     }
     CB_DATA_STREAM_AND_METADATA data = {stream, *metadata_cb};
@@ -134,15 +154,16 @@ FLAC_Open(SDL_IOStream &stream, std::optional<METADATA_CALLBACK> on_metadata) {
     if (ff) {
       drflac_close(ff);
     }
-    const auto new_offset =
-        SDL_SeekIO(&stream, initial_offset, SDL_IO_SEEK_SET);
-    if (new_offset != initial_offset) {
+    stream.clear();
+    stream.seekg(initial_offset);
+    if (!stream) {
       return nullptr;
     }
   }
+  auto callback_data = std::make_unique<CB_DATA_STREAM>(stream);
   auto *ff =
       drflac_open(CB_FLAC_Read<CB_DATA_STREAM>, CB_FLAC_Seek<CB_DATA_STREAM>,
-                  CB_FLAC_Tell<CB_DATA_STREAM>, &stream, nullptr);
+                  CB_FLAC_Tell<CB_DATA_STREAM>, callback_data.get(), nullptr);
   if (!ff) {
     return nullptr;
   }
@@ -155,7 +176,8 @@ FLAC_Open(SDL_IOStream &stream, std::optional<METADATA_CALLBACK> on_metadata) {
            : reinterpret_cast<drflac_read_func_t &>(
                  drflac_read_pcm_frames_s32));
   PCM_FORMAT pcmf = {ff->sampleRate, ff->channels, output_format};
-  return std::make_unique<PCM_PART_FLAC>(ff, pcmf, *read_func);
+  return std::make_unique<PCM_PART_FLAC>(std::move(callback_data), ff, pcmf,
+                                         *read_func);
 }
 
 } // namespace BGM

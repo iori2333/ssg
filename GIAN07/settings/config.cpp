@@ -2,18 +2,15 @@
 /// Config - Config data
 ///
 
-#include <sstream>
+#include <fstream>
 #include <type_traits>
 #include <utility>
 
-#include <SDL3/SDL_iostream.h>
 #include <toml++/toml.hpp>
 
 #include "config.h"
 
 #include "gfx/graphics_backend.h"
-#include "sys/file.h"
-#include "util/guard.h"
 
 static constexpr auto CFG_FN = "SSG.TOML";
 static constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
@@ -63,25 +60,14 @@ void LoadToml(const toml::table &tbl, const char *key, T &dest,
 } // namespace
 
 static void TOMLLoad(const char *fn, ConfigData &cfg) {
-  auto *f = SDL_IOFromFile(fn, "rb");
-  if (f == nullptr) {
-    return;
-  }
-  auto f_guard = make_guard(f, SDL_CloseIO);
-
-  const auto size = SDL_GetIOSize(f);
-  if (size <= 0) {
-    return;
-  }
-
-  std::string buf(static_cast<size_t>(size), '\0');
-  if (SDL_ReadIO(f, buf.data(), size) != size) {
+  std::ifstream file(fn, std::ios::binary);
+  if (!file) {
     return;
   }
 
   toml::table tbl;
   try {
-    tbl = toml::parse(buf);
+    tbl = toml::parse(file);
   } catch (const toml::parse_error &) {
     return;
   }
@@ -247,17 +233,11 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     tbl.emplace("input", std::move(sec));
   }
 
-  std::ostringstream oss;
-  oss << tbl;
-
-  auto *f = SDL_IOFromFile(fn, "wb");
-  if (f == nullptr) {
+  std::ofstream file(fn, std::ios::binary | std::ios::trunc);
+  if (!file) {
     return;
   }
-  auto f_guard = make_guard(f, SDL_CloseIO);
-
-  const auto str = oss.str();
-  SDL_MustWriteIO(f, str.data(), str.size());
+  file << tbl;
 }
 
 ConfigData LoadConfig() {

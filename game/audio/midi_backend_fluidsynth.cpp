@@ -4,11 +4,11 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <thread>
 #include <vector>
-
-#include <SDL3/SDL_timer.h>
 
 #include <fluidsynth.h>
 
@@ -38,8 +38,7 @@ static constexpr std::string_view FontExts[] = {".sf2", ".sf3", ".dls"};
 
 // Collects font files from [dir] into [paths] + [sources] with the given
 // [source] tag. Skips duplicates.
-static void ScanDir(const std::string &dir,
-                    std::vector<std::string> &paths,
+static void ScanDir(const std::string &dir, std::vector<std::string> &paths,
                     std::vector<MID_BACKEND_DEVICE_SOURCE> &sources,
                     MID_BACKEND_DEVICE_SOURCE source) {
   std::error_code ec;
@@ -78,10 +77,17 @@ static void ScanSoundFonts(std::string_view data_path) {
           MID_BACKEND_DEVICE_SOURCE::SYSTEM);
 #endif
   // Environment variable override (e.g. DEFAULT_SOUNDFONT=/path/to/font.sf2)
-  if (const char *env = SDL_getenv("DEFAULT_SOUNDFONT")) {
+#if defined(__clang__) && defined(_WIN32)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  if (const char *env = std::getenv("DEFAULT_SOUNDFONT")) {
     FsFontPaths.push_back(env);
     FsFontSources.push_back(MID_BACKEND_DEVICE_SOURCE::ENV);
   }
+#if defined(__clang__) && defined(_WIN32)
+#pragma clang diagnostic pop
+#endif
 
   // 2. Local project soundfonts/ directory.
   const std::string sf_dir =
@@ -100,13 +106,12 @@ static void ScanSoundFonts(std::string_view data_path) {
     for (size_t i = 0; i < FsFontPaths.size(); i++) {
       indexed.push_back({&FsFontPaths[i], FsFontSources[i], i});
     }
-    std::ranges::sort(indexed,
-                      [](const Indexed &a, const Indexed &b) {
-                        return *a.path < *b.path;
-                      });
-    const auto [first, last] = std::ranges::unique(
-        indexed, std::ranges::equal_to{},
-        [](const Indexed &x) { return *x.path; });
+    std::ranges::sort(indexed, [](const Indexed &a, const Indexed &b) {
+      return *a.path < *b.path;
+    });
+    const auto [first, last] =
+        std::ranges::unique(indexed, std::ranges::equal_to{},
+                            [](const Indexed &x) { return *x.path; });
     indexed.erase(first, last);
 
     std::vector<std::string> new_paths;
@@ -245,8 +250,7 @@ std::optional<std::string_view> MidBackend_DeviceName(void) {
 
 size_t MidBackend_DeviceCount(void) { return FsFontPaths.size(); }
 
-std::optional<std::string_view>
-MidBackend_DeviceNameAt(size_t index) {
+std::optional<std::string_view> MidBackend_DeviceNameAt(size_t index) {
   if (index >= FsFontPaths.size()) {
     return std::nullopt;
   }
@@ -256,8 +260,7 @@ MidBackend_DeviceNameAt(size_t index) {
   return cached;
 }
 
-std::optional<MID_BACKEND_DEVICE_SOURCE>
-MidBackend_DeviceSource(size_t index) {
+std::optional<MID_BACKEND_DEVICE_SOURCE> MidBackend_DeviceSource(size_t index) {
   if (index >= FsFontSources.size()) {
     return std::nullopt;
   }
@@ -286,8 +289,7 @@ bool MidBackend_DeviceSelect(size_t index) {
   FsFontId = fluid_synth_sfload(FsSynth, FsFontPaths[FsFontIndex].c_str(), 1);
   if (FsFontId == FLUID_FAILED) {
     FsFontIndex = old_index;
-    FsFontId =
-        fluid_synth_sfload(FsSynth, FsFontPaths[FsFontIndex].c_str(), 1);
+    FsFontId = fluid_synth_sfload(FsSynth, FsFontPaths[FsFontIndex].c_str(), 1);
   }
 
   FsAudioDriver = new_fluid_audio_driver(FsSettings, FsSynth);
@@ -353,26 +355,28 @@ bool MidBackend_DeviceChange(int8_t direction) {
   return true;
 }
 
-static SDL_TimerID FsTimer = 0;
-
 static constexpr auto TIMER_INTERVAL = std::chrono::milliseconds(10);
-
-extern "C" uint32_t TimerCallback(void *, SDL_TimerID, uint32_t interval) {
-  Mid_Proc(std::chrono::duration_cast<MID_REALTIME>(
-      std::chrono::milliseconds{interval}));
-  return static_cast<uint32_t>(TIMER_INTERVAL.count());
-}
+static std::jthread FsTimer;
 
 void MidBackend_StartTimer(void) {
-  if (!FsTimer) {
-    FsTimer = SDL_AddTimer(TIMER_INTERVAL.count(), TimerCallback, nullptr);
+  if (!FsTimer.joinable()) {
+    FsTimer = std::jthread([](std::stop_token stop) {
+      auto next_tick = std::chrono::steady_clock::now();
+      while (!stop.stop_requested()) {
+        next_tick += TIMER_INTERVAL;
+        std::this_thread::sleep_until(next_tick);
+        if (!stop.stop_requested()) {
+          Mid_Proc(std::chrono::duration_cast<MID_REALTIME>(TIMER_INTERVAL));
+        }
+      }
+    });
   }
 }
 
 void MidBackend_StopTimer(void) {
-  if (FsTimer) {
-    SDL_RemoveTimer(FsTimer);
-    FsTimer = 0;
+  if (FsTimer.joinable()) {
+    FsTimer.request_stop();
+    FsTimer.join();
   }
 }
 
