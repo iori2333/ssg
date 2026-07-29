@@ -19,7 +19,7 @@ enum class BossMode : uint8_t {
 
 struct BossActor : EnemyActor {
   void ResetForSpawn() {
-    item = 0;
+    item = {};
     EnterMode(BossMode::Normal);
   }
 
@@ -63,4 +63,4 @@ struct BossHudModel {
   int32_t stage_timeout_end = -1;
 };
 
-inline constexpr size_t BOSS_MAX = 4;
+inline constexpr size_t kBossCapacity = 4;

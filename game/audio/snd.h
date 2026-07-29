@@ -39,5 +39,5 @@ bool Snd_SELoad(BYTE_BUFFER_OWNED buffer, uint8_t id, SND_INSTANCE_ID max);
 
 // Playback & stop
 void Snd_SEPlay(SfxId id, int x = SND_X_MID, bool loop = false);
-void Snd_SEStop(uint8_t id);
+void Snd_SEStop(SfxId id);
 void Snd_SEStopAll(void);

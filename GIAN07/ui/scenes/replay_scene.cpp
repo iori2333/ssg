@@ -92,6 +92,7 @@ bool ReplayScene::BeginSave(bool extra_stage, INPUT_BITS initial_input) {
 
   GrpBackend_SetClip(GRP_RES_RECT);
   save_extra_stage_ = extra_stage;
+  save_failed_ = false;
   name_entry_.Begin(true, initial_input);
   mode_ = Mode::NameEntry;
   return true;
@@ -212,14 +213,17 @@ ReplaySceneResult ReplayScene::UpdateStageSelect(INPUT_BITS input,
 ReplaySceneResult ReplayScene::UpdateNameEntry(INPUT_BITS input,
                                                bool should_draw) {
   const auto result = name_entry_.Update(input);
-  if (result != NameEntryResult::Editing) {
-    const bool saved =
-        result == NameEntryResult::Confirmed &&
+  if (result == NameEntryResult::Confirmed) {
+    const auto save_result =
         record_system_.SaveReplay(name_entry_.Name(), save_extra_stage_);
-    if (result == NameEntryResult::Cancelled) {
-      record_system_.CancelRecording();
+    if (save_result == RecordSaveResult::Saved) {
+      return {.type = ReplaySceneResult::Type::SaveComplete, .saved = true};
     }
-    return {.type = ReplaySceneResult::Type::SaveComplete, .saved = saved};
+    save_failed_ = true;
+    Snd_SEPlay(SfxId::Cancel);
+  } else if (result == NameEntryResult::Cancelled) {
+    record_system_.CancelRecording();
+    return {.type = ReplaySceneResult::Type::SaveComplete, .saved = false};
   }
 
   if (should_draw) {
@@ -325,6 +329,9 @@ void ReplayScene::DrawNameEntry() const {
   GrpGeom->Unlock();
   GrpSurface_Blit({x, y}, SURFACE_ID::NAMEREG, {0, 64, 400, 96});
   GrpPut16(256, 120, "Replay Name");
+  if (save_failed_) {
+    GrpPut16(216, 152, "Replay save failed");
+  }
   GrpPut16c2(x + 88, y + 4, std::string{name_entry_.Name()}.c_str());
   name_entry_.Draw(x + 88, y + 4);
 }

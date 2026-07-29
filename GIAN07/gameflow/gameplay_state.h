@@ -36,34 +36,22 @@ private:
     LoadFailed,
   };
 
-  [[nodiscard]] bool EnterLive(GameContext &context);
-  [[nodiscard]] bool EnterReplay(GameContext &context, std::string_view path,
-                                 StageId stage);
-  [[nodiscard]] bool EnterDemo(GameContext &context);
-  [[nodiscard]] FlowEvent Update(GameContext &context, const FrameInput &frame);
-  [[nodiscard]] bool LoadCurrentStage(GameContext &context);
-  [[nodiscard]] bool LoadNextStage(GameContext &context);
-  [[nodiscard]] bool LoadNextReplayStage(GameContext &context);
-  void InitializeGameplayView(GameContext &context, bool interactive);
-  [[nodiscard]] StepResult Step(GameContext &context, INPUT_BITS &input);
+  [[nodiscard]] bool LoadCurrentStage();
+  [[nodiscard]] bool LoadNextStage();
+  [[nodiscard]] bool LoadNextReplayStage();
+  void InitializeGameplayView(bool interactive);
+  [[nodiscard]] StepResult Step(INPUT_BITS &input);
   [[nodiscard]] StepResult
-  HandleStageTransition(GameContext &context,
-                        stage::StageTransition transition);
-  [[nodiscard]] FlowEvent UpdateLive(GameContext &context,
-                                     const FrameInput &frame);
-  [[nodiscard]] FlowEvent UpdateReplay(GameContext &context,
-                                       const FrameInput &frame);
-  [[nodiscard]] FlowEvent UpdateDemo(GameContext &context,
-                                     const FrameInput &frame);
-  [[nodiscard]] FlowEvent UpdatePause(GameContext &context,
-                                      const FrameInput &frame);
-  [[nodiscard]] FlowEvent UpdateGameOverIntro(GameContext &context,
-                                              const FrameInput &frame);
-  [[nodiscard]] FlowEvent UpdateGameOverMenu(GameContext &context,
-                                             const FrameInput &frame);
-  void BeginGameOver(GameContext &context);
-  void StopPlayback(GameContext &context);
-  void Draw(GameContext &context) const;
+  HandleStageTransition(stage::StageTransition transition);
+  [[nodiscard]] FlowEvent UpdateLive(const FrameInput &frame);
+  [[nodiscard]] FlowEvent UpdateReplay(const FrameInput &frame);
+  [[nodiscard]] FlowEvent UpdateDemo(const FrameInput &frame);
+  [[nodiscard]] FlowEvent UpdatePause(const FrameInput &frame);
+  [[nodiscard]] FlowEvent UpdateGameOverIntro(const FrameInput &frame);
+  [[nodiscard]] FlowEvent UpdateGameOverMenu(const FrameInput &frame);
+  void BeginGameOver();
+  void StopPlayback();
+  void Draw() const;
 
   GameContext &context_;
   Mode mode_ = Mode::Live;

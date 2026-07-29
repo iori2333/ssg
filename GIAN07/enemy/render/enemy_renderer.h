@@ -16,11 +16,12 @@ class Player;
 class EnemyRenderer {
 public:
   EnemyRenderer(const EnemyAnimationSet &animations, const Player &player)
-      : animations_(&animations), player_(&player) {}
+      : animations_(animations), player_(player) {}
 
-  void DrawRegular(const ObjectPool<EnemyActor, ENEMY_MAX> &actors) const;
-  void DrawBosses(const ObjectPool<BossActor, BOSS_MAX> &bosses,
-                  const std::array<BitFormation, BOSS_MAX> &formations) const;
+  void DrawRegular(const ObjectPool<EnemyActor, kEnemyCapacity> &actors) const;
+  void
+  DrawBosses(const ObjectPool<BossActor, kBossCapacity> &bosses,
+             const std::array<BitFormation, kBossCapacity> &formations) const;
 
 private:
   void DrawActor(const EnemyActor &actor) const;
@@ -28,6 +29,6 @@ private:
   void DrawBossLinks(const BitFormation &formation) const;
   bool DrawBossSpecialState(const BossActor &boss) const;
 
-  const EnemyAnimationSet *animations_;
-  const Player *player_;
+  const EnemyAnimationSet &animations_;
+  const Player &player_;
 };

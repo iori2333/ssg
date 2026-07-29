@@ -12,7 +12,7 @@
 struct EnemyActor;
 
 // ── Pool capacity ────────────────────────────────────────────────
-inline constexpr auto kLongLaserMax = 20;
+inline constexpr auto kLongLaserCapacity = 20;
 
 // ── Laser type discriminator ────────────────────────────────────
 enum class LongLaserType : uint8_t {
@@ -71,7 +71,7 @@ struct LaserLong {
   friend struct LaserReflect; // for reflection on long lasers, must keep
 
   void Render() const;
-  bool IsDead() const;
+  [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const LongLaserSpawnInfo &info);
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y,

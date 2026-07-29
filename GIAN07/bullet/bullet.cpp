@@ -1,4 +1,4 @@
-/// Bullet — Bullet class implementation
+/// Enemy bullet entity behavior.
 
 #include <span>
 #include <utility>
@@ -13,29 +13,30 @@
 #include "util/cast.h"
 #include "util/ut_math.h"
 
-// ── Free functions ───────────────────────────────────────────────
-
 int GetBulletHitRadius(uint8_t c) {
-  switch (c & 0xF0) {
-  case TAMA_SMALL:
-    return TAMA_HIT_S;
-  case TAMA_LARGE:
-  case TAMA_EXTRA2:
-    return TAMA_HIT_M;
-  case TAMA_ANGLE:
-    return (c == 0x25) ? TAMA_HIT_M : TAMA_HIT_S;
-  case TAMA_EXTRA: {
-    constexpr int radii[4] = {TAMA_HIT_XL, TAMA_HIT_L, TAMA_HIT_M, TAMA_HIT_S};
+  switch (c & kBulletVisualCategoryMask) {
+  case kSmallBulletVisual:
+    return kSmallBulletHitRadius;
+  case kLargeBulletVisual:
+  case kLargeExtraBulletVisual:
+    return kMediumBulletHitRadius;
+  case kDirectionalBulletVisual:
+    return c == kSpecialDirectionalBulletVisual ? kMediumBulletHitRadius
+                                                : kSmallBulletHitRadius;
+  case kExtraBulletVisual: {
+    constexpr int radii[4] = {kExtraLargeBulletHitRadius, kLargeBulletHitRadius,
+                              kMediumBulletHitRadius, kSmallBulletHitRadius};
     return radii[c & 3];
   }
   default:
-    return TAMA_HIT_M;
+    return kMediumBulletHitRadius;
   }
 }
 
 int GetBulletEvadeRadius(uint8_t c) {
-  return ((c & 0xF0) == TAMA_SMALL) ? TAMA_EVADE_RADIUS_SMALL
-                                    : TAMA_EVADE_RADIUS_LARGE;
+  return (c & kBulletVisualCategoryMask) == kSmallBulletVisual
+             ? kSmallBulletGrazeRadius
+             : kLargeBulletGrazeRadius;
 }
 
 namespace {
@@ -207,7 +208,7 @@ void Bullet::Spawn(const BulletSpawnInfo &info) {
   vx_ = cosl(d_, v_);
   vy_ = sinl(d_, v_);
   count_ = 0;
-  flag_ = TF_NONE;
+  flags_ = Flags::None;
 }
 
 // ── Bullet: Movement ─────────────────────────────────────────────
@@ -217,11 +218,12 @@ BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
   if (effect_ == BulletEffect::None) {
     MoveByType(info, result);
     MoveByOption(result);
-    if ((flag_ & TF_CLIP) == 0 && (x_ < playfield::kWorldLeft - 4_px ||
-                                   x_ > playfield::kWorldRight + 4_px ||
-                                   y_ < playfield::kWorldTop - 4_px ||
-                                   y_ > playfield::kWorldBottom + 4_px)) {
-      flag_ |= TF_DELETE;
+    if (!HasFlag(Flags::KeepOutsidePlayfield) &&
+        (x_ < playfield::kWorldLeft - 4_px ||
+         x_ > playfield::kWorldRight + 4_px ||
+         y_ < playfield::kWorldTop - 4_px ||
+         y_ > playfield::kWorldBottom + 4_px)) {
+      SetFlag(Flags::PendingRemoval, true);
     }
   } else {
     MoveByEffect();
@@ -232,7 +234,7 @@ BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
 
 void Bullet::RevertToNormal() {
   motion_ = BulletMotion::Normal;
-  flag_ &= ~TF_CLIP;
+  SetFlag(Flags::KeepOutsidePlayfield, false);
   vx_ = cosl(d_, v_);
   vy_ = sinl(d_, v_);
 }
@@ -353,7 +355,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     } else if (count_ < 130 - 60) {
       deg_t = atan8(0, -20_px - y_) - d_;
     } else {
-      flag_ = TF_NONE;
+      flags_ = Flags::None;
       deg_t = 0;
     }
     if (deg_t < -128) {
@@ -379,7 +381,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     return;
   case BulletMotion::Bomb:
     if (count_ >= 49) {
-      flag_ |= TF_DELETE;
+      SetFlag(Flags::PendingRemoval, true);
     }
     return;
   }
@@ -478,7 +480,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
       new_d = -d_;
     }
     if (op_temp == 1) {
-      flag_ |= TF_DELETE;
+      SetFlag(Flags::PendingRemoval, true);
       const int cx = tx_ + cosl(new_d, v_);
       const int cy = ty_ + sinl(new_d, v_);
       constexpr uint8_t kCircleEffect = 0x50;
@@ -557,7 +559,7 @@ void Bullet::MoveByEffect() {
     x_ += (vx_ >> 1);
     y_ += (vy_ >> 1);
     if (count_ >= 47) {
-      flag_ |= TF_DELETE;
+      SetFlag(Flags::PendingRemoval, true);
     }
     return;
   }
@@ -572,7 +574,7 @@ void Bullet::Render() const {
                                             {128 + 72, 384, 128 + 80, 384 + 8}};
   static constexpr uint8_t sizeExtraTama[4] = {16, 12, 8, 4};
 
-  bool is_small = (c_ & 0xf0) == TAMA_SMALL;
+  const bool is_small = (c_ & kBulletVisualCategoryMask) == kSmallBulletVisual;
   int x = (x_ >> 6) - (is_small ? 4 : 8);
   int y = (y_ >> 6) - (is_small ? 4 : 8);
 
@@ -608,11 +610,11 @@ void Bullet::Render() const {
   }
 
   switch (c_ & 0xf0) {
-  case TAMA_LARGE:
+  case kLargeBulletVisual:
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
                     PIXEL_LTWH{((c_ & 0x0f) << 4) + 384, 8, 16, 16});
     break;
-  case TAMA_EXTRA: {
+  case kExtraBulletVisual: {
     const uint8_t d = (c_ & 3);
     PIXEL_LTRB src = rcExtraTama[d];
     int ex = (x_ >> 6) - sizeExtraTama[d];
@@ -620,13 +622,13 @@ void Bullet::Render() const {
     GrpSurface_Blit({ex, ey}, SURFACE_ID::ENEMY, src);
     break;
   }
-  case TAMA_EXTRA2: {
+  case kLargeExtraBulletVisual: {
     const auto d = Cast::down_sign<uint8_t>(d_ + 4) / 8;
     GrpSurface_Blit({x, y}, SURFACE_ID::ENEMY,
                     PIXEL_LTWH{d * 16, 320 + ((c_ & 3) << 4), 16, 16});
     break;
   }
-  case TAMA_ANGLE:
+  case kDirectionalBulletVisual:
     if (c_ != 32 + 5) {
       GrpSurface_Blit(
           {x, y}, SURFACE_ID::SYSTEM,
@@ -644,25 +646,28 @@ void Bullet::Render() const {
 
 // ── Bullet: Lifecycle ────────────────────────────────────────────
 
-bool Bullet::IsDead() const { return (flag_ & TF_DELETE) != 0; }
+bool Bullet::IsDead() const { return HasFlag(Flags::PendingRemoval); }
 
-bool Bullet::IsSmall() const { return (c_ & 0xf0) == TAMA_SMALL; }
+bool Bullet::IsSmall() const {
+  return (c_ & kBulletVisualCategoryMask) == kSmallBulletVisual;
+}
 
 bool Bullet::IsClearing() const { return effect_ == BulletEffect::Clearing; }
 
 bool Bullet::RegisterGraze() {
-  if ((flag_ & TF_EVADE) != 0) {
+  if (HasFlag(Flags::Grazed)) {
     return false;
   }
-  flag_ |= TF_EVADE;
+  SetFlag(Flags::Grazed, true);
   return true;
 }
 
-void Bullet::RemoveImmediately() { flag_ |= TF_DELETE; }
+void Bullet::RemoveImmediately() { SetFlag(Flags::PendingRemoval, true); }
 
 void Bullet::UpdateDisplayAngle() {
-  const auto category = c_ & 0xf0;
-  if (category == TAMA_ANGLE || category == TAMA_EXTRA2) {
+  const auto category = c_ & kBulletVisualCategoryMask;
+  if (category == kDirectionalBulletVisual ||
+      category == kLargeExtraBulletVisual) {
     d_ += 4;
   }
 }
@@ -677,7 +682,7 @@ void Bullet::Kill() {
 
 HitResult Bullet::CheckHit(int player_x, int player_y,
                            int player_radius) const {
-  if (effect_ == BulletEffect::Clearing || (flag_ & TF_DELETE) != 0) {
+  if (effect_ == BulletEffect::Clearing || HasFlag(Flags::PendingRemoval)) {
     return HitResult::Miss;
   }
   const int hit_radius = GetBulletHitRadius(c_);
@@ -698,7 +703,7 @@ HitResult Bullet::CheckHit(int player_x, int player_y,
 // ── Bullet: Debug ───────────────────────────────────────────────
 
 void Bullet::RenderDebugHitbox(int mode) const {
-  if (effect_ == BulletEffect::Clearing || (flag_ & TF_DELETE) != 0) {
+  if (effect_ == BulletEffect::Clearing || HasFlag(Flags::PendingRemoval)) {
     return;
   }
   auto *gp = GrpGeom_Poly();

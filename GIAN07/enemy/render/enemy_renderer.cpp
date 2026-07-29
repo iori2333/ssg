@@ -14,47 +14,47 @@
 #include "util/ut_math.h"
 
 void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
-  if (actor.animation >= animations_->size()) {
+  if (actor.animation >= animations_.size()) {
     return;
   }
 
   constexpr auto surface = SURFACE_ID::ENEMY;
-  const auto &animation = (*animations_)[actor.animation];
+  const auto &animation = animations_[actor.animation];
   const WORLD_POINT center = WORLD_POINT::FromWorld(actor.x, actor.y);
   const auto topleft = center.ToPixel(animation.size);
 
-  const auto frame = animation.mode == ANM_DEG
+  const auto frame = animation.mode == EnemyAnimationMode::Directional
                          ? static_cast<uint8_t>(actor.d - 64 + 8) >> 4
                          : actor.animation_frame;
-  if (frame >= ENEMY_ANIMATION_FRAME_MAX ||
+  if (frame >= kEnemyAnimationFrameCapacity ||
       !GrpSurface_Blit({topleft.x, topleft.y}, surface, animation.ptn[frame])) {
     return;
   }
 
   if (actor.animation == actor.damage_animation || actor.damage_flash == 0 ||
-      actor.damage_animation >= animations_->size()) {
+      actor.damage_animation >= animations_.size()) {
     return;
   }
 
-  const auto &damage_animation = (*animations_)[actor.damage_animation];
+  const auto &damage_animation = animations_[actor.damage_animation];
   const auto damage_topleft = center.ToPixel(damage_animation.size);
   GrpSurface_Blit({damage_topleft.x, damage_topleft.y}, surface,
                   damage_animation.ptn[0]);
 }
 
 void EnemyRenderer::DrawRegular(
-    const ObjectPool<EnemyActor, ENEMY_MAX> &actors) const {
+    const ObjectPool<EnemyActor, kEnemyCapacity> &actors) const {
   for (const auto &actor : actors) {
     if (actor.state == EnemyActorState::Exploding) {
       DrawExplosion(actor);
-    } else if ((actor.flag & EF_DRAW) != 0) {
+    } else if (actor.HasFlag(EnemyActorFlags::Draw)) {
       DrawActor(actor);
     }
   }
 }
 
 void EnemyRenderer::DrawExplosion(const EnemyActor &actor) const {
-  const auto frame = actor.count / ENEMY_BOMB_SPD;
+  const auto frame = actor.count / kEnemyExplosionSpeed;
   const PIXEL_LTRB source = {static_cast<PIXEL_COORD>(frame * 48), 296,
                              static_cast<PIXEL_COORD>((frame + 1) * 48), 344};
   const PIXEL_POINT center = WORLD_POINT::FromWorld(actor.x, actor.y).ToPixel();
@@ -62,8 +62,8 @@ void EnemyRenderer::DrawExplosion(const EnemyActor &actor) const {
 }
 
 void EnemyRenderer::DrawBosses(
-    const ObjectPool<BossActor, BOSS_MAX> &bosses,
-    const std::array<BitFormation, BOSS_MAX> &formations) const {
+    const ObjectPool<BossActor, kBossCapacity> &bosses,
+    const std::array<BitFormation, kBossCapacity> &formations) const {
   for (const auto &formation : formations) {
     DrawBossLinks(formation);
   }
@@ -72,7 +72,7 @@ void EnemyRenderer::DrawBosses(
     if (DrawBossSpecialState(boss)) {
       continue;
     }
-    if ((boss.flag & EF_DRAW) != 0) {
+    if (boss.HasFlag(EnemyActorFlags::Draw)) {
       DrawActor(boss);
     }
   }
@@ -97,8 +97,8 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
   constexpr auto surface = SURFACE_ID::ENEMY;
   const auto center = WORLD_POINT::FromWorld(boss.x, boss.y).ToPixel();
 
-  if (boss.mode == BossMode::BombSpirit && player_->IsBombActive() != 0U &&
-      (boss.flag & EF_DRAW) != 0) {
+  if (boss.mode == BossMode::BombSpirit && player_.IsBombActive() != 0U &&
+      boss.HasFlag(EnemyActorFlags::Draw)) {
     const PIXEL_LTRB spirit = PIXEL_LTWH{
         160 + (Cast::sign<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
     GrpBackend_SetClip(GRP_RES_RECT);
@@ -108,8 +108,8 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
     return true;
   }
 
-  if (boss.mode == BossMode::BombShield && player_->IsBombActive() != 0U &&
-      (boss.flag & EF_DRAW) != 0) {
+  if (boss.mode == BossMode::BombShield && player_.IsBombActive() != 0U &&
+      boss.HasFlag(EnemyActorFlags::Draw)) {
     GrpGeom->Lock();
     for (uint8_t layer = 0; layer <= 5; ++layer) {
       GrpGeom->SetColor({5U - layer, 5U - layer, 5U});

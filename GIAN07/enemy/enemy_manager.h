@@ -114,22 +114,22 @@ private:
 
   EnemyAnimationSet animations_{};
   EnemyRenderer renderer_;
-  ObjectPool<EnemyActor, ENEMY_MAX> regular_enemies_;
-  ObjectPool<BossActor, BOSS_MAX> bosses_;
+  ObjectPool<EnemyActor, kEnemyCapacity> regular_enemies_;
+  ObjectPool<BossActor, kBossCapacity> bosses_;
   BossHudModel boss_hud_{};
 
   EnemyHomingTarget homing_target_;
-  int homing_distance_ = HOMING_DUMMY;
+  int homing_distance_ = kNoHomingDistance;
 
-  BulletManager *bullets_;
-  GameSession *session_;
-  ItemSystem *items_;
-  Player *player_;
-  stage::StageSession *stage_;
-  EffectManager *effects_;
+  BulletManager &bullets_;
+  GameSession &session_;
+  ItemSystem &items_;
+  Player &player_;
+  stage::StageSession &stage_;
+  EffectManager &effects_;
 
   EclHost ecl_host_;
   EclVm ecl_;
   SnakeFormation snakes_;
-  std::array<BitFormation, BOSS_MAX> bits_;
+  std::array<BitFormation, kBossCapacity> bits_;
 };

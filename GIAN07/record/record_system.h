@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "gameplay/game_rules.h"
@@ -47,6 +48,12 @@ struct ReplayRecord {
   std::vector<StageId> stages;
 };
 
+enum class RecordSaveResult : uint8_t {
+  Saved,
+  NoData,
+  IoError,
+};
+
 class RecordSystem {
 public:
   explicit RecordSystem(const data::GameData &data) : data_(data) {}
@@ -55,7 +62,7 @@ public:
                                          const GameSession &session) const;
   [[nodiscard]] std::vector<ScoreRecord> ListScores(GameLevel difficulty,
                                                     std::size_t limit) const;
-  [[nodiscard]] bool SaveScore(const ScoreRecord &record) const;
+  [[nodiscard]] RecordSaveResult SaveScore(const ScoreRecord &record) const;
 
   void BeginRecording(const Player &player, const GameSession &session,
                       const ConfigData &config);
@@ -65,7 +72,8 @@ public:
   void Record(INPUT_BITS input);
   void UpdateLastRecordedInput(INPUT_BITS input);
   void CancelRecording();
-  [[nodiscard]] bool SaveReplay(std::string_view name, bool extra_stage);
+  [[nodiscard]] RecordSaveResult SaveReplay(std::string_view name,
+                                            bool extra_stage);
 
   [[nodiscard]] std::vector<ReplayRecord> ListReplays() const;
   [[nodiscard]] bool LoadReplay(std::string_view path, StageId start_stage);
@@ -79,11 +87,9 @@ public:
                                    GameSession &session);
   [[nodiscard]] INPUT_BITS NextInput();
   void StopPlayback();
-  [[nodiscard]] bool IsPlaying() const { return playing_; }
-  [[nodiscard]] bool IsRecording() const { return recording_; }
-  [[nodiscard]] bool IsMultiStagePlayback() const {
-    return multi_stage_playback_;
-  }
+  [[nodiscard]] bool IsPlaying() const;
+  [[nodiscard]] bool IsRecording() const;
+  [[nodiscard]] bool IsMultiStagePlayback() const;
 
 private:
   struct ReplaySettings {
@@ -107,21 +113,30 @@ private:
     std::vector<INPUT_BITS> inputs;
   };
 
+  struct IdleState {};
+
+  struct RecordingState {
+    ReplaySettings settings;
+    StageCheckpoint current_checkpoint;
+    bool has_current_checkpoint = false;
+    std::vector<INPUT_BITS> current_inputs;
+    std::vector<ReplayStage> stages;
+  };
+
+  struct PlaybackState {
+    ReplaySettings settings;
+    std::vector<ReplayStage> stages;
+    std::size_t stage_index = 0;
+    std::size_t frame_cursor = 0;
+    bool active = false;
+    bool multi_stage = false;
+  };
+
   [[nodiscard]] bool LoadArchive(std::string_view path,
                                  std::optional<ReplayRecord> *record,
                                  ReplaySettings *settings,
                                  std::vector<ReplayStage> *stages) const;
 
   const data::GameData &data_;
-  ReplaySettings settings_{};
-  StageCheckpoint current_checkpoint_{};
-  bool has_current_checkpoint_ = false;
-  bool playing_ = false;
-  bool recording_ = false;
-  bool multi_stage_playback_ = false;
-  std::vector<INPUT_BITS> current_inputs_;
-  std::vector<ReplayStage> recorded_stages_;
-  std::vector<ReplayStage> playback_stages_;
-  std::size_t playback_stage_index_ = 0;
-  std::size_t frame_cursor_ = 0;
+  std::variant<IdleState, RecordingState, PlaybackState> state_;
 };

@@ -24,10 +24,10 @@ public:
   bool Play(unsigned int id);
 
   // Track title: waveform metadata title first, then GameData fallback.
-  std::string_view CurrentTitle() const;
+  [[nodiscard]] std::string_view CurrentTitle() const;
 
   // Total number of tracks in MUSIC.PAK.
-  size_t TrackCount() const;
+  [[nodiscard]] size_t TrackCount() const;
 
   // BGM pack management
   bool HasPacks(bool invalidate_cache = false);

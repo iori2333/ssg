@@ -28,7 +28,7 @@ void BulletManager::Init() {
   reflect_lasers_.Reset();
   long_lasers_.Reset();
   homing_lasers_.Reset();
-  Snd_SEStop(2);
+  Snd_SEStop(SfxId::Laser);
 }
 
 // ── BulletManager: Spawn (bullets) ────────────────────────────────
@@ -244,7 +244,7 @@ void BulletManager::UpdateBullet(const EnemyHomingTarget &target) {
       effects_.SpawnFragment(r.smoke_x, r.smoke_y, FragmentKind::Smoke);
     }
     if (r.division_requested) {
-      Snd_SEPlay(static_cast<SfxId>(12), r.division_cx);
+      Snd_SEPlay(SfxId::Joint, r.division_cx);
       auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true, session_);
       SpawnBullet(si);
     }
@@ -253,7 +253,7 @@ void BulletManager::UpdateBullet(const EnemyHomingTarget &target) {
 }
 
 void BulletManager::UpdateReflect() {
-  std::array<const LaserLong *, kLongLaserMax> active_longs{};
+  std::array<const LaserLong *, kLongLaserCapacity> active_longs{};
   std::size_t long_count = 0;
   for (const auto &ll : long_lasers_) {
     active_longs[long_count++] = &ll;
@@ -302,7 +302,7 @@ void BulletManager::HitCheck() {
       return;
     case HitResult::Graze:
       if (b.RegisterGraze()) {
-        player_.AddEvadeEx(b.X(), b.Y(), TAMA_EVADE);
+        player_.AddEvadeEx(b.X(), b.Y(), kBulletGrazeValue);
       } else {
         player_.AddEvadeEx(b.X(), b.Y(), 0);
       }
@@ -381,7 +381,7 @@ void BulletManager::Clear() {
   for (auto &ll : long_lasers_) {
     ll.Kill();
   }
-  Snd_SEStop(2);
+  Snd_SEStop(SfxId::Laser);
   for (auto &h : homing_lasers_) {
     h.Kill();
   }
@@ -390,7 +390,7 @@ void BulletManager::Clear() {
 
 uint32_t BulletManager::ConvertBulletsToScore() {
   uint32_t sum = 0;
-  uint32_t score = TAMA1_POINT + player_.GrazeCount() * 100;
+  uint32_t score = kBulletClearScoreStart + player_.GrazeCount() * 100;
   for (auto &b : bullets_) {
     if (!b.IsSmall()) {
       continue;
@@ -403,7 +403,7 @@ uint32_t BulletManager::ConvertBulletsToScore() {
   }
   bullets_.Compact([](const Bullet &b) { return b.IsDead(); });
 
-  score = TAMA2_POINT + player_.GrazeCount() * 100;
+  score = kBulletClearScoreEnd + player_.GrazeCount() * 100;
   for (auto &b : bullets_) {
     if (b.IsSmall()) {
       continue;
@@ -428,7 +428,7 @@ void BulletManager::ConvertBulletsToItems(uint8_t frequency) {
   for (auto &b : bullets_) {
     if (!b.IsClearing()) {
       if (rnd() % frequency == 0) {
-        items_.Spawn(b.X(), b.Y(), ITEM_SCORE);
+        items_.Spawn(b.X(), b.Y(), ItemKind::Score);
         b.RemoveImmediately();
       } else {
         b.Kill();
@@ -449,12 +449,12 @@ void BulletManager::ControlLongLaser(const EnemyActor *e, uint8_t id,
     ll.Update(info);
     switch (info.command) {
     case LongLaserUpdateInfo::Command::Open:
-      Snd_SEPlay(static_cast<SfxId>(2), ll.X(), true);
+      Snd_SEPlay(SfxId::Laser, ll.X(), true);
       break;
     case LongLaserUpdateInfo::Command::Close:
     case LongLaserUpdateInfo::Command::CloseToLine:
     case LongLaserUpdateInfo::Command::ForceClose:
-      Snd_SEStop(2);
+      Snd_SEStop(SfxId::Laser);
       break;
     default:
       break;

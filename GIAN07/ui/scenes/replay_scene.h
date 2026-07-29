@@ -83,4 +83,5 @@ private:
 
   NameEntry name_entry_;
   bool save_extra_stage_ = false;
+  bool save_failed_ = false;
 };

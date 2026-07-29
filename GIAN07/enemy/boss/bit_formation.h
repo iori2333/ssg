@@ -16,7 +16,7 @@ struct BulletManager;
 class EnemyManager;
 class Player;
 
-inline constexpr std::size_t BIT_MAX = 6;
+inline constexpr std::size_t kBitCapacity = 6;
 
 struct BitLink {
   PIXEL_POINT from{};
@@ -24,14 +24,14 @@ struct BitLink {
 };
 
 struct BitLinkGeometry {
-  std::array<BitLink, BIT_MAX> links{};
+  std::array<BitLink, kBitCapacity> links{};
   std::size_t count = 0;
 };
 
 class BitFormation {
 public:
   BitFormation(EnemyManager &enemies, BulletManager &bullets, Player &player)
-      : enemies_(&enemies), bullets_(&bullets), player_(&player) {}
+      : enemies_(enemies), bullets_(bullets), player_(player) {}
 
   void Reset();
   void Spawn(BossActor &parent, uint8_t count, uint32_t script_id);
@@ -68,7 +68,7 @@ private:
   void UpdateRotation();
   void PruneInvalidParts();
 
-  std::array<Part, BIT_MAX> parts_{};
+  std::array<Part, kBitCapacity> parts_{};
   EnemyActor *parent_ = nullptr;
   int center_x_ = 0;
   int center_y_ = 0;
@@ -84,7 +84,7 @@ private:
   uint16_t base_angle_ = 0;
   bool laser_active_ = false;
 
-  EnemyManager *enemies_;
-  BulletManager *bullets_;
-  Player *player_;
+  EnemyManager &enemies_;
+  BulletManager &bullets_;
+  Player &player_;
 };

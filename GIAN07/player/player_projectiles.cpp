@@ -1,5 +1,5 @@
 ///
-/// PlayerShot - Player projectile movement, collision, and drawing.
+/// Player projectiles - movement, collision, and drawing.
 ///
 /// Loadout-specific firing lives in player/loadout. This file owns the shared
 /// projectile pool and per-frame dispatch.
@@ -47,16 +47,16 @@ constexpr uint8_t ShotDamage(PlayerShotKind kind) {
 
 // --- Fire dispatch ---
 
-void Player::UpdateWeapons_(EnemyManager &enemies, INPUT_BITS input) {
+void Player::UpdateWeapons(EnemyManager &enemies, INPUT_BITS input) {
   if (((input & KEY_TAMA) != 0) && toge_time_ == 0 && !IsMovementDisabled()) {
-    toge_time_ = MAID_TAMA_START;
+    toge_time_ = kShotCycleStart;
   }
 
   if ((input & KEY_BOMB) != 0) {
     const auto trigger = life_state_ == LifeState::DeathbombWindow
                              ? BombTrigger::Deathbomb
                              : BombTrigger::Manual;
-    ActivateBomb_(trigger);
+    ActivateBomb(trigger);
   }
 
   if (bomb_time_ != 0U) {
@@ -66,10 +66,10 @@ void Player::UpdateWeapons_(EnemyManager &enemies, INPUT_BITS input) {
 
   if (toge_time_ != 0U) {
     const uint8_t tier = (exp_ + 1) >> 5;
-    if (IsMainShotFrame_(toge_time_)) {
+    if (IsMainShotFrame(toge_time_)) {
       loadout_->FireMain(*this, tier, focused_);
     }
-    if (IsSubShotFrame_(toge_time_)) {
+    if (IsSubShotFrame(toge_time_)) {
       loadout_->FireSub(*this, tier, focused_);
     }
     toge_time_--;
@@ -133,7 +133,7 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
 
 // --- Bullet movement & hit check ---
 
-void Player::UpdateProjectiles_(EnemyManager &enemies) {
+void Player::UpdateProjectiles(EnemyManager &enemies) {
   for (auto &t : maid_tama_) {
     if (t.kind_ == PlayerShotKind::HomingBombBlast) {
       enemies.ApplyPlayerAttack(PlayerAttack::Point(

@@ -15,14 +15,14 @@
 struct BulletManager;
 class EnemyManager;
 
-inline constexpr std::size_t SNAKE_MAX = 4;
-inline constexpr std::size_t SNAKE_LENGTH = 30;
-inline constexpr std::size_t SNAKE_POINTS_PER_SEGMENT = 8;
+inline constexpr std::size_t kSnakeCapacity = 4;
+inline constexpr std::size_t kSnakeLength = 30;
+inline constexpr std::size_t kSnakePointsPerSegment = 8;
 
 class SnakeFormation {
 public:
   SnakeFormation(EnemyManager &enemies, BulletManager &bullets)
-      : enemies_(&enemies), bullets_(&bullets) {}
+      : enemies_(enemies), bullets_(bullets) {}
 
   void Reset();
   void Spawn(BossActor &parent, uint32_t tail_script);
@@ -38,8 +38,8 @@ private:
   };
 
   struct Snake {
-    std::array<TrailPoint, SNAKE_LENGTH * SNAKE_POINTS_PER_SEGMENT> trail{};
-    std::array<EnemyActor *, SNAKE_LENGTH> segments{};
+    std::array<TrailPoint, kSnakeLength * kSnakePointsPerSegment> trail{};
+    std::array<EnemyActor *, kSnakeLength> segments{};
     EnemyActor *parent = nullptr;
     std::size_t head = 0;
     bool active = false;
@@ -47,7 +47,7 @@ private:
 
   void Destroy(Snake &snake);
 
-  std::array<Snake, SNAKE_MAX> snakes_{};
-  EnemyManager *enemies_;
-  BulletManager *bullets_;
+  std::array<Snake, kSnakeCapacity> snakes_{};
+  EnemyManager &enemies_;
+  BulletManager &bullets_;
 };

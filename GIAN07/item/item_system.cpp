@@ -11,57 +11,57 @@
 #include "player/player.h"
 #include "util/ut_math.h"
 
-int ItemSystem::HitRadius(uint8_t type) {
-  switch (type) {
-  case ITEM_BOMB:
-  case ITEM_EXTEND:
-    return ITEM_HIT_RADIUS_LARGE;
+int ItemSystem::HitRadius(ItemKind kind) {
+  switch (kind) {
+  case ItemKind::Bomb:
+  case ItemKind::Extend:
+    return kLargeItemHitRadius;
   default:
-    return ITEM_HIT_RADIUS;
+    return kItemHitRadius;
   }
 }
 
-// Spawn an item
-void ItemSystem::Spawn(int x, int y, uint8_t type) {
+void ItemSystem::Spawn(int x, int y, ItemKind kind) {
+  if (kind == ItemKind::None) {
+    return;
+  }
   auto *ip = pool_.Alloc();
   if (!ip) {
     return;
   }
 
-  constexpr uint8_t deg = -64; // rnd()%(128-110)+128+55;
+  constexpr uint8_t deg = -64;
   ip->x = x;
   ip->y = y;
-  ip->type = type; // ITEM_SCORE;
+  ip->kind = kind;
   ip->count = 0;
   ip->auto_collect = false;
 
-  switch (type) {
-  case ITEM_SCORE:
+  switch (kind) {
+  case ItemKind::None:
+    return;
+  case ItemKind::Score:
     ip->vx = cosl(deg, 3_px);
     ip->vy = sinl(deg, 3_px);
     break;
 
-  case ITEM_EXTEND:
+  case ItemKind::Extend:
     ip->vx = cosl(deg, 2_px);
     ip->vy = sinl(deg, 2_px);
     break;
 
-  case ITEM_BOMB:
+  case ItemKind::Bomb:
     ip->vx = cosl(deg, 2_px);
     ip->vy = sinl(deg, 2_px);
     break;
   }
 }
 
-// Move items
 void ItemSystem::Update() {
   int tx = 0;
   int ty = 0;
   int l = 0;
 
-  // Auto-collect items when player is above this height
-
-  // point = 100+(player_->GrazeCount())*100;
   const uint32_t point =
       (((((playfield::kWorldBottom - 10_px) - player_.Y()) >> 6) +
         (player_.GrazeCount() * 4)) *
@@ -69,8 +69,8 @@ void ItemSystem::Update() {
 
   for (auto &ip : pool_) {
     if (!player_.IsBombActive()) {
-      if (player_.Y() < STAR_COLLECT_LINE ||
-          player_.GrazeWaitTime() > STAR_COLLECT_EVADETIME || ip.auto_collect) {
+      if (player_.Y() < kStarCollectLine ||
+          player_.GrazeWaitTime() > kStarCollectGrazeWait || ip.auto_collect) {
         // Player above collect line or auto-collect already active
         ip.auto_collect = true;
         tx = (player_.X() - ip.x);
@@ -91,19 +91,17 @@ void ItemSystem::Update() {
     }
 
     if (ip.vy < 6_px) {
-      ip.vy += ITEM_GRAVITY;
+      ip.vy += kItemGravity;
     }
     ip.count++;
     {
       const int64_t dx = static_cast<int64_t>(ip.x) - player_.X();
       const int64_t dy = static_cast<int64_t>(ip.y) - player_.Y();
-      const int r = HitRadius(ip.type);
+      const int r = HitRadius(ip.kind);
       if ((dx * dx + dy * dy) < (static_cast<int64_t>(r) * r)) {
-        switch (ip.type) {
-        case ITEM_SCORE: {
+        switch (ip.kind) {
+        case ItemKind::Score: {
           Snd_SEPlay(SfxId::Select, ip.x);
-          // Item pickup no longer increases rank.
-          // increases Rank
           player_.AddScore(point);
           effects_.SpawnPointValue(ip.x, ip.y, point);
           if (player_.GrazeCount() != 0U) {
@@ -114,32 +112,34 @@ void ItemSystem::Update() {
           const uint32_t star_amt = (player_.GrazeCount() != 0U) ? 2 : 1;
           const auto reward = player_.AddStar(star_amt);
           switch (reward) {
-          case PlayerReward::EXTEND:
+          case PlayerReward::Extend:
             effects_.SpawnString(180 + 64, 80, "E x t e n d  !");
             break;
-          case PlayerReward::BOMB:
+          case PlayerReward::Bomb:
             effects_.SpawnString(120 + 64, 80, "B o m b   E x t e n d  !");
             break;
-          case PlayerReward::NONE:
+          case PlayerReward::None:
             break;
           }
 
           break;
         }
 
-        case ITEM_EXTEND:
+        case ItemKind::Extend:
           Snd_SEPlay(SfxId::Select, ip.x);
           effects_.SpawnString(180 + 64, 80, "E x t e n d  !");
           player_.PickupExtend();
           break;
 
-        case ITEM_BOMB:
+        case ItemKind::Bomb:
           Snd_SEPlay(SfxId::Select, ip.x);
           effects_.SpawnString(120 + 64, 80, "B o m b   E x t e n d  !");
           player_.PickupBomb();
           break;
+        case ItemKind::None:
+          break;
         }
-        ip.type = ITEM_DELETE;
+        ip.kind = ItemKind::None;
       }
     }
 
@@ -147,14 +147,14 @@ void ItemSystem::Update() {
     if ((ip.x) < playfield::kWorldLeft - 8_px ||
         (ip.x) > playfield::kWorldRight + 8_px ||
         (ip.y) > playfield::kWorldBottom + 8_px) {
-      ip.type = ITEM_DELETE;
+      ip.kind = ItemKind::None;
     }
   }
 
-  pool_.Compact([](const ItemData &i) { return (i.type == ITEM_DELETE); });
+  pool_.Compact(
+      [](const ItemData &item) { return item.kind == ItemKind::None; });
 }
 
-// Draw items
 void ItemSystem::Draw() const {
   int j = 0;
   int x = 0;
@@ -163,15 +163,15 @@ void ItemSystem::Draw() const {
 
   for (const auto &ip : pool_) {
     const uint8_t ptn = ((ip.count >> 2) & 3);
-    switch (ip.type) {
-    case ITEM_SCORE:
+    switch (ip.kind) {
+    case ItemKind::Score:
       src = PIXEL_LTWH{(384 + (ptn << 4)), (256 + 16), 16, 16};
       x = (ip.x >> 6) - 8;
       y = (ip.y >> 6) - 8;
       GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
       break;
 
-    case ITEM_EXTEND:
+    case ItemKind::Extend:
       for (j = 0; j < 8; j++) {
         src = PIXEL_LTWH{(384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16};
         x = (ip.x >> 6) - 8 + cosl(ip.count + (j * 256 / 8), 12);
@@ -179,15 +179,9 @@ void ItemSystem::Draw() const {
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
       }
 
-      //	src = PIXEL_LTWH{
-      //		(384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16
-      //	};
-      //	x = (ip.x>>6) - 8;
-      //	y = (ip.y>>6) - 8;
-      //	GrpSurface_Blit({ x, y }, SURFACE_ID::SYSTEM, src);
       break;
 
-    case ITEM_BOMB:
+    case ItemKind::Bomb:
       for (j = 0; j < 8; j++) {
         src = PIXEL_LTWH{(384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16};
         x = (ip.x >> 6) - 8 + cosl((-2 * ip.count) + (j * 256 / 8), 12);
@@ -195,19 +189,12 @@ void ItemSystem::Draw() const {
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
       }
 
-      //	src = PIXEL_LTWH{
-      //		(384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16
-      //	};
-      //	x = (ip.x>>6) - 8;
-      //	y = (ip.y>>6) - 8;
-      //	GrpSurface_Blit({ x, y }, SURFACE_ID::SYSTEM, src);
       break;
 
-    default:
+    case ItemKind::None:
       break;
     }
   }
 }
 
-// Initialize item pool
 void ItemSystem::Reset() { pool_.Reset(); }

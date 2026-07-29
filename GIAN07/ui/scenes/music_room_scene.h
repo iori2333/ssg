@@ -21,7 +21,7 @@ class GraphicsLoader;
 
 class MusicRoomScene {
 public:
-  MusicRoomScene(data::GameData &data, data::GraphicsLoader &graphics,
+  MusicRoomScene(const data::GameData &data, data::GraphicsLoader &graphics,
                  MusicPlayer &music)
       : data_(data), graphics_(graphics), music_(music) {}
 
@@ -54,7 +54,7 @@ private:
   std::array<uint16_t, 144> spectrum_peaks_{};
   uint8_t spectrum_decay_frame_ = 0;
 
-  data::GameData &data_;
+  const data::GameData &data_;
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
 };

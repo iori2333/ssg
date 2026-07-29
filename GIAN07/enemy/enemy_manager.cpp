@@ -40,8 +40,8 @@ int RandomWorldY() {
 EnemyManager::EnemyManager(BulletManager &bullets, ItemSystem &items,
                            GameSession &session, Player &player,
                            stage::StageSession &stage, EffectManager &effects)
-    : renderer_(animations_, player), bullets_(&bullets), session_(&session),
-      items_(&items), player_(&player), stage_(&stage), effects_(&effects),
+    : renderer_(animations_, player), bullets_(bullets), session_(session),
+      items_(items), player_(player), stage_(stage), effects_(effects),
       ecl_host_(*this, bullets, session, player, stage),
       ecl_(ecl_host_, effects), snakes_(*this, bullets),
       bits_{BitFormation(*this, bullets, player),
@@ -89,7 +89,7 @@ void EnemyManager::Update() {
 
 void EnemyManager::ResetHomingTarget() {
   homing_target_ = {};
-  homing_distance_ = HOMING_DUMMY;
+  homing_distance_ = kNoHomingDistance;
 }
 
 void EnemyManager::DrawBosses() { renderer_.DrawBosses(bosses_, bits_); }
@@ -99,7 +99,7 @@ void EnemyManager::SpawnBoss(PIXEL_POINT position, uint32_t script_id) {
 }
 
 void EnemyManager::ConsiderHomingTarget(const EnemyActor &actor) {
-  const int temp = player_->Y() - actor.y;
+  const int temp = player_.Y() - actor.y;
 
   if (temp < 0) {
     return;
@@ -126,26 +126,27 @@ void EnemyManager::BeginActorFrame(EnemyActor &actor,
       (actor.auto_fire_frame + 1) % actor.auto_fire_interval;
   if (actor.auto_fire_frame == 0) {
     auto spawn = MakeBulletSpawnInfo(actor.bullet_command, actor.x, actor.y,
-                                     true, *session_);
-    bullets_->SpawnBullet(spawn);
+                                     true, session_);
+    bullets_.SpawnBullet(spawn);
   }
 }
 
 void EnemyManager::CheckPlayerCollision(const EnemyActor &actor) const {
   const int dx =
-      std::max(std::abs(player_->X() - actor.x) - actor.hitbox_half_width, 0);
+      std::max(std::abs(player_.X() - actor.x) - actor.hitbox_half_width, 0);
   const int dy =
-      std::max(std::abs(player_->Y() - actor.y) - actor.hitbox_half_height, 0);
-  const auto radius = static_cast<int64_t>(player_->HitRadius());
+      std::max(std::abs(player_.Y() - actor.y) - actor.hitbox_half_height, 0);
+  const auto radius = static_cast<int64_t>(player_.HitRadius());
   if (static_cast<int64_t>(dx) * dx + static_cast<int64_t>(dy) * dy <=
           radius * radius &&
-      !player_->IsInvincible() && (actor.flag & EF_HITSB) != 0) {
-    player_->OnHit();
+      !player_.IsInvincible() &&
+      actor.HasFlag(EnemyActorFlags::CollidesWithPlayer)) {
+    player_.OnHit();
   }
 }
 
 void EnemyManager::FinishActorFrame(EnemyActor &actor, bool consider_homing) {
-  if (consider_homing && (actor.flag & EF_DAMAGE) != 0) {
+  if (consider_homing && actor.HasFlag(EnemyActorFlags::Damageable)) {
     ConsiderHomingTarget(actor);
   }
   actor.UpdateAnimation(animations_);
@@ -175,16 +176,16 @@ void EnemyManager::UpdateRegular() {
           (e->y > playfield::kWorldBottom + e->hitbox_half_height) ||
           (e->x < playfield::kWorldLeft - e->hitbox_half_width) ||
           (e->x > playfield::kWorldRight + e->hitbox_half_width)) {
-        if ((e->flag & EF_CLIP) == 0) {
+        if (!e->HasFlag(EnemyActorFlags::KeepOutsidePlayfield)) {
           if (e->long_laser_count != 0U) {
-            bullets_->ControlLongLaser(
+            bullets_.ControlLongLaser(
                 e, ECL_ALL_LONG_LASERS,
                 LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
           }
           e->state = EnemyActorState::PendingRemoval;
         }
       }
-    } else if (e->count >= (8 * ENEMY_BOMB_SPD) - 1) {
+    } else if (e->count >= (8 * kEnemyExplosionSpeed) - 1) {
       e->state = EnemyActorState::PendingRemoval;
     }
 
@@ -204,10 +205,10 @@ void EnemyManager::ClearRegular() {
       continue;
     }
 
-    if ((e->flag & EF_DRAW) != 0) {
+    if (e->HasFlag(EnemyActorFlags::Draw)) {
       e->BeginExplosion();
       if (e->long_laser_count != 0U) {
-        bullets_->ControlLongLaser(
+        bullets_.ControlLongLaser(
             e, ECL_ALL_LONG_LASERS,
             LongLaserUpdateInfo{
                 LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
@@ -220,7 +221,7 @@ void EnemyManager::ClearRegular() {
       e->hp = 0;
       e->count = 0;
       if (e->long_laser_count != 0U) {
-        bullets_->ControlLongLaser(
+        bullets_.ControlLongLaser(
             e, ECL_ALL_LONG_LASERS,
             LongLaserUpdateInfo{
                 LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
@@ -246,7 +247,7 @@ void EnemyManager::CompactRegular() {
 void EnemyManager::RetireActor(EnemyActor &actor) {
   // Release every cross-frame observer before ObjectPool can reuse this slot.
   OnActorRetired(actor);
-  bullets_->ControlLongLaser(
+  bullets_.ControlLongLaser(
       &actor, ECL_ALL_LONG_LASERS,
       LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
   actor.long_laser_count = 0;
@@ -264,20 +265,19 @@ void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
   if (std::cmp_less_equal(actor.hp, damage)) {
     Snd_SEPlay(SfxId::Bomb, actor.x);
     if (actor.long_laser_count != 0U) {
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           &actor, ECL_ALL_LONG_LASERS,
-          LongLaserUpdateInfo{
-              LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
-    player_->PowerUp(static_cast<uint8_t>(actor.hp)); // Power up
+    player_.PowerUp(static_cast<uint8_t>(actor.hp));
     actor.BeginExplosion();
-    player_->AddScore(actor.score);
-    if (actor.item != 0U) {
-      items_->Spawn(actor.x, actor.y, actor.item);
+    player_.AddScore(actor.score);
+    if (actor.item != ItemKind::None) {
+      items_.Spawn(actor.x, actor.y, actor.item);
     }
   } else {
     Snd_SEPlay(SfxId::Hit, actor.x);
-    player_->PowerUp(damage); // Power up here too
+    player_.PowerUp(damage);
     actor.hp -= damage;
   }
 }
@@ -290,7 +290,7 @@ bool EnemyManager::ApplyPlayerAttack(const PlayerAttack &attack) {
 
   for (auto &actor : regular_enemies_) {
     if (actor.state != EnemyActorState::Active ||
-        (actor.flag & EF_DAMAGE) == 0 || !actor.IsHitBy(attack)) {
+        !actor.HasFlag(EnemyActorFlags::Damageable) || !actor.IsHitBy(attack)) {
       continue;
     }
     ApplyRegularDamage(actor, attack.regular_damage);
@@ -319,9 +319,10 @@ void EnemyManager::InitializeActor(EnemyActor &actor, WORLD_POINT position,
 
   actor.hp = std::numeric_limits<uint32_t>::max();
   actor.d = 64;
-  actor.flag = EF_DAMAGE | EF_DRAW | EF_HITSB;
+  actor.flags = EnemyActorFlags::Damageable | EnemyActorFlags::Draw |
+                EnemyActorFlags::CollidesWithPlayer;
   actor.auto_fire_frame = Cast::down<uint8_t>(rnd());
-  actor.item = ITEM_SCORE;
+  actor.item = ItemKind::Score;
   actor.v = 64;
   actor.vx = cosl(actor.d, actor.v);
   actor.vy = sinl(actor.d, actor.v);

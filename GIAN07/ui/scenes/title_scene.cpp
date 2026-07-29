@@ -41,7 +41,7 @@ bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
     return false;
   }
   GrpBackend_SetClip(GRP_RES_RECT);
-  Snd_SEStop(8);
+  Snd_SEStop(SfxId::Warning);
 
   ui_.ForceCloseMessageWindow();
   ui_.InitMessageWindow({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480},
@@ -103,8 +103,8 @@ TitleSceneResult TitleScene::Update(INPUT_BITS input, bool should_draw) {
     return TitleSceneResult::StartDemo;
   }
 
-  auto *active_menu = ui_.ActiveMenu();
-  active_menu->Tick(input);
+  auto &main_menu = ui_.Main();
+  main_menu.Tick(input);
   ui_.ShowMenuHelp();
   ui_.TickMessageWindow();
 
@@ -134,7 +134,7 @@ TitleSceneResult TitleScene::Update(INPUT_BITS input, bool should_draw) {
     GrpBackend_Clear();
     GrpSurface_Blit({0, 42}, SURFACE_ID::TITLE, source);
     ui_.DrawMessageWindow();
-    active_menu->Draw();
+    main_menu.Draw();
     DrawVersion(438);
     Grp_Flip();
   }

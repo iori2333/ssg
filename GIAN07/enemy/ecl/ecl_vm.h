@@ -17,7 +17,7 @@ class EffectManager;
 class EclVm {
 public:
   EclVm(EclHost &host, EffectManager &effects)
-      : host_(&host), effects_(&effects) {}
+      : host_(host), effects_(effects) {}
 
   void Install(EclProgram program) { program_ = std::move(program); }
   [[nodiscard]] bool Start(EnemyActor &actor, uint32_t script_id) const;
@@ -50,8 +50,8 @@ private:
                          uint32_t value);
 
   EclProgram program_;
-  EclHost *host_;
-  EffectManager *effects_;
+  EclHost &host_;
+  EffectManager &effects_;
   uint8_t sequence_angle_ = 0;
   uint8_t sequence_angle_delta_ = 0;
 };

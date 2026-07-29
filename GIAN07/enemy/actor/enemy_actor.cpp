@@ -29,7 +29,7 @@ void EnemyActor::UpdateAnimation(const EnemyAnimationSet &animations) {
   }
 
   switch (animation_data.mode) {
-  case ANM_NORM:
+  case EnemyAnimationMode::Loop:
     if (animation_speed > 0 && count % animation_speed == 0) {
       animation_frame = (animation_frame + 1) % animation_data.n;
     } else if (animation_speed < 0 && count % -animation_speed == 0) {
@@ -38,14 +38,14 @@ void EnemyActor::UpdateAnimation(const EnemyAnimationSet &animations) {
     }
     break;
 
-  case ANM_STOP:
+  case EnemyAnimationMode::StopAtEnd:
     if (animation_speed > 0 && count % animation_speed == 0 &&
         animation_frame < animation_data.n - 1) {
       ++animation_frame;
     }
     break;
 
-  default:
+  case EnemyAnimationMode::Directional:
     break;
   }
 }

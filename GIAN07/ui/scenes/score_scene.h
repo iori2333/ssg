@@ -65,6 +65,7 @@ private:
   uint8_t current_difficulty_ = 0;
   bool input_locked_ = false;
   bool detail_open_ = false;
+  bool save_failed_ = false;
   NameEntry name_entry_;
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;

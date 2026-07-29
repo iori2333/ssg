@@ -19,6 +19,7 @@
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
+#include "item/item_system.h"
 #include "player/player.h"
 #include "stage/stage_session.h"
 #include "util/cast.h"
@@ -124,13 +125,13 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
     actor.hp = args.hp;
     actor.score = args.score;
     if (actor.hp == 0) {
-      host_->KillBosses();
+      host_.KillBosses();
     }
     return Step::Advance;
   }
   case EclOpcode::End:
     if (actor.long_laser_count != 0U) {
-      host_->Bullets().ControlLongLaser(
+      host_.Bullets().ControlLongLaser(
           &actor, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
@@ -193,7 +194,7 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
 
   case EclOpcode::JumpDifficulty: {
     const auto &targets = Args<EclDifficultyJumpArguments>(instruction).targets;
-    switch (host_->Session().EffectiveLevel()) {
+    switch (host_.Session().EffectiveLevel()) {
     case GameLevel::Easy:
       actor.script.position = targets[0];
       break;
@@ -213,8 +214,8 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
 
   case EclOpcode::JumpDirection: {
     const auto difference =
-        static_cast<uint8_t>(abs(atan8(host_->GetPlayer().X() - actor.x,
-                                       host_->GetPlayer().Y() - actor.y) -
+        static_cast<uint8_t>(abs(atan8(host_.GetPlayer().X() - actor.x,
+                                       host_.GetPlayer().Y() - actor.y) -
                                  actor.d));
     if (difference < 4) {
       actor.script.position = Args<EclJumpArguments>(instruction).target;
@@ -250,13 +251,17 @@ EclVm::Step
 EclVm::ExecuteMovementInstruction(EnemyActor &actor,
                                   const EclInstruction &instruction) {
   const auto absolute_angle = [&actor](uint8_t angle) -> uint8_t {
-    return (actor.flag & EF_RLCHG) ? (128 - angle) : angle;
+    return actor.HasFlag(EnemyActorFlags::HorizontalMirror) ? (128 - angle)
+                                                            : angle;
   };
   const auto absolute_velocity_x = [&actor](int velocity) {
-    return (actor.flag & EF_RLCHG) ? -velocity : velocity;
+    return actor.HasFlag(EnemyActorFlags::HorizontalMirror) ? -velocity
+                                                            : velocity;
   };
   const auto relative_angle = [&actor](int8_t angle) -> int8_t {
-    return (actor.flag & EF_RLCHG) ? static_cast<int8_t>(-angle) : angle;
+    return actor.HasFlag(EnemyActorFlags::HorizontalMirror)
+               ? static_cast<int8_t>(-angle)
+               : angle;
   };
   const auto continue_duration = [&actor](uint16_t frames) {
     if (actor.script.wait_counter == 0) {
@@ -398,11 +403,11 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.vx =
           instruction.Opcode() == EclOpcode::MoveToPlayerY
               ? 0
-              : (host_->GetPlayer().X() - actor.x) / actor.script.wait_counter;
+              : (host_.GetPlayer().X() - actor.x) / actor.script.wait_counter;
       actor.vy =
           instruction.Opcode() == EclOpcode::MoveToPlayerX
               ? 0
-              : (host_->GetPlayer().Y() - actor.y) / actor.script.wait_counter;
+              : (host_.GetPlayer().Y() - actor.y) / actor.script.wait_counter;
     }
     if (--actor.script.wait_counter != 0) {
       actor.x += actor.vx;
@@ -436,7 +441,7 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.vx = cosl(actor.d, actor.v);
       actor.vy = sinl(actor.d, actor.v);
       actor.vd = gravity;
-      actor.flag |= EF_CLIP;
+      actor.SetFlag(EnemyActorFlags::KeepOutsidePlayfield, true);
     } else {
       actor.x += actor.vx;
       actor.y += actor.vy;
@@ -466,8 +471,8 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     actor.d = rnd() & 0xff;
     return Step::Advance;
   case EclOpcode::AimAtPlayer:
-    actor.d = atan8(host_->GetPlayer().X() - actor.x,
-                    host_->GetPlayer().Y() - actor.y);
+    actor.d =
+        atan8(host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y);
     return Step::Advance;
   case EclOpcode::SetSpeed:
     actor.v = Args<EclSignedDwordArguments>(instruction).value;
@@ -498,8 +503,8 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     sequence_angle_ += sequence_angle_delta_;
     return Step::Advance;
   case EclOpcode::MoveToPlayerPosition:
-    actor.x = host_->GetPlayer().X();
-    actor.y = host_->GetPlayer().Y();
+    actor.x = host_.GetPlayer().X();
+    actor.y = host_.GetPlayer().Y();
     return Step::Advance;
 
   case EclOpcode::RandomBoundedAngle: {
@@ -571,8 +576,8 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
   const auto fire = [&](bool scale,
                         BulletSpawnType type = BulletSpawnType::Normal) {
     auto info = MakeBulletSpawnInfo(actor.bullet_command, actor.x, actor.y,
-                                    scale, host_->Session(), type);
-    host_->Bullets().SpawnBullet(info);
+                                    scale, host_.Session(), type);
+    host_.Bullets().SpawnBullet(info);
   };
 
   switch (instruction.Opcode()) {
@@ -613,8 +618,8 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::AimBulletAtPlayer:
-    actor.bullet_command.d = atan8(host_->GetPlayer().X() - actor.x,
-                                   host_->GetPlayer().Y() - actor.y);
+    actor.bullet_command.d =
+        atan8(host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y);
     break;
   case EclOpcode::SyncBulletAngle:
     actor.bullet_command.d = actor.d;
@@ -661,12 +666,12 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
     actor.bullet_command.rep = Args<EclByteArguments>(instruction).value;
     break;
   case EclOpcode::ClearBullets:
-    host_->ClearBossProjectiles();
-    host_->Bullets().Clear();
-    host_->ClearRegular();
+    host_.ClearBossProjectiles();
+    host_.Bullets().Clear();
+    host_.ClearRegular();
     break;
   case EclOpcode::BulletsToItems:
-    host_->Bullets().ConvertBulletsToItems(
+    host_.Bullets().ConvertBulletsToItems(
         Args<EclByteArguments>(instruction).value);
     break;
   default:
@@ -678,7 +683,7 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
 EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
                                            const EclInstruction &instruction) {
   const auto fire_reflect = [&](bool unscaled) {
-    host_->Bullets().SpawnReflect(ReflectSpawnInfo{
+    host_.Bullets().SpawnReflect(ReflectSpawnInfo{
         .no_scaling = unscaled,
         .x = actor.x + actor.laser_command.x,
         .y = actor.y + actor.laser_command.y,
@@ -729,8 +734,8 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::AimLaserAtPlayer:
-    actor.laser_command.d = atan8(host_->GetPlayer().X() - actor.x,
-                                  host_->GetPlayer().Y() - actor.y);
+    actor.laser_command.d =
+        atan8(host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y);
     break;
   case EclOpcode::SyncLaserAngle:
     actor.laser_command.d = actor.d;
@@ -762,7 +767,7 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::SpawnLongLaser:
-    if (host_->Bullets().SpawnLongLaser(LongLaserSpawnInfo{
+    if (host_.Bullets().SpawnLongLaser(LongLaserSpawnInfo{
             .enemy = &actor,
             .enemy_id = actor.long_laser_count,
             .dx = actor.laser_command.x,
@@ -777,13 +782,13 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     }
     break;
   case EclOpcode::OpenLongLaser:
-    host_->Bullets().ControlLongLaser(
+    host_.Bullets().ControlLongLaser(
         &actor, Args<EclLongLaserArguments>(instruction).id,
         LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
     break;
   case EclOpcode::CloseLongLaser: {
     const auto id = Args<EclLongLaserArguments>(instruction).id;
-    host_->Bullets().ControlLongLaser(
+    host_.Bullets().ControlLongLaser(
         &actor, id, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
     if (id == ECL_ALL_LONG_LASERS) {
       actor.long_laser_count = 0;
@@ -793,20 +798,20 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::CloseLongLaserToLine:
-    host_->Bullets().ControlLongLaser(
+    host_.Bullets().ControlLongLaser(
         &actor, Args<EclLongLaserArguments>(instruction).id,
         LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
     break;
   case EclOpcode::AddLongLaserAngle: {
     const auto &args = Args<EclLongLaserArguments>(instruction);
-    host_->Bullets().ControlLongLaser(
+    host_.Bullets().ControlLongLaser(
         &actor, args.id,
         LongLaserUpdateInfo{LongLaserUpdateInfo::Command::AdjustAngle, 0,
                             args.angle_delta});
     break;
   }
   case EclOpcode::FireHomingLaser:
-    host_->Bullets().SpawnHoming(HomingSpawnInfo{
+    host_.Bullets().SpawnHoming(HomingSpawnInfo{
         .x = actor.x + actor.laser_command.x,
         .y = actor.y + actor.laser_command.y,
         .d = actor.laser_command.d,
@@ -827,50 +832,50 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
                                            const EclInstruction &instruction) {
   switch (instruction.Opcode()) {
   case EclOpcode::EnableDraw:
-    actor.flag |= EF_DRAW;
+    actor.SetFlag(EnemyActorFlags::Draw, true);
     break;
   case EclOpcode::DisableDraw:
-    actor.flag &= ~EF_DRAW;
+    actor.SetFlag(EnemyActorFlags::Draw, false);
     break;
   case EclOpcode::EnableClip:
-    actor.flag |= EF_CLIP;
+    actor.SetFlag(EnemyActorFlags::KeepOutsidePlayfield, true);
     break;
   case EclOpcode::DisableClip:
-    actor.flag &= ~EF_CLIP;
+    actor.SetFlag(EnemyActorFlags::KeepOutsidePlayfield, false);
     break;
   case EclOpcode::EnableDamage:
-    actor.flag |= EF_DAMAGE;
+    actor.SetFlag(EnemyActorFlags::Damageable, true);
     break;
   case EclOpcode::DisableDamage:
-    actor.flag &= ~EF_DAMAGE;
+    actor.SetFlag(EnemyActorFlags::Damageable, false);
     break;
   case EclOpcode::EnablePlayerCollision:
-    actor.flag |= EF_HITSB;
+    actor.SetFlag(EnemyActorFlags::CollidesWithPlayer, true);
     break;
   case EclOpcode::DisablePlayerCollision:
-    actor.flag &= ~EF_HITSB;
+    actor.SetFlag(EnemyActorFlags::CollidesWithPlayer, false);
     break;
   case EclOpcode::EnableHorizontalMirror:
     if (actor.x < playfield::kWorldCenterX) {
-      actor.flag |= EF_RLCHG;
+      actor.SetFlag(EnemyActorFlags::HorizontalMirror, true);
     } else {
-      actor.flag &= ~EF_RLCHG;
+      actor.SetFlag(EnemyActorFlags::HorizontalMirror, false);
     }
     break;
   case EclOpcode::DisableHorizontalMirror:
-    actor.flag &= ~EF_RLCHG;
+    actor.SetFlag(EnemyActorFlags::HorizontalMirror, false);
     break;
   case EclOpcode::SetAnimation: {
     const auto &args = Args<EclAnimationArguments>(instruction);
-    if (args.pattern >= host_->Animations().size() ||
-        host_->Animations()[args.pattern].n == 0) {
+    if (args.pattern >= host_.Animations().size() ||
+        host_.Animations()[args.pattern].n == 0) {
       actor.state = EnemyActorState::PendingRemoval;
       return Step::Halt;
     }
     actor.animation = actor.damage_animation = args.pattern;
     actor.animation_speed = args.speed;
-    actor.hitbox_half_height = host_->Animations()[actor.animation].size.h << 5;
-    actor.hitbox_half_width = host_->Animations()[actor.animation].size.w << 5;
+    actor.hitbox_half_height = host_.Animations()[actor.animation].size.h << 5;
+    actor.hitbox_half_width = host_.Animations()[actor.animation].size.w << 5;
     actor.animation_frame = 0;
     break;
   }
@@ -879,8 +884,8 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
                actor.x);
     break;
   case EclOpcode::BossAction:
-    host_->HandleBossAction(actor,
-                            Args<EclBossActionArguments>(instruction).action);
+    host_.HandleBossAction(actor,
+                           Args<EclBossActionArguments>(instruction).action);
     break;
   case EclOpcode::SetSequenceAngleDelta:
     sequence_angle_delta_ = Args<EclByteArguments>(instruction).value;
@@ -891,7 +896,7 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     WORLD_POINT position{&actor.x, &actor.y};
     position.x += PixelToWorld(args.offset_x);
     position.y += PixelToWorld(args.offset_y);
-    auto *spawned = host_->SpawnRegular(position, args.script_id);
+    auto *spawned = host_.SpawnRegular(position, args.script_id);
     if (spawned != nullptr && args.angle_source) {
       spawned->d = ReadValue(actor, *args.angle_source);
     }
@@ -903,18 +908,22 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     actor.hitbox_half_height = PixelToWorld(args.height);
     break;
   }
-  case EclOpcode::SetItem:
-    actor.item = Args<EclByteArguments>(instruction).value;
+  case EclOpcode::SetItem: {
+    const auto value = Args<EclByteArguments>(instruction).value;
+    actor.item = value <= std::to_underlying(ItemKind::Bomb)
+                     ? static_cast<ItemKind>(value)
+                     : ItemKind::None;
     return Step::Yield;
+  }
   case EclOpcode::Stage4Effect: {
-    host_->Stage().CommandRocks(
+    host_.Stage().CommandRocks(
         Args<EclStage4EffectArguments>(instruction).command);
     break;
   }
   case EclOpcode::SetDamageAnimation:
     if (const auto pattern = Args<EclByteArguments>(instruction).value;
-        pattern < host_->Animations().size() &&
-        host_->Animations()[pattern].n != 0) {
+        pattern < host_.Animations().size() &&
+        host_.Animations()[pattern].n != 0) {
       actor.damage_animation = pattern;
     } else {
       actor.state = EnemyActorState::PendingRemoval;
@@ -922,30 +931,30 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     }
     break;
   case EclOpcode::BitLaser:
-    host_->ControlBitLaser(actor,
-                           Args<EclBitLaserArguments>(instruction).command);
+    host_.ControlBitLaser(actor,
+                          Args<EclBitLaserArguments>(instruction).command);
     break;
   case EclOpcode::BitAttack:
-    host_->SetBitAttack(actor, Args<EclScriptArguments>(instruction).script_id);
+    host_.SetBitAttack(actor, Args<EclScriptArguments>(instruction).script_id);
     break;
   case EclOpcode::BitCommand: {
     const auto &args = Args<EclCommandValueArguments>(instruction);
-    host_->ControlBits(actor, args.command, args.value);
+    host_.ControlBits(actor, args.command, args.value);
     break;
   }
   case EclOpcode::SpawnBoss: {
     const WORLD_POINT position{&actor.x, &actor.y};
-    host_->SpawnBoss(position, Args<EclScriptArguments>(instruction).script_id);
+    host_.SpawnBoss(position, Args<EclScriptArguments>(instruction).script_id);
     break;
   }
   case EclOpcode::SpawnCircleEffect: {
     const auto &args = Args<EclCircleEffectArguments>(instruction);
-    effects_->SpawnCircle(actor.x + PixelToWorld(args.offset_x),
-                          actor.y + PixelToWorld(args.offset_y), args.effect);
+    effects_.SpawnCircle(actor.x + PixelToWorld(args.offset_x),
+                         actor.y + PixelToWorld(args.offset_y), args.effect);
     break;
   }
   case EclOpcode::Stage3Effect:
-    host_->Stage().Command(stage::BackgroundCommand::Stage3Stars, *effects_);
+    host_.Stage().Command(stage::BackgroundCommand::Stage3Stars, effects_);
     return Step::Yield;
   default:
     return Step::Halt;
@@ -1059,7 +1068,7 @@ void EclVm::CheckInterrupts(EnemyActor &actor) {
     bool should_trigger = false;
     switch (kind) {
     case EclInterrupt::BossCount:
-      should_trigger = host_->BossCount() <= interrupt.threshold;
+      should_trigger = host_.BossCount() <= interrupt.threshold;
       break;
     case EclInterrupt::Hp:
       should_trigger = actor.hp <= interrupt.threshold;
@@ -1071,7 +1080,7 @@ void EclVm::CheckInterrupts(EnemyActor &actor) {
       }
       break;
     case EclInterrupt::BitCount:
-      should_trigger = host_->BitCount(actor) <= interrupt.threshold;
+      should_trigger = host_.BitCount(actor) <= interrupt.threshold;
       break;
     }
 

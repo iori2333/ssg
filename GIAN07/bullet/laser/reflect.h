@@ -45,7 +45,7 @@ enum class ReflectState : uint8_t {
 };
 
 // ── Pool capacity ──────────────────────────────────────────────
-inline constexpr auto kReflectMax = 1000;
+inline constexpr auto kReflectCapacity = 1000;
 
 // ── Update info ────────────────────────────────────────────────
 struct ReflectUpdateInfo {
@@ -64,7 +64,7 @@ struct LaserReflect {
   using UpdateResult = UpdateInfo::UpdateResult;
 
   void Render() const;
-  bool IsDead() const;
+  [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const ReflectSpawnInfo &info);
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y,

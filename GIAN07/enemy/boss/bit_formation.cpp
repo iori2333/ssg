@@ -44,8 +44,8 @@ void BitFormation::Reset() {
 
 // Set bits
 void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
-  static constexpr std::array<uint8_t, BIT_MAX> hp_multipliers = {1, 4, 2,
-                                                                  5, 3, 6};
+  static constexpr std::array<uint8_t, kBitCapacity> hp_multipliers = {1, 4, 2,
+                                                                       5, 3, 6};
 
   int i = 0;
 
@@ -57,7 +57,7 @@ void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
   }
 
   // Invalid bit count
-  if (count == 0 || count > BIT_MAX) {
+  if (count == 0 || count > kBitCapacity) {
     return;
   }
 
@@ -76,12 +76,12 @@ void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
   laser_active_ = false;
   const WORLD_POINT position{&center_x_, &center_y_};
   for (i = 0; std::cmp_less(i, count); i++) {
-    if (auto *e = enemies_->SpawnRegular(position, script_id)) {
+    if (auto *e = enemies_.SpawnRegular(position, script_id)) {
       e->hp = BIT_VIRTUAL_HP;
       e->d = i * (256 / count);
       e->script.registers[0] = i;
       e->script.registers[1] = count;
-      enemies_->ecl_.Execute(*e);
+      enemies_.ecl_.Execute(*e);
 
       // Associate this structure with the created enemy
       parts_[i].actor = e;
@@ -167,7 +167,7 @@ void BitFormation::Update() {
     if (parts_[i].hp <= damage) {
       // Send deletion request to enemy associated with bit array
       if (e->long_laser_count != 0U) {
-        bullets_->ControlLongLaser(
+        bullets_.ControlLongLaser(
             e, ECL_ALL_LONG_LASERS,
             LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
       }
@@ -355,11 +355,11 @@ void BitFormation::UpdateRotation() {
         break;
       }
       LaserDeg = 64 + (256 / count_);
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           e, 0,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle,
                               static_cast<uint8_t>(e->d + LaserDeg)});
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           e, 1,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle,
                               static_cast<uint8_t>(e->d - LaserDeg)});
@@ -387,7 +387,7 @@ void BitFormation::Destroy() {
     }
 
     if (e->long_laser_count != 0U) {
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           e, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
@@ -402,7 +402,7 @@ void BitFormation::Destroy() {
 
 BitLinkGeometry BitFormation::LinkGeometry() const {
   BitLinkGeometry geometry;
-  std::array<EnemyActor *, BIT_MAX * 2> references{};
+  std::array<EnemyActor *, kBitCapacity * 2> references{};
 
   if (motion_ == MotionState::Disabled) {
     return geometry;
@@ -440,7 +440,7 @@ void BitFormation::SelectAttack(uint32_t script_id) {
 
   for (i = 0; std::cmp_less(i, count_); i++) {
     if (auto *actor = parts_[i].actor) {
-      if (!enemies_->ecl_.Jump(*actor, script_id)) {
+      if (!enemies_.ecl_.Jump(*actor, script_id)) {
         actor->state = EnemyActorState::PendingRemoval;
       }
     }
@@ -475,7 +475,7 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
     case EclBitLaserCommand::Fixed:
       info.c = 2;
       info.enemy_id = e->long_laser_count;
-      if (bullets_->SpawnLongLaser(info)) {
+      if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
       break;
@@ -484,13 +484,13 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
       info.d += 64;
       info.c = 1;
       info.enemy_id = e->long_laser_count;
-      if (bullets_->SpawnLongLaser(info)) {
+      if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
 
       info.d += 128;
       info.enemy_id = e->long_laser_count;
-      if (bullets_->SpawnLongLaser(info)) {
+      if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
       break;
@@ -502,24 +502,24 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
 
       info.d = e->d + delta;
       info.enemy_id = e->long_laser_count;
-      if (bullets_->SpawnLongLaser(info)) {
+      if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
       info.d = e->d - delta;
       info.enemy_id = e->long_laser_count;
-      if (bullets_->SpawnLongLaser(info)) {
+      if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
       break;
 
     case EclBitLaserCommand::Open:
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           e, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
       continue;
 
     case EclBitLaserCommand::Close:
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           e, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
       e->long_laser_count = 0;
@@ -527,7 +527,7 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
       continue;
 
     case EclBitLaserCommand::CloseToLine:
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           e, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
       continue;
@@ -570,7 +570,7 @@ void BitFormation::Command(EclBitCommand command, int param) {
   case EclBitCommand::MoveTowardPlayer:
     speed_ = 10_px;
     acceleration_ = -8;
-    direction_ = atan8(player_->X() - center_x_, player_->Y() - center_y_);
+    direction_ = atan8(player_.X() - center_x_, player_.Y() - center_y_);
     motion_ = MotionState::MoveTowardPlayer;
     break;
 

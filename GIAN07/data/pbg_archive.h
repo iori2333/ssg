@@ -35,7 +35,7 @@ public:
   // Decompresses entry [index] into a freshly allocated buffer.
   [[nodiscard]] BYTE_BUFFER_OWNED Extract(uint32_t index) const;
 
-  uint32_t EntryCount() const;
+  [[nodiscard]] uint32_t EntryCount() const;
   explicit operator bool() const { return data_.get() != nullptr; }
 
 private:
@@ -50,8 +50,9 @@ private:
 class PbgArchiveWriter {
 public:
   void Add(std::span<const uint8_t> data);
-  bool Write(const char *path,
-             std::optional<FILE_TIMESTAMPS> timestamps = std::nullopt) const;
+  [[nodiscard]] bool
+  Write(const char *path,
+        std::optional<FILE_TIMESTAMPS> timestamps = std::nullopt) const;
 
 private:
   std::vector<std::vector<uint8_t>> files_;

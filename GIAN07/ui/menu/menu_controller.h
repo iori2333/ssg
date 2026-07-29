@@ -53,16 +53,16 @@ public:
   void Tick(INPUT_BITS key);
   void Draw();
 
-  bool Active() const { return !stack_.empty(); }
-  int Depth() const;
-  int Selection() const;
-  int ClosedSelection() const { return closed_selection_; }
-  INPUT_BITS LastKey() const { return last_key_; }
-  std::string_view GetTitle() const;
-  std::string_view GetCurrentHelp() const;
-  int WindowY() const { return y_; }
-  int WindowX() const { return x_; }
-  int WindowWidth() const { return w_; }
+  [[nodiscard]] bool Active() const { return !stack_.empty(); }
+  [[nodiscard]] int Depth() const;
+  [[nodiscard]] int Selection() const;
+  [[nodiscard]] int ClosedSelection() const { return closed_selection_; }
+  [[nodiscard]] INPUT_BITS LastKey() const { return last_key_; }
+  [[nodiscard]] std::string_view GetTitle() const;
+  [[nodiscard]] std::string_view GetCurrentHelp() const;
+  [[nodiscard]] int WindowY() const { return y_; }
+  [[nodiscard]] int WindowX() const { return x_; }
+  [[nodiscard]] int WindowWidth() const { return w_; }
 
   void SetY(int new_y) { y_ = new_y; }
   void AdjustYForTallMenu(int baseline_y, int max_visible);
@@ -71,7 +71,7 @@ public:
 
   void ActivateListView(ListView &view);
   void DeactivateListView();
-  bool InListView() const { return active_list_ != nullptr; }
+  [[nodiscard]] bool InListView() const { return active_list_ != nullptr; }
 
   // Pushes a page built from entry node's children plus auto Exit item.
   void PushPage(EntryNode &entry);

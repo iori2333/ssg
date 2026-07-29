@@ -15,30 +15,28 @@
 #include "sys/input.h"
 #include "util/object_pool.h"
 
-// [ Constants ]
+inline constexpr int kRespawnInvincibilityDuration = 300;
+inline constexpr int kRespawnMovementThreshold = 150;
+inline constexpr int kBombEndInvincibilityDuration = 60;
+inline constexpr int kPracticeHitInvincibilityDuration = 30;
+inline constexpr int kDeathbombWindow = 12;
+inline constexpr uint8_t kDeathbombCost = 2;
 
-inline constexpr int RESPAWN_INVINCIBILITY_DURATION = 300;
-inline constexpr int RESPAWN_MOVEMENT_THRESHOLD = 150;
-inline constexpr int BOMB_END_INVINCIBILITY_DURATION = 60;
-inline constexpr int PRACTICE_HIT_INVINCIBILITY_DURATION = 30;
-inline constexpr int DEATHBOMB_WINDOW = 12; // Base window at Lunatic difficulty
-inline constexpr uint8_t DEATHBOMB_COST = 2;
+inline constexpr uint16_t kGrazeWaitMax = 256;
+inline constexpr uint16_t kGrazeWaitIncrement = 2;
 
-inline constexpr uint16_t EVADETIME_MAX = 256; // Max graze wait time
-inline constexpr uint16_t EVADETIME_INCR = 2;  // Wait time increase value
+inline constexpr auto kShotCycleStart = 18;
+inline constexpr auto kMainShotFrame = 6;
+inline constexpr auto kSubShotFrame = 9;
 
-inline constexpr auto MAID_TAMA_START = 18;
-inline constexpr auto MAID_MAIN_SHOT = 6;
-inline constexpr auto MAID_SUB_SHOT = 9;
+inline constexpr auto kInitialStarThreshold = 150;
+inline constexpr auto kStarThresholdIncrement = 150;
+inline constexpr auto kStarExtendLoop = 3;
+inline constexpr auto kStarCollectLine = 120_px;
+inline constexpr auto kStarCollectGrazeWait = 128;
 
-inline constexpr auto STAR_THRESHOLD_INIT = 150;
-inline constexpr auto STAR_THRESHOLD_INCR = 150;
-inline constexpr auto STAR_EXTEND_LOOP = 3;
-inline constexpr auto STAR_COLLECT_LINE = 120_px;
-inline constexpr auto STAR_COLLECT_EVADETIME = 128;
-
-inline constexpr auto BOMB_RANK_DECR = 25;
-inline constexpr auto DEATH_RANK_DECR = 100;
+inline constexpr auto kBombRankDecrease = 25;
+inline constexpr auto kDeathRankDecrease = 100;
 
 class EnemyManager;
 class EffectManager;
@@ -48,8 +46,7 @@ namespace stage {
 class StageSession;
 }
 
-// [ Player class ]
-enum class PlayerReward : uint8_t { NONE, BOMB, EXTEND };
+enum class PlayerReward : uint8_t { None, Bomb, Extend };
 
 struct PlayerUpdateResult {
   INPUT_BITS effective_input;
@@ -175,20 +172,20 @@ private:
   std::unique_ptr<PlayerLoadout> loadout_;
   EffectManager &effects_;
 
-  bool IsMainShotFrame_(uint16_t t) const;
-  bool IsSubShotFrame_(uint16_t t) const;
-  void DrawFocusHitbox_() const;
-  [[nodiscard]] int HitRadiusPixels_() const;
-  void UpdateStatus_();
-  INPUT_BITS PrepareInput_(INPUT_BITS input);
-  void UpdateMovement_(INPUT_BITS input);
-  void UpdateOptionPosition_(int movement_x, int movement_y);
-  void UpdateProjectiles_(EnemyManager &enemies);
-  void UpdateWeapons_(EnemyManager &enemies, INPUT_BITS input);
-  bool ActivateBomb_(BombTrigger trigger);
-  void EnterDeathbombWindow_();
-  void PlayHitFeedback_() const;
-  void CommitDeath_();
+  [[nodiscard]] bool IsMainShotFrame(uint16_t time) const;
+  [[nodiscard]] bool IsSubShotFrame(uint16_t time) const;
+  void DrawFocusHitbox() const;
+  [[nodiscard]] int HitRadiusPixels() const;
+  void UpdateStatus();
+  INPUT_BITS PrepareInput(INPUT_BITS input);
+  void UpdateMovement(INPUT_BITS input);
+  void UpdateOptionPosition(int movement_x, int movement_y);
+  void UpdateProjectiles(EnemyManager &enemies);
+  void UpdateWeapons(EnemyManager &enemies, INPUT_BITS input);
+  bool ActivateBomb(BombTrigger trigger);
+  void EnterDeathbombWindow();
+  void PlayHitFeedback() const;
+  void CommitDeath();
 
   // --- Coordinates ---
   int x_ = 0, y_ = 0;

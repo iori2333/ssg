@@ -120,7 +120,9 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   pending_rank_ = static_cast<std::size_t>(position - scores_.begin());
   if (pending_rank_ >= kRowCount) {
     current_record_->name = kDefaultScoreName;
-    (void)record_system_.SaveScore(*current_record_);
+    if (record_system_.SaveScore(*current_record_) != RecordSaveResult::Saved) {
+      DebugOut("スコアデータを保存できませんでした");
+    }
     current_record_.reset();
     return ScoreRegistrationStart::Complete;
   }
@@ -130,7 +132,7 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
                   scores_.end());
   }
 
-  Snd_SEStop(8);
+  Snd_SEStop(SfxId::Warning);
   Snd_SEStopAll();
   ui_.ForceCloseMessageWindow();
   GrpBackend_Clear();
@@ -145,6 +147,7 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   ResetRows();
   GrpBackend_SetClip(GRP_RES_RECT);
   name_entry_.Begin(false, initial_input);
+  save_failed_ = false;
   if (change_music) {
     music_.Play(19);
   }
@@ -157,9 +160,12 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(INPUT_BITS input,
   scores_[pending_rank_].name = name_entry_.Name();
   if (result == NameEntryResult::Confirmed) {
     current_record_->name = name_entry_.Name();
-    (void)record_system_.SaveScore(*current_record_);
-    current_record_.reset();
-    return ScoreSceneResult::RegistrationComplete;
+    if (record_system_.SaveScore(*current_record_) == RecordSaveResult::Saved) {
+      current_record_.reset();
+      return ScoreSceneResult::RegistrationComplete;
+    }
+    save_failed_ = true;
+    Snd_SEPlay(SfxId::Cancel);
   }
 
   if (should_draw) {
@@ -167,6 +173,9 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(INPUT_BITS input,
     const auto gx = rows_[pending_rank_].x >> 6;
     const auto gy = rows_[pending_rank_].y >> 6;
     name_entry_.Draw(gx + 88, gy + 4);
+    if (save_failed_) {
+      GrpPut16(216, 392, "Score save failed");
+    }
     Grp_Flip();
   }
   return ScoreSceneResult::Running;

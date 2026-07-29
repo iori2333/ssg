@@ -39,6 +39,8 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
     return false;
   }
   params_ = result->live;
+  const auto active_api = GrpBackend_APIString();
+  params_.api = GrpBackend_APIID(active_api);
   const auto fullscreen = params_.FullscreenFlags();
   config.display_mode =
       fullscreen.fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed;
@@ -48,7 +50,7 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
   config.scaling_mode = params_.ScaleGeometry() ? ScalingMode::Geometry
                                                 : ScalingMode::Framebuffer;
   config.device_id = params_.device_id;
-  config.graphics_api = GrpBackend_APIString(params_.api);
+  config.graphics_api = active_api;
   config.window_scale_4x = params_.window_scale_4x;
   config.window_left = params_.left;
   config.window_top = params_.top;

@@ -19,10 +19,6 @@ enum class MsgWindowFlags : uint8_t {
   HAS_BITFLAG_OPERATORS = 3,
 };
 
-// Message window management class
-// Originally a [MSG_WINDOW] struct + file-static global [MsgWindow], but
-// was made a class to encapsulate state. The [MWin*] free functions remain
-// as thin wrappers around this global instance.
 class MsgWindow {
 public:
   void Init(const WINDOW_LTRB &rc, MsgWindowFlags flags = MsgWindowFlags::NONE);

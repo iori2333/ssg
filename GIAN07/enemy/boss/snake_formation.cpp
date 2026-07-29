@@ -34,14 +34,14 @@ void SnakeFormation::Spawn(BossActor &parent, uint32_t tail_script) {
 
   const WORLD_POINT position{&parent.x, &parent.y};
   for (auto &segment : snake->segments) {
-    if (auto *actor = enemies_->SpawnRegular(position, tail_script)) {
+    if (auto *actor = enemies_.SpawnRegular(position, tail_script)) {
       segment = actor;
     }
   }
 }
 
 void SnakeFormation::Update() {
-  constexpr auto point_count = SNAKE_LENGTH * SNAKE_POINTS_PER_SEGMENT;
+  constexpr auto point_count = kSnakeLength * kSnakePointsPerSegment;
 
   for (auto &snake : snakes_) {
     if (!snake.active) {
@@ -61,7 +61,7 @@ void SnakeFormation::Update() {
       }
 
       const auto trail_index =
-          (snake.head + point_count - index * SNAKE_POINTS_PER_SEGMENT) %
+          (snake.head + point_count - index * kSnakePointsPerSegment) %
           point_count;
       const auto &point = snake.trail[trail_index];
       segment->x = point.x;
@@ -110,7 +110,7 @@ void SnakeFormation::Destroy(Snake &snake) {
     }
 
     if (segment->long_laser_count != 0U) {
-      bullets_->ControlLongLaser(
+      bullets_.ControlLongLaser(
           segment, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }

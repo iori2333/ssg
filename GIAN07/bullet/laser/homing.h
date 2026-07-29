@@ -27,8 +27,8 @@ struct HomingSpawnInfo {
 };
 
 // ── Pool / segment constants ────────────────────────────────────
-inline constexpr auto kHomingMax = 162;
-inline constexpr auto kHomingLen = 7;
+inline constexpr auto kHomingCapacity = 162;
+inline constexpr auto kHomingTrailLength = 7;
 inline constexpr auto kHomingSection = 4;
 
 enum class HomingState : uint8_t {
@@ -46,7 +46,7 @@ struct LaserHoming {
   using UpdateInfo = HomingUpdateInfo;
 
   void Render() const;
-  bool IsDead() const;
+  [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const HomingSpawnInfo &info);
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
@@ -68,7 +68,7 @@ private:
   int current_{};
   int a_{};
   uint8_t left_{};
-  TrailPoint p_[kHomingLen * kHomingSection]{};
+  TrailPoint p_[kHomingTrailLength * kHomingSection]{};
 
   HomingType subtype_{HomingType::None};
   HomingState state_{HomingState::Normal};

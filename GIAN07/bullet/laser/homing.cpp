@@ -19,12 +19,12 @@ namespace {
 inline constexpr auto kHomingWidth = 8_px;
 
 constexpr int GetPrev(int current, int n) {
-  return (current + n) % (kHomingLen * kHomingSection);
+  return (current + n) % (kHomingTrailLength * kHomingSection);
 }
 
 constexpr int GetNext(int current) {
-  return (current + (kHomingLen * kHomingSection) - 1) %
-         (kHomingLen * kHomingSection);
+  return (current + (kHomingTrailLength * kHomingSection) - 1) %
+         (kHomingTrailLength * kHomingSection);
 }
 
 template <GRAPHICS_GEOMETRY_POLY Gp>
@@ -93,7 +93,7 @@ void LaserHoming::Update(const UpdateInfo &info) {
 
     if (std::abs(deg2) < 8) {
       subtype_ = HomingType::None;
-      Snd_SEPlay(static_cast<SfxId>(17), p_[current_].x);
+      Snd_SEPlay(SfxId::Hlaser, p_[current_].x);
     } else {
       if (v_ > 2_px) {
         v_ -= a_;
@@ -164,7 +164,7 @@ void LaserHoming::Render() const {
     GeomCircleF({(pt->x >> 6), (pt->y >> 6)}, (w >> 6));
   }
 
-  for (int i = 0; i < kHomingLen - 1; i++) {
+  for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
     pt = &p_[cur];
 
@@ -204,7 +204,7 @@ void LaserHoming::Render() const {
     GeomCircleF({(pt->x >> 6), (pt->y >> 6)}, (w >> 6));
   }
 
-  for (int i = 0; i < kHomingLen - 1; i++) {
+  for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
     pt = &p_[cur];
 
@@ -266,7 +266,7 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
   const int evade_r = (kHomingWidth + 15_px) >> 6;
 
   int current = current_;
-  for (int j = 0; j < kHomingLen; j++) {
+  for (int j = 0; j < kHomingTrailLength; j++) {
     const auto &pt = p_[current];
     const int cx = pt.x >> 6;
     const int cy = pt.y >> 6;

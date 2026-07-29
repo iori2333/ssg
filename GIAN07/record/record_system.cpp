@@ -139,6 +139,22 @@ std::string ReplayFilename(bool extra_stage,
                      std::chrono::floor<std::chrono::seconds>(now));
 }
 
+std::optional<std::filesystem::path>
+UniqueReplayPath(bool extra_stage, std::chrono::system_clock::time_point now) {
+  std::error_code error;
+  const auto filename = ReplayFilename(extra_stage, now);
+  const auto stem = std::filesystem::path{filename}.stem().string();
+  auto path = std::filesystem::path{kReplayDirectory} / filename;
+  for (uint32_t suffix = 1; std::filesystem::exists(path, error); ++suffix) {
+    if (error) {
+      return std::nullopt;
+    }
+    path = std::filesystem::path{kReplayDirectory} /
+           std::format("{}_{}.dat", stem, suffix);
+  }
+  return error ? std::nullopt : std::optional{std::move(path)};
+}
+
 bool IsReplayFilename(std::string_view name) {
   const auto replay_prefix = name.starts_with("replay_");
   const auto extra_prefix = name.starts_with("replay_ex_");
@@ -235,11 +251,11 @@ std::vector<ScoreRecord> RecordSystem::ListScores(GameLevel difficulty,
   return records;
 }
 
-bool RecordSystem::SaveScore(const ScoreRecord &record) const {
+RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) const {
   std::error_code error;
   std::filesystem::create_directories(kScoreDirectory, error);
   if (error) {
-    return false;
+    return RecordSaveResult::IoError;
   }
 
   const auto now = std::chrono::system_clock::now();
@@ -250,7 +266,7 @@ bool RecordSystem::SaveScore(const ScoreRecord &record) const {
               std::format("score_{}.dat", file_id);
   for (uint32_t suffix = 1; std::filesystem::exists(path, error); suffix++) {
     if (error) {
-      return false;
+      return RecordSaveResult::IoError;
     }
     path = std::filesystem::path{kScoreDirectory} /
            std::format("score_{}_{}.dat", file_id, suffix);
@@ -275,108 +291,109 @@ bool RecordSystem::SaveScore(const ScoreRecord &record) const {
 
   auto *stream = SDL_IOFromFile(path.string().c_str(), "wb");
   if (stream == nullptr) {
-    return false;
+    return RecordSaveResult::IoError;
   }
   const bool written = SDL_MustWriteIO(stream, &file, sizeof(file));
-  return SDL_CloseIO(stream) && written;
+  return SDL_CloseIO(stream) && written ? RecordSaveResult::Saved
+                                        : RecordSaveResult::IoError;
 }
 
 void RecordSystem::BeginRecording(const Player &player,
                                   const GameSession &session,
                                   const ConfigData &config) {
-  playing_ = false;
-  multi_stage_playback_ = false;
-  playback_stages_.clear();
-
   const auto seed = ((static_cast<uint32_t>(rnd()) + 1U) *
                      (static_cast<uint32_t>(rnd()) + 1U));
   rnd_seed_set(seed);
 
-  settings_ = {
-      .difficulty = session.level,
-      .practice_mode = config.game.practice_mode,
-      .player_stock = config.game.player_stock,
-      .bomb_stock = config.game.bomb_stock,
-      .input_flags = static_cast<uint8_t>(
-          (config.input.joypad_enabled ? kInputFlagJoypad : 0) |
-          (config.input.z_msg_skip_enabled ? kInputFlagMessageSkip : 0) |
-          (config.input.z_spd_down_enabled ? kInputFlagSpeedDown : 0)),
-  };
-  frame_cursor_ = 0;
-  recording_ = true;
-  recorded_stages_.clear();
-  current_inputs_.clear();
+  state_.emplace<RecordingState>(RecordingState{
+      .settings =
+          {
+              .difficulty = session.level,
+              .practice_mode = config.game.practice_mode,
+              .player_stock = config.game.player_stock,
+              .bomb_stock = config.game.bomb_stock,
+              .input_flags = static_cast<uint8_t>(
+                  (config.input.joypad_enabled ? kInputFlagJoypad : 0) |
+                  (config.input.z_msg_skip_enabled ? kInputFlagMessageSkip
+                                                   : 0) |
+                  (config.input.z_spd_down_enabled ? kInputFlagSpeedDown : 0)),
+          },
+  });
   BeginStage(player, session);
 }
 
 void RecordSystem::BeginStage(const Player &player,
                               const GameSession &session) {
-  if (!recording_) {
+  auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr) {
     return;
   }
-  current_checkpoint_ = {
+  recording->current_checkpoint = {
       .stage = session.stage,
       .frame_count = 0,
       .rng = rnd_state(),
       .player = player.CaptureProgress(),
       .rank = session.rank,
   };
-  has_current_checkpoint_ = true;
-  current_inputs_.clear();
-  frame_cursor_ = 0;
+  recording->has_current_checkpoint = true;
+  recording->current_inputs.clear();
 }
 
 bool RecordSystem::HasRecordedStages() const {
-  return recording_ && (!recorded_stages_.empty() || !current_inputs_.empty());
+  const auto *recording = std::get_if<RecordingState>(&state_);
+  return recording != nullptr &&
+         (!recording->stages.empty() || !recording->current_inputs.empty());
 }
 
 void RecordSystem::FlushStage() {
-  if (!recording_ || !has_current_checkpoint_ || current_inputs_.empty()) {
+  auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || !recording->has_current_checkpoint ||
+      recording->current_inputs.empty()) {
     return;
   }
-  if (recorded_stages_.size() >= kReplayStageCapacity) {
-    recording_ = false;
+  if (recording->stages.size() >= kReplayStageCapacity) {
     return;
   }
 
-  current_checkpoint_.frame_count =
-      static_cast<uint32_t>(current_inputs_.size());
-  recorded_stages_.push_back({.checkpoint = current_checkpoint_,
-                              .inputs = std::move(current_inputs_)});
-  current_inputs_.clear();
-  has_current_checkpoint_ = false;
-  frame_cursor_ = 0;
+  recording->current_checkpoint.frame_count =
+      static_cast<uint32_t>(recording->current_inputs.size());
+  recording->stages.push_back({.checkpoint = recording->current_checkpoint,
+                               .inputs = std::move(recording->current_inputs)});
+  recording->current_inputs.clear();
+  recording->has_current_checkpoint = false;
 }
 
 void RecordSystem::Record(INPUT_BITS input) {
-  if (!recording_ || (input & KEY_ESC) != 0 ||
-      current_inputs_.size() >= kReplayBufferCapacity) {
+  auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || (input & KEY_ESC) != 0 ||
+      recording->current_inputs.size() >= kReplayBufferCapacity) {
     return;
   }
-  current_inputs_.push_back(input);
+  recording->current_inputs.push_back(input);
 }
 
 void RecordSystem::UpdateLastRecordedInput(INPUT_BITS input) {
-  if (recording_ && !current_inputs_.empty()) {
-    current_inputs_.back() = input;
+  auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording != nullptr && !recording->current_inputs.empty()) {
+    recording->current_inputs.back() = input;
   }
 }
 
 void RecordSystem::CancelRecording() {
-  recording_ = false;
-  has_current_checkpoint_ = false;
-  current_inputs_.clear();
-  recorded_stages_.clear();
+  if (std::holds_alternative<RecordingState>(state_)) {
+    state_.emplace<IdleState>();
+  }
 }
 
-bool RecordSystem::SaveReplay(std::string_view name, bool extra_stage) {
-  if (!recording_) {
-    return false;
+RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
+                                          bool extra_stage) {
+  if (!std::holds_alternative<RecordingState>(state_)) {
+    return RecordSaveResult::NoData;
   }
   FlushStage();
-  recording_ = false;
-  if (recorded_stages_.empty()) {
-    return false;
+  auto &recording = std::get<RecordingState>(state_);
+  if (recording.stages.empty()) {
+    return RecordSaveResult::NoData;
   }
 
   std::string replay_name{name.substr(0, kRecordNameLength)};
@@ -393,17 +410,17 @@ bool RecordSystem::SaveReplay(std::string_view name, bool extra_stage) {
   manifest.WriteBytes(kReplayMagic);
   manifest.Write(kReplayVersion);
   manifest.Write<uint64_t>(static_cast<uint64_t>(created_at));
-  manifest.Write(std::to_underlying(settings_.difficulty));
-  manifest.Write(std::to_underlying(settings_.practice_mode));
-  manifest.Write(settings_.player_stock);
-  manifest.Write(settings_.bomb_stock);
-  manifest.Write(settings_.input_flags);
+  manifest.Write(std::to_underlying(recording.settings.difficulty));
+  manifest.Write(std::to_underlying(recording.settings.practice_mode));
+  manifest.Write(recording.settings.player_stock);
+  manifest.Write(recording.settings.bomb_stock);
+  manifest.Write(recording.settings.input_flags);
   manifest.Write(static_cast<uint8_t>(replay_name.size()));
   manifest.WriteBytes({reinterpret_cast<const uint8_t *>(replay_name.data()),
                        replay_name.size()});
-  manifest.Write(static_cast<uint8_t>(recorded_stages_.size()));
+  manifest.Write(static_cast<uint8_t>(recording.stages.size()));
 
-  for (const auto &stage : recorded_stages_) {
+  for (const auto &stage : recording.stages) {
     const auto &checkpoint = stage.checkpoint;
     manifest.Write(std::to_underlying(checkpoint.stage));
     manifest.Write(checkpoint.frame_count);
@@ -415,7 +432,7 @@ bool RecordSystem::SaveReplay(std::string_view name, bool extra_stage) {
 
   data::PbgArchiveWriter archive;
   archive.Add(manifest.Bytes());
-  for (const auto &stage : recorded_stages_) {
+  for (const auto &stage : recording.stages) {
     util::ByteWriter inputs;
     for (const auto input : stage.inputs) {
       inputs.Write(static_cast<uint16_t>(input));
@@ -425,13 +442,12 @@ bool RecordSystem::SaveReplay(std::string_view name, bool extra_stage) {
 
   std::error_code error;
   std::filesystem::create_directories(kReplayDirectory, error);
-  const auto replay_path = std::filesystem::path{kReplayDirectory} /
-                           ReplayFilename(extra_stage, now);
-  const auto saved = !error && archive.Write(replay_path.string().c_str());
-  recorded_stages_.clear();
-  current_inputs_.clear();
-  has_current_checkpoint_ = false;
-  return saved;
+  const auto replay_path = UniqueReplayPath(extra_stage, now);
+  if (error || !replay_path || !archive.Write(replay_path->string().c_str())) {
+    return RecordSaveResult::IoError;
+  }
+  state_.emplace<IdleState>();
+  return RecordSaveResult::Saved;
 }
 
 std::vector<ReplayRecord> RecordSystem::ListReplays() const {
@@ -480,10 +496,11 @@ bool RecordSystem::LoadArchive(std::string_view path,
   uint8_t name_length = 0;
   if (!magic || !std::ranges::equal(*magic, kReplayMagic) ||
       !ReadValue(reader, version) || version != kReplayVersion ||
-      !ReadValue(reader, created_at) || !ReadValue(reader, difficulty) ||
-      !ReadValue(reader, practice_mode) || !ReadValue(reader, player_stock) ||
-      !ReadValue(reader, bomb_stock) || !ReadValue(reader, input_flags) ||
-      !ReadValue(reader, name_length) || name_length > kRecordNameLength) {
+      !ReadValue(reader, created_at) || created_at > kMaxSignedRecordValue ||
+      !ReadValue(reader, difficulty) || !ReadValue(reader, practice_mode) ||
+      !ReadValue(reader, player_stock) || !ReadValue(reader, bomb_stock) ||
+      !ReadValue(reader, input_flags) || !ReadValue(reader, name_length) ||
+      name_length > kRecordNameLength) {
     return false;
   }
   const auto name_bytes = reader.ReadBytes(name_length);
@@ -579,77 +596,79 @@ bool RecordSystem::LoadArchive(std::string_view path,
 }
 
 bool RecordSystem::LoadReplay(std::string_view path, StageId start_stage) {
-  playing_ = false;
-  multi_stage_playback_ = false;
-  playback_stages_.clear();
-
+  ReplaySettings settings;
+  std::vector<ReplayStage> stages;
   std::optional<ReplayRecord> record;
-  if (!LoadArchive(path, &record, &settings_, &playback_stages_)) {
+  if (!LoadArchive(path, &record, &settings, &stages)) {
     return false;
   }
   const auto selected = std::ranges::find(record->stages, start_stage);
   if (selected == record->stages.end()) {
-    playback_stages_.clear();
     return false;
   }
 
-  playback_stage_index_ =
-      static_cast<std::size_t>(selected - record->stages.begin());
-  frame_cursor_ = 0;
+  state_.emplace<PlaybackState>(PlaybackState{
+      .settings = settings,
+      .stages = std::move(stages),
+      .stage_index =
+          static_cast<std::size_t>(selected - record->stages.begin()),
+      .multi_stage = true,
+  });
   return true;
 }
 
 bool RecordSystem::ConfigurePlayback(Player &player, GameSession &session) {
-  if (playback_stages_.empty() ||
-      playback_stage_index_ >= playback_stages_.size()) {
+  auto *playback = std::get_if<PlaybackState>(&state_);
+  if (playback == nullptr || playback->stages.empty() ||
+      playback->stage_index >= playback->stages.size()) {
     return false;
   }
-  const auto practice_mode = settings_.practice_mode == PracticeMode::AutoBomb
-                                 ? PracticeMode::Off
-                                 : settings_.practice_mode;
+  const auto practice_mode =
+      playback->settings.practice_mode == PracticeMode::AutoBomb
+          ? PracticeMode::Off
+          : playback->settings.practice_mode;
   player.Configure(practice_mode,
-                   (settings_.input_flags & kInputFlagSpeedDown) != 0);
-  session.level = settings_.difficulty;
+                   (playback->settings.input_flags & kInputFlagSpeedDown) != 0);
+  session.level = playback->settings.difficulty;
   session.stage = CurrentPlaybackStage();
-  multi_stage_playback_ = true;
   return true;
 }
 
 void RecordSystem::RestorePlaybackStage(Player &player, GameSession &session) {
-  const auto &checkpoint = playback_stages_[playback_stage_index_].checkpoint;
+  auto &playback = std::get<PlaybackState>(state_);
+  const auto &checkpoint = playback.stages[playback.stage_index].checkpoint;
   session.stage = checkpoint.stage;
   session.rank = checkpoint.rank;
   player.RestoreProgress(checkpoint.player);
   rnd_state_restore(checkpoint.rng);
-  frame_cursor_ = 0;
-  playing_ = true;
+  playback.frame_cursor = 0;
+  playback.active = true;
 }
 
 bool RecordSystem::HasNextPlaybackStage() const {
-  return multi_stage_playback_ &&
-         playback_stage_index_ + 1 < playback_stages_.size();
+  const auto *playback = std::get_if<PlaybackState>(&state_);
+  return playback != nullptr && playback->multi_stage &&
+         playback->stage_index + 1 < playback->stages.size();
 }
 
 bool RecordSystem::AdvancePlaybackStage() {
   if (!HasNextPlaybackStage()) {
     return false;
   }
-  playback_stage_index_++;
-  frame_cursor_ = 0;
-  playing_ = false;
+  auto &playback = std::get<PlaybackState>(state_);
+  ++playback.stage_index;
+  playback.frame_cursor = 0;
+  playback.active = false;
   return true;
 }
 
 StageId RecordSystem::CurrentPlaybackStage() const {
-  return playback_stages_[playback_stage_index_].checkpoint.stage;
+  const auto &playback = std::get<PlaybackState>(state_);
+  return playback.stages[playback.stage_index].checkpoint.stage;
 }
 
 bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
                                  GameSession &session) {
-  playing_ = false;
-  multi_stage_playback_ = false;
-  playback_stages_.clear();
-
   const auto data = data_.ExtractMap(std::to_underlying(stage) + 6);
   auto cursor = data.cursor();
   const auto header_data = cursor.next<DemoReplayHeader>();
@@ -665,14 +684,14 @@ bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
     return false;
   }
 
-  settings_ = {
+  const ReplaySettings settings = {
       .difficulty = static_cast<GameLevel>(header.config.game_level),
       .practice_mode = PracticeMode::Off,
       .player_stock = header.config.player_stock,
       .bomb_stock = header.config.bomb_stock,
       .input_flags = header.config.input_flags,
   };
-  player.Initialize(settings_.player_stock, settings_.bomb_stock);
+  player.Initialize(settings.player_stock, settings.bomb_stock);
   auto progress = player.CaptureProgress();
   progress.player_type = header.weapon;
   progress.power = header.power;
@@ -688,34 +707,51 @@ bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
       .rank = session.rank,
   };
   replay_stage.inputs.assign(inputs->begin(), inputs->end());
-  playback_stages_.push_back(std::move(replay_stage));
-  playback_stage_index_ = 0;
-
-  session.level = settings_.difficulty;
+  session.level = settings.difficulty;
   player.Configure(PracticeMode::Off,
-                   (settings_.input_flags & kInputFlagSpeedDown) != 0);
+                   (settings.input_flags & kInputFlagSpeedDown) != 0);
   player.RestoreProgress(progress);
   rnd_seed_set(header.random_seed);
-  playing_ = true;
+  std::vector<ReplayStage> stages;
+  stages.push_back(std::move(replay_stage));
+  state_.emplace<PlaybackState>(PlaybackState{
+      .settings = settings,
+      .stages = std::move(stages),
+      .active = true,
+      .multi_stage = false,
+  });
   return true;
 }
 
 INPUT_BITS RecordSystem::NextInput() {
-  if (!playing_ || playback_stages_.empty()) {
+  auto *playback = std::get_if<PlaybackState>(&state_);
+  if (playback == nullptr || !playback->active || playback->stages.empty()) {
     return KEY_ESC;
   }
-  const auto &inputs = playback_stages_[playback_stage_index_].inputs;
-  if (frame_cursor_ >= inputs.size()) {
-    playing_ = false;
+  const auto &inputs = playback->stages[playback->stage_index].inputs;
+  if (playback->frame_cursor >= inputs.size()) {
+    playback->active = false;
     return KEY_ESC;
   }
-  return inputs[frame_cursor_++];
+  return inputs[playback->frame_cursor++];
 }
 
 void RecordSystem::StopPlayback() {
-  playing_ = false;
-  multi_stage_playback_ = false;
-  playback_stages_.clear();
-  playback_stage_index_ = 0;
-  frame_cursor_ = 0;
+  if (std::holds_alternative<PlaybackState>(state_)) {
+    state_.emplace<IdleState>();
+  }
+}
+
+bool RecordSystem::IsPlaying() const {
+  const auto *playback = std::get_if<PlaybackState>(&state_);
+  return playback != nullptr && playback->active;
+}
+
+bool RecordSystem::IsRecording() const {
+  return std::holds_alternative<RecordingState>(state_);
+}
+
+bool RecordSystem::IsMultiStagePlayback() const {
+  const auto *playback = std::get_if<PlaybackState>(&state_);
+  return playback != nullptr && playback->multi_stage;
 }

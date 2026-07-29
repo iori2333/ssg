@@ -65,8 +65,6 @@ public:
   [[nodiscard]] std::optional<GameOverAction> TakeGameOverAction();
   [[nodiscard]] std::optional<menu::MainMenuAction> TakeMainMenuAction();
 
-  // --- Active menu on title screen ---
-  menu::MenuController *ActiveMenu() { return &main_window_; }
   void ShowMenuHelp();
 
 private:

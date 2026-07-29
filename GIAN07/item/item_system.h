@@ -12,16 +12,18 @@
 class EffectManager;
 class Player;
 
-inline constexpr auto ITEM_MAX = 100;
+inline constexpr std::size_t kItemCapacity = 100;
 
-inline constexpr auto ITEM_DELETE = 0x00;
-inline constexpr auto ITEM_SCORE = 0x01;
-inline constexpr auto ITEM_EXTEND = 0x02;
-inline constexpr auto ITEM_BOMB = 0x03;
+enum class ItemKind : uint8_t {
+  None,
+  Score,
+  Extend,
+  Bomb,
+};
 
-inline constexpr auto ITEM_GRAVITY = 3;
-inline constexpr auto ITEM_HIT_RADIUS = 16_px;
-inline constexpr auto ITEM_HIT_RADIUS_LARGE = 28_px;
+inline constexpr auto kItemGravity = 3;
+inline constexpr auto kItemHitRadius = 16_px;
+inline constexpr auto kLargeItemHitRadius = 28_px;
 
 struct ItemData {
   int x = 0;
@@ -29,7 +31,7 @@ struct ItemData {
   int vx = 0;
   int vy = 0;
   uint32_t count = 0;
-  uint8_t type = ITEM_DELETE;
+  ItemKind kind = ItemKind::None;
   bool auto_collect = false;
 };
 
@@ -39,14 +41,14 @@ public:
       : player_(player), effects_(effects) {}
 
   void Reset();
-  void Spawn(int x, int y, uint8_t type);
+  void Spawn(int x, int y, ItemKind kind);
   void Update();
   void Draw() const;
 
 private:
-  [[nodiscard]] static int HitRadius(uint8_t type);
+  [[nodiscard]] static int HitRadius(ItemKind kind);
 
   Player &player_;
   EffectManager &effects_;
-  ObjectPool<ItemData, ITEM_MAX> pool_;
+  ObjectPool<ItemData, kItemCapacity> pool_;
 };

@@ -213,11 +213,11 @@ void StageSession::ExecuteEffect(SceneEffect effect,
                                  StageUpdateContext &context) {
   switch (effect) {
   case SceneEffect::Warning:
-    Snd_SEPlay(static_cast<SfxId>(8), playfield::kWorldCenterX, true);
+    Snd_SEPlay(SfxId::Warning, playfield::kWorldCenterX, true);
     context.effects.StartBossWarning();
     break;
   case SceneEffect::StopWarning:
-    Snd_SEStop(8);
+    Snd_SEStop(SfxId::Warning);
     break;
   case SceneEffect::FadeMusic:
     BGM_FadeOut(120);

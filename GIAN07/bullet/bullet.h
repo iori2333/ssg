@@ -1,6 +1,4 @@
-///
-/// Bullet - Definitions and various things related to bullets
-///
+/// Enemy bullet entity state and movement.
 
 #pragma once
 
@@ -10,42 +8,33 @@
 #include "fire_state.h"
 
 #include "gfx/coords.h"
+#include "util/enum_flags.h"
 
 struct GameSession;
 
-////Bullet constants////
-inline constexpr auto TAMA_EVADE = 1;
+inline constexpr auto kBulletGrazeValue = 1;
+inline constexpr auto kBulletClearScoreStart = 10000;
+inline constexpr auto kBulletClearScoreEnd = 15000;
+inline constexpr auto kSmallBulletGrazeRadius = 24_px;
+inline constexpr auto kLargeBulletGrazeRadius = 32_px;
 
-inline constexpr auto TAMA1_POINT = 10000;
-inline constexpr auto TAMA2_POINT = 15000;
-
-inline constexpr auto TAMA_EVADE_RADIUS_SMALL = 24_px;
-inline constexpr auto TAMA_EVADE_RADIUS_LARGE = 32_px;
-
-inline constexpr auto TAMA_SMALL = 0x00;
-inline constexpr auto TAMA_LARGE = 0x10;
-inline constexpr auto TAMA_ANGLE = 0x20;
-inline constexpr auto TAMA_EXTRA = 0x30;
-inline constexpr auto TAMA_EXTRA2 = 0x40;
-inline constexpr auto TAMA_REN = 0x04;
-inline constexpr auto TAMA_ZSET = 0x08;
-inline constexpr int TAMA_HIT_S = 2.5_px;
-inline constexpr int TAMA_HIT_M = 4.5_px;
-inline constexpr int TAMA_HIT_L = 7.5_px;
-inline constexpr int TAMA_HIT_XL = 10.5_px;
-
-inline constexpr auto TF_NONE = 0x00;
-inline constexpr auto TF_CLIP = 0x01;
-inline constexpr auto TF_EVADE = 0x02;
-inline constexpr auto TF_DELETE = 0x80;
+inline constexpr auto kBulletVisualCategoryMask = 0xf0;
+inline constexpr auto kSmallBulletVisual = 0x00;
+inline constexpr auto kLargeBulletVisual = 0x10;
+inline constexpr auto kDirectionalBulletVisual = 0x20;
+inline constexpr auto kExtraBulletVisual = 0x30;
+inline constexpr auto kLargeExtraBulletVisual = 0x40;
+inline constexpr auto kSpecialDirectionalBulletVisual = 0x25;
+inline constexpr int kSmallBulletHitRadius = 2.5_px;
+inline constexpr int kMediumBulletHitRadius = 4.5_px;
+inline constexpr int kLargeBulletHitRadius = 7.5_px;
+inline constexpr int kExtraLargeBulletHitRadius = 10.5_px;
 
 int GetBulletHitRadius(uint8_t c);
 int GetBulletEvadeRadius(uint8_t c);
 
-////Pool capacities////
-inline constexpr auto kBulletMax = 2048;
+inline constexpr auto kBulletCapacity = 2048;
 
-////Bullet spawn type discriminator////
 enum class BulletSpawnType : uint8_t {
   Normal = 0x00,
   Line = 0x01,
@@ -91,7 +80,6 @@ enum class BulletEffect : uint8_t {
 
 enum class BulletSpeedVariance : uint8_t { None, Small, Medium, Large };
 
-////Spawn parameter struct////
 struct BulletSpawnInfo {
   int x{};
   int y{};
@@ -117,8 +105,6 @@ struct BulletSpawnInfo {
 
 struct BulletManager;
 
-////World context + side-effect result (passed to / returned from
-/// Bullet::Update)////
 struct BulletUpdateInfo {
   int player_x, player_y;
   bool enemy_homing_valid;
@@ -133,14 +119,13 @@ struct BulletUpdateInfo {
   };
 };
 
-////Bullet class////
 struct Bullet {
   using SpawnInfo = BulletSpawnInfo;
   using UpdateInfo = BulletUpdateInfo;
   using UpdateResult = UpdateInfo::UpdateResult;
 
   void Render() const;
-  bool IsDead() const;
+  [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const BulletSpawnInfo &info);
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
@@ -158,9 +143,21 @@ struct Bullet {
   void UpdateDisplayAngle();
 
 private:
-  // ── Manager-internal ──────────────────────────────────────
+  enum class Flags : uint8_t {
+    None = 0,
+    KeepOutsidePlayfield = 1 << 0,
+    Grazed = 1 << 1,
+    PendingRemoval = 1 << 7,
+    HAS_BITFLAG_OPERATORS,
+  };
 
-  // ── Fields ────────────────────────────────────────────────
+  [[nodiscard]] bool HasFlag(Flags flag) const {
+    return std::to_underlying(flags_ & flag) != 0;
+  }
+  void SetFlag(Flags flag, bool enabled) {
+    EnumFlagSet(flags_, flag, static_cast<uint8_t>(enabled));
+  }
+
   int x_{};
   int y_{};
   int v_{};
@@ -181,7 +178,7 @@ private:
   BulletOptionKind option_{BulletOptionKind::None};
   uint8_t option_count_{};
   BulletEffect effect_{BulletEffect::None};
-  uint8_t flag_{};
+  Flags flags_ = Flags::None;
 
   void MoveByType(const UpdateInfo &info, UpdateResult &result);
   void MoveByOption(UpdateResult &result);
@@ -190,7 +187,6 @@ private:
   void DrawEffect() const;
 };
 
-//// Free function: build SpawnInfo from ECL command ////
 [[nodiscard]] BulletSpawnInfo
 MakeBulletSpawnInfo(const EclBulletState &cmd, int ox, int oy, bool scaling,
                     const GameSession &game,

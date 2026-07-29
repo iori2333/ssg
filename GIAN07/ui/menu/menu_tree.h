@@ -31,9 +31,9 @@ public:
   IMenuNode(IMenuNode &&) = default;
   IMenuNode &operator=(IMenuNode &&) = default;
 
-  std::string_view Title() const { return title_; }
+  [[nodiscard]] std::string_view Title() const { return title_; }
   virtual std::string Value() const = 0;
-  std::string_view Help() const { return help_; }
+  [[nodiscard]] std::string_view Help() const { return help_; }
 
   virtual bool Enabled() const {
     return enabled_ && (!enabled_fn_ || enabled_fn_());

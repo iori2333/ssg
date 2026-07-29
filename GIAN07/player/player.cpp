@@ -40,13 +40,13 @@ Player::Player(EffectManager &effects, GameSession &session,
     : loadout_(std::make_unique<WideLoadout>()), effects_(effects),
       session_(session), stage_(stage) {}
 
-bool Player::IsMainShotFrame_(uint16_t t) const {
-  return (t == MAID_MAIN_SHOT || t == MAID_MAIN_SHOT * 2 ||
-          t == MAID_MAIN_SHOT * 3);
+bool Player::IsMainShotFrame(uint16_t t) const {
+  return (t == kMainShotFrame || t == kMainShotFrame * 2 ||
+          t == kMainShotFrame * 3);
 }
 
-bool Player::IsSubShotFrame_(uint16_t t) const {
-  return (t == 0 || t == MAID_SUB_SHOT) && bomb_time_ == 0;
+bool Player::IsSubShotFrame(uint16_t t) const {
+  return (t == 0 || t == kSubShotFrame) && bomb_time_ == 0;
 }
 
 void Player::SpawnShot(const PlayerShotSpawnInfo &si) {
@@ -86,12 +86,12 @@ void Player::DrawBombBackground() const {
   loadout_->DrawBombBackground(*this, bomb_time_);
 }
 
-int Player::HitRadiusPixels_() const {
+int Player::HitRadiusPixels() const {
   return (HitRadius() + WORLD_COORD_SCALE - 1) / WORLD_COORD_SCALE;
 }
 
-void Player::DrawFocusHitbox_() const {
-  if (!focused_ || invincibility_time_ >= RESPAWN_INVINCIBILITY_DURATION) {
+void Player::DrawFocusHitbox() const {
+  if (!focused_ || invincibility_time_ >= kRespawnInvincibilityDuration) {
     return;
   }
 
@@ -99,7 +99,7 @@ void Player::DrawFocusHitbox_() const {
 
   GrpGeom->Lock();
   GrpGeom->SetColor({5, 5, 5});
-  GeomCircleF(center, HitRadiusPixels_());
+  GeomCircleF(center, HitRadiusPixels());
   GrpGeom->SetColor({5, 2, 2});
   GeomCircleF(center, 1);
   GrpGeom->Unlock();
@@ -114,7 +114,7 @@ void Player::DrawDebugHitbox() const {
   const WINDOW_POINT center{x_ >> WORLD_COORD_BITS, y_ >> WORLD_COORD_BITS};
   geometry->SetColor({0, 0, 0});
   geometry->SetAlphaNorm(204);
-  Geometry::CircleF_Approximated(*geometry, center, HitRadiusPixels_(), true);
+  Geometry::CircleF_Approximated(*geometry, center, HitRadiusPixels(), true);
 }
 
 void Player::Draw() {
@@ -138,7 +138,7 @@ void Player::Draw() {
   draw_flag = 1 - draw_flag;
   draw_flag2++;
 
-  if (invincibility_time_ == RESPAWN_INVINCIBILITY_DURATION) {
+  if (invincibility_time_ == kRespawnInvincibilityDuration) {
     draw_flag = 0;
   }
 
@@ -147,10 +147,10 @@ void Player::Draw() {
     GrpSurface_Blit({sx, sy}, SURFACE_ID::SYSTEM, src);
   }
 
-  DrawFocusHitbox_();
+  DrawFocusHitbox();
 
   if (((exp_ + 1) >> 5) != 0) {
-    if (invincibility_time_ < RESPAWN_INVINCIBILITY_DURATION) {
+    if (invincibility_time_ < kRespawnInvincibilityDuration) {
       const int opt_off = loadout_->OptionOffset(focused_);
       src = VivBit[loadout_->OptionSprite()][(draw_flag2 >> 2) & 1];
       GrpSurface_Blit({(ox + opt_off), oy}, SURFACE_ID::SYSTEM, src);
@@ -161,7 +161,7 @@ void Player::Draw() {
   loadout_->DrawBombForeground(*this, bomb_time_);
 }
 
-void Player::UpdateStatus_() {
+void Player::UpdateStatus() {
   // Decrease graze remaining time
   if (evade_c_ != 0U) {
     if ((bomb_time_ != 0U) && evade_c_ >= 2) {
@@ -188,7 +188,7 @@ void Player::UpdateStatus_() {
     invincibility_time_--;
   }
   if (life_state_ == LifeState::Respawning &&
-      invincibility_time_ < RESPAWN_MOVEMENT_THRESHOLD) {
+      invincibility_time_ < kRespawnMovementThreshold) {
     life_state_ = LifeState::Active;
   }
 
@@ -196,7 +196,7 @@ void Player::UpdateStatus_() {
   if (deathbomb_time_ != 0U) {
     deathbomb_time_--;
     if (deathbomb_time_ == 0U) {
-      CommitDeath_();
+      CommitDeath();
     }
   }
 
@@ -216,7 +216,7 @@ void Player::UpdateStatus_() {
   }
 }
 
-INPUT_BITS Player::PrepareInput_(INPUT_BITS input) {
+INPUT_BITS Player::PrepareInput(INPUT_BITS input) {
   if (std::exchange(auto_bomb_requested_, false)) {
     input |= KEY_BOMB;
   }
@@ -237,7 +237,7 @@ INPUT_BITS Player::PrepareInput_(INPUT_BITS input) {
   return input;
 }
 
-void Player::UpdateMovement_(INPUT_BITS input) {
+void Player::UpdateMovement(INPUT_BITS input) {
   int vx = 0;
   int vy = 0;
   int v = 0;
@@ -291,10 +291,10 @@ void Player::UpdateMovement_(INPUT_BITS input) {
     grp_id_ = 1;
   }
 
-  UpdateOptionPosition_(vx, vy);
+  UpdateOptionPosition(vx, vy);
 }
 
-void Player::UpdateOptionPosition_(int movement_x, int movement_y) {
+void Player::UpdateOptionPosition(int movement_x, int movement_y) {
   option_lag_x_ -= std::clamp(option_lag_x_, -1_px, 1_px);
   option_lag_y_ -= std::clamp(option_lag_y_, -1_px, 1_px);
 
@@ -316,17 +316,17 @@ void Player::UpdateOptionPosition_(int movement_x, int movement_y) {
 }
 
 PlayerUpdateResult Player::Update(EnemyManager &enemies, INPUT_BITS input) {
-  UpdateStatus_();
-  input = PrepareInput_(input);
-  UpdateMovement_(input);
-  UpdateWeapons_(enemies, input);
+  UpdateStatus();
+  input = PrepareInput(input);
+  UpdateMovement(input);
+  UpdateWeapons(enemies, input);
 
   if (bomb_time_ != 0U) {
     clear_bullets_requested_ = true;
   }
 
   buzz_sound_ = false;
-  UpdateProjectiles_(enemies);
+  UpdateProjectiles(enemies);
 
   return {
       .effective_input = input,
@@ -352,7 +352,7 @@ void Player::Initialize(int player_stock, int bomb_stock) {
   deathbomb_count_ = 0;
 
   star_counter_ = 0;
-  star_threshold_ = STAR_THRESHOLD_INIT;
+  star_threshold_ = kInitialStarThreshold;
   star_extend_count_ = 0;
 
   bomb_time_ = 0;
@@ -363,7 +363,7 @@ void Player::Initialize(int player_stock, int bomb_stock) {
 
   grp_id_ = 1;
 
-  invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
+  invincibility_time_ = kRespawnInvincibilityDuration;
   life_state_ = LifeState::Respawning;
 
   game_over_ = false;
@@ -383,7 +383,7 @@ void Player::PrepareNextStage() {
   loadout_->Reset();
   maid_tama_.Reset();
 
-  invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
+  invincibility_time_ = kRespawnInvincibilityDuration;
   bomb_time_ = 0;
   deathbomb_time_ = 0;
   life_state_ = LifeState::Respawning;
@@ -402,33 +402,33 @@ void Player::OnHit() {
   case PracticeMode::Off:
   case PracticeMode::AutoBomb:
     if (bomb_ != 0U && bomb_time_ == 0U) {
-      EnterDeathbombWindow_();
+      EnterDeathbombWindow();
       if (practice_mode_ == PracticeMode::AutoBomb) {
         auto_bomb_requested_ = true;
       }
     } else {
-      PlayHitFeedback_();
-      CommitDeath_();
+      PlayHitFeedback();
+      CommitDeath();
     }
     return;
   case PracticeMode::Invincible:
-    PlayHitFeedback_();
+    PlayHitFeedback();
     for (int i = 0; i < 50; i++) {
       effects_.SpawnFragment(x_, y_, FragmentKind::Heart);
     }
-    invincibility_time_ = PRACTICE_HIT_INVINCIBILITY_DURATION;
+    invincibility_time_ = kPracticeHitInvincibilityDuration;
     return;
   }
 }
 
-void Player::PlayHitFeedback_() const {
+void Player::PlayHitFeedback() const {
   Snd_SEPlay(SfxId::Dead);
   effects_.SpawnFragment(x_, y_, FragmentKind::ExpandingCircle);
 }
 
-void Player::EnterDeathbombWindow_() {
-  PlayHitFeedback_();
-  const auto window = DEATHBOMB_WINDOW +
+void Player::EnterDeathbombWindow() {
+  PlayHitFeedback();
+  const auto window = kDeathbombWindow +
                       (static_cast<int>(GameLevel::Lunatic) -
                        static_cast<int>(std::to_underlying(session_.level))) *
                           2;
@@ -436,7 +436,7 @@ void Player::EnterDeathbombWindow_() {
   life_state_ = LifeState::DeathbombWindow;
 }
 
-bool Player::ActivateBomb_(BombTrigger trigger) {
+bool Player::ActivateBomb(BombTrigger trigger) {
   if (bomb_time_ != 0U || bomb_ == 0U || stage_.DialogueActive()) {
     return false;
   }
@@ -451,10 +451,10 @@ bool Player::ActivateBomb_(BombTrigger trigger) {
   }
 
   bomb_time_ = loadout_->BombDuration();
-  invincibility_time_ = BOMB_END_INVINCIBILITY_DURATION;
+  invincibility_time_ = kBombEndInvincibilityDuration;
   const uint8_t bomb_cost =
-      trigger == BombTrigger::Deathbomb && bomb_ >= DEATHBOMB_COST
-          ? DEATHBOMB_COST
+      trigger == BombTrigger::Deathbomb && bomb_ >= kDeathbombCost
+          ? kDeathbombCost
           : 1;
   bomb_ -= bomb_cost;
   bomb_used_++;
@@ -463,12 +463,12 @@ bool Player::ActivateBomb_(BombTrigger trigger) {
   }
   deathbomb_time_ = 0;
   life_state_ = LifeState::Active;
-  session_.AddRank(-BOMB_RANK_DECR);
+  session_.AddRank(-kBombRankDecrease);
   clear_bullets_requested_ = true;
   return true;
 }
 
-void Player::CommitDeath_() {
+void Player::CommitDeath() {
   for (int i = 0; i < 50; i++) {
     effects_.SpawnFragment(x_, y_, FragmentKind::Heart);
   }
@@ -482,10 +482,10 @@ void Player::CommitDeath_() {
   bomb_ = initial_bomb_stock_;
   bomb_time_ = 0;
   deathbomb_time_ = 0;
-  invincibility_time_ = RESPAWN_INVINCIBILITY_DURATION;
+  invincibility_time_ = kRespawnInvincibilityDuration;
   life_state_ = LifeState::Respawning;
 
-  session_.AddRank(-DEATH_RANK_DECR); // death decreases rank
+  session_.AddRank(-kDeathRankDecrease); // death decreases rank
 
   if (left_ != 0U) {
     left_ -= 1;
@@ -526,8 +526,8 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   }
 
   if (evade_ != 0U) {
-    evade_c_ = std::min(static_cast<uint16_t>(evade_c_ + EVADETIME_INCR),
-                        EVADETIME_MAX);
+    evade_c_ = std::min(static_cast<uint16_t>(evade_c_ + kGrazeWaitIncrement),
+                        kGrazeWaitMax);
   }
 }
 
@@ -608,20 +608,20 @@ void Player::RotateType(int dir) {
 PlayerReward Player::AddStar(uint32_t n) {
   star_counter_ += n;
   if (star_counter_ >= star_threshold_) {
-    star_threshold_ += STAR_THRESHOLD_INCR;
+    star_threshold_ += kStarThresholdIncrement;
     star_extend_count_++;
 
     // reward loop: EB...B|EB...B
-    if (star_extend_count_ % STAR_EXTEND_LOOP == 1) {
+    if (star_extend_count_ % kStarExtendLoop == 1) {
       left_++;
-      return PlayerReward::EXTEND;
+      return PlayerReward::Extend;
     }
 
     bomb_++;
-    return PlayerReward::BOMB;
+    return PlayerReward::Bomb;
   }
 
-  return PlayerReward::NONE;
+  return PlayerReward::None;
 }
 
 void Player::ResetForContinue(int player_stock) {
@@ -629,7 +629,7 @@ void Player::ResetForContinue(int player_stock) {
   left_ = player_stock;
   score_ = ((score_ % 10) + 1);
   star_counter_ = 0;
-  star_threshold_ = STAR_THRESHOLD_INIT;
+  star_threshold_ = kInitialStarThreshold;
   star_extend_count_ = 0;
   game_over_ = false;
 }

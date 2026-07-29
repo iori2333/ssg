@@ -45,19 +45,8 @@ void ResetGameplayRuntime(GameContext &context) {
   BGM_SetTempo(0);
 }
 
-bool GameplayState::EnterLive() { return EnterLive(context_); }
-
-bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
-  return EnterReplay(context_, path, stage);
-}
-
-bool GameplayState::EnterDemo() { return EnterDemo(context_); }
-
-FlowEvent GameplayState::Update(const FrameInput &frame) {
-  return Update(context_, frame);
-}
-
-bool GameplayState::LoadCurrentStage(GameContext &context) {
+bool GameplayState::LoadCurrentStage() {
+  auto &context = context_;
   if (!context.graphics.LoadStage(context.session.stage)) {
     DebugOut("IMAGES.PAK が破壊されています");
     return false;
@@ -70,8 +59,8 @@ bool GameplayState::LoadCurrentStage(GameContext &context) {
   return true;
 }
 
-void GameplayState::InitializeGameplayView(GameContext &context,
-                                           bool interactive) {
+void GameplayState::InitializeGameplayView(bool interactive) {
+  auto &context = context_;
   TextObj.Clear();
   if (mode_ != Mode::Demo) {
     BGM_FadeOut(240);
@@ -93,18 +82,19 @@ void GameplayState::InitializeGameplayView(GameContext &context,
   GrpBackend_SetClip(playfield::kClip);
 }
 
-bool GameplayState::EnterLive(GameContext &context) {
+bool GameplayState::EnterLive() {
+  auto &context = context_;
   mode_ = Mode::Live;
   phase_ = Phase::Running;
-  if (!LoadCurrentStage(context)) {
+  if (!LoadCurrentStage()) {
     return false;
   }
-  InitializeGameplayView(context, true);
+  InitializeGameplayView(true);
   return true;
 }
 
-bool GameplayState::EnterReplay(GameContext &context, std::string_view path,
-                                StageId stage) {
+bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
+  auto &context = context_;
   if (!context.records.LoadReplay(path, stage)) {
     return false;
   }
@@ -118,16 +108,17 @@ bool GameplayState::EnterReplay(GameContext &context, std::string_view path,
     return false;
   }
   context.records.RestorePlaybackStage(context.player, context.session);
-  if (!LoadCurrentStage(context)) {
-    StopPlayback(context);
+  if (!LoadCurrentStage()) {
+    StopPlayback();
     return false;
   }
-  InitializeGameplayView(context, false);
+  InitializeGameplayView(false);
   overlay_timer_ = 0;
   return true;
 }
 
-bool GameplayState::EnterDemo(GameContext &context) {
+bool GameplayState::EnterDemo() {
+  auto &context = context_;
   GrpBackend_Clear();
   Grp_Flip();
   mode_ = Mode::Demo;
@@ -140,24 +131,26 @@ bool GameplayState::EnterDemo(GameContext &context) {
     return false;
   }
   context.session.ResetRank();
-  if (!LoadCurrentStage(context)) {
-    StopPlayback(context);
+  if (!LoadCurrentStage()) {
+    StopPlayback();
     return false;
   }
-  InitializeGameplayView(context, false);
+  InitializeGameplayView(false);
   overlay_timer_ = 0;
   return true;
 }
 
-bool GameplayState::LoadNextStage(GameContext &context) {
+bool GameplayState::LoadNextStage() {
+  auto &context = context_;
   context.session.AdvanceStage();
   ResetGameplayRuntime(context);
   context.player.PrepareNextStage();
   context.records.BeginStage(context.player, context.session);
-  return LoadCurrentStage(context);
+  return LoadCurrentStage();
 }
 
-bool GameplayState::LoadNextReplayStage(GameContext &context) {
+bool GameplayState::LoadNextReplayStage() {
+  auto &context = context_;
   if (!context.records.AdvancePlaybackStage()) {
     return false;
   }
@@ -166,31 +159,29 @@ bool GameplayState::LoadNextReplayStage(GameContext &context) {
     return false;
   }
   context.records.RestorePlaybackStage(context.player, context.session);
-  if (!LoadCurrentStage(context)) {
-    StopPlayback(context);
+  if (!LoadCurrentStage()) {
+    StopPlayback();
     return false;
   }
   return true;
 }
 
 GameplayState::StepResult
-GameplayState::HandleStageTransition(GameContext &context,
-                                     stage::StageTransition transition) {
+GameplayState::HandleStageTransition(stage::StageTransition transition) {
+  auto &context = context_;
   switch (transition) {
   case stage::StageTransition::None:
     return StepResult::Running;
   case stage::StageTransition::NextStage:
     if (context.records.IsRecording()) {
       context.records.FlushStage();
-      return LoadNextStage(context) ? StepResult::Running
-                                    : StepResult::LoadFailed;
+      return LoadNextStage() ? StepResult::Running : StepResult::LoadFailed;
     }
     if (context.records.IsMultiStagePlayback()) {
-      return LoadNextReplayStage(context) ? StepResult::Running
-                                          : StepResult::LoadFailed;
+      return LoadNextReplayStage() ? StepResult::Running
+                                   : StepResult::LoadFailed;
     }
-    return LoadNextStage(context) ? StepResult::Running
-                                  : StepResult::LoadFailed;
+    return LoadNextStage() ? StepResult::Running : StepResult::LoadFailed;
   case stage::StageTransition::GameClear:
     if (context.records.IsMultiStagePlayback()) {
       return StepResult::Running;
@@ -215,8 +206,8 @@ GameplayState::HandleStageTransition(GameContext &context,
   std::unreachable();
 }
 
-GameplayState::StepResult GameplayState::Step(GameContext &context,
-                                              INPUT_BITS &input) {
+GameplayState::StepResult GameplayState::Step(INPUT_BITS &input) {
+  auto &context = context_;
   context.ui.TickMessageWindow();
   const auto transition = context.stage.Update(
       {.enemies = context.enemies,
@@ -229,7 +220,7 @@ GameplayState::StepResult GameplayState::Step(GameContext &context,
            context.config.ui.message_window == MessageWindowMode::Hidden},
       input);
   if (transition != stage::StageTransition::None) {
-    return HandleStageTransition(context, transition);
+    return HandleStageTransition(transition);
   }
 
   context.enemies.Update();
@@ -244,7 +235,7 @@ GameplayState::StepResult GameplayState::Step(GameContext &context,
     context.bullets.Clear();
   }
   if (player_result.game_over) {
-    BeginGameOver(context);
+    BeginGameOver();
   }
   context.session.UpdateRank(context.stage.Frame());
   if (player_result.game_over) {
@@ -253,37 +244,38 @@ GameplayState::StepResult GameplayState::Step(GameContext &context,
   return StepResult::Running;
 }
 
-void GameplayState::BeginGameOver(GameContext &context) {
+void GameplayState::BeginGameOver() {
+  auto &context = context_;
   context.effects.SpawnGameOver();
   game_over_timer_ = 120;
   phase_ = Phase::GameOverIntro;
 }
 
-FlowEvent GameplayState::Update(GameContext &context, const FrameInput &frame) {
+FlowEvent GameplayState::Update(const FrameInput &frame) {
   switch (phase_) {
   case Phase::Paused:
-    return UpdatePause(context, frame);
+    return UpdatePause(frame);
   case Phase::GameOverIntro:
-    return UpdateGameOverIntro(context, frame);
+    return UpdateGameOverIntro(frame);
   case Phase::GameOverMenu:
-    return UpdateGameOverMenu(context, frame);
+    return UpdateGameOverMenu(frame);
   case Phase::Running:
     break;
   }
 
   switch (mode_) {
   case Mode::Live:
-    return UpdateLive(context, frame);
+    return UpdateLive(frame);
   case Mode::Replay:
-    return UpdateReplay(context, frame);
+    return UpdateReplay(frame);
   case Mode::Demo:
-    return UpdateDemo(context, frame);
+    return UpdateDemo(frame);
   }
   std::unreachable();
 }
 
-FlowEvent GameplayState::UpdateLive(GameContext &context,
-                                    const FrameInput &frame) {
+FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
+  auto &context = context_;
   auto input = frame.gameplay;
   context.records.Record(input);
   if ((input & KEY_ESC) != 0) {
@@ -295,7 +287,7 @@ FlowEvent GameplayState::UpdateLive(GameContext &context,
     return NoEvent{};
   }
 
-  const auto result = Step(context, input);
+  const auto result = Step(input);
   context.records.UpdateLastRecordedInput(input);
   switch (result) {
   case StepResult::Running:
@@ -313,7 +305,7 @@ FlowEvent GameplayState::UpdateLive(GameContext &context,
   }
 
   if (frame.should_draw) {
-    Draw(context);
+    Draw();
     if (context.records.IsRecording()) {
       constexpr PIXEL_LTRB rc = PIXEL_LTWH{288, 80, 24, 8};
       GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, rc);
@@ -323,8 +315,8 @@ FlowEvent GameplayState::UpdateLive(GameContext &context,
   return NoEvent{};
 }
 
-FlowEvent GameplayState::UpdatePause(GameContext &context,
-                                     const FrameInput &frame) {
+FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
+  auto &context = context_;
   context.ui.Exit().Tick(frame.gameplay);
   if (const auto action = context.ui.TakePauseAction()) {
     switch (*action) {
@@ -343,7 +335,7 @@ FlowEvent GameplayState::UpdatePause(GameContext &context,
   }
 
   if (frame.should_draw) {
-    Draw(context);
+    Draw();
     GrpBackend_SetClip(GRP_RES_RECT);
     context.ui.Exit().Draw();
     GrpBackend_SetClip(playfield::kClip);
@@ -352,8 +344,8 @@ FlowEvent GameplayState::UpdatePause(GameContext &context,
   return NoEvent{};
 }
 
-FlowEvent GameplayState::UpdateGameOverIntro(GameContext &context,
-                                             const FrameInput &frame) {
+FlowEvent GameplayState::UpdateGameOverIntro(const FrameInput &frame) {
+  auto &context = context_;
   switch (game_over_timer_) {
   default:
     game_over_timer_--;
@@ -378,14 +370,14 @@ FlowEvent GameplayState::UpdateGameOverIntro(GameContext &context,
   }
 
   if (frame.should_draw) {
-    Draw(context);
+    Draw();
     Grp_Flip();
   }
   return NoEvent{};
 }
 
-FlowEvent GameplayState::UpdateGameOverMenu(GameContext &context,
-                                            const FrameInput &frame) {
+FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
+  auto &context = context_;
   context.ui.GameOver().Tick(frame.gameplay);
   if (const auto action = context.ui.TakeGameOverAction()) {
     context.effects.ClearTextEffects();
@@ -420,14 +412,15 @@ FlowEvent GameplayState::UpdateGameOverMenu(GameContext &context,
   }
 
   if (frame.should_draw) {
-    Draw(context);
+    Draw();
     context.ui.GameOver().Draw();
     Grp_Flip();
   }
   return NoEvent{};
 }
 
-void GameplayState::StopPlayback(GameContext &context) {
+void GameplayState::StopPlayback() {
+  auto &context = context_;
   context.records.StopPlayback();
   context.session.level = context.config.game.game_level;
   context.player.Configure(context.config.game.practice_mode,
@@ -435,11 +428,11 @@ void GameplayState::StopPlayback(GameContext &context) {
   context.session.is_demoplay = false;
 }
 
-FlowEvent GameplayState::UpdateReplay(GameContext &context,
-                                      const FrameInput &frame) {
+FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
+  auto &context = context_;
   overlay_timer_ = (overlay_timer_ + 1) % 128;
   if ((frame.gameplay & KEY_ESC) != 0) {
-    StopPlayback(context);
+    StopPlayback();
     return ReturnToTitle{.change_music = true};
   }
 
@@ -447,19 +440,19 @@ FlowEvent GameplayState::UpdateReplay(GameContext &context,
   for (int i = 0; i < speed; i++) {
     auto input = context.records.NextInput();
     if ((input & KEY_ESC) != 0) {
-      StopPlayback(context);
+      StopPlayback();
       return ReturnToTitle{.change_music = true};
     }
-    const auto result = Step(context, input);
+    const auto result = Step(input);
     if (result == StepResult::GameOver || result == StepResult::LoadFailed ||
         phase_ != Phase::Running || !context.records.IsPlaying()) {
-      StopPlayback(context);
+      StopPlayback();
       return ReturnToTitle{.change_music = true};
     }
   }
 
   if (frame.should_draw) {
-    Draw(context);
+    Draw();
     constexpr PIXEL_LTWH replay_label = {312, 80, 32, 8};
     GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, replay_label);
     if (overlay_timer_ < 96) {
@@ -476,23 +469,23 @@ FlowEvent GameplayState::UpdateReplay(GameContext &context,
   return NoEvent{};
 }
 
-FlowEvent GameplayState::UpdateDemo(GameContext &context,
-                                    const FrameInput &frame) {
+FlowEvent GameplayState::UpdateDemo(const FrameInput &frame) {
+  auto &context = context_;
   overlay_timer_ = (overlay_timer_ + 1) % 128;
   auto input = frame.gameplay != 0U ? KEY_ESC : context.records.NextInput();
   context.session.is_demoplay = true;
   if ((input & KEY_ESC) != 0) {
-    StopPlayback(context);
+    StopPlayback();
     return ReturnToTitle{.change_music = false};
   }
 
-  const auto result = Step(context, input);
+  const auto result = Step(input);
   if (result != StepResult::Running || phase_ != Phase::Running) {
-    StopPlayback(context);
+    StopPlayback();
     return ReturnToTitle{.change_music = false};
   }
   if (frame.should_draw) {
-    Draw(context);
+    Draw();
     if (overlay_timer_ < 64) {
       GrpPut16(200, 200, "D E M O   P L A Y");
     }
@@ -501,7 +494,8 @@ FlowEvent GameplayState::UpdateDemo(GameContext &context,
   return NoEvent{};
 }
 
-void GameplayState::Draw(GameContext &context) const {
+void GameplayState::Draw() const {
+  auto &context = context_;
   const GameplayHudModel hud_model{
       .score = context.player.Score(),
       .bombs = context.player.Bombs(),
