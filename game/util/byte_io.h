@@ -5,8 +5,10 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <span>
+#include <type_traits>
 #include <vector>
 
 namespace util {
@@ -31,6 +33,7 @@ private:
 
 class ByteReader {
 public:
+  ByteReader() = default;
   explicit ByteReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
 
   template <std::unsigned_integral T> [[nodiscard]] std::optional<T> Read() {
@@ -41,6 +44,25 @@ public:
     for (std::size_t i = 0; i < sizeof(T); i++) {
       value |= static_cast<T>(bytes_[position_++]) << (i * 8);
     }
+    return value;
+  }
+
+  template <std::unsigned_integral T>
+  [[nodiscard]] std::optional<T> Peek() const {
+    auto copy = *this;
+    return copy.Read<T>();
+  }
+
+  template <typename T>
+    requires std::is_trivially_copyable_v<T> &&
+             std::is_default_constructible_v<T>
+  [[nodiscard]] std::optional<T> ReadObject() {
+    if (bytes_.size() - position_ < sizeof(T)) {
+      return std::nullopt;
+    }
+    T value{};
+    std::memcpy(&value, bytes_.data() + position_, sizeof(T));
+    position_ += sizeof(T);
     return value;
   }
 
@@ -55,6 +77,16 @@ public:
   }
 
   [[nodiscard]] bool Empty() const { return position_ == bytes_.size(); }
+  [[nodiscard]] std::size_t Remaining() const {
+    return bytes_.size() - position_;
+  }
+  [[nodiscard]] bool Seek(std::size_t position) {
+    if (position > bytes_.size()) {
+      return false;
+    }
+    position_ = position;
+    return true;
+  }
 
 private:
   std::span<const uint8_t> bytes_;

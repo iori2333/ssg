@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -16,8 +17,6 @@
 
 #include "effect/effect_types.h"
 #include "stage/stage_visuals.h"
-#include "sys/buffer.h"
-
 struct EclNoArguments {};
 
 struct EclSetupArguments {
@@ -252,7 +251,7 @@ private:
 class EclProgram {
 public:
   [[nodiscard]] static std::optional<EclProgram>
-  Parse(BYTE_BUFFER_BORROWED bytes);
+  Parse(std::span<const uint8_t> bytes);
 
   [[nodiscard]] std::optional<size_t> Entry(uint32_t script_id) const;
   [[nodiscard]] const EclInstruction *InstructionAt(size_t position) const;

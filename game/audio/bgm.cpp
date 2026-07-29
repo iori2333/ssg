@@ -100,7 +100,7 @@ bool BGM_LoadWaveform(std::string_view path) {
   return false;
 }
 
-bool BGM_LoadMIDI(BYTE_BUFFER_OWNED buf) {
+bool BGM_LoadMIDI(std::vector<uint8_t> buf) {
   Waveform = nullptr;
   return Mid_Load(std::move(buf));
 }

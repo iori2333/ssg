@@ -785,7 +785,7 @@ bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp) {
   auto &tex = Textures[sid];
   tex = SafeDestroy(SDL_DestroyTexture, tex);
 
-  auto *rwops = SDL_IOFromMem(bmp.buffer.get(), bmp.buffer.size());
+  auto *rwops = SDL_IOFromMem(bmp.buffer.data(), bmp.buffer.size());
   auto *surf = SDL_LoadBMP_IO(rwops, 1);
   auto surf_guard = make_guard(surf, SDL_DestroySurface);
   std::ignore = std::move(bmp);

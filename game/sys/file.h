@@ -4,11 +4,11 @@
 
 #pragma once
 
+#include <cstdint>
 #include <filesystem>
 #include <span>
+#include <vector>
 
-#include "buffer.h"
-
-[[nodiscard]] BYTE_BUFFER_OWNED File_Load(const std::filesystem::path &path);
+[[nodiscard]] std::vector<uint8_t> File_Load(const std::filesystem::path &path);
 [[nodiscard]] bool File_Save(const std::filesystem::path &path,
                              std::span<const uint8_t> data);

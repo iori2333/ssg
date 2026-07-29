@@ -7,9 +7,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <vector>
-
-#include "sys/buffer.h"
 
 namespace stage {
 
@@ -28,7 +27,8 @@ public:
     uint32_t scroll_wait = 0;
   };
 
-  [[nodiscard]] static std::optional<StageMap> Parse(BYTE_BUFFER_BORROWED data);
+  [[nodiscard]] static std::optional<StageMap>
+  Parse(std::span<const uint8_t> data);
 
   [[nodiscard]] const std::vector<Layer> &Layers() const { return layers_; }
 

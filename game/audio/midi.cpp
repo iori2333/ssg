@@ -14,6 +14,7 @@
 #include "midi_backend.h"
 #include "volume.h"
 
+#include "util/byte_io.h"
 #include "util/endian.h"
 #include "util/enum_flags.h"
 
@@ -131,16 +132,17 @@ struct MID_EVENT {
 };
 
 class MID_TRACK_ITERATOR {
-  BYTE_BUFFER_CURSOR<const uint8_t> cursor;
+  util::ByteReader cursor;
   uint8_t status = 0x00;
+  bool initialized = false;
 
 public:
   MID_TRACK_ITERATOR() = default;
   MID_TRACK_ITERATOR(const MID_TRACK_ITERATOR &other) = default;
   MID_TRACK_ITERATOR(const std::span<const uint8_t> data)
-      : cursor(data), status(0x00) {}
+      : cursor(data), status(0x00), initialized(true) {}
 
-  explicit operator bool() const { return (cursor.data() != nullptr); }
+  explicit operator bool() const { return initialized; }
 
   // Reads a MIDI variable-length quantity and advances [work] accordingly.
   // Used for both delta times and multi-byte event lengths. Returns -1 if
@@ -179,7 +181,7 @@ struct MID_TRACK {
 };
 
 struct MID_SEQUENCE {
-  BYTE_BUFFER_OWNED smf = nullptr;
+  std::vector<uint8_t> smf;
   std::unique_ptr<MID_TRACK[]> track_buf = nullptr;
   std::span<MID_TRACK> tracks;
   MID_TEMPO tempo = {.qn_duration = 1s /* 60 BPM */};
@@ -335,48 +337,45 @@ void Mid_FadeOut(VOLUME volume_start, std::chrono::milliseconds duration) {
   Mid_Dev.FadeDuration = duration;
 }
 
-bool Mid_Load(BYTE_BUFFER_OWNED buffer) {
+bool Mid_Load(std::vector<uint8_t> buffer) {
   Mid_Seq = {};
   Mid_Seq.smf = std::move(buffer);
 
-  auto cursor = Mid_Seq.smf.cursor();
-  const auto maybe_midhead = cursor.next<SMF_FILE>();
-  if (!maybe_midhead) {
-    return false;
-  }
-  const auto &midhead = maybe_midhead.value()[0];
-
-  if (midhead.MThd != 0x4D546864) { // "MThd"
+  util::ByteReader cursor{Mid_Seq.smf};
+  const auto midhead = cursor.ReadObject<SMF_FILE>();
+  if (!midhead) {
     return false;
   }
 
-  const auto maybe_midmain = cursor.next<SMF_MAIN>();
-  if (!maybe_midmain) {
+  if (midhead->MThd != 0x4D546864) { // "MThd"
     return false;
   }
-  const auto midmain = maybe_midmain.value()[0];
 
-  Mid_Seq.tempo.ppqn = midmain.timebase;
+  const auto midmain = cursor.ReadObject<SMF_MAIN>();
+  if (!midmain) {
+    return false;
+  }
 
-  Mid_Seq.track_buf =
-      std::unique_ptr<MID_TRACK[]>(new (std::nothrow) MID_TRACK[midmain.track]);
+  Mid_Seq.tempo.ppqn = midmain->timebase;
+
+  Mid_Seq.track_buf = std::unique_ptr<MID_TRACK[]>(
+      new (std::nothrow) MID_TRACK[midmain->track]);
   if (!Mid_Seq.track_buf) {
     return false;
   }
-  Mid_Seq.tracks = {Mid_Seq.track_buf.get(), midmain.track};
+  Mid_Seq.tracks = {Mid_Seq.track_buf.get(), midmain->track};
 
   for (auto &track : Mid_Seq.tracks) {
-    const auto maybe_midtrack = cursor.next<SMF_TRACK>();
-    if (!maybe_midtrack) {
+    const auto midtrack = cursor.ReadObject<SMF_TRACK>();
+    if (!midtrack) {
       return false;
     }
-    const auto midtrack = maybe_midtrack.value()[0];
 
-    const auto maybe_data = cursor.next<uint8_t>(midtrack.size);
-    if (!maybe_data) {
+    const auto data = cursor.ReadBytes(midtrack->size);
+    if (!data) {
       return false;
     }
-    track.data = maybe_data.value();
+    track.data = *data;
   }
 
   Mid_Seq.Rewind();
@@ -419,11 +418,11 @@ uint32_t MID_TRACK_ITERATOR::ConsumeVLQ(void) {
   uint8_t temp = 0;
   uint32_t ret = 0;
   do {
-    const auto maybe_temp = cursor.next<uint8_t>(1);
+    const auto maybe_temp = cursor.Read<uint8_t>();
     if (!maybe_temp) {
       return (std::numeric_limits<uint32_t>::max)();
     }
-    temp = maybe_temp.value()[0];
+    temp = *maybe_temp;
     ret = ((ret << 7) | (temp & 0x7f));
   } while (temp & 0x80);
   return ret;
@@ -459,14 +458,12 @@ void MID_TRACK::ConsumeDelta(const MID_TEMPO &tempo, const MID_LOOP &loop) {
 }
 
 std::optional<MID_EVENT> MID_TRACK_ITERATOR::ConsumeEvent(void) {
-  const auto maybe_status = cursor.next<uint8_t>(1);
+  const auto maybe_status = cursor.Peek<uint8_t>();
   if (!maybe_status) {
     return std::nullopt;
   }
-  if (maybe_status.value()[0] >= std::to_underlying(MID_EVENT_KIND::FIRST)) {
-    status = maybe_status.value()[0];
-  } else {
-    cursor.cursor--;
+  if (*maybe_status >= std::to_underlying(MID_EVENT_KIND::FIRST)) {
+    status = *cursor.Read<uint8_t>();
   }
   assert(status >= std::to_underlying(MID_EVENT_KIND::FIRST));
   const auto kind = ((status > std::to_underlying(MID_EVENT_KIND::SYSEX))
@@ -481,20 +478,18 @@ std::optional<MID_EVENT> MID_TRACK_ITERATOR::ConsumeEvent(void) {
   case MID_EVENT_KIND::NOTE_AFTERTOUCH:
   case MID_EVENT_KIND::CONTROLLER:
   case MID_EVENT_KIND::PITCH_BEND:
-    extra_data = cursor.next<uint8_t>(2);
+    extra_data = cursor.ReadBytes(2);
     break;
   case MID_EVENT_KIND::PROGRAM_CHANGE:
   case MID_EVENT_KIND::CHANNEL_AFTERTOUCH:
-    extra_data = cursor.next<uint8_t>(1);
+    extra_data = cursor.ReadBytes(1);
     break;
   case MID_EVENT_KIND::SYSEX:
-    extra_data = cursor.next<uint8_t>(ConsumeVLQ());
+    extra_data = cursor.ReadBytes(ConsumeVLQ());
     break;
   case MID_EVENT_KIND::META:
-    meta = cursor.next<uint8_t>(1)
-               .transform([](auto v) { return v[0]; })
-               .value_or(0);
-    extra_data = cursor.next<uint8_t>(ConsumeVLQ());
+    meta = cursor.Read<uint8_t>().value_or(0);
+    extra_data = cursor.ReadBytes(ConsumeVLQ());
     break;
   default:
     assert(!"Unimplemented MIDI system message");

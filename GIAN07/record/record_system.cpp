@@ -482,10 +482,10 @@ bool RecordSystem::LoadArchive(std::string_view path,
     return false;
   }
   const auto manifest_data = archive.Extract(0);
-  if (!manifest_data) {
+  if (manifest_data.empty()) {
     return false;
   }
-  util::ByteReader reader{{manifest_data.get(), manifest_data.size()}};
+  util::ByteReader reader{manifest_data};
   const auto magic = reader.ReadBytes(kReplayMagic.size());
   uint16_t version = 0;
   uint64_t created_at = 0;
@@ -550,11 +550,11 @@ bool RecordSystem::LoadArchive(std::string_view path,
     ReplayStage replay_stage{.checkpoint = checkpoint};
     if (stages != nullptr) {
       const auto input_data = archive.Extract(i + 1);
-      if (!input_data ||
+      if (input_data.empty() ||
           input_data.size() != checkpoint.frame_count * sizeof(uint16_t)) {
         return false;
       }
-      util::ByteReader input_reader{{input_data.get(), input_data.size()}};
+      util::ByteReader input_reader{input_data};
       replay_stage.inputs.reserve(checkpoint.frame_count);
       for (uint32_t frame = 0; frame < checkpoint.frame_count; frame++) {
         uint16_t input = 0;
@@ -671,48 +671,53 @@ StageId RecordSystem::CurrentPlaybackStage() const {
 bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
                                  GameSession &session) {
   const auto data = data_.ExtractMap(std::to_underlying(stage) + 6);
-  auto cursor = data.cursor();
-  const auto header_data = cursor.next<DemoReplayHeader>();
-  if (!header_data) {
+  util::ByteReader reader{data};
+  const auto header = reader.ReadObject<DemoReplayHeader>();
+  if (!header) {
     return false;
   }
-  const auto &header = header_data.value()[0];
-  if (header.frame_count > kReplayBufferCapacity) {
-    return false;
-  }
-  const auto inputs = cursor.next<uint16_t>(header.frame_count);
-  if (!inputs) {
+  if (header->frame_count > kReplayBufferCapacity) {
     return false;
   }
 
+  std::vector<INPUT_BITS> inputs;
+  inputs.reserve(header->frame_count);
+  for (uint32_t frame = 0; frame < header->frame_count; ++frame) {
+    const auto input = reader.Read<uint16_t>();
+    if (!input) {
+      return false;
+    }
+    inputs.push_back(static_cast<INPUT_BITS>(*input));
+  }
+
   const ReplaySettings settings = {
-      .difficulty = static_cast<GameLevel>(header.config.game_level),
+      .difficulty = static_cast<GameLevel>(header->config.game_level),
       .practice_mode = PracticeMode::Off,
-      .player_stock = header.config.player_stock,
-      .bomb_stock = header.config.bomb_stock,
-      .input_flags = header.config.input_flags,
+      .player_stock = header->config.player_stock,
+      .bomb_stock = header->config.bomb_stock,
+      .input_flags = header->config.input_flags,
   };
   player.Initialize(settings.player_stock, settings.bomb_stock);
   auto progress = player.CaptureProgress();
-  progress.player_type = header.weapon;
-  progress.power = header.power;
-  progress.lives = header.config.player_stock;
-  progress.bombs = header.config.bomb_stock;
+  progress.player_type = header->weapon;
+  progress.power = header->power;
+  progress.lives = header->config.player_stock;
+  progress.bombs = header->config.bomb_stock;
 
   ReplayStage replay_stage;
   replay_stage.checkpoint = {
       .stage = stage,
-      .frame_count = header.frame_count,
-      .rng = {.seed = header.random_seed, .draw_count = 0},
+      .frame_count = header->frame_count,
+      .rng = {.seed = header->random_seed, .draw_count = 0},
       .player = progress,
       .rank = session.rank,
   };
-  replay_stage.inputs.assign(inputs->begin(), inputs->end());
+  replay_stage.inputs = std::move(inputs);
   session.level = settings.difficulty;
   player.Configure(PracticeMode::Off,
                    (settings.input_flags & kInputFlagSpeedDown) != 0);
   player.RestoreProgress(progress);
-  rnd_seed_set(header.random_seed);
+  rnd_seed_set(header->random_seed);
   std::vector<ReplayStage> stages;
   stages.push_back(std::move(replay_stage));
   state_.emplace<PlaybackState>(PlaybackState{

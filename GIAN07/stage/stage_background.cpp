@@ -15,8 +15,8 @@
 
 namespace stage {
 
-bool TileMapScroller::Load(BYTE_BUFFER_OWNED data) {
-  auto map = StageMap::Parse({data.get(), data.size()});
+bool TileMapScroller::Load(std::span<const uint8_t> data) {
+  auto map = StageMap::Parse(data);
   if (!map) {
     return false;
   }
@@ -104,9 +104,9 @@ void TileMapScroller::Draw(const std::array<int8_t, kVisibleMapRows> &raster_dx,
   }
 }
 
-bool StageBackground::LoadMap(BYTE_BUFFER_OWNED data) {
+bool StageBackground::LoadMap(std::span<const uint8_t> data) {
   TileMapScroller map;
-  if (!map.Load(std::move(data))) {
+  if (!map.Load(data)) {
     return false;
   }
   map_ = std::move(map);

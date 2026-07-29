@@ -3,7 +3,6 @@
 ///
 #include <algorithm>
 #include <array>
-#include <cstring>
 #include <filesystem>
 #include <format>
 #include <optional>
@@ -11,7 +10,7 @@
 
 #include "game_data.h"
 
-#include "util/endian.h"
+#include "util/byte_io.h"
 
 namespace {
 
@@ -82,18 +81,18 @@ LoadErrors GameData::Load(std::string_view data_path) {
   tracks.reserve(music.EntryCount());
   for (uint32_t index = 0; index < music.EntryCount(); ++index) {
     auto raw = music.Extract(index);
-    if (!raw) {
+    if (raw.empty()) {
       errors.push_back({ArchiveId::Music, LoadErrorKind::Invalid});
       break;
     }
 
-    auto cursor = raw.cursor();
-    auto read_string = [&cursor]() -> std::optional<std::string> {
-      const auto length = cursor.next<ENDIAN_LITTLE<uint32_t>>();
+    util::ByteReader reader{raw};
+    auto read_string = [&reader]() -> std::optional<std::string> {
+      const auto length = reader.Read<uint32_t>();
       if (!length) {
         return std::nullopt;
       }
-      const auto bytes = cursor.next<uint8_t>(length.value()[0]);
+      const auto bytes = reader.ReadBytes(*length);
       if (!bytes) {
         return std::nullopt;
       }
@@ -103,11 +102,12 @@ LoadErrors GameData::Load(std::string_view data_path) {
 
     auto title = read_string();
     auto comment = read_string();
-    if (!title || !comment || cursor.cursor >= cursor.size()) {
+    if (!title || !comment || reader.Remaining() == 0) {
       errors.push_back({ArchiveId::Music, LoadErrorKind::Invalid});
       break;
     }
-    tracks.push_back({std::move(*title), std::move(*comment), cursor.cursor});
+    tracks.push_back({std::move(*title), std::move(*comment),
+                      raw.size() - reader.Remaining()});
   }
   if (!errors.empty()) {
     return errors;
@@ -123,33 +123,29 @@ const PbgArchive &GameData::Archive(ArchiveId id) const {
   return archives_[ToIndex(id)];
 }
 
-BYTE_BUFFER_OWNED GameData::ExtractMap(uint32_t index) const {
+std::vector<uint8_t> GameData::ExtractMap(uint32_t index) const {
   return Archive(ArchiveId::Map).Extract(index);
 }
 
-BYTE_BUFFER_OWNED GameData::ExtractImage(uint32_t index) const {
+std::vector<uint8_t> GameData::ExtractImage(uint32_t index) const {
   return Archive(ArchiveId::Images).Extract(index);
 }
 
-BYTE_BUFFER_OWNED GameData::ExtractSound(uint32_t index) const {
+std::vector<uint8_t> GameData::ExtractSound(uint32_t index) const {
   return Archive(ArchiveId::Sound).Extract(index);
 }
 
-BYTE_BUFFER_OWNED GameData::ExtractMusicMidi(uint32_t index) const {
+std::vector<uint8_t> GameData::ExtractMusicMidi(uint32_t index) const {
   if (index >= music_tracks_.size()) {
-    return nullptr;
+    return {};
   }
   auto raw = Archive(ArchiveId::Music).Extract(index);
   const auto offset = music_tracks_[index].midi_offset;
-  if (!raw || offset >= raw.size()) {
-    return nullptr;
+  if (raw.empty() || offset >= raw.size()) {
+    return {};
   }
 
-  BYTE_BUFFER_OWNED midi(raw.size() - offset);
-  if (midi) {
-    std::memcpy(midi.get(), raw.get() + offset, midi.size());
-  }
-  return midi;
+  return {raw.begin() + static_cast<ptrdiff_t>(offset), raw.end()};
 }
 
 std::string_view GameData::TrackTitle(size_t index) const {

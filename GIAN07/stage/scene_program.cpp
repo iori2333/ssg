@@ -13,7 +13,7 @@ namespace {
 
 class SceneReader {
 public:
-  explicit SceneReader(BYTE_BUFFER_BORROWED bytes) : bytes_(bytes) {}
+  explicit SceneReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
 
   [[nodiscard]] bool Empty() const { return offset_ == bytes_.size(); }
 
@@ -55,7 +55,7 @@ public:
   }
 
 private:
-  BYTE_BUFFER_BORROWED bytes_;
+  std::span<const uint8_t> bytes_;
   size_t offset_ = 0;
 };
 
@@ -63,7 +63,8 @@ private:
 
 namespace stage {
 
-std::optional<SceneProgram> SceneProgram::Parse(BYTE_BUFFER_BORROWED bytes) {
+std::optional<SceneProgram>
+SceneProgram::Parse(std::span<const uint8_t> bytes) {
   if (bytes.empty()) {
     return std::nullopt;
   }
@@ -191,7 +192,7 @@ std::optional<SceneProgram> SceneProgram::Parse(BYTE_BUFFER_BORROWED bytes) {
   return program;
 }
 
-bool SceneRunner::Load(BYTE_BUFFER_BORROWED bytes) {
+bool SceneRunner::Load(std::span<const uint8_t> bytes) {
   auto program = SceneProgram::Parse(bytes);
   if (!program) {
     return false;

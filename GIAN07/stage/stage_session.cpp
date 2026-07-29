@@ -18,10 +18,11 @@
 
 namespace stage {
 
-bool StageSession::Load(BYTE_BUFFER_OWNED map, BYTE_BUFFER_BORROWED scene) {
+bool StageSession::Load(std::span<const uint8_t> map,
+                        std::span<const uint8_t> scene) {
   SceneRunner next_scene;
   StageBackground next_background;
-  if (!next_scene.Load(scene) || !next_background.LoadMap(std::move(map))) {
+  if (!next_scene.Load(scene) || !next_background.LoadMap(map)) {
     return false;
   }
   scene_ = std::move(next_scene);

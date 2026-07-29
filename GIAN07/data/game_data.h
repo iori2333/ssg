@@ -39,10 +39,10 @@ public:
   [[nodiscard]] LoadErrors Load(std::string_view data_path);
   [[nodiscard]] bool Loaded() const { return loaded_; }
 
-  [[nodiscard]] BYTE_BUFFER_OWNED ExtractMap(uint32_t index) const;
-  [[nodiscard]] BYTE_BUFFER_OWNED ExtractImage(uint32_t index) const;
-  [[nodiscard]] BYTE_BUFFER_OWNED ExtractSound(uint32_t index) const;
-  [[nodiscard]] BYTE_BUFFER_OWNED ExtractMusicMidi(uint32_t index) const;
+  [[nodiscard]] std::vector<uint8_t> ExtractMap(uint32_t index) const;
+  [[nodiscard]] std::vector<uint8_t> ExtractImage(uint32_t index) const;
+  [[nodiscard]] std::vector<uint8_t> ExtractSound(uint32_t index) const;
+  [[nodiscard]] std::vector<uint8_t> ExtractMusicMidi(uint32_t index) const;
 
   [[nodiscard]] size_t TrackCount() const { return music_tracks_.size(); }
   [[nodiscard]] std::string_view TrackTitle(size_t index) const;

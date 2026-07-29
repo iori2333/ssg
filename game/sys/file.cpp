@@ -7,7 +7,7 @@
 
 #include "file.h"
 
-BYTE_BUFFER_OWNED File_Load(const std::filesystem::path &path) {
+std::vector<uint8_t> File_Load(const std::filesystem::path &path) {
   std::ifstream stream(path, std::ios::binary | std::ios::ate);
   if (!stream) {
     return {};
@@ -20,11 +20,11 @@ BYTE_BUFFER_OWNED File_Load(const std::filesystem::path &path) {
           std::numeric_limits<std::streamsize>::max()) {
     return {};
   }
-  BYTE_BUFFER_OWNED data(static_cast<size_t>(end));
+  std::vector<uint8_t> data(static_cast<size_t>(end));
   stream.seekg(0);
-  stream.read(reinterpret_cast<char *>(data.get()),
+  stream.read(reinterpret_cast<char *>(data.data()),
               static_cast<std::streamsize>(data.size()));
-  return stream ? std::move(data) : BYTE_BUFFER_OWNED{};
+  return stream ? std::move(data) : std::vector<uint8_t>{};
 }
 
 bool File_Save(const std::filesystem::path &path,

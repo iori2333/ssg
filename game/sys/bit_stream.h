@@ -5,13 +5,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <utility>
-
-#include "buffer.h"
+#include <vector>
 
 class BitReader {
 public:
-  explicit BitReader(BYTE_BUFFER_BORROWED buffer) : buffer_(buffer) {}
+  explicit BitReader(std::span<const uint8_t> buffer) : buffer_(buffer) {}
   BitReader(const void *data, std::size_t size)
       : buffer_({static_cast<const uint8_t *>(data), size}) {}
 
@@ -20,7 +20,7 @@ public:
   [[nodiscard]] uint32_t ReadBits(std::size_t bit_count);
 
 private:
-  BYTE_BUFFER_BORROWED buffer_;
+  std::span<const uint8_t> buffer_;
   std::size_t byte_cursor_ = 0;
   uint8_t bit_cursor_ = 0;
 };
@@ -31,20 +31,20 @@ public:
   void WriteBits(uint32_t bits, unsigned int bit_count);
   [[nodiscard]] bool Save(const char *path) const;
 
-  [[nodiscard]] const BYTE_BUFFER_GROWABLE &Buffer() const { return buffer_; }
+  [[nodiscard]] const std::vector<uint8_t> &Buffer() const { return buffer_; }
 
 private:
-  BYTE_BUFFER_GROWABLE buffer_;
+  std::vector<uint8_t> buffer_;
   uint8_t bit_cursor_ = 0;
 };
 
 class BitFileReader : public BitReader {
 public:
-  explicit BitFileReader(BYTE_BUFFER_OWNED file)
-      : BitReader(file.get(), file.size()), file_(std::move(file)) {}
+  explicit BitFileReader(std::vector<uint8_t> file)
+      : BitReader(file.data(), file.size()), file_(std::move(file)) {}
 
 private:
-  BYTE_BUFFER_OWNED file_;
+  std::vector<uint8_t> file_;
 };
 
 [[nodiscard]] BitFileReader LoadBitFile(const char *path);

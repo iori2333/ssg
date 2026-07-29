@@ -106,6 +106,8 @@ bool GraphicsLoader::LoadGalleryEnemySurface() const {
   const int copy_y = 320;
   const int copy_h = 64;
   const int copy_w = std::min<int>(bmp30->info.biWidth, bmp29->info.biWidth);
+  const auto src_pixels = bmp30->Pixels();
+  auto dst_pixels = bmp29->Pixels();
 
   for (int y = 0; y < copy_h; ++y) {
     const int src_y = bmp30->info.biHeight - 1 - (copy_y + y);
@@ -115,9 +117,9 @@ bool GraphicsLoader::LoadGalleryEnemySurface() const {
       continue;
     }
     for (int x = 0; x < copy_w; ++x) {
-      const auto pixel = bmp30->pixels[src_y * src_stride + x];
+      const auto pixel = src_pixels[src_y * src_stride + x];
       if (pixel != std::byte{0}) {
-        bmp29->pixels[dst_y * dst_stride + x] = pixel;
+        dst_pixels[dst_y * dst_stride + x] = pixel;
       }
     }
   }

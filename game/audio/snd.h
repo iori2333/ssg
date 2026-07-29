@@ -3,10 +3,12 @@
 ///
 #pragma once
 
+#include <cstdint>
+#include <span>
+
 #include "volume.h"
 
 #include "audio/constants.h"
-#include "sys/buffer.h"
 #include "util/enum_flags.h"
 
 // Constants & macros
@@ -35,7 +37,8 @@ void Snd_BGMCleanup(void);
 bool Snd_SEInit(void);
 void Snd_SECleanup(void);
 
-bool Snd_SELoad(BYTE_BUFFER_OWNED buffer, uint8_t id, SND_INSTANCE_ID max);
+bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
+                SND_INSTANCE_ID max);
 
 // Playback & stop
 void Snd_SEPlay(SfxId id, int x = SND_X_MID, bool loop = false);

@@ -12,11 +12,11 @@
 //            : the message sending may need to be improved.
 
 #include <chrono>
+#include <cstdint>
 #include <string_view>
+#include <vector>
 
 #include "volume.h"
-
-#include "sys/buffer.h"
 
 enum class MID_FLAGS : uint8_t {
   HAS_BITFLAG_OPERATORS,
@@ -85,7 +85,7 @@ VOLUME Mid_GetFadeVolume(void);
 void Mid_UpdateVolume(void);
 void Mid_FadeOut(VOLUME volume_start, std::chrono::milliseconds duration);
 
-bool Mid_Load(BYTE_BUFFER_OWNED buffer); // Load a MIDI file from a buffer
+bool Mid_Load(std::vector<uint8_t> buffer); // Load a MIDI file from a buffer
 
 // Sets a loop point for the currently loaded sequence.
 void Mid_SetLoop(const MID_LOOP &loop);

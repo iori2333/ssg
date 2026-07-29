@@ -6,8 +6,7 @@
 #include <chrono>
 #include <cstdint>
 #include <string_view>
-
-#include "sys/buffer.h"
+#include <vector>
 
 bool BGM_Init(std::string_view preferred_soundfont = {});
 void BGM_Cleanup(void);
@@ -44,7 +43,7 @@ void BGM_Resume(void);
 // at a time; loading one replaces the previous.
 // Returns false if the source could not be opened/decoded.
 bool BGM_LoadWaveform(std::string_view path);
-bool BGM_LoadMIDI(BYTE_BUFFER_OWNED buf);
+bool BGM_LoadMIDI(std::vector<uint8_t> buf);
 
 // Cached waveform title (from Vorbis comment metadata).
 // Empty if no waveform is loaded or if the waveform has no title tag.

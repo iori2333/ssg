@@ -14,7 +14,7 @@
 
 namespace {
 
-BYTE_BUFFER_BORROWED LoadEmbeddedScript(int file_no) {
+std::span<const uint8_t> LoadEmbeddedScript(int file_no) {
   for (size_t i = 0; i < embedded_script_count; ++i) {
     if (embedded_scripts[i].index == file_no) {
       return {embedded_scripts[i].data, embedded_scripts[i].size};
@@ -38,7 +38,7 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
   auto ecl = LoadEmbeddedScript(extra ? 24 : stage_index);
   auto scl = LoadEmbeddedScript(extra ? 25 : stage_index + 6);
   auto map = data_->ExtractMap(extra ? 12 : stage_index);
-  if (ecl.empty() || scl.empty() || !map) {
+  if (ecl.empty() || scl.empty() || map.empty()) {
     return false;
   }
 
@@ -50,7 +50,7 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
   EnemyAnimationSet animations{};
   anime_data::SetupStageAnime(stage, animations);
 
-  if (!session.Load(std::move(map), scl)) {
+  if (!session.Load(map, scl)) {
     return false;
   }
 

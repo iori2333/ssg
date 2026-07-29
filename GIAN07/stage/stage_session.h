@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 
 #include "scene_program.h"
 #include "stage_background.h"
@@ -41,7 +42,8 @@ struct StageUpdateContext {
 
 class StageSession {
 public:
-  [[nodiscard]] bool Load(BYTE_BUFFER_OWNED map, BYTE_BUFFER_BORROWED scene);
+  [[nodiscard]] bool Load(std::span<const uint8_t> map,
+                          std::span<const uint8_t> scene);
 
   [[nodiscard]] StageTransition Update(StageUpdateContext context,
                                        INPUT_BITS input);

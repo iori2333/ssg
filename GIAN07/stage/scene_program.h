@@ -6,10 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <vector>
-
-#include "sys/buffer.h"
 
 namespace stage {
 
@@ -86,7 +85,7 @@ struct SceneInstruction {
 class SceneProgram {
 public:
   [[nodiscard]] static std::optional<SceneProgram>
-  Parse(BYTE_BUFFER_BORROWED bytes);
+  Parse(std::span<const uint8_t> bytes);
 
   [[nodiscard]] const std::vector<SceneInstruction> &Instructions() const {
     return instructions_;
@@ -98,7 +97,7 @@ private:
 
 class SceneRunner {
 public:
-  [[nodiscard]] bool Load(BYTE_BUFFER_BORROWED bytes);
+  [[nodiscard]] bool Load(std::span<const uint8_t> bytes);
 
   [[nodiscard]] const SceneInstruction *Current() const;
   [[nodiscard]] const std::vector<SceneInstruction> &Instructions() const {

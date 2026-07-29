@@ -8,13 +8,11 @@
 #include <span>
 #include <vector>
 
-#include "sys/buffer.h"
 #include "util/endian.h"
 
 namespace data {
 
-// On-disk PBG entry descriptor. Exposed because PbgArchive references it, but
-// not generally useful to external callers.
+// On-disk PBG entry descriptor.
 struct PbgEntryHeader {
   ENDIAN_LITTLE<uint32_t> size_uncompressed;
   ENDIAN_LITTLE<uint32_t> offset;
@@ -31,16 +29,16 @@ public:
   [[nodiscard]] static PbgArchive Open(const std::filesystem::path &path);
 
   // Decompresses entry [index] into a freshly allocated buffer.
-  [[nodiscard]] BYTE_BUFFER_OWNED Extract(uint32_t index) const;
+  [[nodiscard]] std::vector<uint8_t> Extract(uint32_t index) const;
 
   [[nodiscard]] uint32_t EntryCount() const;
-  explicit operator bool() const { return static_cast<bool>(data_); }
+  explicit operator bool() const { return !data_.empty(); }
 
 private:
-  BYTE_BUFFER_OWNED data_;
-  std::span<const PbgEntryHeader> entries_;
+  std::vector<uint8_t> data_;
+  std::vector<PbgEntryHeader> entries_;
 
-  static PbgArchive FromBuffer(BYTE_BUFFER_OWNED data);
+  static PbgArchive FromBuffer(std::vector<uint8_t> data);
 };
 
 // Builder for writing PBG packfiles. Add() copies each entry so the builder

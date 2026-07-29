@@ -26,7 +26,7 @@ bool MusicPlayer::Play(unsigned int id) {
 
   // Always load MIDI for sequencer notes and fallback audio.
   auto midi = data_.ExtractMusicMidi(id);
-  if (!midi || !Mid_Load(std::move(midi))) {
+  if (midi.empty() || !Mid_Load(std::move(midi))) {
     return false;
   }
 

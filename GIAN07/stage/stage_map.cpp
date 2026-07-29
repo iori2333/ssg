@@ -20,7 +20,7 @@ struct MapLayerHeader {
 constexpr size_t kMapLayerLimit = 5;
 constexpr size_t kMapHeaderSize = sizeof(uint32_t);
 constexpr size_t kLayerHeaderSize = sizeof(uint32_t) * 3;
-std::optional<MapLayerHeader> ReadLayerHeader(BYTE_BUFFER_BORROWED data,
+std::optional<MapLayerHeader> ReadLayerHeader(std::span<const uint8_t> data,
                                               size_t index) {
   const size_t offset = kMapHeaderSize + index * kLayerHeaderSize;
   if (offset > data.size() || data.size() - offset < kLayerHeaderSize) {
@@ -37,7 +37,7 @@ std::optional<MapLayerHeader> ReadLayerHeader(BYTE_BUFFER_BORROWED data,
 
 namespace stage {
 
-std::optional<StageMap> StageMap::Parse(BYTE_BUFFER_BORROWED bytes) {
+std::optional<StageMap> StageMap::Parse(std::span<const uint8_t> bytes) {
   if (bytes.size() < kMapHeaderSize) {
     return std::nullopt;
   }

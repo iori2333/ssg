@@ -226,7 +226,8 @@ void SndBackend_SEUpdateVolume(void) {
 }
 
 bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
-                       const SDL_AudioSpec &spec, BYTE_BUFFER_BORROWED pcm) {
+                       const SDL_AudioSpec &spec,
+                       std::span<const uint8_t> pcm) {
   if (id >= SND_OBJ_MAX) {
     return false;
   }

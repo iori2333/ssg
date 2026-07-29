@@ -6,6 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <vector>
 
 #include "stage_map.h"
@@ -34,7 +35,7 @@ enum class BackgroundCommand : uint8_t {
 
 class TileMapScroller {
 public:
-  [[nodiscard]] bool Load(BYTE_BUFFER_OWNED data);
+  [[nodiscard]] bool Load(std::span<const uint8_t> data);
   void Update();
   void Draw(const std::array<int8_t, kVisibleMapRows> &raster_dx,
             int quake_dx) const;
@@ -57,7 +58,7 @@ private:
 
 class StageBackground {
 public:
-  [[nodiscard]] bool LoadMap(BYTE_BUFFER_OWNED data);
+  [[nodiscard]] bool LoadMap(std::span<const uint8_t> data);
   void Update(EffectManager &effects);
   void Draw() const;
   void Command(BackgroundCommand command, EffectManager &effects);

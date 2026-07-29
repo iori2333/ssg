@@ -4,10 +4,15 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <span>
+#include <vector>
+
 #include "coords.h"
 #include "pixelformat.h"
 
-#include "sys/buffer.h"
 #include "util/endian.h"
 
 struct SDL_IOStream;
@@ -50,13 +55,17 @@ struct BMP_INFOHEADER {
 #pragma pack(pop)
 // --------------------------------------
 
-// A valid .BMP buffer, with convenient references to the header, optional
-// palette, and pixel data inside the buffer.
+// A validated .BMP buffer with its decoded header and pixel range.
 struct BMP_OWNED {
-  BYTE_BUFFER_OWNED buffer;
-  const BMP_INFOHEADER &info;
-  std::span<BGRA> palette;     // Empty if not palettized.
-  std::span<std::byte> pixels; // Exactly as large as the image.
+  std::vector<uint8_t> buffer;
+  BMP_INFOHEADER info;
+  size_t pixel_offset;
+  size_t pixel_size;
+
+  [[nodiscard]] std::span<std::byte> Pixels() {
+    return {reinterpret_cast<std::byte *>(buffer.data() + pixel_offset),
+            pixel_size};
+  }
 };
 
 // Can be safely used for static allocations.
@@ -65,7 +74,7 @@ constexpr uint16_t BMP_PALETTE_SIZE_MAX = 256;
 // Returns a value between 0 and [BMP_PALETTE_SIZE_MAX].
 uint16_t BMPPaletteSizeFromBPP(uint8_t bpp);
 
-std::optional<BMP_OWNED> BMPLoad(BYTE_BUFFER_OWNED buffer);
+std::optional<BMP_OWNED> BMPLoad(std::vector<uint8_t> buffer);
 
 #ifndef SDL_pixels_h_
 enum SDL_PixelFormat : uint32_t;

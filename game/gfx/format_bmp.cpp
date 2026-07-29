@@ -9,6 +9,8 @@
 
 #include "format_bmp.h"
 
+#include "util/byte_io.h"
+
 namespace {
 
 bool WriteExact(SDL_IOStream *stream, const void *data, size_t size) {
@@ -30,22 +32,18 @@ uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {
   return ret;
 }
 
-std::optional<BMP_OWNED> BMPLoad(BYTE_BUFFER_OWNED buffer) {
-  if (!buffer) {
+std::optional<BMP_OWNED> BMPLoad(std::vector<uint8_t> buffer) {
+  if (buffer.empty()) {
     return std::nullopt;
   }
 
-  // Needs to be mutable because the game needs to enforce palette color 0 to
-  // always be #000000...
-  auto cursor = buffer.cursor_mut();
-
-  const auto &maybe_header_file = cursor.next<BMP_FILEHEADER>();
-  if (!maybe_header_file) {
+  util::ByteReader reader{buffer};
+  const auto header_file = reader.ReadObject<BMP_FILEHEADER>();
+  if (!header_file) {
     return std::nullopt;
   }
-  const auto &header_file = maybe_header_file.value()[0];
 
-  if (header_file.bfType != 0x4D42) { // "BM"
+  if (header_file->bfType != 0x4D42) { // "BM"
     return std::nullopt;
   }
 
@@ -53,21 +51,18 @@ std::optional<BMP_OWNED> BMPLoad(BYTE_BUFFER_OWNED buffer) {
   // automatic file type detection, which should have failed in the two
   // checks above. But if we got here, we expect this to be a valid .BMP,
   // and therefore assert() that it is.
-  const auto maybe_header_info = cursor.next<BMP_INFOHEADER>();
-  if (!maybe_header_info) {
+  const auto header_info = reader.ReadObject<BMP_INFOHEADER>();
+  if (!header_info) {
     assert(!"Not a .BMP file?");
     return std::nullopt;
   }
-  const auto &header_info = maybe_header_info.value()[0];
 
   const auto palette_size =
-      BMPPaletteSizeFromBPP(header_info.biPlanes * header_info.biBitCount);
-  auto maybe_palette = cursor.next<BGRA>(palette_size);
-  if (!maybe_palette) {
+      BMPPaletteSizeFromBPP(header_info->biPlanes * header_info->biBitCount);
+  if (!reader.ReadBytes(palette_size * sizeof(BGRA))) {
     assert(!"Needs a palette, but doesn't contain a full one?");
     return std::nullopt;
   }
-  auto palette = maybe_palette.value();
 
   // [header_info.biSizeImage] can be 0, so we have to manually calculate the
   // actual size allocated by CreateDIBSection() by DWORD-aligning the row
@@ -75,16 +70,14 @@ std::optional<BMP_OWNED> BMPLoad(BYTE_BUFFER_OWNED buffer) {
   // buffer because nothing prevents the file from being larger than what
   // CreateDIBSection() allocated. This actually happens with File 22 in
   // GRAPH.DAT (Reimu's faceset).
-  const size_t size = (header_info.Stride() * header_info.biHeight);
-  cursor.cursor = header_file.bfOffBits;
-  auto maybe_pixels = cursor.next<std::byte>(size);
-  if (!maybe_pixels) {
+  const size_t size = (header_info->Stride() * header_info->biHeight);
+  if (!reader.Seek(header_file->bfOffBits) || !reader.ReadBytes(size)) {
     assert(!"Does not contain all pixels?");
     return std::nullopt;
   }
-  auto pixels = maybe_pixels.value();
 
-  return BMP_OWNED{std::move(buffer), header_info, palette, pixels};
+  return BMP_OWNED{std::move(buffer), *header_info, header_file->bfOffBits,
+                   size};
 }
 
 bool BMPSaveSupports(SDL_PixelFormat format) {

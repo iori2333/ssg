@@ -14,6 +14,7 @@
 
 #include "sys/bit_stream.h"
 #include "sys/file.h"
+#include "util/byte_io.h"
 
 namespace data {
 
@@ -48,8 +49,8 @@ uint32_t AccumulateEntryChecksum(uint32_t &current_total, uint32_t offset,
   return ret;
 }
 
-std::optional<BYTE_BUFFER_BORROWED>
-CompressedEntry(const BYTE_BUFFER_OWNED &packfile,
+std::optional<std::span<const uint8_t>>
+CompressedEntry(std::span<const uint8_t> packfile,
                 std::span<const PbgEntryHeader> info, uint32_t filno) {
   if (filno >= info.size()) {
     return std::nullopt;
@@ -61,21 +62,18 @@ CompressedEntry(const BYTE_BUFFER_OWNED &packfile,
   if ((start >= packfile.size()) || (end < start) || (end > packfile.size())) {
     return std::nullopt;
   }
-  return BYTE_BUFFER_BORROWED{(packfile.get() + start), (end - start)};
+  return packfile.subspan(start, end - start);
 }
 
-static BYTE_BUFFER_OWNED Decompress(const BYTE_BUFFER_BORROWED &compressed,
-                                    uint32_t size_uncompressed) {
-  BYTE_BUFFER_OWNED uncompressed(size_uncompressed);
-  if (!uncompressed) {
-    return nullptr;
-  }
+static std::vector<uint8_t> Decompress(std::span<const uint8_t> compressed,
+                                       uint32_t size_uncompressed) {
+  std::vector<uint8_t> uncompressed(size_uncompressed);
 
   std::array<uint8_t, (1 << LZSS_DICT_BITS)> dict{};
   uint32_t out_i = 0;
 
   auto output = [&](uint8_t literal) {
-    uncompressed.get()[out_i] = literal;
+    uncompressed[out_i] = literal;
     dict[out_i & LZSS_DICT_MASK] = literal;
     out_i++;
   };
@@ -83,29 +81,29 @@ static BYTE_BUFFER_OWNED Decompress(const BYTE_BUFFER_BORROWED &compressed,
   BitReader device{compressed};
   while (out_i < size_uncompressed) {
     if (!device.CanRead(1)) {
-      return nullptr;
+      return {};
     }
     const bool is_literal = device.ReadBit() != 0U;
     if (is_literal) {
       if (!device.CanRead(8)) {
-        return nullptr;
+        return {};
       }
       output(device.ReadBits(8));
     } else {
       if (!device.CanRead(LZSS_DICT_BITS)) {
-        return nullptr;
+        return {};
       }
       auto seq_offset = device.ReadBits(LZSS_DICT_BITS);
       if (seq_offset == 0) {
-        return nullptr;
+        return {};
       }
       seq_offset--;
       if (!device.CanRead(LZSS_SEQ_BITS)) {
-        return nullptr;
+        return {};
       }
       const auto seq_length = (device.ReadBits(LZSS_SEQ_BITS) + LZSS_SEQ_MIN);
       if (seq_length > size_uncompressed - out_i) {
-        return nullptr;
+        return {};
       }
       for (auto i = decltype(seq_length){0}; i < seq_length; i++) {
         output(dict[seq_offset++ & LZSS_DICT_MASK]);
@@ -115,7 +113,7 @@ static BYTE_BUFFER_OWNED Decompress(const BYTE_BUFFER_BORROWED &compressed,
   return uncompressed;
 }
 
-BYTE_BUFFER_GROWABLE Compress(BYTE_BUFFER_BORROWED buffer) {
+std::vector<uint8_t> Compress(std::span<const uint8_t> buffer) {
   constexpr auto DICT_WINDOW = ((1 << LZSS_DICT_BITS) - LZSS_SEQ_MAX);
   BitWriter device;
   uint32_t in_i = 0;
@@ -169,28 +167,31 @@ PbgArchive PbgArchive::Open(const std::filesystem::path &path) {
   return FromBuffer(File_Load(path));
 }
 
-PbgArchive PbgArchive::FromBuffer(BYTE_BUFFER_OWNED packfile) {
+PbgArchive PbgArchive::FromBuffer(std::vector<uint8_t> packfile) {
   PbgArchive result;
-  auto packfile_cursor = packfile.cursor();
+  util::ByteReader reader{packfile};
 
-  const auto maybe_head = packfile_cursor.next<PbgHeader>();
-  if (!maybe_head) {
-    return result;
-  }
-  const auto &head = maybe_head.value()[0];
-  if (head.name != kPbgHeadName) {
+  const auto head = reader.ReadObject<PbgHeader>();
+  if (!head || head->name != kPbgHeadName) {
     return result;
   }
 
-  const auto maybe_info = packfile_cursor.next<PbgEntryHeader>(head.n);
-  if (!maybe_info) {
+  std::vector<PbgEntryHeader> entries;
+  if (head->n > reader.Remaining() / sizeof(PbgEntryHeader)) {
     return result;
   }
-  const auto info_span = maybe_info.value();
+  entries.reserve(head->n);
+  for (uint32_t i = 0; i < head->n; ++i) {
+    const auto entry = reader.ReadObject<PbgEntryHeader>();
+    if (!entry) {
+      return result;
+    }
+    entries.push_back(*entry);
+  }
 
   uint32_t total_checksum = 0;
-  for (uint32_t i = 0; i < info_span.size(); i++) {
-    const auto maybe_compressed = CompressedEntry(packfile, info_span, i);
+  for (uint32_t i = 0; i < entries.size(); i++) {
+    const auto maybe_compressed = CompressedEntry(packfile, entries, i);
     if (!maybe_compressed) {
       return result;
     }
@@ -198,25 +199,25 @@ PbgArchive PbgArchive::FromBuffer(BYTE_BUFFER_OWNED packfile) {
         std::accumulate(maybe_compressed.value().begin(),
                         maybe_compressed.value().end(), uint32_t{0});
     total_checksum += checksum;
-    total_checksum += info_span[i].size_uncompressed;
-    total_checksum += info_span[i].offset;
-    if (checksum != info_span[i].checksum_compressed) {
+    total_checksum += entries[i].size_uncompressed;
+    total_checksum += entries[i].offset;
+    if (checksum != entries[i].checksum_compressed) {
       return result;
     }
   }
-  if (total_checksum != head.sum) {
+  if (total_checksum != head->sum) {
     return result;
   }
 
   result.data_ = std::move(packfile);
-  result.entries_ = info_span;
+  result.entries_ = std::move(entries);
   return result;
 }
 
-BYTE_BUFFER_OWNED PbgArchive::Extract(uint32_t index) const {
+std::vector<uint8_t> PbgArchive::Extract(uint32_t index) const {
   const auto maybe_compressed = CompressedEntry(data_, entries_, index);
   if (!maybe_compressed) {
-    return nullptr;
+    return {};
   }
   return Decompress(maybe_compressed.value(),
                     entries_[index].size_uncompressed);
@@ -264,7 +265,7 @@ bool PbgArchiveWriter::Write(const std::filesystem::path &path) const {
     }
 
     for (size_t i = 0; i < files_.size(); i++) {
-      auto compressed = Compress(BYTE_BUFFER_BORROWED{files_[i]});
+      auto compressed = Compress(files_[i]);
       const auto offset = stream.tellp();
       if (offset < 0 || static_cast<uintmax_t>(offset) >
                             std::numeric_limits<uint32_t>::max()) {

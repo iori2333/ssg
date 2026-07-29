@@ -5,6 +5,7 @@
 #pragma once
 
 #include <chrono>
+#include <span>
 
 #include "snd.h"
 struct SDL_AudioSpec;
@@ -43,7 +44,7 @@ void SndBackend_SECleanup(void);
 void SndBackend_SEUpdateVolume(void);
 
 bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
-                       const SDL_AudioSpec &spec, BYTE_BUFFER_BORROWED pcm);
+                       const SDL_AudioSpec &spec, std::span<const uint8_t> pcm);
 void SndBackend_SEPlay(SfxId id, int x = SND_X_MID, bool loop = false);
 void SndBackend_SEStop(uint8_t id);
 

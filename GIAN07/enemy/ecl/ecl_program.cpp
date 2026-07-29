@@ -241,7 +241,7 @@ EclInstruction MakeInstruction(EclOpcode opcode, Arguments arguments) {
 }
 
 std::optional<EclInstruction>
-DecodeInstruction(BYTE_BUFFER_BORROWED bytes, size_t address,
+DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
                   const std::vector<size_t> &address_to_position,
                   size_t script_count) {
   const auto opcode = static_cast<EclOpcode>(bytes[address]);
@@ -675,7 +675,7 @@ DecodeInstruction(BYTE_BUFFER_BORROWED bytes, size_t address,
 
 } // namespace
 
-std::optional<EclProgram> EclProgram::Parse(BYTE_BUFFER_BORROWED bytes) {
+std::optional<EclProgram> EclProgram::Parse(std::span<const uint8_t> bytes) {
   if (bytes.size() < sizeof(uint32_t)) {
     return std::nullopt;
   }
