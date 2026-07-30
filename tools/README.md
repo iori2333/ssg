@@ -298,6 +298,7 @@ script_tool disasm-scl <in_binary> <out_text>
 script_tool asm-scl   <in_text> <out_binary>
 script_tool asm-messages <in_text> <out_binary>
 script_tool asm-ui <in_text> <out_binary>
+script_tool asm-music <in_text> <out_binary>
 script_tool disasm-ecl <in_binary> <out_text>
 script_tool asm-ecl   <in_text> <out_binary>
 ```
@@ -350,6 +351,18 @@ ui.menu.game_start.help = "Start the game"
 `asm-ui` 会检查重复键和 32 位文本 ID 冲突。UI 和 SCL 目录分别编译，
 在运行时合并到同一种语言的查询表中。
 
+### Music Room 本地化文本格式
+
+Music Room 曲名与说明保存在 `scripts/i18n/<language>/music.txt`，不再依赖
+`MUSIC.PAK` 内嵌文本。格式与 UI 目录相同；换行使用 `\n` 转义：
+
+```
+music.track_00.title = "秋霜玉　～ Clockworks"
+music.track_00.comment = "タイトル曲です\n\nど～も。ＺＵＮです。"
+```
+
+`asm-music` 会独立编译该目录，再由运行时按曲目编号查询。
+
 ### ECL 文本格式
 
 使用 `.header`、`.offset`、`.org` 指令保留精确的二进制布局。`@label_XXXX` 引用跳转目标：
@@ -379,11 +392,13 @@ STI vector 类型：`BOSSLEFT`（剩余 Boss 数量）、`HP`（血量阈值）�
 vim scripts/stage1.scl
 vim scripts/i18n/zh/messages.txt
 vim scripts/i18n/zh/ui.txt
+vim scripts/i18n/zh/music.txt
 
 # 2. 可单独检查生成结果
 script_tool asm-scl scripts/stage1.scl work/stage1.bin
 script_tool asm-messages scripts/i18n/zh/messages.txt work/zh_messages.bin
 script_tool asm-ui scripts/i18n/zh/ui.txt work/zh_ui.bin
+script_tool asm-music scripts/i18n/zh/music.txt work/zh_music.bin
 
 # 3. 重新构建游戏
 ./build_windows.bat

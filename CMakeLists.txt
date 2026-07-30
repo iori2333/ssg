@@ -266,14 +266,18 @@ set(SUPPORTED_MESSAGE_LANGUAGES ja en zh)
 set(MESSAGE_SRC_DIR "${SCRIPT_SRC_DIR}/i18n")
 set(MESSAGE_GENERATED_HEADERS "")
 set(UI_GENERATED_HEADERS "")
+set(MUSIC_GENERATED_HEADERS "")
 set(EMBEDDED_MESSAGE_CATALOGS "")
 foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
     set(message_src "${MESSAGE_SRC_DIR}/${language}/messages.txt")
     set(ui_src "${MESSAGE_SRC_DIR}/${language}/ui.txt")
+    set(music_src "${MESSAGE_SRC_DIR}/${language}/music.txt")
     set(message_bin "${SCRIPT_GEN_DIR}/${language}_messages.bin")
     set(ui_bin "${SCRIPT_GEN_DIR}/${language}_ui.bin")
+    set(music_bin "${SCRIPT_GEN_DIR}/${language}_music.bin")
     set(message_header "${SCRIPT_GEN_DIR}/${language}_messages.h")
     set(ui_header "${SCRIPT_GEN_DIR}/${language}_ui.h")
+    set(music_header "${SCRIPT_GEN_DIR}/${language}_music.h")
 
     add_custom_command(
         OUTPUT "${message_bin}"
@@ -307,8 +311,25 @@ foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
         DEPENDS "${ui_bin}" "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
         COMMENT "Generating ${language} UI text catalog header"
     )
+    add_custom_command(
+        OUTPUT "${music_bin}"
+        COMMAND script_tool asm-music "${music_src}" "${music_bin}"
+        DEPENDS script_tool "${music_src}"
+        COMMENT "Assembling ${language} Music Room text catalog"
+    )
+    add_custom_command(
+        OUTPUT "${music_header}"
+        COMMAND ${CMAKE_COMMAND}
+            -DINPUT="${music_bin}"
+            -DOUTPUT="${music_header}"
+            -DVARNAME="${language}_music"
+            -P "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
+        DEPENDS "${music_bin}" "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
+        COMMENT "Generating ${language} Music Room text catalog header"
+    )
     list(APPEND MESSAGE_GENERATED_HEADERS "${message_header}")
     list(APPEND UI_GENERATED_HEADERS "${ui_header}")
+    list(APPEND MUSIC_GENERATED_HEADERS "${music_header}")
     list(APPEND EMBEDDED_MESSAGE_CATALOGS "${message_src}|${language}")
 endforeach()
 
@@ -329,6 +350,7 @@ add_custom_command(
         -DOUTPUT_H="${MESSAGES_DATA_H}"
         -P "${CMAKE_SOURCE_DIR}/cmake/generate_messages_data.cmake"
     DEPENDS ${MESSAGE_GENERATED_HEADERS} ${UI_GENERATED_HEADERS}
+            ${MUSIC_GENERATED_HEADERS}
             "${CMAKE_SOURCE_DIR}/cmake/generate_messages_data.cmake"
             "${MESSAGE_ENTRIES_FILE}"
     COMMENT "Generating embedded message catalog data"

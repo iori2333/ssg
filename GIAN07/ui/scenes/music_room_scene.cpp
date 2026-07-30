@@ -10,7 +10,6 @@
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
-#include "data/game_data.h"
 #include "data/graphics_loader.h"
 #include "gfx/constants.h"
 #include "gfx/font_uty.h"
@@ -77,29 +76,31 @@ void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
       });
 }
 
-void MusicRoomScene::Text::RenderComment(WINDOW_POINT topleft) const {
+void MusicRoomScene::Text::RenderComment(WINDOW_POINT topleft,
+                                         std::string_view comment_text) const {
   if (comment_text.empty()) {
     return;
   }
-  TextObj.Render(topleft, comment, comment_text, [this](TEXTRENDER_SESSION &s) {
-    int y = 0;
-    s.SetFont(FONT_ID::SMALL);
-    s.SetColor(ColorDefault);
+  TextObj.Render(topleft, comment, comment_text,
+                 [comment_text](TEXTRENDER_SESSION &s) {
+                   int y = 0;
+                   s.SetFont(FONT_ID::SMALL);
+                   s.SetColor(ColorDefault);
 
-    size_t pos = 0;
-    while (pos < comment_text.size()) {
-      const auto nl = comment_text.find('\n', pos);
-      const auto line = comment_text.substr(pos, nl - pos);
-      if (!line.empty() || nl != std::string_view::npos) {
-        s.Put({.x = 0, .y = y}, line);
-        y += 16;
-      }
-      if (nl == std::string_view::npos) {
-        break;
-      }
-      pos = nl + 1;
-    }
-  });
+                   size_t pos = 0;
+                   while (pos < comment_text.size()) {
+                     const auto nl = comment_text.find('\n', pos);
+                     const auto line = comment_text.substr(pos, nl - pos);
+                     if (!line.empty() || nl != std::string_view::npos) {
+                       s.Put({.x = 0, .y = y}, line);
+                       y += 16;
+                     }
+                     if (nl == std::string_view::npos) {
+                       break;
+                     }
+                     pos = nl + 1;
+                   }
+                 });
 }
 
 bool MusicRoomScene::Enter() {
@@ -127,9 +128,8 @@ bool MusicRoomScene::Enter() {
   Mid_TableInit();
 
   // BGM_Stop();
-  const auto comment = data_.TrackComment(0);
-  if (comment.empty()) {
-    DebugOut("MUSIC.PAK がはかいされています");
+  if (music_.TrackCount() == 0 || localization_.MusicComment(0).empty()) {
+    DebugOut("Music Room text catalog is invalid");
     return false;
   }
 
@@ -138,8 +138,6 @@ bool MusicRoomScene::Enter() {
       .title = TextObj.Register({.w = 240, .h = 16}),
       .comment = TextObj.Register({.w = 272, .h = 192}),
       .version = TextObj.Register({.w = 490, .h = 13}),
-
-      .comment_text = comment,
   };
 
   return true;
@@ -375,7 +373,6 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
       const auto track_count = music_.TrackCount();
       track_id_ = ((track_id_ + track_count - 1) % track_count);
       music_.Play(track_id_);
-      text.comment_text = data_.TrackComment(track_id_);
     }
     previous_input_ = input;
   }
@@ -458,8 +455,10 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
     if (playing == BGM_PLAYING::MIDI) {
       text.RenderMidDev({(540 + 2), (96 - 3)});
     }
-    text.RenderTitle({400, (144 + 2)}, track_id_, music_.CurrentTitle());
-    text.RenderComment({(400 - 40), (144 + 30)});
+    text.RenderTitle({400, (144 + 2)}, track_id_,
+                     localization_.MusicTitle(track_id_));
+    text.RenderComment({(400 - 40), (144 + 30)},
+                       localization_.MusicComment(track_id_));
     text.RenderVersion(
         {(200 - 50), 460},
         localization_.Text(i18n::TextIdFromKey("ui.music_room.version")));

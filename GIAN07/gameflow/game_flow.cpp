@@ -174,8 +174,7 @@ private:
 class MusicRoomFlowState {
 public:
   explicit MusicRoomFlowState(GameContext &context)
-      : scene_(context.data, context.graphics, context.music,
-               context.localization) {}
+      : scene_(context.graphics, context.music, context.localization) {}
 
   [[nodiscard]] bool Enter() { return scene_.Enter(); }
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {

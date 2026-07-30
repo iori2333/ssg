@@ -6,6 +6,7 @@
 ///   script_tool asm-scl   <in_text> <out_binary>
 ///   script_tool asm-messages <in_text> <out_binary>
 ///   script_tool asm-ui <in_text> <out_binary>
+///   script_tool asm-music <in_text> <out_binary>
 ///   script_tool disasm-ecl <in_binary> <out_text>
 ///   script_tool asm-ecl   <in_text> <out_binary>
 ///
@@ -887,7 +888,8 @@ static bool cmd_asm_messages(const char *in_file, const char *out_file) {
     return write_text_catalog(std::move(entries), out_file, "message");
 }
 
-static bool cmd_asm_ui(const char *in_file, const char *out_file) {
+static bool cmd_asm_key_value_catalog(const char *in_file, const char *out_file,
+                                      std::string_view catalog_name) {
     std::ifstream ifs(in_file);
     if (!ifs) {
         std::println(stderr, "Error: Cannot open '{}'", in_file);
@@ -912,14 +914,15 @@ static bool cmd_asm_ui(const char *in_file, const char *out_file) {
 
         const auto &key = tokens[0].text;
         if (!keys.insert(key).second) {
-            std::println(stderr, "Line {}: duplicate UI key '{}'", lineno, key);
+            std::println(stderr, "Line {}: duplicate {} key '{}'", lineno,
+                         catalog_name, key);
             return false;
         }
         const auto id = text_id_hash(key);
         if (const auto it = ids.find(id); it != ids.end()) {
             std::println(stderr,
-                         "Line {}: UI text ID collision between '{}' and '{}'",
-                         lineno, it->second, key);
+                         "Line {}: {} ID collision between '{}' and '{}'",
+                         lineno, catalog_name, it->second, key);
             return false;
         }
         ids.emplace(id, key);
@@ -930,7 +933,15 @@ static bool cmd_asm_ui(const char *in_file, const char *out_file) {
         });
     }
     if (entries.empty()) return false;
-    return write_text_catalog(std::move(entries), out_file, "UI text");
+    return write_text_catalog(std::move(entries), out_file, catalog_name);
+}
+
+static bool cmd_asm_ui(const char *in_file, const char *out_file) {
+    return cmd_asm_key_value_catalog(in_file, out_file, "UI text");
+}
+
+static bool cmd_asm_music(const char *in_file, const char *out_file) {
+    return cmd_asm_key_value_catalog(in_file, out_file, "music text");
 }
 
 // ============================================================================
@@ -1403,6 +1414,9 @@ Usage:
   script_tool asm-ui <in_text> <out_binary>
       Assemble a localized UI text catalog
 
+  script_tool asm-music <in_text> <out_binary>
+      Assemble a localized Music Room text catalog
+
   script_tool disasm-ecl <in_binary> <out_text>
       Disassemble ECL binary to human-readable text with labels
 
@@ -1414,6 +1428,7 @@ Labels use @name: syntax.  Jump/call operands use @name references.
 SCL strings use C-style escapes (\xNN, \\, \", \n, \r, \t).
 Message catalog entries use an @key: label followed by one or more MSG lines.
 UI catalog entries use key = "text" on a single line.
+Music Room catalog entries use the same key-value syntax.
 )");
 }
 
@@ -1459,6 +1474,14 @@ int main(int argc, char **argv) {
             return 1;
         }
         return cmd_asm_ui(argv[2], argv[3]) ? 0 : 1;
+    }
+
+    if (mode == "asm-music") {
+        if (argc != 4) {
+            std::println(stderr, "Usage: script_tool asm-music <in_text> <out_binary>");
+            return 1;
+        }
+        return cmd_asm_music(argv[2], argv[3]) ? 0 : 1;
     }
 
     if (mode == "disasm-ecl") {

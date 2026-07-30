@@ -23,6 +23,8 @@ file(WRITE "${OUTPUT_H}"
     "    size_t message_size;\n"
     "    const uint8_t* ui_data;\n"
     "    size_t ui_size;\n"
+    "    const uint8_t* music_data;\n"
+    "    size_t music_size;\n"
     "};\n"
     "extern const EmbeddedMessageCatalog embedded_message_catalogs[];\n"
     "extern const size_t embedded_message_catalog_count;\n"
@@ -37,6 +39,8 @@ foreach(entry IN LISTS EMBEDDED_MESSAGE_CATALOGS)
     string(APPEND cpp_body "#include \"${variable}.h\"\n")
     string(REPLACE "-" "_" ui_variable "${language}_ui")
     string(APPEND cpp_body "#include \"${ui_variable}.h\"\n")
+    string(REPLACE "-" "_" music_variable "${language}_music")
+    string(APPEND cpp_body "#include \"${music_variable}.h\"\n")
 endforeach()
 
 string(APPEND cpp_body "\nconst EmbeddedMessageCatalog embedded_message_catalogs[] = {\n")
@@ -45,8 +49,9 @@ foreach(entry IN LISTS EMBEDDED_MESSAGE_CATALOGS)
     set(language "${CMAKE_MATCH_2}")
     string(REPLACE "-" "_" variable "${language}_messages")
     string(REPLACE "-" "_" ui_variable "${language}_ui")
+    string(REPLACE "-" "_" music_variable "${language}_music")
     string(APPEND cpp_body
-        "    { \"${language}\", ${variable}, ${variable}_len, ${ui_variable}, ${ui_variable}_len },\n")
+        "    { \"${language}\", ${variable}, ${variable}_len, ${ui_variable}, ${ui_variable}_len, ${music_variable}, ${music_variable}_len },\n")
 endforeach()
 list(LENGTH EMBEDDED_MESSAGE_CATALOGS catalog_count)
 string(APPEND cpp_body

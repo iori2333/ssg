@@ -94,6 +94,37 @@ bool ValidateUiCatalogs() {
   return true;
 }
 
+bool ValidateMusicCatalogs() {
+  constexpr std::array languages = {"ja", "en", "zh"};
+  constexpr std::array track_one_titles = {
+      "フォルスストロベリー", "False Strawberry", "False Strawberry"};
+  constexpr size_t track_count = 20;
+  i18n::Localization localization;
+  if (!localization.Initialize("ja")) {
+    std::cerr << "invalid embedded text catalogs\n";
+    return false;
+  }
+  for (size_t language = 0; language < languages.size(); ++language) {
+    if (!localization.SetLanguage(languages[language]) ||
+        localization.MusicTitle(1) != track_one_titles[language]) {
+      std::cerr << "invalid Music Room text catalog for " << languages[language]
+                << '\n';
+      return false;
+    }
+    for (size_t track = 0; track < track_count; ++track) {
+      if (localization.MusicTitle(track).empty() ||
+          localization.MusicComment(track).empty()) {
+        std::cerr << "missing Music Room text for track " << track << " in "
+                  << languages[language] << '\n';
+        return false;
+      }
+    }
+  }
+  std::cout << "validated " << languages.size() << " Music Room catalogs and "
+            << track_count << " tracks\n";
+  return true;
+}
+
 bool ValidateEnemies() {
   for (const int index : kEnemyIds) {
     const auto *script = FindScript(index);
@@ -227,6 +258,9 @@ int main(int argc, char **argv) {
     return 1;
   }
   if (!ValidateUiCatalogs()) {
+    return 1;
+  }
+  if (!ValidateMusicCatalogs()) {
     return 1;
   }
   if (!ValidateTimeline()) {

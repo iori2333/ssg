@@ -30,6 +30,8 @@ public:
   [[nodiscard]] bool HasText(size_t language_index, TextId id) const;
   [[nodiscard]] std::string_view Text(TextId id) const;
   [[nodiscard]] std::span<const std::string_view> Lines(TextId id) const;
+  [[nodiscard]] std::string_view MusicTitle(size_t track) const;
+  [[nodiscard]] std::string_view MusicComment(size_t track) const;
 
 private:
   struct Catalog {

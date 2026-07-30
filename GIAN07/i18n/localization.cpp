@@ -12,6 +12,52 @@
 
 namespace {
 
+constexpr std::array kMusicTitleIds = {
+    i18n::TextIdFromKey("music.track_00.title"),
+    i18n::TextIdFromKey("music.track_01.title"),
+    i18n::TextIdFromKey("music.track_02.title"),
+    i18n::TextIdFromKey("music.track_03.title"),
+    i18n::TextIdFromKey("music.track_04.title"),
+    i18n::TextIdFromKey("music.track_05.title"),
+    i18n::TextIdFromKey("music.track_06.title"),
+    i18n::TextIdFromKey("music.track_07.title"),
+    i18n::TextIdFromKey("music.track_08.title"),
+    i18n::TextIdFromKey("music.track_09.title"),
+    i18n::TextIdFromKey("music.track_10.title"),
+    i18n::TextIdFromKey("music.track_11.title"),
+    i18n::TextIdFromKey("music.track_12.title"),
+    i18n::TextIdFromKey("music.track_13.title"),
+    i18n::TextIdFromKey("music.track_14.title"),
+    i18n::TextIdFromKey("music.track_15.title"),
+    i18n::TextIdFromKey("music.track_16.title"),
+    i18n::TextIdFromKey("music.track_17.title"),
+    i18n::TextIdFromKey("music.track_18.title"),
+    i18n::TextIdFromKey("music.track_19.title"),
+};
+
+constexpr std::array kMusicCommentIds = {
+    i18n::TextIdFromKey("music.track_00.comment"),
+    i18n::TextIdFromKey("music.track_01.comment"),
+    i18n::TextIdFromKey("music.track_02.comment"),
+    i18n::TextIdFromKey("music.track_03.comment"),
+    i18n::TextIdFromKey("music.track_04.comment"),
+    i18n::TextIdFromKey("music.track_05.comment"),
+    i18n::TextIdFromKey("music.track_06.comment"),
+    i18n::TextIdFromKey("music.track_07.comment"),
+    i18n::TextIdFromKey("music.track_08.comment"),
+    i18n::TextIdFromKey("music.track_09.comment"),
+    i18n::TextIdFromKey("music.track_10.comment"),
+    i18n::TextIdFromKey("music.track_11.comment"),
+    i18n::TextIdFromKey("music.track_12.comment"),
+    i18n::TextIdFromKey("music.track_13.comment"),
+    i18n::TextIdFromKey("music.track_14.comment"),
+    i18n::TextIdFromKey("music.track_15.comment"),
+    i18n::TextIdFromKey("music.track_16.comment"),
+    i18n::TextIdFromKey("music.track_17.comment"),
+    i18n::TextIdFromKey("music.track_18.comment"),
+    i18n::TextIdFromKey("music.track_19.comment"),
+};
+
 class CatalogReader {
 public:
   explicit CatalogReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
@@ -114,6 +160,9 @@ bool Localization::Initialize(std::string_view requested_language) {
         !ParseCatalog({embedded.ui_data, embedded.ui_size}, catalog)) {
       return false;
     }
+    if (!ParseCatalog({embedded.music_data, embedded.music_size}, catalog)) {
+      return false;
+    }
     catalogs.push_back(std::move(catalog));
   }
 
@@ -180,6 +229,16 @@ std::span<const std::string_view> Localization::Lines(TextId id) const {
     }
   }
   return {};
+}
+
+std::string_view Localization::MusicTitle(size_t track) const {
+  return track < kMusicTitleIds.size() ? Text(kMusicTitleIds[track])
+                                       : std::string_view{};
+}
+
+std::string_view Localization::MusicComment(size_t track) const {
+  return track < kMusicCommentIds.size() ? Text(kMusicCommentIds[track])
+                                         : std::string_view{};
 }
 
 } // namespace i18n
