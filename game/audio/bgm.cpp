@@ -140,13 +140,17 @@ void BGM_Stop(void) {
 }
 
 void BGM_Pause(void) {
-  if (!Waveform) {
+  if (Waveform) {
+    SndBackend_BGMStop();
+  } else {
     Mid_Pause();
   }
 }
 
 void BGM_Resume(void) {
-  if (!Waveform) {
+  if (Waveform) {
+    SndBackend_BGMPlay();
+  } else {
     Mid_Resume();
   }
 }

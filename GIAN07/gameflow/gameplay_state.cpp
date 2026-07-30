@@ -248,6 +248,9 @@ GameplayState::StepResult GameplayState::Step(INPUT_BITS &input) {
 void GameplayState::BeginGameOver() {
   auto &context = context_;
   context.effects.SpawnGameOver();
+  if (mode_ == Mode::Live) {
+    BGM_Pause();
+  }
   game_over_timer_ = 120;
   phase_ = Phase::GameOverIntro;
 }
@@ -361,7 +364,6 @@ FlowEvent GameplayState::UpdateGameOverIntro(const FrameInput &frame) {
     if (frame.gameplay != 0) {
       break;
     }
-    BGM_Pause();
     SndBackend_PauseAll();
     context.ui.PrepareGameOverMenu(context.player.Credits() != 0U,
                                    context.records.HasRecordedStages());
