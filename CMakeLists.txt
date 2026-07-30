@@ -164,6 +164,27 @@ if(MSVC)
 endif()
 
 # ============================================================
+# Pack tool (PBG archive extraction and repacking)
+# ============================================================
+add_executable(pack_tool
+    tools/pack_tool.cpp
+    GIAN07/data/data_manifest.cpp
+    GIAN07/data/pbg_archive.cpp
+    game/sys/bit_stream.cpp
+    game/sys/file.cpp
+)
+target_include_directories(pack_tool PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+    ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
+)
+set_target_properties(pack_tool PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+if(MSVC)
+    target_compile_options(pack_tool PRIVATE /MP)
+endif()
+
+# ============================================================
 # Script code generation (ECL/SCL source -> binary -> C arrays)
 # ============================================================
 
@@ -358,7 +379,7 @@ add_custom_command(
 target_sources(GIAN07 PRIVATE "${MESSAGES_DATA_CPP}")
 
 # Stage format validator. MAP validation accepts an optional directory
-# containing pack_tool-extracted 000.bin...012.bin files.
+# containing the extracted maps section (000.map...006.map).
 add_executable(stage_validator
     tools/stage_validator.cpp
     GIAN07/enemy/ecl/ecl_program.cpp

@@ -27,6 +27,7 @@ public:
   PbgArchive() = default;
 
   [[nodiscard]] static PbgArchive Open(const std::filesystem::path &path);
+  [[nodiscard]] static PbgArchive Open(std::span<const uint8_t> bytes);
 
   // Decompresses entry [index] into a freshly allocated buffer.
   [[nodiscard]] std::vector<uint8_t> Extract(uint32_t index) const;

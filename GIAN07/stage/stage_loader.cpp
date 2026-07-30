@@ -37,7 +37,7 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
   const bool extra = stage == StageId::Extra;
   auto ecl = LoadEmbeddedScript(extra ? 24 : stage_index);
   auto scl = LoadEmbeddedScript(extra ? 25 : stage_index + 6);
-  auto map = data_->ExtractMap(extra ? 12 : stage_index);
+  auto map = data_->ExtractMap(extra ? 6 : stage_index);
   if (ecl.empty() || scl.empty() || map.empty()) {
     return false;
   }

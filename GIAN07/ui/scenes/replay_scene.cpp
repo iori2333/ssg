@@ -98,7 +98,7 @@ bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
   GrpBackend_Clear();
   Grp_Flip();
   if (!graphics_.LoadNameRegistration()) {
-    DebugOut("IMAGES.PAK が破壊されています");
+    DebugOut("ゲームデータが破壊されています");
     return false;
   }
 

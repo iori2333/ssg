@@ -88,6 +88,7 @@ struct InputConfig {
 
 struct DebugConfig {
   int32_t hitbox_display = 0;
+  bool demo_recording = false;
 };
 
 struct ConfigData {

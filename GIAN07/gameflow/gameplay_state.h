@@ -49,6 +49,7 @@ private:
   [[nodiscard]] FlowEvent UpdatePause(const FrameInput &frame);
   [[nodiscard]] FlowEvent UpdateGameOverIntro(const FrameInput &frame);
   [[nodiscard]] FlowEvent UpdateGameOverMenu(const FrameInput &frame);
+  [[nodiscard]] FlowEvent ExitDemoCapture();
   void BeginGameOver();
   void StopPlayback();
   void Draw() const;
@@ -58,6 +59,7 @@ private:
   Phase phase_ = Phase::Running;
   int game_over_timer_ = 0;
   uint8_t overlay_timer_ = 0;
+  bool demo_visible_ = false;
 };
 
 } // namespace gameflow

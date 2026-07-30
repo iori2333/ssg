@@ -119,8 +119,13 @@ public:
     case WeaponSelectSceneResult::Running:
       return NoEvent{};
     case WeaponSelectSceneResult::StartGame:
-      context_.records.BeginRecording(context_.player, context_.session,
-                                      context_.config);
+      if (context_.config.debug.demo_recording) {
+        context_.records.BeginDemoCapture(context_.player, context_.session,
+                                          context_.config);
+      } else {
+        context_.records.BeginRecording(context_.player, context_.session,
+                                        context_.config);
+      }
       return StartLiveGame{};
     case WeaponSelectSceneResult::Cancelled:
       return ReturnToTitle{.change_music = false};

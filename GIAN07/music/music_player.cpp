@@ -43,17 +43,6 @@ bool MusicPlayer::Play(unsigned int id) {
   return true;
 }
 
-std::string_view MusicPlayer::CurrentTitle() const {
-  auto wt = BGM_WaveformTitle();
-  if (!wt.empty()) {
-    return wt;
-  }
-  if (loaded_num_ > 0) {
-    return data_.TrackTitle(loaded_num_ - 1);
-  }
-  return {};
-}
-
 size_t MusicPlayer::TrackCount() const { return data_.TrackCount(); }
 
 // ---------------------------------------------------------------------------

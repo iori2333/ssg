@@ -167,6 +167,10 @@ PbgArchive PbgArchive::Open(const std::filesystem::path &path) {
   return FromBuffer(File_Load(path));
 }
 
+PbgArchive PbgArchive::Open(std::span<const uint8_t> bytes) {
+  return FromBuffer(std::vector<uint8_t>(bytes.begin(), bytes.end()));
+}
+
 PbgArchive PbgArchive::FromBuffer(std::vector<uint8_t> packfile) {
   PbgArchive result;
   util::ByteReader reader{packfile};

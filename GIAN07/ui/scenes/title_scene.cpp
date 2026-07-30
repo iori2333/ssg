@@ -96,7 +96,7 @@ TitleSceneResult TitleScene::Update(INPUT_BITS input, bool should_draw) {
   } else {
     demo_timer_ = 0;
   }
-  if (ui_.Main().Depth() > 1) {
+  if (ui_.Main().Depth() > 1 || ui_.Main().InListView()) {
     demo_timer_ = 0;
   }
   if (demo_timer_ == 60 * 10) {

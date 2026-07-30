@@ -61,21 +61,42 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | `game/audio/` | Audio layer – sound effects, MIDI, BGM, codecs, volume, audio backends |
 | `game/util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
 | `game/platform/` | Platform-specific backends with no cross-platform equivalent |
-| `tools/` | Build tools: pack_tool (DAT pack manipulation + music data migration), script_tool (ECL/SCL disasm/asm) |
+| `tools/` | Build tools: pack_tool (PBG extract/pack), script_tool (ECL/SCL disasm/asm) |
 
 Entry point: `GIAN07/app/main.cpp`.
 
-### Music data format
+### Game data format
 
-Original BGM stored in `MUSIC.PAK` (PBG format, unified entries):
+Runtime resources can be loaded from either an extracted `data/` directory or
+the PBG-compressed `data.pak`. If `data/` exists next to the executable, it is
+always used; `data.pak` is only opened when the directory is absent. An invalid
+directory is an error and does not silently fall back to the archive.
+
+The directory uses `maps/*.map`, `images/*.bmp`, `music/*.mid`,
+`sounds/*.wav`, and `demos/*.dat`. Entries in each section are numbered
+contiguously from `000`. Music titles and comments live only in the embedded
+i18n catalogs.
+
+Archive entry 0 is a versioned manifest; the remaining entries contain the
+same five sections in manifest order.
+
+Manifest v2 uses little-endian integers:
+
 ```
-[title_len:u32LE][title:UTF-8][comment_len:u32LE][comment:UTF-8\n][midi:raw SMF]
+magic[8] = "SSGDATA\x1a"
+version:u32 = 2
+section_count:u32 = 5
+repeat section_count:
+  section_id:u32
+  first_entry:u32
+  entry_count:u32
 ```
 
-Legacy comments previously in `ENEMY.DAT` entries 027–046 have been migrated
-to `MUSIC.PAK`. The remaining map/demo data has been repacked as `MAP.PAK`.
-`GRAPH.DAT` and `GRAPH2.DAT` have been merged into `IMAGES.PAK`.
-Convert original GBK-encoded data with `pack_tool extract-music` → `pack_tool pack-music`.
+Use `pack_tool extract data.pak <directory>` to produce the five section
+directories and `pack_tool pack <directory> data.pak` to rebuild the archive.
+Debug Demo Recording writes local Replay v2 files to `demos/`; it never edits
+`data.pak`. Local demos take precedence during Debug Demo Play and are copied
+into an extracted `demos/` section only when explicitly repacking.
 
 ## Tooling
 
@@ -87,10 +108,11 @@ Convert original GBK-encoded data with `pack_tool extract-music` → `pack_tool 
 ### Stage validation
 
 `stage_validator` validates the embedded SCL programs and can additionally
-validate real maps extracted from `MAP.PAK`:
+validate real maps extracted from the `maps` section of `data.pak`:
 
 ```powershell
-build\bin\stage_validator.exe build\map_inspect
+build\bin\pack_tool.exe extract bin\data.pak build\data_inspect
+build\bin\stage_validator.exe build\data_inspect\maps
 ```
 
 Do not use the title-screen random Demo as the primary Stage/Scroll regression

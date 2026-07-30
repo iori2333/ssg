@@ -30,6 +30,7 @@ namespace {
 constexpr std::array<uint8_t, 4> kReplayMagic = {'G', '7', 'R', 'P'};
 constexpr uint16_t kReplayVersion = 2;
 constexpr auto kReplayDirectory = "replays";
+constexpr auto kDemoDirectory = "demos";
 constexpr std::array<uint8_t, 4> kScoreMagic = {'G', '7', 'S', 'C'};
 constexpr uint16_t kScoreVersion = 1;
 constexpr auto kScoreDirectory = "scores";
@@ -55,25 +56,6 @@ struct ScoreRecordFile {
   std::array<char, kRecordNameLength> name{};
 };
 static_assert(sizeof(ScoreRecordFile) == 44);
-
-struct DemoReplayConfig {
-  uint8_t game_level;
-  uint8_t player_stock;
-  uint8_t bomb_stock;
-  uint8_t padding_1[5];
-  uint8_t input_flags;
-  uint8_t padding_2[15];
-};
-static_assert(sizeof(DemoReplayConfig) == 24);
-
-struct DemoReplayHeader {
-  uint32_t random_seed;
-  uint32_t frame_count;
-  DemoReplayConfig config;
-  uint8_t power;
-  uint8_t weapon;
-};
-static_assert(sizeof(DemoReplayHeader) == 36);
 
 template <typename T> bool ReadValue(util::ByteReader &reader, T &value) {
   using U = std::make_unsigned_t<T>;
@@ -158,6 +140,11 @@ bool IsReplayFilename(std::string_view name) {
   const auto extra_prefix = name.starts_with("replay_ex_");
   const auto extension = std::filesystem::path{name}.extension().string();
   return (replay_prefix || extra_prefix) && extension == ".dat";
+}
+
+std::filesystem::path DemoPath(StageId stage) {
+  return std::filesystem::path{kDemoDirectory} /
+         std::format("{:03}.dat", std::to_underlying(stage));
 }
 
 bool IsScoreFilename(const std::filesystem::path &path) {
@@ -302,6 +289,18 @@ RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) const {
 void RecordSystem::BeginRecording(const Player &player,
                                   const GameSession &session,
                                   const ConfigData &config) {
+  BeginCapture(player, session, config, false);
+}
+
+void RecordSystem::BeginDemoCapture(const Player &player,
+                                    const GameSession &session,
+                                    const ConfigData &config) {
+  BeginCapture(player, session, config, true);
+}
+
+void RecordSystem::BeginCapture(const Player &player,
+                                const GameSession &session,
+                                const ConfigData &config, bool demo_capture) {
   const auto seed = ((static_cast<uint32_t>(rnd()) + 1U) *
                      (static_cast<uint32_t>(rnd()) + 1U));
   rnd_seed_set(seed);
@@ -319,8 +318,20 @@ void RecordSystem::BeginRecording(const Player &player,
                                                    : 0) |
                   (config.input.z_spd_down_enabled ? kInputFlagSpeedDown : 0)),
           },
+      .demo_capture = demo_capture,
   });
   BeginStage(player, session);
+}
+
+bool RecordSystem::MarkDemoStart() {
+  auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || !recording->demo_capture ||
+      recording->demo_start_frame ||
+      recording->current_inputs.size() >= kReplayBufferCapacity) {
+    return false;
+  }
+  recording->demo_start_frame = recording->current_inputs.size();
+  return true;
 }
 
 void RecordSystem::BeginStage(const Player &player,
@@ -338,12 +349,22 @@ void RecordSystem::BeginStage(const Player &player,
   };
   recording->has_current_checkpoint = true;
   recording->current_inputs.clear();
+  if (recording->demo_capture) {
+    recording->stages.clear();
+    recording->demo_start_frame.reset();
+  }
 }
 
 bool RecordSystem::HasRecordedStages() const {
   const auto *recording = std::get_if<RecordingState>(&state_);
-  return recording != nullptr &&
-         (!recording->stages.empty() || !recording->current_inputs.empty());
+  if (recording == nullptr) {
+    return false;
+  }
+  if (!recording->demo_capture) {
+    return !recording->stages.empty() || !recording->current_inputs.empty();
+  }
+  return recording->demo_start_frame &&
+         recording->current_inputs.size() > *recording->demo_start_frame;
 }
 
 void RecordSystem::FlushStage() {
@@ -370,13 +391,19 @@ void RecordSystem::Record(INPUT_BITS input) {
       recording->current_inputs.size() >= kReplayBufferCapacity) {
     return;
   }
+  input &= ~KEY_DEMO_START;
+  if (recording->demo_capture && recording->demo_start_frame &&
+      recording->current_inputs.size() == *recording->demo_start_frame) {
+    input |= KEY_DEMO_START;
+  }
   recording->current_inputs.push_back(input);
 }
 
 void RecordSystem::UpdateLastRecordedInput(INPUT_BITS input) {
   auto *recording = std::get_if<RecordingState>(&state_);
   if (recording != nullptr && !recording->current_inputs.empty()) {
-    recording->current_inputs.back() = input;
+    const auto demo_marker = recording->current_inputs.back() & KEY_DEMO_START;
+    recording->current_inputs.back() = (input & ~KEY_DEMO_START) | demo_marker;
   }
 }
 
@@ -388,12 +415,13 @@ void RecordSystem::CancelRecording() {
 
 RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
                                           bool extra_stage) {
-  if (!std::holds_alternative<RecordingState>(state_)) {
+  const auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || recording->demo_capture) {
     return RecordSaveResult::NoData;
   }
   FlushStage();
-  auto &recording = std::get<RecordingState>(state_);
-  if (recording.stages.empty()) {
+  recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || recording->stages.empty()) {
     return RecordSaveResult::NoData;
   }
 
@@ -407,21 +435,67 @@ RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
       std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch())
           .count();
 
+  std::error_code error;
+  std::filesystem::create_directories(kReplayDirectory, error);
+  const auto replay_path = UniqueReplayPath(extra_stage, now);
+  if (error || !replay_path) {
+    return RecordSaveResult::IoError;
+  }
+  return SaveRecording(replay_name, replay_path->string(), created_at);
+}
+
+RecordSaveResult RecordSystem::SaveDemo(StageId stage) {
+  auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || !recording->demo_capture ||
+      !recording->demo_start_frame) {
+    return RecordSaveResult::NoData;
+  }
+  FlushStage();
+  recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || recording->stages.size() != 1 ||
+      recording->stages.front().checkpoint.stage != stage ||
+      !std::ranges::any_of(recording->stages.front().inputs, [](auto input) {
+        return (input & KEY_DEMO_START) != 0;
+      })) {
+    return RecordSaveResult::NoData;
+  }
+
+  const auto now = std::chrono::system_clock::now();
+  const auto created_at =
+      std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch())
+          .count();
+  std::error_code error;
+  std::filesystem::create_directories(kDemoDirectory, error);
+  if (error) {
+    return RecordSaveResult::IoError;
+  }
+  return SaveRecording("DEMO", DemoPath(stage).string(), created_at);
+}
+
+RecordSaveResult RecordSystem::SaveRecording(std::string_view replay_name,
+                                             std::string_view path,
+                                             int64_t created_at) {
+  auto *recording = std::get_if<RecordingState>(&state_);
+  if (recording == nullptr || recording->stages.empty() ||
+      replay_name.size() > kRecordNameLength || created_at < 0) {
+    return RecordSaveResult::NoData;
+  }
+
   util::ByteWriter manifest;
   manifest.WriteBytes(kReplayMagic);
   manifest.Write(kReplayVersion);
   manifest.Write<uint64_t>(static_cast<uint64_t>(created_at));
-  manifest.Write(std::to_underlying(recording.settings.difficulty));
-  manifest.Write(std::to_underlying(recording.settings.practice_mode));
-  manifest.Write(recording.settings.player_stock);
-  manifest.Write(recording.settings.bomb_stock);
-  manifest.Write(recording.settings.input_flags);
+  manifest.Write(std::to_underlying(recording->settings.difficulty));
+  manifest.Write(std::to_underlying(recording->settings.practice_mode));
+  manifest.Write(recording->settings.player_stock);
+  manifest.Write(recording->settings.bomb_stock);
+  manifest.Write(recording->settings.input_flags);
   manifest.Write(static_cast<uint8_t>(replay_name.size()));
   manifest.WriteBytes({reinterpret_cast<const uint8_t *>(replay_name.data()),
                        replay_name.size()});
-  manifest.Write(static_cast<uint8_t>(recording.stages.size()));
+  manifest.Write(static_cast<uint8_t>(recording->stages.size()));
 
-  for (const auto &stage : recording.stages) {
+  for (const auto &stage : recording->stages) {
     const auto &checkpoint = stage.checkpoint;
     manifest.Write(std::to_underlying(checkpoint.stage));
     manifest.Write(checkpoint.frame_count);
@@ -433,7 +507,7 @@ RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
 
   data::PbgArchiveWriter archive;
   archive.Add(manifest.Bytes());
-  for (const auto &stage : recording.stages) {
+  for (const auto &stage : recording->stages) {
     util::ByteWriter inputs;
     for (const auto input : stage.inputs) {
       inputs.Write(static_cast<uint16_t>(input));
@@ -441,10 +515,7 @@ RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
     archive.Add(inputs.Bytes());
   }
 
-  std::error_code error;
-  std::filesystem::create_directories(kReplayDirectory, error);
-  const auto replay_path = UniqueReplayPath(extra_stage, now);
-  if (error || !replay_path || !archive.Write(*replay_path)) {
+  if (!archive.Write(std::filesystem::path{path})) {
     return RecordSaveResult::IoError;
   }
   state_.emplace<IdleState>();
@@ -481,6 +552,19 @@ bool RecordSystem::LoadArchive(std::string_view path,
   if (!archive) {
     return false;
   }
+  if (!LoadArchive(archive, record, settings, stages)) {
+    return false;
+  }
+  if (record != nullptr && record->has_value()) {
+    record->value().path = path;
+  }
+  return true;
+}
+
+bool RecordSystem::LoadArchive(const data::PbgArchive &archive,
+                               std::optional<ReplayRecord> *record,
+                               ReplaySettings *settings,
+                               std::vector<ReplayStage> *stages) const {
   const auto manifest_data = archive.Extract(0);
   if (manifest_data.empty()) {
     return false;
@@ -572,7 +656,7 @@ bool RecordSystem::LoadArchive(std::string_view path,
 
   if (record != nullptr) {
     record->emplace(ReplayRecord{
-        .path = std::string{path},
+        .path = {},
         .name = std::string{reinterpret_cast<const char *>(name_bytes->data()),
                             name_bytes->size()},
         .created_at = static_cast<int64_t>(created_at),
@@ -668,65 +752,67 @@ StageId RecordSystem::CurrentPlaybackStage() const {
   return playback.stages[playback.stage_index].checkpoint.stage;
 }
 
+bool RecordSystem::HasStageDemo(StageId stage) const {
+  const auto index = std::to_underlying(stage);
+  if (index >= kRegularStageCount) {
+    return false;
+  }
+
+  ReplaySettings settings;
+  std::vector<ReplayStage> stages;
+  std::error_code error;
+  const auto local_path = DemoPath(stage);
+  if (std::filesystem::is_regular_file(local_path, error) &&
+      LoadDemoArchive(data::PbgArchive::Open(local_path), stage, settings,
+                      stages)) {
+    return true;
+  }
+  return index < data_.DemoCount() &&
+         LoadDemoArchive(data::PbgArchive::Open(data_.ExtractDemo(index)),
+                         stage, settings, stages);
+}
+
 bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
                                  GameSession &session) {
-  const auto data = data_.ExtractMap(std::to_underlying(stage) + 6);
-  util::ByteReader reader{data};
-  const auto header = reader.ReadObject<DemoReplayHeader>();
-  if (!header) {
-    return false;
-  }
-  if (header->frame_count > kReplayBufferCapacity) {
-    return false;
-  }
-
-  std::vector<INPUT_BITS> inputs;
-  inputs.reserve(header->frame_count);
-  for (uint32_t frame = 0; frame < header->frame_count; ++frame) {
-    const auto input = reader.Read<uint16_t>();
-    if (!input) {
-      return false;
-    }
-    inputs.push_back(static_cast<INPUT_BITS>(*input));
-  }
-
-  const ReplaySettings settings = {
-      .difficulty = static_cast<GameLevel>(header->config.game_level),
-      .practice_mode = PracticeMode::Off,
-      .player_stock = header->config.player_stock,
-      .bomb_stock = header->config.bomb_stock,
-      .input_flags = header->config.input_flags,
-  };
-  player.Initialize(settings.player_stock, settings.bomb_stock);
-  auto progress = player.CaptureProgress();
-  progress.player_type = header->weapon;
-  progress.power = header->power;
-  progress.lives = header->config.player_stock;
-  progress.bombs = header->config.bomb_stock;
-
-  ReplayStage replay_stage;
-  replay_stage.checkpoint = {
-      .stage = stage,
-      .frame_count = header->frame_count,
-      .rng = {.seed = header->random_seed, .draw_count = 0},
-      .player = progress,
-      .rank = session.rank,
-  };
-  replay_stage.inputs = std::move(inputs);
-  session.level = settings.difficulty;
-  player.Configure(PracticeMode::Off,
-                   (settings.input_flags & kInputFlagSpeedDown) != 0);
-  player.RestoreProgress(progress);
-  rnd_seed_set(header->random_seed);
+  ReplaySettings settings;
   std::vector<ReplayStage> stages;
-  stages.push_back(std::move(replay_stage));
+  std::error_code error;
+  const auto local_path = DemoPath(stage);
+  bool loaded =
+      std::filesystem::is_regular_file(local_path, error) &&
+      LoadDemoArchive(data::PbgArchive::Open(local_path), stage, settings,
+                      stages);
+  const auto index = std::to_underlying(stage);
+  if (!loaded && index < data_.DemoCount()) {
+    loaded = LoadDemoArchive(data::PbgArchive::Open(data_.ExtractDemo(index)),
+                             stage, settings, stages);
+  }
+  if (!loaded) {
+    return false;
+  }
+
   state_.emplace<PlaybackState>(PlaybackState{
       .settings = settings,
       .stages = std::move(stages),
-      .active = true,
       .multi_stage = false,
   });
+  if (!ConfigurePlayback(player, session)) {
+    state_.emplace<IdleState>();
+    return false;
+  }
+  RestorePlaybackStage(player, session);
   return true;
+}
+
+bool RecordSystem::LoadDemoArchive(const data::PbgArchive &archive,
+                                   StageId stage, ReplaySettings &settings,
+                                   std::vector<ReplayStage> &stages) const {
+  stages.clear();
+  return archive && LoadArchive(archive, nullptr, &settings, &stages) &&
+         stages.size() == 1 && stages.front().checkpoint.stage == stage &&
+         std::ranges::any_of(stages.front().inputs, [](auto input) {
+           return (input & KEY_DEMO_START) != 0;
+         });
 }
 
 INPUT_BITS RecordSystem::NextInput() {
@@ -754,7 +840,9 @@ bool RecordSystem::IsPlaying() const {
 }
 
 bool RecordSystem::IsRecording() const {
-  return std::holds_alternative<RecordingState>(state_);
+  const auto *recording = std::get_if<RecordingState>(&state_);
+  return recording != nullptr &&
+         (!recording->demo_capture || recording->demo_start_frame.has_value());
 }
 
 bool RecordSystem::IsMultiStagePlayback() const {

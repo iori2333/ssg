@@ -32,6 +32,8 @@ constexpr INPUT_BITS KEY_STAGE3 = {0x0800};
 constexpr INPUT_BITS KEY_STAGE4 = {0x1000};
 constexpr INPUT_BITS KEY_STAGE5 = {0x2000};
 constexpr INPUT_BITS KEY_STAGE6 = {0x4000};
+// Stored in Demo Replay input streams as the visible playback start marker.
+constexpr INPUT_BITS KEY_DEMO_START = {0x8000};
 
 constexpr INPUT_BITS KEY_ULEFT = (KEY_UP | KEY_LEFT);
 constexpr INPUT_BITS KEY_URIGHT = (KEY_UP | KEY_RIGHT);
@@ -56,6 +58,7 @@ constexpr INPUT_SYSTEM_BITS SYSKEY_SNAPSHOT = {0x0001};
 constexpr INPUT_SYSTEM_BITS SYSKEY_SKIP = {0x0002};
 constexpr INPUT_SYSTEM_BITS SYSKEY_BGM_FADE = {0x0004};
 constexpr INPUT_SYSTEM_BITS SYSKEY_BGM_DEVICE = {0x0008};
+constexpr INPUT_SYSTEM_BITS SYSKEY_DEMO_RECORD = {0x0010};
 
 using INPUT_PAD_BINDING = std::pair<INPUT_PAD_BUTTON, INPUT_BITS>;
 

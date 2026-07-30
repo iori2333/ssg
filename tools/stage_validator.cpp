@@ -21,7 +21,7 @@ namespace {
 
 constexpr std::array kSceneIds = {6, 7, 8, 9, 10, 11, 25, 47};
 constexpr std::array kEnemyIds = {0, 1, 2, 3, 4, 5, 24};
-constexpr std::array kMapIds = {0, 1, 2, 3, 4, 5, 12};
+constexpr std::array kMapIds = {0, 1, 2, 3, 4, 5, 6};
 
 const EmbeddedScript *FindScript(int index) {
   for (size_t i = 0; i < embedded_script_count; ++i) {
@@ -239,7 +239,7 @@ bool ValidateMaps(const std::filesystem::path &directory) {
   for (const int index : kMapIds) {
     const auto path = directory / (std::to_string(index / 100) +
                                    std::to_string((index / 10) % 10) +
-                                   std::to_string(index % 10) + ".bin");
+                                   std::to_string(index % 10) + ".map");
     std::ifstream input(path, std::ios::binary);
     if (!input) {
       std::cerr << "missing extracted map " << path << '\n';

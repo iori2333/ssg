@@ -614,7 +614,7 @@ static std::unique_ptr<EntryNode>
 BuildDebugMenu(DebugConfig &debug_cfg, i18n::Localization &localization,
                std::function<void(MainMenuAction)> on_action) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
-  ch.reserve(2);
+  ch.reserve(3);
 
   ch.push_back(std::make_unique<ChoiceNode>(
       Localized(localization, "ui.menu.hitbox.title"),
@@ -622,6 +622,13 @@ BuildDebugMenu(DebugConfig &debug_cfg, i18n::Localization &localization,
       0, 2,
       LocalizedLabels(localization,
                       {"ui.common.off", "ui.value.hit", "ui.value.all"})));
+
+  auto demo_recording = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.demo_recording.title"),
+      Localized(localization, "ui.menu.demo_recording.help"),
+      std::ref(debug_cfg.demo_recording));
+  LocalizeToggleValues(*demo_recording, localization);
+  ch.push_back(std::move(demo_recording));
 
   ch.push_back(std::make_unique<ActionNode>(
       Localized(localization, "ui.menu.bullet_gallery.title"),

@@ -126,7 +126,7 @@ bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty,
   GrpBackend_Clear();
   Grp_Flip();
   if (!graphics_.LoadNameRegistration()) {
-    DebugOut("IMAGES.PAK が破壊されています");
+    DebugOut("ゲームデータが破壊されています");
     return false;
   }
 
@@ -211,7 +211,7 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   GrpBackend_Clear();
   Grp_Flip();
   if (!graphics_.LoadNameRegistration()) {
-    DebugOut("IMAGES.PAK が破壊されています");
+    DebugOut("ゲームデータが破壊されています");
     current_record_.reset();
     return ScoreRegistrationStart::Complete;
   }

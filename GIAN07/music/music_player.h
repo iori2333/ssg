@@ -19,14 +19,11 @@ class MusicPlayer {
 public:
   explicit MusicPlayer(const data::GameData &data) : data_(data) {}
 
-  // Track switching. Loads the MIDI track from MUSIC.PAK, then tries to
+  // Track switching. Loads the MIDI track from game data, then tries to
   // open a replacement waveform from the active BGM pack. Plays on success.
   bool Play(unsigned int id);
 
-  // Track title: waveform metadata title first, then GameData fallback.
-  [[nodiscard]] std::string_view CurrentTitle() const;
-
-  // Total number of tracks in MUSIC.PAK.
+  // Total number of tracks in game data.
   [[nodiscard]] size_t TrackCount() const;
 
   // BGM pack management

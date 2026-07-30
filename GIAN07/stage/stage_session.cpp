@@ -141,7 +141,8 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
         BGM_Stop();
         if (context.music.Play(instruction->track_id)) {
           BGM_Play();
-          const auto title = context.music.CurrentTitle();
+          const auto title =
+              context.localization.MusicTitle(instruction->track_id);
           if (!title.empty()) {
             context.effects.SetMusicTitle(460, title);
           }

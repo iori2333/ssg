@@ -1,5 +1,6 @@
 /// Active gameplay flow: live runs, replays, demos, pause, and game over.
 
+#include <array>
 #include <cstdint>
 #include <string_view>
 #include <utility>
@@ -48,12 +49,12 @@ void ResetGameplayRuntime(GameContext &context) {
 bool GameplayState::LoadCurrentStage() {
   auto &context = context_;
   if (!context.graphics.LoadStage(context.session.stage)) {
-    DebugOut("IMAGES.PAK が破壊されています");
+    DebugOut("ゲームデータが破壊されています");
     return false;
   }
   if (!context.stage_loader.Load(context.session.stage, context.enemies,
                                  context.stage)) {
-    DebugOut("MAP.PAK が破壊されています");
+    DebugOut("ゲームデータが破壊されています");
     return false;
   }
   return true;
@@ -125,18 +126,29 @@ bool GameplayState::EnterDemo() {
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
   rnd_seed_set(Time_SteadyTicksMS());
-  context.session.stage = static_cast<StageId>(rnd() % kRegularStageCount);
+  std::array<StageId, kRegularStageCount> available{};
+  size_t available_count = 0;
+  for (uint8_t index = 0; index < kRegularStageCount; ++index) {
+    const auto stage = static_cast<StageId>(index);
+    if (context.records.HasStageDemo(stage)) {
+      available[available_count++] = stage;
+    }
+  }
+  if (available_count == 0) {
+    return false;
+  }
+  context.session.stage = available[rnd() % available_count];
   if (!context.records.LoadStageDemo(context.session.stage, context.player,
                                      context.session)) {
     return false;
   }
-  context.session.ResetRank();
   if (!LoadCurrentStage()) {
     StopPlayback();
     return false;
   }
   InitializeGameplayView(false);
   overlay_timer_ = 0;
+  demo_visible_ = false;
   return true;
 }
 
@@ -281,9 +293,15 @@ FlowEvent GameplayState::Update(const FrameInput &frame) {
 FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
   auto &context = context_;
   auto input = frame.gameplay;
+  if (context.config.debug.demo_recording &&
+      (frame.system & SYSKEY_DEMO_RECORD) != 0 &&
+      !context.records.IsRecording()) {
+    (void)context.records.MarkDemoStart();
+  }
   context.records.Record(input);
   if ((input & KEY_ESC) != 0) {
-    context.ui.PrepareExitMenu(context.records.HasRecordedStages());
+    context.ui.PrepareExitMenu(!context.config.debug.demo_recording &&
+                               context.records.HasRecordedStages());
     context.ui.Exit().Open({250, 150}, 1, input);
     BGM_Pause();
     SndBackend_PauseAll();
@@ -325,10 +343,17 @@ FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
   if (const auto action = context.ui.TakePauseAction()) {
     switch (*action) {
     case UIManager::PauseAction::SaveReplayAndExit:
+      if (context.config.debug.demo_recording) {
+        return ExitDemoCapture();
+      }
       return SaveReplayAndExit{.extra_stage =
                                    context.session.stage == StageId::Extra};
     case UIManager::PauseAction::Exit:
-      context.records.CancelRecording();
+      if (context.config.debug.demo_recording) {
+        return ExitDemoCapture();
+      } else {
+        context.records.CancelRecording();
+      }
       return ReturnToTitle{.change_music = true};
     case UIManager::PauseAction::Resume:
       BGM_Resume();
@@ -346,6 +371,18 @@ FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
     Grp_Flip();
   }
   return NoEvent{};
+}
+
+FlowEvent GameplayState::ExitDemoCapture() {
+  auto &context = context_;
+  const auto saved = context.records.SaveDemo(context.session.stage);
+  if (saved == RecordSaveResult::IoError) {
+    DebugOut("Demo replay could not be saved");
+  }
+  if (saved != RecordSaveResult::Saved) {
+    context.records.CancelRecording();
+  }
+  return ReturnToTitle{.change_music = true};
 }
 
 FlowEvent GameplayState::UpdateGameOverIntro(const FrameInput &frame) {
@@ -366,7 +403,8 @@ FlowEvent GameplayState::UpdateGameOverIntro(const FrameInput &frame) {
     }
     SndBackend_PauseAll();
     context.ui.PrepareGameOverMenu(context.player.Credits() != 0U,
-                                   context.records.HasRecordedStages());
+                                   !context.config.debug.demo_recording &&
+                                       context.records.HasRecordedStages());
     context.ui.GameOver().Open({200, 176}, 0, frame.gameplay);
     phase_ = Phase::GameOverMenu;
     return NoEvent{};
@@ -399,12 +437,18 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
       phase_ = Phase::Running;
       return NoEvent{};
     case UIManager::GameOverAction::SaveReplayAndExit:
+      if (context.config.debug.demo_recording) {
+        return ExitDemoCapture();
+      }
       return FinishRun{
           .extra_stage = context.session.stage == StageId::Extra,
           .change_music = true,
           .save_replay = true,
       };
     case UIManager::GameOverAction::Exit:
+      if (context.config.debug.demo_recording) {
+        return ExitDemoCapture();
+      }
       context.records.CancelRecording();
       return FinishRun{
           .extra_stage = context.session.stage == StageId::Extra,
@@ -446,6 +490,7 @@ FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
       StopPlayback();
       return ReturnToTitle{.change_music = true};
     }
+    input &= ~KEY_DEMO_START;
     const auto result = Step(input);
     if (result == StepResult::GameOver || result == StepResult::LoadFailed ||
         phase_ != Phase::Running || !context.records.IsPlaying()) {
@@ -474,20 +519,33 @@ FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
 
 FlowEvent GameplayState::UpdateDemo(const FrameInput &frame) {
   auto &context = context_;
-  overlay_timer_ = (overlay_timer_ + 1) % 128;
-  auto input = frame.gameplay != 0U ? KEY_ESC : context.records.NextInput();
   context.session.is_demoplay = true;
-  if ((input & KEY_ESC) != 0) {
-    StopPlayback();
-    return ReturnToTitle{.change_music = false};
+  constexpr auto kPrerollStepsPerFrame = 240;
+  const auto step_count = demo_visible_ ? 1 : kPrerollStepsPerFrame;
+  for (int step = 0; step < step_count; ++step) {
+    auto input = frame.gameplay != 0U ? KEY_ESC : context.records.NextInput();
+    const bool demo_start = (input & KEY_DEMO_START) != 0;
+    input &= ~KEY_DEMO_START;
+    if ((input & KEY_ESC) != 0) {
+      StopPlayback();
+      return ReturnToTitle{.change_music = false};
+    }
+
+    const auto result = Step(input);
+    if (result != StepResult::Running || phase_ != Phase::Running) {
+      StopPlayback();
+      return ReturnToTitle{.change_music = false};
+    }
+    if (demo_start) {
+      demo_visible_ = true;
+      break;
+    }
   }
 
-  const auto result = Step(input);
-  if (result != StepResult::Running || phase_ != Phase::Running) {
-    StopPlayback();
-    return ReturnToTitle{.change_music = false};
+  if (demo_visible_) {
+    overlay_timer_ = (overlay_timer_ + 1) % 128;
   }
-  if (frame.should_draw) {
+  if (frame.should_draw && demo_visible_) {
     Draw();
     if (overlay_timer_ < 64) {
       GrpPut16(200, 200, "D E M O   P L A Y");

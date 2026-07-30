@@ -1,35 +1,33 @@
 ///
-/// GameData - owns validated game archives and their data-only catalogs
+/// GameData - owns the validated unified game data archive
 ///
 #pragma once
 
-#include <array>
+#include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
+#include "data_manifest.h"
 #include "pbg_archive.h"
 
 namespace data {
-
-enum class ArchiveId : uint8_t {
-  Map,
-  Images,
-  Music,
-  Sound,
-  Count,
-};
 
 enum class LoadErrorKind : uint8_t {
   Missing,
   Invalid,
 };
 
+enum class DataSourceKind : uint8_t {
+  Directory,
+  Archive,
+};
+
 struct LoadError {
-  ArchiveId archive;
   LoadErrorKind kind;
+  DataSourceKind source;
 };
 
 using LoadErrors = std::vector<LoadError>;
@@ -43,22 +41,27 @@ public:
   [[nodiscard]] std::vector<uint8_t> ExtractImage(uint32_t index) const;
   [[nodiscard]] std::vector<uint8_t> ExtractSound(uint32_t index) const;
   [[nodiscard]] std::vector<uint8_t> ExtractMusicMidi(uint32_t index) const;
+  [[nodiscard]] std::vector<uint8_t> ExtractDemo(uint32_t index) const;
 
-  [[nodiscard]] size_t TrackCount() const { return music_tracks_.size(); }
-  [[nodiscard]] std::string_view TrackTitle(size_t index) const;
-  [[nodiscard]] std::string_view TrackComment(size_t index) const;
+  [[nodiscard]] size_t TrackCount() const {
+    return manifest_.sections[std::to_underlying(DataSectionId::Music)]
+        .entry_count;
+  }
+  [[nodiscard]] size_t DemoCount() const {
+    return manifest_.sections[std::to_underlying(DataSectionId::Demos)]
+        .entry_count;
+  }
 
 private:
-  struct MusicTrack {
-    std::string title;
-    std::string comment;
-    size_t midi_offset = 0;
-  };
+  [[nodiscard]] LoadErrors LoadDirectory(const std::filesystem::path &path);
+  [[nodiscard]] LoadErrors LoadArchive(const std::filesystem::path &path);
+  [[nodiscard]] bool ValidateContents() const;
+  [[nodiscard]] std::vector<uint8_t> Extract(DataSectionId section,
+                                             uint32_t index) const;
 
-  [[nodiscard]] const PbgArchive &Archive(ArchiveId id) const;
-
-  std::array<PbgArchive, std::to_underlying(ArchiveId::Count)> archives_;
-  std::vector<MusicTrack> music_tracks_;
+  std::filesystem::path directory_;
+  PbgArchive archive_;
+  DataManifest manifest_;
   bool loaded_ = false;
 };
 

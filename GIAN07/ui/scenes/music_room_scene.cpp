@@ -109,7 +109,7 @@ bool MusicRoomScene::Enter() {
   Grp_Flip();
 
   if (!graphics_.LoadMusicRoom()) {
-    DebugOut("IMAGES.PAK が破壊されています");
+    DebugOut("ゲームデータが破壊されています");
     return false;
   }
 
