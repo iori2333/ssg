@@ -146,7 +146,7 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   current_difficulty_ = std::to_underlying(current_record_->difficulty);
   ResetRows();
   GrpBackend_SetClip(GRP_RES_RECT);
-  name_entry_.Begin(false, initial_input);
+  name_entry_.Begin(true, initial_input);
   save_failed_ = false;
   if (change_music) {
     music_.Play(19);
@@ -166,6 +166,9 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(INPUT_BITS input,
     }
     save_failed_ = true;
     Snd_SEPlay(SfxId::Cancel);
+  } else if (result == NameEntryResult::Cancelled) {
+    current_record_.reset();
+    return ScoreSceneResult::RegistrationComplete;
   }
 
   if (should_draw) {
