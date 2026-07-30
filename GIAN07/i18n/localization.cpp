@@ -62,15 +62,6 @@ class CatalogReader {
 public:
   explicit CatalogReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
 
-  [[nodiscard]] std::optional<uint16_t> ReadU16() {
-    if (bytes_.size() - offset_ < sizeof(uint16_t)) {
-      return std::nullopt;
-    }
-    const auto value = static_cast<uint16_t>(U16LEAt(bytes_.data() + offset_));
-    offset_ += sizeof(uint16_t);
-    return value;
-  }
-
   [[nodiscard]] std::optional<uint32_t> ReadU32() {
     if (bytes_.size() - offset_ < sizeof(uint32_t)) {
       return std::nullopt;
@@ -118,31 +109,36 @@ bool Localization::ParseCatalog(std::span<const uint8_t> bytes,
   }
   const auto version = reader.ReadU32();
   const auto entry_count = reader.ReadU32();
-  if (!version || *version != 1 || !entry_count) {
+  if (!version || *version != 2 || !entry_count) {
     return false;
   }
 
   catalog.messages.reserve(*entry_count);
   for (uint32_t entry_index = 0; entry_index < *entry_count; ++entry_index) {
     const auto id = reader.ReadU32();
-    const auto line_count = reader.ReadU16();
-    if (!id || !line_count || *line_count == 0) {
+    const auto size = reader.ReadU32();
+    if (!id || !size) {
       return false;
     }
-    std::vector<std::string_view> lines;
-    lines.reserve(*line_count);
-    for (uint16_t line_index = 0; line_index < *line_count; ++line_index) {
-      const auto size = reader.ReadU32();
-      if (!size) {
-        return false;
-      }
-      const auto line = reader.ReadString(*size);
-      if (!line) {
-        return false;
-      }
-      lines.push_back(*line);
+    const auto value = reader.ReadString(*size);
+    if (!value) {
+      return false;
     }
-    if (!catalog.messages.emplace(*id, std::move(lines)).second) {
+
+    std::vector<std::string_view> lines;
+    size_t line_start = 0;
+    while (line_start <= value->size()) {
+      const auto line_end = value->find('\n', line_start);
+      lines.push_back(value->substr(line_start, line_end - line_start));
+      if (line_end == std::string_view::npos) {
+        break;
+      }
+      line_start = line_end + 1;
+    }
+    if (!catalog.messages
+             .emplace(*id,
+                      TextEntry{.value = *value, .lines = std::move(lines)})
+             .second) {
       return false;
     }
   }
@@ -211,21 +207,32 @@ bool Localization::HasText(size_t language_index, TextId id) const {
 }
 
 std::string_view Localization::Text(TextId id) const {
-  const auto lines = Lines(id);
-  return lines.empty() ? std::string_view{} : lines.front();
+  if (current_ < catalogs_.size()) {
+    if (const auto found = catalogs_[current_].messages.find(id);
+        found != catalogs_[current_].messages.end()) {
+      return found->second.value;
+    }
+  }
+  if (fallback_ < catalogs_.size()) {
+    if (const auto found = catalogs_[fallback_].messages.find(id);
+        found != catalogs_[fallback_].messages.end()) {
+      return found->second.value;
+    }
+  }
+  return {};
 }
 
 std::span<const std::string_view> Localization::Lines(TextId id) const {
   if (current_ < catalogs_.size()) {
     if (const auto found = catalogs_[current_].messages.find(id);
         found != catalogs_[current_].messages.end()) {
-      return found->second;
+      return found->second.lines;
     }
   }
   if (fallback_ < catalogs_.size()) {
     if (const auto found = catalogs_[fallback_].messages.find(id);
         found != catalogs_[fallback_].messages.end()) {
-      return found->second;
+      return found->second.lines;
     }
   }
   return {};

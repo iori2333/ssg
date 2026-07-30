@@ -296,9 +296,7 @@ cp bin/MAP_ORIG.PAK bin/MAP.PAK
 ```sh
 script_tool disasm-scl <in_binary> <out_text>
 script_tool asm-scl   <in_text> <out_binary>
-script_tool asm-messages <in_text> <out_binary>
-script_tool asm-ui <in_text> <out_binary>
-script_tool asm-music <in_text> <out_binary>
+script_tool asm-text <in_text> <out_binary>
 script_tool disasm-ecl <in_binary> <out_text>
 script_tool asm-ecl   <in_text> <out_binary>
 ```
@@ -324,44 +322,71 @@ END
 本地化文本块。非 ASCII 字节使用 `\xNN` 转义。EFC 类型使用符号名
 （WARN、STG2BOSS 等）。
 
-### SCL 本地化文本格式
+### 本地化文本格式
 
-`scripts/i18n/<language>/messages.txt` 中的每个标签对应一个
-`MSGREF`。一个文本块可以包含不同数量的显示行，因此各语言可以独立换行：
+剧情、UI 和 Music Room 文本分别保存在 `messages.txt`、`ui.txt` 和
+`music.txt`，但三者使用同一套键值语法并由 `asm-text` 编译。单行文本使用
+双引号：
 
 ```
-@stage1_msg_000:
-    MSG "[VIVIT]"
-    MSG "  Hello!"
+ui.menu.game_start.title = "Game Start"
 ```
 
-`asm-messages` 会检查重复键和 32 位文本 ID 冲突。构建过程会将所有支持
-的语言目录一起嵌入游戏，并要求每种语言具有完全相同的键集合。
+多行文本使用三引号。开头和结尾的三引号必须各自独占一行，边界自身的
+换行不属于文本；内部换行、空行和缩进均会原样保留：
+
+```
+stage1_msg_000 = """
+[VIVIT]
+  Hello!
+"""
+```
+
+两种字符串都支持 `\xNN`、`\\`、`\"`、`\n`、`\r` 和 `\t` 转义。
+`asm-text` 会检查无效语法、重复键和 32 位文本 ID 冲突。
+
+### SCL 本地化文本
+
+`scripts/i18n/<language>/messages.txt` 中的每个键对应一个 `MSGREF`。
+一个文本块可以包含不同数量的显示行，因此各语言可以独立换行：
+
+```
+stage1_msg_000 = """
+[VIVIT]
+  Hello!
+"""
+```
+
+构建过程会将所有支持的语言目录一起嵌入游戏，并要求每种语言具有完全
+相同的键集合。
 
 ### UI 本地化文本格式
 
 菜单、弹窗等非 HUD UI 文本保存在 `scripts/i18n/<language>/ui.txt`，
-与 SCL 消息目录分开。每个词条是一个单行键值：
+与 SCL 消息目录分开。当前每个词条都是单行键值：
 
 ```
 ui.menu.game_start.title = "Game Start"
 ui.menu.game_start.help = "Start the game"
 ```
 
-`asm-ui` 会检查重复键和 32 位文本 ID 冲突。UI 和 SCL 目录分别编译，
-在运行时合并到同一种语言的查询表中。
+UI 和 SCL 目录分别编译，在运行时合并到同一种语言的查询表中。
 
 ### Music Room 本地化文本格式
 
 Music Room 曲名与说明保存在 `scripts/i18n/<language>/music.txt`，不再依赖
-`MUSIC.PAK` 内嵌文本。格式与 UI 目录相同；换行使用 `\n` 转义：
+`MUSIC.PAK` 内嵌文本。曲名使用单行字符串，评论使用多行字符串：
 
 ```
 music.track_00.title = "秋霜玉　～ Clockworks"
-music.track_00.comment = "タイトル曲です\n\nど～も。ＺＵＮです。"
+music.track_00.comment = """
+タイトル曲です
+
+ど～も。ＺＵＮです。
+"""
 ```
 
-`asm-music` 会独立编译该目录，再由运行时按曲目编号查询。
+该目录会独立编译，再由运行时按曲目编号查询。
 
 ### ECL 文本格式
 
@@ -396,9 +421,9 @@ vim scripts/i18n/zh/music.txt
 
 # 2. 可单独检查生成结果
 script_tool asm-scl scripts/stage1.scl work/stage1.bin
-script_tool asm-messages scripts/i18n/zh/messages.txt work/zh_messages.bin
-script_tool asm-ui scripts/i18n/zh/ui.txt work/zh_ui.bin
-script_tool asm-music scripts/i18n/zh/music.txt work/zh_music.bin
+script_tool asm-text scripts/i18n/zh/messages.txt work/zh_messages.bin
+script_tool asm-text scripts/i18n/zh/ui.txt work/zh_ui.bin
+script_tool asm-text scripts/i18n/zh/music.txt work/zh_music.bin
 
 # 3. 重新构建游戏
 ./build_windows.bat

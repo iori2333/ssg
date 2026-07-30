@@ -33,10 +33,21 @@ const EmbeddedScript *FindScript(int index) {
 }
 
 bool ValidateScenes() {
+  constexpr std::array languages = {"ja", "en", "zh"};
   i18n::Localization localization;
   if (!localization.Initialize("ja")) {
     std::cerr << "invalid embedded message catalogs\n";
     return false;
+  }
+  const auto sample_id = i18n::TextIdFromKey("stage1_msg_000");
+  for (const auto language : languages) {
+    if (!localization.SetLanguage(language) ||
+        localization.Text(sample_id).find('\n') == std::string_view::npos ||
+        localization.Lines(sample_id).size() != 4 ||
+        localization.Lines(sample_id).front() != "[VIVIT]") {
+      std::cerr << "invalid multiline message text for " << language << '\n';
+      return false;
+    }
   }
   size_t message_references = 0;
   for (const int index : kSceneIds) {
@@ -106,7 +117,8 @@ bool ValidateMusicCatalogs() {
   }
   for (size_t language = 0; language < languages.size(); ++language) {
     if (!localization.SetLanguage(languages[language]) ||
-        localization.MusicTitle(1) != track_one_titles[language]) {
+        localization.MusicTitle(1) != track_one_titles[language] ||
+        localization.MusicComment(0).find('\n') == std::string_view::npos) {
       std::cerr << "invalid Music Room text catalog for " << languages[language]
                 << '\n';
       return false;

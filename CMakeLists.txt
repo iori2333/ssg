@@ -281,7 +281,7 @@ foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
 
     add_custom_command(
         OUTPUT "${message_bin}"
-        COMMAND script_tool asm-messages "${message_src}" "${message_bin}"
+        COMMAND script_tool asm-text "${message_src}" "${message_bin}"
         DEPENDS script_tool "${message_src}"
         COMMENT "Assembling ${language} message catalog"
     )
@@ -297,7 +297,7 @@ foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
     )
     add_custom_command(
         OUTPUT "${ui_bin}"
-        COMMAND script_tool asm-ui "${ui_src}" "${ui_bin}"
+        COMMAND script_tool asm-text "${ui_src}" "${ui_bin}"
         DEPENDS script_tool "${ui_src}"
         COMMENT "Assembling ${language} UI text catalog"
     )
@@ -313,7 +313,7 @@ foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
     )
     add_custom_command(
         OUTPUT "${music_bin}"
-        COMMAND script_tool asm-music "${music_src}" "${music_bin}"
+        COMMAND script_tool asm-text "${music_src}" "${music_bin}"
         DEPENDS script_tool "${music_src}"
         COMMENT "Assembling ${language} Music Room text catalog"
     )

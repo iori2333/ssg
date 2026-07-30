@@ -4,9 +4,7 @@
 /// Usage:
 ///   script_tool disasm-scl <in_binary> <out_text>
 ///   script_tool asm-scl   <in_text> <out_binary>
-///   script_tool asm-messages <in_text> <out_binary>
-///   script_tool asm-ui <in_text> <out_binary>
-///   script_tool asm-music <in_text> <out_binary>
+///   script_tool asm-text <in_text> <out_binary>
 ///   script_tool disasm-ecl <in_binary> <out_text>
 ///   script_tool asm-ecl   <in_text> <out_binary>
 ///
@@ -776,19 +774,14 @@ static bool cmd_asm_scl(const char *in_file, const char *out_file) {
 }
 
 // ============================================================================
-// Localized SCL message catalog assembler
+// Localized text catalog assembler
 // ============================================================================
 
-struct MessageSourceEntry {
+struct TextSourceEntry {
     std::string key;
     uint32_t id = 0;
-    std::vector<std::vector<uint8_t>> lines;
+    std::vector<uint8_t> value;
 };
-
-static void append_u16(std::vector<uint8_t> &out, uint16_t value) {
-    out.push_back(static_cast<uint8_t>(value));
-    out.push_back(static_cast<uint8_t>(value >> 8));
-}
 
 static void append_u32(std::vector<uint8_t> &out, uint32_t value) {
     out.push_back(static_cast<uint8_t>(value));
@@ -797,151 +790,131 @@ static void append_u32(std::vector<uint8_t> &out, uint32_t value) {
     out.push_back(static_cast<uint8_t>(value >> 24));
 }
 
-static bool write_text_catalog(std::vector<MessageSourceEntry> entries,
-                               const char *out_file,
-                               std::string_view catalog_name) {
-    std::ranges::sort(entries, {}, &MessageSourceEntry::id);
+static bool write_text_catalog(std::vector<TextSourceEntry> entries,
+                               const char *out_file) {
+    std::ranges::sort(entries, {}, &TextSourceEntry::id);
     std::vector<uint8_t> out = {'S', 'S', 'T', 'X'};
-    append_u32(out, 1);
+    append_u32(out, 2);
     append_u32(out, static_cast<uint32_t>(entries.size()));
     for (const auto &entry : entries) {
         append_u32(out, entry.id);
-        append_u16(out, static_cast<uint16_t>(entry.lines.size()));
-        for (const auto &line : entry.lines) {
-            append_u32(out, static_cast<uint32_t>(line.size()));
-            out.insert(out.end(), line.begin(), line.end());
-        }
+        append_u32(out, static_cast<uint32_t>(entry.value.size()));
+        out.insert(out.end(), entry.value.begin(), entry.value.end());
     }
 
-    std::println("Assembled {} catalog: {} entries, {} bytes", catalog_name,
-                 entries.size(), out.size());
+    std::println("Assembled text catalog: {} entries, {} bytes", entries.size(),
+                 out.size());
     return write_file(out_file, out);
 }
 
-static bool cmd_asm_messages(const char *in_file, const char *out_file) {
-    std::ifstream ifs(in_file);
-    if (!ifs) {
-        std::println(stderr, "Error: Cannot open '{}'", in_file);
-        return false;
-    }
-
-    std::vector<MessageSourceEntry> entries;
-    std::optional<MessageSourceEntry> current;
-    std::unordered_set<std::string> keys;
-    std::unordered_map<uint32_t, std::string> ids;
-
-    auto finish_entry = [&]() -> bool {
-        if (!current) return true;
-        if (current->lines.empty()) {
-            std::println(stderr, "Message '{}' has no lines", current->key);
-            return false;
-        }
-        if (current->lines.size() > std::numeric_limits<uint16_t>::max()) {
-            std::println(stderr, "Message '{}' has too many lines", current->key);
-            return false;
-        }
-        entries.push_back(std::move(*current));
-        current.reset();
-        return true;
-    };
-
-    std::string line;
-    int lineno = 0;
-    while (std::getline(ifs, line)) {
-        lineno++;
-        auto tokens = tokenize_line(line, lineno);
-        if (tokens.empty()) return false;
-        if (tokens[0].kind == TokenKind::COMMENT) continue;
-
-        if (tokens[0].kind == TokenKind::LABEL) {
-            if (tokens.size() != 1) {
-                std::println(stderr, "Line {}: message label must be on its own line", lineno);
-                return false;
-            }
-            if (!finish_entry()) return false;
-            const auto &key = tokens[0].text;
-            if (!keys.insert(key).second) {
-                std::println(stderr, "Line {}: duplicate message key '{}'", lineno, key);
-                return false;
-            }
-            const auto id = text_id_hash(key);
-            if (const auto it = ids.find(id); it != ids.end()) {
-                std::println(stderr, "Line {}: message ID collision between '{}' and '{}'", lineno,
-                             it->second, key);
-                return false;
-            }
-            ids.emplace(id, key);
-            current.emplace(MessageSourceEntry{.key = key, .id = id});
-            continue;
-        }
-
-        if (!current || tokens[0].kind != TokenKind::MNEMONIC ||
-            tokens[0].text != "MSG" || tokens.size() != 2 ||
-            tokens[1].kind != TokenKind::STRING) {
-            std::println(stderr, "Line {}: expected a message label or MSG string", lineno);
-            return false;
-        }
-        current->lines.push_back(unescape_string(tokens[1].text));
-    }
-    if (!finish_entry() || entries.empty()) return false;
-
-    return write_text_catalog(std::move(entries), out_file, "message");
+static std::string_view trim_catalog_whitespace(std::string_view text) {
+    constexpr std::string_view whitespace = " \t\r";
+    const auto first = text.find_first_not_of(whitespace);
+    if (first == std::string_view::npos) return {};
+    const auto last = text.find_last_not_of(whitespace);
+    return text.substr(first, last - first + 1);
 }
 
-static bool cmd_asm_key_value_catalog(const char *in_file, const char *out_file,
-                                      std::string_view catalog_name) {
+static bool valid_catalog_key(std::string_view key) {
+    return !key.empty() && std::ranges::all_of(key, [](unsigned char c) {
+        return std::isalnum(c) || c == '_' || c == '-' || c == '.';
+    });
+}
+
+static bool cmd_asm_text(const char *in_file, const char *out_file) {
     std::ifstream ifs(in_file);
     if (!ifs) {
         std::println(stderr, "Error: Cannot open '{}'", in_file);
         return false;
     }
 
-    std::vector<MessageSourceEntry> entries;
+    std::vector<TextSourceEntry> entries;
     std::unordered_set<std::string> keys;
     std::unordered_map<uint32_t, std::string> ids;
     std::string line;
     int lineno = 0;
     while (std::getline(ifs, line)) {
         lineno++;
-        auto tokens = tokenize_line(line, lineno);
-        if (tokens.empty()) return false;
-        if (tokens[0].kind == TokenKind::COMMENT) continue;
-        if (tokens.size() != 2 || tokens[0].kind != TokenKind::KEY ||
-            tokens[1].kind != TokenKind::STRING) {
-            std::println(stderr, "Line {}: expected key = \"text\"", lineno);
-            return false;
+        const int entry_lineno = lineno;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        const auto trimmed = trim_catalog_whitespace(line);
+        if (trimmed.empty() || trimmed.front() == ';') continue;
+
+        std::string key;
+        std::vector<uint8_t> value;
+        const auto equals = line.find('=');
+        if (equals != std::string::npos &&
+            trim_catalog_whitespace(std::string_view(line).substr(equals + 1)) ==
+                "\"\"\"") {
+            const auto key_view =
+                trim_catalog_whitespace(std::string_view(line).substr(0, equals));
+            if (!valid_catalog_key(key_view)) {
+                std::println(stderr, "Line {}: invalid text key '{}'", lineno,
+                             key_view);
+                return false;
+            }
+            key = key_view;
+
+            std::string multiline;
+            bool closed = false;
+            bool first_line = true;
+            while (std::getline(ifs, line)) {
+                lineno++;
+                if (!line.empty() && line.back() == '\r') line.pop_back();
+                if (trim_catalog_whitespace(line) == "\"\"\"") {
+                    closed = true;
+                    break;
+                }
+                if (!first_line) multiline.push_back('\n');
+                multiline += line;
+                first_line = false;
+            }
+            if (!closed) {
+                std::println(stderr,
+                             "Line {}: unterminated multiline string for '{}'",
+                             lineno, key);
+                return false;
+            }
+            value = unescape_string(multiline);
+        } else {
+            auto tokens = tokenize_line(line, lineno);
+            if (tokens.empty()) return false;
+            if (tokens.size() != 2 || tokens[0].kind != TokenKind::KEY ||
+                tokens[1].kind != TokenKind::STRING) {
+                std::println(stderr,
+                             "Line {}: expected key = \"text\" or key = \"\"\"",
+                             lineno);
+                return false;
+            }
+            key = tokens[0].text;
+            if (!valid_catalog_key(key)) {
+                std::println(stderr, "Line {}: invalid text key '{}'", lineno,
+                             key);
+                return false;
+            }
+            value = unescape_string(tokens[1].text);
         }
 
-        const auto &key = tokens[0].text;
         if (!keys.insert(key).second) {
-            std::println(stderr, "Line {}: duplicate {} key '{}'", lineno,
-                         catalog_name, key);
+            std::println(stderr, "Line {}: duplicate text key '{}'", entry_lineno,
+                         key);
             return false;
         }
         const auto id = text_id_hash(key);
         if (const auto it = ids.find(id); it != ids.end()) {
-            std::println(stderr,
-                         "Line {}: {} ID collision between '{}' and '{}'",
-                         lineno, catalog_name, it->second, key);
+            std::println(stderr, "Line {}: text ID collision between '{}' and '{}'",
+                         entry_lineno, it->second, key);
             return false;
         }
         ids.emplace(id, key);
-        entries.push_back(MessageSourceEntry{
+        entries.push_back(TextSourceEntry{
             .key = key,
             .id = id,
-            .lines = {unescape_string(tokens[1].text)},
+            .value = std::move(value),
         });
     }
     if (entries.empty()) return false;
-    return write_text_catalog(std::move(entries), out_file, catalog_name);
-}
-
-static bool cmd_asm_ui(const char *in_file, const char *out_file) {
-    return cmd_asm_key_value_catalog(in_file, out_file, "UI text");
-}
-
-static bool cmd_asm_music(const char *in_file, const char *out_file) {
-    return cmd_asm_key_value_catalog(in_file, out_file, "music text");
+    return write_text_catalog(std::move(entries), out_file);
 }
 
 // ============================================================================
@@ -1408,14 +1381,8 @@ Usage:
   script_tool asm-scl <in_text> <out_binary>
       Assemble SCL text back to binary
 
-  script_tool asm-messages <in_text> <out_binary>
-      Assemble a localized SCL message catalog
-
-  script_tool asm-ui <in_text> <out_binary>
-      Assemble a localized UI text catalog
-
-  script_tool asm-music <in_text> <out_binary>
-      Assemble a localized Music Room text catalog
+  script_tool asm-text <in_text> <out_binary>
+      Assemble a localized text catalog
 
   script_tool disasm-ecl <in_binary> <out_text>
       Disassemble ECL binary to human-readable text with labels
@@ -1426,9 +1393,8 @@ Usage:
 The .header N directive in ECL text sets the number of script entries.
 Labels use @name: syntax.  Jump/call operands use @name references.
 SCL strings use C-style escapes (\xNN, \\, \", \n, \r, \t).
-Message catalog entries use an @key: label followed by one or more MSG lines.
-UI catalog entries use key = "text" on a single line.
-Music Room catalog entries use the same key-value syntax.
+Text catalog entries use key = "text" for single-line values. Multiline values
+use key = """ followed by the text and a closing """ on its own line.
 )");
 }
 
@@ -1460,28 +1426,14 @@ int main(int argc, char **argv) {
         return cmd_asm_scl(argv[2], argv[3]) ? 0 : 1;
     }
 
-    if (mode == "asm-messages") {
+    if (mode == "asm-text" || mode == "asm-messages" || mode == "asm-ui" ||
+        mode == "asm-music") {
         if (argc != 4) {
-            std::println(stderr, "Usage: script_tool asm-messages <in_text> <out_binary>");
+            std::println(stderr,
+                         "Usage: script_tool asm-text <in_text> <out_binary>");
             return 1;
         }
-        return cmd_asm_messages(argv[2], argv[3]) ? 0 : 1;
-    }
-
-    if (mode == "asm-ui") {
-        if (argc != 4) {
-            std::println(stderr, "Usage: script_tool asm-ui <in_text> <out_binary>");
-            return 1;
-        }
-        return cmd_asm_ui(argv[2], argv[3]) ? 0 : 1;
-    }
-
-    if (mode == "asm-music") {
-        if (argc != 4) {
-            std::println(stderr, "Usage: script_tool asm-music <in_text> <out_binary>");
-            return 1;
-        }
-        return cmd_asm_music(argv[2], argv[3]) ? 0 : 1;
+        return cmd_asm_text(argv[2], argv[3]) ? 0 : 1;
     }
 
     if (mode == "disasm-ecl") {

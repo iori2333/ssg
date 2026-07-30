@@ -34,9 +34,14 @@ public:
   [[nodiscard]] std::string_view MusicComment(size_t track) const;
 
 private:
+  struct TextEntry {
+    std::string_view value;
+    std::vector<std::string_view> lines;
+  };
+
   struct Catalog {
     std::string_view language;
-    std::unordered_map<TextId, std::vector<std::string_view>> messages;
+    std::unordered_map<TextId, TextEntry> messages;
   };
 
   [[nodiscard]] static bool ParseCatalog(std::span<const uint8_t> bytes,

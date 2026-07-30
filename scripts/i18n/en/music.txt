@@ -1,61 +1,309 @@
 ; Music Room track titles and comments.
 
 music.track_00.title = "Shuusou Gyoku ~ Clockworks"
-music.track_00.comment = "Title theme.\n\nHello there. ZUN here.\nSince it had been a while since I\nmade game music, Shuusou Gyoku was\na lot of fun to work on.\n\nStill, this track is much too dark,\nisn't it? (lol)\nJust like always (^^;"
+music.track_00.comment = """
+Title theme.
+
+Hello there. ZUN here.
+Since it had been a while since I
+made game music, Shuusou Gyoku was
+a lot of fun to work on.
+
+Still, this track is much too dark,
+isn't it? (lol)
+Just like always (^^;
+"""
 
 music.track_01.title = "False Strawberry"
-music.track_01.comment = "Stage 1 theme.\n\nI meant to compose it with the West\nin mind, but it did not quite turn\nout that way...\n\nAt least it feels like Stage 1 (^^;\n\nFor the piano in the chorus, I tried\nwhat FM could not express back in\nTouhou."
+music.track_01.comment = """
+Stage 1 theme.
+
+I meant to compose it with the West
+in mind, but it did not quite turn
+out that way...
+
+At least it feels like Stage 1 (^^;
+
+For the piano in the chorus, I tried
+what FM could not express back in
+Touhou.
+"""
 
 music.track_02.title = "Primrose Shiver"
-music.track_02.comment = "Stage 1 boss, Milia's theme.\n\nI always think Stage 1 boss themes\nare hard to make (^^;\nThis time I was careful not to make\nit dark. Perhaps that paid off,\nbecause it is not too dark now.\n\nI think the chorus melody is a type\nI have never used before."
+music.track_02.comment = """
+Stage 1 boss, Milia's theme.
+
+I always think Stage 1 boss themes
+are hard to make (^^;
+This time I was careful not to make
+it dark. Perhaps that paid off,
+because it is not too dark now.
+
+I think the chorus melody is a type
+I have never used before.
+"""
 
 music.track_03.title = "Illusory Imperial Capital"
-music.track_03.comment = "Stage 2 theme.\n\nSince Stage 2 is set in a city, I\nfocused on a near-future image I had\nrarely tried before. Or rather, that\nwas what I meant to do (^^;\n\nUnusually, this track was already\ncomplete before I converted it to\ndata. That helped me finish it\nquickly (lol)"
+music.track_03.comment = """
+Stage 2 theme.
+
+Since Stage 2 is set in a city, I
+focused on a near-future image I had
+rarely tried before. Or rather, that
+was what I meant to do (^^;
+
+Unusually, this track was already
+complete before I converted it to
+data. That helped me finish it
+quickly (lol)
+"""
 
 music.track_04.title = "Disastrous Gemini"
-music.track_04.comment = "Stage 2 bosses, Mei & Mai's theme.\n\nI wrote it simply hoping I could\nbring out a childlike quality.\n\nIt ended up far removed from what I\npictured before production, but\nall's well that ends well.\n\nIt is thoroughly girlish, though\nperhaps all my earlier tracks were\ntoo (lol)"
+music.track_04.comment = """
+Stage 2 bosses, Mei & Mai's theme.
+
+I wrote it simply hoping I could
+bring out a childlike quality.
+
+It ended up far removed from what I
+pictured before production, but
+all's well that ends well.
+
+It is thoroughly girlish, though
+perhaps all my earlier tracks were
+too (lol)
+"""
 
 music.track_05.title = "Illusion of Flowers, Air of Scarlet Dream"
-music.track_05.comment = "Stage 3 theme.\n\nHow should I put it? This may be an\nunusual track for me. I wrote it\nhoping to evoke something endless.\n\nIts unusually pop atmosphere is\nunusual... unusually so. I think it\nworks well as an accent in the game.\n\nBut is it really pop? (lol)"
+music.track_05.comment = """
+Stage 3 theme.
+
+How should I put it? This may be an
+unusual track for me. I wrote it
+hoping to evoke something endless.
+
+Its unusually pop atmosphere is
+unusual... unusually so. I think it
+works well as an accent in the game.
+
+But is it really pop? (lol)
+"""
 
 music.track_06.title = "Firmament Army"
-music.track_06.comment = "Stage 3 boss, Gates's theme.\nHe is male, a new kind of theme for\nme, so I was a little unsure (^^;\nHe is a soldier too, and my lack of\nmilitary imagery left far too many\nunknowns.\n\nIn the end, I did the usual (^^;\nI meant to give it my very best~\n\nIt could pass for a magical-girl\ntheme too (sweat)"
+music.track_06.comment = """
+Stage 3 boss, Gates's theme.
+He is male, a new kind of theme for
+me, so I was a little unsure (^^;
+He is a soldier too, and my lack of
+military imagery left far too many
+unknowns.
+
+In the end, I did the usual (^^;
+I meant to give it my very best~
+
+It could pass for a magical-girl
+theme too (sweat)
+"""
 
 music.track_07.title = "Illusory Sputnik Night"
-music.track_07.comment = "Stage 4 theme.\n\nSpace left me a little lost (lol)\nIts opening dissonance is space\nitself (not really)\n\nI aimed for older game-music.\n\nThis feels pop too, strange after\nall those dark Touhou tracks.\n(What? This is not bright either?\n(sweat))"
+music.track_07.comment = """
+Stage 4 theme.
+
+Space left me a little lost (lol)
+Its opening dissonance is space
+itself (not really)
+
+I aimed for older game-music.
+
+This feels pop too, strange after
+all those dark Touhou tracks.
+(What? This is not bright either?
+(sweat))
+"""
 
 music.track_08.title = "Mechanical Circus ~ Reverie"
-music.track_08.comment = "Stage 4 boss, Marie's theme.\n\nSome may think, \"There it is!\" It\nfeels unchanged since Touhou.\n\nI am satisfied that it became a cool\ntrack without rushing too far ahead.\n\nEven so, the melody is simple and\neasy to remember. It may linger in\nyour head during the boss fight."
+music.track_08.comment = """
+Stage 4 boss, Marie's theme.
+
+Some may think, \"There it is!\" It
+feels unchanged since Touhou.
+
+I am satisfied that it became a cool
+track without rushing too far ahead.
+
+Even so, the melody is simple and
+easy to remember. It may linger in
+your head during the boss fight.
+"""
 
 music.track_09.title = "Dreamy Girl of Canaveral Cape"
-music.track_09.comment = "Stage 5 theme.\n\nI wrote it before the stage data was\nready, so from here I simply did\nwhatever I wanted (lol)\n\nShe is a maid, so make it Western,\nWestern, and of course Western.\n\nYou may not hear the loop in-game,\nbut the latter half of the chorus\nis not very Western either (^^;"
+music.track_09.comment = """
+Stage 5 theme.
+
+I wrote it before the stage data was
+ready, so from here I simply did
+whatever I wanted (lol)
+
+She is a maid, so make it Western,
+Western, and of course Western.
+
+You may not hear the loop in-game,
+but the latter half of the chorus
+is not very Western either (^^;
+"""
 
 music.track_10.title = "Magical Girl Crusade"
-music.track_10.comment = "Stage 5 boss, Erich's theme.\n\nI focused only on making it cool!\nNaturally, in a fantastical way.\n\nBy this point, I had barely managed\nto distinguish it from a Touhou\ntrack (lol)\n\nWith tracks like this everywhere,\nwhat was Touhou meant to be? (^^;"
+music.track_10.comment = """
+Stage 5 boss, Erich's theme.
+
+I focused only on making it cool!
+Naturally, in a fantastical way.
+
+By this point, I had barely managed
+to distinguish it from a Touhou
+track (lol)
+
+With tracks like this everywhere,
+what was Touhou meant to be? (^^;
+"""
 
 music.track_11.title = "Antique Terror"
-music.track_11.comment = "Stage 6 theme.\n\nUntil now, my final-stage themes\nwere all slow, but this time I made\none at a medium tempo.\n\nThe theme is a fighting maid.\n\nWait, then what were the other\ntracks about?"
+music.track_11.comment = """
+Stage 6 theme.
+
+Until now, my final-stage themes
+were all slow, but this time I made
+one at a medium tempo.
+
+The theme is a fighting maid.
+
+Wait, then what were the other
+tracks about?
+"""
 
 music.track_12.title = "Dream Machine ~ Innocent Power"
-music.track_12.comment = "Final boss VIVIT's first theme.\n\nI aimed for endgame, not the finale.\n\nIt feels like a final-boss intro.\n\nIt does not quite feel like a\nshooting game (lol)\n\nThe chorus was made for the title\nscreen, but using it here gives\nthe track an odd demo feel (hey)"
+music.track_12.comment = """
+Final boss VIVIT's first theme.
+
+I aimed for endgame, not the finale.
+
+It feels like a final-boss intro.
+
+It does not quite feel like a
+shooting game (lol)
+
+The chorus was made for the title
+screen, but using it here gives
+the track an odd demo feel (hey)
+"""
 
 music.track_13.title = "Fantasy Science ~ Doll's Phantom"
-music.track_13.comment = "Final boss VIVIT's second theme.\n\nI finished it in a fantasy-techno\nstyle (mystery)\nAs it is a connecting track, I took\ncare not to make it too assertive.\nIt is rather unusual for me, and I\nquite like it.\n\nI meant to make drums the focus,\nbut I rarely listen to such music.\nIt got messy, so I added melodies."
+music.track_13.comment = """
+Final boss VIVIT's second theme.
+
+I finished it in a fantasy-techno
+style (mystery)
+As it is a connecting track, I took
+care not to make it too assertive.
+It is rather unusual for me, and I
+quite like it.
+
+I meant to make drums the focus,
+but I rarely listen to such music.
+It got messy, so I added melodies.
+"""
 
 music.track_14.title = "Girl's Divinity ~ Pandora's Box"
-music.track_14.comment = "Final boss VIVIT's third theme.\n\nThis track pushes its sense of a\nfinale right to the forefront.\n\nI wrote it to make you feel,\n\"Western style is so much fun~\"\n(slight mystery)\n\nI wanted to make every track feel\nlike this. (come on)"
+music.track_14.comment = """
+Final boss VIVIT's third theme.
+
+This track pushes its sense of a
+finale right to the forefront.
+
+I wrote it to make you feel,
+\"Western style is so much fun~\"
+(slight mystery)
+
+I wanted to make every track feel
+like this. (come on)
+"""
 
 music.track_15.title = "Silk Road Alice"
-music.track_15.comment = "Extra Stage theme.\n\nA complete change: Touhou style,\nwith a Japanese New Age flavor.\n\nJapanese instruments and piano fit\nuncannily well, like hichiriki and\npiano (Hideki Togi), for example...\n\nThinking of instruments on the Silk\nRoad inspires fantasies. The maid\ntraveled it too... (cut)"
+music.track_15.comment = """
+Extra Stage theme.
+
+A complete change: Touhou style,
+with a Japanese New Age flavor.
+
+Japanese instruments and piano fit
+uncannily well, like hichiriki and
+piano (Hideki Togi), for example...
+
+Thinking of instruments on the Silk
+Road inspires fantasies. The maid
+traveled it too... (cut)
+"""
 
 music.track_16.title = "Witches' Ball ~ Magus"
-music.track_16.comment = "Extra Boss 1, Marisa's theme.\n\nThe theme is a witch. No \"girl\"\nattached to this one (lol)\nIt sounds unusually villainous.\n\nWell, she is a boss, so she is\na villain (^^;\n\n\nI wanted intelligence over cuteness.\nDid you feel it?"
+music.track_16.comment = """
+Extra Boss 1, Marisa's theme.
+
+The theme is a witch. No \"girl\"
+attached to this one (lol)
+It sounds unusually villainous.
+
+Well, she is a boss, so she is
+a villain (^^;
+
+
+I wanted intelligence over cuteness.
+Did you feel it?
+"""
 
 music.track_17.title = "Dichromatic Butterfly ~ Ancients"
-music.track_17.comment = "Extra Boss 2, Reimu's theme.\n\nShe boasts the most atrocious attack\npower of any shrine maiden. Yet the\ntheme sounds nothing like one (^^;\n\nIt is the end: speed, and anything\ngoes? That is the feeling~ (lol)\n\nSadly, it lacks a shrine maiden's\nintelligence. Still, it lets you\ndodge in style..."
+music.track_17.comment = """
+Extra Boss 2, Reimu's theme.
+
+She boasts the most atrocious attack
+power of any shrine maiden. Yet the
+theme sounds nothing like one (^^;
+
+It is the end: speed, and anything
+goes? That is the feeling~ (lol)
+
+Sadly, it lacks a shrine maiden's
+intelligence. Still, it lets you
+dodge in style...
+"""
 
 music.track_18.title = "Herselves"
-music.track_18.comment = "Ending theme.\n\nSad~hopeful~brave~sad again...\nIt was hard to shape it that way.\n\nIts mood shifts dizzyingly in only\n90 seconds; listening is hard too.\nIntro like an adult game (wrong)\nMain tune to cheer you up (mystery)\nChorus like cavalry (also wrong)\nEnding on a clockwork theme (true)\nMuch work for a short track~ (^^;"
+music.track_18.comment = """
+Ending theme.
+
+Sad~hopeful~brave~sad again...
+It was hard to shape it that way.
+
+Its mood shifts dizzyingly in only
+90 seconds; listening is hard too.
+Intro like an adult game (wrong)
+Main tune to cheer you up (mystery)
+Chorus like cavalry (also wrong)
+Ending on a clockwork theme (true)
+Much work for a short track~ (^^;
+"""
 
 music.track_19.title = "Titled Maid"
-music.track_19.comment = "Name registration theme.\n\nIt is also the Game Over theme, but\nsomehow it is dark enough to keep\nyou from wanting another try (lol)\n\nAfter you went to the trouble of\nplaying, sorry for this dark track.\n\nThis darkness is not melancholy or\nnostalgia. If I had to name it,\ndespair? (^^;"
+music.track_19.comment = """
+Name registration theme.
+
+It is also the Game Over theme, but
+somehow it is dark enough to keep
+you from wanting another try (lol)
+
+After you went to the trouble of
+playing, sorry for this dark track.
+
+This darkness is not melancholy or
+nostalgia. If I had to name it,
+despair? (^^;
+"""
