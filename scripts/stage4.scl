@@ -5,16 +5,14 @@
     TIME frame=50
     MWOPEN
     FACE id=12
-    MSG "[玛丽]"
-    MSG "  通报各机，"
+    MSGREF id=@stage4_msg_000
     TIME frame=90
     NPG
-    MSG "[玛丽]"
-    MSG "  通报各机，目标接近中！"
+    MSGREF id=@stage4_msg_001
     TIME frame=130
-    MSG "  散开后，呈半包围态势！"
+    MSGREF id=@stage4_msg_002
     TIME frame=170
-    MSG "  拼了命也要打下来！！  "
+    MSGREF id=@stage4_msg_003
     TIME frame=290
     MWCLOSE
     EFC type=CFADEOUT
@@ -23,32 +21,22 @@
     TIME frame=420
     MWOPEN
     FACE id=2
-    MSG "[VIVIT]"
-    MSG "  呜呜，不会吧……"
-    MSG "  没想到竟然能够"
-    MSG "  单独突破大气圈。"
+    MSGREF id=@stage4_msg_004
     TIME frame=540
     NPG
     FACE id=0
     TIME frame=560
-    MSG "[VIVIT]"
-    MSG "  有一点……"
-    MSG "  活动困难啊？"
-    MSG "  算了，加油吧——！"
+    MSGREF id=@stage4_msg_005
     TIME frame=680
     NPG
     FACE id=6
     TIME frame=700
-    MSG "[主人]"
-    MSG "  只剩下一点了，ＶＩＶＩＴ。"
-    MSG "  将这里挺过的话……"
-    MSG "  就有我们的所追寻的东西了。"
+    MSGREF id=@stage4_msg_006
     TIME frame=820
     NPG
     FACE id=1
     TIME frame=840
-    MSG "[VIVIT]"
-    MSG "  是！"
+    MSGREF id=@stage4_msg_007
     TIME frame=960
     MWCLOSE
     TIME frame=1000
@@ -599,28 +587,19 @@
     MWOPEN
     FACE id=2
     TIME frame=5730
-    MSG "[VIVIT]"
-    MSG "  和上一个似的……"
-    MSG "  大得毫无意义啊。"
+    MSGREF id=@stage4_msg_008
     TIME frame=5850
     NPG
     FACE id=12
     TIME frame=5870
-    MSG "[玛丽]"
-    MSG "  啊呀啊呀。"
-    MSG "  虽然听说拥有很强的战斗力，"
-    MSG "  但是……"
+    MSGREF id=@stage4_msg_009
     TIME frame=5990
-    MSG "  可爱的女孩子啊……"
-    MSG "  赤红的长发，雪白的肌肤……"
-    MSG "  好想蹂躏你啊！  "
+    MSGREF id=@stage4_msg_010
     TIME frame=6110
     NPG
     FACE id=4
     TIME frame=6130
-    MSG "[VIVIT]"
-    MSG "  哎？哎哎？哎哎哎？"
-    MSG "  我可没有那种兴趣！  "
+    MSGREF id=@stage4_msg_011
     TIME frame=6250
     MWCLOSE
     TIME frame=6370
@@ -634,31 +613,22 @@
     MWOPEN
     FACE id=2
     TIME frame=6520
-    MSG "[VIVIT]"
-    MSG "  呜呜呜呜。"
-    MSG "  好可怕啊！"
+    MSGREF id=@stage4_msg_012
     TIME frame=6640
     NPG
     FACE id=12
     TIME frame=6660
-    MSG "[玛丽]"
-    MSG "  不敢相信，我竟然输了。"
-    MSG "  快点走吧！"
-    MSG "  若想体会更恐怖的事情的话……"
+    MSGREF id=@stage4_msg_013
     TIME frame=6780
     NPG
     FACE id=4
     TIME frame=6800
-    MSG "[VIVIT]"
-    MSG "  好，好的……"
+    MSGREF id=@stage4_msg_014
     TIME frame=6920
     NPG
     FACE id=12
     TIME frame=6940
-    MSG "[玛丽]"
-    MSG "  前进就行了。"
-    MSG "  因为真正的“恐怖”"
-    MSG "  在那里啊……  "
+    MSGREF id=@stage4_msg_015
     TIME frame=7060
     MWCLOSE
     EFC type=MUSICFADE

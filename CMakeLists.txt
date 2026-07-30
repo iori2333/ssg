@@ -260,13 +260,69 @@ add_custom_command(
 target_sources(GIAN07 PRIVATE "${SCRIPTS_DATA_CPP}")
 target_include_directories(GIAN07 PRIVATE "${SCRIPT_GEN_DIR}")
 
+# Compile every localized message catalog into the executable. SCL contains
+# stable message IDs and no longer depends on a configure-time language.
+set(SUPPORTED_MESSAGE_LANGUAGES ja en zh)
+set(MESSAGE_SRC_DIR "${SCRIPT_SRC_DIR}/i18n")
+set(MESSAGE_GENERATED_HEADERS "")
+set(EMBEDDED_MESSAGE_CATALOGS "")
+foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
+    set(message_src "${MESSAGE_SRC_DIR}/${language}/messages.txt")
+    set(message_bin "${SCRIPT_GEN_DIR}/${language}_messages.bin")
+    set(message_header "${SCRIPT_GEN_DIR}/${language}_messages.h")
+
+    add_custom_command(
+        OUTPUT "${message_bin}"
+        COMMAND script_tool asm-messages "${message_src}" "${message_bin}"
+        DEPENDS script_tool "${message_src}"
+        COMMENT "Assembling ${language} message catalog"
+    )
+    add_custom_command(
+        OUTPUT "${message_header}"
+        COMMAND ${CMAKE_COMMAND}
+            -DINPUT="${message_bin}"
+            -DOUTPUT="${message_header}"
+            -DVARNAME="${language}_messages"
+            -P "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
+        DEPENDS "${message_bin}" "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
+        COMMENT "Generating ${language} message catalog header"
+    )
+    list(APPEND MESSAGE_GENERATED_HEADERS "${message_header}")
+    list(APPEND EMBEDDED_MESSAGE_CATALOGS "${message_src}|${language}")
+endforeach()
+
+set(MESSAGE_ENTRIES_FILE "${SCRIPT_GEN_DIR}/message_entries.cmake")
+file(WRITE "${MESSAGE_ENTRIES_FILE}" "set(EMBEDDED_MESSAGE_CATALOGS\n")
+foreach(entry IN LISTS EMBEDDED_MESSAGE_CATALOGS)
+    file(APPEND "${MESSAGE_ENTRIES_FILE}" "    \"${entry}\"\n")
+endforeach()
+file(APPEND "${MESSAGE_ENTRIES_FILE}" ")\n")
+
+set(MESSAGES_DATA_CPP "${SCRIPT_GEN_DIR}/messages_data.cpp")
+set(MESSAGES_DATA_H "${SCRIPT_GEN_DIR}/messages_data.h")
+add_custom_command(
+    OUTPUT "${MESSAGES_DATA_CPP}" "${MESSAGES_DATA_H}"
+    COMMAND ${CMAKE_COMMAND}
+        -DENTRIES_FILE="${MESSAGE_ENTRIES_FILE}"
+        -DOUTPUT_CPP="${MESSAGES_DATA_CPP}"
+        -DOUTPUT_H="${MESSAGES_DATA_H}"
+        -P "${CMAKE_SOURCE_DIR}/cmake/generate_messages_data.cmake"
+    DEPENDS ${MESSAGE_GENERATED_HEADERS}
+            "${CMAKE_SOURCE_DIR}/cmake/generate_messages_data.cmake"
+            "${MESSAGE_ENTRIES_FILE}"
+    COMMENT "Generating embedded message catalog data"
+)
+target_sources(GIAN07 PRIVATE "${MESSAGES_DATA_CPP}")
+
 # Stage format validator. MAP validation accepts an optional directory
 # containing pack_tool-extracted 000.bin...012.bin files.
 add_executable(stage_validator
     tools/stage_validator.cpp
     GIAN07/enemy/ecl/ecl_program.cpp
+    GIAN07/i18n/localization.cpp
     GIAN07/stage/scene_program.cpp
     GIAN07/stage/stage_map.cpp
+    "${MESSAGES_DATA_CPP}"
     "${SCRIPTS_DATA_CPP}"
 )
 target_include_directories(stage_validator PRIVATE

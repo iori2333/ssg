@@ -7,15 +7,12 @@
     MWOPEN
     FACE id=1
     TIME frame=70
-    MSG "[VIVIT]"
-    MSG "  呜，还没有到达目的地么？"
-    MSG "  已经傍晚了啊。"
+    MSGREF id=@stage2_msg_000
     TIME frame=190
     NPG
     FACE id=2
     TIME frame=210
-    MSG "[VIVIT]"
-    MSG "  嗯！？有种不好的预感……"
+    MSGREF id=@stage2_msg_001
     TIME frame=330
     MWCLOSE
     TIME frame=355
@@ -26,9 +23,7 @@
     MWOPEN
     FACE id=2
     TIME frame=430
-    MSG "[VIVIT]"
-    MSG "  呀！这是什么速度啊！"
-    MSG "  这么说那些也是敌人吧！"
+    MSGREF id=@stage2_msg_002
     TIME frame=550
     MWCLOSE
     MUSIC id=3
@@ -510,59 +505,47 @@
     SSP speed=90
     MWOPEN
     FACE id=0
-    MSG "[VIVIT]"
-    MSG "  终于追上了……"
-    MSG "  你们就是这次的对手吧！"
+    MSGREF id=@stage2_msg_003
     TIME frame=6440
     NPG
     FACE id=12
     TIME frame=6480
-    MSG "[冥]"
-    MSG "  真是慢啊。"
+    MSGREF id=@stage2_msg_004
     TIME frame=6600
     NPG
     FACE id=13
     TIME frame=6640
-    MSG "[舞]"
-    MSG "  ……是啊。"
+    MSGREF id=@stage2_msg_005
     TIME frame=6760
     NPG
     FACE id=0
     TIME frame=6800
-    MSG "[VIVIT]"
-    MSG "  是你们太快了……"
-    MSG "  来吧，一决胜负！"
+    MSGREF id=@stage2_msg_006
     TIME frame=6920
     NPG
     FACE id=14
     TIME frame=6960
-    MSG "[冥＆舞]"
-    MSG "  好啊，一决胜负！"
+    MSGREF id=@stage2_msg_007
     TIME frame=7080
     NPG
     FACE id=12
     TIME frame=7120
-    MSG "[冥]"
-    MSG "  但是，冥和……"
+    MSGREF id=@stage2_msg_008
     TIME frame=7240
     NPG
     FACE id=13
     TIME frame=7280
-    MSG "[舞]"
-    MSG "  舞是……"
+    MSGREF id=@stage2_msg_009
     TIME frame=7400
     NPG
     FACE id=14
     TIME frame=7440
-    MSG "[冥＆舞]"
-    MSG "  无敌的哦！"
+    MSGREF id=@stage2_msg_010
     TIME frame=7560
     NPG
     FACE id=0
     TIME frame=7600
-    MSG "[VIVIT]"
-    MSG "  我不会输的！"
-    MSG "  这也是为了主人！"
+    MSGREF id=@stage2_msg_011
     TIME frame=7720
     MWCLOSE
     MUSIC id=4
@@ -574,57 +557,47 @@
     MWOPEN
     FACE id=1
     TIME frame=7790
-    MSG "[VIVIT]"
-    MSG "  赢了！！"
+    MSGREF id=@stage2_msg_012
     TIME frame=7910
     NPG
     FACE id=14
     TIME frame=7930
-    MSG "[冥＆舞]"
-    MSG "  呜呜……输掉了。"
+    MSGREF id=@stage2_msg_013
     TIME frame=8050
     NPG
     FACE id=12
     TIME frame=8070
-    MSG "[冥]"
-    MSG "  但是啊，有比起冥和舞来……"
+    MSGREF id=@stage2_msg_014
     TIME frame=8190
     NPG
     FACE id=13
     TIME frame=8210
-    MSG "[舞]"
-    MSG "  还要强～大的人在呢。"
+    MSGREF id=@stage2_msg_015
     TIME frame=8330
     NPG
     FACE id=0
     TIME frame=8350
-    MSG "[VIVIT]"
-    MSG "  强～大的人是谁啊？"
+    MSGREF id=@stage2_msg_016
     TIME frame=8470
     NPG
     FACE id=14
     TIME frame=8490
-    MSG "[冥＆舞]"
-    MSG "  那个呀……不告诉你～"
+    MSGREF id=@stage2_msg_017
     TIME frame=8610
     NPG
     FACE id=0
     TIME frame=8630
-    MSG "[VIVIT]"
-    MSG "  呜呜呜，好在意啊！！"
+    MSGREF id=@stage2_msg_018
     TIME frame=8750
     NPG
     FACE id=6
     TIME frame=8770
-    MSG "[主人]"
-    MSG "  ＶＩＶ…"
-    MSG "  马上就好了，加油吧。"
+    MSGREF id=@stage2_msg_019
     TIME frame=8890
     NPG
     FACE id=1
     TIME frame=8910
-    MSG "[VIVIT]"
-    MSG "  是的～主人！"
+    MSGREF id=@stage2_msg_020
     TIME frame=9150
     MWCLOSE
     EFC type=MUSICFADE

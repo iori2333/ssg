@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
@@ -15,6 +16,10 @@
 #include "stage/scene_program.h"
 
 class MusicPlayer;
+
+namespace i18n {
+class Localization;
+}
 
 namespace data {
 class GraphicsLoader;
@@ -27,8 +32,9 @@ class StageLoader;
 class EndingScene {
 public:
   EndingScene(data::GraphicsLoader &graphics, stage::StageLoader &stage_loader,
-              MusicPlayer &music)
-      : graphics_(graphics), stage_loader_(stage_loader), music_(music) {}
+              MusicPlayer &music, i18n::Localization &localization)
+      : graphics_(graphics), stage_loader_(stage_loader), music_(music),
+        localization_(localization) {}
 
   [[nodiscard]] bool Enter();
   [[nodiscard]] bool Update(bool should_draw);
@@ -57,15 +63,14 @@ private:
   };
 
   struct Text {
-    std::string_view Text[10];
-    int NumText = 0;
+    std::vector<std::string_view> Text;
     TEXTRENDER_RECT_ID Rect = {};
 
     // Contains all text from [Text], concatenated with '\n'.
     std::string TextStr;
 
     void Blank() {
-      NumText = 0;
+      Text.clear();
       TextStr.clear();
     }
 
@@ -113,4 +118,5 @@ private:
   data::GraphicsLoader &graphics_;
   stage::StageLoader &stage_loader_;
   MusicPlayer &music_;
+  i18n::Localization &localization_;
 };

@@ -8,33 +8,24 @@
     NPG
     FACE id=6
     TIME frame=70
-    MSG "[主人]"
-    MSG "  数十年前，"
-    MSG "  我和女儿在对仙人掌能源进行"
-    MSG "  研究的时候，"
+    MSGREF id=@stage6_msg_000
     TIME frame=190
     NPG
     TIME frame=210
-    MSG "[主人]"
-    MSG "  能量暴走了，"
-    MSG "  女儿她…"
-    MSG "  被关在了这个异空间里。"
+    MSGREF id=@stage6_msg_001
     TIME frame=330
     NPG
     FACE id=0
     TIME frame=350
-    MSG "[VIVIT]"
-    MSG "  什么啊…这里是。"
+    MSGREF id=@stage6_msg_002
     TIME frame=470
     NPG
     TIME frame=490
-    MSG "[VIVIT]"
-    MSG "  又冷……又可怕。"
+    MSGREF id=@stage6_msg_003
     TIME frame=610
     NPG
     TIME frame=630
-    MSG "[VIVIT]"
-    MSG "  但是……"
+    MSGREF id=@stage6_msg_004
     TIME frame=750
     MWCLOSE
     MUSIC id=11
@@ -261,72 +252,50 @@
     MWOPEN
     FACE id=12
     TIME frame=3650
-    MSG "[VIVIT-captured-]"
-    MSG "  ……"
+    MSGREF id=@stage6_msg_005
     TIME frame=3770
     NPG
     FACE id=3
     TIME frame=3790
-    MSG "[VIVIT]"
-    MSG "  什么呀……这个。"
-    MSG "  到底是怎么回事？"
-    MSG "  主人！！！！　"
+    MSGREF id=@stage6_msg_006
     TIME frame=3910
     NPG
     FACE id=6
     TIME frame=3930
-    MSG "[主人]"
-    MSG "  ……"
-    MSG "  ……"
-    MSG "  就是这样。"
+    MSGREF id=@stage6_msg_007
     TIME frame=4050
     TIME frame=4070
-    MSG "  那就是我的女儿……"
-    MSG "  被能量所侵蚀，"
-    MSG "  失去自我的存在……"
+    MSGREF id=@stage6_msg_008
     TIME frame=4190
     NPG
     FACE id=13
     TIME frame=4210
-    MSG "[VIVIT-captured-]"
-    MSG "  救救…我……"
+    MSGREF id=@stage6_msg_009
     TIME frame=4330
     NPG
     FACE id=0
     TIME frame=4350
-    MSG "[VIVIT]"
-    MSG "  我已经一头雾水了！"
-    MSG "  为什么，和我一摸一样啊！？"
+    MSGREF id=@stage6_msg_010
     TIME frame=4470
     NPG
     FACE id=6
     TIME frame=4490
-    MSG "[主人]"
-    MSG "  ＶＩＶ……"
-    MSG "  请实现我的梦想！"
-    MSG "  拯救我的女儿！！"
+    MSGREF id=@stage6_msg_011
     TIME frame=4610
     NPG
     FACE id=12
     TIME frame=4630
-    MSG "[VIVIT-captured-]"
-    MSG "  ……"
-    MSG "  ……"
-    MSG "  ……"
+    MSGREF id=@stage6_msg_012
     TIME frame=4750
     NPG
     FACE id=0
     TIME frame=4770
-    MSG "[VIVIT]"
-    MSG "  我明白了。"
-    MSG "  我会拯救她的。"
+    MSGREF id=@stage6_msg_013
     TIME frame=4890
     NPG
     FACE id=12
     TIME frame=4910
-    MSG "[VIVIT-captured-]"
-    MSG "  ……"
-    MSG "  解放吧，人类！！"
+    MSGREF id=@stage6_msg_014
     TIME frame=5030
     MWCLOSE
     MUSIC id=12
@@ -336,15 +305,12 @@
     MWOPEN
     FACE id=13
     TIME frame=5100
-    MSG "[VIVIT-captured-]"
-    MSG "  呀啊啊啊啊啊啊啊啊！"
+    MSGREF id=@stage6_msg_015
     TIME frame=5220
     NPG
     FACE id=0
     TIME frame=5240
-    MSG "[VIVIT]"
-    MSG "  啊啊，主人。"
-    MSG "  大小姐她……很痛苦。"
+    MSGREF id=@stage6_msg_016
     TIME frame=5360
     MWCLOSE
     EFC type=WHITEIN
@@ -358,13 +324,10 @@
     MWOPEN
     FACE id=12
     TIME frame=5462
-    MSG "[VIVIT-captured-]"
-    MSG "  名为人类者……"
-    MSG "  所创造之物啊。"
+    MSGREF id=@stage6_msg_017
     TIME frame=5582
     NPG
-    MSG "[VIVIT-captured-]"
-    MSG "  解放吧。"
+    MSGREF id=@stage6_msg_018
     TIME frame=5702
     MWCLOSE
     EFC type=WHITEIN
@@ -378,51 +341,37 @@
     MWOPEN
     FACE id=13
     TIME frame=5804
-    MSG "[VIVIT-captured-]"
-    MSG "  嗷噢噢噢噢噢噢——"
+    MSGREF id=@stage6_msg_019
     TIME frame=5924
     NPG
     FACE id=6
     TIME frame=5944
-    MSG "[主人]"
-    MSG "  ＶＩＶＩＴ啊。"
-    MSG "  谢谢你。"
+    MSGREF id=@stage6_msg_020
     TIME frame=6064
     NPG
     FACE id=0
     TIME frame=6084
-    MSG "[VIVIT]"
-    MSG "  主人……"
-    MSG "  不过，大小姐她……"
-    MSG "  大小姐她没事么？"
+    MSGREF id=@stage6_msg_021
     TIME frame=6204
     NPG
     FACE id=14
     TIME frame=6224
-    MSG "[VIVIT-captured-]"
-    MSG "  呜，唔…"
+    MSGREF id=@stage6_msg_022
     TIME frame=6344
     NPG
     FACE id=0
     TIME frame=6364
-    MSG "[VIVIT]"
-    MSG "  啊啊！"
-    MSG "  主人！主人！"
-    MSG "  她没事，大小姐她没事！"
+    MSGREF id=@stage6_msg_023
     TIME frame=6484
     NPG
     FACE id=6
     TIME frame=6504
-    MSG "[主人]"
-    MSG "  我的女儿被拯救出来了。"
-    MSG "  谢谢你，ＶＩＶ。"
-    MSG "  来，回家吧。"
+    MSGREF id=@stage6_msg_024
     TIME frame=6624
     NPG
     FACE id=1
     TIME frame=6644
-    MSG "[VIVIT]"
-    MSG "  是！！"
+    MSGREF id=@stage6_msg_025
     TIME frame=6764
     MWCLOSE
     EFC type=MUSICFADE

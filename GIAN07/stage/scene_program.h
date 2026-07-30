@@ -36,6 +36,7 @@ enum class SceneOpcode : uint8_t {
   EnemyPalette = 0x14,
   Staff = 0x15,
   ExtraClear = 0x16,
+  MessageReference = 0x17,
 };
 
 enum class SceneEffect : uint8_t {
@@ -77,6 +78,7 @@ struct SceneInstruction {
   uint8_t staff_id = 0;
   uint8_t surface_id = 0;
   uint8_t file_id = 0;
+  uint32_t text_id = 0;
   SceneEffect effect = SceneEffect::Warning;
   SceneWaitCondition wait_condition = SceneWaitCondition::BossCount;
   std::string_view text;

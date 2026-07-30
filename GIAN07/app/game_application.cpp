@@ -69,6 +69,13 @@ bool GameApplication::Initialize() {
   Mid_SetVolume(config.audio.bgm_volume);
   Snd_SetVolumes(config.audio.bgm_volume, config.audio.se_volume);
 
+  if (!context_.localization.Initialize(config.ui.language)) {
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to initialize embedded message catalogs");
+    return false;
+  }
+  config_.ui.language = context_.localization.Language();
+
   if (!context_.display.Initialize(config_.graphics)) {
     SDL_LogCritical(SDL_LOG_CATEGORY_VIDEO,
                     "Failed to initialize the graphics backend");
@@ -97,7 +104,8 @@ bool GameApplication::Initialize() {
   (void)context_.music.SetPack(config.audio.bgm_pack);
   context_.ui.ConfigureMain(config_, {.display = context_.display,
                                       .sound_effects = context_.sound_effects,
-                                      .music = context_.music});
+                                      .music = context_.music,
+                                      .localization = context_.localization});
 
   flow_ = std::make_unique<gameflow::GameFlow>(context_);
   if (!flow_->Start()) {

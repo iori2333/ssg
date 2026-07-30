@@ -13,6 +13,7 @@
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
+#include "i18n/localization.h"
 #include "music/music_player.h"
 #include "ui/ui_manager.h"
 
@@ -101,6 +102,13 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
 
     case SceneOpcode::Message:
       context.ui.ShowMessage(instruction->text);
+      scene_.Advance();
+      break;
+
+    case SceneOpcode::MessageReference:
+      for (const auto line : context.localization.Lines(instruction->text_id)) {
+        context.ui.ShowMessage(line);
+      }
       scene_.Advance();
       break;
 

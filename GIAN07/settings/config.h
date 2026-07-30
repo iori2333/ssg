@@ -62,6 +62,7 @@ enum class MessageWindowMode : uint8_t {
 
 struct UiConfig {
   MessageWindowMode message_window = MessageWindowMode::Lower;
+  std::string language = "ja";
 };
 
 struct AudioConfig {

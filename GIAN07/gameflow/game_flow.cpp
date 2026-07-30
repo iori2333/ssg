@@ -155,7 +155,8 @@ private:
 class EndingFlowState {
 public:
   explicit EndingFlowState(GameContext &context)
-      : scene_(context.graphics, context.stage_loader, context.music) {}
+      : scene_(context.graphics, context.stage_loader, context.music,
+               context.localization) {}
 
   [[nodiscard]] bool Enter() { return scene_.Enter(); }
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {

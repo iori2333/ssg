@@ -129,6 +129,7 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     cfg.ui.message_window = disabled ? MessageWindowMode::Hidden
                                      : (upper ? MessageWindowMode::Upper
                                               : MessageWindowMode::Lower);
+    LoadToml(*sec, "language", cfg.ui.language);
   }
 
   // [sound]
@@ -203,6 +204,7 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
                 cfg.ui.message_window == MessageWindowMode::Upper);
     sec.emplace("messages_disabled",
                 cfg.ui.message_window == MessageWindowMode::Hidden);
+    sec.emplace("language", cfg.ui.language);
     tbl.emplace("ui", std::move(sec));
   }
 

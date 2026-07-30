@@ -1,0 +1,956 @@
+; Localized SCL message blocks. Keys are stable script references.
+
+@stage1_msg_000:
+    MSG "[VIVIT]"
+    MSG "  おつかい♪　おつかい♪"
+    MSG "  えっと、この方向に"
+    MSG "  まっすぐ行けばＯＫね"
+
+@stage1_msg_001:
+    MSG "[VIVIT]"
+    MSG "  ん？機影確認…。"
+    MSG "  なんかこっちにくる～！"
+
+@stage1_msg_002:
+    MSG "  ご、ご主人さま～！？"
+
+@stage1_msg_003:
+    MSG "[ご主人様]"
+    MSG "  そいつらを\" お掃除\" なさいな！"
+
+@stage1_msg_004:
+    MSG "[VIVIT]"
+    MSG "  と、いいますと？"
+
+@stage1_msg_005:
+    MSG "[ご主人様]"
+    MSG "  いいから、いいから"
+    MSG "  そいつらをやっつけるのです！"
+
+@stage1_msg_006:
+    MSG "[VIVIT]"
+    MSG "  は、はい！"
+    MSG "  よくわからないですけど、"
+    MSG "  がんばりますぅ★"
+
+@stage1_msg_007:
+    MSG "[ミリア]"
+    MSG "  あなたがウワサの…"
+    MSG "  そう、面白いわね。"
+    MSG "  私の部下の仇うちといきますか！"
+
+@stage1_msg_008:
+    MSG "[VIVIT]"
+    MSG "  ええっ！？だって、"
+    MSG "  いきなり攻撃しかけたきたのは"
+    MSG "  あなた達でしょ"
+
+@stage1_msg_009:
+    MSG "[ミリア]"
+    MSG "  ははっ、知らないわね"
+    MSG "  とにかく私達にたてついたこと、"
+    MSG "  後悔させてあ・げ・る★"
+
+@stage1_msg_010:
+    MSG "[VIVIT]"
+    MSG "  ふんだっ！"
+    MSG "  ご主人様の命により、"
+    MSG "  あなたをお掃除させていただきます"
+
+@stage1_msg_011:
+    MSG "[ミリア]"
+    MSG "  お黙りなさいっ！"
+    MSG "  このポンコツメイド・ファイター！"
+
+@stage1_msg_012:
+    MSG "[VIVIT]"
+    MSG "  ぽ、ぽんこつぅ！？"
+    MSG "  冗談じゃないですわ！"
+    MSG "  このく・そ・ば・ばぁ♪"
+
+@stage1_msg_013:
+    MSG "[ミリア]"
+    MSG "  かかってらっしゃぁい！"
+
+@stage1_msg_014:
+    MSG "[ミリア]"
+    MSG "  あぁ、私のsylphが…"
+
+@stage1_msg_015:
+    MSG "  私を倒したぐらいで"
+    MSG "  いい気になるんじゃなくてよ！"
+
+@stage1_msg_016:
+    MSG "[VIVIT]"
+    MSG "  そういえば、"
+    MSG "  あなたは何者なんですか？"
+
+@stage1_msg_017:
+    MSG "[ミリア]"
+    MSG "  ははっ、"
+    MSG "  そんなことは教えられないわよ"
+
+@stage1_msg_018:
+    MSG "  ポンコツ・メイド・ファイター！"
+
+@stage1_msg_019:
+    MSG "[VIVIT]"
+    MSG "  ったく、年かんがえろや…。"
+
+@stage1_msg_020:
+    MSG "[ミリア]"
+    MSG "  ひどいわぁぁぁぁぁぁっ"
+
+@stage1_msg_021:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ…"
+    MSG "  なんて言葉遣いです！"
+
+@stage1_msg_022:
+    MSG "[VIVIT]"
+    MSG "  あうっ。"
+
+@stage1_msg_023:
+    MSG "[VIVIT]"
+    MSG "  あうっ。ごめんなさいですぅ"
+
+@stage1_msg_024:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ、この仕事が終わったら、"
+
+@stage1_msg_025:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ、この仕事が終わったら、"
+    MSG "  そのあとで・・"
+
+@stage1_msg_026:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ、この仕事が終わったら、"
+    MSG "  そのあとで・・おし"
+
+@stage1_msg_027:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ、この仕事が終わったら、"
+    MSG "  そのあとで・・おしおき"
+
+@stage1_msg_028:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ、この仕事が終わったら、"
+    MSG "  そのあとで・・おしおきです"
+
+@stage1_msg_029:
+    MSG "[VIVIT]"
+    MSG "  あふ…"
+
+@stage1_msg_030:
+    MSG "[VIVIT]"
+    MSG "  あふ…ご主人さまぁ…"
+
+@stage2_msg_000:
+    MSG "[VIVIT]"
+    MSG "  ふぅ、目的地はまだ着かないの？"
+    MSG "  もう、夕方だよぉ"
+
+@stage2_msg_001:
+    MSG "[VIVIT]"
+    MSG "  ん！？なんかいやな予感…"
+
+@stage2_msg_002:
+    MSG "[VIVIT]"
+    MSG "  きゃっ！　なんてスピードなの！"
+    MSG "  さてはアレも敵さんなのねっ！"
+
+@stage2_msg_003:
+    MSG "[VIVIT]"
+    MSG "  やっと追いついた…"
+    MSG "  あなたがたち今回の相手ね！"
+
+@stage2_msg_004:
+    MSG "[めい]"
+    MSG "  随分とおそいんだね。"
+
+@stage2_msg_005:
+    MSG "[まい]"
+    MSG "  …そうだね。"
+
+@stage2_msg_006:
+    MSG "[VIVIT]"
+    MSG "  貴方達がはや過ぎるんですっ"
+    MSG "  さあ、勝負しましょう！"
+
+@stage2_msg_007:
+    MSG "[めい＆まい]"
+    MSG "  いいよ。勝負しよっ！"
+
+@stage2_msg_008:
+    MSG "[めい]"
+    MSG "  でも、めいと…"
+
+@stage2_msg_009:
+    MSG "[まい]"
+    MSG "  まいは…"
+
+@stage2_msg_010:
+    MSG "[めい＆まい]"
+    MSG "  無敵だよっ！"
+
+@stage2_msg_011:
+    MSG "[VIVIT]"
+    MSG "  負けません！"
+    MSG "  ご主人様の為にも！"
+
+@stage2_msg_012:
+    MSG "[VIVIT]"
+    MSG "  やったぁ！！"
+
+@stage2_msg_013:
+    MSG "[めい＆まい]"
+    MSG "  うう…負けちゃったぁ。"
+
+@stage2_msg_014:
+    MSG "[めい]"
+    MSG "  でもね、めいとまいよりも…"
+
+@stage2_msg_015:
+    MSG "[まい]"
+    MSG "  つよーい人がいるんだよっ。"
+
+@stage2_msg_016:
+    MSG "[VIVIT]"
+    MSG "  つよーい人誰ですか？"
+
+@stage2_msg_017:
+    MSG "[めい＆まい]"
+    MSG "  それは…教えないっ♪"
+
+@stage2_msg_018:
+    MSG "[VIVIT]"
+    MSG "  ううう、気になるぅ！！"
+
+@stage2_msg_019:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ…"
+    MSG "  もうすぐですよ。頑張ってください。"
+
+@stage2_msg_020:
+    MSG "[VIVIT]"
+    MSG "  はい♪ご主人様！"
+
+@stage3_msg_000:
+    MSG "[VIVIT]"
+    MSG "  ね…ねぇ、ご主人様。なんか大きな"
+    MSG "  エネルギーを感じるんですけど…。"
+
+@stage3_msg_001:
+    MSG "[ご主人様]"
+    MSG "  おそらく、ゲイツだろう。"
+
+@stage3_msg_002:
+    MSG "  たたき上げの軍人だそうだ。"
+
+@stage3_msg_003:
+    MSG "[VIVIT]"
+    MSG "  へぇ、強そう…ね。"
+
+@stage3_msg_004:
+    MSG "[VIVIT]"
+    MSG "  うわぁ…"
+
+@stage3_msg_005:
+    MSG "  でかぁ～い。"
+
+@stage3_msg_006:
+    MSG "  なんであんなのが飛べるわけ？"
+
+@stage3_msg_007:
+    MSG "[ご主人様]"
+    MSG "  あの機体も利用してるんだよ。"
+    MSG "  サボテンエネルギーをね…"
+
+@stage3_msg_008:
+    MSG "[VIVIT]"
+    MSG "  にゃはは"
+
+@stage3_msg_009:
+    MSG "  マヌケなネーミングですねっ"
+
+@stage3_msg_010:
+    MSG "[ご主人様]"
+    MSG "  マ、マヌケ？"
+
+@stage3_msg_011:
+    MSG "[VIVIT]"
+    MSG "  あなたが、今回の…？"
+
+@stage3_msg_012:
+    MSG "[ゲイツ]"
+    MSG "  この俺に出撃命令がでたってんで"
+    MSG "  期待して来てみりゃあ…"
+    MSG "  なんでぇ、てめぇは！？"
+
+@stage3_msg_013:
+    MSG "[VIVIT]"
+    MSG "  てめぇって…あなた失礼ですよ！"
+    MSG "  ぷんすか！"
+
+@stage3_msg_014:
+    MSG "[ゲイツ]"
+    MSG "  かかってきなよ、嬢ちゃん"
+    MSG "  俺は強いヤツしか認めない。"
+    MSG "  てめぇの実力を見せてもらうぜ！"
+
+@stage3_msg_015:
+    MSG "[VIVIT]"
+    MSG "  よぉし、私の実力、"
+    MSG "  教えてあげるわっ！！"
+
+@stage3_msg_016:
+    MSG "[ゲイツ]"
+    MSG "  期待してるぞ"
+
+@stage3_msg_017:
+    MSG "[VIVIT]"
+    MSG "  おじさまぁ、実力…"
+    MSG "  考えてねっ♪"
+
+@stage3_msg_018:
+    MSG "[ゲイツ]"
+    MSG "  負けた…"
+    MSG "  この俺があんなのに…。"
+
+@stage3_msg_019:
+    MSG "[VIVIT]"
+    MSG "  まったく、ゲイツってのに"
+    MSG "  ろくなのいないわね♪"
+
+@stage3_msg_020:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ…"
+    MSG "  危険発言♪"
+
+@stage3_msg_021:
+    MSG "[VIVIT]"
+    MSG "  てへ！"
+
+@stage4_msg_000:
+    MSG "[マリー]"
+    MSG "  各機に通達。"
+
+@stage4_msg_001:
+    MSG "[マリー]"
+    MSG "  各機に通達。ターゲット接近中。"
+
+@stage4_msg_002:
+    MSG "  散開して、半包囲態勢！"
+
+@stage4_msg_003:
+    MSG "  死ぬ気で墜とせっ！！"
+
+@stage4_msg_004:
+    MSG "[VIVIT]"
+    MSG "  ふうぅ。まさかね…"
+    MSG "  まさか単独で大気圏を"
+    MSG "  抜けられるとは思わなかったわ。"
+
+@stage4_msg_005:
+    MSG "[VIVIT]"
+    MSG "  ちょっと…"
+    MSG "  動き辛いかな？"
+    MSG "  まぁがんばりましょーー！"
+
+@stage4_msg_006:
+    MSG "[ご主人様]"
+    MSG "  後少しですよ。ＶＩＶＩＴ。"
+    MSG "  ここを抜ければ…"
+    MSG "  私達の目指すものがあるのです。"
+
+@stage4_msg_007:
+    MSG "[VIVIT]"
+    MSG "  ハイっ！"
+
+@stage4_msg_008:
+    MSG "[VIVIT]"
+    MSG "  前回にまして…"
+    MSG "  無駄におっきいわねぇ。"
+
+@stage4_msg_009:
+    MSG "[マリー]"
+    MSG "  あらあら。"
+    MSG "  すごい戦闘能力をもっていると"
+    MSG "  聞いたのですが"
+
+@stage4_msg_010:
+    MSG "  可愛い女の子ね…。"
+    MSG "  真っ赤な長い髪、白い肌…。"
+    MSG "  めちゃくちゃにしたいわ！"
+
+@stage4_msg_011:
+    MSG "[VIVIT]"
+    MSG "  え？ええ？えええ？"
+    MSG "  私そういう趣味ないんですぅ。"
+
+@stage4_msg_012:
+    MSG "[VIVIT]"
+    MSG "  うううう。"
+    MSG "  怖かったぁ！"
+
+@stage4_msg_013:
+    MSG "[マリー]"
+    MSG "  なんてこと。負けるなんて。"
+    MSG "  さあ早く行きなさい！"
+    MSG "  もっと酷い事したくなるから…"
+
+@stage4_msg_014:
+    MSG "[VIVIT]"
+    MSG "  は、はいいい。"
+
+@stage4_msg_015:
+    MSG "[マリー]"
+    MSG "  行くがいいわ。"
+    MSG "  本当の\" 恐怖\" が…"
+    MSG "  そこにあるのだから。"
+
+@stage5_msg_000:
+    MSG "[VIVIT]"
+    MSG "  ここは？"
+    MSG "  静止衛星軌道上にこんなものを"
+    MSG "  いつ、つくったの…？"
+
+@stage5_msg_001:
+    MSG "[ご主人様]"
+    MSG "  ああ。よくぞ…　よくぞ"
+    MSG "  ここまで来てくれました。"
+    MSG "  さぁ！もうひと頑張りしてください"
+
+@stage5_msg_002:
+    MSG "[VIVIT]"
+    MSG "  えっ？"
+
+@stage5_msg_003:
+    MSG "[ご主人様]"
+    MSG "  安心するのです"
+    MSG "  この奥に君の、そして私の"
+    MSG "  求めるものがあるのだから。"
+
+@stage5_msg_004:
+    MSG "[VIVIT]"
+    MSG "  ご主人様…。ただの…"
+    MSG "  ただのお使いじゃ…ないのですね！"
+
+@stage5_msg_005:
+    MSG "[ご主人様]"
+    MSG "  さあ！"
+    MSG "  君の！私の！希望を！"
+    MSG "  手に入れなさい！！"
+
+@stage5_msg_006:
+    MSG "[VIVIT]"
+    MSG "  なに…この雰囲気？"
+    MSG "  体験したことのない・・"
+    MSG "  …怖い"
+
+@stage5_msg_007:
+    MSG "[エーリッヒ]"
+    MSG "  ＶＩＶ、君にすべてを話しましょう。"
+    MSG "  そう、すべては私の物語。"
+    MSG "  私の…"
+
+@stage5_msg_008:
+    MSG "[VIVIT]"
+    MSG "  あなたは？"
+
+@stage5_msg_009:
+    MSG "[エーリッヒ]"
+    MSG "  まだわかりませんか？"
+    MSG "  私の声に聞き覚えがあるでしょう"
+
+@stage5_msg_010:
+    MSG "[VIVIT]"
+    MSG "  あ…あなたは…！！"
+    MSG "  ご主人様ぁ！！"
+
+@stage5_msg_011:
+    MSG "[エーリッヒ]"
+    MSG "  ＶＩＶ…。"
+    MSG "  私を…越えていくのです！"
+
+@stage5_msg_012:
+    MSG "[VIVIT]"
+    MSG "  ご主人様…"
+    MSG "  どういうことですか？"
+
+@stage5_msg_013:
+    MSG "[エーリッヒ]"
+    MSG "  私には娘がいます。"
+    MSG "  数十年前に事故で異空間に"
+    MSG "  封じられたのです。"
+
+@stage5_msg_014:
+    MSG "[VIVIT]"
+    MSG "  …。"
+
+@stage5_msg_015:
+    MSG "[エーリッヒ]"
+    MSG "  娘を助けることが出来るのは"
+    MSG "  ＶＩＶ、君しかいない…。"
+
+@stage5_msg_016:
+    MSG "[エーリッヒ]"
+    MSG "  ミリア…。 めい＆まい…。"
+    MSG "  ゲイツ…。 マリー…。"
+
+@stage5_msg_017:
+    MSG "[エーリッヒ]"
+    MSG "  そして私を倒した君ならば、"
+    MSG "  私の娘を救い出してくれるはず…。"
+
+@stage5_msg_018:
+    MSG "[VIVIT]"
+    MSG "  ご主人さ…ま？？"
+    MSG "  ご主人様！！"
+
+@stage5_msg_019:
+    MSG "[エーリッヒ]"
+    MSG "  今は先へ進むのです！！"
+    MSG "  すべてはそこにあるのですから！"
+
+@stage5_msg_020:
+    MSG "[VIVIT]"
+    MSG "  あ…。"
+    MSG "  はい！！！"
+
+@stage5_msg_021:
+    MSG "  わかりました、ご主人様"
+
+@stage6_msg_000:
+    MSG "[ご主人様]"
+    MSG "  数十年前、私と娘は、"
+    MSG "  サボテンエネルギーを研究して"
+    MSG "  いたのです。"
+
+@stage6_msg_001:
+    MSG "[ご主人様]"
+    MSG "  その時、エネルギーが暴発し、"
+    MSG "  娘は異空間…"
+    MSG "  ここに閉じこめられてしまった。"
+
+@stage6_msg_002:
+    MSG "[VIVIT]"
+    MSG "  なんなの…ここは。"
+
+@stage6_msg_003:
+    MSG "[VIVIT]"
+    MSG "  寒いし…怖い。"
+
+@stage6_msg_004:
+    MSG "[VIVIT]"
+    MSG "  けど…。"
+
+@stage6_msg_005:
+    MSG "[VIVIT-captured-]"
+    MSG "  …。"
+
+@stage6_msg_006:
+    MSG "[VIVIT]"
+    MSG "  なによ…。コレは。"
+    MSG "  どういうことなの？"
+    MSG "  ご主人様っ！！！！"
+
+@stage6_msg_007:
+    MSG "[ご主人様]"
+    MSG "  …。"
+    MSG "  …。"
+    MSG "  そういうことです。"
+
+@stage6_msg_008:
+    MSG "  あれが私の娘…"
+    MSG "  エネルギーに取り込まれ、"
+    MSG "  自我を失った存在…。"
+
+@stage6_msg_009:
+    MSG "[VIVIT-captured-]"
+    MSG "  たす…け…て。"
+
+@stage6_msg_010:
+    MSG "[VIVIT]"
+    MSG "  もう、分からないよ！"
+    MSG "  なんで、私にそっくりなの！？"
+
+@stage6_msg_011:
+    MSG "[ご主人様]"
+    MSG "  ＶＩＶ…。"
+    MSG "  私の夢をかなえてくれ！"
+    MSG "  娘を助けてくれ！！"
+
+@stage6_msg_012:
+    MSG "[VIVIT-captured-]"
+    MSG "  …。"
+    MSG "  …。"
+    MSG "  …。"
+
+@stage6_msg_013:
+    MSG "[VIVIT]"
+    MSG "  わかりました。"
+    MSG "  私が助けてみせます。"
+
+@stage6_msg_014:
+    MSG "[VIVIT-captured-]"
+    MSG "  …。"
+    MSG "  カイホウせよ。人類ヨ！！"
+
+@stage6_msg_015:
+    MSG "[VIVIT-captured-]"
+    MSG "  きゃああああああああ！"
+
+@stage6_msg_016:
+    MSG "[VIVIT]"
+    MSG "  ああ。ご主人様。"
+    MSG "  お嬢様が…苦しんでいます。"
+
+@stage6_msg_017:
+    MSG "[VIVIT-captured-]"
+    MSG "  ヒトと呼ばれし者に"
+    MSG "  創られし、モノよ。"
+
+@stage6_msg_018:
+    MSG "[VIVIT-captured-]"
+    MSG "  解放せよ。"
+
+@stage6_msg_019:
+    MSG "[VIVIT-captured-]"
+    MSG "  ガァアアアアア。"
+
+@stage6_msg_020:
+    MSG "[ご主人様]"
+    MSG "  ビビットよ。"
+    MSG "  ありがとう。"
+
+@stage6_msg_021:
+    MSG "[VIVIT]"
+    MSG "  ごしゅじんさま"
+    MSG "  だけど、お嬢様が…"
+    MSG "  お嬢様は大丈夫なの？"
+
+@stage6_msg_022:
+    MSG "[VIVIT-captured-]"
+    MSG "  うっ。うん…"
+
+@stage6_msg_023:
+    MSG "[VIVIT]"
+    MSG "  ああ。"
+    MSG "  ご主人様！ご主人様！"
+    MSG "  無事ですよ。お嬢様は無事ですよ！"
+
+@stage6_msg_024:
+    MSG "[ご主人様]"
+    MSG "  娘は救われました。"
+    MSG "  ありがとう、ＶＩＶ…。"
+    MSG "  さ、帰ってきなさい。"
+
+@stage6_msg_025:
+    MSG "[VIVIT]"
+    MSG "  はいっ！！"
+
+@extra_msg_000:
+    MSG "[VIVIT]"
+    MSG "  今回はちゃんとおつかいですね。"
+
+@extra_msg_001:
+    MSG "[ご主人様]"
+    MSG "  ・・そういうわけで期限は今日中だ"
+    MSG "  よろしく頼んだぞ。"
+
+@extra_msg_002:
+    MSG "[VIVIT]"
+    MSG "  了解しました～"
+
+@extra_msg_003:
+    MSG "[ご主人様]"
+    MSG "  気をつけてな"
+
+@extra_msg_004:
+    MSG "[VIVIT]"
+    MSG "  いっていきま～す"
+
+@extra_msg_005:
+    MSG "[VIVIT]"
+    MSG "  って、どこへいけばいいの？"
+
+@extra_msg_006:
+    MSG "[VIVIT]"
+    MSG "  とんでもないとこまで来てしまった"
+    MSG "  かも・・・"
+    MSG "  今日中に帰れるのかしらん"
+
+@extra_msg_007:
+    MSG "[？？？]"
+    MSG "  撃つと動く！！"
+
+@extra_msg_008:
+    MSG "[VIVIT]"
+    MSG "  ！！？"
+
+@extra_msg_009:
+    MSG "[霧雨 魔理沙]"
+    MSG "  初めまして、空飛ぶ機械ネズミさん"
+    MSG "  こんな辺鄙な所まで"
+    MSG "  なんの用かしら？"
+
+@extra_msg_010:
+    MSG "[VIVIT]"
+    MSG "  おつかい頼まれて来たです！"
+    MSG "  ・・・それにネズミじゃないです！"
+
+@extra_msg_011:
+    MSG "[霧雨 魔理沙]"
+    MSG "  じゃ、ネコだな。"
+    MSG "  なにを取りに来たんだい？"
+    MSG "  機械ネコ。いやネコ型ロボッ・・・"
+
+@extra_msg_012:
+    MSG "[VIVIT]"
+    MSG "  私をあんな、力の使い方の"
+    MSG "  分かっていない低脳ロボと"
+    MSG "  一緒にしないで下さい！！"
+
+@extra_msg_013:
+    MSG "[VIVIT]"
+    MSG "  私は、ご主人様に頼まれて、"
+    MSG "  あるモノを探しに来ただけです"
+
+@extra_msg_014:
+    MSG "[霧雨 魔理沙]"
+    MSG "  あるモノ？"
+    MSG "  こんな場所に？"
+
+@extra_msg_015:
+    MSG "[VIVIT]"
+    MSG "  そうです。"
+    MSG "  ・・・聖杯を探しに来ました"
+
+@extra_msg_016:
+    MSG "[霧雨 魔理沙]"
+    MSG "  ・・・（汗）"
+    MSG "  お前の主人は"
+    MSG "  なにをやらかすつもりなんだ"
+
+@extra_msg_017:
+    MSG "[霧雨 魔理沙]"
+    MSG "  そもそも、そんなもんこんな東に"
+    MSG "  あるわけないだろ？"
+    MSG "  頭使えよ、頭。"
+
+@extra_msg_018:
+    MSG "[VIVIT]"
+    MSG "  私の頭脳回路は全身にありますが、"
+    MSG "  主に胸部に集中しております。"
+
+@extra_msg_019:
+    MSG "[霧雨 魔理沙]"
+    MSG "  ・・・やる気まんまんのようだな？"
+    MSG "  久しぶりの魔法だ。"
+    MSG "  気ぃ入れて「逝き」な。"
+
+@extra_msg_020:
+    MSG "[VIVIT]"
+    MSG "  そうですね無いならすぐに"
+    MSG "  他の場所に「行かない」と・・・"
+
+@extra_msg_021:
+    MSG "[霧雨 魔理沙]"
+    MSG "  なんだよ～、強いじゃないか。"
+    MSG "  今日の所はこれくらいに・・・"
+    MSG "  （ボガッ）"
+
+@extra_msg_022:
+    MSG "[？？？]"
+    MSG "  また、神社散らかして！"
+    MSG "  遊ぶんならよそでやってって"
+    MSG "  いつもいってるでしょ！！"
+
+@extra_msg_023:
+    MSG "[VIVIT]"
+    MSG "  あ、あの？"
+
+@extra_msg_024:
+    MSG "[博麗 霊夢]"
+    MSG "  あなたも！！"
+
+@extra_msg_025:
+    MSG "[VIVIT]"
+    MSG "  わ、私はこれで・・・（汗）"
+
+@extra_msg_026:
+    MSG "[博麗 霊夢]"
+    MSG "  ちょい待ち！！"
+
+@extra_msg_027:
+    MSG "[博麗 霊夢]"
+    MSG "  なんか用事があるんでしょ？"
+    MSG "  うちの神社で叶わない願いは"
+    MSG "  無いんだから。何でもいってよ。"
+
+@extra_msg_028:
+    MSG "[VIVIT]"
+    MSG "  え？"
+
+@extra_msg_029:
+    MSG "[霧雨 魔理沙]"
+    MSG "  そんなこと聞いたことないがな・・"
+    MSG "  （ボガッ）"
+
+@extra_msg_030:
+    MSG "[VIVIT]"
+    MSG "  私、手に入れなければいけないモノ"
+    MSG "  があるんです"
+    MSG "  それも、今日中に。"
+
+@extra_msg_031:
+    MSG "[博麗 霊夢]"
+    MSG "  わかったわ。"
+    MSG "  なんとかしましょう。"
+
+@extra_msg_032:
+    MSG "[VIVIT]"
+    MSG "  ほんとですか～。"
+
+@extra_msg_033:
+    MSG "[博麗 霊夢]"
+    MSG "  じゃ、かかってらっしゃい。"
+
+@extra_msg_034:
+    MSG "[VIVIT]"
+    MSG "  へ？"
+
+@extra_msg_035:
+    MSG "[博麗 霊夢]"
+    MSG "  そういうもんでしょ？"
+    MSG "  大人の世界って（違）"
+
+@extra_msg_036:
+    MSG "[VIVIT]"
+    MSG "  ・・・いいですけど"
+    MSG "  負けませんよ、私。"
+
+@extra_msg_037:
+    MSG "[博麗 霊夢]"
+    MSG "  ふっふっふ～　今日は"
+    MSG "  お払い棒２本持ってきたから"
+    MSG "  攻撃力２倍よ～、うふふ～"
+
+@extra_msg_038:
+    MSG "[霧雨 魔理沙]"
+    MSG "  そういうもんなのか？"
+
+@extra_msg_039:
+    MSG "[博麗 霊夢]"
+    MSG "  そんなわけないでしょ。"
+
+@extra_msg_040:
+    MSG "[VIVIT]"
+    MSG "  つべこべいわんと、"
+    MSG "  こっちからいきますよ！！"
+
+@extra_msg_041:
+    MSG "[博麗 霊夢]"
+    MSG "  なんか、戦闘意欲ありありだけど。"
+    MSG "  魔理沙がなんか"
+    MSG "  やらかしたのかしらん（汗）"
+
+@extra_msg_042:
+    MSG "[霧雨 魔理沙]"
+    MSG "  （私のせいか？）"
+
+@extra_msg_043:
+    MSG "[博麗 霊夢]"
+    MSG "  いくよ！！"
+
+@extra_msg_044:
+    MSG "[博麗 霊夢]"
+    MSG "  つっ、強い～"
+
+@extra_msg_045:
+    MSG "[VIVIT]"
+    MSG "  じゃ、捜し物聴いてもらえます？"
+
+@extra_msg_046:
+    MSG "[博麗 霊夢]"
+    MSG "  しょうがないわね。"
+    MSG "  ・・・なに探してるの。"
+
+@extra_msg_047:
+    MSG "[VIVIT]"
+    MSG "  「聖杯」が欲しいのです！"
+    MSG "  今日中に"
+
+@extra_msg_048:
+    MSG "[博麗 霊夢]"
+    MSG "  ・・・なにそれ。"
+
+@extra_msg_049:
+    MSG "[VIVIT]"
+    MSG "  磔刑後のキリストの血を"
+    MSG "  受けたといわれる"
+    MSG "  アレのことですよ。"
+
+@extra_msg_050:
+    MSG "[博麗 霊夢]"
+    MSG "  ・・・誰それ。"
+
+@extra_msg_051:
+    MSG "[VIVIT]"
+    MSG "  しくしくしく～"
+
+@ending_msg_000:
+    MSG "こうして、ＶＩＶＩＴ＂おつかい＂は終りました…。"
+    MSG "敵だとおもっていた人たち。実はご主人様が"
+    MSG "私の性能を試すために放った刺客だったの。"
+
+@ending_msg_001:
+    MSG "ゲイツさんは私のことを気に入ってくれて、"
+    MSG "『俺の部隊に入隊してくれ』って言われちゃった。"
+
+@ending_msg_002:
+    MSG "めいちゃんとまいちゃんは、本当はいい娘だったの。"
+    MSG "今日も一緒に買い物に行く約束をしてるんだ。"
+
+@ending_msg_003:
+    MSG "そうそう、マリーさん。やっぱりサディスティックな人でしたよ。"
+    MSG "あれから４回も言い寄られましたもの…。"
+
+@ending_msg_004:
+    MSG "そして私…ＶＩＶＩＴ。"
+
+@ending_msg_005:
+    MSG "私の能力は非常に高く評価されました。"
+    MSG "けど、次期新製品のラインに私の廉価版が流れる事はありませんでした。"
+
+@ending_msg_006:
+    MSG "お嬢様と私が同じ姿なので、ご主人様が製品として売り出すのを嫌ったからでしょう。"
+
+@ending_msg_007:
+    MSG "お嬢様…。"
+    MSG "私と同じ姿…。"
+    MSG "とても優しい方…。"
+
+@ending_msg_008:
+    MSG "ご主人様が必死に助けようとしたのも当然ですね。"
+
+@ending_msg_009:
+    MSG "私は今、メイドロボットとして、"
+    MSG "ご主人様のお手伝いをしています。"
+    MSG "私を作ってくれて、ありがとうの気持ちを込めて…。"
+
+@ending_msg_010:
+    MSG "「おーい、ＶＩＶ」"
+    MSG "「おーい、ＶＩＶ」"
+    MSG "あ、ご主人様が呼んでる。"
+
+@ending_msg_011:
+    MSG "「なんですかぁ？」"
+
+@ending_msg_012:
+    MSG "「実は、君に頼みたいことがあるんですが…」"
+
+@ending_msg_013:
+    MSG "「え、またおつかいですか？」"

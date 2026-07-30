@@ -216,6 +216,7 @@ GameplayState::StepResult GameplayState::Step(INPUT_BITS &input) {
        .graphics = context.graphics,
        .music = context.music,
        .session = context.session,
+       .localization = context.localization,
        .messages_disabled =
            context.config.ui.message_window == MessageWindowMode::Hidden},
       input);

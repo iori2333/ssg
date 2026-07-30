@@ -74,7 +74,7 @@ SceneProgram::Parse(std::span<const uint8_t> bytes) {
   while (!reader.Empty()) {
     const auto raw_opcode = reader.ReadU8();
     if (!raw_opcode ||
-        *raw_opcode > std::to_underlying(SceneOpcode::ExtraClear)) {
+        *raw_opcode > std::to_underlying(SceneOpcode::MessageReference)) {
       return std::nullopt;
     }
 
@@ -148,6 +148,14 @@ SceneProgram::Parse(std::span<const uint8_t> bytes) {
         return std::nullopt;
       }
       instruction.text = *text;
+      break;
+    }
+    case SceneOpcode::MessageReference: {
+      const auto text_id = reader.ReadU32();
+      if (!text_id) {
+        return std::nullopt;
+      }
+      instruction.text_id = *text_id;
       break;
     }
     case SceneOpcode::LoadFace: {

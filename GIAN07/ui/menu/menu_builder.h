@@ -13,6 +13,10 @@ struct ConfigData;
 class DisplayController;
 class MusicPlayer;
 
+namespace i18n {
+class Localization;
+}
+
 namespace data {
 class GraphicsLoader;
 class SfxLoader;
@@ -33,6 +37,7 @@ struct MainMenuServices {
   DisplayController &display;
   data::SfxLoader &sound_effects;
   MusicPlayer &music;
+  i18n::Localization &localization;
 };
 
 std::unique_ptr<IMenuNode>

@@ -296,6 +296,7 @@ cp bin/MAP_ORIG.PAK bin/MAP.PAK
 ```sh
 script_tool disasm-scl <in_binary> <out_text>
 script_tool asm-scl   <in_text> <out_binary>
+script_tool asm-messages <in_text> <out_binary>
 script_tool disasm-ecl <in_binary> <out_text>
 script_tool asm-ecl   <in_text> <out_binary>
 ```
@@ -309,6 +310,7 @@ TIME frame=1800
 ENEMY x=100 y=200 id=5
 EFC type=WARN
 MSG "Hello World"
+MSGREF id=@stage1_msg_000
 MWOPEN
 KEY
 BOSSDEAD
@@ -316,7 +318,23 @@ STAGECLEAR
 END
 ```
 
-非 ASCII 字节使用 `\xNN` 转义。EFC 类型使用符号名（WARN、STG2BOSS 等）。
+`MSG` 保留内联文本，用于兼容旧 SCL。`MSGREF` 使用稳定符号键引用
+本地化文本块。非 ASCII 字节使用 `\xNN` 转义。EFC 类型使用符号名
+（WARN、STG2BOSS 等）。
+
+### SCL 本地化文本格式
+
+`scripts/i18n/<language>/messages.txt` 中的每个标签对应一个
+`MSGREF`。一个文本块可以包含不同数量的显示行，因此各语言可以独立换行：
+
+```
+@stage1_msg_000:
+    MSG "[VIVIT]"
+    MSG "  Hello!"
+```
+
+`asm-messages` 会检查重复键和 32 位文本 ID 冲突。构建过程会将所有支持
+的语言目录一起嵌入游戏；运行时缺失的当前语言文本会回退到日文。
 
 ### ECL 文本格式
 
@@ -339,19 +357,21 @@ STI vector 类型：`BOSSLEFT`（剩余 Boss 数量）、`HP`（血量阈值）�
 
 ### 完整工作流示例
 
-脚本已从 pack 文件中移出并嵌入二进制（`scripts/` → 编译期 `embedded_scripts[]`）。反编译/编辑的源文件在 `scripts/*.ecl` 和 `scripts/*.scl`，修改后重新构建即可。
+脚本已从 pack 文件中移出并嵌入二进制。`scripts/*.scl` 保存唯一一套
+控制流，`scripts/i18n/<language>/messages.txt` 保存各语言文本。
 
 ```sh
-# 1. 反编译嵌在源码中的脚本
-script_tool disasm-scl scripts/stage1.scl work/stage1.txt
-script_tool disasm-ecl scripts/stage1.ecl work/stage1.txt
+# 1. 编辑 SCL 控制流和对应文本目录
+vim scripts/stage1.scl
+vim scripts/i18n/zh/messages.txt
 
-# 2. 编辑文本文件...
-vim work/stage1.txt
+# 2. 可单独检查生成结果
+script_tool asm-scl scripts/stage1.scl work/stage1.bin
+script_tool asm-messages scripts/i18n/zh/messages.txt work/zh_messages.bin
 
-# 3. 编译回二进制
-script_tool asm-scl work/stage1.txt scripts/stage1.scl
-
-# 4. 重新构建游戏
+# 3. 重新构建游戏
 ./build_windows.bat
 ```
+
+当前构建同时嵌入 `ja`、`en` 和 `zh`。可以在游戏的 Config → Language
+菜单中切换，选择结果保存在 `SSG.TOML` 的 `ui.language`。

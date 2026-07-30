@@ -8,6 +8,7 @@
 #include "data/graphics_assets.h"
 #include "data/graphics_loader.h"
 #include "gfx/constants.h"
+#include "i18n/localization.h"
 #include "music/music_player.h"
 #include "platform/text_backend.h"
 #include "stage/stage_loader.h"
@@ -150,23 +151,25 @@ void EndingScene::Text::Render(WINDOW_POINT topleft) {
     int max_px = 0;
 
     s.SetFont(FONT_ID::NORMAL);
-    for (decltype(NumText) i = 0; i < NumText; i++) {
+    for (size_t i = 0; i < Text.size(); i++) {
       max_px = (std::max)(max_px, s.Extent(Text[i]).w);
     }
 
     const auto dx = std::max(0, (s.RectSize().w - max_px) / 2);
 
     s.SetColor({.r = 128, .g = 128, .b = 128});
-    for (decltype(NumText) i = 0; i < NumText; i++) {
-      s.Put({.x = (dx + 1), .y = (1 + (i * 25))}, Text[i]);
-      s.Put({.x = (dx - 1), .y = (1 + (i * 25))}, Text[i]);
-      s.Put({.x = dx, .y = (0 + (i * 25))}, Text[i]);
-      s.Put({.x = dx, .y = (2 + (i * 25))}, Text[i]);
+    for (size_t i = 0; i < Text.size(); i++) {
+      const auto y = static_cast<int>(i) * 25;
+      s.Put({.x = (dx + 1), .y = (y + 1)}, Text[i]);
+      s.Put({.x = (dx - 1), .y = (y + 1)}, Text[i]);
+      s.Put({.x = dx, .y = y}, Text[i]);
+      s.Put({.x = dx, .y = (y + 2)}, Text[i]);
     }
 
     s.SetColor({.r = 255, .g = 255, .b = 255});
-    for (decltype(NumText) i = 0; i < NumText; i++) {
-      s.Put({.x = dx, .y = (1 + (i * 25))}, Text[i]);
+    for (size_t i = 0; i < Text.size(); i++) {
+      const auto y = static_cast<int>(i) * 25;
+      s.Put({.x = dx, .y = (y + 1)}, Text[i]);
     }
   });
 }
@@ -214,9 +217,18 @@ bool EndingScene::SCLDecode() {
       break;
 
     case stage::SceneOpcode::Message:
-      text.Text[text.NumText++] = instruction->text;
+      text.Text.push_back(instruction->text);
       text.TextStr += instruction->text;
       text.TextStr += '\n';
+      scene_.Advance();
+      break;
+
+    case stage::SceneOpcode::MessageReference:
+      for (const auto line : localization_.Lines(instruction->text_id)) {
+        text.Text.push_back(line);
+        text.TextStr += line;
+        text.TextStr += '\n';
+      }
       scene_.Advance();
       break;
 

@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "enemy/ecl/ecl_program.h"
+#include "i18n/localization.h"
 #include "scripts_data.h"
 #include "stage/scene_program.h"
 #include "stage/stage_map.h"
@@ -32,6 +33,12 @@ const EmbeddedScript *FindScript(int index) {
 }
 
 bool ValidateScenes() {
+  i18n::Localization localization;
+  if (!localization.Initialize("ja")) {
+    std::cerr << "invalid embedded message catalogs\n";
+    return false;
+  }
+  size_t message_references = 0;
   for (const int index : kSceneIds) {
     const auto *script = FindScript(index);
     if (script == nullptr) {
@@ -44,8 +51,24 @@ bool ValidateScenes() {
       std::cerr << "invalid embedded SCL " << index << '\n';
       return false;
     }
+    for (const auto &instruction : program->Instructions()) {
+      if (instruction.opcode != stage::SceneOpcode::MessageReference) {
+        continue;
+      }
+      message_references++;
+      for (size_t language = 0; language < localization.LanguageCount();
+           ++language) {
+        if (!localization.HasText(language, instruction.text_id)) {
+          std::cerr << "missing message 0x" << std::hex << instruction.text_id
+                    << std::dec << " in " << localization.LanguageAt(language)
+                    << '\n';
+          return false;
+        }
+      }
+    }
   }
-  std::cout << "validated " << kSceneIds.size() << " embedded SCL programs\n";
+  std::cout << "validated " << kSceneIds.size() << " embedded SCL programs and "
+            << message_references << " localized message references\n";
   return true;
 }
 
@@ -101,6 +124,15 @@ bool ValidateEnemyDecoderGuards() {
 }
 
 bool ValidateTimeline() {
+  constexpr std::array<uint8_t, 5> legacy_message = {
+      static_cast<uint8_t>(stage::SceneOpcode::Message), 'o', 'k', 0,
+      static_cast<uint8_t>(stage::SceneOpcode::End)};
+  const auto legacy_program = stage::SceneProgram::Parse(legacy_message);
+  if (!legacy_program || legacy_program->Instructions().size() != 2 ||
+      legacy_program->Instructions().front().text != "ok") {
+    return false;
+  }
+
   constexpr std::array<uint8_t, 7> script = {
       0x00, 0x02, 0x00, 0x00, 0x00, // TIME 2
       0x10,                         // STAGECLEAR

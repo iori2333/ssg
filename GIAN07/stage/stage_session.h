@@ -17,6 +17,10 @@ struct GameSession;
 class MusicPlayer;
 class UIManager;
 
+namespace i18n {
+class Localization;
+}
+
 namespace data {
 class GraphicsLoader;
 }
@@ -37,6 +41,7 @@ struct StageUpdateContext {
   data::GraphicsLoader &graphics;
   MusicPlayer &music;
   const GameSession &session;
+  i18n::Localization &localization;
   bool messages_disabled;
 };
 

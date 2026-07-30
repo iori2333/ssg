@@ -1,0 +1,957 @@
+; Localized SCL message blocks. Keys are stable script references.
+
+@stage1_msg_000:
+    MSG "[VIVIT]"
+    MSG "  跑腿♪ 跑腿♪"
+    MSG "  嗯，沿着这个方向"
+    MSG "  一直走就行了吧。"
+
+@stage1_msg_001:
+    MSG "[VIVIT]"
+    MSG "  嗯？发现机影……"
+    MSG "  好像朝这边来了～！"
+
+@stage1_msg_002:
+    MSG "  主、主人～！？"
+
+@stage1_msg_003:
+    MSG "[主人]"
+    MSG "  把那些家伙“清扫”掉！"
+
+@stage1_msg_004:
+    MSG "[VIVIT]"
+    MSG "  您是说……？"
+
+@stage1_msg_005:
+    MSG "[主人]"
+    MSG "  好啦，好啦，"
+    MSG "  把那些家伙干掉！"
+
+@stage1_msg_006:
+    MSG "[VIVIT]"
+    MSG "  是、是！"
+    MSG "  虽然不太明白，"
+    MSG "  但我会加油的★"
+
+@stage1_msg_007:
+    MSG "[米莉亚]"
+    MSG "  你就是传闻中的……"
+    MSG "  嗯，挺有意思。"
+    MSG "  那就替我的部下报仇吧！"
+
+@stage1_msg_008:
+    MSG "[VIVIT]"
+    MSG "  咦咦！？可是，"
+    MSG "  突然发动攻击的"
+    MSG "  明明是你们吧！"
+
+@stage1_msg_009:
+    MSG "[米莉亚]"
+    MSG "  哈哈，谁管你。"
+    MSG "  总之，胆敢反抗我们，"
+    MSG "  我会让你后·悔·的★"
+
+@stage1_msg_010:
+    MSG "[VIVIT]"
+    MSG "  哼！"
+    MSG "  奉主人之命，"
+    MSG "  我要把你清扫掉！"
+
+@stage1_msg_011:
+    MSG "[米莉亚]"
+    MSG "  闭嘴！"
+    MSG "  你这个破烂女仆战士！"
+
+@stage1_msg_012:
+    MSG "[VIVIT]"
+    MSG "  破、破烂！？"
+    MSG "  开什么玩笑！"
+    MSG "  你这个臭·老·太·婆♪"
+
+@stage1_msg_013:
+    MSG "[米莉亚]"
+    MSG "  放马过来吧！"
+
+@stage1_msg_014:
+    MSG "[米莉亚]"
+    MSG "  啊啊，我的 Sylph……"
+
+@stage1_msg_015:
+    MSG "  别以为打败了我"
+    MSG "  就可以得意忘形！"
+
+@stage1_msg_016:
+    MSG "[VIVIT]"
+    MSG "  话说回来，"
+    MSG "  你到底是什么人？"
+
+@stage1_msg_017:
+    MSG "[米莉亚]"
+    MSG "  哈哈，"
+    MSG "  我才不会告诉你，"
+
+@stage1_msg_018:
+    MSG "  破烂·女仆·战士！"
+
+@stage1_msg_019:
+    MSG "[VIVIT]"
+    MSG "  真是的，也不看看自己的年纪……"
+
+@stage1_msg_020:
+    MSG "[米莉亚]"
+    MSG "  太过分啦啊啊啊啊！"
+
+@stage1_msg_021:
+    MSG "[主人]"
+    MSG "  VIV……"
+    MSG "  怎么能这么说话！"
+
+@stage1_msg_022:
+    MSG "[VIVIT]"
+    MSG "  啊呜。"
+
+@stage1_msg_023:
+    MSG "[VIVIT]"
+    MSG "  啊呜。对不起嘛。"
+
+@stage1_msg_024:
+    MSG "[主人]"
+    MSG "  VIV，等这件差事结束后，"
+
+@stage1_msg_025:
+    MSG "[主人]"
+    MSG "  VIV，等这件差事结束后，"
+    MSG "  到时候……"
+
+@stage1_msg_026:
+    MSG "[主人]"
+    MSG "  VIV，等这件差事结束后，"
+    MSG "  到时候……罚……"
+
+@stage1_msg_027:
+    MSG "[主人]"
+    MSG "  VIV，等这件差事结束后，"
+    MSG "  到时候……惩罚……"
+
+@stage1_msg_028:
+    MSG "[主人]"
+    MSG "  VIV，等这件差事结束后，"
+    MSG "  到时候……要惩罚你。"
+
+@stage1_msg_029:
+    MSG "[VIVIT]"
+    MSG "  啊呜……"
+
+@stage1_msg_030:
+    MSG "[VIVIT]"
+    MSG "  啊呜……主人……"
+
+@stage2_msg_000:
+    MSG "[VIVIT]"
+    MSG "  呼，还没到目的地吗？"
+    MSG "  真是的，都傍晚了。"
+
+@stage2_msg_001:
+    MSG "[VIVIT]"
+    MSG "  嗯！？总觉得有种不祥的预感……"
+
+@stage2_msg_002:
+    MSG "[VIVIT]"
+    MSG "  呀！这速度也太快了！"
+    MSG "  看来那些也是敌人！"
+
+@stage2_msg_003:
+    MSG "[VIVIT]"
+    MSG "  总算追上了……"
+    MSG "  你们就是这次的对手吧！"
+
+@stage2_msg_004:
+    MSG "[冥]"
+    MSG "  真够慢的呢。"
+
+@stage2_msg_005:
+    MSG "[舞]"
+    MSG "  ……是啊。"
+
+@stage2_msg_006:
+    MSG "[VIVIT]"
+    MSG "  是你们太快啦！"
+    MSG "  来吧，一决胜负！"
+
+@stage2_msg_007:
+    MSG "[冥＆舞]"
+    MSG "  好啊，一决胜负吧！"
+
+@stage2_msg_008:
+    MSG "[冥]"
+    MSG "  可是，冥和……"
+
+@stage2_msg_009:
+    MSG "[舞]"
+    MSG "  舞是……"
+
+@stage2_msg_010:
+    MSG "[冥＆舞]"
+    MSG "  无敌的哦！"
+
+@stage2_msg_011:
+    MSG "[VIVIT]"
+    MSG "  我不会输！"
+    MSG "  也为了主人！"
+
+@stage2_msg_012:
+    MSG "[VIVIT]"
+    MSG "  成功了！！"
+
+@stage2_msg_013:
+    MSG "[冥＆舞]"
+    MSG "  呜呜……输了。"
+
+@stage2_msg_014:
+    MSG "[冥]"
+    MSG "  不过啊，还有比冥和舞……"
+
+@stage2_msg_015:
+    MSG "[舞]"
+    MSG "  更～厉害的人哦。"
+
+@stage2_msg_016:
+    MSG "[VIVIT]"
+    MSG "  更～厉害的人是谁？"
+
+@stage2_msg_017:
+    MSG "[冥＆舞]"
+    MSG "  那个人嘛……不告诉你♪"
+
+@stage2_msg_018:
+    MSG "[VIVIT]"
+    MSG "  呜呜呜，好在意！！"
+
+@stage2_msg_019:
+    MSG "[主人]"
+    MSG "  VIV……"
+    MSG "  马上就到了。再坚持一下。"
+
+@stage2_msg_020:
+    MSG "[VIVIT]"
+    MSG "  是♪ 主人！"
+
+@stage3_msg_000:
+    MSG "[VIVIT]"
+    MSG "  那……那个，主人。"
+    MSG "  我感觉到一股很强的能量……"
+
+@stage3_msg_001:
+    MSG "[主人]"
+    MSG "  恐怕是盖茨。"
+
+@stage3_msg_002:
+    MSG "  听说他是从基层一路升上来的军人。"
+
+@stage3_msg_003:
+    MSG "[VIVIT]"
+    MSG "  哦，好像很强……呢。"
+
+@stage3_msg_004:
+    MSG "[VIVIT]"
+    MSG "  呜哇……"
+
+@stage3_msg_005:
+    MSG "  好～大。"
+
+@stage3_msg_006:
+    MSG "  那么大的东西为什么能飞起来？"
+
+@stage3_msg_007:
+    MSG "[主人]"
+    MSG "  那架机体也采用了"
+    MSG "  仙人掌能源……"
+
+@stage3_msg_008:
+    MSG "[VIVIT]"
+    MSG "  喵哈哈～"
+
+@stage3_msg_009:
+    MSG "  这名字也太傻了吧！"
+
+@stage3_msg_010:
+    MSG "[主人]"
+    MSG "  傻、傻？"
+
+@stage3_msg_011:
+    MSG "[VIVIT]"
+    MSG "  你就是这次的……？"
+
+@stage3_msg_012:
+    MSG "[盖茨]"
+    MSG "  听说居然下令让我出击，"
+    MSG "  我还满怀期待地过来看看……"
+    MSG "  什么嘛，你这家伙！？"
+
+@stage3_msg_013:
+    MSG "[VIVIT]"
+    MSG "  “你这家伙”……太没礼貌了！"
+    MSG "  我生气了！"
+
+@stage3_msg_014:
+    MSG "[盖茨]"
+    MSG "  放马过来吧，小姑娘。"
+    MSG "  我只认可强者。"
+    MSG "  让我见识一下你的实力！"
+
+@stage3_msg_015:
+    MSG "[VIVIT]"
+    MSG "  好，那就让你"
+    MSG "  好好见识我的实力！！"
+
+@stage3_msg_016:
+    MSG "[盖茨]"
+    MSG "  我等着看呢。"
+
+@stage3_msg_017:
+    MSG "[VIVIT]"
+    MSG "  大叔，要先掂量好……"
+    MSG "  自己的实力哦♪"
+
+@stage3_msg_018:
+    MSG "[盖茨]"
+    MSG "  输了……"
+    MSG "  我居然输给了那种家伙……"
+
+@stage3_msg_019:
+    MSG "[VIVIT]"
+    MSG "  真是的，叫盖茨的"
+    MSG "  就没一个好东西♪"
+
+@stage3_msg_020:
+    MSG "[主人]"
+    MSG "  VIV……"
+    MSG "  危险发言♪"
+
+@stage3_msg_021:
+    MSG "[VIVIT]"
+    MSG "  诶嘿！"
+
+@stage4_msg_000:
+    MSG "[玛丽]"
+    MSG "  通知各机。"
+
+@stage4_msg_001:
+    MSG "[玛丽]"
+    MSG "  通知各机。目标正在接近！"
+
+@stage4_msg_002:
+    MSG "  散开，形成半包围阵势！"
+
+@stage4_msg_003:
+    MSG "  拼死也要将其击落！！"
+
+@stage4_msg_004:
+    MSG "[VIVIT]"
+    MSG "  呼。真没想到……"
+    MSG "  我居然能独自"
+    MSG "  冲出大气层。"
+
+@stage4_msg_005:
+    MSG "[VIVIT]"
+    MSG "  有点……"
+    MSG "  不太好活动？"
+    MSG "  算了，加油吧——！"
+
+@stage4_msg_006:
+    MSG "[主人]"
+    MSG "  只差一点了，VIVIT。"
+    MSG "  只要穿过这里……"
+    MSG "  就能抵达我们的目标。"
+
+@stage4_msg_007:
+    MSG "[VIVIT]"
+    MSG "  是！"
+
+@stage4_msg_008:
+    MSG "[VIVIT]"
+    MSG "  比上次那个……"
+    MSG "  还要大得毫无意义呢。"
+
+@stage4_msg_009:
+    MSG "[玛丽]"
+    MSG "  哎呀哎呀。"
+    MSG "  听说你拥有很强的战斗力，"
+    MSG "  没想到……"
+
+@stage4_msg_010:
+    MSG "  却是个可爱的女孩子。"
+    MSG "  鲜红的长发，雪白的肌肤……"
+    MSG "  真想把你蹂躏一番！"
+
+@stage4_msg_011:
+    MSG "[VIVIT]"
+    MSG "  咦？咦咦？咦咦咦？"
+    MSG "  我可没有那种兴趣！"
+
+@stage4_msg_012:
+    MSG "[VIVIT]"
+    MSG "  呜呜呜呜。"
+    MSG "  好可怕！"
+
+@stage4_msg_013:
+    MSG "[玛丽]"
+    MSG "  怎么会这样……我居然输了。"
+    MSG "  快走吧！"
+    MSG "  不然我会想对你做更过分的事……"
+
+@stage4_msg_014:
+    MSG "[VIVIT]"
+    MSG "  好、好的——。"
+
+@stage4_msg_015:
+    MSG "[玛丽]"
+    MSG "  继续前进吧。"
+    MSG "  因为真正的“恐怖”……"
+    MSG "  就在那里。"
+
+@stage5_msg_000:
+    MSG "[VIVIT]"
+    MSG "  这里是？"
+    MSG "  静止卫星轨道上的这种东西……"
+    MSG "  是什么时候建造的？"
+
+@stage5_msg_001:
+    MSG "[主人]"
+    MSG "  啊……太好了，太好了。"
+    MSG "  你终于来到了这里。"
+    MSG "  来！再加把劲吧。"
+
+@stage5_msg_002:
+    MSG "[VIVIT]"
+    MSG "  咦？"
+
+@stage5_msg_003:
+    MSG "[主人]"
+    MSG "  放心吧。"
+    MSG "  在这深处，有你和我"
+    MSG "  一直追寻的东西。"
+
+@stage5_msg_004:
+    MSG "[VIVIT]"
+    MSG "  主人……这不是……"
+    MSG "  不只是普通的跑腿差事，对吧！"
+
+@stage5_msg_005:
+    MSG "[主人]"
+    MSG "  来吧！"
+    MSG "  把你的！我的！希望！"
+    MSG "  拿到手吧！！"
+
+@stage5_msg_006:
+    MSG "[VIVIT]"
+    MSG "  这……是什么气氛？"
+    MSG "  我从未感受过……"
+    MSG "  ……好可怕。"
+
+@stage5_msg_007:
+    MSG "[埃利希]"
+    MSG "  VIV，让我把一切都告诉你吧。"
+    MSG "  没错，一切都是我的故事。"
+    MSG "  我的……"
+
+@stage5_msg_008:
+    MSG "[VIVIT]"
+    MSG "  你是？"
+
+@stage5_msg_009:
+    MSG "[埃利希]"
+    MSG "  还没明白吗？"
+    MSG "  你应该记得我的声音吧。"
+
+@stage5_msg_010:
+    MSG "[VIVIT]"
+    MSG "  你……你是……！！"
+    MSG "  主人！！"
+
+@stage5_msg_011:
+    MSG "[埃利希]"
+    MSG "  VIV……"
+    MSG "  超越……我吧！"
+
+@stage5_msg_012:
+    MSG "[VIVIT]"
+    MSG "  主人……"
+    MSG "  这是怎么回事？"
+
+@stage5_msg_013:
+    MSG "[埃利希]"
+    MSG "  我有一个女儿。"
+    MSG "  几十年前，她因事故"
+    MSG "  被封印在了异空间。"
+
+@stage5_msg_014:
+    MSG "[VIVIT]"
+    MSG "  ……"
+
+@stage5_msg_015:
+    MSG "[埃利希]"
+    MSG "  能够救我女儿的，"
+    MSG "  只有你，VIV……"
+
+@stage5_msg_016:
+    MSG "[埃利希]"
+    MSG "  米莉亚……冥和舞……"
+    MSG "  盖茨……玛丽……"
+
+@stage5_msg_017:
+    MSG "[埃利希]"
+    MSG "  你打败了他们，也打败了我，"
+    MSG "  就一定能救出我的女儿……"
+
+@stage5_msg_018:
+    MSG "[VIVIT]"
+    MSG "  主……人？？"
+    MSG "  主人！！"
+
+@stage5_msg_019:
+    MSG "[埃利希]"
+    MSG "  现在只管继续前进！！"
+    MSG "  因为一切都在那里！"
+
+@stage5_msg_020:
+    MSG "[VIVIT]"
+    MSG "  啊……"
+    MSG "  是！！！"
+
+@stage5_msg_021:
+    MSG "  我明白了，主人！"
+
+@stage6_msg_000:
+    MSG "[主人]"
+    MSG "  几十年前，我和女儿"
+    MSG "  曾经一起研究"
+    MSG "  仙人掌能源。"
+
+@stage6_msg_001:
+    MSG "[主人]"
+    MSG "  那时，能源突然失控，"
+    MSG "  女儿被困在异空间……"
+    MSG "  也就是这里。"
+
+@stage6_msg_002:
+    MSG "[VIVIT]"
+    MSG "  这里……到底是什么地方。"
+
+@stage6_msg_003:
+    MSG "[VIVIT]"
+    MSG "  又冷……又可怕。"
+
+@stage6_msg_004:
+    MSG "[VIVIT]"
+    MSG "  可是……"
+
+@stage6_msg_005:
+    MSG "[VIVIT-captured-]"
+    MSG "  ……"
+
+@stage6_msg_006:
+    MSG "[VIVIT]"
+    MSG "  这……是什么？"
+    MSG "  到底是怎么回事？"
+    MSG "  主人！！！！"
+
+@stage6_msg_007:
+    MSG "[主人]"
+    MSG "  ……"
+    MSG "  ……"
+    MSG "  就是这么回事。"
+
+@stage6_msg_008:
+    MSG "  那就是我的女儿……"
+    MSG "  被能源吞噬后，"
+    MSG "  已经失去了自我……"
+
+@stage6_msg_009:
+    MSG "[VIVIT-captured-]"
+    MSG "  救……救我……"
+
+@stage6_msg_010:
+    MSG "[VIVIT]"
+    MSG "  我已经完全搞不懂了！"
+    MSG "  为什么她和我一模一样！？"
+
+@stage6_msg_011:
+    MSG "[主人]"
+    MSG "  VIV……"
+    MSG "  实现我的梦想吧！"
+    MSG "  救救我的女儿！！"
+
+@stage6_msg_012:
+    MSG "[VIVIT-captured-]"
+    MSG "  ……"
+    MSG "  ……"
+    MSG "  ……"
+
+@stage6_msg_013:
+    MSG "[VIVIT]"
+    MSG "  我明白了。"
+    MSG "  我一定会救她。"
+
+@stage6_msg_014:
+    MSG "[VIVIT-captured-]"
+    MSG "  ……"
+    MSG "  解放我吧，人类！！"
+
+@stage6_msg_015:
+    MSG "[VIVIT-captured-]"
+    MSG "  呀啊啊啊啊啊啊啊！"
+
+@stage6_msg_016:
+    MSG "[VIVIT]"
+    MSG "  啊，主人。"
+    MSG "  大小姐她……很痛苦。"
+
+@stage6_msg_017:
+    MSG "[VIVIT-captured-]"
+    MSG "  你这被所谓的“人类”"
+    MSG "  创造出来的东西啊。"
+
+@stage6_msg_018:
+    MSG "[VIVIT-captured-]"
+    MSG "  解放我吧。"
+
+@stage6_msg_019:
+    MSG "[VIVIT-captured-]"
+    MSG "  嘎啊啊啊啊啊！"
+
+@stage6_msg_020:
+    MSG "[主人]"
+    MSG "  VIVIT啊。"
+    MSG "  谢谢你。"
+
+@stage6_msg_021:
+    MSG "[VIVIT]"
+    MSG "  主人……"
+    MSG "  可是，大小姐她……"
+    MSG "  大小姐没事吗？"
+
+@stage6_msg_022:
+    MSG "[VIVIT-captured-]"
+    MSG "  呜。嗯……"
+
+@stage6_msg_023:
+    MSG "[VIVIT]"
+    MSG "  啊！"
+    MSG "  主人！主人！"
+    MSG "  她没事！大小姐没事！"
+
+@stage6_msg_024:
+    MSG "[主人]"
+    MSG "  我的女儿得救了。"
+    MSG "  谢谢你，VIV……"
+    MSG "  好了，回来吧。"
+
+@stage6_msg_025:
+    MSG "[VIVIT]"
+    MSG "  是！！"
+
+@extra_msg_000:
+    MSG "[VIVIT]"
+    MSG "  这次总算是正经的跑腿差事了呢。"
+
+@extra_msg_001:
+    MSG "[主人]"
+    MSG "  ……总之，期限是今天之内。"
+    MSG "  就拜托你了。"
+
+@extra_msg_002:
+    MSG "[VIVIT]"
+    MSG "  明白了～"
+
+@extra_msg_003:
+    MSG "[主人]"
+    MSG "  路上小心。"
+
+@extra_msg_004:
+    MSG "[VIVIT]"
+    MSG "  我出发啦～"
+
+@extra_msg_005:
+    MSG "[VIVIT]"
+    MSG "  可是，我该去哪里呢？"
+
+@extra_msg_006:
+    MSG "[VIVIT]"
+    MSG "  好像跑到了不得了的地方……"
+    MSG "  不知道今天之内"
+    MSG "  还能不能赶回去。"
+
+@extra_msg_007:
+    MSG "[？？？]"
+    MSG "  你一开枪，我就动！！"
+
+@extra_msg_008:
+    MSG "[VIVIT]"
+    MSG "  ！！？"
+
+@extra_msg_009:
+    MSG "[雾雨 魔理沙]"
+    MSG "  初次见面，会飞的机器老鼠小姐。"
+    MSG "  跑到这么偏僻的地方，"
+    MSG "  有什么事吗？"
+
+@extra_msg_010:
+    MSG "[VIVIT]"
+    MSG "  我是受托来跑腿的！"
+    MSG "  ……还有，我才不是老鼠！"
+
+@extra_msg_011:
+    MSG "[雾雨 魔理沙]"
+    MSG "  那就是猫咯。"
+    MSG "  你来拿什么东西，机器猫？"
+    MSG "  不对，是猫型机器人……"
+
+@extra_msg_012:
+    MSG "[VIVIT]"
+    MSG "  请别把我和那种"
+    MSG "  连力量都不会用的低能机器人"
+    MSG "  相提并论！！"
+
+@extra_msg_013:
+    MSG "[VIVIT]"
+    MSG "  我只是受主人所托，"
+    MSG "  来找某样东西而已。"
+
+@extra_msg_014:
+    MSG "[雾雨 魔理沙]"
+    MSG "  某样东西？"
+    MSG "  在这种地方？"
+
+@extra_msg_015:
+    MSG "[VIVIT]"
+    MSG "  是的。"
+    MSG "  ……我是来找圣杯的。"
+
+@extra_msg_016:
+    MSG "[雾雨 魔理沙]"
+    MSG "  ……（汗）"
+    MSG "  你主人到底"
+    MSG "  想搞出什么名堂？"
+
+@extra_msg_017:
+    MSG "[雾雨 魔理沙]"
+    MSG "  再说，那种东西怎么可能"
+    MSG "  会在这么东边的地方？"
+    MSG "  动动脑子啊，脑子。"
+
+@extra_msg_018:
+    MSG "[VIVIT]"
+    MSG "  我的思考回路遍布全身，"
+    MSG "  不过主要集中在胸部。"
+
+@extra_msg_019:
+    MSG "[雾雨 魔理沙]"
+    MSG "  ……看来你干劲十足啊？"
+    MSG "  好久没用魔法了。"
+    MSG "  给我打起精神“上路”吧。"
+
+@extra_msg_020:
+    MSG "[VIVIT]"
+    MSG "  是啊。这里没有的话，"
+    MSG "  我就得赶快“上路”去别处……"
+
+@extra_msg_021:
+    MSG "[雾雨 魔理沙]"
+    MSG "  什么嘛～你不是挺强的吗。"
+    MSG "  今天就先到这里……"
+    MSG "  （砰）"
+
+@extra_msg_022:
+    MSG "[？？？]"
+    MSG "  又把神社弄得乱七八糟！"
+    MSG "  我不是一直说，"
+    MSG "  要玩就去别处玩吗！！"
+
+@extra_msg_023:
+    MSG "[VIVIT]"
+    MSG "  请、请问……？"
+
+@extra_msg_024:
+    MSG "[博丽 灵梦]"
+    MSG "  你也一样！！"
+
+@extra_msg_025:
+    MSG "[VIVIT]"
+    MSG "  我、我就先告辞了……（汗）"
+
+@extra_msg_026:
+    MSG "[博丽 灵梦]"
+    MSG "  等一下！！"
+
+@extra_msg_027:
+    MSG "[博丽 灵梦]"
+    MSG "  你是有事才来的吧？"
+    MSG "  我家神社没有实现不了的愿望。"
+    MSG "  有什么愿望尽管说。"
+
+@extra_msg_028:
+    MSG "[VIVIT]"
+    MSG "  咦？"
+
+@extra_msg_029:
+    MSG "[雾雨 魔理沙]"
+    MSG "  这种事我怎么没听说过……"
+    MSG "  （砰）"
+
+@extra_msg_030:
+    MSG "[VIVIT]"
+    MSG "  我有一样必须得到的东西，"
+    MSG "  而且必须在今天之内。"
+
+@extra_msg_031:
+    MSG "[博丽 灵梦]"
+    MSG "  我知道了。"
+    MSG "  我来想办法。"
+
+@extra_msg_032:
+    MSG "[VIVIT]"
+    MSG "  真的吗～？"
+
+@extra_msg_033:
+    MSG "[博丽 灵梦]"
+    MSG "  那就放马过来吧。"
+
+@extra_msg_034:
+    MSG "[VIVIT]"
+    MSG "  咦？"
+
+@extra_msg_035:
+    MSG "[博丽 灵梦]"
+    MSG "  不就是这样吗？"
+    MSG "  这就是大人的世界（误）"
+
+@extra_msg_036:
+    MSG "[VIVIT]"
+    MSG "  ……我倒是无所谓，"
+    MSG "  但我可不会输哦。"
+
+@extra_msg_037:
+    MSG "[博丽 灵梦]"
+    MSG "  呵呵呵～今天"
+    MSG "  我带了两根驱魔棒，"
+    MSG "  所以攻击力也是两倍哦～呵呵～"
+
+@extra_msg_038:
+    MSG "[雾雨 魔理沙]"
+    MSG "  是这么算的吗？"
+
+@extra_msg_039:
+    MSG "[博丽 灵梦]"
+    MSG "  怎么可能。"
+
+@extra_msg_040:
+    MSG "[VIVIT]"
+    MSG "  少说废话，"
+    MSG "  我要先攻了！！"
+
+@extra_msg_041:
+    MSG "[博丽 灵梦]"
+    MSG "  你看起来战意十足啊。"
+    MSG "  魔理沙是不是"
+    MSG "  又干了什么好事……（汗）"
+
+@extra_msg_042:
+    MSG "[雾雨 魔理沙]"
+    MSG "  （这也怪我？）"
+
+@extra_msg_043:
+    MSG "[博丽 灵梦]"
+    MSG "  要上了！！"
+
+@extra_msg_044:
+    MSG "[博丽 灵梦]"
+    MSG "  好、好强～"
+
+@extra_msg_045:
+    MSG "[VIVIT]"
+    MSG "  那可以听听我要找什么了吗？"
+
+@extra_msg_046:
+    MSG "[博丽 灵梦]"
+    MSG "  真拿你没办法。"
+    MSG "  ……你在找什么？"
+
+@extra_msg_047:
+    MSG "[VIVIT]"
+    MSG "  我想要“圣杯”！"
+    MSG "  而且今天之内就要。"
+
+@extra_msg_048:
+    MSG "[博丽 灵梦]"
+    MSG "  ……那是什么？"
+
+@extra_msg_049:
+    MSG "[VIVIT]"
+    MSG "  就是据说曾承接过"
+    MSG "  被钉上十字架的基督所流鲜血的"
+    MSG "  那个东西啊。"
+
+@extra_msg_050:
+    MSG "[博丽 灵梦]"
+    MSG "  ……那是谁？"
+
+@extra_msg_051:
+    MSG "[VIVIT]"
+    MSG "  呜呜呜～"
+
+@ending_msg_000:
+    MSG "就这样，VIVIT的“跑腿差事”结束了……"
+    MSG "那些原以为是敌人的人，"
+    MSG "其实是主人派来测试我性能的刺客。"
+
+@ending_msg_001:
+    MSG "盖茨先生似乎很中意我，"
+    MSG "还对我说：“加入我的部队吧。”"
+
+@ending_msg_002:
+    MSG "小冥和小舞其实都是好孩子。"
+    MSG "今天也约好要一起去买东西。"
+
+@ending_msg_003:
+    MSG "对了，还有玛丽小姐。"
+    MSG "她果然是个虐待狂。"
+    MSG "那以后又来纠缠了我四次……"
+
+@ending_msg_004:
+    MSG "然后是我……VIVIT。"
+
+@ending_msg_005:
+    MSG "我的能力获得了很高的评价。"
+    MSG "但下一代产品线中并没有我的廉价版。"
+
+@ending_msg_006:
+    MSG "大概因为我和大小姐长得一样，"
+    MSG "主人不愿把我当作商品出售吧。"
+
+@ending_msg_007:
+    MSG "大小姐……"
+    MSG "和我有着相同的模样……"
+    MSG "是一位非常温柔的人……"
+
+@ending_msg_008:
+    MSG "难怪主人会拼尽全力去救她。"
+
+@ending_msg_009:
+    MSG "如今，我作为女仆机器人，"
+    MSG "在主人身边帮忙。"
+    MSG "怀着“感谢您创造了我”的心意……"
+
+@ending_msg_010:
+    MSG "“喂——VIV！”"
+    MSG "“喂——VIV！”"
+    MSG "啊，主人在叫我。"
+
+@ending_msg_011:
+    MSG "“什么事呀？”"
+
+@ending_msg_012:
+    MSG "“其实，我有件事想拜托你……”"
+
+@ending_msg_013:
+    MSG "“咦，又要跑腿吗？”"

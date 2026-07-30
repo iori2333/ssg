@@ -7,39 +7,32 @@
     MWOPEN
     FACE id=1
     TIME frame=70
-    MSG "[VIVIT]"
-    MSG "　这次是份像样的差事了呢。"
+    MSGREF id=@extra_msg_000
     TIME frame=190
     NPG
     FACE id=12
     TIME frame=210
-    MSG "[主人]"
-    MSG "　．．那么，期限是今天之内。"
-    MSG "　看你的了。"
+    MSGREF id=@extra_msg_001
     TIME frame=330
     NPG
     FACE id=1
     TIME frame=350
-    MSG "[VIVIT]"
-    MSG "  明白～"
+    MSGREF id=@extra_msg_002
     TIME frame=470
     NPG
     FACE id=12
     TIME frame=490
-    MSG "[主人]"
-    MSG "　多多小心啊。"
+    MSGREF id=@extra_msg_003
     TIME frame=610
     NPG
     FACE id=1
     TIME frame=630
-    MSG "[VIVIT]"
-    MSG "  我出发咯～"
+    MSGREF id=@extra_msg_004
     TIME frame=750
     NPG
     FACE id=0
     TIME frame=770
-    MSG "[VIVIT]"
-    MSG "  啊，该往哪边走？"
+    MSGREF id=@extra_msg_005
     TIME frame=890
     MWCLOSE
     LOADFACE surf=2 file=9
@@ -855,21 +848,17 @@
     MWOPEN
     FACE id=2
     TIME frame=8200
-    MSG "[VIVIT]"
-    MSG " 好像来到了很不得了的地方……"
-    MSG " 今天之内赶不赶得不回去呢？"
+    MSGREF id=@extra_msg_006
     TIME frame=8320
     NPG
     FACE id=6
     TIME frame=8340
-    MSG "[？？？]"
-    MSG "  敢射击我就动了！！"
+    MSGREF id=@extra_msg_007
     TIME frame=8460
     NPG
     FACE id=0
     TIME frame=8480
-    MSG "[VIVIT]"
-    MSG " ！！？"
+    MSGREF id=@extra_msg_008
     TIME frame=8600
     MWCLOSE
     TIME frame=8620
@@ -883,90 +872,62 @@
     MWOPEN
     FACE id=6
     TIME frame=8708
-    MSG "[雾雨 魔理沙]"
-    MSG "  初次见面，会飞的机器老鼠小姐。"
-    MSG "  来这种穷乡僻壤有何贵干啊？"
+    MSGREF id=@extra_msg_009
     TIME frame=8828
     NPG
     FACE id=3
     TIME frame=8848
-    MSG "[VIVIT]"
-    MSG "  我是接了差事才来这里的！"
-    MSG "  ……还有，我不是老鼠！"
+    MSGREF id=@extra_msg_010
     TIME frame=8968
     NPG
     FACE id=7
     TIME frame=8988
-    MSG "[雾雨 魔理沙]"
-    MSG "  那，应该是猫咯。"
-    MSG "  你是来拿什么东西的吗，机器猫？"
-    MSG "  不对，猫型机器……"
+    MSGREF id=@extra_msg_011
     TIME frame=9108
     NPG
     FACE id=3
     TIME frame=9128
-    MSG "[VIVIT]"
-    MSG "  请不要把我和那种"
-    MSG "  只懂胡搅瞎弄的低智能机器人"
-    MSG "  混为一谈！！"
+    MSGREF id=@extra_msg_012
     TIME frame=9248
     NPG
     FACE id=0
     TIME frame=9268
-    MSG "[VIVIT]"
-    MSG "  我只是，受主人所托，"
-    MSG "  前来寻找某样东西而已。"
+    MSGREF id=@extra_msg_013
     TIME frame=9388
     NPG
     FACE id=6
     TIME frame=9408
-    MSG "[雾雨 魔理沙]"
-    MSG "  某样东西？"
-    MSG "  在这种地方？"
+    MSGREF id=@extra_msg_014
     TIME frame=9528
     NPG
     FACE id=0
     TIME frame=9548
-    MSG "[VIVIT]"
-    MSG "  是的。"
-    MSG "  ……我是来找圣杯的。"
+    MSGREF id=@extra_msg_015
     TIME frame=9668
     NPG
     FACE id=9
     TIME frame=9688
-    MSG "[雾雨 魔理沙]"
-    MSG "  ．．．（汗）"
-    MSG "  你的主人打的是什么算盘啊。"
+    MSGREF id=@extra_msg_016
     TIME frame=9808
     NPG
     FACE id=7
     TIME frame=9828
-    MSG "[雾雨 魔理沙]"
-    MSG "  再说了，那样的东西怎么可能在"
-    MSG "  这种东方之地啊？"
-    MSG "  用用脑子啊，脑子。"
+    MSGREF id=@extra_msg_017
     TIME frame=9948
     NPG
     FACE id=0
     TIME frame=9968
-    MSG "[VIVIT]"
-    MSG "  虽然我的大脑回路遍布全身，"
-    MSG "  不过主要是集中在胸部。"
+    MSGREF id=@extra_msg_018
     TIME frame=10088
     NPG
     FACE id=8
     TIME frame=10108
-    MSG "[雾雨 魔理沙]"
-    MSG "  ……看来是干劲十足啊？"
-    MSG "  好久没用魔法了。"
-    MSG "  你就给我好好地“去”吧。"
+    MSGREF id=@extra_msg_019
     TIME frame=10228
     NPG
     FACE id=2
     TIME frame=10248
-    MSG "[VIVIT]"
-    MSG "  这倒没错。"
-    MSG "  这里没有的话就得快点去别处找……"
+    MSGREF id=@extra_msg_020
     TIME frame=10368
     MWCLOSE
     DELENEMY
@@ -979,24 +940,17 @@
     MWOPEN
     FACE id=10
     TIME frame=10688
-    MSG "[雾雨 魔理沙]"
-    MSG "  真看不出，你竟然这么强啊。"
-    MSG "  今天就到此为止……"
-    MSG "  （砰）"
+    MSGREF id=@extra_msg_021
     TIME frame=10808
     NPG
     FACE id=12
     TIME frame=10828
-    MSG "[？？？]"
-    MSG "  你这家伙，又在神社胡闹！"
-    MSG "  我都说了好多次了吧，"
-    MSG "  要闹就出去闹！！"
+    MSGREF id=@extra_msg_022
     TIME frame=10948
     NPG
     FACE id=0
     TIME frame=10968
-    MSG "[VIVIT]"
-    MSG "  这，这是？"
+    MSGREF id=@extra_msg_023
     TIME frame=11088
     MWCLOSE
     TIME frame=11108
@@ -1010,133 +964,102 @@
     MWOPEN
     FACE id=12
     TIME frame=11196
-    MSG "[博丽 灵梦]"
-    MSG "  还有你！！"
+    MSGREF id=@extra_msg_024
     TIME frame=11316
     NPG
     FACE id=2
     TIME frame=11336
-    MSG "[VIVIT]"
-    MSG "  我，我还有点事……（汗）"
+    MSGREF id=@extra_msg_025
     TIME frame=11456
     NPG
     FACE id=12
     TIME frame=11476
-    MSG "[博丽 灵梦]"
-    MSG "  等一下！！"
+    MSGREF id=@extra_msg_026
     TIME frame=11596
     NPG
     FACE id=13
     TIME frame=11616
-    MSG "[博丽 灵梦]"
-    MSG "  你是有事而来的吧？"
-    MSG "  敝神社可是很灵验的哦。"
-    MSG "  有什么愿望尽管说吧。"
+    MSGREF id=@extra_msg_027
     TIME frame=11736
     NPG
     FACE id=0
     TIME frame=11756
-    MSG "[VIVIT]"
-    MSG "  诶？"
+    MSGREF id=@extra_msg_028
     TIME frame=11876
     NPG
     FACE id=10
     TIME frame=11896
-    MSG "[雾雨 魔理沙]"
-    MSG "  这我还是头一次听说……"
-    MSG " （砰）"
+    MSGREF id=@extra_msg_029
     TIME frame=12016
     NPG
     FACE id=0
     TIME frame=12036
-    MSG "[VIVIT]"
-    MSG "  我在找一样非找到不可的东西。"
-    MSG "  而且，要在今天之内。"
+    MSGREF id=@extra_msg_030
     TIME frame=12156
     NPG
     FACE id=13
     TIME frame=12176
-    MSG "[博丽 灵梦]"
-    MSG "  我明白了。"
-    MSG "  我会想办法的。"
+    MSGREF id=@extra_msg_031
     TIME frame=12296
     NPG
     FACE id=1
     TIME frame=12316
-    MSG "[VIVIT]"
-    MSG "  真的吗～"
+    MSGREF id=@extra_msg_032
     TIME frame=12436
     NPG
     FACE id=13
     TIME frame=12456
-    MSG "[博丽 灵梦]"
-    MSG "  那么，请出招吧。"
+    MSGREF id=@extra_msg_033
     TIME frame=12576
     NPG
     FACE id=2
     TIME frame=12596
-    MSG "[VIVIT]"
-    MSG "  哈？"
+    MSGREF id=@extra_msg_034
     TIME frame=12716
     NPG
     FACE id=14
     TIME frame=12736
-    MSG "[博丽 灵梦]"
-    MSG "  这不就是规矩么？"
-    MSG "  大人的世界的（误）"
+    MSGREF id=@extra_msg_035
     TIME frame=12856
     NPG
     FACE id=0
     TIME frame=12876
-    MSG "[VIVIT]"
-    MSG "  ……倒也无所谓。"
-    MSG "  我可不会输给你的。"
+    MSGREF id=@extra_msg_036
     TIME frame=12996
     NPG
     FACE id=13
     TIME frame=13016
-    MSG "[博丽 灵梦]"
-    MSG "  呵·呵·呵～"
-    MSG "  今天我带着两枝驱魔杖，"
-    MSG "  攻击力可是两倍哦～哦呵呵～"
+    MSGREF id=@extra_msg_037
     TIME frame=13136
     NPG
     FACE id=10
     TIME frame=13156
-    MSG "[雾雨 魔理沙]"
-    MSG "  原来是这么一回事啊？"
+    MSGREF id=@extra_msg_038
     TIME frame=13276
     NPG
     FACE id=14
     TIME frame=13296
-    MSG "[博丽 灵梦]"
-    MSG "  怎么可能。"
+    MSGREF id=@extra_msg_039
     TIME frame=13416
     NPG
     FACE id=3
     TIME frame=13436
-    MSG "[VIVIT]"
-    MSG "  不要再说些有的没的了，"
-    MSG "  就由我先攻吧！！"
+    MSGREF id=@extra_msg_040
     TIME frame=13556
     NPG
     FACE id=14
     TIME frame=13576
-    MSG "[博丽 灵梦]"
-    MSG "  看来，你战意正盛啊。"
-    MSG "  不会是魔理沙干了什么好事吧。（汗）"
+    MSGREF id=@extra_msg_041
     TIME frame=13696
     NPG
     FACE id=10
     TIME frame=13716
-    MSG "[雾雨 魔理沙]"
-    MSG "  （关我什么事？）"
+    MSGREF id=@extra_msg_042
     TIME frame=13836
     NPG
     FACE id=13
     TIME frame=13856
-    MSG "[博丽 灵梦]"
-    MSG "  要上咯！！"
+    MSGREF id=@extra_msg_043
     TIME frame=13976
     MWCLOSE
     DELENEMY
@@ -1148,53 +1071,42 @@
     MWOPEN
     FACE id=15
     TIME frame=14116
-    MSG "[博丽 灵梦]"
-    MSG "  真、真强啊～"
+    MSGREF id=@extra_msg_044
     TIME frame=14236
     NPG
     FACE id=1
     TIME frame=14256
-    MSG "[VIVIT]"
-    MSG "  那么，可以帮我找东西了吗？"
+    MSGREF id=@extra_msg_045
     TIME frame=14376
     NPG
     FACE id=15
     TIME frame=14396
-    MSG "[博丽 灵梦]"
-    MSG "  那好吧。"
-    MSG "  …你在找什么。"
+    MSGREF id=@extra_msg_046
     TIME frame=14516
     NPG
     FACE id=1
     TIME frame=14536
-    MSG "[VIVIT]"
-    MSG "  我要找的是“圣杯”！"
-    MSG "  今天之内要找到。"
+    MSGREF id=@extra_msg_047
     TIME frame=14656
     NPG
     FACE id=15
     TIME frame=14676
-    MSG "[博丽 灵梦]"
-    MSG "  ……那是什么。"
+    MSGREF id=@extra_msg_048
     TIME frame=14796
     NPG
     FACE id=0
     TIME frame=14816
-    MSG "[VIVIT]"
-    MSG "  是用来承接遭受磔刑的"
-    MSG "  耶酥流出的血的酒杯。"
+    MSGREF id=@extra_msg_049
     TIME frame=14936
     NPG
     FACE id=15
     TIME frame=14956
-    MSG "[博丽 灵梦]"
-    MSG "  ……那又是谁。"
+    MSGREF id=@extra_msg_050
     TIME frame=15076
     NPG
     FACE id=4
     TIME frame=15096
-    MSG "[VIVIT]"
-    MSG "  呜……"
+    MSGREF id=@extra_msg_051
     TIME frame=15216
     MWCLOSE
     TIME frame=15236

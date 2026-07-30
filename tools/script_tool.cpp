@@ -4,6 +4,7 @@
 /// Usage:
 ///   script_tool disasm-scl <in_binary> <out_text>
 ///   script_tool asm-scl   <in_text> <out_binary>
+///   script_tool asm-messages <in_text> <out_binary>
 ///   script_tool disasm-ecl <in_binary> <out_text>
 ///   script_tool asm-ecl   <in_text> <out_binary>
 ///
@@ -20,11 +21,14 @@
 #include <cstring>
 #include <format>
 #include <fstream>
+#include <limits>
+#include <optional>
 #include <print>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "util/endian.h"
@@ -252,8 +256,9 @@ static const SclOpInfo *scl_op_info(uint8_t op) {
         {"ENEMYPALETTE",{}, 0},
         {"STAFF",       {{"id", ArgType::U8}}, 1},
         {"EXTRACLEAR",  {}, 0},
+        {"MSGREF",      {{"id", ArgType::U32}}, 1},
     };
-    if (op <= 0x16 && table[op].name) return &table[op];
+    if (op <= 0x17 && table[op].name) return &table[op];
     return nullptr;
 }
 
@@ -422,6 +427,14 @@ static std::vector<uint8_t> unescape_string(std::string_view s) {
         }
     }
     return out;
+}
+
+static uint32_t text_id_hash(std::string_view key) {
+    uint32_t hash = 2166136261U;
+    for (const unsigned char c : key) {
+        hash = (hash ^ c) * 16777619U;
+    }
+    return hash;
 }
 
 // ============================================================================
@@ -631,7 +644,8 @@ static bool cmd_disasm_scl(const char *in_file, const char *out_file) {
                     op == 0x0A || op == 0x0D || op == 0x10 || op == 0x11 ||
                     op == 0x12 || op == 0x13 || op == 0x14 || op == 0x16) ? 1 :
                    (op == 0x0B || op == 0x0C || op == 0x15) ? 2 :
-                   (op == 0x0E) ? 3 : (op == 0x0F) ? 6 : 1;
+                   (op == 0x0E) ? 3 : (op == 0x0F) ? 6 :
+                   (op == 0x17) ? 5 : 1;
         } else {
             out += std::format("; unknown opcode 0x{:02X} at +0x{:04X}\n", op, pos);
             pos++;
@@ -676,7 +690,7 @@ static bool cmd_asm_scl(const char *in_file, const char *out_file) {
 
         std::string mnem = tokens[0].text;
         uint8_t op = 0xFF;
-        for (int o = 0; o <= 0x16; o++) {
+        for (int o = 0; o <= 0x17; o++) {
             if (auto *inf = scl_op_info(static_cast<uint8_t>(o))) {
                 if (mnem == inf->name) { op = static_cast<uint8_t>(o); break; }
             }
@@ -707,11 +721,13 @@ static bool cmd_asm_scl(const char *in_file, const char *out_file) {
                 } else if (tokens[ti].kind == TokenKind::NUMBER || tokens[ti].kind == TokenKind::LABELREF) {
                     std::string key = pending_key.empty() ? info->args[arg_map.size()].name : pending_key;
                     pending_key.clear();
-                    if (tokens[ti].kind == TokenKind::LABELREF) {
+                    if (tokens[ti].kind == TokenKind::LABELREF && op != 0x17) {
                         std::println(stderr, "Line {}: label references not supported in SCL", lineno);
                         return false;
                     }
-                    arg_map[key] = tokens[ti].numval;
+                    arg_map[key] = tokens[ti].kind == TokenKind::LABELREF
+                                       ? text_id_hash(tokens[ti].text)
+                                       : tokens[ti].numval;
                 } else if (tokens[ti].kind == TokenKind::MNEMONIC) {
                     std::string key = pending_key.empty() ? info->args[arg_map.size()].name : pending_key;
                     pending_key.clear();
@@ -757,6 +773,113 @@ static bool cmd_asm_scl(const char *in_file, const char *out_file) {
     }
 
     std::println("Assembled SCL: {} bytes", out.size());
+    return write_file(out_file, out);
+}
+
+// ============================================================================
+// Localized SCL message catalog assembler
+// ============================================================================
+
+struct MessageSourceEntry {
+    std::string key;
+    uint32_t id = 0;
+    std::vector<std::vector<uint8_t>> lines;
+};
+
+static void append_u16(std::vector<uint8_t> &out, uint16_t value) {
+    out.push_back(static_cast<uint8_t>(value));
+    out.push_back(static_cast<uint8_t>(value >> 8));
+}
+
+static void append_u32(std::vector<uint8_t> &out, uint32_t value) {
+    out.push_back(static_cast<uint8_t>(value));
+    out.push_back(static_cast<uint8_t>(value >> 8));
+    out.push_back(static_cast<uint8_t>(value >> 16));
+    out.push_back(static_cast<uint8_t>(value >> 24));
+}
+
+static bool cmd_asm_messages(const char *in_file, const char *out_file) {
+    std::ifstream ifs(in_file);
+    if (!ifs) {
+        std::println(stderr, "Error: Cannot open '{}'", in_file);
+        return false;
+    }
+
+    std::vector<MessageSourceEntry> entries;
+    std::optional<MessageSourceEntry> current;
+    std::unordered_set<std::string> keys;
+    std::unordered_map<uint32_t, std::string> ids;
+
+    auto finish_entry = [&]() -> bool {
+        if (!current) return true;
+        if (current->lines.empty()) {
+            std::println(stderr, "Message '{}' has no lines", current->key);
+            return false;
+        }
+        if (current->lines.size() > std::numeric_limits<uint16_t>::max()) {
+            std::println(stderr, "Message '{}' has too many lines", current->key);
+            return false;
+        }
+        entries.push_back(std::move(*current));
+        current.reset();
+        return true;
+    };
+
+    std::string line;
+    int lineno = 0;
+    while (std::getline(ifs, line)) {
+        lineno++;
+        auto tokens = tokenize_line(line, lineno);
+        if (tokens.empty()) return false;
+        if (tokens[0].kind == TokenKind::COMMENT) continue;
+
+        if (tokens[0].kind == TokenKind::LABEL) {
+            if (tokens.size() != 1) {
+                std::println(stderr, "Line {}: message label must be on its own line", lineno);
+                return false;
+            }
+            if (!finish_entry()) return false;
+            const auto &key = tokens[0].text;
+            if (!keys.insert(key).second) {
+                std::println(stderr, "Line {}: duplicate message key '{}'", lineno, key);
+                return false;
+            }
+            const auto id = text_id_hash(key);
+            if (const auto it = ids.find(id); it != ids.end()) {
+                std::println(stderr, "Line {}: message ID collision between '{}' and '{}'", lineno,
+                             it->second, key);
+                return false;
+            }
+            ids.emplace(id, key);
+            current.emplace(MessageSourceEntry{.key = key, .id = id});
+            continue;
+        }
+
+        if (!current || tokens[0].kind != TokenKind::MNEMONIC ||
+            tokens[0].text != "MSG" || tokens.size() != 2 ||
+            tokens[1].kind != TokenKind::STRING) {
+            std::println(stderr, "Line {}: expected a message label or MSG string", lineno);
+            return false;
+        }
+        current->lines.push_back(unescape_string(tokens[1].text));
+    }
+    if (!finish_entry() || entries.empty()) return false;
+
+    std::ranges::sort(entries, {}, &MessageSourceEntry::id);
+    std::vector<uint8_t> out = {'S', 'S', 'T', 'X'};
+    append_u32(out, 1);
+    append_u32(out, static_cast<uint32_t>(entries.size()));
+    for (const auto &entry : entries) {
+        append_u32(out, entry.id);
+        append_u16(out, static_cast<uint16_t>(entry.lines.size()));
+        for (const auto &message_line : entry.lines) {
+            append_u32(out, static_cast<uint32_t>(message_line.size()));
+            out.insert(out.end(), message_line.begin(), message_line.end());
+        }
+    }
+
+    std::println("Assembled message catalog: {} entries, {} bytes", entries.size(),
+                 out.size());
     return write_file(out_file, out);
 }
 
@@ -1224,6 +1347,9 @@ Usage:
   script_tool asm-scl <in_text> <out_binary>
       Assemble SCL text back to binary
 
+  script_tool asm-messages <in_text> <out_binary>
+      Assemble a localized SCL message catalog
+
   script_tool disasm-ecl <in_binary> <out_text>
       Disassemble ECL binary to human-readable text with labels
 
@@ -1233,6 +1359,7 @@ Usage:
 The .header N directive in ECL text sets the number of script entries.
 Labels use @name: syntax.  Jump/call operands use @name references.
 SCL strings use C-style escapes (\xNN, \\, \", \n, \r, \t).
+Message catalog entries use an @key: label followed by one or more MSG lines.
 )");
 }
 
@@ -1262,6 +1389,14 @@ int main(int argc, char **argv) {
             return 1;
         }
         return cmd_asm_scl(argv[2], argv[3]) ? 0 : 1;
+    }
+
+    if (mode == "asm-messages") {
+        if (argc != 4) {
+            std::println(stderr, "Usage: script_tool asm-messages <in_text> <out_binary>");
+            return 1;
+        }
+        return cmd_asm_messages(argv[2], argv[3]) ? 0 : 1;
     }
 
     if (mode == "disasm-ecl") {

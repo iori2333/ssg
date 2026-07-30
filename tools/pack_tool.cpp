@@ -76,6 +76,7 @@ static const char *scl_name(uint8_t op) {
   case 0x14: return "ENEMYPALETTE";
   case 0x15: return "STAFF";
   case 0x16: return "EXTRACLEAR";
+  case 0x17: return "MSGREF";
   default:  return nullptr;
   }
 }
@@ -952,6 +953,12 @@ static bool cmd_dump_scl(const char *in_file) {
     } else if (op == 0x16) {
       std::println("  {:4d}  +0x{:04X}  EXTRACLEAR", lineno, pos);
       pos += 1;
+    } else if (op == 0x17) {
+      if (pos + 5 <= data.size()) {
+        std::println("  {:4d}  +0x{:04X}  MSGREF  id=0x{:08X}", lineno,
+                     pos, static_cast<uint32_t>(U32LEAt(&data[pos + 1])));
+      }
+      pos += 5;
     } else {
       if (name != nullptr) {
         std::println("  {:4d}  +0x{:04X}  {} (unhandled)", lineno, pos, name);

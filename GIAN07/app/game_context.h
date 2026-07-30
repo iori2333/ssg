@@ -11,6 +11,7 @@
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_session.h"
+#include "i18n/localization.h"
 #include "item/item_system.h"
 #include "music/music_player.h"
 #include "player/player.h"
@@ -25,6 +26,7 @@ struct GameContext {
 
   const ConfigData &config;
 
+  i18n::Localization localization;
   data::GameData data;
   data::GraphicsLoader graphics{data};
   DisplayController display{graphics};

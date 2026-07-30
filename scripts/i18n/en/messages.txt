@@ -1,0 +1,956 @@
+; Localized SCL message blocks. Keys are stable script references.
+
+@stage1_msg_000:
+    MSG "[VIVIT]"
+    MSG "  Errands! Errands!"
+    MSG "  Let's see... I just keep going"
+    MSG "  straight this way, right?"
+
+@stage1_msg_001:
+    MSG "[VIVIT]"
+    MSG "  Hm? Aircraft detected..."
+    MSG "  Something's coming this way!"
+
+@stage1_msg_002:
+    MSG "  M-Master!?"
+
+@stage1_msg_003:
+    MSG "[Master]"
+    MSG "  Go \"clean up\" those things!"
+
+@stage1_msg_004:
+    MSG "[VIVIT]"
+    MSG "  What do you mean?"
+
+@stage1_msg_005:
+    MSG "[Master]"
+    MSG "  Never mind, never mind."
+    MSG "  Just take them down!"
+
+@stage1_msg_006:
+    MSG "[VIVIT]"
+    MSG "  Y-yes!"
+    MSG "  I don't really understand,"
+    MSG "  but I'll do my best!"
+
+@stage1_msg_007:
+    MSG "[Milia]"
+    MSG "  So you're the one from the rumors..."
+    MSG "  How interesting."
+    MSG "  Time to avenge my subordinates!"
+
+@stage1_msg_008:
+    MSG "[VIVIT]"
+    MSG "  What!? But your people"
+    MSG "  were the ones who attacked me"
+    MSG "  out of nowhere!"
+
+@stage1_msg_009:
+    MSG "[Milia]"
+    MSG "  Ha! Not my problem."
+    MSG "  Either way, I'll make you regret"
+    MSG "  defying us. Deeply."
+
+@stage1_msg_010:
+    MSG "[VIVIT]"
+    MSG "  Hmph!"
+    MSG "  By my master's command,"
+    MSG "  I shall clean you up!"
+
+@stage1_msg_011:
+    MSG "[Milia]"
+    MSG "  Silence!"
+    MSG "  You junk maid fighter!"
+
+@stage1_msg_012:
+    MSG "[VIVIT]"
+    MSG "  J-junk!?"
+    MSG "  You've got to be kidding me!"
+    MSG "  You crone!"
+
+@stage1_msg_013:
+    MSG "[Milia]"
+    MSG "  Come and get me!"
+
+@stage1_msg_014:
+    MSG "[Milia]"
+    MSG "  Ah, my Sylph..."
+
+@stage1_msg_015:
+    MSG "  Don't get cocky"
+    MSG "  just because you beat me!"
+
+@stage1_msg_016:
+    MSG "[VIVIT]"
+    MSG "  By the way,"
+    MSG "  who exactly are you?"
+
+@stage1_msg_017:
+    MSG "[Milia]"
+    MSG "  Ha!"
+    MSG "  Like I'd ever tell you,"
+
+@stage1_msg_018:
+    MSG "  you junk maid fighter!"
+
+@stage1_msg_019:
+    MSG "[VIVIT]"
+    MSG "  Sheesh, act your age..."
+
+@stage1_msg_020:
+    MSG "[Milia]"
+    MSG "  You're so meeeeean!"
+
+@stage1_msg_021:
+    MSG "[Master]"
+    MSG "  VIV..."
+    MSG "  Watch your language!"
+
+@stage1_msg_022:
+    MSG "[VIVIT]"
+    MSG "  Ouch."
+
+@stage1_msg_023:
+    MSG "[VIVIT]"
+    MSG "  Ouch. I'm sorry..."
+
+@stage1_msg_024:
+    MSG "[Master]"
+    MSG "  VIV, when this job is over,"
+
+@stage1_msg_025:
+    MSG "[Master]"
+    MSG "  VIV, when this job is over,"
+    MSG "  afterward..."
+
+@stage1_msg_026:
+    MSG "[Master]"
+    MSG "  VIV, when this job is over,"
+    MSG "  afterward... a puni-"
+
+@stage1_msg_027:
+    MSG "[Master]"
+    MSG "  VIV, when this job is over,"
+    MSG "  afterward... a punishment"
+
+@stage1_msg_028:
+    MSG "[Master]"
+    MSG "  VIV, when this job is over,"
+    MSG "  afterward... you will be punished."
+
+@stage1_msg_029:
+    MSG "[VIVIT]"
+    MSG "  Ah..."
+
+@stage1_msg_030:
+    MSG "[VIVIT]"
+    MSG "  Ah... Master..."
+
+@stage2_msg_000:
+    MSG "[VIVIT]"
+    MSG "  Whew, aren't we there yet?"
+    MSG "  It's already evening..."
+
+@stage2_msg_001:
+    MSG "[VIVIT]"
+    MSG "  Huh!? I have a bad feeling..."
+
+@stage2_msg_002:
+    MSG "[VIVIT]"
+    MSG "  Eek! They're so fast!"
+    MSG "  They must be enemies too!"
+
+@stage2_msg_003:
+    MSG "[VIVIT]"
+    MSG "  I finally caught up..."
+    MSG "  You're my opponents this time!"
+
+@stage2_msg_004:
+    MSG "[Mei]"
+    MSG "  You're awfully slow."
+
+@stage2_msg_005:
+    MSG "[Mai]"
+    MSG "  ...You sure are."
+
+@stage2_msg_006:
+    MSG "[VIVIT]"
+    MSG "  You two are just too fast!"
+    MSG "  Now, let's fight!"
+
+@stage2_msg_007:
+    MSG "[Mei & Mai]"
+    MSG "  Sure. Let's fight!"
+
+@stage2_msg_008:
+    MSG "[Mei]"
+    MSG "  But Mei and..."
+
+@stage2_msg_009:
+    MSG "[Mai]"
+    MSG "  Mai are..."
+
+@stage2_msg_010:
+    MSG "[Mei & Mai]"
+    MSG "  Invincible!"
+
+@stage2_msg_011:
+    MSG "[VIVIT]"
+    MSG "  I won't lose!"
+    MSG "  For my master's sake!"
+
+@stage2_msg_012:
+    MSG "[VIVIT]"
+    MSG "  I did it!!"
+
+@stage2_msg_013:
+    MSG "[Mei & Mai]"
+    MSG "  Ugh... We lost."
+
+@stage2_msg_014:
+    MSG "[Mei]"
+    MSG "  But you know, there are people..."
+
+@stage2_msg_015:
+    MSG "[Mai]"
+    MSG "  much stronger than Mei and Mai!"
+
+@stage2_msg_016:
+    MSG "[VIVIT]"
+    MSG "  Who are these stronger people?"
+
+@stage2_msg_017:
+    MSG "[Mei & Mai]"
+    MSG "  That's... a secret!"
+
+@stage2_msg_018:
+    MSG "[VIVIT]"
+    MSG "  Ugh, now I have to know!!"
+
+@stage2_msg_019:
+    MSG "[Master]"
+    MSG "  VIV..."
+    MSG "  You're nearly there. Keep going."
+
+@stage2_msg_020:
+    MSG "[VIVIT]"
+    MSG "  Yes, Master!"
+
+@stage3_msg_000:
+    MSG "[VIVIT]"
+    MSG "  M-Master, I can sense some kind of"
+    MSG "  enormous energy..."
+
+@stage3_msg_001:
+    MSG "[Master]"
+    MSG "  It's probably Gates."
+
+@stage3_msg_002:
+    MSG "  I hear he's a seasoned soldier."
+
+@stage3_msg_003:
+    MSG "[VIVIT]"
+    MSG "  Oh... He sounds strong."
+
+@stage3_msg_004:
+    MSG "[VIVIT]"
+    MSG "  Whoa..."
+
+@stage3_msg_005:
+    MSG "  It's huge!"
+
+@stage3_msg_006:
+    MSG "  How can that thing even fly?"
+
+@stage3_msg_007:
+    MSG "[Master]"
+    MSG "  That craft uses it too:"
+    MSG "  cactus energy..."
+
+@stage3_msg_008:
+    MSG "[VIVIT]"
+    MSG "  Nyahaha!"
+
+@stage3_msg_009:
+    MSG "  What a silly name!"
+
+@stage3_msg_010:
+    MSG "[Master]"
+    MSG "  S-silly?"
+
+@stage3_msg_011:
+    MSG "[VIVIT]"
+    MSG "  Are you my opponent this time...?"
+
+@stage3_msg_012:
+    MSG "[Gates]"
+    MSG "  When they ordered me out,"
+    MSG "  I expected something good..."
+    MSG "  Who the hell are you!?"
+
+@stage3_msg_013:
+    MSG "[VIVIT]"
+    MSG "  \"The hell\"? How rude!"
+    MSG "  Hmph!"
+
+@stage3_msg_014:
+    MSG "[Gates]"
+    MSG "  Come at me, missy."
+    MSG "  I only respect the strong."
+    MSG "  Show me what you've got!"
+
+@stage3_msg_015:
+    MSG "[VIVIT]"
+    MSG "  Fine! I'll show you"
+    MSG "  just how strong I am!!"
+
+@stage3_msg_016:
+    MSG "[Gates]"
+    MSG "  I'm counting on it."
+
+@stage3_msg_017:
+    MSG "[VIVIT]"
+    MSG "  Mister, you should really..."
+    MSG "  know your limits!"
+
+@stage3_msg_018:
+    MSG "[Gates]"
+    MSG "  I lost..."
+    MSG "  Me, beaten by that thing..."
+
+@stage3_msg_019:
+    MSG "[VIVIT]"
+    MSG "  Honestly, nobody called Gates"
+    MSG "  is ever any good!"
+
+@stage3_msg_020:
+    MSG "[Master]"
+    MSG "  VIV..."
+    MSG "  That's a dangerous thing to say."
+
+@stage3_msg_021:
+    MSG "[VIVIT]"
+    MSG "  Teehee!"
+
+@stage4_msg_000:
+    MSG "[Marie]"
+    MSG "  Attention, all units."
+
+@stage4_msg_001:
+    MSG "[Marie]"
+    MSG "  All units: target approaching."
+
+@stage4_msg_002:
+    MSG "  Spread out and half-encircle it!"
+
+@stage4_msg_003:
+    MSG "  Bring it down or die trying!!"
+
+@stage4_msg_004:
+    MSG "[VIVIT]"
+    MSG "  Whew. I can't believe it..."
+    MSG "  I never thought I'd make it"
+    MSG "  out of the atmosphere alone."
+
+@stage4_msg_005:
+    MSG "[VIVIT]"
+    MSG "  It's a little..."
+    MSG "  hard to move up here."
+    MSG "  Well, I'll give it my best!"
+
+@stage4_msg_006:
+    MSG "[Master]"
+    MSG "  Just a little farther, VIVIT."
+    MSG "  Once you're through here..."
+    MSG "  you'll reach our destination."
+
+@stage4_msg_007:
+    MSG "[VIVIT]"
+    MSG "  Yes, sir!"
+
+@stage4_msg_008:
+    MSG "[VIVIT]"
+    MSG "  Even more than the last one..."
+    MSG "  this thing is needlessly huge."
+
+@stage4_msg_009:
+    MSG "[Marie]"
+    MSG "  Well, well."
+    MSG "  I heard you possessed"
+    MSG "  remarkable combat ability,"
+
+@stage4_msg_010:
+    MSG "  but what a darling girl..."
+    MSG "  Long crimson hair, pale skin..."
+    MSG "  I want to ravage you!"
+
+@stage4_msg_011:
+    MSG "[VIVIT]"
+    MSG "  What? What? Whaaat?"
+    MSG "  I'm not into that sort of thing!"
+
+@stage4_msg_012:
+    MSG "[VIVIT]"
+    MSG "  Uuuugh."
+    MSG "  That was scary!"
+
+@stage4_msg_013:
+    MSG "[Marie]"
+    MSG "  How could I lose?"
+    MSG "  Now hurry along!"
+    MSG "  Or I'll want to do worse to you..."
+
+@stage4_msg_014:
+    MSG "[VIVIT]"
+    MSG "  Y-yes ma'am."
+
+@stage4_msg_015:
+    MSG "[Marie]"
+    MSG "  Go on."
+    MSG "  True \"terror\"..."
+    MSG "  lies just ahead."
+
+@stage5_msg_000:
+    MSG "[VIVIT]"
+    MSG "  What is this place?"
+    MSG "  When did they build something"
+    MSG "  like this in geostationary orbit?"
+
+@stage5_msg_001:
+    MSG "[Master]"
+    MSG "  Ah, well done..."
+    MSG "  You have made it this far."
+    MSG "  Now, one final push!"
+
+@stage5_msg_002:
+    MSG "[VIVIT]"
+    MSG "  Huh?"
+
+@stage5_msg_003:
+    MSG "[Master]"
+    MSG "  Rest assured."
+    MSG "  What you and I both seek"
+    MSG "  lies inside."
+
+@stage5_msg_004:
+    MSG "[VIVIT]"
+    MSG "  Master... This isn't..."
+    MSG "  just an ordinary errand, is it?"
+
+@stage5_msg_005:
+    MSG "[Master]"
+    MSG "  Now!"
+    MSG "  Seize the hope that belongs"
+    MSG "  to both you and me!!"
+
+@stage5_msg_006:
+    MSG "[VIVIT]"
+    MSG "  What... is this feeling?"
+    MSG "  I've never felt anything like it..."
+    MSG "  I'm scared."
+
+@stage5_msg_007:
+    MSG "[Erich]"
+    MSG "  VIV, I will tell you everything."
+    MSG "  Yes, this is all my story."
+    MSG "  My..."
+
+@stage5_msg_008:
+    MSG "[VIVIT]"
+    MSG "  Who are you?"
+
+@stage5_msg_009:
+    MSG "[Erich]"
+    MSG "  You still don't understand?"
+    MSG "  Surely you recognize my voice."
+
+@stage5_msg_010:
+    MSG "[VIVIT]"
+    MSG "  Y-you're...!!"
+    MSG "  Master!!"
+
+@stage5_msg_011:
+    MSG "[Erich]"
+    MSG "  VIV..."
+    MSG "  You must... surpass me!"
+
+@stage5_msg_012:
+    MSG "[VIVIT]"
+    MSG "  Master..."
+    MSG "  What is going on?"
+
+@stage5_msg_013:
+    MSG "[Erich]"
+    MSG "  I have a daughter."
+    MSG "  An accident sealed her in another"
+    MSG "  dimension several decades ago."
+
+@stage5_msg_014:
+    MSG "[VIVIT]"
+    MSG "  ..."
+
+@stage5_msg_015:
+    MSG "[Erich]"
+    MSG "  VIV, you are the only one"
+    MSG "  who can save my daughter..."
+
+@stage5_msg_016:
+    MSG "[Erich]"
+    MSG "  Milia... Mei and Mai..."
+    MSG "  Gates... Marie..."
+
+@stage5_msg_017:
+    MSG "[Erich]"
+    MSG "  Having defeated them, and me,"
+    MSG "  you should be able to rescue her..."
+
+@stage5_msg_018:
+    MSG "[VIVIT]"
+    MSG "  Mas...ter??"
+    MSG "  Master!!"
+
+@stage5_msg_019:
+    MSG "[Erich]"
+    MSG "  For now, press onward!!"
+    MSG "  Everything awaits you there!"
+
+@stage5_msg_020:
+    MSG "[VIVIT]"
+    MSG "  Ah..."
+    MSG "  Yes!!!"
+
+@stage5_msg_021:
+    MSG "  I understand, Master."
+
+@stage6_msg_000:
+    MSG "[Master]"
+    MSG "  Several decades ago, my daughter"
+    MSG "  and I were researching"
+    MSG "  cactus energy."
+
+@stage6_msg_001:
+    MSG "[Master]"
+    MSG "  Then the energy erupted,"
+    MSG "  and my daughter was trapped..."
+    MSG "  here, in another dimension."
+
+@stage6_msg_002:
+    MSG "[VIVIT]"
+    MSG "  What... is this place?"
+
+@stage6_msg_003:
+    MSG "[VIVIT]"
+    MSG "  It's cold... and frightening."
+
+@stage6_msg_004:
+    MSG "[VIVIT]"
+    MSG "  But..."
+
+@stage6_msg_005:
+    MSG "[VIVIT-captured-]"
+    MSG "  ..."
+
+@stage6_msg_006:
+    MSG "[VIVIT]"
+    MSG "  What... is this?"
+    MSG "  What's going on?"
+    MSG "  Master!!!!"
+
+@stage6_msg_007:
+    MSG "[Master]"
+    MSG "  ..."
+    MSG "  ..."
+    MSG "  This is what happened."
+
+@stage6_msg_008:
+    MSG "  That is my daughter..."
+    MSG "  Consumed by the energy,"
+    MSG "  she lost all sense of self..."
+
+@stage6_msg_009:
+    MSG "[VIVIT-captured-]"
+    MSG "  Help... me..."
+
+@stage6_msg_010:
+    MSG "[VIVIT]"
+    MSG "  I don't understand anymore!"
+    MSG "  Why does she look just like me!?"
+
+@stage6_msg_011:
+    MSG "[Master]"
+    MSG "  VIV..."
+    MSG "  Make my dream come true!"
+    MSG "  Save my daughter!!"
+
+@stage6_msg_012:
+    MSG "[VIVIT-captured-]"
+    MSG "  ..."
+    MSG "  ..."
+    MSG "  ..."
+
+@stage6_msg_013:
+    MSG "[VIVIT]"
+    MSG "  I understand."
+    MSG "  I will save her."
+
+@stage6_msg_014:
+    MSG "[VIVIT-captured-]"
+    MSG "  ..."
+    MSG "  RELEASE ME, HUMANS!!"
+
+@stage6_msg_015:
+    MSG "[VIVIT-captured-]"
+    MSG "  Aaaaaaaaaaaaaah!"
+
+@stage6_msg_016:
+    MSG "[VIVIT]"
+    MSG "  Oh, Master."
+    MSG "  Milady... She's suffering."
+
+@stage6_msg_017:
+    MSG "[VIVIT-captured-]"
+    MSG "  You who were created by"
+    MSG "  those called humans."
+
+@stage6_msg_018:
+    MSG "[VIVIT-captured-]"
+    MSG "  Set me free."
+
+@stage6_msg_019:
+    MSG "[VIVIT-captured-]"
+    MSG "  Gaaaaaaaah!"
+
+@stage6_msg_020:
+    MSG "[Master]"
+    MSG "  VIVIT."
+    MSG "  Thank you."
+
+@stage6_msg_021:
+    MSG "[VIVIT]"
+    MSG "  Master,"
+    MSG "  but what about Milady...?"
+    MSG "  Is she all right?"
+
+@stage6_msg_022:
+    MSG "[VIVIT-captured-]"
+    MSG "  Ugh... Yes..."
+
+@stage6_msg_023:
+    MSG "[VIVIT]"
+    MSG "  Oh!"
+    MSG "  Master! Master!"
+    MSG "  She's safe. Milady is safe!"
+
+@stage6_msg_024:
+    MSG "[Master]"
+    MSG "  My daughter has been saved."
+    MSG "  Thank you, VIV..."
+    MSG "  Now, come home."
+
+@stage6_msg_025:
+    MSG "[VIVIT]"
+    MSG "  Yes, sir!!"
+
+@extra_msg_000:
+    MSG "[VIVIT]"
+    MSG "  This time it's a real errand."
+
+@extra_msg_001:
+    MSG "[Master]"
+    MSG "  ...So the deadline is today."
+    MSG "  I'm counting on you."
+
+@extra_msg_002:
+    MSG "[VIVIT]"
+    MSG "  Understood!"
+
+@extra_msg_003:
+    MSG "[Master]"
+    MSG "  Take care."
+
+@extra_msg_004:
+    MSG "[VIVIT]"
+    MSG "  I'm off!"
+
+@extra_msg_005:
+    MSG "[VIVIT]"
+    MSG "  Wait, where am I going?"
+
+@extra_msg_006:
+    MSG "[VIVIT]"
+    MSG "  I may have come"
+    MSG "  much too far..."
+    MSG "  Can I get home by tonight?"
+
+@extra_msg_007:
+    MSG "[???]"
+    MSG "  Shoot, and I'll move!!"
+
+@extra_msg_008:
+    MSG "[VIVIT]"
+    MSG "  !!?"
+
+@extra_msg_009:
+    MSG "[Marisa Kirisame]"
+    MSG "  Nice to meet you,"
+    MSG "  miss flying mechanical mouse."
+    MSG "  What brings you out here?"
+
+@extra_msg_010:
+    MSG "[VIVIT]"
+    MSG "  I came here on an errand!"
+    MSG "  ...And I'm not a mouse!"
+
+@extra_msg_011:
+    MSG "[Marisa Kirisame]"
+    MSG "  A cat, then. What did you"
+    MSG "  come to fetch, mechanical cat?"
+    MSG "  Or rather, cat-shaped robo..."
+
+@extra_msg_012:
+    MSG "[VIVIT]"
+    MSG "  Don't compare me to some"
+    MSG "  dim-witted robot that can't"
+    MSG "  even use its own power!!"
+
+@extra_msg_013:
+    MSG "[VIVIT]"
+    MSG "  My master asked me to find"
+    MSG "  a certain item. That's all."
+
+@extra_msg_014:
+    MSG "[Marisa Kirisame]"
+    MSG "  A certain item?"
+    MSG "  In a place like this?"
+
+@extra_msg_015:
+    MSG "[VIVIT]"
+    MSG "  That's right."
+    MSG "  ...I came to find the Holy Grail."
+
+@extra_msg_016:
+    MSG "[Marisa Kirisame]"
+    MSG "  ..."
+    MSG "  Just what is your master"
+    MSG "  planning to pull?"
+
+@extra_msg_017:
+    MSG "[Marisa Kirisame]"
+    MSG "  Why would something like that"
+    MSG "  be way out here in the East?"
+    MSG "  Use your head."
+
+@extra_msg_018:
+    MSG "[VIVIT]"
+    MSG "  My neural circuits span my body,"
+    MSG "  but are concentrated in my chest."
+
+@extra_msg_019:
+    MSG "[Marisa Kirisame]"
+    MSG "  ...So you're raring to go?"
+    MSG "  Time for some magic I haven't"
+    MSG "  used in ages. Now go meet death!"
+
+@extra_msg_020:
+    MSG "[VIVIT]"
+    MSG "  If it isn't here, I really must"
+    MSG "  get going somewhere else..."
+
+@extra_msg_021:
+    MSG "[Marisa Kirisame]"
+    MSG "  Hey, you're pretty strong."
+    MSG "  That's enough for today..."
+    MSG "  (WHAM)"
+
+@extra_msg_022:
+    MSG "[???]"
+    MSG "  You trashed the shrine again!"
+    MSG "  How many times have I told you"
+    MSG "  to play somewhere else!?"
+
+@extra_msg_023:
+    MSG "[VIVIT]"
+    MSG "  E-excuse me?"
+
+@extra_msg_024:
+    MSG "[Reimu Hakurei]"
+    MSG "  You too!!"
+
+@extra_msg_025:
+    MSG "[VIVIT]"
+    MSG "  W-well, I'll be going now..."
+
+@extra_msg_026:
+    MSG "[Reimu Hakurei]"
+    MSG "  Hold it!!"
+
+@extra_msg_027:
+    MSG "[Reimu Hakurei]"
+    MSG "  You came here for something, right?"
+    MSG "  There's no wish my shrine can't"
+    MSG "  grant. Go on, tell me."
+
+@extra_msg_028:
+    MSG "[VIVIT]"
+    MSG "  Huh?"
+
+@extra_msg_029:
+    MSG "[Marisa Kirisame]"
+    MSG "  I've never heard that before..."
+    MSG "  (WHAM)"
+
+@extra_msg_030:
+    MSG "[VIVIT]"
+    MSG "  There's something"
+    MSG "  I absolutely must obtain,"
+    MSG "  and I need it today."
+
+@extra_msg_031:
+    MSG "[Reimu Hakurei]"
+    MSG "  All right."
+    MSG "  We'll do something about that."
+
+@extra_msg_032:
+    MSG "[VIVIT]"
+    MSG "  Really?"
+
+@extra_msg_033:
+    MSG "[Reimu Hakurei]"
+    MSG "  Then come at me."
+
+@extra_msg_034:
+    MSG "[VIVIT]"
+    MSG "  Huh?"
+
+@extra_msg_035:
+    MSG "[Reimu Hakurei]"
+    MSG "  That's how it works, right?"
+    MSG "  The adult world, I mean. (Not)"
+
+@extra_msg_036:
+    MSG "[VIVIT]"
+    MSG "  ...Fine by me,"
+    MSG "  but I won't lose."
+
+@extra_msg_037:
+    MSG "[Reimu Hakurei]"
+    MSG "  Heh heh! I brought two"
+    MSG "  purification rods today,"
+    MSG "  so I have twice the attack power!"
+
+@extra_msg_038:
+    MSG "[Marisa Kirisame]"
+    MSG "  Is that how it works?"
+
+@extra_msg_039:
+    MSG "[Reimu Hakurei]"
+    MSG "  Of course not."
+
+@extra_msg_040:
+    MSG "[VIVIT]"
+    MSG "  Enough talk."
+    MSG "  I'll make the first move!!"
+
+@extra_msg_041:
+    MSG "[Reimu Hakurei]"
+    MSG "  She's certainly eager to fight."
+    MSG "  I wonder what Marisa"
+    MSG "  did to her..."
+
+@extra_msg_042:
+    MSG "[Marisa Kirisame]"
+    MSG "  (Is this my fault?)"
+
+@extra_msg_043:
+    MSG "[Reimu Hakurei]"
+    MSG "  Here I come!!"
+
+@extra_msg_044:
+    MSG "[Reimu Hakurei]"
+    MSG "  Y-you're strong..."
+
+@extra_msg_045:
+    MSG "[VIVIT]"
+    MSG "  Will you hear my request now?"
+
+@extra_msg_046:
+    MSG "[Reimu Hakurei]"
+    MSG "  I suppose I have to."
+    MSG "  ...What are you looking for?"
+
+@extra_msg_047:
+    MSG "[VIVIT]"
+    MSG "  I need the \"Holy Grail\"!"
+    MSG "  By the end of today."
+
+@extra_msg_048:
+    MSG "[Reimu Hakurei]"
+    MSG "  ...What's that?"
+
+@extra_msg_049:
+    MSG "[VIVIT]"
+    MSG "  You know, the vessel said to have"
+    MSG "  caught Christ's blood"
+    MSG "  after the Crucifixion."
+
+@extra_msg_050:
+    MSG "[Reimu Hakurei]"
+    MSG "  ...Who's that?"
+
+@extra_msg_051:
+    MSG "[VIVIT]"
+    MSG "  Sob, sob, sob..."
+
+@ending_msg_000:
+    MSG "And so, VIVIT's \"errand\" came to an end..."
+    MSG "The people I thought were enemies were actually"
+    MSG "agents sent by Master to test my abilities."
+
+@ending_msg_001:
+    MSG "Gates took a liking to me and even asked,"
+    MSG "\"Why don't you join my unit?\""
+
+@ending_msg_002:
+    MSG "Mei and Mai turned out to be good girls."
+    MSG "In fact, we're going shopping together today."
+
+@ending_msg_003:
+    MSG "Oh, and Marie really was a sadist after all."
+    MSG "She's propositioned me four times since then..."
+
+@ending_msg_004:
+    MSG "And as for me... VIVIT."
+
+@ending_msg_005:
+    MSG "My abilities received exceptionally high marks."
+    MSG "But no cheaper model of me entered the next product line."
+
+@ending_msg_006:
+    MSG "Perhaps Master refused to sell copies because Milady and I look alike."
+
+@ending_msg_007:
+    MSG "Milady..."
+    MSG "She looks just like me..."
+    MSG "And she is so very kind..."
+
+@ending_msg_008:
+    MSG "No wonder Master was so desperate to save her."
+
+@ending_msg_009:
+    MSG "Now I work as a maid robot,"
+    MSG "helping Master however I can,"
+    MSG "with gratitude for having created me..."
+
+@ending_msg_010:
+    MSG "\"Hey, VIV!\""
+    MSG "\"Hey, VIV!\""
+    MSG "Oh, Master's calling me."
+
+@ending_msg_011:
+    MSG "\"What is it?\""
+
+@ending_msg_012:
+    MSG "\"Actually, I have a favor to ask...\""
+
+@ending_msg_013:
+    MSG "\"What, another errand?\""

@@ -28,6 +28,7 @@
 #include "data/sfx_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics_backend.h"
+#include "i18n/localization.h"
 #include "music/music_player.h"
 #include "settings/config.h"
 #include "sys/input.h"
@@ -44,6 +45,41 @@ static std::string PadButtonLabel(INPUT_PAD_BUTTON v) {
 }
 
 static std::string FmtLabel(const char *s) { return s; }
+
+static std::string LanguageLabel(std::string_view language) {
+  if (language == "ja") {
+    return "Japanese";
+  }
+  if (language == "en") {
+    return "English";
+  }
+  if (language == "zh") {
+    return "Simplified Chinese";
+  }
+  return std::string(language);
+}
+
+static std::unique_ptr<ListNode>
+BuildLanguageMenu(UiConfig &ui_cfg, i18n::Localization &localization) {
+  auto node = std::make_unique<ListNode>(
+      "Language", "Select the game language",
+      [&localization] { return localization.LanguageCount(); },
+      [&localization](size_t index) {
+        return LanguageLabel(localization.LanguageAt(index));
+      },
+      [&ui_cfg, &localization](size_t index) {
+        const auto language = localization.LanguageAt(index);
+        if (!localization.SetLanguage(language)) {
+          return true;
+        }
+        ui_cfg.language = language;
+        return false;
+      },
+      static_cast<int>(localization.CurrentLanguageIndex()));
+  node->BindSelection(
+      [&localization] { return localization.CurrentLanguageIndex(); });
+  return node;
+}
 
 // ---------------------------------------------------------------------------
 // Difficulty
@@ -542,6 +578,7 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
       std::make_unique<EntryNode>("Config", "各種設定を変更します",
                                   std::vector<std::unique_ptr<IMenuNode>>{});
   config->AddChild(BuildDifficultyMenu(cfg.game));
+  config->AddChild(BuildLanguageMenu(cfg.ui, services.localization));
   config->AddChild(BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display));
   config->AddChild(
       BuildSoundMenu(cfg.audio, services.sound_effects, services.music));
