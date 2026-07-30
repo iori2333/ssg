@@ -23,7 +23,9 @@
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "gfx/text.h"
+#include "i18n/localization.h"
 #include "platform/text_backend.h"
+#include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
 #include "ui/menu/menu_controller.h"
@@ -33,6 +35,31 @@
 #include "util/debug.h"
 
 namespace {
+std::string_view Text(const i18n::Localization &localization,
+                      std::string_view key) {
+  return localization.Text(i18n::TextIdFromKey(key));
+}
+
+std::string_view StageName(const i18n::Localization &localization,
+                           StageId stage) {
+  constexpr std::array keys = {"ui.value.stage1", "ui.value.stage2",
+                               "ui.value.stage3", "ui.value.stage4",
+                               "ui.value.stage5", "ui.value.stage6",
+                               "ui.value.extra"};
+  const auto index = std::to_underlying(stage);
+  return index < keys.size() ? Text(localization, keys[index])
+                             : std::string_view{};
+}
+
+std::string_view PlayerName(const i18n::Localization &localization,
+                            PlayerType player) {
+  constexpr std::array keys = {"ui.value.wide", "ui.value.homing",
+                               "ui.value.laser"};
+  const auto index = std::to_underlying(player);
+  return index < keys.size() ? Text(localization, keys[index])
+                             : std::string_view{};
+}
+
 std::string StageList(const ReplayRecord &replay) {
   std::string result;
   for (const auto stage : replay.stages) {
@@ -54,6 +81,16 @@ uint8_t DetailGradient(PIXEL_COORD y) {
   }
   return y <= 6 ? 220 : 180;
 }
+
+void RenderUiText(WINDOW_POINT position, TEXTRENDER_RECT_ID rect,
+                  std::string_view text, bool centered = false) {
+  TextObj.Render(position, rect, text, [text, centered](TEXTRENDER_SESSION &s) {
+    s.SetFont(FONT_ID::NORMAL);
+    const auto x = centered ? TextLayoutXCenter(s, text) : 0;
+    s.Put({x + 1, 1}, text, RGB{96, 96, 96});
+    s.Put({x, 0}, text, RGB{255, 255, 255});
+  });
+}
 } // namespace
 
 bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
@@ -73,6 +110,7 @@ bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
   for (auto &text : player_text_) {
     text = TextObj.Register({.w = 80, .h = 10});
   }
+  ui_text_ = TextObj.Register({.w = 480, .h = 24});
   replays_ = record_system_.ListReplays();
   selected_ = 0;
   previous_input_ = initial_input;
@@ -91,6 +129,8 @@ bool ReplayScene::BeginSave(bool extra_stage, INPUT_BITS initial_input) {
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
+  TextObj.Clear();
+  ui_text_ = TextObj.Register({.w = 480, .h = 24});
   save_extra_stage_ = extra_stage;
   save_failed_ = false;
   name_entry_.Begin(true, initial_input);
@@ -166,15 +206,23 @@ void ReplayScene::OpenStageSelect() {
   for (uint8_t id = 0; id <= std::to_underlying(StageId::Extra); id++) {
     const auto stage = static_cast<StageId>(id);
     auto item = std::make_unique<menu::ActionNode>(
-        StageName(stage), "", [this, stage](menu::MenuController &) {
+        menu::MenuText(
+            [this, stage] { return StageName(localization_, stage); }),
+        "", [this, stage](menu::MenuController &) {
           pending_stage_ = stage;
           return false;
         });
     item->SetEnabled(std::ranges::contains(replay.stages, stage));
     items.push_back(std::move(item));
   }
-  stage_menu_root_ =
-      std::make_unique<menu::EntryNode>("Select Stage", "", std::move(items));
+  stage_menu_root_ = std::make_unique<menu::EntryNode>(
+      menu::MenuText(
+          [this] { return Text(localization_, "ui.replay.select_stage"); }),
+      "", std::move(items));
+  stage_menu_.SetExitText(
+      menu::MenuText([this] { return Text(localization_, "ui.common.back"); }),
+      menu::MenuText(
+          [this] { return Text(localization_, "ui.common.back_help"); }));
   stage_menu_.Init(160);
   stage_menu_.Navigate(*stage_menu_root_,
                        std::to_underlying(replay.stages.front()));
@@ -284,7 +332,7 @@ void ReplayScene::DrawBrowser() {
     const auto difficulty = GameLevelName(replay.difficulty);
     const auto difficulty_x =
         x + 384 - static_cast<int>(difficulty.size() * 14);
-    GrpPut16(difficulty_x, y + 4, std::string{difficulty}.c_str());
+    GrpPut16(difficulty_x, y + 4, std::string(difficulty).c_str());
 
     const auto date = std::format("{:%Y/%m/%d %H:%M}",
                                   std::chrono::system_clock::time_point{
@@ -300,7 +348,7 @@ void ReplayScene::DrawBrowser() {
                                  DetailGradient);
                    });
 
-    const auto player = PlayerTypeName(replay.player_type);
+    const auto player = PlayerName(localization_, replay.player_type);
     TextObj.Render({x + 304, y + detail_y - 2}, player_text_[row], player,
                    [player](TEXTRENDER_SESSION &session) {
                      std::array<std::string_view, 1> text = {player};
@@ -310,13 +358,15 @@ void ReplayScene::DrawBrowser() {
   }
 
   if (replays_.empty()) {
-    GrpPut16(240, 450, "No Replay Data");
+    const auto message = Text(localization_, "ui.replay.no_data");
+    RenderUiText({80, 448}, ui_text_, message, true);
     return;
   }
 
   const auto page_count = (replays_.size() + kPageSize - 1) / kPageSize;
-  const auto page_label = std::format("Replay  {}/{}", page + 1, page_count);
-  GrpPut16(272, 450, page_label.c_str());
+  const auto page_label = std::format(
+      "{}  {}/{}", Text(localization_, "ui.replay.page"), page + 1, page_count);
+  RenderUiText({80, 448}, ui_text_, page_label, true);
 }
 
 void ReplayScene::DrawNameEntry() const {
@@ -328,9 +378,11 @@ void ReplayScene::DrawNameEntry() const {
   GrpGeom->DrawBox(x, y, x + 400, y + 32);
   GrpGeom->Unlock();
   GrpSurface_Blit({x, y}, SURFACE_ID::NAMEREG, {0, 64, 400, 96});
-  GrpPut16(256, 120, "Replay Name");
+  const auto title = Text(localization_, "ui.replay.name");
+  RenderUiText({80, 118}, ui_text_, title, true);
   if (save_failed_) {
-    GrpPut16(216, 152, "Replay save failed");
+    const auto failed = Text(localization_, "ui.replay.save_failed");
+    RenderUiText({80, 150}, ui_text_, failed, true);
   }
   GrpPut16c2(x + 88, y + 4, std::string{name_entry_.Name()}.c_str());
   name_entry_.Draw(x + 88, y + 4);

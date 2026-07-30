@@ -109,7 +109,9 @@ bool Localization::Initialize(std::string_view requested_language) {
   for (size_t i = 0; i < embedded_message_catalog_count; ++i) {
     const auto &embedded = embedded_message_catalogs[i];
     Catalog catalog{.language = embedded.language};
-    if (!ParseCatalog({embedded.data, embedded.size}, catalog)) {
+    if (!ParseCatalog({embedded.message_data, embedded.message_size},
+                      catalog) ||
+        !ParseCatalog({embedded.ui_data, embedded.ui_size}, catalog)) {
       return false;
     }
     catalogs.push_back(std::move(catalog));
@@ -120,6 +122,17 @@ bool Localization::Initialize(std::string_view requested_language) {
     return false;
   }
   const auto fallback_index = static_cast<size_t>(fallback - catalogs.begin());
+  const auto &fallback_messages = catalogs[fallback_index].messages;
+  for (const auto &catalog : catalogs) {
+    if (catalog.messages.size() != fallback_messages.size()) {
+      return false;
+    }
+    for (const auto &[id, unused] : fallback_messages) {
+      if (!catalog.messages.contains(id)) {
+        return false;
+      }
+    }
+  }
   catalogs_ = std::move(catalogs);
   fallback_ = fallback_index;
   current_ = fallback_;
@@ -146,6 +159,11 @@ std::string_view Localization::LanguageAt(size_t index) const {
 bool Localization::HasText(size_t language_index, TextId id) const {
   return language_index < catalogs_.size() &&
          catalogs_[language_index].messages.contains(id);
+}
+
+std::string_view Localization::Text(TextId id) const {
+  const auto lines = Lines(id);
+  return lines.empty() ? std::string_view{} : lines.front();
 }
 
 std::span<const std::string_view> Localization::Lines(TextId id) const {

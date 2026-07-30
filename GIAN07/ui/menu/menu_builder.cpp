@@ -44,17 +44,38 @@ static std::string PadButtonLabel(INPUT_PAD_BUTTON v) {
   return "--------";
 }
 
-static std::string FmtLabel(const char *s) { return s; }
+static MenuText Localized(i18n::Localization &localization,
+                          std::string_view key) {
+  const auto id = i18n::TextIdFromKey(key);
+  return MenuText([&localization, id] { return localization.Text(id); });
+}
+
+static ChoiceLabels
+LocalizedLabels(i18n::Localization &localization,
+                std::initializer_list<std::string_view> keys) {
+  std::vector<MenuText> labels;
+  labels.reserve(keys.size());
+  for (const auto key : keys) {
+    labels.push_back(Localized(localization, key));
+  }
+  return ChoiceLabels(std::move(labels));
+}
+
+static void LocalizeToggleValues(ToggleNode &node,
+                                 i18n::Localization &localization) {
+  node.SetValueText(Localized(localization, "ui.common.on"),
+                    Localized(localization, "ui.common.off"));
+}
 
 static std::string LanguageLabel(std::string_view language) {
   if (language == "ja") {
-    return "Japanese";
+    return "日本語";
   }
   if (language == "en") {
     return "English";
   }
   if (language == "zh") {
-    return "Simplified Chinese";
+    return "简体中文";
   }
   return std::string(language);
 }
@@ -62,7 +83,8 @@ static std::string LanguageLabel(std::string_view language) {
 static std::unique_ptr<ListNode>
 BuildLanguageMenu(UiConfig &ui_cfg, i18n::Localization &localization) {
   auto node = std::make_unique<ListNode>(
-      "Language", "Select the game language",
+      Localized(localization, "ui.menu.language.title"),
+      Localized(localization, "ui.menu.language.help"),
       [&localization] { return localization.LanguageCount(); },
       [&localization](size_t index) {
         return LanguageLabel(localization.LanguageAt(index));
@@ -85,34 +107,40 @@ BuildLanguageMenu(UiConfig &ui_cfg, i18n::Localization &localization) {
 // Difficulty
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode> BuildDifficultyMenu(GameConfig &game_cfg) {
+static std::unique_ptr<EntryNode>
+BuildDifficultyMenu(GameConfig &game_cfg, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(4);
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "PlayerStock", "残り人数を設定します", game_cfg.player_stock, 0,
-      kMaxPlayerStock,
+      Localized(localization, "ui.menu.player_stock.title"),
+      Localized(localization, "ui.menu.player_stock.help"),
+      game_cfg.player_stock, 0, kMaxPlayerStock,
       std::vector<std::string>{"1", "2", "3", "4", "5", "6", "7"}));
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "BombStock", "ボムの数を設定します", game_cfg.bomb_stock, 0,
-      kMaxBombStock,
+      Localized(localization, "ui.menu.bomb_stock.title"),
+      Localized(localization, "ui.menu.bomb_stock.help"), game_cfg.bomb_stock,
+      0, kMaxBombStock,
       std::vector<std::string>{"0", "1", "2", "3", "4", "5", "6"}));
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "Difficulty", "難易度を設定します", game_cfg.game_level, GameLevel::Easy,
-      GameLevel::Lunatic,
-      std::vector<std::string>{FmtLabel("Easy"), FmtLabel("Normal"),
-                               FmtLabel("Hard"), FmtLabel("Lunatic")}));
+      Localized(localization, "ui.menu.difficulty.title"),
+      Localized(localization, "ui.menu.difficulty.setting_help"),
+      game_cfg.game_level, GameLevel::Easy, GameLevel::Lunatic,
+      LocalizedLabels(localization, {"ui.value.easy", "ui.value.normal",
+                                     "ui.value.hard", "ui.value.lunatic"})));
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "PracticeMode", "練習模式を設定します", game_cfg.practice_mode,
+      Localized(localization, "ui.menu.practice.title"),
+      Localized(localization, "ui.menu.practice.help"), game_cfg.practice_mode,
       PracticeMode::Off, PracticeMode::Invincible,
-      std::vector<std::string>{FmtLabel("Off"), FmtLabel("AutoB"),
-                               FmtLabel("Invin")}));
+      LocalizedLabels(localization, {"ui.common.off", "ui.value.auto_bomb",
+                                     "ui.value.invincible"})));
 
-  return std::make_unique<EntryNode>("Difficulty", "難易度に関する設定",
-                                     std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.difficulty.title"),
+      Localized(localization, "ui.menu.difficulty.help"), std::move(ch));
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +148,8 @@ static std::unique_ptr<EntryNode> BuildDifficultyMenu(GameConfig &game_cfg) {
 // ---------------------------------------------------------------------------
 
 static std::unique_ptr<EntryNode>
-BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display) {
+BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
+                    i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(2);
 
@@ -131,26 +160,32 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display) {
     labels.push_back(std::format("WebP z{}", i - 1));
   }
   ch.push_back(std::make_unique<ChoiceNode>(
-      "Format", "Screenshot format", gfx_cfg.screenshot_effort, 0,
-      GRP_SCREENSHOT_EFFORT_MAX, std::move(labels), [&gfx_cfg, &display] {
+      Localized(localization, "ui.menu.screenshot_format.title"),
+      Localized(localization, "ui.menu.screenshot_format.help"),
+      gfx_cfg.screenshot_effort, 0, GRP_SCREENSHOT_EFFORT_MAX,
+      std::move(labels), [&gfx_cfg, &display] {
         display.SetScreenshotEffort(gfx_cfg.screenshot_effort);
       }));
 
   ch.push_back(std::make_unique<SeparatorNode>());
 
   return std::make_unique<EntryNode>(
-      "Screenshots", "Customize the screenshot format", std::move(ch));
+      Localized(localization, "ui.menu.screenshots.title"),
+      Localized(localization, "ui.menu.screenshots.help"), std::move(ch));
 }
 
 // ---------------------------------------------------------------------------
 // Graphics API (dynamic)
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
-                                              DisplayController &display) {
+static std::unique_ptr<ListNode>
+BuildApiMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
+             i18n::Localization &localization) {
   auto init_sel = static_cast<int>(GrpBackend_APIID(gfx_cfg.graphics_api));
   auto node = std::make_unique<ListNode>(
-      "API", "Select rendering API", [] { return GrpBackend_APICount(); },
+      Localized(localization, "ui.menu.api.title"),
+      Localized(localization, "ui.menu.api.help"),
+      [] { return GrpBackend_APICount(); },
       [](size_t i) {
         return std::string(GrpBackend_APILabel(GrpBackend_APIString(i)));
       },
@@ -171,28 +206,35 @@ static std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
 
 static std::unique_ptr<EntryNode>
 BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
-                  DisplayController &display) {
+                  DisplayController &display,
+                  i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(11);
 
   auto dev = std::make_unique<ActionNode>(
-      "Device", "", [](MenuController &) { return true; });
+      Localized(localization, "ui.menu.device.title"), "",
+      [](MenuController &) { return true; });
   dev->BindValue([&gfx_cfg] {
     return std::string(GrpBackend_DeviceLabel(gfx_cfg.device_id));
   });
   ch.push_back(std::move(dev));
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "Display", "Switch between window and fullscreen modes",
-      gfx_cfg.display_mode, DisplayMode::Windowed, DisplayMode::Fullscreen,
-      std::vector<std::string>{"Window", "Fullscreen"},
+      Localized(localization, "ui.menu.display.title"),
+      Localized(localization, "ui.menu.display.help"), gfx_cfg.display_mode,
+      DisplayMode::Windowed, DisplayMode::Fullscreen,
+      LocalizedLabels(localization,
+                      {"ui.value.windowed", "ui.value.fullscreen"}),
       [&gfx_cfg, &display] { (void)display.ApplyConfig(gfx_cfg); }));
 
   {
     auto fullscreen_mode = std::make_unique<ChoiceNode>(
-        "FullScr", "Fullscreen mode", gfx_cfg.fullscreen_mode,
-        FullscreenMode::Borderless, FullscreenMode::Exclusive,
-        std::vector<std::string>{"Borderless", "Exclusive"},
+        Localized(localization, "ui.menu.fullscreen_mode.title"),
+        Localized(localization, "ui.menu.fullscreen_mode.help"),
+        gfx_cfg.fullscreen_mode, FullscreenMode::Borderless,
+        FullscreenMode::Exclusive,
+        LocalizedLabels(localization,
+                        {"ui.value.borderless", "ui.value.exclusive"}),
         [&gfx_cfg, &display] { (void)display.ApplyConfig(gfx_cfg); });
     fullscreen_mode->BindEnabled(
         [&gfx_cfg] { return gfx_cfg.display_mode == DisplayMode::Fullscreen; });
@@ -201,15 +243,17 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
 
   {
     const auto max_scale = Grp_WindowScale4xMax();
-    std::vector<std::string> labels;
+    std::vector<MenuText> labels;
     labels.reserve(max_scale + 1);
-    labels.push_back("Screen");
+    labels.push_back(Localized(localization, "ui.value.screen"));
     for (uint8_t scale = 1; scale <= max_scale; scale++) {
-      labels.push_back(std::format("{:3}.{:02}x", scale / 4, (scale % 4) * 25));
+      labels.emplace_back(
+          std::format("{:3}.{:02}x", scale / 4, (scale % 4) * 25));
     }
     auto window_scale = std::make_unique<ChoiceNode>(
-        "WindowScale", "Window scaling factor", gfx_cfg.window_scale_4x, 0,
-        max_scale, std::move(labels),
+        Localized(localization, "ui.menu.window_scale.title"),
+        Localized(localization, "ui.menu.window_scale.help"),
+        gfx_cfg.window_scale_4x, 0, max_scale, ChoiceLabels(std::move(labels)),
         [&gfx_cfg, &display] { (void)display.ApplyConfig(gfx_cfg); });
     window_scale->BindEnabled(
         [&gfx_cfg] { return gfx_cfg.display_mode == DisplayMode::Windowed; });
@@ -218,9 +262,12 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
 
   {
     auto fullscreen_fit = std::make_unique<ChoiceNode>(
-        "FullScrFit", "Borderless fullscreen scaling", gfx_cfg.fullscreen_fit,
-        GRAPHICS_FULLSCREEN_FIT::INTEGER, GRAPHICS_FULLSCREEN_FIT::STRETCH,
-        std::vector<std::string>{"Integer", "Aspect", "Stretch"},
+        Localized(localization, "ui.menu.fullscreen_fit.title"),
+        Localized(localization, "ui.menu.fullscreen_fit.help"),
+        gfx_cfg.fullscreen_fit, GRAPHICS_FULLSCREEN_FIT::INTEGER,
+        GRAPHICS_FULLSCREEN_FIT::STRETCH,
+        LocalizedLabels(localization, {"ui.value.integer", "ui.value.aspect",
+                                       "ui.value.stretch"}),
         [&gfx_cfg, &display] { (void)display.ApplyConfig(gfx_cfg); });
     fullscreen_fit->BindEnabled([&gfx_cfg] {
       return gfx_cfg.display_mode == DisplayMode::Fullscreen &&
@@ -231,9 +278,11 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
 
   {
     auto scaling_mode = std::make_unique<ChoiceNode>(
-        "ScaleMode", "Scaling method", gfx_cfg.scaling_mode,
-        ScalingMode::Framebuffer, ScalingMode::Geometry,
-        std::vector<std::string>{"FrameBuf", "Geometry"},
+        Localized(localization, "ui.menu.scaling_mode.title"),
+        Localized(localization, "ui.menu.scaling_mode.help"),
+        gfx_cfg.scaling_mode, ScalingMode::Framebuffer, ScalingMode::Geometry,
+        LocalizedLabels(localization,
+                        {"ui.value.framebuffer", "ui.value.geometry"}),
         [&gfx_cfg, &display] { (void)display.ApplyConfig(gfx_cfg); });
     scaling_mode->BindEnabled([&gfx_cfg] {
       return gfx_cfg.display_mode != DisplayMode::Fullscreen ||
@@ -243,16 +292,17 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
   }
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "FrameRate", "描画スキップの設定です", gfx_cfg.fps_divisor, 0,
-      kMaxFpsDivisor,
-      std::vector<std::string>{FmtLabel("おまけ"), FmtLabel("60Fps"),
-                               FmtLabel("30Fps"), FmtLabel("20Fps")},
+      Localized(localization, "ui.menu.frame_rate.title"),
+      Localized(localization, "ui.menu.frame_rate.help"), gfx_cfg.fps_divisor,
+      0, kMaxFpsDivisor,
+      LocalizedLabels(localization, {"ui.value.bonus", "ui.value.60fps",
+                                     "ui.value.30fps", "ui.value.20fps"}),
       [&gfx_cfg, &display] { display.SetFrameRate(gfx_cfg.fps_divisor); }));
 
-  ch.push_back(BuildScreenshotMenu(gfx_cfg, display));
+  ch.push_back(BuildScreenshotMenu(gfx_cfg, display, localization));
 
   {
-    auto api_entry = BuildApiMenu(gfx_cfg, display);
+    auto api_entry = BuildApiMenu(gfx_cfg, display, localization);
     api_entry->BindEnabled([] { return GrpBackend_APICount() >= 2; });
     ch.push_back(std::move(api_entry));
   }
@@ -260,24 +310,30 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
   ch.push_back(std::make_unique<SeparatorNode>());
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "MsgWindow", "ウィンドウの表示位置を決めます", ui_cfg.message_window,
-      MessageWindowMode::Upper, MessageWindowMode::Hidden,
-      std::vector<std::string>{"上のほう", "下のほう", "描画せず"}));
+      Localized(localization, "ui.menu.message_window.title"),
+      Localized(localization, "ui.menu.message_window.help"),
+      ui_cfg.message_window, MessageWindowMode::Upper,
+      MessageWindowMode::Hidden,
+      LocalizedLabels(localization, {"ui.value.upper", "ui.value.lower",
+                                     "ui.value.hidden"})));
 
-  return std::make_unique<EntryNode>("Graphic", "グラフィックに関する設定",
-                                     std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.graphics.title"),
+      Localized(localization, "ui.menu.graphics.help"), std::move(ch));
 }
 
 // ---------------------------------------------------------------------------
 // MIDI
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode> BuildMidiMenu(AudioConfig &audio_cfg) {
+static std::unique_ptr<EntryNode>
+BuildMidiMenu(AudioConfig &audio_cfg, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(2);
 
   auto sf_node = std::make_unique<ListNode>(
-      "SoundFont", "Select a SoundFont device",
+      Localized(localization, "ui.menu.soundfont.title"),
+      Localized(localization, "ui.menu.soundfont.help"),
       [] { return MidBackend_DeviceCount(); },
       [](size_t i) {
         auto name = MidBackend_DeviceNameAt(i);
@@ -328,29 +384,34 @@ static std::unique_ptr<EntryNode> BuildMidiMenu(AudioConfig &audio_cfg) {
       }());
   ch.push_back(std::move(sf_node));
 
-  ch.push_back(std::make_unique<ToggleNode>(
-      "SC88ProFXCompat", "Retain SC-88Pro echo on other Roland synths",
+  auto compat = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.sc88_compat.title"),
+      Localized(localization, "ui.menu.sc88_compat.help"),
       std::ref(audio_cfg.fix_sysex_bugs), [&audio_cfg](bool on) {
         (void)Mid_SetFlags(on ? MID_FLAGS::FIX_SYSEX_BUGS : MID_FLAGS::NONE);
-      }));
+      });
+  LocalizeToggleValues(*compat, localization);
+  ch.push_back(std::move(compat));
 
-  return std::make_unique<EntryNode>("MIDI", "Change MIDI playback options",
-                                     std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.midi.title"),
+      Localized(localization, "ui.menu.midi.help"), std::move(ch));
 }
 
 // ---------------------------------------------------------------------------
 // Sound / Music
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
-                                                 data::SfxLoader &sound_effects,
-                                                 MusicPlayer &music) {
+static std::unique_ptr<EntryNode>
+BuildSoundMenu(AudioConfig &audio_cfg, data::SfxLoader &sound_effects,
+               MusicPlayer &music, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(7);
 
-  ch.push_back(std::make_unique<ToggleNode>(
-      "Sound / SE", "SEを鳴らすかどうかの設定", std::ref(audio_cfg.se_enabled),
-      [&audio_cfg, &sound_effects](bool on) {
+  auto sound_enabled = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.sound_effects.title"),
+      Localized(localization, "ui.menu.sound_effects.help"),
+      std::ref(audio_cfg.se_enabled), [&audio_cfg, &sound_effects](bool on) {
         if (on) {
           if (!sound_effects.Load()) {
             audio_cfg.se_enabled = false;
@@ -358,19 +419,24 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
         } else {
           Snd_SECleanup();
         }
-      }));
+      });
+  LocalizeToggleValues(*sound_enabled, localization);
+  ch.push_back(std::move(sound_enabled));
 
-  ch.push_back(std::make_unique<ToggleNode>("BGM", "BGMを鳴らすかどうかの設定",
-                                            std::ref(audio_cfg.bgm_enabled),
-                                            [&music](bool on) {
-                                              if (on) {
-                                                if (BGM_Init()) {
-                                                  music.Play(0);
-                                                }
-                                              } else {
-                                                BGM_Cleanup();
-                                              }
-                                            }));
+  auto bgm_enabled = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.bgm.title"),
+      Localized(localization, "ui.menu.bgm.help"),
+      std::ref(audio_cfg.bgm_enabled), [&music](bool on) {
+        if (on) {
+          if (BGM_Init()) {
+            music.Play(0);
+          }
+        } else {
+          BGM_Cleanup();
+        }
+      });
+  LocalizeToggleValues(*bgm_enabled, localization);
+  ch.push_back(std::move(bgm_enabled));
 
   {
     std::vector<std::string> vol_labels;
@@ -379,8 +445,10 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
       vol_labels.push_back(std::format("{}", i));
     }
     ch.push_back(std::make_unique<ChoiceNode>(
-        "SoundVolume", "効果音の音量", audio_cfg.se_volume, 0, VOLUME_MAX,
-        std::move(vol_labels), [&audio_cfg] {
+        Localized(localization, "ui.menu.sound_volume.title"),
+        Localized(localization, "ui.menu.sound_volume.help"),
+        audio_cfg.se_volume, 0, VOLUME_MAX, std::move(vol_labels),
+        [&audio_cfg] {
           Snd_SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
         }));
   }
@@ -392,16 +460,21 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
       vol_labels.push_back(std::format("{}", i));
     }
     ch.push_back(std::make_unique<ChoiceNode>(
-        "BGMVolume", "音楽の音量", audio_cfg.bgm_volume, 0, VOLUME_MAX,
-        std::move(vol_labels), [&audio_cfg] {
+        Localized(localization, "ui.menu.bgm_volume.title"),
+        Localized(localization, "ui.menu.bgm_volume.help"),
+        audio_cfg.bgm_volume, 0, VOLUME_MAX, std::move(vol_labels),
+        [&audio_cfg] {
           Mid_SetVolume(audio_cfg.bgm_volume);
           Snd_SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
         }));
   }
 
-  ch.push_back(std::make_unique<ToggleNode>(
-      "BGMVolNormalize", "曲ごとの音量差を補正",
-      std::ref(audio_cfg.bgm_vol_norm), [](bool on) { BGM_SetGainApply(on); }));
+  auto normalize = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.bgm_normalize.title"),
+      Localized(localization, "ui.menu.bgm_normalize.help"),
+      std::ref(audio_cfg.bgm_vol_norm), [](bool on) { BGM_SetGainApply(on); });
+  LocalizeToggleValues(*normalize, localization);
+  ch.push_back(std::move(normalize));
 
   {
     auto packs = std::make_shared<std::vector<std::string>>();
@@ -410,14 +483,17 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
       std::ranges::sort(*packs);
     }
     auto bgm_pack = std::make_unique<ListNode>(
-        "BGMPack", "BGMパックのメニューを開きます",
+        Localized(localization, "ui.menu.bgm_pack.title"),
+        Localized(localization, "ui.menu.bgm_pack.help"),
         [packs] { return packs->size() + 2; },
-        [packs](size_t i) -> std::string {
+        [packs, &localization](size_t i) -> std::string {
           if (i == 0) {
-            return "<使用しない>";
+            return std::format("<{}>", localization.Text(i18n::TextIdFromKey(
+                                           "ui.value.none")));
           }
           if (i == packs->size() + 1) {
-            return "<Download>";
+            return std::format("<{}>", localization.Text(i18n::TextIdFromKey(
+                                           "ui.value.download")));
           }
           return (*packs)[i - 1];
         },
@@ -447,10 +523,11 @@ static std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
     ch.push_back(std::move(bgm_pack));
   }
 
-  ch.push_back(BuildMidiMenu(audio_cfg));
+  ch.push_back(BuildMidiMenu(audio_cfg, localization));
 
-  return std::make_unique<EntryNode>("Sound / Music",
-                                     "ＳＥ／ＢＧＭに関する設定", std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.sound.title"),
+      Localized(localization, "ui.menu.sound.help"), std::move(ch));
 }
 
 // ---------------------------------------------------------------------------
@@ -467,15 +544,17 @@ static void ApplyPadBindings(const InputConfig &input_cfg) {
   Key_SetPadBindings(bindings);
 }
 
-static std::unique_ptr<EntryNode> BuildPadMenu(InputConfig &input_cfg) {
+static std::unique_ptr<EntryNode>
+BuildPadMenu(InputConfig &input_cfg, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(4);
 
-  static constexpr const char *kPadHelp = "パッド上のボタンを押すと変更";
-
-  auto make_pad = [&input_cfg](const char *label, INPUT_PAD_BUTTON &btn) {
+  auto make_pad = [&input_cfg, &localization](std::string_view label_key,
+                                              INPUT_PAD_BUTTON &btn) {
     auto node = std::make_unique<ActionNode>(
-        label, kPadHelp, [&btn, &input_cfg](MenuController &ctrl) {
+        Localized(localization, label_key),
+        Localized(localization, "ui.menu.pad_binding.help"),
+        [&btn, &input_cfg](MenuController &ctrl) {
           INPUT_BITS key = ctrl.LastKey();
           key &= static_cast<INPUT_BITS>(~Pad_Data);
           if (auto temp = Key_PadSingle()) {
@@ -488,60 +567,73 @@ static std::unique_ptr<EntryNode> BuildPadMenu(InputConfig &input_cfg) {
     return node;
   };
 
-  ch.push_back(make_pad("Shot", input_cfg.pad_tama));
-  ch.push_back(make_pad("Bomb", input_cfg.pad_bomb));
-  ch.push_back(make_pad("SpeedDown", input_cfg.pad_shift));
-  ch.push_back(make_pad("Cancel", input_cfg.pad_cancel));
+  ch.push_back(make_pad("ui.menu.pad_shot.title", input_cfg.pad_tama));
+  ch.push_back(make_pad("ui.menu.pad_bomb.title", input_cfg.pad_bomb));
+  ch.push_back(make_pad("ui.menu.pad_slow.title", input_cfg.pad_shift));
+  ch.push_back(make_pad("ui.menu.pad_cancel.title", input_cfg.pad_cancel));
 
-  return std::make_unique<EntryNode>("Joy Pad", "パッドの設定をします",
-                                     std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.joypad.title"),
+      Localized(localization, "ui.menu.joypad.help"), std::move(ch));
 }
 
 // ---------------------------------------------------------------------------
 // Input
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode> BuildInputMenu(InputConfig &input_cfg) {
+static std::unique_ptr<EntryNode>
+BuildInputMenu(InputConfig &input_cfg, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(3);
 
-  ch.push_back(std::make_unique<ToggleNode>(
-      "Z-MessageSkip", "弾キーのメッセージスキップ設定",
-      std::ref(input_cfg.z_msg_skip_enabled)));
+  auto message_skip = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.message_skip.title"),
+      Localized(localization, "ui.menu.message_skip.help"),
+      std::ref(input_cfg.z_msg_skip_enabled));
+  LocalizeToggleValues(*message_skip, localization);
+  ch.push_back(std::move(message_skip));
 
-  ch.push_back(std::make_unique<ToggleNode>(
-      "Z-SpeedDown", "弾キーの押しっぱなしで低速移動",
-      std::ref(input_cfg.z_spd_down_enabled)));
+  auto speed_down = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.speed_down.title"),
+      Localized(localization, "ui.menu.speed_down.help"),
+      std::ref(input_cfg.z_spd_down_enabled));
+  LocalizeToggleValues(*speed_down, localization);
+  ch.push_back(std::move(speed_down));
 
-  ch.push_back(BuildPadMenu(input_cfg));
+  ch.push_back(BuildPadMenu(input_cfg, localization));
 
-  return std::make_unique<EntryNode>("Input", "入力デバイスに関する設定",
-                                     std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.input.title"),
+      Localized(localization, "ui.menu.input.help"), std::move(ch));
 }
 
 // ---------------------------------------------------------------------------
 // Debug (PBG_DEBUG only)
 // ---------------------------------------------------------------------------
 static std::unique_ptr<EntryNode>
-BuildDebugMenu(DebugConfig &debug_cfg,
+BuildDebugMenu(DebugConfig &debug_cfg, i18n::Localization &localization,
                std::function<void(MainMenuAction)> on_action) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(2);
 
   ch.push_back(std::make_unique<ChoiceNode>(
-      "Hitbox", "[DebugMode] 弾幕判定エリア表示", debug_cfg.hitbox_display, 0,
-      2,
-      std::vector<std::string>{FmtLabel("Off"), FmtLabel("Hit"),
-                               FmtLabel("All")}));
+      Localized(localization, "ui.menu.hitbox.title"),
+      Localized(localization, "ui.menu.hitbox.help"), debug_cfg.hitbox_display,
+      0, 2,
+      LocalizedLabels(localization,
+                      {"ui.common.off", "ui.value.hit", "ui.value.all"})));
 
   ch.push_back(std::make_unique<ActionNode>(
-      "Bullet Gallery", "Debug bullet type gallery",
+      Localized(localization, "ui.menu.bullet_gallery.title"),
+      Localized(localization, "ui.menu.bullet_gallery.help"),
       [on_action](MenuController &) {
         on_action(MainMenuAction::OpenBulletGallery);
         return true;
       }));
 
-  return std::make_unique<EntryNode>("Debug", "デバッグ設定", std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.debug.title"),
+      Localized(localization, "ui.menu.debug.help"), std::move(ch));
 }
 } // namespace
 
@@ -552,59 +644,74 @@ BuildDebugMenu(DebugConfig &debug_cfg,
 std::unique_ptr<IMenuNode>
 BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
                   std::function<void(MainMenuAction)> on_action) {
+  auto &localization = services.localization;
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(9);
 
   ch.push_back(std::make_unique<ActionNode>(
-      "Game Start", "ゲームを開始します", [on_action](MenuController &) {
+      Localized(localization, "ui.menu.game_start.title"),
+      Localized(localization, "ui.menu.game_start.help"),
+      [on_action](MenuController &) {
         on_action(MainMenuAction::StartGame);
         return true;
       }));
 
-  ch.push_back(
-      std::make_unique<ActionNode>("Extra Start", "ゲームを開始します(Extra)",
-                                   [on_action](MenuController &) {
-                                     on_action(MainMenuAction::StartExtra);
-                                     return true;
-                                   }));
+  ch.push_back(std::make_unique<ActionNode>(
+      Localized(localization, "ui.menu.extra_start.title"),
+      Localized(localization, "ui.menu.extra_start.help"),
+      [on_action](MenuController &) {
+        on_action(MainMenuAction::StartExtra);
+        return true;
+      }));
 
   ch.push_back(std::make_unique<ActionNode>(
-      "Replay", "リプレイファイルの管理", [on_action](MenuController &) {
+      Localized(localization, "ui.menu.replay.title"),
+      Localized(localization, "ui.menu.replay.help"),
+      [on_action](MenuController &) {
         on_action(MainMenuAction::OpenReplay);
         return true;
       }));
 
-  auto config =
-      std::make_unique<EntryNode>("Config", "各種設定を変更します",
-                                  std::vector<std::unique_ptr<IMenuNode>>{});
-  config->AddChild(BuildDifficultyMenu(cfg.game));
+  auto config = std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.config.title"),
+      Localized(localization, "ui.menu.config.help"),
+      std::vector<std::unique_ptr<IMenuNode>>{});
+  config->AddChild(BuildDifficultyMenu(cfg.game, localization));
   config->AddChild(BuildLanguageMenu(cfg.ui, services.localization));
-  config->AddChild(BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display));
   config->AddChild(
-      BuildSoundMenu(cfg.audio, services.sound_effects, services.music));
-  config->AddChild(BuildInputMenu(cfg.input));
+      BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display, localization));
+  config->AddChild(BuildSoundMenu(cfg.audio, services.sound_effects,
+                                  services.music, localization));
+  config->AddChild(BuildInputMenu(cfg.input, localization));
   ch.push_back(std::move(config));
 
   ch.push_back(std::make_unique<ActionNode>(
-      "Score", "スコアの表示をします", [on_action](MenuController &) {
+      Localized(localization, "ui.menu.score.title"),
+      Localized(localization, "ui.menu.score.help"),
+      [on_action](MenuController &) {
         on_action(MainMenuAction::OpenScore);
         return true;
       }));
 
   auto music = std::make_unique<ActionNode>(
-      "Music", "音楽室に入ります", [on_action](MenuController &) {
+      Localized(localization, "ui.menu.music.title"),
+      Localized(localization, "ui.menu.music.help"),
+      [on_action](MenuController &) {
         on_action(MainMenuAction::OpenMusicRoom);
         return true;
       });
   music->BindEnabled([] { return BGM_Enabled(); });
   ch.push_back(std::move(music));
 
-  ch.push_back(BuildDebugMenu(cfg.debug, on_action));
+  ch.push_back(BuildDebugMenu(cfg.debug, localization, on_action));
 
-  ch.push_back(std::make_unique<ActionNode>(
-      "Exit", "ゲームを終了します", [](MenuController &) { return false; }));
+  ch.push_back(
+      std::make_unique<ActionNode>(Localized(localization, "ui.common.exit"),
+                                   Localized(localization, "ui.menu.exit.help"),
+                                   [](MenuController &) { return false; }));
 
-  return std::make_unique<EntryNode>("Main Menu", "", std::move(ch));
+  return std::make_unique<EntryNode>(
+      Localized(localization, "ui.menu.main.title"), "", std::move(ch));
 }
 
 } // namespace menu

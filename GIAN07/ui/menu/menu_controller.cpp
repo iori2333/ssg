@@ -15,6 +15,22 @@
 
 namespace menu {
 
+namespace {
+
+void RemoveLastUtf8CodePoint(std::string &text) {
+  if (text.empty()) {
+    return;
+  }
+  auto start = text.size() - 1;
+  while (start > 0 &&
+         (static_cast<unsigned char>(text[start]) & 0xC0U) == 0x80U) {
+    start--;
+  }
+  text.resize(start);
+}
+
+} // namespace
+
 bool EntryNode::OnAction(MenuController &ctrl) {
   ctrl.PushPage(*this);
   return true;
@@ -22,6 +38,12 @@ bool EntryNode::OnAction(MenuController &ctrl) {
 
 bool ListNode::OnAction(MenuController &ctrl) {
   list_view_.title = title_;
+  const auto size = size_fn_();
+  list_view_.titles.clear();
+  list_view_.titles.reserve(size);
+  for (size_t i = 0; i < size; ++i) {
+    list_view_.titles.push_back(gen_fn_(i));
+  }
   const auto current = CurrentIndex();
   list_view_.selected =
       current >= 0 && current < static_cast<int>(list_view_.titles.size())
@@ -83,7 +105,7 @@ void MenuController::ResetNavigation(int initial_select) {
   MenuPage page;
   auto children = entry->Children();
   page.items.assign(children.begin(), children.end());
-  page.title = root_node_->Title();
+  page.owner = root_node_;
   page.selected = initial_select;
   stack_.push_back(std::move(page));
 
@@ -259,7 +281,7 @@ void MenuController::Close() {
 
 void MenuController::BuildPageFromEntry(EntryNode &entry) {
   MenuPage page;
-  page.title = entry.Title();
+  page.owner = &entry;
   auto children = entry.Children();
   page.items.reserve(children.size() + 1);
   for (auto *child : children) {
@@ -267,8 +289,8 @@ void MenuController::BuildPageFromEntry(EntryNode &entry) {
   }
 
   auto exit_action = [](MenuController &) { return false; };
-  auto exit_node = std::make_unique<ActionNode>(
-      kDefaultExitTitle, kDefaultExitHelp, std::move(exit_action));
+  auto exit_node = std::make_unique<ActionNode>(exit_title_, exit_help_,
+                                                std::move(exit_action));
   page.items.push_back(exit_node.get());
   exit_nodes_.push_back(std::move(exit_node));
 
@@ -300,7 +322,8 @@ std::string_view MenuController::GetTitle() const {
   if (stack_.empty()) {
     return {};
   }
-  return stack_.back().title;
+  const auto *owner = stack_.back().owner;
+  return owner != nullptr ? owner->Title() : std::string_view{};
 }
 
 std::string_view MenuController::GetCurrentHelp() const {
@@ -376,7 +399,8 @@ void MenuController::RenderPage() {
   GrpGeom->Unlock();
 
   WINDOW_POINT pos = {x_, y_};
-  std::string_view title_str = page.title;
+  const auto title_str =
+      page.owner != nullptr ? page.owner->Title() : std::string_view{};
   auto &title_slot = slots_[0];
   std::string title_key = std::format("T|{}", title_str);
   if (title_slot.cache_key != title_key) {
@@ -530,12 +554,13 @@ void MenuController::RenderList() {
 
   WINDOW_POINT pos = {x_, y_};
   auto &title_slot = slots_[0];
-  std::string title_key = std::format("T|{}", view->title);
+  const auto title = view->title.Get();
+  std::string title_key = std::format("T|{}", title);
   if (title_slot.cache_key != title_key) {
     title_slot.cache_key = title_key;
   }
   TextObj.Render(pos, title_slot.trr, title_slot.cache_key,
-                 [&](TEXTRENDER_SESSION &s) { DrawTitle(s, view->title, w_); });
+                 [&](TEXTRENDER_SESSION &s) { DrawTitle(s, title, w_); });
 
   pos.y += kMenuItemH;
   for (int i = view->scroll; i < view->scroll + visible; i++) {
@@ -547,7 +572,7 @@ void MenuController::RenderList() {
     if (i < n) {
       item_title = view->titles[i];
     } else {
-      item_title = "Exit";
+      item_title = exit_title_.Get();
     }
 
     std::string key = std::format("{}|\x01{}|\x01{}{}{}{}", item_title, "",
@@ -607,7 +632,7 @@ void MenuController::DrawItem(TEXTRENDER_SESSION &s, std::string_view title,
     auto ell_w = s.Extent("...").w;
     while (!display_title.empty() &&
            s.Extent(display_title).w + ell_w > title_avail) {
-      display_title.pop_back();
+      RemoveLastUtf8CodePoint(display_title);
     }
     display_title += "...";
   }

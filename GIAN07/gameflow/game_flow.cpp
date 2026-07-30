@@ -137,7 +137,7 @@ class BulletGalleryFlowState {
 public:
   explicit BulletGalleryFlowState(GameContext &context)
       : scene_(context.config, context.graphics, context.bullets,
-               context.player) {}
+               context.player, context.localization) {}
 
   [[nodiscard]] bool Enter() { return scene_.Enter(); }
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
@@ -174,7 +174,8 @@ private:
 class MusicRoomFlowState {
 public:
   explicit MusicRoomFlowState(GameContext &context)
-      : scene_(context.data, context.graphics, context.music) {}
+      : scene_(context.data, context.graphics, context.music,
+               context.localization) {}
 
   [[nodiscard]] bool Enter() { return scene_.Enter(); }
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
@@ -192,7 +193,8 @@ class ScoreFlowState {
 public:
   explicit ScoreFlowState(GameContext &context)
       : context_(context),
-        scene_(context.records, context.graphics, context.music, context.ui) {}
+        scene_(context.records, context.graphics, context.music, context.ui,
+               context.localization) {}
 
   [[nodiscard]] bool EnterBrowser(GameLevel difficulty,
                                   INPUT_BITS initial_input) {
@@ -239,8 +241,8 @@ private:
 class ReplayFlowState {
 public:
   explicit ReplayFlowState(GameContext &context)
-      : context_(context),
-        scene_(context.records, context.graphics, context.ui) {}
+      : context_(context), scene_(context.records, context.graphics, context.ui,
+                                  context.localization) {}
 
   [[nodiscard]] bool EnterBrowser(INPUT_BITS initial_input) {
     return scene_.EnterBrowser(initial_input);

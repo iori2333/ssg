@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <format>
+#include <string>
 
 #include "bullet_gallery_scene.h"
 
@@ -14,6 +15,9 @@
 #include "gfx/font_uty.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/text.h"
+#include "i18n/localization.h"
+#include "platform/text_backend.h"
 #include "player/player.h"
 #include "settings/config.h"
 #include "sys/input.h"
@@ -40,6 +44,8 @@ bool BulletGalleryScene::Enter() {
   }
   bullets_.Init();
   bullets_.Clear();
+  TextObj.Clear();
+  help_text_ = TextObj.Register({.w = 480, .h = 20});
   for (int row = 0; row < 5; row++) {
     for (int column = 0; column < 6; column++) {
       const auto type = kGalleryGrid[row][column];
@@ -81,7 +87,14 @@ BulletGallerySceneResult BulletGalleryScene::Update(INPUT_BITS input,
     }
   }
   GrpBackend_SetClip(GRP_RES_RECT);
-  GrpPut16(140, 460, "Bullet Gallery  |  ESC to exit");
+  const auto help =
+      localization_.Text(i18n::TextIdFromKey("ui.bullet_gallery.exit_help"));
+  TextObj.Render({80, 458}, help_text_, help, [help](TEXTRENDER_SESSION &s) {
+    s.SetFont(FONT_ID::NORMAL);
+    const auto x = TextLayoutXCenter(s, help);
+    s.Put({x + 1, 1}, help, RGB{96, 96, 96});
+    s.Put({x, 0}, help, RGB{255, 255, 255});
+  });
   GrpBackend_SetClip({playfield::kLeft, playfield::kTop, playfield::kRight + 1,
                       playfield::kBottom + 1});
   Grp_Flip();

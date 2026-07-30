@@ -72,6 +72,28 @@ bool ValidateScenes() {
   return true;
 }
 
+bool ValidateUiCatalogs() {
+  constexpr std::array languages = {"ja", "en", "zh"};
+  constexpr std::array main_menu_titles = {"メインメニュー", "Main Menu",
+                                           "主菜单"};
+  i18n::Localization localization;
+  if (!localization.Initialize("ja")) {
+    std::cerr << "invalid embedded text catalogs\n";
+    return false;
+  }
+  const auto title_id = i18n::TextIdFromKey("ui.menu.main.title");
+  for (size_t i = 0; i < languages.size(); ++i) {
+    if (!localization.SetLanguage(languages[i]) ||
+        localization.Text(title_id) != main_menu_titles[i]) {
+      std::cerr << "invalid UI text catalog for " << languages[i] << '\n';
+      return false;
+    }
+  }
+  std::cout << "validated " << languages.size()
+            << " runtime UI text catalogs\n";
+  return true;
+}
+
 bool ValidateEnemies() {
   for (const int index : kEnemyIds) {
     const auto *script = FindScript(index);
@@ -202,6 +224,9 @@ int main(int argc, char **argv) {
     return 1;
   }
   if (!ValidateScenes()) {
+    return 1;
+  }
+  if (!ValidateUiCatalogs()) {
     return 1;
   }
   if (!ValidateTimeline()) {

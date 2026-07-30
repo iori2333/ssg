@@ -14,6 +14,10 @@
 
 class MusicPlayer;
 
+namespace i18n {
+class Localization;
+}
+
 namespace data {
 class GameData;
 class GraphicsLoader;
@@ -22,8 +26,9 @@ class GraphicsLoader;
 class MusicRoomScene {
 public:
   MusicRoomScene(const data::GameData &data, data::GraphicsLoader &graphics,
-                 MusicPlayer &music)
-      : data_(data), graphics_(graphics), music_(music) {}
+                 MusicPlayer &music, i18n::Localization &localization)
+      : data_(data), graphics_(graphics), music_(music),
+        localization_(localization) {}
 
   [[nodiscard]] bool Enter();
   [[nodiscard]] bool Update(INPUT_BITS input, INPUT_BITS system_input,
@@ -37,7 +42,7 @@ private:
     TEXTRENDER_RECT_ID version;
     std::string_view comment_text;
 
-    void RenderVersion(WINDOW_POINT topleft) const;
+    void RenderVersion(WINDOW_POINT topleft, std::string_view value) const;
     void RenderMidDev(WINDOW_POINT topleft) const;
     void RenderTitle(WINDOW_POINT topleft, std::size_t track_id,
                      std::string_view track_title) const;
@@ -57,4 +62,5 @@ private:
   const data::GameData &data_;
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
+  i18n::Localization &localization_;
 };

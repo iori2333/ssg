@@ -62,6 +62,8 @@ private:
   bool loaded_ = false;
 };
 
-[[nodiscard]] std::string FormatLoadErrors(const LoadErrors &errors);
+[[nodiscard]] std::string FormatLoadErrors(const LoadErrors &errors,
+                                           std::string_view missing_text,
+                                           std::string_view invalid_text);
 
 } // namespace data

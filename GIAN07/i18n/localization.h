@@ -8,9 +8,15 @@
 #include <unordered_map>
 #include <vector>
 
+#include "util/text_id.h"
+
 namespace i18n {
 
 using TextId = uint32_t;
+
+[[nodiscard]] constexpr TextId TextIdFromKey(std::string_view key) {
+  return util::TextIdFromKey(key);
+}
 
 class Localization {
 public:
@@ -22,6 +28,7 @@ public:
   [[nodiscard]] size_t LanguageCount() const { return catalogs_.size(); }
   [[nodiscard]] std::string_view LanguageAt(size_t index) const;
   [[nodiscard]] bool HasText(size_t language_index, TextId id) const;
+  [[nodiscard]] std::string_view Text(TextId id) const;
   [[nodiscard]] std::span<const std::string_view> Lines(TextId id) const;
 
 private:

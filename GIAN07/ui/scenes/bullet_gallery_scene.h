@@ -4,11 +4,16 @@
 
 #include <cstdint>
 
+#include "gfx/text.h"
 #include "sys/input.h"
 
 class BulletManager;
 class Player;
 struct ConfigData;
+
+namespace i18n {
+class Localization;
+}
 
 namespace data {
 class GraphicsLoader;
@@ -19,9 +24,10 @@ enum class BulletGallerySceneResult : uint8_t { Running, ExitRequested };
 class BulletGalleryScene {
 public:
   BulletGalleryScene(const ConfigData &config, data::GraphicsLoader &graphics,
-                     BulletManager &bullets, const Player &player)
+                     BulletManager &bullets, const Player &player,
+                     i18n::Localization &localization)
       : config_(config), graphics_(graphics), bullets_(bullets),
-        player_(player) {}
+        player_(player), localization_(localization) {}
 
   [[nodiscard]] bool Enter();
   [[nodiscard]] BulletGallerySceneResult Update(INPUT_BITS input,
@@ -32,4 +38,6 @@ private:
   data::GraphicsLoader &graphics_;
   BulletManager &bullets_;
   const Player &player_;
+  i18n::Localization &localization_;
+  TEXTRENDER_RECT_ID help_text_ = 0;
 };

@@ -18,9 +18,9 @@ void IMenuNode::OnAdjust(MenuController & /*ctrl*/, int /*delta*/) {}
 // EntryNode
 // ---------------------------------------------------------------------------
 
-EntryNode::EntryNode(std::string_view title, std::string_view help,
+EntryNode::EntryNode(MenuText title, MenuText help,
                      std::vector<std::unique_ptr<IMenuNode>> children)
-    : IMenuNode(title, help) {
+    : IMenuNode(std::move(title), std::move(help)) {
   children_.reserve(children.size());
   child_ptrs_.reserve(children.size());
   for (auto &ch : children) {
@@ -54,9 +54,14 @@ void EntryNode::AddChild(std::unique_ptr<IMenuNode> child) {
 // ToggleNode
 // ---------------------------------------------------------------------------
 
-ToggleNode::ToggleNode(std::string_view title, std::string_view help,
+ToggleNode::ToggleNode(MenuText title, MenuText help,
                        std::reference_wrapper<bool> ref, ChangeFn on_change)
-    : IMenuNode(title, help), ref_(ref), on_change_(std::move(on_change)) {}
+    : IMenuNode(std::move(title), std::move(help)), ref_(ref),
+      on_change_(std::move(on_change)) {}
+
+std::string ToggleNode::Value() const {
+  return std::string(ref_.get() ? on_.Get() : off_.Get());
+}
 
 bool ToggleNode::OnAction(MenuController & /*ctrl*/) {
   ref_.get() = !ref_.get();
@@ -79,7 +84,7 @@ void ToggleNode::OnAdjust(MenuController & /*ctrl*/, int /*delta*/) {
 
 std::string ChoiceNode::Value() const {
   const auto index = value_fn_();
-  return index < labels_.size() ? labels_[index] : std::string{};
+  return std::string(labels_.At(index));
 }
 
 void ChoiceNode::OnAdjust(MenuController & /*ctrl*/, int delta) {
@@ -93,9 +98,9 @@ void ChoiceNode::OnAdjust(MenuController & /*ctrl*/, int delta) {
 // ActionNode
 // ---------------------------------------------------------------------------
 
-ActionNode::ActionNode(std::string_view title, std::string_view help,
-                       ActionFn action, AdjustFn adjust_fn)
-    : IMenuNode(title, help), action_(std::move(action)),
+ActionNode::ActionNode(MenuText title, MenuText help, ActionFn action,
+                       AdjustFn adjust_fn)
+    : IMenuNode(std::move(title), std::move(help)), action_(std::move(action)),
       adjust_fn_(std::move(adjust_fn)) {}
 
 bool ActionNode::OnAction(MenuController &ctrl) { return action_(ctrl); }
@@ -142,16 +147,12 @@ void ListView::MoveDown() {
 // ListNode
 // ---------------------------------------------------------------------------
 
-ListNode::ListNode(std::string_view title, std::string_view help,
-                   SizeFn size_fn, GenFn gen_fn, HandleFn handle_fn,
-                   int init_sel, bool disable_value)
-    : IMenuNode(title, help), current_idx_(init_sel),
-      disable_value_(disable_value), handle_fn_(std::move(handle_fn)) {
-  auto n = size_fn();
-  list_view_.titles.reserve(n);
-  for (size_t i = 0; i < n; i++) {
-    list_view_.titles.push_back(gen_fn(i));
-  }
+ListNode::ListNode(MenuText title, MenuText help, SizeFn size_fn, GenFn gen_fn,
+                   HandleFn handle_fn, int init_sel, bool disable_value)
+    : IMenuNode(std::move(title), std::move(help)), current_idx_(init_sel),
+      disable_value_(disable_value), handle_fn_(std::move(handle_fn)),
+      size_fn_(std::move(size_fn)), gen_fn_(std::move(gen_fn)) {
+  const auto n = size_fn_();
   if (current_idx_ < 0 || static_cast<size_t>(current_idx_) >= n) {
     current_idx_ = 0;
   }
@@ -170,8 +171,8 @@ std::string ListNode::Value() const {
     return {};
   }
   auto idx = static_cast<size_t>(current);
-  if (idx < list_view_.titles.size()) {
-    return list_view_.titles[idx];
+  if (idx < size_fn_()) {
+    return gen_fn_(idx);
   }
   return {};
 }

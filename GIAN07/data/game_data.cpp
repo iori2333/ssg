@@ -158,13 +158,14 @@ std::string_view GameData::TrackComment(size_t index) const {
                                       : std::string_view{};
 }
 
-std::string FormatLoadErrors(const LoadErrors &errors) {
+std::string FormatLoadErrors(const LoadErrors &errors,
+                             std::string_view missing_text,
+                             std::string_view invalid_text) {
   std::string result;
   for (const auto &error : errors) {
     result += std::format("{}: {}\n", ArchiveName(error.archive),
-                          error.kind == LoadErrorKind::Missing
-                              ? "file not found"
-                              : "invalid or incomplete archive");
+                          error.kind == LoadErrorKind::Missing ? missing_text
+                                                               : invalid_text);
   }
   return result;
 }

@@ -18,6 +18,10 @@
 
 class UIManager;
 
+namespace i18n {
+class Localization;
+}
+
 namespace data {
 class GraphicsLoader;
 }
@@ -37,8 +41,9 @@ struct ReplaySceneResult {
 class ReplayScene {
 public:
   ReplayScene(RecordSystem &records, data::GraphicsLoader &graphics,
-              UIManager &ui)
-      : record_system_(records), graphics_(graphics), ui_(ui) {}
+              UIManager &ui, i18n::Localization &localization)
+      : record_system_(records), graphics_(graphics), ui_(ui),
+        localization_(localization) {}
 
   [[nodiscard]] bool EnterBrowser(INPUT_BITS initial_input);
   [[nodiscard]] bool BeginSave(bool extra_stage, INPUT_BITS initial_input);
@@ -69,12 +74,14 @@ private:
   RecordSystem &record_system_;
   data::GraphicsLoader &graphics_;
   UIManager &ui_;
+  i18n::Localization &localization_;
   Mode mode_ = Mode::Browser;
   std::vector<ReplayRecord> replays_;
   std::size_t selected_ = 0;
   INPUT_BITS previous_input_ = 0;
   std::array<TEXTRENDER_RECT_ID, kPageSize> stage_text_{};
   std::array<TEXTRENDER_RECT_ID, kPageSize> player_text_{};
+  TEXTRENDER_RECT_ID ui_text_ = 0;
   std::array<DisplayRow, kPageSize> rows_{};
 
   std::unique_ptr<menu::EntryNode> stage_menu_root_;

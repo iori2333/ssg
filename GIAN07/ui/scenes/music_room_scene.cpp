@@ -15,6 +15,7 @@
 #include "gfx/constants.h"
 #include "gfx/font_uty.h"
 #include "gfx/text.h"
+#include "i18n/localization.h"
 #include "music/music_player.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
@@ -31,13 +32,12 @@ static constexpr RGB ColorDefault = {.r = 153, .g = 204, .b = 255};
 // State
 // -----
 
-void MusicRoomScene::Text::RenderVersion(WINDOW_POINT topleft) const {
-  static constexpr std::string_view VERSION =
-      "秋霜玉    Version 1.005     ★デモ対応版＃★";
-  TextObj.Render(topleft, version, VERSION, [](TEXTRENDER_SESSION &s) {
+void MusicRoomScene::Text::RenderVersion(WINDOW_POINT topleft,
+                                         std::string_view value) const {
+  TextObj.Render(topleft, version, value, [value](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
-    s.Put({.x = 0, .y = 0}, VERSION);
+    s.Put({.x = 0, .y = 0}, value);
   });
 }
 
@@ -460,7 +460,9 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
     }
     text.RenderTitle({400, (144 + 2)}, track_id_, music_.CurrentTitle());
     text.RenderComment({(400 - 40), (144 + 30)});
-    text.RenderVersion({(200 - 50), 460});
+    text.RenderVersion(
+        {(200 - 50), 460},
+        localization_.Text(i18n::TextIdFromKey("ui.music_room.version")));
 
     Grp_Flip();
   }

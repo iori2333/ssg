@@ -22,7 +22,10 @@
 #include "gfx/font_uty.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/text.h"
+#include "i18n/localization.h"
 #include "music/music_player.h"
+#include "platform/text_backend.h"
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
@@ -33,9 +36,77 @@
 namespace {
 constexpr auto kDefaultScoreName = "Vivit!";
 
+std::string_view Text(const i18n::Localization &localization,
+                      std::string_view key) {
+  return localization.Text(i18n::TextIdFromKey(key));
+}
+
+std::string_view DifficultyName(const i18n::Localization &localization,
+                                GameLevel level) {
+  constexpr std::array keys = {"ui.value.easy", "ui.value.normal",
+                               "ui.value.hard", "ui.value.lunatic",
+                               "ui.value.extra"};
+  const auto index = std::to_underlying(level);
+  return index < keys.size() ? Text(localization, keys[index])
+                             : std::string_view{};
+}
+
+std::string_view StageName(const i18n::Localization &localization,
+                           StageId stage) {
+  constexpr std::array keys = {"ui.value.stage1", "ui.value.stage2",
+                               "ui.value.stage3", "ui.value.stage4",
+                               "ui.value.stage5", "ui.value.stage6",
+                               "ui.value.extra"};
+  const auto index = std::to_underlying(stage);
+  return index < keys.size() ? Text(localization, keys[index])
+                             : std::string_view{};
+}
+
+std::string_view PlayerName(const i18n::Localization &localization,
+                            PlayerType player) {
+  constexpr std::array keys = {"ui.value.wide", "ui.value.homing",
+                               "ui.value.laser"};
+  const auto index = std::to_underlying(player);
+  return index < keys.size() ? Text(localization, keys[index])
+                             : std::string_view{};
+}
+
 std::string RecordDate(int64_t timestamp) {
   return std::format("{:%Y-%m-%d %H%M}", std::chrono::system_clock::time_point{
                                              std::chrono::seconds{timestamp}});
+}
+
+void RenderUiText(WINDOW_POINT position, TEXTRENDER_RECT_ID rect,
+                  std::string_view text, bool centered = false) {
+  TextObj.Render(position, rect, text, [text, centered](TEXTRENDER_SESSION &s) {
+    s.SetFont(FONT_ID::NORMAL);
+    const auto x = centered ? TextLayoutXCenter(s, text) : 0;
+    s.Put({x + 1, 1}, text, RGB{96, 96, 96});
+    s.Put({x, 0}, text, RGB{255, 255, 255});
+  });
+}
+
+void RenderDetailRow(WINDOW_POINT position, TEXTRENDER_RECT_ID rect,
+                     std::string_view label, std::string_view value) {
+  const auto cache_key = std::format("{}\x1F{}", label, value);
+  TextObj.Render(
+      position, rect, cache_key, [label, value](TEXTRENDER_SESSION &s) {
+        constexpr int label_right = 132;
+        constexpr int separator_x = 144;
+        constexpr int value_x = 168;
+        constexpr RGB shadow{64, 64, 80};
+        constexpr RGB label_color{128, 180, 255};
+        constexpr RGB value_color{255, 255, 255};
+
+        s.SetFont(FONT_ID::NORMAL);
+        const auto label_x = std::max(0, label_right - s.Extent(label).w);
+        s.Put({label_x + 1, 1}, label, shadow);
+        s.Put({label_x, 0}, label, label_color);
+        s.Put({separator_x + 1, 1}, ":", shadow);
+        s.Put({separator_x, 0}, ":", label_color);
+        s.Put({value_x + 1, 1}, value, shadow);
+        s.Put({value_x, 0}, value, value_color);
+      });
 }
 } // namespace
 
@@ -60,6 +131,8 @@ bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty,
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
+  TextObj.Clear();
+  ui_text_ = TextObj.Register({.w = 480, .h = 24});
   input_locked_ = initial_input != 0U;
   return true;
 }
@@ -146,6 +219,8 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   current_difficulty_ = std::to_underlying(current_record_->difficulty);
   ResetRows();
   GrpBackend_SetClip(GRP_RES_RECT);
+  TextObj.Clear();
+  ui_text_ = TextObj.Register({.w = 480, .h = 24});
   name_entry_.Begin(true, initial_input);
   save_failed_ = false;
   if (change_music) {
@@ -177,7 +252,8 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(INPUT_BITS input,
     const auto gy = rows_[pending_rank_].y >> 6;
     name_entry_.Draw(gx + 88, gy + 4);
     if (save_failed_) {
-      GrpPut16(216, 392, "Score save failed");
+      const auto failed = Text(localization_, "ui.score.save_failed");
+      RenderUiText({80, 390}, ui_text_, failed, true);
     }
     Grp_Flip();
   }
@@ -264,22 +340,35 @@ void ScoreScene::DrawDetail() const {
 
   constexpr int text_x = x + 20;
   int text_y = y + 12;
-  GrpPut16(text_x + 144, text_y, "Score Detail");
+  const auto detail_title = Text(localization_, "ui.score.detail");
+  RenderUiText({x, text_y}, ui_text_, detail_title, true);
   text_y += 28;
-  const std::array lines = {
-      std::format("Name       {}", record.name),
-      std::format("Date       {}", RecordDate(record.created_at)),
-      std::format("Difficulty {}", GameLevelName(record.difficulty)),
-      std::format("Stage      {}", StageName(record.stage)),
-      std::format("Weapon     {}", PlayerTypeName(record.player_type)),
-      std::format("Score      {}", record.score),
-      std::format("Graze      {}", record.graze),
-      std::format("Miss       {}", record.miss_count),
-      std::format("Bomb       {}", record.bomb_used),
-      std::format("Deathbomb  {}", record.deathbomb_count),
+  const std::array labels = {
+      Text(localization_, "ui.score.name"),
+      Text(localization_, "ui.score.date"),
+      Text(localization_, "ui.score.difficulty"),
+      Text(localization_, "ui.score.stage"),
+      Text(localization_, "ui.score.weapon"),
+      Text(localization_, "ui.score.score"),
+      Text(localization_, "ui.score.graze"),
+      Text(localization_, "ui.score.miss"),
+      Text(localization_, "ui.score.bomb"),
+      Text(localization_, "ui.score.deathbomb"),
   };
-  for (const auto &line : lines) {
-    GrpPut16(text_x, text_y, line.c_str());
+  const std::array values = {
+      std::string(record.name),
+      RecordDate(record.created_at),
+      std::string(DifficultyName(localization_, record.difficulty)),
+      std::string(StageName(localization_, record.stage)),
+      std::string(PlayerName(localization_, record.player_type)),
+      std::format("{}", record.score),
+      std::format("{}", record.graze),
+      std::format("{}", record.miss_count),
+      std::format("{}", record.bomb_used),
+      std::format("{}", record.deathbomb_count),
+  };
+  for (size_t i = 0; i < labels.size(); ++i) {
+    RenderDetailRow({text_x, text_y}, ui_text_, labels[i], values[i]);
     text_y += 21;
   }
 }

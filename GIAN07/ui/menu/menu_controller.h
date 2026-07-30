@@ -36,7 +36,7 @@ enum class MenuColor {
 };
 
 struct MenuPage {
-  std::string_view title;
+  IMenuNode *owner = nullptr;
   std::vector<IMenuNode *> items;
   int selected = 0;
   int scroll = 0;
@@ -68,6 +68,10 @@ public:
   void AdjustYForTallMenu(int baseline_y, int max_visible);
   void SetLastKey(INPUT_BITS key) { last_key_ = key; }
   void SetRootCancelEnabled(bool enabled) { root_cancel_enabled_ = enabled; }
+  void SetExitText(MenuText title, MenuText help) {
+    exit_title_ = std::move(title);
+    exit_help_ = std::move(help);
+  }
 
   void ActivateListView(ListView &view);
   void DeactivateListView();
@@ -83,9 +87,6 @@ private:
     TEXTRENDER_RECT_ID trr;
     std::string cache_key;
   };
-
-  static constexpr auto kDefaultExitTitle = "Exit";
-  static constexpr auto kDefaultExitHelp = "一つ前のメニューにもどります";
 
   void ProcessInput(INPUT_BITS key);
   void ProcessListInput(INPUT_BITS key);
@@ -119,6 +120,8 @@ private:
   uint8_t fast_repeat_wait_ = kMenuKeyWait;
   bool first_wait_ = false;
   bool root_cancel_enabled_ = true;
+  MenuText exit_title_ = "Exit";
+  MenuText exit_help_ = "一つ前のメニューにもどります";
 };
 
 } // namespace menu

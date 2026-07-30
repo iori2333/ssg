@@ -8,33 +8,56 @@
 #include "menu/menu_builder.h"
 #include "ui_manager.h"
 
+#include "i18n/localization.h"
 #include "settings/config.h"
 
-UIManager::UIManager() {
+namespace {
+
+menu::MenuText Localized(i18n::Localization &localization,
+                         std::string_view key) {
+  const auto id = i18n::TextIdFromKey(key);
+  return menu::MenuText([&localization, id] { return localization.Text(id); });
+}
+
+} // namespace
+
+UIManager::UIManager() = default;
+
+void UIManager::ConfigureMain(ConfigData &config,
+                              menu::MainMenuServices services) {
+  auto &localization = services.localization;
+  root_menu_ = menu::BuildMainMenuTree(
+      config, services,
+      [this](menu::MainMenuAction action) { main_menu_action_ = action; });
+
   std::vector<std::unique_ptr<menu::IMenuNode>> exit_items;
   auto save_and_exit = std::make_unique<menu::ActionNode>(
-      "  Save & Exit  ", "", [this](menu::MenuController &) {
+      Localized(localization, "ui.pause.save_and_exit"), "",
+      [this](menu::MenuController &) {
         pause_action_ = PauseAction::SaveReplayAndExit;
         return false;
       });
   save_and_exit_item_ = save_and_exit.get();
   exit_items.push_back(std::move(save_and_exit));
   exit_items.push_back(std::make_unique<menu::ActionNode>(
-      "   お っ け ～ ", "", [this](menu::MenuController &) {
+      Localized(localization, "ui.pause.confirm_exit"), "",
+      [this](menu::MenuController &) {
         pause_action_ = PauseAction::Exit;
         return false;
       }));
   exit_items.push_back(std::make_unique<menu::ActionNode>(
-      "   だ め だ め", "", [this](menu::MenuController &) {
+      Localized(localization, "ui.pause.cancel"), "",
+      [this](menu::MenuController &) {
         pause_action_ = PauseAction::Resume;
         return false;
       }));
-  exit_menu_ = std::make_unique<menu::EntryNode>("終了するの？", "",
-                                                 std::move(exit_items));
+  exit_menu_ = std::make_unique<menu::EntryNode>(
+      Localized(localization, "ui.pause.title"), "", std::move(exit_items));
 
   std::vector<std::unique_ptr<menu::IMenuNode>> game_over_items;
   auto continue_game = std::make_unique<menu::ActionNode>(
-      "Continue", "", [this](menu::MenuController &) {
+      Localized(localization, "ui.game_over.continue"), "",
+      [this](menu::MenuController &) {
         game_over_action_ = GameOverAction::Continue;
         return false;
       });
@@ -42,7 +65,8 @@ UIManager::UIManager() {
   game_over_items.push_back(std::move(continue_game));
 
   auto save_replay = std::make_unique<menu::ActionNode>(
-      "Save Replay & Exit", "", [this](menu::MenuController &) {
+      Localized(localization, "ui.game_over.save_replay_exit"), "",
+      [this](menu::MenuController &) {
         game_over_action_ = GameOverAction::SaveReplayAndExit;
         return false;
       });
@@ -50,12 +74,20 @@ UIManager::UIManager() {
   game_over_items.push_back(std::move(save_replay));
 
   game_over_items.push_back(std::make_unique<menu::ActionNode>(
-      "Exit Without Replay", "", [this](menu::MenuController &) {
+      Localized(localization, "ui.game_over.exit_without_replay"), "",
+      [this](menu::MenuController &) {
         game_over_action_ = GameOverAction::Exit;
         return false;
       }));
   game_over_menu_ = std::make_unique<menu::EntryNode>(
-      "Game Over", "", std::move(game_over_items));
+      Localized(localization, "ui.game_over.title"), "",
+      std::move(game_over_items));
+
+  auto exit_title = Localized(localization, "ui.common.back");
+  auto exit_help = Localized(localization, "ui.common.back_help");
+  main_window_.SetExitText(exit_title, exit_help);
+  exit_window_.SetExitText(exit_title, exit_help);
+  game_over_window_.SetExitText(std::move(exit_title), std::move(exit_help));
 }
 
 void UIManager::InitMessageWindow(const WINDOW_LTRB &rect,
@@ -84,13 +116,6 @@ void UIManager::SetMessageFace(uint8_t face_id) {
 void UIManager::SetLargeMessageFont() { msg_window_.SetFont(FONT_ID::LARGE); }
 
 void UIManager::NewMessagePage() { msg_window_.NewPage(); }
-
-void UIManager::ConfigureMain(ConfigData &config,
-                              menu::MainMenuServices services) {
-  root_menu_ = menu::BuildMainMenuTree(
-      config, services,
-      [this](menu::MainMenuAction action) { main_menu_action_ = action; });
-}
 
 void UIManager::InitMain() {
   main_menu_action_.reset();

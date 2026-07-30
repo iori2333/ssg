@@ -8,11 +8,16 @@
 #include <optional>
 #include <vector>
 
+#include "gfx/text.h"
 #include "record/record_system.h"
 #include "ui/name_entry.h"
 
 class MusicPlayer;
 class UIManager;
+
+namespace i18n {
+class Localization;
+}
 
 namespace data {
 class GraphicsLoader;
@@ -29,8 +34,10 @@ enum class ScoreRegistrationStart : uint8_t { Active, Complete };
 class ScoreScene {
 public:
   ScoreScene(RecordSystem &records, data::GraphicsLoader &graphics,
-             MusicPlayer &music, UIManager &ui)
-      : record_system_(records), graphics_(graphics), music_(music), ui_(ui) {}
+             MusicPlayer &music, UIManager &ui,
+             i18n::Localization &localization)
+      : record_system_(records), graphics_(graphics), music_(music), ui_(ui),
+        localization_(localization) {}
 
   [[nodiscard]] bool ShowLeaderboard(GameLevel initial_difficulty,
                                      INPUT_BITS initial_input);
@@ -66,8 +73,10 @@ private:
   bool input_locked_ = false;
   bool detail_open_ = false;
   bool save_failed_ = false;
+  TEXTRENDER_RECT_ID ui_text_ = 0;
   NameEntry name_entry_;
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
   UIManager &ui_;
+  i18n::Localization &localization_;
 };

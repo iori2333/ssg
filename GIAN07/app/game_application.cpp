@@ -3,6 +3,8 @@
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <string>
+#include <string_view>
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_messagebox.h>
@@ -17,6 +19,7 @@
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "gfx/window_backend.h"
+#include "i18n/localization.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
 #include "sys/path.h"
@@ -92,8 +95,14 @@ bool GameApplication::Initialize() {
 
   const auto data_errors = context_.data.Load(PathForData());
   if (!data_errors.empty()) {
-    const auto message = data::FormatLoadErrors(data_errors);
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Invalid game data",
+    const auto text = [this](std::string_view key) {
+      return context_.localization.Text(i18n::TextIdFromKey(key));
+    };
+    const auto message =
+        data::FormatLoadErrors(data_errors, text("ui.error.file_not_found"),
+                               text("ui.error.invalid_archive"));
+    const auto title = text("ui.error.invalid_game_data");
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, std::string(title).c_str(),
                              message.c_str(), nullptr);
     return false;
   }

@@ -297,6 +297,7 @@ cp bin/MAP_ORIG.PAK bin/MAP.PAK
 script_tool disasm-scl <in_binary> <out_text>
 script_tool asm-scl   <in_text> <out_binary>
 script_tool asm-messages <in_text> <out_binary>
+script_tool asm-ui <in_text> <out_binary>
 script_tool disasm-ecl <in_binary> <out_text>
 script_tool asm-ecl   <in_text> <out_binary>
 ```
@@ -334,7 +335,20 @@ END
 ```
 
 `asm-messages` 会检查重复键和 32 位文本 ID 冲突。构建过程会将所有支持
-的语言目录一起嵌入游戏；运行时缺失的当前语言文本会回退到日文。
+的语言目录一起嵌入游戏，并要求每种语言具有完全相同的键集合。
+
+### UI 本地化文本格式
+
+菜单、弹窗等非 HUD UI 文本保存在 `scripts/i18n/<language>/ui.txt`，
+与 SCL 消息目录分开。每个词条是一个单行键值：
+
+```
+ui.menu.game_start.title = "Game Start"
+ui.menu.game_start.help = "Start the game"
+```
+
+`asm-ui` 会检查重复键和 32 位文本 ID 冲突。UI 和 SCL 目录分别编译，
+在运行时合并到同一种语言的查询表中。
 
 ### ECL 文本格式
 
@@ -364,10 +378,12 @@ STI vector 类型：`BOSSLEFT`（剩余 Boss 数量）、`HP`（血量阈值）�
 # 1. 编辑 SCL 控制流和对应文本目录
 vim scripts/stage1.scl
 vim scripts/i18n/zh/messages.txt
+vim scripts/i18n/zh/ui.txt
 
 # 2. 可单独检查生成结果
 script_tool asm-scl scripts/stage1.scl work/stage1.bin
 script_tool asm-messages scripts/i18n/zh/messages.txt work/zh_messages.bin
+script_tool asm-ui scripts/i18n/zh/ui.txt work/zh_ui.bin
 
 # 3. 重新构建游戏
 ./build_windows.bat

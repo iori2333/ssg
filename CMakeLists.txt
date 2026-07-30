@@ -265,11 +265,15 @@ target_include_directories(GIAN07 PRIVATE "${SCRIPT_GEN_DIR}")
 set(SUPPORTED_MESSAGE_LANGUAGES ja en zh)
 set(MESSAGE_SRC_DIR "${SCRIPT_SRC_DIR}/i18n")
 set(MESSAGE_GENERATED_HEADERS "")
+set(UI_GENERATED_HEADERS "")
 set(EMBEDDED_MESSAGE_CATALOGS "")
 foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
     set(message_src "${MESSAGE_SRC_DIR}/${language}/messages.txt")
+    set(ui_src "${MESSAGE_SRC_DIR}/${language}/ui.txt")
     set(message_bin "${SCRIPT_GEN_DIR}/${language}_messages.bin")
+    set(ui_bin "${SCRIPT_GEN_DIR}/${language}_ui.bin")
     set(message_header "${SCRIPT_GEN_DIR}/${language}_messages.h")
+    set(ui_header "${SCRIPT_GEN_DIR}/${language}_ui.h")
 
     add_custom_command(
         OUTPUT "${message_bin}"
@@ -287,7 +291,24 @@ foreach(language IN LISTS SUPPORTED_MESSAGE_LANGUAGES)
         DEPENDS "${message_bin}" "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
         COMMENT "Generating ${language} message catalog header"
     )
+    add_custom_command(
+        OUTPUT "${ui_bin}"
+        COMMAND script_tool asm-ui "${ui_src}" "${ui_bin}"
+        DEPENDS script_tool "${ui_src}"
+        COMMENT "Assembling ${language} UI text catalog"
+    )
+    add_custom_command(
+        OUTPUT "${ui_header}"
+        COMMAND ${CMAKE_COMMAND}
+            -DINPUT="${ui_bin}"
+            -DOUTPUT="${ui_header}"
+            -DVARNAME="${language}_ui"
+            -P "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
+        DEPENDS "${ui_bin}" "${CMAKE_SOURCE_DIR}/cmake/bin2h.cmake"
+        COMMENT "Generating ${language} UI text catalog header"
+    )
     list(APPEND MESSAGE_GENERATED_HEADERS "${message_header}")
+    list(APPEND UI_GENERATED_HEADERS "${ui_header}")
     list(APPEND EMBEDDED_MESSAGE_CATALOGS "${message_src}|${language}")
 endforeach()
 
@@ -307,7 +328,7 @@ add_custom_command(
         -DOUTPUT_CPP="${MESSAGES_DATA_CPP}"
         -DOUTPUT_H="${MESSAGES_DATA_H}"
         -P "${CMAKE_SOURCE_DIR}/cmake/generate_messages_data.cmake"
-    DEPENDS ${MESSAGE_GENERATED_HEADERS}
+    DEPENDS ${MESSAGE_GENERATED_HEADERS} ${UI_GENERATED_HEADERS}
             "${CMAKE_SOURCE_DIR}/cmake/generate_messages_data.cmake"
             "${MESSAGE_ENTRIES_FILE}"
     COMMENT "Generating embedded message catalog data"

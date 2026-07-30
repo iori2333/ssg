@@ -5,6 +5,7 @@
 ///   script_tool disasm-scl <in_binary> <out_text>
 ///   script_tool asm-scl   <in_text> <out_binary>
 ///   script_tool asm-messages <in_text> <out_binary>
+///   script_tool asm-ui <in_text> <out_binary>
 ///   script_tool disasm-ecl <in_binary> <out_text>
 ///   script_tool asm-ecl   <in_text> <out_binary>
 ///
@@ -32,6 +33,7 @@
 #include <vector>
 
 #include "util/endian.h"
+#include "util/text_id.h"
 
 // ============================================================================
 // ECL command length table (from ECL_LEN.h)
@@ -430,11 +432,7 @@ static std::vector<uint8_t> unescape_string(std::string_view s) {
 }
 
 static uint32_t text_id_hash(std::string_view key) {
-    uint32_t hash = 2166136261U;
-    for (const unsigned char c : key) {
-        hash = (hash ^ c) * 16777619U;
-    }
-    return hash;
+    return util::TextIdFromKey(key);
 }
 
 // ============================================================================
@@ -798,6 +796,27 @@ static void append_u32(std::vector<uint8_t> &out, uint32_t value) {
     out.push_back(static_cast<uint8_t>(value >> 24));
 }
 
+static bool write_text_catalog(std::vector<MessageSourceEntry> entries,
+                               const char *out_file,
+                               std::string_view catalog_name) {
+    std::ranges::sort(entries, {}, &MessageSourceEntry::id);
+    std::vector<uint8_t> out = {'S', 'S', 'T', 'X'};
+    append_u32(out, 1);
+    append_u32(out, static_cast<uint32_t>(entries.size()));
+    for (const auto &entry : entries) {
+        append_u32(out, entry.id);
+        append_u16(out, static_cast<uint16_t>(entry.lines.size()));
+        for (const auto &line : entry.lines) {
+            append_u32(out, static_cast<uint32_t>(line.size()));
+            out.insert(out.end(), line.begin(), line.end());
+        }
+    }
+
+    std::println("Assembled {} catalog: {} entries, {} bytes", catalog_name,
+                 entries.size(), out.size());
+    return write_file(out_file, out);
+}
+
 static bool cmd_asm_messages(const char *in_file, const char *out_file) {
     std::ifstream ifs(in_file);
     if (!ifs) {
@@ -865,22 +884,53 @@ static bool cmd_asm_messages(const char *in_file, const char *out_file) {
     }
     if (!finish_entry() || entries.empty()) return false;
 
-    std::ranges::sort(entries, {}, &MessageSourceEntry::id);
-    std::vector<uint8_t> out = {'S', 'S', 'T', 'X'};
-    append_u32(out, 1);
-    append_u32(out, static_cast<uint32_t>(entries.size()));
-    for (const auto &entry : entries) {
-        append_u32(out, entry.id);
-        append_u16(out, static_cast<uint16_t>(entry.lines.size()));
-        for (const auto &message_line : entry.lines) {
-            append_u32(out, static_cast<uint32_t>(message_line.size()));
-            out.insert(out.end(), message_line.begin(), message_line.end());
-        }
+    return write_text_catalog(std::move(entries), out_file, "message");
+}
+
+static bool cmd_asm_ui(const char *in_file, const char *out_file) {
+    std::ifstream ifs(in_file);
+    if (!ifs) {
+        std::println(stderr, "Error: Cannot open '{}'", in_file);
+        return false;
     }
 
-    std::println("Assembled message catalog: {} entries, {} bytes", entries.size(),
-                 out.size());
-    return write_file(out_file, out);
+    std::vector<MessageSourceEntry> entries;
+    std::unordered_set<std::string> keys;
+    std::unordered_map<uint32_t, std::string> ids;
+    std::string line;
+    int lineno = 0;
+    while (std::getline(ifs, line)) {
+        lineno++;
+        auto tokens = tokenize_line(line, lineno);
+        if (tokens.empty()) return false;
+        if (tokens[0].kind == TokenKind::COMMENT) continue;
+        if (tokens.size() != 2 || tokens[0].kind != TokenKind::KEY ||
+            tokens[1].kind != TokenKind::STRING) {
+            std::println(stderr, "Line {}: expected key = \"text\"", lineno);
+            return false;
+        }
+
+        const auto &key = tokens[0].text;
+        if (!keys.insert(key).second) {
+            std::println(stderr, "Line {}: duplicate UI key '{}'", lineno, key);
+            return false;
+        }
+        const auto id = text_id_hash(key);
+        if (const auto it = ids.find(id); it != ids.end()) {
+            std::println(stderr,
+                         "Line {}: UI text ID collision between '{}' and '{}'",
+                         lineno, it->second, key);
+            return false;
+        }
+        ids.emplace(id, key);
+        entries.push_back(MessageSourceEntry{
+            .key = key,
+            .id = id,
+            .lines = {unescape_string(tokens[1].text)},
+        });
+    }
+    if (entries.empty()) return false;
+    return write_text_catalog(std::move(entries), out_file, "UI text");
 }
 
 // ============================================================================
@@ -1350,6 +1400,9 @@ Usage:
   script_tool asm-messages <in_text> <out_binary>
       Assemble a localized SCL message catalog
 
+  script_tool asm-ui <in_text> <out_binary>
+      Assemble a localized UI text catalog
+
   script_tool disasm-ecl <in_binary> <out_text>
       Disassemble ECL binary to human-readable text with labels
 
@@ -1360,6 +1413,7 @@ The .header N directive in ECL text sets the number of script entries.
 Labels use @name: syntax.  Jump/call operands use @name references.
 SCL strings use C-style escapes (\xNN, \\, \", \n, \r, \t).
 Message catalog entries use an @key: label followed by one or more MSG lines.
+UI catalog entries use key = "text" on a single line.
 )");
 }
 
@@ -1397,6 +1451,14 @@ int main(int argc, char **argv) {
             return 1;
         }
         return cmd_asm_messages(argv[2], argv[3]) ? 0 : 1;
+    }
+
+    if (mode == "asm-ui") {
+        if (argc != 4) {
+            std::println(stderr, "Usage: script_tool asm-ui <in_text> <out_binary>");
+            return 1;
+        }
+        return cmd_asm_ui(argv[2], argv[3]) ? 0 : 1;
     }
 
     if (mode == "disasm-ecl") {
