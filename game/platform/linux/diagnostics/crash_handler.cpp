@@ -6,6 +6,8 @@
 
 #include <unistd.h>
 
+#include "sys/crash_handler.h"
+
 namespace crash::platform {
 namespace {
 

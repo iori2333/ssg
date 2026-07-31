@@ -19,10 +19,11 @@
 #include <SDL3/SDL_main.h>
 
 #include "game_application.h"
+
 #include "gfx/constants.h"
+#include "sys/crash_handler.h"
 #include "sys/log.h"
 #include "sys/path.h"
-#include "util/crash_handler.h"
 #include "util/guard.h"
 
 int main(int argc, char **args) {

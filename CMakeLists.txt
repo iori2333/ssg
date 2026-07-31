@@ -96,50 +96,64 @@ if(Git_FOUND)
 endif()
 
 # ============================================================
-# Create the executable
+# Cross-platform runtime library
 # ============================================================
-add_executable(GIAN07
-    ${PBG_SRC}
+add_library(game_runtime STATIC
     ${GAME_SRC}
 )
 
-target_compile_definitions(GIAN07 PRIVATE
+target_include_directories(game_runtime PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+)
+
+target_compile_definitions(game_runtime PUBLIC
     GAME_VERSION="${GAME_VERSION}"
     $<$<CONFIG:Debug>:PBG_DEBUG>
 )
 
 if(WIN32)
-    target_sources(GIAN07 PRIVATE ${PLATFORM_WINDOWS_SRC})
-
-    target_sources(GIAN07 PRIVATE GIAN07/app/GIAN07.rc)
-
-    target_compile_definitions(GIAN07 PRIVATE WIN32)
-    target_link_libraries(GIAN07 PRIVATE ${WIN32_SYSTEM_LIBS})
+    target_sources(game_runtime PRIVATE ${PLATFORM_WINDOWS_SRC})
+    target_compile_definitions(game_runtime PUBLIC WIN32)
+    target_link_libraries(game_runtime PRIVATE ${WIN32_SYSTEM_LIBS})
 elseif(UNIX)
-    target_sources(GIAN07 PRIVATE ${PLATFORM_LINUX_SRC})
-    target_compile_definitions(GIAN07 PRIVATE LINUX SDL3=1)
-    target_link_libraries(GIAN07 PRIVATE
+    target_sources(game_runtime PRIVATE ${PLATFORM_LINUX_SRC})
+    target_compile_definitions(game_runtime PUBLIC LINUX SDL3=1)
+    target_link_libraries(game_runtime PRIVATE
         PkgConfig::PANGO
         PkgConfig::FONTCONFIG
         pthread dl m
     )
 endif()
 
+target_link_libraries(game_runtime
+    PUBLIC SDL3::SDL3-static
+    PRIVATE
+    vorbis vorbisfile miniaudio dr_libs
+    webp libfluidsynth
+)
+
+if(MSVC)
+    target_compile_options(game_runtime PRIVATE /MP)
+endif()
+
 # ============================================================
-# Include directories
+# Main executable
 # ============================================================
+add_executable(GIAN07
+    ${PBG_SRC}
+)
+
+if(WIN32)
+    target_sources(GIAN07 PRIVATE GIAN07/app/GIAN07.rc)
+endif()
+
 target_include_directories(GIAN07 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
 )
 
-# ============================================================
-# Link libraries
-# ============================================================
 target_link_libraries(GIAN07 PRIVATE
-    vorbis vorbisfile miniaudio dr_libs
-    SDL3::SDL3-static webp
-    tomlplusplus::tomlplusplus libfluidsynth
+    game_runtime
+    tomlplusplus::tomlplusplus
 )
 
 # ============================================================
