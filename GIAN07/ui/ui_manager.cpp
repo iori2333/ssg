@@ -31,6 +31,13 @@ void UIManager::ConfigureMain(ConfigData &config,
       [this](menu::MainMenuAction action) { main_menu_action_ = action; });
 
   std::vector<std::unique_ptr<menu::IMenuNode>> exit_items;
+  exit_items.push_back(std::make_unique<menu::ActionNode>(
+      Localized(localization, "ui.pause.cancel"), "",
+      [this](menu::MenuController &) {
+        pause_action_ = PauseAction::Resume;
+        return false;
+      }));
+
   auto save_and_exit = std::make_unique<menu::ActionNode>(
       Localized(localization, "ui.pause.save_and_exit"), "",
       [this](menu::MenuController &) {
@@ -43,12 +50,6 @@ void UIManager::ConfigureMain(ConfigData &config,
       Localized(localization, "ui.pause.confirm_exit"), "",
       [this](menu::MenuController &) {
         pause_action_ = PauseAction::Exit;
-        return false;
-      }));
-  exit_items.push_back(std::make_unique<menu::ActionNode>(
-      Localized(localization, "ui.pause.cancel"), "",
-      [this](menu::MenuController &) {
-        pause_action_ = PauseAction::Resume;
         return false;
       }));
   exit_menu_ = std::make_unique<menu::EntryNode>(
@@ -124,7 +125,7 @@ void UIManager::InitMain() {
 }
 
 void UIManager::InitExit() {
-  exit_window_.Init(140);
+  exit_window_.Init(180);
   exit_window_.SetRootCancelEnabled(false);
   exit_window_.Navigate(*exit_menu_);
 }

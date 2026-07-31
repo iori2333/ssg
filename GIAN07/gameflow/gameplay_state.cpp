@@ -308,7 +308,7 @@ FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
   if ((input & KEY_ESC) != 0) {
     context.ui.PrepareExitMenu(!context.config.debug.demo_recording &&
                                context.records.HasRecordedStages());
-    context.ui.Exit().Open({250, 150}, 1, input);
+    context.ui.Exit().Open({230, 150}, 0, input);
     BGM_Pause();
     SndBackend_PauseAll();
     phase_ = Phase::Paused;
