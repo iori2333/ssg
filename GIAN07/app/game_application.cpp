@@ -10,9 +10,6 @@
 
 #include "game_application.h"
 
-#include "audio/bgm.h"
-#include "audio/midi.h"
-#include "audio/snd.h"
 #include "data/game_data.h"
 #include "gameflow/game_flow.h"
 #include "gfx/graphics.h"
@@ -63,10 +60,6 @@ bool GameApplication::Initialize() {
   config_loaded_ = true;
   const auto &config = config_;
   ApplyPadBindings(input_, config.input);
-  (void)Mid_SetFlags(config.audio.fix_sysex_bugs ? MID_FLAGS::FIX_SYSEX_BUGS
-                                                 : MID_FLAGS::NONE);
-  Mid_SetVolume(config.audio.bgm_volume);
-  Snd_SetVolumes(config.audio.bgm_volume, config.audio.se_volume);
 
   if (!context_.localization.Initialize(config.ui.language)) {
     logging::Critical(logging::Channel::I18n,
@@ -83,11 +76,10 @@ bool GameApplication::Initialize() {
   display_initialized_ = true;
   Grp_ScreenshotSetPrefix("screenshots/");
 
-  if (config.audio.bgm_enabled && !BGM_Init(config.audio.soundfont)) {
+  if (!context_.audio.Initialize(config.audio)) {
     logging::Warning(logging::Channel::Audio,
                      "No background music backend is available");
   }
-  BGM_SetGainApply(config.audio.bgm_vol_norm);
 
   const auto data_errors = context_.data.Load(PathForData());
   if (!data_errors.empty()) {
@@ -113,14 +105,14 @@ bool GameApplication::Initialize() {
     return false;
   }
 
-  if (config.audio.se_enabled && !context_.sound_effects.Load()) {
+  if (config.audio.se_enabled && !context_.audio.EnableSfx(true)) {
     logging::Warning(logging::Channel::Audio, "Failed to load sound effects");
   }
   context_.music.SetMidiVariant(config.audio.midi_variant);
   (void)context_.music.SetPack(config.audio.bgm_pack);
   context_.ui.ConfigureMain(config_, {.display = context_.display,
                                       .input = input_,
-                                      .sound_effects = context_.sound_effects,
+                                      .audio = context_.audio,
                                       .music = context_.music,
                                       .localization = context_.localization});
 
@@ -154,8 +146,7 @@ void GameApplication::Shutdown() {
   }
   running_ = false;
 
-  BGM_Cleanup();
-  Snd_Cleanup();
+  context_.audio.Shutdown();
   if (display_initialized_) {
     TextBackend_Cleanup();
     GrpBackend_Cleanup();

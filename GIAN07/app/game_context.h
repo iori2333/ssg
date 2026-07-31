@@ -7,6 +7,7 @@
 
 #include "display_controller.h"
 
+#include "audio/audio_system.h"
 #include "bullet/bullet_manager.h"
 #include "data/game_data.h"
 #include "data/graphics_loader.h"
@@ -37,6 +38,7 @@ struct GameContext {
   DisplayController display{graphics};
   data::SfxLoader sound_effects{data};
   MusicPlayer music{data};
+  AudioSystem audio{music, sound_effects};
   stage::StageLoader stage_loader{data};
   RecordSystem records{data};
   stage::StageSession stage;

@@ -19,13 +19,11 @@
 #include "menu_controller.h"
 
 #include "app/display_controller.h"
+#include "audio/audio_system.h"
 #include "audio/bgm.h"
 #include "audio/midi.h"
 #include "audio/midi_backend.h"
-#include "audio/snd.h"
 #include "audio/volume.h"
-#include "data/graphics_loader.h"
-#include "data/sfx_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics_backend.h"
 #include "i18n/localization.h"
@@ -411,21 +409,17 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
 // ---------------------------------------------------------------------------
 
 static std::unique_ptr<EntryNode>
-BuildSoundMenu(AudioConfig &audio_cfg, data::SfxLoader &sound_effects,
-               MusicPlayer &music, i18n::Localization &localization) {
+BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
+               i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(7);
 
   auto sound_enabled = std::make_unique<ToggleNode>(
       Localized(localization, "ui.menu.sound_effects.title"),
       Localized(localization, "ui.menu.sound_effects.help"),
-      std::ref(audio_cfg.se_enabled), [&audio_cfg, &sound_effects](bool on) {
-        if (on) {
-          if (!sound_effects.Load()) {
-            audio_cfg.se_enabled = false;
-          }
-        } else {
-          Snd_SECleanup();
+      std::ref(audio_cfg.se_enabled), [&audio_cfg, &audio](bool on) {
+        if (!audio.EnableSfx(on)) {
+          audio_cfg.se_enabled = false;
         }
       });
   LocalizeToggleValues(*sound_enabled, localization);
@@ -434,13 +428,9 @@ BuildSoundMenu(AudioConfig &audio_cfg, data::SfxLoader &sound_effects,
   auto bgm_enabled = std::make_unique<ToggleNode>(
       Localized(localization, "ui.menu.bgm.title"),
       Localized(localization, "ui.menu.bgm.help"),
-      std::ref(audio_cfg.bgm_enabled), [&music](bool on) {
-        if (on) {
-          if (BGM_Init()) {
-            music.Play(0);
-          }
-        } else {
-          BGM_Cleanup();
+      std::ref(audio_cfg.bgm_enabled), [&audio_cfg, &audio](bool on) {
+        if (!audio.EnableBgm(on, audio_cfg.soundfont)) {
+          audio_cfg.bgm_enabled = false;
         }
       });
   LocalizeToggleValues(*bgm_enabled, localization);
@@ -456,8 +446,8 @@ BuildSoundMenu(AudioConfig &audio_cfg, data::SfxLoader &sound_effects,
         Localized(localization, "ui.menu.sound_volume.title"),
         Localized(localization, "ui.menu.sound_volume.help"),
         audio_cfg.se_volume, 0, VOLUME_MAX, std::move(vol_labels),
-        [&audio_cfg] {
-          Snd_SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
+        [&audio_cfg, &audio] {
+          audio.SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
         }));
   }
 
@@ -471,16 +461,16 @@ BuildSoundMenu(AudioConfig &audio_cfg, data::SfxLoader &sound_effects,
         Localized(localization, "ui.menu.bgm_volume.title"),
         Localized(localization, "ui.menu.bgm_volume.help"),
         audio_cfg.bgm_volume, 0, VOLUME_MAX, std::move(vol_labels),
-        [&audio_cfg] {
-          Mid_SetVolume(audio_cfg.bgm_volume);
-          Snd_SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
+        [&audio_cfg, &audio] {
+          audio.SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
         }));
   }
 
   auto normalize = std::make_unique<ToggleNode>(
       Localized(localization, "ui.menu.bgm_normalize.title"),
       Localized(localization, "ui.menu.bgm_normalize.help"),
-      std::ref(audio_cfg.bgm_vol_norm), [](bool on) { BGM_SetGainApply(on); });
+      std::ref(audio_cfg.bgm_vol_norm),
+      [&audio](bool on) { audio.SetNormalization(on); });
   LocalizeToggleValues(*normalize, localization);
   ch.push_back(std::move(normalize));
 
@@ -700,8 +690,8 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
   config->AddChild(BuildLanguageMenu(cfg.ui, services.localization));
   config->AddChild(
       BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display, localization));
-  config->AddChild(BuildSoundMenu(cfg.audio, services.sound_effects,
-                                  services.music, localization));
+  config->AddChild(
+      BuildSoundMenu(cfg.audio, services.audio, services.music, localization));
   config->AddChild(BuildInputMenu(cfg.input, services.input, localization));
   ch.push_back(std::move(config));
 
