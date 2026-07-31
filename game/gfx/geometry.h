@@ -6,7 +6,7 @@
 
 #include "gfx/graphics_backend.h"
 
-namespace Geometry {
+namespace geometry {
 
 // Vertex generators
 // -----------------
@@ -25,94 +25,41 @@ void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
 // Implementations
 // ---------------
 
-void Circle_Approximated(GRAPHICS_GEOMETRY_POLY auto &gc, WINDOW_POINT center,
-                         PIXEL_COORD radius) {
+inline void DrawCircle(GraphicsGeometry &graphics, WINDOW_POINT center,
+                       PIXEL_COORD radius) {
   std::array<VERTEX_XY, CIRCLE_POINTS> xys{};
   ApproximateCircle(xys, center, radius);
-  gc.DrawLineStrip(xys);
+  graphics.DrawLineStrip(xys);
 }
 
-// Draw exact points along the outline
-void Circle_Exact(GRAPHICS_GEOMETRY_FB auto &gf, WINDOW_POINT c,
-                  PIXEL_COORD radius) {
-  if (radius == 0) {
-    gf.DrawPoint(c);
-    return;
-  }
-
-  auto dx = radius;
-  auto dy = decltype(dx){0};
-  auto s = radius;
-
-  while (dx >= dy) {
-    using _ = WINDOW_POINT;
-    gf.DrawPoint(c + _{+dx, +dy});
-    gf.DrawPoint(c + _{+dx, -dy});
-    gf.DrawPoint(c + _{-dx, +dy});
-    gf.DrawPoint(c + _{-dx, -dy});
-    gf.DrawPoint(c + _{+dy, +dx});
-    gf.DrawPoint(c + _{+dy, -dx});
-    gf.DrawPoint(c + _{-dy, +dx});
-    gf.DrawPoint(c + _{-dy, -dx});
-    s -= ((dy << 1) + 1);
-    if (s < 0) {
-      s += ((dx - 1) << 1);
-      dx--;
-    }
-    dy++;
-  }
-}
-
-void CircleF_Approximated(GRAPHICS_GEOMETRY_POLY auto &gp, WINDOW_POINT center,
-                          PIXEL_COORD radius, bool alpha) {
+inline void DrawFilledCircle(GraphicsGeometry &graphics, WINDOW_POINT center,
+                             PIXEL_COORD radius, bool alpha) {
   std::array<VERTEX_XY, (1 + CIRCLE_POINTS)> xys{};
   xys[0].x = static_cast<VERTEX_COORD>(center.x);
   xys[0].y = static_cast<VERTEX_COORD>(center.y);
   ApproximateCircle(std::span(xys).template subspan<1, CIRCLE_POINTS>(), center,
                     radius);
   if (alpha) {
-    gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, xys);
+    graphics.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, xys);
   } else {
-    gp.DrawTriangles(TRIANGLE_PRIMITIVE::FAN, xys);
+    graphics.DrawTriangles(TRIANGLE_PRIMITIVE::FAN, xys);
   }
 }
 
-void CircleF_Exact(GRAPHICS_GEOMETRY_FB auto &gf, WINDOW_POINT center,
-                   PIXEL_COORD radius) {
-  if (radius == 0) {
-    gf.DrawPoint(center);
-    return;
-  }
-  auto si = radius;
-  auto di = decltype(si){0};
-  auto s = radius;
-  for (; si >= di; di++) {
-    gf.DrawHLine((center.x - si), (center.x + si), (center.y - di));
-    gf.DrawHLine((center.x - si), (center.x + si), (center.y + di));
-    s -= ((di << 1) + 1);
-    if (s >= 0) {
-      continue;
-    }
-    gf.DrawHLine((center.x - di), (center.x + di), (center.y - si));
-    gf.DrawHLine((center.x - di), (center.x + di), (center.y + si));
-    s += ((--si) << 1);
-  }
-}
-
-void FatCircleA_Approximated(GRAPHICS_GEOMETRY_POLY auto &gp,
-                             WINDOW_POINT center, PIXEL_COORD r,
-                             PIXEL_COORD w) {
+inline void DrawAlphaFatCircle(GraphicsGeometry &graphics, WINDOW_POINT center,
+                               PIXEL_COORD r, PIXEL_COORD w) {
   // When it becomes a regular circle
   if (w >= r) {
-    Geometry::CircleF_Approximated(gp, center, (r + w), true);
+    geometry::DrawFilledCircle(graphics, center, (r + w), true);
   }
   std::array<VERTEX_XY, (CIRCLE_POINTS * 2)> xys{};
   ApproximateFatCircle(xys, center, r, w);
-  gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, xys);
+  graphics.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, xys);
 }
 
-void GrdRect(GRAPHICS_GEOMETRY_POLY auto &gp, std::span<const VERTEX_XY, 4> p,
-             RGBA col_edge, bool alpha) {
+inline void DrawGradientRect(GraphicsGeometry &graphics,
+                             std::span<const VERTEX_XY, 4> p, RGBA col_edge,
+                             bool alpha) {
   const RGBA col_center = {.r = 255, .g = 255, .b = 255, .a = col_edge.a};
 
   // Use an explicit integer division for a pixel-perfect match of the
@@ -124,14 +71,14 @@ void GrdRect(GRAPHICS_GEOMETRY_POLY auto &gp, std::span<const VERTEX_XY, 4> p,
       col_edge, col_edge, col_center, col_center, col_edge, col_edge,
   };
   if (alpha) {
-    gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, xys, colors);
+    graphics.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, xys, colors);
   } else {
-    gp.DrawTriangles(TRIANGLE_PRIMITIVE::STRIP, xys, colors);
+    graphics.DrawTriangles(TRIANGLE_PRIMITIVE::STRIP, xys, colors);
   }
 }
 // ---------------
 
-} // namespace Geometry
+} // namespace geometry
 
 // Draw calls
 // ----------
@@ -142,27 +89,21 @@ void GeomCircle(WINDOW_POINT center, PIXEL_COORD radius);
 // Filled circle
 void GeomCircleF(WINDOW_POINT center, PIXEL_COORD radius);
 
-// Filled and alpha-blended circle
-void GeomCircleFA(GRAPHICS_GEOMETRY_POLY auto &gc, WINDOW_POINT center,
-                  PIXEL_COORD radius) {
-  Geometry::CircleF_Approximated(*gc, center, radius, true);
-}
-
 // Alpha-blended fat circle
-void GeomFatCircleA(GRAPHICS_GEOMETRY_POLY auto &gp, WINDOW_POINT center,
-                    PIXEL_COORD r, PIXEL_COORD w) {
-  Geometry::FatCircleA_Approximated(gp, center, r, w);
+inline void GeomFatCircleA(GraphicsGeometry &graphics, WINDOW_POINT center,
+                           PIXEL_COORD r, PIXEL_COORD w) {
+  geometry::DrawAlphaFatCircle(graphics, center, r, w);
 }
 
 // Gradient rectangle (can be diagonal)
-void GeomGrdRect(GRAPHICS_GEOMETRY_POLY auto &gp,
-                 std::span<const VERTEX_XY, 4> points, RGB col_edge) {
-  Geometry::GrdRect(gp, points, col_edge.WithAlpha(0xFF), false);
+inline void GeomGrdRect(GraphicsGeometry &graphics,
+                        std::span<const VERTEX_XY, 4> points, RGB col_edge) {
+  geometry::DrawGradientRect(graphics, points, col_edge.WithAlpha(0xFF), false);
 }
 
 // Gradient rectangle (can be diagonal + alpha)
-void GeomGrdRectA(GRAPHICS_GEOMETRY_POLY auto &gp,
-                  std::span<const VERTEX_XY, 4> points, RGBA col_edge) {
-  Geometry::GrdRect(gp, points, col_edge, true);
+inline void GeomGrdRectA(GraphicsGeometry &graphics,
+                         std::span<const VERTEX_XY, 4> points, RGBA col_edge) {
+  geometry::DrawGradientRect(graphics, points, col_edge, true);
 }
 // ----------

@@ -291,11 +291,9 @@ void ScoreScene::DrawLeaderboard(bool show_selection) {
       continue;
     }
     if (show_selection && i == selected_) {
-      GrpGeom->Lock();
       GrpGeom->SetAlphaNorm(96);
       GrpGeom->SetColor({4, 0, 0});
       GrpGeom->DrawBoxA(x, y, x + 400, y + 32);
-      GrpGeom->Unlock();
     }
 
     const auto &record = scores_[i];
@@ -327,7 +325,6 @@ void ScoreScene::DrawDetail() const {
   constexpr int y = 92;
   constexpr int width = 480;
   constexpr int height = 268;
-  GrpGeom->Lock();
   GrpGeom->SetAlphaNorm(224);
   GrpGeom->SetColor({0, 0, 1});
   GrpGeom->DrawBoxA(x, y, x + width, y + height);
@@ -337,7 +334,6 @@ void ScoreScene::DrawDetail() const {
   GrpGeom->DrawBox(x, y + height - 1, x + width, y + height);
   GrpGeom->DrawBox(x, y, x + 1, y + height);
   GrpGeom->DrawBox(x + width - 1, y, x + width, y + height);
-  GrpGeom->Unlock();
 
   constexpr int text_x = x + 20;
   int text_y = y + 12;

@@ -28,7 +28,6 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
               std::to_underlying(config.fullscreen_fit));
   const GRAPHICS_PARAMS requested{
       .flags = flags,
-      .device_id = config.device_id,
       .api = GrpBackend_APIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,
@@ -49,7 +48,6 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
   config.fullscreen_fit = fullscreen.fit;
   config.scaling_mode = params_.ScaleGeometry() ? ScalingMode::Geometry
                                                 : ScalingMode::Framebuffer;
-  config.device_id = params_.device_id;
   config.graphics_api = active_api;
   config.window_scale_4x = params_.window_scale_4x;
   config.window_left = params_.left;
@@ -99,7 +97,6 @@ bool DisplayController::ApplyConfig(const GraphicsConfig &config) {
               std::to_underlying(config.fullscreen_fit));
   return Apply({
       .flags = flags,
-      .device_id = config.device_id,
       .api = GrpBackend_APIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,

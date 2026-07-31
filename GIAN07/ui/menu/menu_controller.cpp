@@ -363,11 +363,10 @@ void MenuController::Draw() {
 void MenuController::RenderPage() {
   auto &page = stack_.back();
   int visible = std::min(static_cast<int>(page.items.size()), kMaxVisibleItems);
-  int box_alpha = (GrpGeom_FB() != nullptr) ? (64 + 32) : 128;
+  constexpr int box_alpha = 128;
 
   int top = y_;
 
-  GrpGeom->Lock();
   GrpGeom->SetAlphaNorm(box_alpha);
 
   GrpGeom->SetColor({0, 0, 0});
@@ -387,7 +386,6 @@ void MenuController::RenderPage() {
       GrpGeom->SetColor({0, 0, 2});
     }
   }
-  GrpGeom->Unlock();
 
   WINDOW_POINT pos = {x_, y_};
   const auto title_str =
@@ -524,11 +522,10 @@ void MenuController::RenderList() {
   auto *view = active_list_;
   int total = view->Total();
   int visible = (std::min)(total, kMaxVisibleItems);
-  int box_alpha = (GrpGeom_FB() != nullptr) ? (64 + 32) : 128;
+  constexpr int box_alpha = 128;
 
   int top = y_;
 
-  GrpGeom->Lock();
   GrpGeom->SetAlphaNorm(box_alpha);
 
   GrpGeom->SetColor({0, 0, 0});
@@ -548,7 +545,6 @@ void MenuController::RenderList() {
       GrpGeom->SetColor({0, 0, 2});
     }
   }
-  GrpGeom->Unlock();
 
   WINDOW_POINT pos = {x_, y_};
   auto &title_slot = slots_[0];

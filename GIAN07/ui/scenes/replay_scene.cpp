@@ -315,16 +315,12 @@ void ReplayScene::DrawBrowser() {
     if (index >= last) {
       continue;
     }
-    GrpGeom->Lock();
     GrpGeom->SetColor({0, 0, 0});
     GrpGeom->DrawBox(x + 88, y + 27, x + 114, y + 32);
-    GrpGeom->Unlock();
     if (index == selected_) {
-      GrpGeom->Lock();
       GrpGeom->SetAlphaNorm(96);
       GrpGeom->SetColor({4, 0, 0});
       GrpGeom->DrawBoxA(x, y, x + 400, y + 32);
-      GrpGeom->Unlock();
     }
     const auto &replay = replays_[index];
     GrpPut16c2(x + 88, y + 4, replay.name.c_str());
@@ -373,10 +369,8 @@ void ReplayScene::DrawNameEntry() const {
   GrpBackend_Clear();
   const int x = 120;
   const int y = 176;
-  GrpGeom->Lock();
   GrpGeom->SetColor({2, 0, 0});
   GrpGeom->DrawBox(x, y, x + 400, y + 32);
-  GrpGeom->Unlock();
   GrpSurface_Blit({x, y}, SURFACE_ID::NAMEREG, {0, 64, 400, 96});
   const auto title = Text(localization_, "ui.replay.name");
   RenderUiText({80, 118}, ui_text_, title, true);

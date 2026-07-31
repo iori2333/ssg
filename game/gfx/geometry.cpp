@@ -6,7 +6,7 @@
 
 #include "util/math_utils.h"
 
-namespace Geometry {
+namespace geometry {
 
 constexpr uint8_t CIRCLE_STEP = (0x100 / (CIRCLE_POINTS - 1));
 
@@ -43,20 +43,12 @@ void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
   }
 }
 
-} // namespace Geometry
+} // namespace geometry
 
 void GeomCircle(WINDOW_POINT center, PIXEL_COORD radius) {
-  if (auto *gp = GrpGeom_Poly()) {
-    Geometry::Circle_Approximated(*gp, center, radius);
-  } else if (auto *gf = GrpGeom_FB()) {
-    Geometry::Circle_Exact(*gf, center, radius);
-  }
+  geometry::DrawCircle(*GrpGeom, center, radius);
 }
 
 void GeomCircleF(WINDOW_POINT center, PIXEL_COORD radius) {
-  if (auto *gp = GrpGeom_Poly()) {
-    Geometry::CircleF_Approximated(*gp, center, radius, false);
-  } else if (auto *gf = GrpGeom_FB()) {
-    Geometry::CircleF_Exact(*gf, center, radius);
-  }
+  geometry::DrawFilledCircle(*GrpGeom, center, radius, false);
 }

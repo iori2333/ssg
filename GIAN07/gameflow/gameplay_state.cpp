@@ -513,11 +513,9 @@ FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
     constexpr PIXEL_LTWH replay_label = {312, 80, 32, 8};
     GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, replay_label);
     if (overlay_timer_ < 96) {
-      GrpGeom->Lock();
       GrpGeom->SetAlphaNorm(128);
       GrpGeom->SetColor({0, 0, 0});
       GrpGeom->DrawBoxA(170, 473, 245, 478);
-      GrpGeom->Unlock();
       constexpr PIXEL_LTWH skip_label = {312, 88, 72, 8};
       GrpSurface_Blit({173, 474}, SURFACE_ID::SYSTEM, skip_label);
     }

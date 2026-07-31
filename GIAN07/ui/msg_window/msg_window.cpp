@@ -174,11 +174,9 @@ void MsgWindow::Draw() {
   }
 
   // Draw translucent part
-  GrpGeom->Lock();
-  GrpGeom->SetAlphaNorm((GrpGeom_FB() != nullptr) ? (64 + 32) : 110);
+  GrpGeom->SetAlphaNorm(110);
   GrpGeom->SetColor({0, 0, 3});
   GrpGeom->DrawBoxA((x + 4), (y + 4), (x + w - 4), (y + h - 4));
-  GrpGeom->Unlock();
 
   // Display text only when window is [FREE]
   // -> Otherwise a Surface for text would have to be created...

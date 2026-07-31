@@ -43,7 +43,6 @@ enum class ScalingMode : uint8_t {
 };
 
 struct GraphicsConfig {
-  uint8_t device_id = 0;
   std::string graphics_api;
   DisplayMode display_mode = DisplayMode::Windowed;
   FullscreenMode fullscreen_mode = FullscreenMode::Borderless;

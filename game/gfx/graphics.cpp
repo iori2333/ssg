@@ -367,14 +367,9 @@ std::optional<GRAPHICS_INIT_RESULT>
 Grp_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
          GRAPHICS_PARAMS params) {
   const auto api_count = GrpBackend_APICount();
-  const auto device_count = GrpBackend_DeviceCount();
   if ((api_count > 0) && (params.api >= api_count)) {
     params.api = -1;
   }
-  params.device_id =
-      device_count == 0
-          ? 0
-          : std::min(params.device_id, static_cast<uint8_t>(device_count - 1));
   return GrpBackend_Init(maybe_prev, params);
 }
 
@@ -386,7 +381,6 @@ std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
   // Start with the defaults and try looking for a different working
   // configuration
   const auto api_count = GrpBackend_APICount();
-  const auto device_count = std::max(GrpBackend_DeviceCount(), uint8_t{1});
 
   const auto api_it =
       ((api_count > 0)
@@ -394,12 +388,9 @@ std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
            : std::views::iota(params.api, Cast::down<int8_t>(params.api + 1)));
 
   for (const auto api : api_it) {
-    for (const auto device_id : std::views::iota(0u, device_count)) {
-      params.api = api;
-      params.device_id = device_id;
-      if (const auto ret = Grp_Init(std::nullopt, params)) {
-        return ret;
-      }
+    params.api = api;
+    if (const auto ret = Grp_Init(std::nullopt, params)) {
+      return ret;
     }
   }
   return std::nullopt;

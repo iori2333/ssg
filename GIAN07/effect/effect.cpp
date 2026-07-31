@@ -85,7 +85,6 @@ void EffectManager::UpdateCircles() {
 void EffectManager::DrawCircles() const {
   static constexpr std::array<uint8_t, 4> kAngleSpeeds = {0, 1, 3, 7};
 
-  GrpGeom->Lock();
   for (const auto &effect : circles_) {
     if (!effect.active) {
       continue;
@@ -132,7 +131,6 @@ void EffectManager::DrawCircles() const {
       break;
     }
   }
-  GrpGeom->Unlock();
 }
 
 void EffectManager::InitializeTextRenderer() {
@@ -333,12 +331,10 @@ void EffectManager::DrawStrings() {
       const int center_x = (effect.x >> 6) + 8;
       const int center_y = (effect.y >> 6) + 8;
       const int half_height = (35 - remaining) / 2;
-      GrpGeom->Lock();
       GrpGeom->SetColor({0, 0, 0});
       GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>((35 - remaining) * 3));
       GrpGeom->DrawBoxA(center_x - 170, center_y - half_height, center_x + 170,
                         center_y + half_height);
-      GrpGeom->Unlock();
       for (int index = 0; index < 9; ++index) {
         GrpPutc((effect.x >> 6) + (index - 4) * (35 - remaining), effect.y >> 6,
                 kGameOver[index]);
@@ -375,7 +371,6 @@ void EffectManager::DrawStrings() {
       break;
     }
     case StringEffectState::MusicTitleHolding: {
-      GrpGeom->Lock();
       GrpGeom->SetColor({0, 0, 0});
       const auto alpha =
           math::RoundedPolarVector(static_cast<float>(effect.time - 32) *
@@ -394,7 +389,6 @@ void EffectManager::DrawStrings() {
                           playfield::kRight - 16 - inset,
                           (effect.y >> 6) + row + 1);
       }
-      GrpGeom->Unlock();
       RenderMusicTitle({effect.x >> 6, effect.y >> 6},
                        {0, 0, effect.velocity_x, effect.velocity_y});
       break;

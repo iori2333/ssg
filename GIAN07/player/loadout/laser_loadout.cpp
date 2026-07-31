@@ -186,68 +186,30 @@ void LaserLoadout::DrawBombForeground(const Player &player,
     points[1].y = origin_y + length_y + width_y;
   };
 
-  GrpGeom->Lock();
+  const auto draw = [&](int width) {
+    GrpGeom->SetAlphaOne();
+    for (const int side : {1, -1}) {
+      for (int i = -3; i <= 3; i++) {
+        const auto direction =
+            side > 0 ? RightAngle(angle, i) : LeftAngle(angle, i);
+        const auto length =
+            math::RoundedPolarVector(math::AngleFromLegacy(direction), 850.0f);
+        const auto beam_width = math::RoundedPolarVector(
+            math::AngleFromLegacy(static_cast<uint8_t>(direction + 64)), width);
+        const int origin_x = (player.OpX() >> 6) + side * OptionOffset(false);
+        const int origin_y = player.OpY() >> 6;
+        set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
+                   beam_width.y);
+        GeomGrdRectA(*GrpGeom, points, color);
+      }
+    }
+  };
+
   if (angle < 58) {
-    for (int width = 3; width > 0; width--) {
-      for (const int side : {1, -1}) {
-        for (int i = -3; i <= 3; i++) {
-          const auto direction =
-              side > 0 ? RightAngle(angle, i) : LeftAngle(angle, i);
-          const auto length = math::RoundedPolarVector(
-              math::AngleFromLegacy(direction), 850.0f);
-          const auto beam_width = math::RoundedPolarVector(
-              math::AngleFromLegacy(static_cast<uint8_t>(direction + 64)),
-              width);
-          const int origin_x = (player.OpX() >> 6) + side * OptionOffset(false);
-          const int origin_y = player.OpY() >> 6;
-          set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
-                     beam_width.y);
-          if (auto *poly = GrpGeom_Poly()) {
-            poly->SetAlphaOne();
-            GeomGrdRectA(*poly, points, color);
-          } else if (auto *fallback = GrpGeom_FB()) {
-            const auto channel = static_cast<unsigned>((3 - width) * 2);
-            fallback->SetColor(RGB216(channel, channel, 5U));
-            fallback->DrawTriangleFan(points);
-          }
-        }
-      }
-      if (GrpGeom_Poly() != nullptr) {
-        break;
-      }
-    }
+    draw(3);
   } else if (angle < 150) {
-    uint8_t channel = 0;
-    for (int width = 12 - ((angle - 64) / 8); width > 0;
-         width -= 2, channel++) {
-      for (const int side : {1, -1}) {
-        for (int i = -3; i <= 3; i++) {
-          const auto direction =
-              side > 0 ? RightAngle(angle, i) : LeftAngle(angle, i);
-          const auto length = math::RoundedPolarVector(
-              math::AngleFromLegacy(direction), 850.0f);
-          const auto beam_width = math::RoundedPolarVector(
-              math::AngleFromLegacy(static_cast<uint8_t>(direction + 64)),
-              width);
-          const int origin_x = (player.OpX() >> 6) + side * OptionOffset(false);
-          const int origin_y = player.OpY() >> 6;
-          set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
-                     beam_width.y);
-          if (auto *poly = GrpGeom_Poly()) {
-            poly->SetAlphaOne();
-            GeomGrdRectA(*poly, points, color);
-          } else if (auto *fallback = GrpGeom_FB()) {
-            fallback->SetColor(RGB216(channel, channel, 5U));
-            fallback->DrawTriangleFan(points);
-          }
-        }
-      }
-      if (GrpGeom_Poly() != nullptr) {
-        break;
-      }
-    }
+    draw(12 - ((angle - 64) / 8));
   }
-  GrpGeom->Unlock();
 }
 
 void LaserLoadout::DrawContinuousAttack(const Player &player,

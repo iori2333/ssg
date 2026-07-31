@@ -16,10 +16,6 @@
 // Should initialize everything needed for device and API queries.
 bool GrpBackend_Enum(void);
 
-// Physical graphics adapters.
-uint8_t GrpBackend_DeviceCount(void);
-std::string_view GrpBackend_DeviceLabel(uint8_t id);
-
 // Rendering APIs.
 int8_t GrpBackend_APICount(void);
 std::string_view GrpBackend_APILabel(std::string_view api);
@@ -67,9 +63,6 @@ void GrpBackend_SetClip(const WINDOW_LTRB &rect);
 
 // Returns the currently active rendering API.
 std::string_view GrpBackend_APIString(void);
-
-// Retrieves the current backbuffer palette.
-void GrpBackend_PaletteGet(PALETTE &pal);
 
 struct FILE_STREAM_WRITE;
 void GrpBackend_Flip(bool take_screenshot);
@@ -142,7 +135,7 @@ using VERTEX_RGBA_SPAN = std::span<const VERTEX_RGBA, N>;
 enum class TRIANGLE_PRIMITIVE : uint8_t { FAN, STRIP, COUNT };
 // ------------
 
-class GRAPHICS_GEOMETRY_SDL;
+class GraphicsGeometry;
 
 // Must be kept in sync with the hardcoded ones in the SDL_GL_ResetAttributes()
 // implementation.
@@ -151,38 +144,8 @@ class GRAPHICS_GEOMETRY_SDL;
 #define OPENGL_TARGET_ES1_MIN 1
 #define OPENGL_TARGET_ES2_MIN 0
 
-extern GRAPHICS_GEOMETRY_SDL GrpGeomSDL;
-
-// Convenience macro for the common case — use GrpGeom_FB() for framebuffer ops.
-#define GrpGeom (&GrpGeomSDL)
-
-GRAPHICS_GEOMETRY_SDL *GrpGeom_Poly(void);
-GRAPHICS_GEOMETRY_SDL *GrpGeom_FB(void);
-
-// Interface for geometry draw calls that require true-color polygon rendering.
-// The [colors] span either must be either
-// • empty or omitted (which will render all vertices using the last SetColor()
-//   and SetAlpha*() value), or
-// • have as many elements as [points].
-template <typename T>
-concept GRAPHICS_GEOMETRY_POLY =
-    requires(T t, WINDOW_COORD coord, TRIANGLE_PRIMITIVE tp,
-             VERTEX_XY_SPAN<> points, VERTEX_RGBA_SPAN<> colors, RGB rgb) {
-      t.DrawLineStrip(points);
-      t.DrawTriangles(tp, points, colors);
-      t.DrawTrianglesA(tp, points, colors);
-
-      // Spare gradient line
-      t.DrawGrdLineEx(coord, coord, rgb, coord, rgb);
-    };
-
-// Interface for framebuffer-exclusive geometry draw calls.
-template <typename T>
-concept GRAPHICS_GEOMETRY_FB =
-    requires(T t, WINDOW_COORD coord, WINDOW_POINT p) {
-      t.DrawPoint(p);
-      t.DrawHLine(coord, coord, coord);
-    };
+extern GraphicsGeometry GrpGeomSDL;
+inline GraphicsGeometry *const GrpGeom = &GrpGeomSDL;
 /// --------
 
 /// Software rendering with pixel access

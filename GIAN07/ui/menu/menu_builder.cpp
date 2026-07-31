@@ -207,15 +207,7 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
                   DisplayController &display,
                   i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
-  ch.reserve(11);
-
-  auto dev = std::make_unique<ActionNode>(
-      Localized(localization, "ui.menu.device.title"), "",
-      [](MenuController &) { return true; });
-  dev->BindValue([&gfx_cfg] {
-    return std::string(GrpBackend_DeviceLabel(gfx_cfg.device_id));
-  });
-  ch.push_back(std::move(dev));
+  ch.reserve(10);
 
   ch.push_back(std::make_unique<ChoiceNode>(
       Localized(localization, "ui.menu.display.title"),

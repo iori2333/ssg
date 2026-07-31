@@ -127,13 +127,9 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
   GrpSurface_Blit({logo.left, logo.top}, SURFACE_ID::SPROJECT, source);
 
   const auto fade = [logo](uint8_t black_alpha) {
-    if (auto *geometry = GrpGeom_Poly()) {
-      geometry->Lock();
-      geometry->SetAlphaNorm(black_alpha);
-      geometry->SetColor({0, 0, 0});
-      geometry->DrawBoxA(logo.left, logo.top, logo.right, logo.bottom);
-      geometry->Unlock();
-    }
+    GrpGeom->SetAlphaNorm(black_alpha);
+    GrpGeom->SetColor({0, 0, 0});
+    GrpGeom->DrawBoxA(logo.left, logo.top, logo.right, logo.bottom);
   };
 
   if (timer_ < 64) {

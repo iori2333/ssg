@@ -230,26 +230,11 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
 
   // GrpSurface_Blit({ (SPECT_X - 7), SPECT_Y }, SURFACE_ID::SYSTEM, src);
 
-  GrpGeom->Lock();
-
-  if (auto *gp = GrpGeom_Poly()) {
-    for (int i = 0; i < std::size(ftable); i++) {
-      // WORD c2 = 0;	//5
-      constexpr RGB c1 = {.r = 200, .g = 0, .b = 0};
-      constexpr RGB c2 = {.r = 250, .g = 250, .b = 0};
-      gp->DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
-    }
-  } else if (auto *gf = GrpGeom_FB()) {
-    gf->SetColor({4, 2, 1});
-    for (int i = 0; i < std::size(ftable); i++) {
-      // WORD c2 = 0;	//5
-      if (ftable[i] != 0U) {
-        gf->DrawLine((i + x), (y - (ftable[i] * 2)), (i + x), y);
-      }
-    }
+  for (int i = 0; i < std::size(ftable); i++) {
+    constexpr RGB c1 = {.r = 200, .g = 0, .b = 0};
+    constexpr RGB c2 = {.r = 250, .g = 250, .b = 0};
+    GrpGeom->DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
   }
-
-  GrpGeom->Unlock();
 }
 
 // Display pressed notes
@@ -322,8 +307,7 @@ void MusicRoomScene::DrawNotes() {
 
   for (const auto Track : std::views::iota(0, 16)) {
     const auto top = (22 + (Track * 24));
-    const auto pan =
-        (Cast::sign<int8_t>(midi_visualization_.pan[Track]) - 64);
+    const auto pan = (Cast::sign<int8_t>(midi_visualization_.pan[Track]) - 64);
     GrpPutMidNum(50, top, midi_visualization_.volume[Track]);
     GrpPutMidNum(125, top, midi_visualization_.expression[Track]);
     GrpPutMidNum(181, top, pan);
@@ -451,10 +435,10 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
 
     if (midi_visualization_.loaded) {
       BlitBG({504, 59, 136, 24}); // MIDI TIMER
-      GrpPut7B(560, 68,
-               std::format("{:07}",
-                           midi_visualization_.play_time.pulse_interpolated)
-                   .c_str());
+      GrpPut7B(
+          560, 68,
+          std::format("{:07}", midi_visualization_.play_time.pulse_interpolated)
+              .c_str());
       // TextOut(hdc,561,64+2,buf,strlen(buf));
     }
 

@@ -147,13 +147,9 @@ void EffectManager::DrawFragments() const {
                       PIXEL_LTWH{576, 448, 32, 32});
       break;
     case FragmentKind::ExpandingCircle:
-      if (auto *geometry = GrpGeom_Poly()) {
-        geometry->Lock();
-        geometry->SetColor({4, 0, 0});
-        geometry->SetAlphaOne();
-        GeomFatCircleA(*geometry, {x, y}, (60 - fragment.remaining) * 6, 5);
-        geometry->Unlock();
-      }
+      GrpGeom->SetColor({4, 0, 0});
+      GrpGeom->SetAlphaOne();
+      GeomFatCircleA(*GrpGeom, {x, y}, (60 - fragment.remaining) * 6, 5);
       break;
     }
   }

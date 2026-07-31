@@ -334,25 +334,7 @@ void LaserReflect::DrawClearing() const {
 }
 
 void LaserReflect::DrawOuter() const {
-  if (auto *gp = GrpGeom_Poly()) {
-    GeomGrdRect(*gp, p_, RGB216{1, 0, 5}.ToRGB());
-  } else if (auto *gf = GrpGeom_FB()) {
-    gf->SetColor({1, 0, 5});
-    gf->DrawTriangleFan(p_);
-
-    gf->SetColor({5, 5, 5});
-
-    VERTEX_XY inner[4];
-    inner[0].x = inner[1].x = p_[0].x - (wx_ * 3 / 4);
-    inner[0].y = inner[1].y = p_[0].y - (wy_ * 3 / 4);
-    inner[3].x = inner[2].x = p_[3].x + (wx_ * 3 / 4);
-    inner[3].y = inner[2].y = p_[3].y + (wy_ * 3 / 4);
-    inner[1].x += lx_;
-    inner[1].y += ly_;
-    inner[2].x += lx_;
-    inner[2].y += ly_;
-    gf->DrawTriangleFan(inner);
-  }
+  GeomGrdRect(*GrpGeom, p_, RGB216{1, 0, 5}.ToRGB());
 }
 
 bool LaserReflect::IsDead() const { return state_ == ReflectState::Dead; }
@@ -376,12 +358,8 @@ void LaserReflect::RenderDebugHitbox(int mode) const {
   if (state_ == ReflectState::Dead || state_ == ReflectState::Clearing) {
     return;
   }
-  auto *gp = GrpGeom_Poly();
-  if (gp == nullptr) {
-    return;
-  }
   const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
-  gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
 
   if (mode >= 2 && w_ > 0) {
     const float bx = x_ / WORLD_COORD_SCALE;
@@ -399,6 +377,6 @@ void LaserReflect::RenderDebugHitbox(int mode) const {
     ep[2].x += static_cast<float>(lx_);
     ep[2].y += static_cast<float>(ly_);
     const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
-    gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
+    GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
   }
 }

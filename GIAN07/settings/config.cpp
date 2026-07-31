@@ -87,8 +87,6 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
 
   // [graphics]
   if (auto *sec = tbl["graphics"].as_table()) {
-    LoadToml(*sec, "device_id", cfg.graphics.device_id,
-             [](auto) { return true; });
     LoadToml(*sec, "api", cfg.graphics.graphics_api);
     LoadToml(*sec, "window_scale_4x", cfg.graphics.window_scale_4x,
              [](auto) { return true; });
@@ -186,7 +184,6 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
   // [graphics]
   {
     toml::table sec;
-    sec.emplace("device_id", cfg.graphics.device_id);
     sec.emplace("api", cfg.graphics.graphics_api);
     sec.emplace("window_scale_4x", cfg.graphics.window_scale_4x);
     sec.emplace("window_left", cfg.graphics.window_left);

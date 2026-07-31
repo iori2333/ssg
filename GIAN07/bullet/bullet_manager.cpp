@@ -348,7 +348,6 @@ void BulletManager::HitCheck() {
 // ── BulletManager: Render ─────────────────────────────────────────
 
 void BulletManager::Render() const {
-  GrpGeom->Lock();
   for (const auto &ll : long_lasers_) {
     ll.Render();
   }
@@ -358,7 +357,6 @@ void BulletManager::Render() const {
   for (const auto &r : reflect_lasers_) {
     r.Render();
   }
-  GrpGeom->Unlock();
 
   for (const auto &b : bullets_) {
     b.Render();
@@ -476,14 +474,10 @@ void BulletManager::RotateDisplayAngles() {
 }
 
 void BulletManager::RenderDebugHitboxes(int mode) const {
-  auto *gp = GrpGeom_Poly();
-  if (gp == nullptr) {
-    return;
-  }
   const RGB216 kBlack{0, 0, 0};
   constexpr uint8_t kAlpha = 204;
-  gp->SetColor(kBlack);
-  gp->SetAlphaNorm(kAlpha);
+  GrpGeom->SetColor(kBlack);
+  GrpGeom->SetAlphaNorm(kAlpha);
 
   for (const auto &b : bullets_) {
     b.RenderDebugHitbox(mode);

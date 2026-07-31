@@ -109,11 +109,9 @@ void StageVisuals::DrawCubes() const {
     GrpSurface_Blit({star.x, star.y}, SURFACE_ID::SYSTEM,
                     PIXEL_LTWH{136, 272, 16, 24});
   }
-  GrpGeom->Lock();
   for (const auto &cube : cubes_) {
     DrawCube(cube);
   }
-  GrpGeom->Unlock();
 }
 
 void StageVisuals::DrawCube(const Cube &cube) {
@@ -189,7 +187,6 @@ void StageVisuals::UpdateFakeEcl() {
 }
 
 void StageVisuals::DrawFakeEcl() const {
-  GrpGeom->Lock();
   GrpGeom->SetColor({0, 2, 0});
   for (int x = 128 - grid_offset_x_ / 2; x < 512; x += 32) {
     GrpGeom->DrawLine(x, 0, x, 480);
@@ -204,7 +201,6 @@ void StageVisuals::DrawFakeEcl() const {
   for (int y = -grid_offset_y_; y < 480; y += 64) {
     GrpGeom->DrawLine(128, y, 512, y);
   }
-  GrpGeom->Unlock();
 
   for (const auto &line : fake_ecl_) {
     GrpSurface_Blit({line.x >> 6, line.y >> 6}, SURFACE_ID::MAPCHIP,

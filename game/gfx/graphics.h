@@ -174,7 +174,6 @@ constexpr auto GRAPHICS_TOPLEFT_UNDEFINED =
 
 struct GRAPHICS_PARAMS {
   GRAPHICS_PARAM_FLAGS flags;
-  uint8_t device_id;
   int8_t api;              // Negative = "use default API"
   uint8_t window_scale_4x; // Scale factor in window mode ×4. 0 = fit display.
 
@@ -216,9 +215,9 @@ std::optional<GRAPHICS_INIT_RESULT>
 Grp_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
          GRAPHICS_PARAMS params);
 
-// Calls Grp_Init() with the given parameters and tries the remaining devices
-// and APIs failure. Returns the actual configuration the backend was
-// initialized with, or `std::nullopt` on failure.
+// Calls Grp_Init() with the given parameters and tries the remaining APIs on
+// failure. Returns the actual configuration the backend was initialized with,
+// or `std::nullopt` on failure.
 std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params);
 
 // Wraps screenshot handling around GrpBackend_Flip().

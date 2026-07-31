@@ -176,7 +176,6 @@ void EndingScene::Text::Render(WINDOW_POINT topleft) {
 
 // Apply fade I/O info
 void EndingScene::DrawFadeInfo() {
-  GrpGeom->Lock();
 
   if (grp_info.bWantDisp) {
     GrpGeom->SetAlphaNorm(255 - grp_info.alpha);
@@ -200,8 +199,6 @@ void EndingScene::DrawFadeInfo() {
     GrpGeom->SetColor({5, 5, 5});
     GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
   }
-
-  GrpGeom->Unlock();
 }
 
 // Ending SCL decode

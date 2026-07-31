@@ -210,7 +210,6 @@ void EffectManager::DrawBossWarning() {
     return;
   }
 
-  GrpGeom->Lock();
   int radius = (warning_age_ - 216) * 3;
   constexpr std::array colors = {RGB216{1, 1, 5}, RGB216{2, 2, 5},
                                  RGB216{3, 3, 5}, RGB216{4, 4, 5},
@@ -221,7 +220,6 @@ void EffectManager::DrawBossWarning() {
     GrpGeom->SetColor(colors[index]);
     GeomCircle({320, 100}, radius);
   }
-  GrpGeom->Unlock();
 }
 
 void EffectManager::InitializeWarningText() {
@@ -299,14 +297,12 @@ void EffectManager::RotateWarningText(int amount) {
 void EffectManager::DrawWarningText() {
   warning_pulse_ += 8;
   if (warning_lines_[0].angle_x == 0) {
-    GrpGeom->Lock();
     const auto pulse = math::RoundedPolarVector(
         static_cast<float>(warning_pulse_) * math::kLegacyAngleStep, 48.0f);
     GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>(128 + pulse.y));
     GrpGeom->SetColor({5, 0, 0});
     GrpGeom->DrawBoxA(129, 46, 512, 66);
     GrpGeom->DrawBoxA(129, 136, 512, 156);
-    GrpGeom->Unlock();
     GrpSurface_Blit({129, 61}, SURFACE_ID::SYSTEM,
                     PIXEL_LTRB{0, 168, 384, 248});
     return;
@@ -340,7 +336,6 @@ void EffectManager::DrawWarningText() {
     }
   };
 
-  GrpGeom->Lock();
   const std::array colors = {RGB216{1, 1, 5}, RGB216{2, 2, 5}, RGB216{3, 3, 5},
                              RGB216{4, 4, 5}, RGB216{5, 5, 5}};
   RotateWarningText(start_rotation);
@@ -351,5 +346,4 @@ void EffectManager::DrawWarningText() {
       RotateWarningText(rotation_step);
     }
   }
-  GrpGeom->Unlock();
 }

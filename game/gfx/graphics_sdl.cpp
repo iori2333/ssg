@@ -66,7 +66,7 @@ SDL_Renderer **Renderer = &PrimaryRenderer;
 // Storing their associated renderer (primary or software) in the user data.
 ENUMARRAY<SDL_Texture *, SURFACE_ID> Textures;
 
-GRAPHICS_GEOMETRY_SDL GrpGeomSDL;
+GraphicsGeometry GrpGeomSDL;
 
 static RGBA Col = {0, 0, 0, 0xFF};
 static SDL_BlendMode AlphaMode = SDL_BLENDMODE_NONE;
@@ -282,9 +282,6 @@ bool GrpBackend_Enum(void) {
   // SDL_Init(SDL_INIT_VIDEO).
   return true;
 }
-
-uint8_t GrpBackend_DeviceCount(void) { return 0; }
-std::string_view GrpBackend_DeviceLabel(uint8_t) { return {}; }
 
 int8_t GrpBackend_APICount(void) { return SDL_GetNumRenderDrivers(); }
 
@@ -687,8 +684,6 @@ std::string_view GrpBackend_APIString(void) {
   return SDL_GetStringProperty(props, SDL_PROP_RENDERER_NAME_STRING, nullptr);
 }
 
-void GrpBackend_PaletteGet(PALETTE &pal) {}
-
 void TakeScreenshot(void) {
   // The rendering itself should not impact screenshot timing.
   SDL_FlushRenderer(*Renderer);
@@ -1013,14 +1008,7 @@ static void DrawWithAlpha(auto func) {
   SDL_SetRenderDrawBlendMode(*Renderer, SDL_BLENDMODE_NONE);
 }
 
-GRAPHICS_GEOMETRY_SDL *GrpGeom_Poly(void) { return &GrpGeomSDL; }
-
-GRAPHICS_GEOMETRY_SDL *GrpGeom_FB(void) { return nullptr; }
-
-void GRAPHICS_GEOMETRY_SDL::Lock(void) {}
-void GRAPHICS_GEOMETRY_SDL::Unlock(void) {}
-
-void GRAPHICS_GEOMETRY_SDL::SetColor(RGB216 col) {
+void GraphicsGeometry::SetColor(RGB216 col) {
   const auto rgb = col.ToRGB();
   Col.r = rgb.r;
   Col.g = rgb.g;
@@ -1028,21 +1016,21 @@ void GRAPHICS_GEOMETRY_SDL::SetColor(RGB216 col) {
   SDL_SetRenderDrawColor(*Renderer, Col.r, Col.g, Col.b, 0xFF);
 }
 
-void GRAPHICS_GEOMETRY_SDL::SetAlphaNorm(uint8_t a) {
+void GraphicsGeometry::SetAlphaNorm(uint8_t a) {
   Col.a = a;
   AlphaMode = SDL_BLENDMODE_BLEND;
 }
 
-void GRAPHICS_GEOMETRY_SDL::SetAlphaOne(void) {
+void GraphicsGeometry::SetAlphaOne(void) {
   Col.a = 0xFF;
   AlphaMode = SDL_BLENDMODE_ADD;
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawLine(int x1, int y1, int x2, int y2) {
+void GraphicsGeometry::DrawLine(int x1, int y1, int x2, int y2) {
   SDL_RenderLine(*Renderer, x1, y1, x2, y2);
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawBox(int x1, int y1, int x2, int y2) {
+void GraphicsGeometry::DrawBox(int x1, int y1, int x2, int y2) {
   const SDL_FRect rect = {
       .x = static_cast<float>(x1),
       .y = static_cast<float>(y1),
@@ -1052,22 +1040,22 @@ void GRAPHICS_GEOMETRY_SDL::DrawBox(int x1, int y1, int x2, int y2) {
   SDL_RenderFillRect(*Renderer, &rect);
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawBoxA(int x1, int y1, int x2, int y2) {
+void GraphicsGeometry::DrawBoxA(int x1, int y1, int x2, int y2) {
   DrawWithAlpha([&] { DrawBox(x1, y1, x2, y2); });
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawTriangleFan(VERTEX_XY_SPAN<> xys) {
+void GraphicsGeometry::DrawTriangleFan(VERTEX_XY_SPAN<> xys) {
   DrawTriangles(TRIANGLE_PRIMITIVE::FAN, xys);
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawLineStrip(VERTEX_XY_SPAN<> xys) {
+void GraphicsGeometry::DrawLineStrip(VERTEX_XY_SPAN<> xys) {
   const auto points = HelpFPointsFrom(xys);
   SDL_RenderLines(*Renderer, points.data(), points.size());
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawTriangles(TRIANGLE_PRIMITIVE tp,
-                                          VERTEX_XY_SPAN<> xys,
-                                          VERTEX_RGBA_SPAN<> colors) {
+void GraphicsGeometry::DrawTriangles(TRIANGLE_PRIMITIVE tp,
+                                     VERTEX_XY_SPAN<> xys,
+                                     VERTEX_RGBA_SPAN<> colors) {
   if (colors.empty()) {
     const VERTEX_RGBA single = {Col.r, Col.g, Col.b, 0xFF};
     DrawGeometry(tp, xys, std::span(&single, 1));
@@ -1076,9 +1064,9 @@ void GRAPHICS_GEOMETRY_SDL::DrawTriangles(TRIANGLE_PRIMITIVE tp,
   }
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawTrianglesA(TRIANGLE_PRIMITIVE tp,
-                                           VERTEX_XY_SPAN<> xys,
-                                           VERTEX_RGBA_SPAN<> colors) {
+void GraphicsGeometry::DrawTrianglesA(TRIANGLE_PRIMITIVE tp,
+                                      VERTEX_XY_SPAN<> xys,
+                                      VERTEX_RGBA_SPAN<> colors) {
   DrawWithAlpha([&] {
     if (colors.empty()) {
       const VERTEX_RGBA single = {Col.r, Col.g, Col.b, Col.a};
@@ -1089,8 +1077,7 @@ void GRAPHICS_GEOMETRY_SDL::DrawTrianglesA(TRIANGLE_PRIMITIVE tp,
   });
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawGrdLineEx(int x, int y1, RGB c1, int y2,
-                                          RGB c2) {
+void GraphicsGeometry::DrawGrdLineEx(int x, int y1, RGB c1, int y2, RGB c2) {
   const auto c1a = c1.WithAlpha(0xFF);
   const auto c2a = c2.WithAlpha(0xFF);
   const VERTEX_XY xys[4] = {
@@ -1103,8 +1090,6 @@ void GRAPHICS_GEOMETRY_SDL::DrawGrdLineEx(int x, int y1, RGB c1, int y2,
   DrawGeometry(TRIANGLE_PRIMITIVE::STRIP, xys, colors);
 }
 
-void GRAPHICS_GEOMETRY_SDL::DrawPoint(WINDOW_POINT) {}
-void GRAPHICS_GEOMETRY_SDL::DrawHLine(int, int, int) {}
 /// --------
 
 /// Software rendering with pixel access

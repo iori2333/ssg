@@ -17,15 +17,12 @@
 void GameplayHud::DrawTop(const GameplayHudModel &model) const {
   constexpr PIXEL_LTRB graze_frame = {0, 80, 128, 104};
 
-  GrpGeom->Lock();
   GrpGeom->SetColor({0, 0, 0});
   GrpGeom->SetAlphaNorm(128);
   GrpGeom->DrawBoxA(playfield::kLeft, playfield::kTop, playfield::kRight + 1,
                     40);
-  GrpGeom->Unlock();
 
   if (model.graze_wait_time != 0U) {
-    GrpGeom->Lock();
     GrpGeom->SetColor({5, 1, 0});
     GrpGeom->SetAlphaOne();
     for (int i = 0; i <= 10; i++) {
@@ -34,7 +31,6 @@ void GameplayHud::DrawTop(const GameplayHudModel &model) const {
         GrpGeom->DrawBoxA(128 + 8, 16 + 3 + i, right, 16 + 3 + i + 1);
       }
     }
-    GrpGeom->Unlock();
   }
 
   GrpSurface_Blit({128, 16}, SURFACE_ID::SYSTEM, graze_frame);

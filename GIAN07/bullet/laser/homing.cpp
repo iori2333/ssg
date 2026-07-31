@@ -27,8 +27,8 @@ constexpr int GetNext(int current) {
          (kHomingTrailLength * kHomingSection);
 }
 
-template <GRAPHICS_GEOMETRY_POLY Gp>
-void DrawCircleA16(Gp &gp, float x, float y, float r, float angle) {
+void DrawCircleA16(GraphicsGeometry &geometry, float x, float y, float r,
+                   float angle) {
   std::array<VERTEX_XY, 10> src{};
   for (int j = 0, i = -64; j <= 8; j++) {
     const auto offset = math::PolarVector(
@@ -38,15 +38,11 @@ void DrawCircleA16(Gp &gp, float x, float y, float r, float angle) {
     i += 16;
   }
   src[9] = src[0];
-  gp.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
+  geometry.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
 }
 
 void DrawTriangleFanAlpha(std::span<const VERTEX_XY, 4> src) {
-  if (auto *gp = GrpGeom_Poly()) {
-    gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
-  } else if (auto *gf = GrpGeom_FB()) {
-    gf->DrawTriangleFan(src);
-  }
+  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
 }
 
 } // namespace
@@ -141,12 +137,8 @@ void LaserHoming::Render() const {
   constexpr RGB216 kInnerColor{3, 4, 5};
 
   // Pass 1: wide outer ribbon
-  if (auto *gp = GrpGeom_Poly()) {
-    gp->SetColor(kOuterColor);
-    gp->SetAlphaOne();
-  } else if (auto *gf = GrpGeom_FB()) {
-    gf->SetColor({2, 2, 5});
-  }
+  GrpGeom->SetColor(kOuterColor);
+  GrpGeom->SetAlphaOne();
 
   int w = kHomingWidth;
   int cur = current_;
@@ -165,13 +157,7 @@ void LaserHoming::Render() const {
   src[0] = first_edge[0];
   src[1] = first_edge[1];
 
-  if (auto *gp = GrpGeom_Poly()) {
-    DrawCircleA16(*gp, pt->x, pt->y, static_cast<float>(w), pt->angle);
-  } else {
-    GeomCircleF({static_cast<int>(pt->x / WORLD_COORD_SCALE),
-                 static_cast<int>(pt->y / WORLD_COORD_SCALE)},
-                (w >> 6));
-  }
+  DrawCircleA16(*GrpGeom, pt->x, pt->y, static_cast<float>(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
@@ -191,11 +177,7 @@ void LaserHoming::Render() const {
   }
 
   // Pass 2: narrow inner highlight
-  if (auto *gp = GrpGeom_Poly()) {
-    gp->SetColor(kInnerColor);
-  } else if (auto *gf = GrpGeom_FB()) {
-    gf->SetColor({5, 5, 5});
-  }
+  GrpGeom->SetColor(kInnerColor);
 
   w = kHomingWidth / 2;
   cur = current_;
@@ -205,13 +187,7 @@ void LaserHoming::Render() const {
   src[0] = highlight_edge[0];
   src[1] = highlight_edge[1];
 
-  if (auto *gp = GrpGeom_Poly()) {
-    DrawCircleA16(*gp, pt->x, pt->y, static_cast<float>(w), pt->angle);
-  } else {
-    GeomCircleF({static_cast<int>(pt->x / WORLD_COORD_SCALE),
-                 static_cast<int>(pt->y / WORLD_COORD_SCALE)},
-                (w >> 6));
-  }
+  DrawCircleA16(*GrpGeom, pt->x, pt->y, static_cast<float>(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
@@ -266,10 +242,6 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
   if (state_ == HomingState::Dead) {
     return;
   }
-  auto *gp = GrpGeom_Poly();
-  if (gp == nullptr) {
-    return;
-  }
   const int hit_r = (kHomingWidth * 2 / 3) >> 6;
   const int evade_r = (kHomingWidth + 15_px) >> 6;
 
@@ -280,9 +252,9 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
     const int cy = static_cast<int>(pt.y / WORLD_COORD_SCALE);
 
     if (mode >= 2) {
-      Geometry::CircleF_Approximated(*gp, {cx, cy}, evade_r, true);
+      geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, evade_r, true);
     }
-    Geometry::CircleF_Approximated(*gp, {cx, cy}, hit_r, true);
+    geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, hit_r, true);
     current = GetPrev(current, kHomingSection);
   }
 }

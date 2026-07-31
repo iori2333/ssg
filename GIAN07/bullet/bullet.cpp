@@ -744,20 +744,16 @@ void Bullet::RenderDebugHitbox(int mode) const {
   if (effect_ == BulletEffect::Clearing || HasFlag(Flags::PendingRemoval)) {
     return;
   }
-  auto *gp = GrpGeom_Poly();
-  if (gp == nullptr) {
-    return;
-  }
   const int cx = WorldToPixel(x_);
   const int cy = WorldToPixel(y_);
 
   if (mode >= 2) {
     const int ev_r = GetBulletEvadeRadius(c_) >> 6;
-    Geometry::CircleF_Approximated(*gp, {cx, cy}, ev_r, true);
+    geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, ev_r, true);
   }
 
   const int r_px = GetBulletHitRadius(c_) >> 6;
   if (r_px > 0) {
-    Geometry::CircleF_Approximated(*gp, {cx, cy}, r_px, true);
+    geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, r_px, true);
   }
 }

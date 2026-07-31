@@ -161,7 +161,6 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, sprites[i]);
   }
 
-  GrpGeom->Lock();
   GrpGeom->SetColor({0, 0, 1});
   GrpGeom->SetAlphaNorm(128);
   for (int i = 0; i < 3; i++) {
@@ -176,7 +175,6 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
     const int y = 260 + math::RoundedPolarVector(angle, 110.0f).y - 48 / 2;
     GrpGeom->DrawBoxA(x, y, x + 56, y + 48);
   }
-  GrpGeom->Unlock();
 
   player_.SetPower(static_cast<uint8_t>(std::min(count_, 255)));
   if (player_.Power() < 31) {
@@ -211,7 +209,6 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
                   .c_str());
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  GrpGeom->Lock();
   GrpGeom->SetColor({0, 0, 4});
   GrpGeom->DrawLine(290, 100, 510, 100);
   GrpGeom->DrawLine(290, 410, 510, 410);
@@ -223,7 +220,6 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
     GrpGeom->SetColor({4, 4, 5});
     GeomCircle({120, 150}, 51 - 2 * std::abs(angle_));
   }
-  GrpGeom->Unlock();
 }
 
 void WeaponSelectScene::PrepareGameStart() {

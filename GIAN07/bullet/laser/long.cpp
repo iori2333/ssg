@@ -22,15 +22,6 @@ namespace {
 inline constexpr RGB216 kTable16Bit[16] = {
     {3, 0, 3}, {0, 2, 0}, {0, 0, 4}, {4, 2, 0}, {0, 0, 1},
 };
-inline constexpr RGB216 kTable8BitA[16] = {
-    {2, 0, 2}, {0, 2, 0}, {0, 1, 3}, {4, 2, 0}, {0, 0, 1},
-};
-inline constexpr RGB216 kTable8BitB[16] = {
-    {3, 0, 3}, {0, 4, 0}, {0, 1, 5}, {5, 3, 0}, {2, 2, 4},
-};
-inline constexpr RGB216 kTable8BitC[16] = {
-    {5, 4, 5}, {5, 5, 5}, {4, 4, 5}, {5, 5, 4}, {4, 4, 5},
-};
 // clang-format on
 
 inline constexpr size_t kBeamVertexCount = 34;
@@ -245,86 +236,34 @@ void LaserLong::Kill() {
 
 void LaserLong::DrawBeam() const {
   const auto cval = c_;
-
   const auto px = (x_ / WORLD_COORD_SCALE) + lx_;
   const auto py = (y_ / WORLD_COORD_SCALE) + ly_;
   const auto len = std::hypot(wx_, wy_);
-
-  // Layer 1: outer gradient + fan cap
-  if (len != 0) {
-    if (auto *gp = GrpGeom_Poly()) {
-      const RGBA col = kTable16Bit[cval].ToRGB().WithAlpha(0xFF);
-      gp->SetAlphaOne();
-      GeomGrdRectA(*gp, p_, col);
-
-      std::array<VERTEX_RGBA, kBeamVertexCount> vcs{};
-      vcs[0] = {255, 255, 255, 0xFF};
-      for (auto &vc : vcs | std::views::drop(1)) {
-        vc = col;
-      }
-
-      std::array<VERTEX_XY, kBeamVertexCount> p2{};
-      p2[0].x = px;
-      p2[0].y = py;
-      p2[1].x = p_[0].x;
-      p2[1].y = p_[0].y;
-      p2[kBeamVertexCount - 1].x = p_[3].x;
-      p2[kBeamVertexCount - 1].y = p_[3].y;
-      for (auto n = 2; n < (kBeamVertexCount - 1); n++) {
-        const auto cap_angle = angle_ + (math::kFullAngle / 4.0f) +
-                               (math::kFullAngle / 2.0f) * (n - 1) / 32.0f;
-        const auto offset = math::PolarVector(cap_angle, len);
-        p2[n].x = p2[0].x + offset.x;
-        p2[n].y = p2[0].y + offset.y;
-      }
-      gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, p2, vcs);
-      return;
-    }
-    if (auto *gf = GrpGeom_FB()) {
-      gf->SetColor(kTable8BitA[cval]);
-      gf->DrawTriangleFan(p_);
-    }
-  } else {
-    if (GrpGeom_Poly() != nullptr) {
-      return;
-    }
+  if (len == 0) {
+    return;
   }
 
-  const WINDOW_POINT center{static_cast<int>(std::lround(px)),
-                            static_cast<int>(std::lround(py))};
-  GeomCircleF(center, static_cast<int>(std::lround(len)));
+  const RGBA col = kTable16Bit[cval].ToRGB().WithAlpha(0xFF);
+  GrpGeom->SetAlphaOne();
+  GeomGrdRectA(*GrpGeom, p_, col);
 
-  // Layer 2: middle strip
-  GrpGeom->SetColor(kTable8BitB[cval]);
-  if (len != 0) {
-    VERTEX_XY inner[4];
-    inner[0].x = inner[1].x = p_[0].x - (wx_ / 8);
-    inner[0].y = inner[1].y = p_[0].y - (wy_ / 8);
-    inner[3].x = inner[2].x = p_[3].x + (wx_ / 8);
-    inner[3].y = inner[2].y = p_[3].y + (wy_ / 8);
-    inner[1].x += infx_;
-    inner[1].y += infy_;
-    inner[2].x += infx_;
-    inner[2].y += infy_;
-    GrpGeom->DrawTriangleFan(inner);
+  std::array<VERTEX_RGBA, kBeamVertexCount> vcs{};
+  vcs[0] = {255, 255, 255, 0xFF};
+  for (auto &vc : vcs | std::views::drop(1)) {
+    vc = col;
   }
-  GeomCircleF(center, static_cast<int>(std::lround(len - (len / 8.0f))));
 
-  // Layer 3: inner core
-  GrpGeom->SetColor(kTable8BitC[cval]);
-  if (len != 0) {
-    VERTEX_XY inner[4];
-    inner[0].x = inner[1].x = p_[0].x - (wx_ / 4);
-    inner[0].y = inner[1].y = p_[0].y - (wy_ / 4);
-    inner[3].x = inner[2].x = p_[3].x + (wx_ / 4);
-    inner[3].y = inner[2].y = p_[3].y + (wy_ / 4);
-    inner[1].x += infx_;
-    inner[1].y += infy_;
-    inner[2].x += infx_;
-    inner[2].y += infy_;
-    GrpGeom->DrawTriangleFan(inner);
+  std::array<VERTEX_XY, kBeamVertexCount> points{};
+  points[0] = {px, py};
+  points[1] = p_[0];
+  points[kBeamVertexCount - 1] = p_[3];
+  for (auto n = 2; n < (kBeamVertexCount - 1); n++) {
+    const auto cap_angle = angle_ + (math::kFullAngle / 4.0f) +
+                           (math::kFullAngle / 2.0f) * (n - 1) / 32.0f;
+    const auto offset = math::PolarVector(cap_angle, len);
+    points[n] = {points[0].x + offset.x, points[0].y + offset.y};
   }
-  GeomCircleF(center, static_cast<int>(std::lround(len - (len / 4.0f))));
+  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, points, vcs);
 }
 
 void LaserLong::DrawPreviewLine() const {
@@ -399,12 +338,8 @@ void LaserLong::RenderDebugHitbox(int mode) const {
   if (state_ != LongState::Active && state_ != LongState::Opening) {
     return;
   }
-  auto *gp = GrpGeom_Poly();
-  if (gp == nullptr) {
-    return;
-  }
   const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
-  gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
 
   if (mode >= 2 && w_ > 0) {
     const float bx = x_ / WORLD_COORD_SCALE;
@@ -424,6 +359,6 @@ void LaserLong::RenderDebugHitbox(int mode) const {
     ep[2].x += static_cast<float>(infx_);
     ep[2].y += static_cast<float>(infy_);
     const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
-    gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
+    GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
   }
 }

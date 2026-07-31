@@ -84,13 +84,11 @@ void EnemyRenderer::DrawBossLinks(const BitFormation &formation) const {
     return;
   }
 
-  GrpGeom->Lock();
   GrpGeom->SetColor({4, 4, 5});
   for (std::size_t index = 0; index < geometry.count; ++index) {
     const auto &link = geometry.links[index];
     GrpGeom->DrawLine(link.from.x, link.from.y, link.to.x, link.to.y);
   }
-  GrpGeom->Unlock();
 }
 
 bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
@@ -110,7 +108,6 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
 
   if (boss.mode == BossMode::BombShield && player_.IsBombActive() != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
-    GrpGeom->Lock();
     for (uint8_t layer = 0; layer <= 5; ++layer) {
       GrpGeom->SetColor({5U - layer, 5U - layer, 5U});
       GeomCircle({center.x, center.y},
@@ -120,7 +117,6 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
                          .y +
                      80);
     }
-    GrpGeom->Unlock();
   }
 
   switch (boss.mode) {
