@@ -3,6 +3,7 @@
 ///
 
 #include <array>
+#include <cmath>
 #include <cstdlib>
 #include <span>
 
@@ -51,9 +52,10 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
   const auto n = si.count;
   const uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
 
-  auto base_deg =
-      si.aimed ? atan8(player_.X() - si.x, player_.Y() - si.y) : uint8_t{0};
-  base_deg = static_cast<uint8_t>(base_deg + si.angle);
+  auto base_angle = si.aimed ? AngleTo(static_cast<float>(player_.X() - si.x),
+                                       static_cast<float>(player_.Y() - si.y))
+                             : 0.0f;
+  base_angle += si.angle;
 
   for (uint16_t i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
@@ -61,10 +63,10 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
       return;
     }
     auto si2 = si;
-    si2.angle =
-        bullet_common::CalcSpreadDir(i % n, si.pattern, n, base_deg, si.spread);
+    si2.angle = bullet_common::CalcSpreadAngle(i % n, si.pattern, n, base_angle,
+                                               si.spread);
 
-    int temp = 0;
+    float temp = 0.0f;
     switch (si.speed_variance) {
     case BulletSpeedVariance::None:
       break;
@@ -80,7 +82,7 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
     }
     si2.speed = si.speed + temp;
     if (si.rapid) {
-      si2.speed += (si.speed >> 3) * (i / n);
+      si2.speed += (si.speed * 0.125f) * (i / n);
     }
     t->Spawn(si2);
   }
@@ -96,17 +98,14 @@ void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
       return;
     }
     auto si2 = si;
-    si2.angle = bullet_common::CalcSpreadDir(i % n, BulletPattern::Spread, n,
-                                             si.angle, si.spread);
+    si2.angle = bullet_common::CalcSpreadAngle(i % n, BulletPattern::Spread, n,
+                                               si.angle, si.spread);
 
     const int i_mod = (i % n) + 1;
-    const auto deg_factor =
-        ((i_mod >> 1) * si.spread * (1 - ((i_mod & 1) << 1)));
-    const uint8_t deg =
-        ((n & 1) != 0) ? deg_factor : -(si.spread >> 1) + deg_factor;
-    int v_ret = cosDiv(deg, si.speed);
+    const auto relative_angle = ShortestAngleDelta(si2.angle, si.angle);
+    float v_ret = si.speed / std::cos(relative_angle);
     if (si.rapid) {
-      v_ret += (v_ret >> 3) * (i_mod - 1);
+      v_ret += (v_ret * 0.125f) * (i_mod - 1);
     }
     si2.speed = v_ret;
 
@@ -124,10 +123,10 @@ void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
       return;
     }
     auto si2 = si;
-    si2.angle =
-        bullet_common::CalcSpreadDir(i % n, si.pattern, n, si.angle, si.spread);
+    si2.angle = bullet_common::CalcSpreadAngle(i % n, si.pattern, n, si.angle,
+                                               si.spread);
 
-    int temp = 0;
+    float temp = 0.0f;
     switch (si.speed_variance) {
     case BulletSpeedVariance::None:
       break;
@@ -141,14 +140,8 @@ void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
       temp = (rnd() % 64) - 32;
       break;
     }
-    int delta = static_cast<int>(si.angle) - static_cast<int>(si2.angle);
-    if (delta > 128) {
-      delta -= 256;
-    }
-    if (delta < -128) {
-      delta += 256;
-    }
-    si2.speed = si.speed - ((si.speed * std::abs(delta)) / 23) + temp;
+    const auto delta = std::abs(ShortestAngleDelta(si.angle, si2.angle));
+    si2.speed = si.speed - ((si.speed * delta) / AngleFromLegacy(23)) + temp;
 
     t->Spawn(si2);
   }
@@ -180,9 +173,10 @@ void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
     cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, session_.rank);
   }
 
-  auto base_deg =
-      cmd.aimed ? atan8(player_.X() - cmd.x, player_.Y() - cmd.y) : 0;
-  base_deg += cmd.d;
+  auto base_angle = cmd.aimed ? AngleTo(static_cast<float>(player_.X() - cmd.x),
+                                        static_cast<float>(player_.Y() - cmd.y))
+                              : 0.0f;
+  base_angle += cmd.angle;
 
   for (uint8_t i = 0; i < cmd.n; i++) {
     auto *r = reflect_lasers_.Alloc();
@@ -190,7 +184,7 @@ void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
       return;
     }
     auto si = cmd;
-    si.base_deg = base_deg;
+    si.base_angle = base_angle;
     si.bullet_index = i;
     r->Spawn(si);
   }
@@ -245,7 +239,8 @@ void BulletManager::UpdateBullet(const EnemyHomingTarget &target) {
     }
     if (r.division_requested) {
       Snd_SEPlay(SfxId::Joint, r.division_cx);
-      auto si = MakeBulletSpawnInfo(r.division_cmd, 0, 0, true, session_);
+      auto si = r.division_info;
+      ScaleBulletSpawnInfo(si, session_);
       SpawnBullet(si);
     }
   }

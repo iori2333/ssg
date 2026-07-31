@@ -21,24 +21,29 @@ BulletPattern DecodePattern(uint8_t command) {
   }
 }
 
-uint8_t CalcSpreadDir(uint16_t i, BulletPattern pattern, uint8_t n,
-                      uint8_t base_deg, uint8_t dw) {
+float CalcSpreadAngle(uint16_t i, BulletPattern pattern, uint8_t n,
+                      float base_angle, uint8_t dw) {
+  if (n == 0) {
+    return base_angle;
+  }
+
   switch (pattern) {
   case BulletPattern::Spread: {
     i++;
-    if ((n & 1) != 0) {
-      return base_deg + ((i >> 1) * dw * (1 - ((i & 1) << 1)));
-    }
-    return base_deg - (dw >> 1) + ((i >> 1) * dw * (1 - ((i & 1) << 1)));
+    const auto direction = 1 - ((i & 1) << 1);
+    const auto offset = static_cast<int>(i >> 1) * dw * direction;
+    const auto centered = (n & 1) != 0 ? offset : offset - (dw >> 1);
+    return base_angle + static_cast<float>(centered) * kLegacyAngleStep;
   }
-  case BulletPattern::Circle: {
-    return base_deg + ((i << 8) / n);
-  }
+  case BulletPattern::Circle:
+    return base_angle +
+           (static_cast<float>(i) * kFullAngle / static_cast<float>(n));
   case BulletPattern::Random: {
-    return base_deg + (rnd() % dw) - (dw >> 1);
+    const auto offset = dw == 0 ? 0 : (rnd() % dw) - (dw >> 1);
+    return base_angle + static_cast<float>(offset) * kLegacyAngleStep;
   }
   }
-  return base_deg;
+  return base_angle;
 }
 
 // — Difficulty scaling ————————————————————————————
@@ -104,8 +109,8 @@ void ApplyHardRapid(uint8_t &ns) { ns++; }
 
 void ApplyLunaticRapid(uint8_t &ns) { ns += 2; }
 
-int ScaleVelocityByRank(int v, int rank) {
-  return (((v >> 1) * rank) >> (5 + 8)) + (v >> 1);
+float ScaleVelocityByRank(float v, int rank) {
+  return (v * 0.5f * static_cast<float>(rank) / 8192.0f) + (v * 0.5f);
 }
 
 } // namespace bullet_common

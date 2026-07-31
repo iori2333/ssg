@@ -21,9 +21,10 @@ enum class ReflectLaserType : uint8_t {
 struct ReflectSpawnInfo {
   bool no_scaling = false;
   int x{}, y{};
-  int v{};
+  float v{};
   int w{}, l{}, l2{};
-  uint8_t d{}, dw{};
+  float angle{};
+  uint8_t dw{};
   uint8_t n{}, c{};
   bool aimed{};
   BulletPattern pattern{BulletPattern::Spread};
@@ -31,7 +32,7 @@ struct ReflectSpawnInfo {
 
   // Per-bullet context (set by manager before Spawn)
   int bullet_index{};
-  uint8_t base_deg{};
+  float base_angle{};
 };
 
 // ── State machine ─────────────────────────────────────────────
@@ -72,33 +73,33 @@ struct LaserReflect {
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
-  [[nodiscard]] int X() const { return x_; }
-  [[nodiscard]] int Y() const { return y_; }
+  [[nodiscard]] int X() const;
+  [[nodiscard]] int Y() const;
   [[nodiscard]] bool RegisterGraze();
 
 private:
   void MarkDead() { state_ = ReflectState::Dead; }
 
-  int x_{};
-  int y_{};
-  int v_{};
-  uint8_t d_{};
+  float x_{};
+  float y_{};
+  float v_{};
+  float angle_{};
   uint8_t c_{};
   uint32_t count_{};
   bool grazed_{};
 
-  int vx_{};
-  int vy_{};
-  int lx_{};
-  int ly_{};
-  int wx_{};
-  int wy_{};
+  float vx_{};
+  float vy_{};
+  float lx_{};
+  float ly_{};
+  float wx_{};
+  float wy_{};
   VERTEX_XY p_[4]{};
 
-  int w_{};
-  int wmax_{};
-  int l_{};
-  int lmax_{};
+  float w_{};
+  float wmax_{};
+  float l_{};
+  float lmax_{};
 
   ReflectLaserType subtype_{ReflectLaserType::Short};
   ReflectState state_{ReflectState::Dead};
@@ -111,8 +112,9 @@ private:
   void UpdateReflected();
   void UpdateClearing();
 
-  [[nodiscard]] static UpdateResult
-  CheckLongLaser(const LaserReflect &self, const LaserLong &ll, int dx, int dy);
+  [[nodiscard]] static UpdateResult CheckLongLaser(const LaserReflect &self,
+                                                   const LaserLong &ll,
+                                                   float dx, float dy);
 
   void DrawOuter() const;
   void DrawClearing() const;

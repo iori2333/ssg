@@ -83,9 +83,9 @@ enum class BulletSpeedVariance : uint8_t { None, Small, Medium, Large };
 struct BulletSpawnInfo {
   int x{};
   int y{};
-  int speed{};
-  int8_t acceleration{};
-  uint8_t angle{};
+  float speed{};
+  float acceleration{};
+  float angle{};
   uint8_t spread{};
   uint8_t count{};
   uint8_t rapid_count{};
@@ -114,7 +114,7 @@ struct BulletUpdateInfo {
     bool smoke_spawn = false;
     int smoke_x = 0, smoke_y = 0;
     bool division_requested = false;
-    EclBulletState division_cmd;
+    BulletSpawnInfo division_info;
     int division_cx = 0, division_cy = 0;
   };
 };
@@ -133,8 +133,8 @@ struct Bullet {
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
-  [[nodiscard]] int X() const { return x_; }
-  [[nodiscard]] int Y() const { return y_; }
+  [[nodiscard]] int X() const;
+  [[nodiscard]] int Y() const;
 
   [[nodiscard]] bool IsSmall() const;
   [[nodiscard]] bool IsClearing() const;
@@ -158,20 +158,19 @@ private:
     EnumFlagSet(flags_, flag, static_cast<uint8_t>(enabled));
   }
 
-  int x_{};
-  int y_{};
-  int v_{};
-  uint8_t d_{};
+  float x_{};
+  float y_{};
+  float v_{};
+  float angle_{};
   uint8_t c_{};
   uint32_t count_{};
 
-  int tx_{};
-  int ty_{};
-  int vx_{};
-  int vy_{};
-  int v0_{};
-  int a_{};
-  uint16_t d16_{};
+  float tx_{};
+  float ty_{};
+  float vx_{};
+  float vy_{};
+  float v0_{};
+  float a_{};
   int8_t vd_{};
   uint8_t rep_{};
   BulletMotion motion_{BulletMotion::Normal};
@@ -185,9 +184,11 @@ private:
   void MoveByEffect();
   void RevertToNormal();
   void DrawEffect() const;
+  [[nodiscard]] uint8_t DisplayAngle() const;
 };
 
 [[nodiscard]] BulletSpawnInfo
 MakeBulletSpawnInfo(const EclBulletState &cmd, int ox, int oy, bool scaling,
                     const GameSession &game,
                     BulletSpawnType spawn_type = BulletSpawnType::Normal);
+void ScaleBulletSpawnInfo(BulletSpawnInfo &info, const GameSession &game);

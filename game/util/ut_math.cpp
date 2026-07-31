@@ -9,6 +9,31 @@
 
 static ut_math_detail::Rng g_rng; // Global random number instance
 
+float AngleFromLegacy(uint8_t angle) {
+  return static_cast<float>(angle) * kLegacyAngleStep;
+}
+
+uint8_t AngleToLegacy(float angle) {
+  const auto scaled =
+      static_cast<int>(std::lround(NormalizeAngle(angle) / kLegacyAngleStep));
+  return static_cast<uint8_t>(scaled & 0xff);
+}
+
+float NormalizeAngle(float angle) {
+  angle = std::fmod(angle, kFullAngle);
+  return angle < 0.0f ? angle + kFullAngle : angle;
+}
+
+float ShortestAngleDelta(float target, float current) {
+  return std::remainder(target - current, kFullAngle);
+}
+
+float AngleTo(float x, float y) { return std::atan2(y, x); }
+
+PolarVectorF PolarVector(float angle, float length) {
+  return {.x = std::cos(angle) * length, .y = std::sin(angle) * length};
+}
+
 int sinl(uint8_t deg, int length) {
   double rad = ut_math_detail::deg256_to_rad(deg);
   return static_cast<int>(std::round(std::sin(rad) * length));

@@ -687,11 +687,11 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         .no_scaling = unscaled,
         .x = actor.x + actor.laser_command.x,
         .y = actor.y + actor.laser_command.y,
-        .v = actor.laser_command.v,
+        .v = static_cast<float>(actor.laser_command.v),
         .w = actor.laser_command.w,
         .l = actor.laser_command.l,
         .l2 = actor.laser_command.l2,
-        .d = actor.laser_command.d,
+        .angle = AngleFromLegacy(actor.laser_command.d),
         .dw = actor.laser_command.dw,
         .n = actor.laser_command.n,
         .c = actor.laser_command.c,
@@ -774,7 +774,7 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
             .dy = actor.laser_command.y,
             .v = actor.laser_command.v,
             .w = actor.laser_command.w,
-            .d = actor.laser_command.d,
+            .angle = AngleFromLegacy(actor.laser_command.d),
             .c = actor.laser_command.c,
             .type = static_cast<LongLaserType>(actor.laser_command.type),
         })) {
@@ -806,15 +806,16 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     const auto &args = Args<EclLongLaserArguments>(instruction);
     host_.Bullets().ControlLongLaser(
         &actor, args.id,
-        LongLaserUpdateInfo{LongLaserUpdateInfo::Command::AdjustAngle, 0,
-                            args.angle_delta});
+        LongLaserUpdateInfo{LongLaserUpdateInfo::Command::AdjustAngle, 0.0f,
+                            static_cast<float>(args.angle_delta) *
+                                kLegacyAngleStep});
     break;
   }
   case EclOpcode::FireHomingLaser:
     host_.Bullets().SpawnHoming(HomingSpawnInfo{
         .x = actor.x + actor.laser_command.x,
         .y = actor.y + actor.laser_command.y,
-        .d = actor.laser_command.d,
+        .angle = AngleFromLegacy(actor.laser_command.d),
         .dw = actor.laser_command.dw,
         .n = actor.laser_command.n,
         .c = actor.laser_command.c,

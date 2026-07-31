@@ -16,7 +16,7 @@ enum class HomingType : uint8_t {
 // ── Spawn parameter struct ─────────────────────────────────────
 struct HomingSpawnInfo {
   int x{}, y{};
-  uint8_t d{};
+  float angle{};
   uint8_t dw{};
   uint8_t n{};
   uint8_t c{};
@@ -56,17 +56,17 @@ struct LaserHoming {
 
 private:
   struct TrailPoint {
-    int x{};
-    int y{};
-    uint8_t d{};
+    float x{};
+    float y{};
+    float angle{};
   };
 
-  int v_{};
+  float v_{};
   uint8_t c_{};
   uint32_t count_{};
 
   int current_{};
-  int a_{};
+  float a_{};
   uint8_t left_{};
   TrailPoint p_[kHomingTrailLength * kHomingSection]{};
 

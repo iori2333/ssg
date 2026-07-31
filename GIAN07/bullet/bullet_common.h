@@ -27,11 +27,10 @@ inline constexpr auto kCmdMask = 0x03;
 
 // — Direction calculation ————————————————————
 
-// Calculate spread direction for bullet/laser i of n.
-// base_deg includes player-aim offset (ZSET) if applicable.
-// Pattern controls whether bullets spread, fill a circle, or randomize.
-[[nodiscard]] uint8_t CalcSpreadDir(uint16_t i, BulletPattern pattern,
-                                    uint8_t n, uint8_t base_deg, uint8_t dw);
+// Calculate the direction for bullet/laser i of n. base_angle includes the
+// player-aim offset (ZSET) if applicable.
+[[nodiscard]] float CalcSpreadAngle(uint16_t i, BulletPattern pattern,
+                                    uint8_t n, float base_angle, uint8_t dw);
 
 // — Difficulty scaling ——————————————————————
 
@@ -51,8 +50,8 @@ void ApplyEasyRapid(uint8_t &ns);
 void ApplyHardRapid(uint8_t &ns);
 void ApplyLunaticRapid(uint8_t &ns);
 
-// Bullet velocity scaling by rank: (v/2)*rank/32 + v/2
+// Bullet velocity scaling by rank: (v/2)*rank/8192 + v/2
 // Only used for normal bullet motion.
-[[nodiscard]] int ScaleVelocityByRank(int v, int rank);
+[[nodiscard]] float ScaleVelocityByRank(float v, int rank);
 
 } // namespace bullet_common

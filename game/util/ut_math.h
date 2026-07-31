@@ -65,6 +65,21 @@ private:
 
 } // namespace ut_math_detail
 
+struct PolarVectorF {
+  float x;
+  float y;
+};
+
+inline constexpr float kFullAngle = std::numbers::pi_v<float> * 2.0f;
+inline constexpr float kLegacyAngleStep = kFullAngle / 256.0f;
+
+[[nodiscard]] float AngleFromLegacy(uint8_t angle);
+[[nodiscard]] uint8_t AngleToLegacy(float angle);
+[[nodiscard]] float NormalizeAngle(float angle);
+[[nodiscard]] float ShortestAngleDelta(float target, float current);
+[[nodiscard]] float AngleTo(float x, float y);
+[[nodiscard]] PolarVectorF PolarVector(float angle, float length);
+
 // Table lookup macros replaced with inline functions.
 // These still return values scaled by 256 to keep existing callers working.
 inline int sinm(uint8_t deg) {

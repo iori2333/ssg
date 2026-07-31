@@ -30,7 +30,7 @@ struct LongLaserSpawnInfo {
   int dy{};
   int v{};
   int w{};
-  uint8_t d{};
+  float angle{};
   uint8_t c{};
   LongLaserType type{LongLaserType::Long};
   int player_x{};
@@ -59,8 +59,8 @@ struct LongLaserUpdateInfo {
     AdjustAngle,
   };
   Command command = Command::Tick;
-  uint8_t angle = 0;
-  int8_t delta = 0;
+  float angle = 0.0f;
+  float delta = 0.0f;
 };
 
 // ── LaserLong ────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ struct LaserLong {
   void Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
-  [[nodiscard]] int X() const { return x_; }
+  [[nodiscard]] int X() const;
   [[nodiscard]] bool BelongsTo(const EnemyActor *enemy, uint8_t id) const;
 
 private:
@@ -88,24 +88,24 @@ private:
     e_ = nullptr;
   }
 
-  int x_{};
-  int y_{};
-  int v_{};
-  uint8_t d_{};
+  float x_{};
+  float y_{};
+  float v_{};
+  float angle_{};
   uint8_t c_{};
   uint32_t count_{};
 
   const EnemyActor *e_{};
-  int dx_{};
-  int dy_{};
-  int lx_{};
-  int ly_{};
-  int infx_{};
-  int infy_{};
-  int wx_{};
-  int wy_{};
-  int w_{};
-  int wmax_{};
+  float dx_{};
+  float dy_{};
+  float lx_{};
+  float ly_{};
+  float infx_{};
+  float infy_{};
+  float wx_{};
+  float wy_{};
+  float w_{};
+  float wmax_{};
   VERTEX_XY p_[4]{};
   uint8_t enemy_id_{};
 
@@ -116,8 +116,7 @@ private:
   void UpdateOpening();
   void UpdateClosing();
   void TickUpdate();
-  void ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
-                    int8_t delta);
+  void ApplyCommand(LongLaserUpdateInfo::Command cmd, float angle, float delta);
   void FixAngleGeometry();
 
   void DrawBeam() const;

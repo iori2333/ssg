@@ -28,11 +28,13 @@ constexpr int GetNext(int current) {
 }
 
 template <GRAPHICS_GEOMETRY_POLY Gp>
-void DrawCircleA16(Gp &gp, int x, int y, int r, uint8_t d) {
+void DrawCircleA16(Gp &gp, float x, float y, float r, float angle) {
   std::array<VERTEX_XY, 10> src{};
   for (int j = 0, i = -64; j <= 8; j++) {
-    src[j].x = (x + cosl(d + i, r)) >> 6;
-    src[j].y = (y + sinl(d + i, r)) >> 6;
+    const auto offset =
+        PolarVector(angle + static_cast<float>(i) * kLegacyAngleStep, r);
+    src[j].x = (x + offset.x) / WORLD_COORD_SCALE;
+    src[j].y = (y + offset.y) / WORLD_COORD_SCALE;
     i += 16;
   }
   src[9] = src[0];
@@ -61,73 +63,69 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
   subtype_ = info.type;
   state_ = HomingState::Normal;
 
-  const auto deg = bullet_common::CalcSpreadDir(
-      info.bullet_index, BulletPattern::Spread, info.n, info.d, info.dw);
+  const auto angle = bullet_common::CalcSpreadAngle(
+      info.bullet_index, BulletPattern::Spread, info.n, info.angle, info.dw);
 
   for (auto &j : p_) {
-    j.x = info.x;
-    j.y = info.y;
-    j.d = deg;
+    j.x = static_cast<float>(info.x);
+    j.y = static_cast<float>(info.y);
+    j.angle = angle;
   }
 }
 
 // ── State machine ──────────────────────────────────────────────────
 
 void LaserHoming::Update(const UpdateInfo &info) {
-  int prev_x = p_[current_].x;
-  int prev_y = p_[current_].y;
-  int prev_deg = p_[current_].d;
+  float prev_x = p_[current_].x;
+  float prev_y = p_[current_].y;
+  float prev_angle = p_[current_].angle;
 
   count_++;
   current_ = GetNext(current_);
 
   switch (subtype_) {
   case HomingType::Type1: {
-    int deg2 =
-        -prev_deg + atan8(info.player_x - prev_x, info.player_y - prev_y);
-    if (deg2 < -128) {
-      deg2 += 256;
-    } else if (deg2 > 128) {
-      deg2 -= 256;
-    }
+    const auto target = AngleTo(static_cast<float>(info.player_x) - prev_x,
+                                static_cast<float>(info.player_y) - prev_y);
+    const auto angle_delta = ShortestAngleDelta(target, prev_angle);
 
-    if (std::abs(deg2) < 8) {
+    if (std::abs(angle_delta) < 8.0f * kLegacyAngleStep) {
       subtype_ = HomingType::None;
-      Snd_SEPlay(SfxId::Hlaser, p_[current_].x);
+      Snd_SEPlay(SfxId::Hlaser, static_cast<int>(std::lround(p_[current_].x)));
     } else {
       if (v_ > 2_px) {
         v_ -= a_;
       }
-      int i = 1 + (static_cast<int>(count_) / 32);
-      i = (deg2 * i) / 32;
-      if (i != 0) {
-        prev_deg = prev_deg + i;
-      } else {
-        prev_deg = prev_deg + deg2;
-      }
+      const auto turn =
+          angle_delta * static_cast<float>(1 + (count_ / 32)) / 32.0f;
+      prev_angle += std::abs(turn) >= kLegacyAngleStep ? turn : angle_delta;
     }
 
     if (count_ > 120) {
       subtype_ = HomingType::None;
     }
 
-    p_[current_].d = prev_deg;
-    p_[current_].x = prev_x + cosl(prev_deg, v_);
-    p_[current_].y = prev_y + sinl(prev_deg, v_);
+    const auto velocity = PolarVector(prev_angle, v_);
+    p_[current_].angle = prev_angle;
+    p_[current_].x = prev_x + velocity.x;
+    p_[current_].y = prev_y + velocity.y;
     break;
   }
 
   case HomingType::None:
     v_ += a_ * 2;
-    p_[current_].d = prev_deg;
-    p_[current_].x = prev_x + cosl(prev_deg, v_);
-    p_[current_].y = prev_y + sinl(prev_deg, v_);
+    {
+      const auto velocity = PolarVector(prev_angle, v_);
+      p_[current_].angle = prev_angle;
+      p_[current_].x = prev_x + velocity.x;
+      p_[current_].y = prev_y + velocity.y;
+    }
     break;
   }
 
   int tail_i = GetNext(current_);
-  int tx = p_[tail_i].x;
-  int ty = p_[tail_i].y;
+  const float tx = p_[tail_i].x;
+  const float ty = p_[tail_i].y;
   if (tx < playfield::kWorldLeft - 4_px || tx > playfield::kWorldRight + 4_px ||
       ty < playfield::kWorldTop - 4_px || ty > playfield::kWorldBottom + 4_px) {
     state_ = HomingState::Dead;
@@ -151,27 +149,34 @@ void LaserHoming::Render() const {
   int w = kHomingWidth;
   int cur = current_;
   const auto *pt = &p_[cur];
+  const auto edge = [](const TrailPoint &point, float width) {
+    const auto offset = PolarVector(point.angle - (kFullAngle / 4.0f), width);
+    return std::array{VERTEX_XY{(point.x + offset.x) / WORLD_COORD_SCALE,
+                                (point.y + offset.y) / WORLD_COORD_SCALE},
+                      VERTEX_XY{(point.x - offset.x) / WORLD_COORD_SCALE,
+                                (point.y - offset.y) / WORLD_COORD_SCALE}};
+  };
 
   VERTEX_XY src[4];
-  src[0].x = (pt->x + cosl(pt->d - 64, w)) >> 6;
-  src[0].y = (pt->y + sinl(pt->d - 64, w)) >> 6;
-  src[1].x = (pt->x - cosl(pt->d - 64, w)) >> 6;
-  src[1].y = (pt->y - sinl(pt->d - 64, w)) >> 6;
+  const auto first_edge = edge(*pt, static_cast<float>(w));
+  src[0] = first_edge[0];
+  src[1] = first_edge[1];
 
   if (auto *gp = GrpGeom_Poly()) {
-    DrawCircleA16(*gp, pt->x, pt->y, w, pt->d);
+    DrawCircleA16(*gp, pt->x, pt->y, static_cast<float>(w), pt->angle);
   } else {
-    GeomCircleF({(pt->x >> 6), (pt->y >> 6)}, (w >> 6));
+    GeomCircleF({static_cast<int>(pt->x / WORLD_COORD_SCALE),
+                 static_cast<int>(pt->y / WORLD_COORD_SCALE)},
+                (w >> 6));
   }
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
     pt = &p_[cur];
 
-    src[2].x = (pt->x - cosl(pt->d - 64, w)) >> 6;
-    src[2].y = (pt->y - sinl(pt->d - 64, w)) >> 6;
-    src[3].x = (pt->x + cosl(pt->d - 64, w)) >> 6;
-    src[3].y = (pt->y + sinl(pt->d - 64, w)) >> 6;
+    const auto next_edge = edge(*pt, static_cast<float>(w));
+    src[2] = next_edge[1];
+    src[3] = next_edge[0];
     DrawTriangleFanAlpha(src);
 
     src[0] = src[3];
@@ -193,25 +198,25 @@ void LaserHoming::Render() const {
   cur = current_;
   pt = &p_[cur];
 
-  src[0].x = (pt->x + cosl(pt->d - 64, w)) >> 6;
-  src[0].y = (pt->y + sinl(pt->d - 64, w)) >> 6;
-  src[1].x = (pt->x - cosl(pt->d - 64, w)) >> 6;
-  src[1].y = (pt->y - sinl(pt->d - 64, w)) >> 6;
+  const auto highlight_edge = edge(*pt, static_cast<float>(w));
+  src[0] = highlight_edge[0];
+  src[1] = highlight_edge[1];
 
   if (auto *gp = GrpGeom_Poly()) {
-    DrawCircleA16(*gp, pt->x, pt->y, w, pt->d);
+    DrawCircleA16(*gp, pt->x, pt->y, static_cast<float>(w), pt->angle);
   } else {
-    GeomCircleF({(pt->x >> 6), (pt->y >> 6)}, (w >> 6));
+    GeomCircleF({static_cast<int>(pt->x / WORLD_COORD_SCALE),
+                 static_cast<int>(pt->y / WORLD_COORD_SCALE)},
+                (w >> 6));
   }
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
     pt = &p_[cur];
 
-    src[2].x = (pt->x - cosl(pt->d - 64, w)) >> 6;
-    src[2].y = (pt->y - sinl(pt->d - 64, w)) >> 6;
-    src[3].x = (pt->x + cosl(pt->d - 64, w)) >> 6;
-    src[3].y = (pt->y + sinl(pt->d - 64, w)) >> 6;
+    const auto next_edge = edge(*pt, static_cast<float>(w));
+    src[2] = next_edge[1];
+    src[3] = next_edge[0];
     DrawTriangleFanAlpha(src);
 
     src[0] = src[3];
@@ -238,12 +243,12 @@ HitResult LaserHoming::CheckHit(int px, int py, int player_radius) const {
 
   bool grazed = false;
   for (const auto &j : p_) {
-    if (playfield::WithinAxisDistance(j.x, px, kHomingWidth + 15_px) &&
-        playfield::WithinAxisDistance(j.y, py, kHomingWidth + 15_px)) {
-      if (playfield::WithinAxisDistance(j.x, px,
-                                        kHomingWidth * 2 / 3 + player_radius) &&
-          playfield::WithinAxisDistance(j.y, py,
-                                        kHomingWidth * 2 / 3 + player_radius)) {
+    if (std::abs(j.x - static_cast<float>(px)) < kHomingWidth + 15_px &&
+        std::abs(j.y - static_cast<float>(py)) < kHomingWidth + 15_px) {
+      if (std::abs(j.x - static_cast<float>(px)) <
+              kHomingWidth * 2 / 3 + player_radius &&
+          std::abs(j.y - static_cast<float>(py)) <
+              kHomingWidth * 2 / 3 + player_radius) {
         return HitResult::Hit;
       }
       grazed = true;
@@ -268,8 +273,8 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
   int current = current_;
   for (int j = 0; j < kHomingTrailLength; j++) {
     const auto &pt = p_[current];
-    const int cx = pt.x >> 6;
-    const int cy = pt.y >> 6;
+    const int cx = static_cast<int>(pt.x / WORLD_COORD_SCALE);
+    const int cy = static_cast<int>(pt.y / WORLD_COORD_SCALE);
 
     if (mode >= 2) {
       Geometry::CircleF_Approximated(*gp, {cx, cy}, evade_r, true);

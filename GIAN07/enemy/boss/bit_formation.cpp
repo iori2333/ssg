@@ -357,12 +357,14 @@ void BitFormation::UpdateRotation() {
       LaserDeg = 64 + (256 / count_);
       bullets_.ControlLongLaser(
           e, 0,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle,
-                              static_cast<uint8_t>(e->d + LaserDeg)});
+          LongLaserUpdateInfo{
+              LongLaserUpdateInfo::Command::SetAngle,
+              AngleFromLegacy(static_cast<uint8_t>(e->d + LaserDeg))});
       bullets_.ControlLongLaser(
           e, 1,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::SetAngle,
-                              static_cast<uint8_t>(e->d - LaserDeg)});
+          LongLaserUpdateInfo{
+              LongLaserUpdateInfo::Command::SetAngle,
+              AngleFromLegacy(static_cast<uint8_t>(e->d - LaserDeg))});
       break;
     case LaserPattern::Disabled:
       break;
@@ -467,7 +469,7 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
         .dy = 0,
         .v = 1_px,
         .w = 8_px,
-        .d = e->d,
+        .angle = AngleFromLegacy(e->d),
         .type = LongLaserType::Long,
     };
 
@@ -481,14 +483,14 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
       break;
 
     case EclBitLaserCommand::Bidirectional:
-      info.d += 64;
+      info.angle += kFullAngle / 4.0f;
       info.c = 1;
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
 
-      info.d += 128;
+      info.angle += kFullAngle / 2.0f;
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
@@ -500,12 +502,12 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
 
       delta = 64 + (256 / count_);
 
-      info.d = e->d + delta;
+      info.angle = AngleFromLegacy(static_cast<uint8_t>(e->d + delta));
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
-      info.d = e->d - delta;
+      info.angle = AngleFromLegacy(static_cast<uint8_t>(e->d - delta));
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;

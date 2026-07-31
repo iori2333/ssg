@@ -57,17 +57,19 @@ void LaserLong::Spawn(const LongLaserSpawnInfo &info) {
   wy_ = 0;
   w_ = 0;
   wmax_ = info.w;
-  d_ = info.d;
+  angle_ = info.angle;
 
   if (info.type == LongLaserType::LongZ) {
-    d_ += atan8(info.player_x - x_, info.player_y - y_);
+    angle_ += AngleTo(static_cast<float>(info.player_x) - x_,
+                      static_cast<float>(info.player_y) - y_);
     subtype_ = LongLaserType::Long;
   } else {
     subtype_ = info.type;
   }
 
-  infx_ = cosl(d_, 800);
-  infy_ = sinl(d_, 800);
+  const auto beam = PolarVector(angle_, static_cast<float>(kBeamLength));
+  infx_ = beam.x;
+  infy_ = beam.y;
   count_ = 0;
 
   RecalcGeometry();
@@ -80,11 +82,11 @@ void LaserLong::Spawn(const LongLaserSpawnInfo &info) {
 void LaserLong::RecalcGeometry() {
   auto *pp = p_;
 
-  pp[1].x = pp[0].x = (x_ >> 6) + wx_ + lx_;
-  pp[1].y = pp[0].y = (y_ >> 6) + wy_ + ly_;
+  pp[1].x = pp[0].x = (x_ / WORLD_COORD_SCALE) + wx_ + lx_;
+  pp[1].y = pp[0].y = (y_ / WORLD_COORD_SCALE) + wy_ + ly_;
 
-  pp[2].x = pp[3].x = (x_ >> 6) - wx_ + lx_;
-  pp[2].y = pp[3].y = (y_ >> 6) - wy_ + ly_;
+  pp[2].x = pp[3].x = (x_ / WORLD_COORD_SCALE) - wx_ + lx_;
+  pp[2].y = pp[3].y = (y_ / WORLD_COORD_SCALE) - wy_ + ly_;
 
   pp[1].x += infx_;
   pp[1].y += infy_;
@@ -113,18 +115,12 @@ void LaserLong::TickUpdate() {
       return;
     }
   } else {
-    if (subtype_ == LongLaserType::SetDeg && d_ != e_->d) {
-      d_ = e_->d;
-
-      lx_ = cosl(d_, w_ >> 6);
-      ly_ = sinl(d_, w_ >> 6);
-      wx_ = -(ly_);
-      wy_ = lx_;
-
-      infx_ = cosl(d_, kBeamLength);
-      infy_ = sinl(d_, kBeamLength);
-
-      RecalcGeometry();
+    if (subtype_ == LongLaserType::SetDeg) {
+      const auto enemy_angle = AngleFromLegacy(e_->d);
+      if (angle_ != enemy_angle) {
+        angle_ = enemy_angle;
+        FixAngleGeometry();
+      }
     }
 
     x_ = e_->x + dx_;
@@ -162,10 +158,12 @@ void LaserLong::UpdateOpening() {
     state_ = LongState::Active;
   }
 
-  lx_ = cosl(d_, w_ >> 6);
-  ly_ = sinl(d_, w_ >> 6);
-  wx_ = -(ly_);
-  wy_ = lx_;
+  const auto width =
+      PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+  lx_ = width.x;
+  ly_ = width.y;
+  wx_ = -width.y;
+  wy_ = width.x;
 
   RecalcGeometry();
 }
@@ -182,10 +180,12 @@ void LaserLong::UpdateClosing() {
     }
   }
 
-  lx_ = cosl(d_, w_ >> 6);
-  ly_ = sinl(d_, w_ >> 6);
-  wx_ = -(ly_);
-  wy_ = lx_;
+  const auto width =
+      PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+  lx_ = width.x;
+  ly_ = width.y;
+  wx_ = -width.y;
+  wy_ = width.x;
 
   RecalcGeometry();
 }
@@ -195,10 +195,12 @@ HitResult LaserLong::CheckHit(int px, int py, int player_radius) const {
     return HitResult::Miss;
   }
 
-  const int tx = px - x_;
-  const int ty = py - y_;
-  const int len = cosl(d_, tx) + sinl(d_, ty);
-  const int dist = std::abs(-sinl(d_, tx) + cosl(d_, ty));
+  const float tx = static_cast<float>(px) - x_;
+  const float ty = static_cast<float>(py) - y_;
+  const float angle_cos = std::cos(angle_);
+  const float angle_sin = std::sin(angle_);
+  const float len = angle_cos * tx + angle_sin * ty;
+  const float dist = std::abs(-angle_sin * tx + angle_cos * ty);
 
   if (len <= 0)
     return HitResult::Miss;
@@ -231,6 +233,8 @@ void LaserLong::Render() const {
 
 bool LaserLong::IsDead() const { return state_ == LongState::Inactive; }
 
+int LaserLong::X() const { return static_cast<int>(std::lround(x_)); }
+
 void LaserLong::Kill() {
   if (state_ != LongState::Inactive) {
     state_ = LongState::Closing;
@@ -242,9 +246,9 @@ void LaserLong::Kill() {
 void LaserLong::DrawBeam() const {
   const auto cval = c_;
 
-  const int px = (x_ >> 6) + lx_;
-  const int py = (y_ >> 6) + ly_;
-  const int len = isqrt((wx_ * wx_) + (wy_ * wy_));
+  const auto px = (x_ / WORLD_COORD_SCALE) + lx_;
+  const auto py = (y_ / WORLD_COORD_SCALE) + ly_;
+  const auto len = std::hypot(wx_, wy_);
 
   // Layer 1: outer gradient + fan cap
   if (len != 0) {
@@ -267,8 +271,11 @@ void LaserLong::DrawBeam() const {
       p2[kBeamVertexCount - 1].x = p_[3].x;
       p2[kBeamVertexCount - 1].y = p_[3].y;
       for (auto n = 2; n < (kBeamVertexCount - 1); n++) {
-        p2[n].x = p2[0].x + cosl(d_ + 64 + (128 * (n - 1) / 32), len);
-        p2[n].y = p2[0].y + sinl(d_ + 64 + (128 * (n - 1) / 32), len);
+        const auto cap_angle = angle_ + (kFullAngle / 4.0f) +
+                               (kFullAngle / 2.0f) * (n - 1) / 32.0f;
+        const auto offset = PolarVector(cap_angle, len);
+        p2[n].x = p2[0].x + offset.x;
+        p2[n].y = p2[0].y + offset.y;
       }
       gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, p2, vcs);
       return;
@@ -283,7 +290,9 @@ void LaserLong::DrawBeam() const {
     }
   }
 
-  GeomCircleF({px, py}, len);
+  const WINDOW_POINT center{static_cast<int>(std::lround(px)),
+                            static_cast<int>(std::lround(py))};
+  GeomCircleF(center, static_cast<int>(std::lround(len)));
 
   // Layer 2: middle strip
   GrpGeom->SetColor(kTable8BitB[cval]);
@@ -299,7 +308,7 @@ void LaserLong::DrawBeam() const {
     inner[2].y += infy_;
     GrpGeom->DrawTriangleFan(inner);
   }
-  GeomCircleF({px, py}, (len - (len / 8)));
+  GeomCircleF(center, static_cast<int>(std::lround(len - (len / 8.0f))));
 
   // Layer 3: inner core
   GrpGeom->SetColor(kTable8BitC[cval]);
@@ -315,20 +324,20 @@ void LaserLong::DrawBeam() const {
     inner[2].y += infy_;
     GrpGeom->DrawTriangleFan(inner);
   }
-  GeomCircleF({px, py}, (len - (len / 4)));
+  GeomCircleF(center, static_cast<int>(std::lround(len - (len / 4.0f))));
 }
 
 void LaserLong::DrawPreviewLine() const {
-  const int px = x_ >> 6;
-  const int py = y_ >> 6;
+  const auto px = x_ / WORLD_COORD_SCALE;
+  const auto py = y_ / WORLD_COORD_SCALE;
   GrpGeom->SetColor({4, 4, 4});
   GrpGeom->DrawLine(px, py, (px + infx_), (py + infy_));
 }
 
 // ── Command dispatch ─────────────────────────────────────────────────
 
-void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
-                             int8_t delta) {
+void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, float angle,
+                             float delta) {
   using Cmd = LongLaserUpdateInfo::Command;
   switch (cmd) {
   case Cmd::Open:
@@ -354,11 +363,11 @@ void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
     e_ = nullptr;
     break;
   case Cmd::SetAngle:
-    d_ = angle;
+    angle_ = angle;
     FixAngleGeometry();
     break;
   case Cmd::AdjustAngle:
-    d_ += delta;
+    angle_ += delta;
     FixAngleGeometry();
     break;
   default:
@@ -367,12 +376,15 @@ void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, uint8_t angle,
 }
 
 void LaserLong::FixAngleGeometry() {
-  lx_ = cosl(d_, w_ >> 6);
-  ly_ = sinl(d_, w_ >> 6);
-  wx_ = -(ly_);
-  wy_ = lx_;
-  infx_ = cosl(d_, kBeamLength);
-  infy_ = sinl(d_, kBeamLength);
+  const auto width =
+      PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+  lx_ = width.x;
+  ly_ = width.y;
+  wx_ = -width.y;
+  wy_ = width.x;
+  const auto beam = PolarVector(angle_, static_cast<float>(kBeamLength));
+  infx_ = beam.x;
+  infy_ = beam.y;
   RecalcGeometry();
 }
 
@@ -395,13 +407,13 @@ void LaserLong::RenderDebugHitbox(int mode) const {
   gp->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
 
   if (mode >= 2 && w_ > 0) {
-    const int bx = x_ >> 6;
-    const int by = y_ >> 6;
-    const int scale = (w_ + kDebugLaserEvadeWidth);
-    const int wx2 = wx_ * scale / w_;
-    const int wy2 = wy_ * scale / w_;
-    const int lx2 = lx_ * scale / w_;
-    const int ly2 = ly_ * scale / w_;
+    const float bx = x_ / WORLD_COORD_SCALE;
+    const float by = y_ / WORLD_COORD_SCALE;
+    const float scale = w_ + kDebugLaserEvadeWidth;
+    const float wx2 = wx_ * scale / w_;
+    const float wy2 = wy_ * scale / w_;
+    const float lx2 = lx_ * scale / w_;
+    const float ly2 = ly_ * scale / w_;
     VERTEX_XY ep[4];
     ep[1].x = ep[0].x = static_cast<float>(bx + wx2 + lx2);
     ep[1].y = ep[0].y = static_cast<float>(by + wy2 + ly2);
