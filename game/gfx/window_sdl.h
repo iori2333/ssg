@@ -8,11 +8,8 @@
 
 #include "graphics.h"
 
-// We can't retrieve the original window position in fullscreen mode via
-// SDL_GetWindowPosition(), so let's back it up before we go fullscreen.
-// Also helpful because these coordinates determine the display that the
-// fullscreen window is placed on.
-extern std::optional<std::pair<int16_t, int16_t>> TopleftBeforeFullscreen;
+// Saves the windowed position before entering fullscreen mode.
+void WndBackend_RememberTopleft(std::pair<int16_t, int16_t> position);
 
 // Falls back to the primary display if the window doesn't exist yet.
 SDL_DisplayID HelpGetDisplayForWindow(void);

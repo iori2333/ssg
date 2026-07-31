@@ -476,8 +476,8 @@ void BulletManager::RotateDisplayAngles() {
 void BulletManager::RenderDebugHitboxes(int mode) const {
   const RGB216 kBlack{0, 0, 0};
   constexpr uint8_t kAlpha = 204;
-  GrpGeom->SetColor(kBlack);
-  GrpGeom->SetAlphaNorm(kAlpha);
+  Geometry().SetColor(kBlack);
+  Geometry().SetAlphaNorm(kAlpha);
 
   for (const auto &b : bullets_) {
     b.RenderDebugHitbox(mode);

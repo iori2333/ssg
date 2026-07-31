@@ -144,8 +144,7 @@ class GraphicsGeometry;
 #define OPENGL_TARGET_ES1_MIN 1
 #define OPENGL_TARGET_ES2_MIN 0
 
-extern GraphicsGeometry GrpGeomSDL;
-inline GraphicsGeometry *const GrpGeom = &GrpGeomSDL;
+GraphicsGeometry &Geometry();
 /// --------
 
 /// Software rendering with pixel access

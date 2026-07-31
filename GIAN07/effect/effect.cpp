@@ -98,7 +98,7 @@ void EffectManager::DrawCircles() const {
         if (radius < 0) {
           continue;
         }
-        GrpGeom->SetColor({5U, layer + 2U, layer + 2U});
+        Geometry().SetColor({5U, layer + 2U, layer + 2U});
         for (int point = 0; point < 5; ++point) {
           const int angle =
               effect.angle + kAngleSpeeds[layer] * age / 10 + point * 256 / 5;
@@ -108,8 +108,8 @@ void EffectManager::DrawCircles() const {
               static_cast<float>(angle) * math::kLegacyAngleStep, radius);
           const auto end = math::RoundedPolarVector(
               static_cast<float>(next_angle) * math::kLegacyAngleStep, radius);
-          GrpGeom->DrawLine(effect.x + start.x, effect.y + start.y,
-                            effect.x + end.x, effect.y + end.y);
+          Geometry().DrawLine(effect.x + start.x, effect.y + start.y,
+                              effect.x + end.x, effect.y + end.y);
         }
       }
       break;
@@ -124,7 +124,7 @@ void EffectManager::DrawCircles() const {
         if (radius < 0) {
           continue;
         }
-        GrpGeom->SetColor({5U, layer + 2U, layer + 2U});
+        Geometry().SetColor({5U, layer + 2U, layer + 2U});
         GeomCircle({effect.x, effect.y}, radius);
       }
       break;
@@ -133,7 +133,7 @@ void EffectManager::DrawCircles() const {
 }
 
 void EffectManager::InitializeTextRenderer() {
-  music_title_rect_ = TextObj.Register(
+  music_title_rect_ = TextRenderer().Register(
       {.w = playfield::kRight + 1 - playfield::kLeft, .h = 20});
 }
 
@@ -199,7 +199,7 @@ void EffectManager::SetMusicTitle(int y, std::string_view title) {
   music_title_text_[1] = title;
   PIXEL_SIZE extent{};
   for (const auto text : music_title_text_) {
-    const auto text_extent = TextObj.TextExtent(FONT_ID::NORMAL, text);
+    const auto text_extent = TextRenderer().TextExtent(FONT_ID::NORMAL, text);
     extent.w += text_extent.w;
     extent.h = text_extent.h;
   }
@@ -286,7 +286,7 @@ void EffectManager::UpdateStrings() {
 
 void EffectManager::RenderMusicTitle(WINDOW_POINT top_left,
                                      const PIXEL_LTWH &subrect) {
-  TextObj.Render(
+  TextRenderer().Render(
       top_left, music_title_rect_, music_title_text_[1],
       [this](TEXTRENDER_SESSION &session) {
         const auto gradient = [](PIXEL_COORD y) -> uint8_t {
@@ -330,10 +330,10 @@ void EffectManager::DrawStrings() {
       const int center_x = (effect.x >> 6) + 8;
       const int center_y = (effect.y >> 6) + 8;
       const int half_height = (35 - remaining) / 2;
-      GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->SetAlphaNorm(static_cast<uint8_t>((35 - remaining) * 3));
-      GrpGeom->DrawBoxA(center_x - 170, center_y - half_height, center_x + 170,
-                        center_y + half_height);
+      Geometry().SetColor({0, 0, 0});
+      Geometry().SetAlphaNorm(static_cast<uint8_t>((35 - remaining) * 3));
+      Geometry().DrawBoxA(center_x - 170, center_y - half_height,
+                          center_x + 170, center_y + half_height);
       for (int index = 0; index < 9; ++index) {
         GrpPutc((effect.x >> 6) + (index - 4) * (35 - remaining), effect.y >> 6,
                 kGameOver[index]);
@@ -370,23 +370,23 @@ void EffectManager::DrawStrings() {
       break;
     }
     case StringEffectState::MusicTitleHolding: {
-      GrpGeom->SetColor({0, 0, 0});
+      Geometry().SetColor({0, 0, 0});
       const auto alpha =
           math::RoundedPolarVector(static_cast<float>(effect.time - 32) *
                                        math::kLegacyAngleStep,
                                    80.0f)
               .y +
           80;
-      GrpGeom->SetAlphaNorm(alpha);
+      Geometry().SetAlphaNorm(alpha);
       for (int row = 0; row < 16; ++row) {
         const int inset =
             math::RoundedPolarVector(static_cast<float>(128 + row * 16) *
                                          math::kLegacyAngleStep,
                                      16.0f)
                 .y;
-        GrpGeom->DrawBoxA((effect.x >> 6) + inset - 16, (effect.y >> 6) + row,
-                          playfield::kRight - 16 - inset,
-                          (effect.y >> 6) + row + 1);
+        Geometry().DrawBoxA((effect.x >> 6) + inset - 16, (effect.y >> 6) + row,
+                            playfield::kRight - 16 - inset,
+                            (effect.y >> 6) + row + 1);
       }
       RenderMusicTitle({effect.x >> 6, effect.y >> 6},
                        {0, 0, effect.velocity_x, effect.velocity_y});

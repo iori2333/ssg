@@ -100,17 +100,17 @@ void Player::DrawFocusHitbox() const {
 
   const WINDOW_POINT center{x_ >> WORLD_COORD_BITS, y_ >> WORLD_COORD_BITS};
 
-  GrpGeom->SetColor({5, 5, 5});
+  Geometry().SetColor({5, 5, 5});
   GeomCircleF(center, HitRadiusPixels());
-  GrpGeom->SetColor({5, 2, 2});
+  Geometry().SetColor({5, 2, 2});
   GeomCircleF(center, 1);
 }
 
 void Player::DrawDebugHitbox() const {
   const WINDOW_POINT center{x_ >> WORLD_COORD_BITS, y_ >> WORLD_COORD_BITS};
-  GrpGeom->SetColor({0, 0, 0});
-  GrpGeom->SetAlphaNorm(204);
-  geometry::DrawFilledCircle(*GrpGeom, center, HitRadiusPixels(), true);
+  Geometry().SetColor({0, 0, 0});
+  Geometry().SetAlphaNorm(204);
+  geometry::DrawFilledCircle(Geometry(), center, HitRadiusPixels(), true);
 }
 
 void Player::Draw() {

@@ -77,7 +77,7 @@ bool DisplayController::Apply(GRAPHICS_PARAMS requested) {
     return false;
   }
 
-  TextObj.WipeBeforeNextRender();
+  TextRenderer().WipeBeforeNextRender();
   params_ = result->live;
   return !result->reload_surfaces || graphics_.Reload();
 }
@@ -105,7 +105,7 @@ bool DisplayController::ApplyConfig(const GraphicsConfig &config) {
 }
 
 void DisplayController::SetFrameRate(uint8_t divisor) {
-  Grp_FPSDivisor = divisor;
+  SetFrameRateDivisor(divisor);
 }
 
 void DisplayController::SetScreenshotEffort(uint8_t effort) {

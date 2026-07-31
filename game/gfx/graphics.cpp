@@ -21,10 +21,28 @@
 #include "sys/path.h"
 #include "util/guard.h"
 
-uint8_t Grp_FPSDivisor = 0;
-static uint8_t Grp_ScreenshotEffort = 0;
-std::chrono::steady_clock::duration
-    Grp_ScreenshotTimes[GRP_SCREENSHOT_EFFORT_COUNT];
+namespace {
+
+struct GraphicsState {
+  uint8_t frame_rate_divisor = 0;
+  uint8_t screenshot_effort = 0;
+  unsigned int screenshot_number = 0;
+  std::string screenshot_prefix;
+  bool screenshot_requested = false;
+};
+
+GraphicsState &State() {
+  static GraphicsState state;
+  return state;
+}
+
+} // namespace
+
+void SetFrameRateDivisor(uint8_t divisor) {
+  State().frame_rate_divisor = divisor;
+}
+
+uint8_t FrameRateDivisor() { return State().frame_rate_divisor; }
 
 // Paletted graphics //
 // ----------------- //
@@ -47,13 +65,8 @@ PALETTE PALETTE::Fade(uint8_t alpha, uint8_t first, uint8_t last) const {
 // Screenshots
 // -----------
 
-using NUM_TYPE = unsigned int;
-
-static NUM_TYPE ScreenshotNum = 0;
-static std::string ScreenshotBuf;
-static bool ScreenshotRequested = false;
-
 static void ScreenshotFindLastFor(std::string_view ext) {
+  auto &state = State();
   const auto extension_matches = [ext](std::string_view candidate) {
     return std::ranges::equal(candidate, ext, [](char left, char right) {
       return std::tolower(static_cast<unsigned char>(left)) ==
@@ -63,52 +76,53 @@ static void ScreenshotFindLastFor(std::string_view ext) {
 
   std::error_code error;
   for (const auto &entry :
-       std::filesystem::directory_iterator{ScreenshotBuf, error}) {
+       std::filesystem::directory_iterator{state.screenshot_prefix, error}) {
     if (error || !entry.is_regular_file(error) ||
         !extension_matches(entry.path().extension().string())) {
       continue;
     }
     const auto stem = entry.path().stem().string();
-    NUM_TYPE number = 0;
+    unsigned int number = 0;
     const auto [end, result] =
         std::from_chars(stem.data(), stem.data() + stem.size(), number);
     if (result == std::errc{} && end == stem.data() + stem.size() &&
-        number < (std::numeric_limits<NUM_TYPE>::max)()) {
-      ScreenshotNum = (std::max)(ScreenshotNum, number + 1);
+        number < (std::numeric_limits<unsigned int>::max)()) {
+      state.screenshot_number = (std::max)(state.screenshot_number, number + 1);
     }
   }
 }
 
 void Grp_ScreenshotSetPrefix(std::string_view prefix) {
-  ScreenshotBuf = prefix;
+  State().screenshot_prefix = prefix;
 }
 
 // Increments the screenshot number to the next file with the given extension
 // that doesn't exist yet, then opens a write stream for that file.
 SDL_IOStream *Grp_NextScreenshotStream(std::string_view ext) {
-  if (ScreenshotBuf.size() == 0) {
+  auto &state = State();
+  if (state.screenshot_prefix.empty()) {
     return nullptr;
   }
 
   // Users might delete the directory while the game is running, after all.
   std::error_code error;
-  std::filesystem::create_directories(ScreenshotBuf, error);
+  std::filesystem::create_directories(state.screenshot_prefix, error);
   if (error) {
-    ScreenshotBuf.clear();
+    state.screenshot_prefix.clear();
     return nullptr;
   }
 
   // Prevent the theoretical infinite loop...
-  while (ScreenshotNum < (std::numeric_limits<NUM_TYPE>::max)()) {
-    const auto prefix_len = ScreenshotBuf.size();
-    ScreenshotBuf += std::format("{:04}", ScreenshotNum++);
-    ScreenshotBuf += ext;
-    auto *ret = SDL_IOFromFile(ScreenshotBuf.c_str(), "wxb");
-    ScreenshotBuf.resize(prefix_len);
+  while (state.screenshot_number < (std::numeric_limits<unsigned int>::max)()) {
+    const auto prefix_len = state.screenshot_prefix.size();
+    state.screenshot_prefix += std::format("{:04}", state.screenshot_number++);
+    state.screenshot_prefix += ext;
+    auto *ret = SDL_IOFromFile(state.screenshot_prefix.c_str(), "wxb");
+    state.screenshot_prefix.resize(prefix_len);
     if (ret) {
       return ret;
     }
-    if (ScreenshotNum == 1) {
+    if (state.screenshot_number == 1) {
       ScreenshotFindLastFor(ext);
     }
   }
@@ -261,10 +275,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   return SDL_WriteIO(stream, wrt.mem, wrt.size) == wrt.size;
 }
 
-bool Grp_ScreenshotSave(SDL_Surface *src,
-                        const std::chrono::steady_clock::time_point t_start) {
-  constexpr auto DURATION_FAILED = std::chrono::steady_clock::duration(-1);
-
+bool Grp_ScreenshotSave(SDL_Surface *src) {
   assert(src->w >= 0);
   assert(src->h >= 0);
   if (SDL_MUSTLOCK(src)) {
@@ -272,19 +283,13 @@ bool Grp_ScreenshotSave(SDL_Surface *src,
   }
 
   auto ret = false;
-  auto effort = Grp_ScreenshotEffort;
+  const auto effort = State().screenshot_effort;
   if (effort != 0) {
     ret = ScreenshotSaveWebP(src, (effort - 1));
-    if (!ret) {
-      Grp_ScreenshotTimes[effort] = DURATION_FAILED;
-    }
   }
   if (!ret) {
-    effort = 0;
     ret = ScreenshotSaveBMP(src);
   }
-  const auto t_end = std::chrono::steady_clock::now();
-  Grp_ScreenshotTimes[effort] = (ret ? (t_end - t_start) : DURATION_FAILED);
 
   if (SDL_MUSTLOCK(src)) {
     SDL_UnlockSurface(src);
@@ -294,7 +299,7 @@ bool Grp_ScreenshotSave(SDL_Surface *src,
 }
 
 void Grp_ScreenshotSetEffort(uint8_t effort) {
-  Grp_ScreenshotEffort = std::min(effort, GRP_SCREENSHOT_EFFORT_MAX);
+  State().screenshot_effort = std::min(effort, kScreenshotEffortMax);
 }
 // -----------
 
@@ -397,7 +402,11 @@ std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
 }
 
 void Grp_Flip(void) {
-  GrpBackend_Flip(ScreenshotRequested && ScreenshotBuf.size());
+  const auto &state = State();
+  GrpBackend_Flip(state.screenshot_requested &&
+                  !state.screenshot_prefix.empty());
 }
 
-void Grp_RequestScreenshot(bool requested) { ScreenshotRequested = requested; }
+void Grp_RequestScreenshot(bool requested) {
+  State().screenshot_requested = requested;
+}

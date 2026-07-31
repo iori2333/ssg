@@ -244,8 +244,8 @@ void LaserLong::DrawBeam() const {
   }
 
   const RGBA col = kTable16Bit[cval].ToRGB().WithAlpha(0xFF);
-  GrpGeom->SetAlphaOne();
-  GeomGrdRectA(*GrpGeom, p_, col);
+  Geometry().SetAlphaOne();
+  GeomGrdRectA(Geometry(), p_, col);
 
   std::array<VERTEX_RGBA, kBeamVertexCount> vcs{};
   vcs[0] = {255, 255, 255, 0xFF};
@@ -263,14 +263,14 @@ void LaserLong::DrawBeam() const {
     const auto offset = math::PolarVector(cap_angle, len);
     points[n] = {points[0].x + offset.x, points[0].y + offset.y};
   }
-  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, points, vcs);
+  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, points, vcs);
 }
 
 void LaserLong::DrawPreviewLine() const {
   const auto px = x_ / WORLD_COORD_SCALE;
   const auto py = y_ / WORLD_COORD_SCALE;
-  GrpGeom->SetColor({4, 4, 4});
-  GrpGeom->DrawLine(px, py, (px + infx_), (py + infy_));
+  Geometry().SetColor({4, 4, 4});
+  Geometry().DrawLine(px, py, (px + infx_), (py + infy_));
 }
 
 // ── Command dispatch ─────────────────────────────────────────────────
@@ -339,7 +339,7 @@ void LaserLong::RenderDebugHitbox(int mode) const {
     return;
   }
   const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
-  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
 
   if (mode >= 2 && w_ > 0) {
     const float bx = x_ / WORLD_COORD_SCALE;
@@ -359,6 +359,6 @@ void LaserLong::RenderDebugHitbox(int mode) const {
     ep[2].x += static_cast<float>(infx_);
     ep[2].y += static_cast<float>(infy_);
     const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
-    GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
+    Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
   }
 }

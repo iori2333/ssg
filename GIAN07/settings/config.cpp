@@ -31,7 +31,7 @@ static constexpr bool ValidPracticeMode(PracticeMode v) {
 }
 static constexpr bool ValidFPSDivisor(uint8_t v) { return v <= kMaxFpsDivisor; }
 static constexpr bool ValidScreenshotEffort(uint8_t v) {
-  return v <= GRP_SCREENSHOT_EFFORT_MAX;
+  return v <= kScreenshotEffortMax;
 }
 static constexpr bool ValidVolume(VOLUME v) { return v <= VOLUME_MAX; }
 static constexpr bool ValidMidiVariant(MidiVariant v) {

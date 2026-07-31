@@ -292,7 +292,7 @@ void MenuController::RegisterTRRs() {
   slots_.clear();
   int needed = 1 + kMaxVisibleItems;
   for (int i = 0; i < needed; i++) {
-    slots_.push_back({TextObj.Register({.w = w_, .h = kMenuItemH})});
+    slots_.push_back({TextRenderer().Register({.w = w_, .h = kMenuItemH})});
   }
 }
 
@@ -367,23 +367,23 @@ void MenuController::RenderPage() {
 
   int top = y_;
 
-  GrpGeom->SetAlphaNorm(box_alpha);
+  Geometry().SetAlphaNorm(box_alpha);
 
-  GrpGeom->SetColor({0, 0, 0});
-  GrpGeom->DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
+  Geometry().SetColor({0, 0, 0});
+  Geometry().DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
   top += kMenuItemH;
 
-  GrpGeom->SetColor({0, 0, 2});
+  Geometry().SetColor({0, 0, 2});
   for (int i = page.scroll; i < page.scroll + visible; i++) {
     if (i == page.selected) {
-      GrpGeom->SetAlphaNorm(128);
-      GrpGeom->SetColor({5, 0, 0});
+      Geometry().SetAlphaNorm(128);
+      Geometry().SetColor({5, 0, 0});
     }
-    GrpGeom->DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
+    Geometry().DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
     top += kMenuItemH;
     if (i == page.selected) {
-      GrpGeom->SetAlphaNorm(box_alpha);
-      GrpGeom->SetColor({0, 0, 2});
+      Geometry().SetAlphaNorm(box_alpha);
+      Geometry().SetColor({0, 0, 2});
     }
   }
 
@@ -396,10 +396,10 @@ void MenuController::RenderPage() {
   if (title_slot.cache_key != title_key) {
     title_slot.cache_key = title_key;
   }
-  TextObj.Render(pos, title_slot.trr, title_slot.cache_key,
-                 [&](TEXTRENDER_SESSION &s) {
-                   DrawTitle(s, title_str, w_, frame_count_);
-                 });
+  TextRenderer().Render(pos, title_slot.trr, title_slot.cache_key,
+                        [&](TEXTRENDER_SESSION &s) {
+                          DrawTitle(s, title_str, w_, frame_count_);
+                        });
 
   pos.y += kMenuItemH;
   for (int i = page.scroll; i < page.scroll + visible; i++) {
@@ -420,10 +420,11 @@ void MenuController::RenderPage() {
       slot.cache_key = key;
     }
 
-    TextObj.Render(pos, slot.trr, slot.cache_key, [&](TEXTRENDER_SESSION &s) {
-      DrawItem(s, node.Title(), value, w_, selected, enabled, highlighted,
-               node.Centered(), marquee_frame);
-    });
+    TextRenderer().Render(
+        pos, slot.trr, slot.cache_key, [&](TEXTRENDER_SESSION &s) {
+          DrawItem(s, node.Title(), value, w_, selected, enabled, highlighted,
+                   node.Centered(), marquee_frame);
+        });
 
     pos.y += kMenuItemH;
   }
@@ -526,23 +527,23 @@ void MenuController::RenderList() {
 
   int top = y_;
 
-  GrpGeom->SetAlphaNorm(box_alpha);
+  Geometry().SetAlphaNorm(box_alpha);
 
-  GrpGeom->SetColor({0, 0, 0});
-  GrpGeom->DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
+  Geometry().SetColor({0, 0, 0});
+  Geometry().DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
   top += kMenuItemH;
 
-  GrpGeom->SetColor({0, 0, 2});
+  Geometry().SetColor({0, 0, 2});
   for (int i = view->scroll; i < view->scroll + visible; i++) {
     if (i == view->selected) {
-      GrpGeom->SetAlphaNorm(128);
-      GrpGeom->SetColor({5, 0, 0});
+      Geometry().SetAlphaNorm(128);
+      Geometry().SetColor({5, 0, 0});
     }
-    GrpGeom->DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
+    Geometry().DrawBoxA(x_, top, x_ + w_, top + kMenuItemH);
     top += kMenuItemH;
     if (i == view->selected) {
-      GrpGeom->SetAlphaNorm(box_alpha);
-      GrpGeom->SetColor({0, 0, 2});
+      Geometry().SetAlphaNorm(box_alpha);
+      Geometry().SetColor({0, 0, 2});
     }
   }
 
@@ -554,7 +555,7 @@ void MenuController::RenderList() {
   if (title_slot.cache_key != title_key) {
     title_slot.cache_key = title_key;
   }
-  TextObj.Render(
+  TextRenderer().Render(
       pos, title_slot.trr, title_slot.cache_key,
       [&](TEXTRENDER_SESSION &s) { DrawTitle(s, title, w_, frame_count_); });
 
@@ -580,10 +581,11 @@ void MenuController::RenderList() {
       slot.cache_key = key;
     }
 
-    TextObj.Render(pos, slot.trr, slot.cache_key, [&](TEXTRENDER_SESSION &s) {
-      DrawItem(s, item_title, "", w_, selected, true, false, false,
-               marquee_frame);
-    });
+    TextRenderer().Render(pos, slot.trr, slot.cache_key,
+                          [&](TEXTRENDER_SESSION &s) {
+                            DrawItem(s, item_title, "", w_, selected, true,
+                                     false, false, marquee_frame);
+                          });
 
     pos.y += kMenuItemH;
   }

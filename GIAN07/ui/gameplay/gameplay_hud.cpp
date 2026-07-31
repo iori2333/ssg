@@ -17,18 +17,18 @@
 void GameplayHud::DrawTop(const GameplayHudModel &model) const {
   constexpr PIXEL_LTRB graze_frame = {0, 80, 128, 104};
 
-  GrpGeom->SetColor({0, 0, 0});
-  GrpGeom->SetAlphaNorm(128);
-  GrpGeom->DrawBoxA(playfield::kLeft, playfield::kTop, playfield::kRight + 1,
-                    40);
+  Geometry().SetColor({0, 0, 0});
+  Geometry().SetAlphaNorm(128);
+  Geometry().DrawBoxA(playfield::kLeft, playfield::kTop, playfield::kRight + 1,
+                      40);
 
   if (model.graze_wait_time != 0U) {
-    GrpGeom->SetColor({5, 1, 0});
-    GrpGeom->SetAlphaOne();
+    Geometry().SetColor({5, 1, 0});
+    Geometry().SetAlphaOne();
     for (int i = 0; i <= 10; i++) {
       const int right = 128 + 9 + (model.graze_wait_time >> 2) + (5 - i);
       if (right > 128 + 8) {
-        GrpGeom->DrawBoxA(128 + 8, 16 + 3 + i, right, 16 + 3 + i + 1);
+        Geometry().DrawBoxA(128 + 8, 16 + 3 + i, right, 16 + 3 + i + 1);
       }
     }
   }

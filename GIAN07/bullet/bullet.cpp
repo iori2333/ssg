@@ -748,11 +748,11 @@ void Bullet::RenderDebugHitbox(int mode) const {
 
   if (mode >= 2) {
     const int ev_r = GetBulletEvadeRadius(c_) >> 6;
-    geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, ev_r, true);
+    geometry::DrawFilledCircle(Geometry(), {cx, cy}, ev_r, true);
   }
 
   const int r_px = GetBulletHitRadius(c_) >> 6;
   if (r_px > 0) {
-    geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, r_px, true);
+    geometry::DrawFilledCircle(Geometry(), {cx, cy}, r_px, true);
   }
 }

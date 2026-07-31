@@ -42,7 +42,7 @@ void DrawCircleA16(GraphicsGeometry &geometry, float x, float y, float r,
 }
 
 void DrawTriangleFanAlpha(std::span<const VERTEX_XY, 4> src) {
-  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
+  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
 }
 
 } // namespace
@@ -137,8 +137,8 @@ void LaserHoming::Render() const {
   constexpr RGB216 kInnerColor{3, 4, 5};
 
   // Pass 1: wide outer ribbon
-  GrpGeom->SetColor(kOuterColor);
-  GrpGeom->SetAlphaOne();
+  Geometry().SetColor(kOuterColor);
+  Geometry().SetAlphaOne();
 
   int w = kHomingWidth;
   int cur = current_;
@@ -157,7 +157,7 @@ void LaserHoming::Render() const {
   src[0] = first_edge[0];
   src[1] = first_edge[1];
 
-  DrawCircleA16(*GrpGeom, pt->x, pt->y, static_cast<float>(w), pt->angle);
+  DrawCircleA16(Geometry(), pt->x, pt->y, static_cast<float>(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
@@ -177,7 +177,7 @@ void LaserHoming::Render() const {
   }
 
   // Pass 2: narrow inner highlight
-  GrpGeom->SetColor(kInnerColor);
+  Geometry().SetColor(kInnerColor);
 
   w = kHomingWidth / 2;
   cur = current_;
@@ -187,7 +187,7 @@ void LaserHoming::Render() const {
   src[0] = highlight_edge[0];
   src[1] = highlight_edge[1];
 
-  DrawCircleA16(*GrpGeom, pt->x, pt->y, static_cast<float>(w), pt->angle);
+  DrawCircleA16(Geometry(), pt->x, pt->y, static_cast<float>(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
@@ -252,9 +252,9 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
     const int cy = static_cast<int>(pt.y / WORLD_COORD_SCALE);
 
     if (mode >= 2) {
-      geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, evade_r, true);
+      geometry::DrawFilledCircle(Geometry(), {cx, cy}, evade_r, true);
     }
-    geometry::DrawFilledCircle(*GrpGeom, {cx, cy}, hit_r, true);
+    geometry::DrawFilledCircle(Geometry(), {cx, cy}, hit_r, true);
     current = GetPrev(current, kHomingSection);
   }
 }

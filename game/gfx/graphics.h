@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <chrono>
 #include <compare>
 #include <concepts>
 #include <cstdint>
@@ -22,12 +21,9 @@
 
 #include "util/enum_flags.h"
 
-// The backend will target a frame rate of
-//
-// 	[FRAME_TIME_TARGET] / [Grp_FPSDivisor]
-//
-// Setting this to 0 disables any frame rate limitation.
-extern uint8_t Grp_FPSDivisor;
+// Setting the divisor to 0 disables frame rate limiting.
+void SetFrameRateDivisor(uint8_t divisor);
+uint8_t FrameRateDivisor();
 
 // Paletted graphics //
 // ----------------- //
@@ -111,12 +107,7 @@ struct RGB216 {
 // -----------
 
 // 0 = BMP, 10 = max-effort WebP.
-constexpr uint8_t GRP_SCREENSHOT_EFFORT_COUNT = 11;
-constexpr uint8_t GRP_SCREENSHOT_EFFORT_MAX = (GRP_SCREENSHOT_EFFORT_COUNT - 1);
-
-// 0 = not yet tried, -1 = last attempt failed.
-extern std::chrono::steady_clock::duration
-    Grp_ScreenshotTimes[GRP_SCREENSHOT_EFFORT_COUNT];
+constexpr uint8_t kScreenshotEffortMax = 10;
 
 void Grp_ScreenshotSetEffort(uint8_t effort);
 
@@ -128,8 +119,7 @@ struct SDL_Surface;
 
 // Saves the given surface to a file with the screenshot prefix. [t_start]
 // represents the very beginning of the backend's capturing process.
-bool Grp_ScreenshotSave(SDL_Surface *src,
-                        const std::chrono::steady_clock::time_point t_start);
+bool Grp_ScreenshotSave(SDL_Surface *src);
 // -----------
 
 enum class GRAPHICS_FULLSCREEN_FIT : uint8_t {

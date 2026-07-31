@@ -177,7 +177,7 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
     constexpr uint8_t alpha = (128 + 64);
     constexpr RGB216 col = {0, 1, 5};
 
-    GrpGeom->SetAlphaNorm(alpha);
+    Geometry().SetAlphaNorm(alpha);
     VERTEX_XY src_vertices[4] = {
         {0, top},
         {left, top},
@@ -186,12 +186,12 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
     };
     if (x1 < x2) {
       src_vertices[0].x = src_vertices[3].x = x1;
-      GeomGrdRectA(*GrpGeom, src_vertices, col.ToRGB().WithAlpha(alpha));
-      GrpGeom->SetColor({5, 0, 0});
-      GrpGeom->DrawBoxA(x1, top, x2, bottom);
+      GeomGrdRectA(Geometry(), src_vertices, col.ToRGB().WithAlpha(alpha));
+      Geometry().SetColor({5, 0, 0});
+      Geometry().DrawBoxA(x1, top, x2, bottom);
     } else {
       src_vertices[0].x = src_vertices[3].x = x2;
-      GeomGrdRectA(*GrpGeom, src_vertices, col.ToRGB().WithAlpha(alpha));
+      GeomGrdRectA(Geometry(), src_vertices, col.ToRGB().WithAlpha(alpha));
     }
 
     src = {0, 104, BOSS_HEALTH_GAUGE_WIDTH, 128};
@@ -203,9 +203,9 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
           static_cast<int32_t>(
               (static_cast<uint64_t>(phase_threshold_hp_) * 30 * 8) / max_hp_);
       if (separator_x > left && separator_x < (left + 30 * 8)) {
-        GrpGeom->SetAlphaNorm(224);
-        GrpGeom->SetColor({5, 5, 5});
-        GrpGeom->DrawBoxA(separator_x, top, (separator_x + 3), bottom);
+        Geometry().SetAlphaNorm(224);
+        Geometry().SetColor({5, 5, 5});
+        Geometry().DrawBoxA(separator_x, top, (separator_x + 3), bottom);
       }
     }
 

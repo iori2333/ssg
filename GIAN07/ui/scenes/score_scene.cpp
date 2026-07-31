@@ -77,18 +77,19 @@ std::string RecordDate(int64_t timestamp) {
 
 void RenderUiText(WINDOW_POINT position, TEXTRENDER_RECT_ID rect,
                   std::string_view text, bool centered = false) {
-  TextObj.Render(position, rect, text, [text, centered](TEXTRENDER_SESSION &s) {
-    s.SetFont(FONT_ID::NORMAL);
-    const auto x = centered ? TextLayoutXCenter(s, text) : 0;
-    s.Put({x + 1, 1}, text, RGB{96, 96, 96});
-    s.Put({x, 0}, text, RGB{255, 255, 255});
-  });
+  TextRenderer().Render(
+      position, rect, text, [text, centered](TEXTRENDER_SESSION &s) {
+        s.SetFont(FONT_ID::NORMAL);
+        const auto x = centered ? TextLayoutXCenter(s, text) : 0;
+        s.Put({x + 1, 1}, text, RGB{96, 96, 96});
+        s.Put({x, 0}, text, RGB{255, 255, 255});
+      });
 }
 
 void RenderDetailRow(WINDOW_POINT position, TEXTRENDER_RECT_ID rect,
                      std::string_view label, std::string_view value) {
   const auto cache_key = std::format("{}\x1F{}", label, value);
-  TextObj.Render(
+  TextRenderer().Render(
       position, rect, cache_key, [label, value](TEXTRENDER_SESSION &s) {
         constexpr int label_right = 132;
         constexpr int separator_x = 144;
@@ -131,8 +132,8 @@ bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty,
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  TextObj.Clear();
-  ui_text_ = TextObj.Register({.w = 480, .h = 24});
+  TextRenderer().Clear();
+  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
   input_locked_ = initial_input != 0U;
   return true;
 }
@@ -220,8 +221,8 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   current_difficulty_ = std::to_underlying(current_record_->difficulty);
   ResetRows();
   GrpBackend_SetClip(GRP_RES_RECT);
-  TextObj.Clear();
-  ui_text_ = TextObj.Register({.w = 480, .h = 24});
+  TextRenderer().Clear();
+  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
   name_entry_.Begin(true, initial_input);
   save_failed_ = false;
   if (change_music) {
@@ -291,9 +292,9 @@ void ScoreScene::DrawLeaderboard(bool show_selection) {
       continue;
     }
     if (show_selection && i == selected_) {
-      GrpGeom->SetAlphaNorm(96);
-      GrpGeom->SetColor({4, 0, 0});
-      GrpGeom->DrawBoxA(x, y, x + 400, y + 32);
+      Geometry().SetAlphaNorm(96);
+      Geometry().SetColor({4, 0, 0});
+      Geometry().DrawBoxA(x, y, x + 400, y + 32);
     }
 
     const auto &record = scores_[i];
@@ -325,15 +326,15 @@ void ScoreScene::DrawDetail() const {
   constexpr int y = 92;
   constexpr int width = 480;
   constexpr int height = 268;
-  GrpGeom->SetAlphaNorm(224);
-  GrpGeom->SetColor({0, 0, 1});
-  GrpGeom->DrawBoxA(x, y, x + width, y + height);
-  GrpGeom->SetAlphaNorm(255);
-  GrpGeom->SetColor({4, 4, 5});
-  GrpGeom->DrawBox(x, y, x + width, y + 1);
-  GrpGeom->DrawBox(x, y + height - 1, x + width, y + height);
-  GrpGeom->DrawBox(x, y, x + 1, y + height);
-  GrpGeom->DrawBox(x + width - 1, y, x + width, y + height);
+  Geometry().SetAlphaNorm(224);
+  Geometry().SetColor({0, 0, 1});
+  Geometry().DrawBoxA(x, y, x + width, y + height);
+  Geometry().SetAlphaNorm(255);
+  Geometry().SetColor({4, 4, 5});
+  Geometry().DrawBox(x, y, x + width, y + 1);
+  Geometry().DrawBox(x, y + height - 1, x + width, y + height);
+  Geometry().DrawBox(x, y, x + 1, y + height);
+  Geometry().DrawBox(x + width - 1, y, x + width, y + height);
 
   constexpr int text_x = x + 20;
   int text_y = y + 12;

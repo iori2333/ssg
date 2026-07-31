@@ -56,7 +56,7 @@ void MsgWindow::Init(const WINDOW_LTRB &rc, MsgWindowFlags flags) {
       .x = (!!(flags & MsgWindowFlags::WITH_FACE) ? FACE_W : 8),
       .y = 8,
   };
-  trr = TextObj.Register(rc.Size() - text_topleft);
+  trr = TextRenderer().Register(rc.Size() - text_topleft);
 }
 
 void MsgWindow::Open() {
@@ -174,9 +174,9 @@ void MsgWindow::Draw() {
   }
 
   // Draw translucent part
-  GrpGeom->SetAlphaNorm(110);
-  GrpGeom->SetColor({0, 0, 3});
-  GrpGeom->DrawBoxA((x + 4), (y + 4), (x + w - 4), (y + h - 4));
+  Geometry().SetAlphaNorm(110);
+  Geometry().SetColor({0, 0, 3});
+  Geometry().DrawBoxA((x + 4), (y + 4), (x + w - 4), (y + h - 4));
 
   // Display text only when window is [FREE]
   // -> Otherwise a Surface for text would have to be created...
@@ -184,7 +184,7 @@ void MsgWindow::Draw() {
     const auto topleft = (WINDOW_POINT{x, y} + text_topleft);
     const auto trr = this->trr.value();
     const auto &text = this->text;
-    TextObj.Render(topleft, trr, text, [this](TEXTRENDER_SESSION &s) {
+    TextRenderer().Render(topleft, trr, text, [this](TEXTRENDER_SESSION &s) {
       // Draw with the set font
       s.SetFont(font_id);
       for (auto i = 0; std::cmp_less(i, line); i++) {

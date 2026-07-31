@@ -46,9 +46,9 @@ void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
 } // namespace geometry
 
 void GeomCircle(WINDOW_POINT center, PIXEL_COORD radius) {
-  geometry::DrawCircle(*GrpGeom, center, radius);
+  geometry::DrawCircle(Geometry(), center, radius);
 }
 
 void GeomCircleF(WINDOW_POINT center, PIXEL_COORD radius) {
-  geometry::DrawFilledCircle(*GrpGeom, center, radius, false);
+  geometry::DrawFilledCircle(Geometry(), center, radius, false);
 }

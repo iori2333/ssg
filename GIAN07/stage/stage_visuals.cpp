@@ -123,28 +123,28 @@ void StageVisuals::DrawCube(const Cube &cube) {
   };
   const int length = cube.half_size;
 
-  GrpGeom->SetColor({1, 1, 3});
+  Geometry().SetColor({1, 1, 3});
   for (int x = -1; x <= 1; ++x) {
     for (int y = -1; y <= 1; ++y) {
       const auto front = project({x * length, y * length, -length});
       const auto back = project({x * length, y * length, length});
-      GrpGeom->DrawLine(front.x, front.y, back.x, back.y);
+      Geometry().DrawLine(front.x, front.y, back.x, back.y);
     }
   }
-  GrpGeom->SetColor({0, 0, 3});
+  Geometry().SetColor({0, 0, 3});
   for (int y = -1; y <= 1; ++y) {
     for (int z = -1; z <= 1; ++z) {
       const auto left = project({-length, y * length, z * length});
       const auto right = project({length, y * length, z * length});
-      GrpGeom->DrawLine(left.x, left.y, right.x, right.y);
+      Geometry().DrawLine(left.x, left.y, right.x, right.y);
     }
   }
-  GrpGeom->SetColor({1, 1, 4});
+  Geometry().SetColor({1, 1, 4});
   for (int x = -1; x <= 1; ++x) {
     for (int z = -1; z <= 1; ++z) {
       const auto top = project({x * length, -length, z * length});
       const auto bottom = project({x * length, length, z * length});
-      GrpGeom->DrawLine(top.x, top.y, bottom.x, bottom.y);
+      Geometry().DrawLine(top.x, top.y, bottom.x, bottom.y);
     }
   }
 }
@@ -187,19 +187,19 @@ void StageVisuals::UpdateFakeEcl() {
 }
 
 void StageVisuals::DrawFakeEcl() const {
-  GrpGeom->SetColor({0, 2, 0});
+  Geometry().SetColor({0, 2, 0});
   for (int x = 128 - grid_offset_x_ / 2; x < 512; x += 32) {
-    GrpGeom->DrawLine(x, 0, x, 480);
+    Geometry().DrawLine(x, 0, x, 480);
   }
   for (int y = grid_offset_y_ / 2; y < 480; y += 32) {
-    GrpGeom->DrawLine(128, y, 512, y);
+    Geometry().DrawLine(128, y, 512, y);
   }
-  GrpGeom->SetColor({0, 3, 0});
+  Geometry().SetColor({0, 3, 0});
   for (int x = 128 - grid_offset_x_; x < 512; x += 64) {
-    GrpGeom->DrawLine(x, 0, x, 480);
+    Geometry().DrawLine(x, 0, x, 480);
   }
   for (int y = -grid_offset_y_; y < 480; y += 64) {
-    GrpGeom->DrawLine(128, y, 512, y);
+    Geometry().DrawLine(128, y, 512, y);
   }
 
   for (const auto &line : fake_ecl_) {

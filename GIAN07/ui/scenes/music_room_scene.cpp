@@ -35,11 +35,12 @@ static constexpr int TitleAreaWidth = 232;
 
 void MusicRoomScene::Text::RenderVersion(WINDOW_POINT topleft,
                                          std::string_view value) const {
-  TextObj.Render(topleft, version, value, [value](TEXTRENDER_SESSION &s) {
-    s.SetFont(FONT_ID::SMALL);
-    s.SetColor(ColorDefault);
-    s.Put({.x = 0, .y = 0}, value);
-  });
+  TextRenderer().Render(topleft, version, value,
+                        [value](TEXTRENDER_SESSION &s) {
+                          s.SetFont(FONT_ID::SMALL);
+                          s.SetColor(ColorDefault);
+                          s.Put({.x = 0, .y = 0}, value);
+                        });
 }
 
 void MusicRoomScene::Text::RenderMidDev(WINDOW_POINT topleft) const {
@@ -49,7 +50,7 @@ void MusicRoomScene::Text::RenderMidDev(WINDOW_POINT topleft) const {
   }
   const auto dev_full = maybe_dev_full.value();
   std::string_view dev = {dev_full.data(), std::min(dev_full.size(), 13UZ)};
-  TextObj.Render(topleft, mid_dev, dev, [&dev](TEXTRENDER_SESSION &s) {
+  TextRenderer().Render(topleft, mid_dev, dev, [&dev](TEXTRENDER_SESSION &s) {
     s.SetFont(FONT_ID::SMALL);
     s.SetColor(ColorDefault);
     s.Put({.x = 0, .y = 0}, dev);
@@ -68,7 +69,7 @@ void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
 
   const auto cache_key = std::format("{}|{}|{}", num, track_title,
                                      marquee_frame / ui::kMarqueeStepFrames);
-  TextObj.Render(
+  TextRenderer().Render(
       topleft, title, cache_key,
       [&num, track_title, marquee_frame](TEXTRENDER_SESSION &s) {
         s.SetFont(FONT_ID::NORMAL);
@@ -89,30 +90,30 @@ void MusicRoomScene::Text::RenderComment(WINDOW_POINT topleft,
   if (comment_text.empty()) {
     return;
   }
-  TextObj.Render(topleft, comment, comment_text,
-                 [comment_text](TEXTRENDER_SESSION &s) {
-                   int y = 0;
-                   s.SetFont(FONT_ID::SMALL);
-                   s.SetColor(ColorDefault);
+  TextRenderer().Render(
+      topleft, comment, comment_text, [comment_text](TEXTRENDER_SESSION &s) {
+        int y = 0;
+        s.SetFont(FONT_ID::SMALL);
+        s.SetColor(ColorDefault);
 
-                   size_t pos = 0;
-                   while (pos < comment_text.size()) {
-                     const auto nl = comment_text.find('\n', pos);
-                     const auto line = comment_text.substr(pos, nl - pos);
-                     if (!line.empty() || nl != std::string_view::npos) {
-                       s.Put({.x = 0, .y = y}, line);
-                       y += 16;
-                     }
-                     if (nl == std::string_view::npos) {
-                       break;
-                     }
-                     pos = nl + 1;
-                   }
-                 });
+        size_t pos = 0;
+        while (pos < comment_text.size()) {
+          const auto nl = comment_text.find('\n', pos);
+          const auto line = comment_text.substr(pos, nl - pos);
+          if (!line.empty() || nl != std::string_view::npos) {
+            s.Put({.x = 0, .y = y}, line);
+            y += 16;
+          }
+          if (nl == std::string_view::npos) {
+            break;
+          }
+          pos = nl + 1;
+        }
+      });
 }
 
 bool MusicRoomScene::Enter() {
-  TextObj.Clear();
+  TextRenderer().Clear();
   GrpBackend_Clear();
   Grp_Flip();
 
@@ -144,10 +145,10 @@ bool MusicRoomScene::Enter() {
   }
 
   text_ = Text{
-      .mid_dev = TextObj.Register({.w = 98, .h = 13}),
-      .title = TextObj.Register({.w = TitleAreaWidth, .h = 16}),
-      .comment = TextObj.Register({.w = 272, .h = 192}),
-      .version = TextObj.Register({.w = 490, .h = 13}),
+      .mid_dev = TextRenderer().Register({.w = 98, .h = 13}),
+      .title = TextRenderer().Register({.w = TitleAreaWidth, .h = 16}),
+      .comment = TextRenderer().Register({.w = 272, .h = 192}),
+      .version = TextRenderer().Register({.w = 490, .h = 13}),
   };
 
   return true;
@@ -233,7 +234,7 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
   for (int i = 0; i < std::size(ftable); i++) {
     constexpr RGB c1 = {.r = 200, .g = 0, .b = 0};
     constexpr RGB c2 = {.r = 250, .g = 250, .b = 0};
-    GrpGeom->DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
+    Geometry().DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
   }
 }
 

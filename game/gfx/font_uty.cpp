@@ -8,52 +8,9 @@
 
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
-#include "util/enum_array.h"
 
 #ifdef WIN32
 #include <windows.h>
-
-extern constinit const util::EnumArray<LOGFONTW, FONT_ID> FontSpecs = [] {
-  util::EnumArray<LOGFONTW, FONT_ID> ret;
-
-  LOGFONTW logfont = {.lfEscapement = 0,
-                      .lfOrientation = 0,
-                      .lfItalic = false,
-                      .lfUnderline = false,
-                      .lfStrikeOut = false,
-                      .lfCharSet = SHIFTJIS_CHARSET,
-                      .lfOutPrecision = OUT_TT_ONLY_PRECIS,
-                      .lfClipPrecision = CLIP_DEFAULT_PRECIS,
-                      .lfQuality = PROOF_QUALITY,
-                      .lfPitchAndFamily = FIXED_PITCH,
-                      .lfFaceName = L"MS Gothic"};
-
-  // Tiny font
-  logfont.lfHeight = 14;
-  logfont.lfWidth = 7;
-  logfont.lfWeight = FW_NORMAL;
-  ret[FONT_ID::SMALL] = logfont;
-
-  // Normal font
-  logfont.lfHeight = 16;
-  logfont.lfWidth = 8;
-  logfont.lfWeight = FW_NORMAL;
-  ret[FONT_ID::NORMAL] = logfont;
-
-  // Large font
-  logfont.lfHeight = 24;
-  logfont.lfWidth = 12;
-  logfont.lfWeight = FW_MEDIUM;
-  ret[FONT_ID::LARGE] = logfont;
-
-  // Tiny
-  logfont.lfHeight = 10;
-  logfont.lfWidth = 0;
-  logfont.lfWeight = FW_NORMAL;
-  ret[FONT_ID::TINY] = logfont;
-
-  return ret;
-}();
 
 static constexpr auto FONT_MODERN = L"msgothic.ttc";
 
@@ -64,16 +21,6 @@ void TextBackend_GDIInit() {
 void TextBackend_GDICleanup() {
   RemoveFontResourceExW(FONT_MODERN, FR_PRIVATE, nullptr);
 }
-#elifdef LINUX
-#define GOTHIC "MS Gothic,IPAMonaGothic "
-
-extern constinit const util::EnumArray<const char *, FONT_ID> FontSpecs = {
-    (GOTHIC "Regular 14px"),
-    (GOTHIC "Regular 16px"),
-    (GOTHIC "Medium 24px"),
-    (GOTHIC "Regular 10px"),
-};
-
 #endif
 
 // Glyph selection inside the 16x16 font

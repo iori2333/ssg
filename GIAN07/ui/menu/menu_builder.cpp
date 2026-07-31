@@ -152,16 +152,16 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
   ch.reserve(2);
 
   std::vector<std::string> labels;
-  labels.reserve(GRP_SCREENSHOT_EFFORT_MAX + 1);
+  labels.reserve(kScreenshotEffortMax + 1);
   labels.push_back("BMP");
-  for (auto i : std::views::iota(1U, GRP_SCREENSHOT_EFFORT_MAX + 1U)) {
+  for (auto i : std::views::iota(1U, kScreenshotEffortMax + 1U)) {
     labels.push_back(std::format("WebP z{}", i - 1));
   }
   ch.push_back(std::make_unique<ChoiceNode>(
       Localized(localization, "ui.menu.screenshot_format.title"),
       Localized(localization, "ui.menu.screenshot_format.help"),
-      gfx_cfg.screenshot_effort, 0, GRP_SCREENSHOT_EFFORT_MAX,
-      std::move(labels), [&gfx_cfg, &display] {
+      gfx_cfg.screenshot_effort, 0, kScreenshotEffortMax, std::move(labels),
+      [&gfx_cfg, &display] {
         display.SetScreenshotEffort(gfx_cfg.screenshot_effort);
       }));
 

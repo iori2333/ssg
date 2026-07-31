@@ -197,7 +197,7 @@ private:
     constexpr int kWidth = 160;
     constexpr int kInitialSelection = std::to_underlying(GameLevel::Normal);
 
-    TextObj.Clear();
+    TextRenderer().Clear();
     selected_difficulty_.reset();
     difficulty_menu_.Init(kWidth);
     difficulty_menu_.Navigate(*difficulty_menu_root_, kInitialSelection);
@@ -412,9 +412,9 @@ struct GameFlow::Impl {
 
 private:
   [[nodiscard]] bool ShouldDraw() {
-    if (Grp_FPSDivisor != 0U) {
+    if (FrameRateDivisor() != 0U) {
       draw_count_++;
-      return (draw_count_ % Grp_FPSDivisor) == 0U;
+      return (draw_count_ % FrameRateDivisor()) == 0U;
     }
     return true;
   }

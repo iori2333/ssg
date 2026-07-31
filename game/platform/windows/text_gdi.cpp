@@ -11,7 +11,46 @@
 #include "platform/text_backend.h"
 #include "util/enum_array.h"
 
-extern const util::EnumArray<LOGFONTW, FONT_ID> FontSpecs;
+namespace {
+
+constinit const util::EnumArray<LOGFONTW, FONT_ID> kFontSpecs = [] {
+  util::EnumArray<LOGFONTW, FONT_ID> specs;
+
+  LOGFONTW font = {.lfEscapement = 0,
+                   .lfOrientation = 0,
+                   .lfItalic = false,
+                   .lfUnderline = false,
+                   .lfStrikeOut = false,
+                   .lfCharSet = SHIFTJIS_CHARSET,
+                   .lfOutPrecision = OUT_TT_ONLY_PRECIS,
+                   .lfClipPrecision = CLIP_DEFAULT_PRECIS,
+                   .lfQuality = PROOF_QUALITY,
+                   .lfPitchAndFamily = FIXED_PITCH,
+                   .lfFaceName = L"MS Gothic"};
+
+  font.lfHeight = 14;
+  font.lfWidth = 7;
+  font.lfWeight = FW_NORMAL;
+  specs[FONT_ID::SMALL] = font;
+
+  font.lfHeight = 16;
+  font.lfWidth = 8;
+  specs[FONT_ID::NORMAL] = font;
+
+  font.lfHeight = 24;
+  font.lfWidth = 12;
+  font.lfWeight = FW_MEDIUM;
+  specs[FONT_ID::LARGE] = font;
+
+  font.lfHeight = 10;
+  font.lfWidth = 0;
+  font.lfWeight = FW_NORMAL;
+  specs[FONT_ID::TINY] = font;
+
+  return specs;
+}();
+
+} // namespace
 
 template <typename F> auto WithWideUTF8(std::string_view str, F &&func) {
   const int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str.data(),
@@ -25,9 +64,14 @@ template <typename F> auto WithWideUTF8(std::string_view str, F &&func) {
   return func(std::wstring_view{buf.data(), buf.size()});
 }
 
-TEXTRENDER TextObj;
+TEXTRENDER &TextRenderer() {
+  static TEXTRENDER renderer;
+  return renderer;
+}
 
-static class {
+namespace {
+
+class FontCache {
   util::EnumArray<HFONT, FONT_ID> arr;
 
 public:
@@ -36,7 +80,7 @@ public:
       if (std::ranges::all_of(arr, [](auto h) { return !h; })) {
         TextBackend_GDIInit();
       }
-      arr[font] = CreateFontIndirectW(&FontSpecs[font]);
+      arr[font] = CreateFontIndirectW(&kFontSpecs[font]);
     }
     return arr[font];
   }
@@ -49,7 +93,14 @@ public:
       }
     }
   }
-} Fonts;
+};
+
+FontCache &Fonts() {
+  static FontCache fonts;
+  return fonts;
+}
+
+} // namespace
 
 PIXEL_SIZE TextGDIExtent(std::optional<HFONT> font, std::string_view str) {
   const auto hdc = GrpSurface_GDIText_Surface().dc;
@@ -118,7 +169,7 @@ PIXEL_SIZE TEXTRENDER_SESSION::RectSize(void) const { return {rect.w, rect.h}; }
 void TEXTRENDER_SESSION::SetFont(FONT_ID font) {
   if (font_cur != font) {
     const auto hdc = GrpSurface_GDIText_Surface().dc;
-    auto font_prev = SelectObject(hdc, Fonts.ForID(font));
+    auto font_prev = SelectObject(hdc, Fonts().ForID(font));
     if (!font_initial) {
       font_initial = font_prev;
     }
@@ -188,10 +239,10 @@ void TEXTRENDER::WipeBeforeNextRender() {
 }
 
 PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
-  return TextGDIExtent(Fonts.ForID(font), str);
+  return TextGDIExtent(Fonts().ForID(font), str);
 }
 
 void TextBackend_Cleanup(void) {
-  Fonts.Cleanup();
+  Fonts().Cleanup();
   TextBackend_GDICleanup();
 }

@@ -160,8 +160,8 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, sprites[i]);
   }
 
-  GrpGeom->SetColor({0, 0, 1});
-  GrpGeom->SetAlphaNorm(128);
+  Geometry().SetColor({0, 0, 1});
+  Geometry().SetAlphaNorm(128);
   for (int i = 0; i < 3; i++) {
     if (session_.stage != StageId::Extra ||
         ((1U << i) & config_.progress.extra_stg_flags) != 0) {
@@ -172,7 +172,7 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
     const auto angle = math::AngleFromLegacy(direction);
     const int x = 120 + math::RoundedPolarVector(angle, 90.0f).x - 56 / 2;
     const int y = 260 + math::RoundedPolarVector(angle, 110.0f).y - 48 / 2;
-    GrpGeom->DrawBoxA(x, y, x + 56, y + 48);
+    Geometry().DrawBoxA(x, y, x + 56, y + 48);
   }
 
   player_.SetPower(static_cast<uint8_t>(std::min(count_, 255)));
@@ -209,15 +209,15 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
           .c_str());
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  GrpGeom->SetColor({0, 0, 4});
-  GrpGeom->DrawLine(290, 100, 510, 100);
-  GrpGeom->DrawLine(290, 410, 510, 410);
-  GrpGeom->DrawLine(290, 100, 290, 410);
-  GrpGeom->DrawLine(510, 100, 510, 410);
+  Geometry().SetColor({0, 0, 4});
+  Geometry().DrawLine(290, 100, 510, 100);
+  Geometry().DrawLine(290, 410, 510, 410);
+  Geometry().DrawLine(290, 100, 290, 410);
+  Geometry().DrawLine(510, 100, 510, 410);
   if (std::abs(angle_) <= 25) {
-    GrpGeom->SetColor({2, 2, 5});
+    Geometry().SetColor({2, 2, 5});
     GeomCircle({120, 150}, 49 - 2 * std::abs(angle_));
-    GrpGeom->SetColor({4, 4, 5});
+    Geometry().SetColor({4, 4, 5});
     GeomCircle({120, 150}, 51 - 2 * std::abs(angle_));
   }
 }

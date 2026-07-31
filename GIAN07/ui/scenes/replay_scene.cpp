@@ -83,12 +83,13 @@ uint8_t DetailGradient(PIXEL_COORD y) {
 
 void RenderUiText(WINDOW_POINT position, TEXTRENDER_RECT_ID rect,
                   std::string_view text, bool centered = false) {
-  TextObj.Render(position, rect, text, [text, centered](TEXTRENDER_SESSION &s) {
-    s.SetFont(FONT_ID::NORMAL);
-    const auto x = centered ? TextLayoutXCenter(s, text) : 0;
-    s.Put({x + 1, 1}, text, RGB{96, 96, 96});
-    s.Put({x, 0}, text, RGB{255, 255, 255});
-  });
+  TextRenderer().Render(
+      position, rect, text, [text, centered](TEXTRENDER_SESSION &s) {
+        s.SetFont(FONT_ID::NORMAL);
+        const auto x = centered ? TextLayoutXCenter(s, text) : 0;
+        s.Put({x + 1, 1}, text, RGB{96, 96, 96});
+        s.Put({x, 0}, text, RGB{255, 255, 255});
+      });
 }
 } // namespace
 
@@ -103,14 +104,14 @@ bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  TextObj.Clear();
+  TextRenderer().Clear();
   for (auto &text : stage_text_) {
-    text = TextObj.Register({.w = 80, .h = 10});
+    text = TextRenderer().Register({.w = 80, .h = 10});
   }
   for (auto &text : player_text_) {
-    text = TextObj.Register({.w = 80, .h = 10});
+    text = TextRenderer().Register({.w = 80, .h = 10});
   }
-  ui_text_ = TextObj.Register({.w = 480, .h = 24});
+  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
   replays_ = record_system_.ListReplays();
   selected_ = 0;
   previous_input_ = initial_input;
@@ -129,8 +130,8 @@ bool ReplayScene::BeginSave(bool extra_stage, INPUT_BITS initial_input) {
   }
 
   GrpBackend_SetClip(GRP_RES_RECT);
-  TextObj.Clear();
-  ui_text_ = TextObj.Register({.w = 480, .h = 24});
+  TextRenderer().Clear();
+  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
   save_extra_stage_ = extra_stage;
   save_failed_ = false;
   name_entry_.Begin(true, initial_input);
@@ -315,12 +316,12 @@ void ReplayScene::DrawBrowser() {
     if (index >= last) {
       continue;
     }
-    GrpGeom->SetColor({0, 0, 0});
-    GrpGeom->DrawBox(x + 88, y + 27, x + 114, y + 32);
+    Geometry().SetColor({0, 0, 0});
+    Geometry().DrawBox(x + 88, y + 27, x + 114, y + 32);
     if (index == selected_) {
-      GrpGeom->SetAlphaNorm(96);
-      GrpGeom->SetColor({4, 0, 0});
-      GrpGeom->DrawBoxA(x, y, x + 400, y + 32);
+      Geometry().SetAlphaNorm(96);
+      Geometry().SetColor({4, 0, 0});
+      Geometry().DrawBoxA(x, y, x + 400, y + 32);
     }
     const auto &replay = replays_[index];
     GrpPut16c2(x + 88, y + 4, replay.name.c_str());
@@ -337,20 +338,20 @@ void ReplayScene::DrawBrowser() {
     GrpPutScore(x + 88, y + detail_y, date.c_str());
 
     const auto stages = StageList(replay);
-    TextObj.Render({x + 224, y + detail_y - 2}, stage_text_[row], stages,
-                   [&stages](TEXTRENDER_SESSION &session) {
-                     std::array<std::string_view, 1> text = {stages};
-                     DrawGrdFont(session, text, FONT_ID::TINY, false,
-                                 DetailGradient);
-                   });
+    TextRenderer().Render({x + 224, y + detail_y - 2}, stage_text_[row], stages,
+                          [&stages](TEXTRENDER_SESSION &session) {
+                            std::array<std::string_view, 1> text = {stages};
+                            DrawGrdFont(session, text, FONT_ID::TINY, false,
+                                        DetailGradient);
+                          });
 
     const auto player = PlayerName(localization_, replay.player_type);
-    TextObj.Render({x + 304, y + detail_y - 2}, player_text_[row], player,
-                   [player](TEXTRENDER_SESSION &session) {
-                     std::array<std::string_view, 1> text = {player};
-                     DrawGrdFont(session, text, FONT_ID::TINY, false,
-                                 DetailGradient);
-                   });
+    TextRenderer().Render({x + 304, y + detail_y - 2}, player_text_[row],
+                          player, [player](TEXTRENDER_SESSION &session) {
+                            std::array<std::string_view, 1> text = {player};
+                            DrawGrdFont(session, text, FONT_ID::TINY, false,
+                                        DetailGradient);
+                          });
   }
 
   if (replays_.empty()) {
@@ -369,8 +370,8 @@ void ReplayScene::DrawNameEntry() const {
   GrpBackend_Clear();
   const int x = 120;
   const int y = 176;
-  GrpGeom->SetColor({2, 0, 0});
-  GrpGeom->DrawBox(x, y, x + 400, y + 32);
+  Geometry().SetColor({2, 0, 0});
+  Geometry().DrawBox(x, y, x + 400, y + 32);
   GrpSurface_Blit({x, y}, SURFACE_ID::NAMEREG, {0, 64, 400, 96});
   const auto title = Text(localization_, "ui.replay.name");
   RenderUiText({80, 118}, ui_text_, title, true);

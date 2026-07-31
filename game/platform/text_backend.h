@@ -18,7 +18,7 @@ bool GrpSurface_GDIText_Update(const PIXEL_LTWH &r) noexcept;
 #include "platform/linux/pangocairo/text_pangocairo.h"
 #endif
 
-extern TEXTRENDER TextObj;
+TEXTRENDER &TextRenderer();
 
 // Shuts down the backend, deleting all fonts.
 void TextBackend_Cleanup(void);

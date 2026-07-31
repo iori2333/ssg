@@ -30,9 +30,9 @@ bool EndingScene::Enter() {
   grp_info.bWantDisp = false;
   stf_task.bWantDisp = false;
 
-  TextObj.Clear();
+  TextRenderer().Clear();
   text.Blank();
-  text.Rect = TextObj.Register({.w = GRP_RES.w, .h = 131});
+  text.Rect = TextRenderer().Register({.w = GRP_RES.w, .h = 131});
 
   return true;
 }
@@ -146,7 +146,7 @@ void EndingScene::DrawStfInfo() {
 
 // Text drawing
 void EndingScene::Text::Render(WINDOW_POINT topleft) {
-  TextObj.Render(topleft, Rect, TextStr, [this](TEXTRENDER_SESSION &s) {
+  TextRenderer().Render(topleft, Rect, TextStr, [this](TEXTRENDER_SESSION &s) {
     int max_px = 0;
 
     s.SetFont(FONT_ID::NORMAL);
@@ -177,26 +177,26 @@ void EndingScene::Text::Render(WINDOW_POINT topleft) {
 void EndingScene::DrawFadeInfo() {
 
   if (grp_info.bWantDisp) {
-    GrpGeom->SetAlphaNorm(255 - grp_info.alpha);
-    GrpGeom->SetColor({0, 0, 0});
-    GrpGeom->DrawBoxA(grp_info.x, grp_info.y, (grp_info.x + 320),
-                      (grp_info.y + 240));
+    Geometry().SetAlphaNorm(255 - grp_info.alpha);
+    Geometry().SetColor({0, 0, 0});
+    Geometry().DrawBoxA(grp_info.x, grp_info.y, (grp_info.x + 320),
+                        (grp_info.y + 240));
   }
   if (stf_task.bWantDisp) {
-    GrpGeom->SetAlphaNorm(255 - stf_task.alpha);
-    GrpGeom->SetColor({0, 0, 0});
+    Geometry().SetAlphaNorm(255 - stf_task.alpha);
+    Geometry().SetColor({0, 0, 0});
     if (stf_task.ox == 320) {
-      GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
+      Geometry().DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
     } else if (stf_task.ox > 320) {
-      GrpGeom->DrawBoxA(320, 0, GRP_RES.w, 300);
+      Geometry().DrawBoxA(320, 0, GRP_RES.w, 300);
     } else {
-      GrpGeom->DrawBoxA(0, 0, (320 - 50), 300);
+      Geometry().DrawBoxA(0, 0, (320 - 50), 300);
     }
   }
   if (flash_state != 0U) {
-    GrpGeom->SetAlphaNorm(255 - flash_state);
-    GrpGeom->SetColor({5, 5, 5});
-    GrpGeom->DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
+    Geometry().SetAlphaNorm(255 - flash_state);
+    Geometry().SetColor({5, 5, 5});
+    Geometry().DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
   }
 }
 

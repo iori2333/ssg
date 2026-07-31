@@ -187,7 +187,7 @@ void LaserLoadout::DrawBombForeground(const Player &player,
   };
 
   const auto draw = [&](int width) {
-    GrpGeom->SetAlphaOne();
+    Geometry().SetAlphaOne();
     for (const int side : {1, -1}) {
       for (int i = -3; i <= 3; i++) {
         const auto direction =
@@ -200,7 +200,7 @@ void LaserLoadout::DrawBombForeground(const Player &player,
         const int origin_y = player.OpY() >> 6;
         set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
                    beam_width.y);
-        GeomGrdRectA(*GrpGeom, points, color);
+        GeomGrdRectA(Geometry(), points, color);
       }
     }
   };

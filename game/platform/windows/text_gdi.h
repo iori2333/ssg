@@ -9,8 +9,8 @@
 
 // Loads any required fonts from the game directory, and cleans them up at
 // process termination.
-extern void TextBackend_GDIInit(void);
-extern void TextBackend_GDICleanup(void);
+void TextBackend_GDIInit();
+void TextBackend_GDICleanup();
 
 class TEXTRENDER_SESSION {
 protected:

@@ -12,7 +12,17 @@
 #include "util/guard.h"
 
 constexpr auto FORMAT = CAIRO_FORMAT_ARGB32;
-extern const util::EnumArray<const char *, FONT_ID> FontSpecs;
+
+namespace {
+
+constinit const util::EnumArray<const char *, FONT_ID> kFontSpecs = {
+    "MS Gothic,IPAMonaGothic Regular 14px",
+    "MS Gothic,IPAMonaGothic Regular 16px",
+    "MS Gothic,IPAMonaGothic Medium 24px",
+    "MS Gothic,IPAMonaGothic Regular 10px",
+};
+
+} // namespace
 
 struct PANGOCAIRO_FONT {
   PangoFontDescription *desc = nullptr;
@@ -99,19 +109,18 @@ bool MetricHintingNeededFor(PangoFontDescription *desc) {
 // State
 // -----
 
-TEXTRENDER TextObj;
+TEXTRENDER &TextRenderer() {
+  static TEXTRENDER renderer;
+  return renderer;
+}
 
-// The single surface for the largest rectangle, enlarged by Session() as
-// necessary.
-PANGOCAIRO_STATE State;
-
-static class {
+class FontCache {
   util::EnumArray<PANGOCAIRO_FONT, FONT_ID> arr;
 
 public:
   const PANGOCAIRO_FONT &ForID(FONT_ID font) {
     if (!arr[font].desc) {
-      arr[font].desc = pango_font_description_from_string(FontSpecs[font]);
+      arr[font].desc = pango_font_description_from_string(kFontSpecs[font]);
       arr[font].hint_metrics =
           (MetricHintingNeededFor(arr[font].desc) ? CAIRO_HINT_METRICS_ON
                                                   : CAIRO_HINT_METRICS_OFF);
@@ -125,7 +134,17 @@ public:
       font.desc = nullptr;
     }
   }
-} Fonts;
+};
+
+PANGOCAIRO_STATE &PangoState() {
+  static PANGOCAIRO_STATE state;
+  return state;
+}
+
+FontCache &Fonts() {
+  static FontCache fonts;
+  return fonts;
+}
 // -----
 
 PANGOCAIRO_STATE::PANGOCAIRO_STATE(cairo_surface_t *surf) : surf(surf) {
@@ -249,22 +268,22 @@ void TEXTRENDER_SESSION::PIXELACCESS::Set(const PIXEL_POINT &xy_rel,
 }
 
 TEXTRENDER_SESSION::PIXELACCESS::PIXELACCESS(void) {
-  cairo_surface_flush(State.surf);
-  buf = cairo_image_surface_get_data(State.surf);
-  stride = cairo_image_surface_get_stride(State.surf);
+  cairo_surface_flush(PangoState().surf);
+  buf = cairo_image_surface_get_data(PangoState().surf);
+  stride = cairo_image_surface_get_stride(PangoState().surf);
 }
 
 TEXTRENDER_SESSION::PIXELACCESS::~PIXELACCESS(void) {
-  cairo_surface_mark_dirty(State.surf);
+  cairo_surface_mark_dirty(PangoState().surf);
 }
 
 TEXTRENDER_SESSION::TEXTRENDER_SESSION(const PIXEL_LTWH rect)
     : tex_origin(rect.left, rect.top), size(rect.w, rect.h) {}
 
 TEXTRENDER_SESSION::~TEXTRENDER_SESSION() {
-  cairo_surface_flush(State.surf);
-  const auto *buf = cairo_image_surface_get_data(State.surf);
-  const auto stride = cairo_image_surface_get_stride(State.surf);
+  cairo_surface_flush(PangoState().surf);
+  const auto *buf = cairo_image_surface_get_data(PangoState().surf);
+  const auto stride = cairo_image_surface_get_stride(PangoState().surf);
   const PIXEL_LTWH subrect = {tex_origin.x, tex_origin.y, size.w, size.h};
   const auto sid = SURFACE_ID::TEXT;
   GrpSurface_Update(sid, &subrect,
@@ -275,21 +294,21 @@ PIXEL_SIZE TEXTRENDER_SESSION::RectSize(void) const { return size; }
 
 void TEXTRENDER_SESSION::SetFont(FONT_ID font) {
   if (font_cur != font) {
-    State.SetFont(&Fonts.ForID(font));
+    PangoState().SetFont(&Fonts().ForID(font));
     font_cur = font;
   }
 }
 
 void TEXTRENDER_SESSION::SetColor(const RGB &color) {
   if (color_cur != color) {
-    cairo_set_source_rgb(State.cr, (color.r / 255.0), (color.g / 255.0),
+    cairo_set_source_rgb(PangoState().cr, (color.r / 255.0), (color.g / 255.0),
                          (color.b / 255.0));
     color_cur = color;
   }
 }
 
 PIXEL_SIZE TEXTRENDER_SESSION::Extent(std::string_view str) {
-  return State.Extent(nullptr, str);
+  return PangoState().Extent(nullptr, str);
 }
 
 void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
@@ -297,9 +316,9 @@ void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
   if (color) {
     SetColor(color.value());
   }
-  State.SetText(str);
-  cairo_move_to(State.cr, topleft_rel.x, topleft_rel.y);
-  pango_cairo_show_layout(State.cr, State.layout);
+  PangoState().SetText(str);
+  cairo_move_to(PangoState().cr, topleft_rel.x, topleft_rel.y);
+  pango_cairo_show_layout(PangoState().cr, PangoState().layout);
 }
 
 std::optional<TEXTRENDER_SESSION>
@@ -308,24 +327,24 @@ TEXTRENDER::Session(TEXTRENDER_RECT_ID rect_id) {
   const auto &rect = rects[rect_id].rect;
 
   PIXEL_SIZE surf_size = {0, 0};
-  if (State.surf) {
-    surf_size.w = cairo_image_surface_get_width(State.surf);
-    surf_size.h = cairo_image_surface_get_height(State.surf);
+  if (PangoState().surf) {
+    surf_size.w = cairo_image_surface_get_width(PangoState().surf);
+    surf_size.h = cairo_image_surface_get_height(PangoState().surf);
   }
   if ((surf_size.w < rect.w) || (surf_size.h < rect.h)) {
     static_assert(std::same_as<decltype(bounds.w), int>);
     static_assert(std::same_as<decltype(bounds.h), int>);
     const auto w = std::max(surf_size.w, rect.w);
     const auto h = std::max(surf_size.h, rect.h);
-    State = {cairo_image_surface_create(FORMAT, w, h)};
-  } else if (State) {
-    cairo_save(State.cr);
-    cairo_set_operator(State.cr, CAIRO_OPERATOR_CLEAR);
-    cairo_rectangle(State.cr, 0, 0, rect.w, rect.h);
-    cairo_fill(State.cr);
-    cairo_restore(State.cr);
+    PangoState() = {cairo_image_surface_create(FORMAT, w, h)};
+  } else if (PangoState()) {
+    cairo_save(PangoState().cr);
+    cairo_set_operator(PangoState().cr, CAIRO_OPERATOR_CLEAR);
+    cairo_rectangle(PangoState().cr, 0, 0, rect.w, rect.h);
+    cairo_fill(PangoState().cr);
+    cairo_restore(PangoState().cr);
   }
-  if (!State) {
+  if (!PangoState()) {
     return std::nullopt;
   }
 
@@ -342,13 +361,13 @@ void TEXTRENDER::WipeBeforeNextRender() { TEXTRENDER_PACKED::Wipe(); }
 
 PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
   // Luckily, Pango calculates extents just fine on 0×0 surfaces.
-  if (!State) {
-    State = {cairo_image_surface_create(FORMAT, 0, 0)};
+  if (!PangoState()) {
+    PangoState() = {cairo_image_surface_create(FORMAT, 0, 0)};
   }
-  return State.Extent(&Fonts.ForID(font), str);
+  return PangoState().Extent(&Fonts().ForID(font), str);
 }
 
 void TextBackend_Cleanup(void) {
-  State = {};
-  Fonts.Cleanup();
+  PangoState() = {};
+  Fonts().Cleanup();
 }

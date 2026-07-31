@@ -153,10 +153,10 @@ NameEntryResult NameEntry::Update(INPUT_BITS input) {
 
 void NameEntry::Draw(int name_x, int name_y) const {
   if (elapsed_ % 64 > 32) {
-    GrpGeom->SetColor({4, 0, 0});
+    Geometry().SetColor({4, 0, 0});
     const auto length = std::min(std::strlen(name_.data()), name_.size() - 2);
     const auto caret_x = name_x + static_cast<int>(length * 16);
-    GrpGeom->DrawBox(caret_x, name_y, caret_x + 14, name_y + 16);
+    Geometry().DrawBox(caret_x, name_y, caret_x + 14, name_y + 16);
   }
 
   constexpr auto surface = SURFACE_ID::NAMEREG;

@@ -20,8 +20,23 @@
 
 constexpr auto LOG_CAT = logging::Channel::Graphics;
 
-static SDL_Window *Window;
-std::optional<std::pair<int16_t, int16_t>> TopleftBeforeFullscreen;
+namespace {
+
+struct WindowState {
+  SDL_Window *window = nullptr;
+  std::optional<std::pair<int16_t, int16_t>> topleft_before_fullscreen;
+};
+
+WindowState &State() {
+  static WindowState state;
+  return state;
+}
+
+} // namespace
+
+void WndBackend_RememberTopleft(std::pair<int16_t, int16_t> position) {
+  State().topleft_before_fullscreen = position;
+}
 
 std::pair<int16_t, int16_t> HelpGetWindowPosition(SDL_Window *window) {
   int left{}, top{};
@@ -34,10 +49,10 @@ std::pair<int16_t, int16_t> HelpGetWindowPosition(SDL_Window *window) {
 }
 
 SDL_DisplayID HelpGetDisplayForWindow(void) {
-  if (!Window) {
+  if (!State().window) {
     return SDL_GetPrimaryDisplay();
   }
-  const auto ret = SDL_GetDisplayForWindow(Window);
+  const auto ret = SDL_GetDisplayForWindow(State().window);
   if (ret == 0) {
     return SDL_GetPrimaryDisplay();
   }
@@ -153,10 +168,10 @@ std::string_view WndBackend_SDLRendererName(int8_t id) {
   return GrpBackend_APIString(id);
 }
 
-SDL_Window *WndBackend_SDL(void) { return Window; }
+SDL_Window *WndBackend_SDL(void) { return State().window; }
 
 std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
-  assert(Window == nullptr);
+  assert(State().window == nullptr);
 
   // The driver/API parameter takes precedence over the environment variable,
   // which is a bad idea in case the user is stuck on an API that might
@@ -214,7 +229,7 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   }
 
   if ((params.left != 0) || (params.top != 0)) {
-    TopleftBeforeFullscreen = {params.left, params.top};
+    State().topleft_before_fullscreen = {params.left, params.top};
   }
 
   const auto real_pos = [](int16_t pos) -> int {
@@ -246,39 +261,40 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   // created, so...
   SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_HIDDEN_BOOLEAN, true);
 
-  Window = SDL_CreateWindowWithProperties(props);
+  State().window = SDL_CreateWindowWithProperties(props);
   SDL_DestroyProperties(props);
-  if (!Window) {
+  if (!State().window) {
     logging::SdlError(LOG_CAT, "Error creating SDL window");
     return std::nullopt;
   }
-  const auto maybe_fs_actual = HelpSetFullscreenMode(Window, fs);
+  const auto maybe_fs_actual = HelpSetFullscreenMode(State().window, fs);
   if (!maybe_fs_actual) {
-    SDL_DestroyWindow(Window);
+    SDL_DestroyWindow(State().window);
     return std::nullopt;
   }
   const auto fs_actual = maybe_fs_actual.value();
   using F = GRAPHICS_PARAM_FLAGS;
   params.SetFlag(F::FULLSCREEN, fs_actual.fullscreen);
   params.SetFlag(F::FULLSCREEN_EXCLUSIVE, fs_actual.exclusive);
-  SDL_ShowWindow(Window);
+  SDL_ShowWindow(State().window);
   return params;
 }
 
 void WndBackend_Cleanup(void) {
-  if (Window) {
-    SDL_DestroyWindow(Window);
-    Window = nullptr;
+  if (State().window) {
+    SDL_DestroyWindow(State().window);
+    State().window = nullptr;
   }
 }
 
 std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void) {
   // A fullscreen window is always positioned at (0, 0), and we don't want to
   // override any previous windowed position.
-  if (!Window || (SDL_GetWindowFlags(Window) & SDL_WINDOW_FULLSCREEN)) {
-    return TopleftBeforeFullscreen;
+  if (!State().window ||
+      (SDL_GetWindowFlags(State().window) & SDL_WINDOW_FULLSCREEN)) {
+    return State().topleft_before_fullscreen;
   }
-  return HelpGetWindowPosition(Window);
+  return HelpGetWindowPosition(State().window);
 }
 
 int WndBackend_Run(std::function<void()> input_func,
@@ -300,10 +316,10 @@ int WndBackend_Run(std::function<void()> input_func,
     }
 
     const auto ticks_start = SDL_GetTicks();
-    if ((Grp_FPSDivisor == 0) ||
+    if ((FrameRateDivisor() == 0) ||
         ((ticks_start - ticks_last) >= FRAME_TIME_TARGET)) {
       quit = !frame_func();
-      if (Grp_FPSDivisor != 0) {
+      if (FrameRateDivisor() != 0) {
         // Since SDL_Delay() works at not-even-exact millisecond
         // granularity, we subtract 1 and spin for the last
         // millisecond to ensure that we hit the exact frame

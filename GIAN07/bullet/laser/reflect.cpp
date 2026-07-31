@@ -328,13 +328,13 @@ void LaserReflect::Render() const {
 
 void LaserReflect::DrawClearing() const {
   constexpr RGB216 col = {1, 0, 5};
-  GrpGeom->SetColor(col);
-  GrpGeom->DrawLine(p_[0].x, p_[0].y, p_[1].x, p_[1].y);
-  GrpGeom->DrawLine(p_[3].x, p_[3].y, p_[2].x, p_[2].y);
+  Geometry().SetColor(col);
+  Geometry().DrawLine(p_[0].x, p_[0].y, p_[1].x, p_[1].y);
+  Geometry().DrawLine(p_[3].x, p_[3].y, p_[2].x, p_[2].y);
 }
 
 void LaserReflect::DrawOuter() const {
-  GeomGrdRect(*GrpGeom, p_, RGB216{1, 0, 5}.ToRGB());
+  GeomGrdRect(Geometry(), p_, RGB216{1, 0, 5}.ToRGB());
 }
 
 bool LaserReflect::IsDead() const { return state_ == ReflectState::Dead; }
@@ -359,7 +359,7 @@ void LaserReflect::RenderDebugHitbox(int mode) const {
     return;
   }
   const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
-  GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
 
   if (mode >= 2 && w_ > 0) {
     const float bx = x_ / WORLD_COORD_SCALE;
@@ -377,6 +377,6 @@ void LaserReflect::RenderDebugHitbox(int mode) const {
     ep[2].x += static_cast<float>(lx_);
     ep[2].y += static_cast<float>(ly_);
     const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
-    GrpGeom->DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
+    Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
   }
 }

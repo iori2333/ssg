@@ -216,7 +216,7 @@ void EffectManager::DrawBossWarning() {
   constexpr std::array radius_steps = {4, 4, 6, 6, 8};
   for (std::size_t index = 0; index < colors.size(); ++index) {
     radius -= radius_steps[index];
-    GrpGeom->SetColor(colors[index]);
+    Geometry().SetColor(colors[index]);
     GeomCircle({320, 100}, radius);
   }
 }
@@ -298,10 +298,10 @@ void EffectManager::DrawWarningText() {
   if (warning_lines_[0].angle_x == 0) {
     const auto pulse = math::RoundedPolarVector(
         static_cast<float>(warning_pulse_) * math::kLegacyAngleStep, 48.0f);
-    GrpGeom->SetAlphaNorm(static_cast<uint8_t>(128 + pulse.y));
-    GrpGeom->SetColor({5, 0, 0});
-    GrpGeom->DrawBoxA(129, 46, 512, 66);
-    GrpGeom->DrawBoxA(129, 136, 512, 156);
+    Geometry().SetAlphaNorm(static_cast<uint8_t>(128 + pulse.y));
+    Geometry().SetColor({5, 0, 0});
+    Geometry().DrawBoxA(129, 46, 512, 66);
+    Geometry().DrawBoxA(129, 136, 512, 156);
     GrpSurface_Blit({129, 61}, SURFACE_ID::SYSTEM,
                     PIXEL_LTRB{0, 168, 384, 248});
     return;
@@ -329,7 +329,7 @@ void EffectManager::DrawWarningText() {
         const auto current = rotate(point);
         const auto p1 = PIXEL_POINT{320, 100} + previous.ToPixel();
         const auto p2 = PIXEL_POINT{320, 100} + current.ToPixel();
-        GrpGeom->DrawLine(p1.x, p1.y, p2.x, p2.y);
+        Geometry().DrawLine(p1.x, p1.y, p2.x, p2.y);
         previous = current;
       }
     }
@@ -339,7 +339,7 @@ void EffectManager::DrawWarningText() {
                              RGB216{4, 4, 5}, RGB216{5, 5, 5}};
   RotateWarningText(start_rotation);
   for (std::size_t index = 0; index < colors.size(); ++index) {
-    GrpGeom->SetColor(colors[index]);
+    Geometry().SetColor(colors[index]);
     draw_lines();
     if (index + 1 < colors.size()) {
       RotateWarningText(rotation_step);

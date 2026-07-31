@@ -35,7 +35,7 @@ constexpr PIXEL_COORD kBuildTagGap = 4;
 bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
   SndBackend_ResumeAll();
   GrpBackend_PixelAccessEnd();
-  TextObj.Clear();
+  TextRenderer().Clear();
   GrpBackend_Clear();
   Grp_Flip();
   if (!graphics_.LoadTitle()) {
@@ -62,8 +62,9 @@ bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
 }
 
 void TitleScene::InitVersion() {
-  const auto build_width = TextObj.TextExtent(FONT_ID::TINY, VERSION_TAG).w;
-  version_rect_ = TextObj.Register({.w = 136, .h = 10});
+  const auto build_width =
+      TextRenderer().TextExtent(FONT_ID::TINY, VERSION_TAG).w;
+  version_rect_ = TextRenderer().Register({.w = 136, .h = 10});
   version_left_ = GRP_RES.w - build_width;
 }
 
@@ -82,11 +83,12 @@ void TitleScene::DrawVersion(PIXEL_COORD top) const {
                                            kBuildTagGap,
                                        top + 2 + 7 - label_extent.h};
   GrpPut55(label_position, kBuildLabel);
-  TextObj.Render({version_left_, top}, version_rect_, VERSION_TAG,
-                 [gradient](auto &session) {
-                   std::array<std::string_view, 1> text = {VERSION_TAG};
-                   DrawGrdFont(session, {text}, FONT_ID::TINY, false, gradient);
-                 });
+  TextRenderer().Render({version_left_, top}, version_rect_, VERSION_TAG,
+                        [gradient](auto &session) {
+                          std::array<std::string_view, 1> text = {VERSION_TAG};
+                          DrawGrdFont(session, {text}, FONT_ID::TINY, false,
+                                      gradient);
+                        });
 }
 
 TitleSceneResult TitleScene::Update(INPUT_BITS input, bool should_draw) {
