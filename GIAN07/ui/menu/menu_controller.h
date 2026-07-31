@@ -98,10 +98,11 @@ private:
   void RenderList();
 
   static void DrawTitle(TEXTRENDER_SESSION &s, std::string_view title,
-                        int rect_w);
+                        int rect_w, uint32_t marquee_frame);
   static void DrawItem(TEXTRENDER_SESSION &s, std::string_view title,
                        std::string_view value, int window_w, bool selected,
-                       bool enabled, bool highlighted, bool centered);
+                       bool enabled, bool highlighted, bool centered,
+                       uint32_t marquee_frame);
 
   std::vector<MenuPage> stack_;
   std::vector<std::unique_ptr<IMenuNode>> exit_nodes_;

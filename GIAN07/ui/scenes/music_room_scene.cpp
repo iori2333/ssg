@@ -18,6 +18,7 @@
 #include "music/music_player.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
+#include "ui/text_marquee.h"
 #include "util/debug.h"
 #include "util/math_utils.h"
 
@@ -26,6 +27,7 @@
 
 static constexpr RGB ColorHighlight = {.r = 51, .g = 102, .b = 153};
 static constexpr RGB ColorDefault = {.r = 153, .g = 204, .b = 255};
+static constexpr int TitleAreaWidth = 232;
 // ---------
 
 // State
@@ -56,23 +58,29 @@ void MusicRoomScene::Text::RenderMidDev(WINDOW_POINT topleft) const {
 
 void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
                                        std::size_t track_id,
-                                       std::string_view track_title) const {
+                                       std::string_view track_title,
+                                       uint32_t marquee_frame) const {
   // Some modders might assign the same title to consecutive tracks, but it's
   // not possible to change the track title without switching to a different
   // track first.
   auto num_str = std::format("#{:02}", (track_id + 1));
   std::string_view num = num_str;
 
+  const auto cache_key = std::format("{}|{}|{}", num, track_title,
+                                     marquee_frame / ui::kMarqueeStepFrames);
   TextObj.Render(
-      topleft, title, num, [&num, track_title](TEXTRENDER_SESSION &s) {
+      topleft, title, cache_key,
+      [&num, track_title, marquee_frame](TEXTRENDER_SESSION &s) {
+        s.SetFont(FONT_ID::NORMAL);
         // GDI would calculate a trailing space as 4 pixels wide, not 8.
         const auto title_left = (s.Extent(num).w + 8);
 
-        s.SetFont(FONT_ID::NORMAL);
+        const auto display_title = ui::MarqueeWindow(
+            s, track_title, s.RectSize().w - title_left - 1, marquee_frame);
         s.Put({.x = 1, .y = 0}, num, ColorHighlight);
-        s.Put({.x = (title_left + 1), .y = 0}, track_title, ColorHighlight);
+        s.Put({.x = (title_left + 1), .y = 0}, display_title, ColorHighlight);
         s.Put({.x = 0, .y = 0}, num, ColorDefault);
-        s.Put({.x = (title_left + 0), .y = 0}, track_title, ColorDefault);
+        s.Put({.x = (title_left + 0), .y = 0}, display_title, ColorDefault);
       });
 }
 
@@ -118,6 +126,7 @@ bool MusicRoomScene::Enter() {
   track_id_ = 0;
   previous_input_ = 0;
   device_change_wait_ = false;
+  title_marquee_frame_ = 0;
   spectrum_peaks_.fill(0);
   spectrum_decay_frame_ = 0;
 
@@ -135,7 +144,7 @@ bool MusicRoomScene::Enter() {
 
   text_ = Text{
       .mid_dev = TextObj.Register({.w = 98, .h = 13}),
-      .title = TextObj.Register({.w = 240, .h = 16}),
+      .title = TextObj.Register({.w = TitleAreaWidth, .h = 16}),
       .comment = TextObj.Register({.w = 272, .h = 192}),
       .version = TextObj.Register({.w = 490, .h = 13}),
   };
@@ -378,6 +387,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
       const auto track_count = music_.TrackCount();
       track_id_ = ((track_id_ + track_count - 1) % track_count);
       music_.Play(track_id_);
+      title_marquee_frame_ = 0;
     }
     previous_input_ = input;
   }
@@ -461,7 +471,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
       text.RenderMidDev({(540 + 2), (96 - 3)});
     }
     text.RenderTitle({400, (144 + 2)}, track_id_,
-                     localization_.MusicTitle(track_id_));
+                     localization_.MusicTitle(track_id_), title_marquee_frame_);
     text.RenderComment({(400 - 40), (144 + 30)},
                        localization_.MusicComment(track_id_));
     text.RenderVersion(
@@ -470,5 +480,6 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
 
     Grp_Flip();
   }
+  title_marquee_frame_++;
   return false;
 }

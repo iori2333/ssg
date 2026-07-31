@@ -1,0 +1,85 @@
+/// Shared UTF-8 text marquee helpers.
+
+#pragma once
+
+#include <algorithm>
+#include <cstdint>
+#include <string>
+#include <string_view>
+
+#include "gfx/text.h"
+
+namespace ui {
+
+inline constexpr uint32_t kMarqueeStepFrames = 10;
+
+namespace detail {
+
+inline void RemoveLastUtf8CodePoint(std::string &text) {
+  if (text.empty()) {
+    return;
+  }
+  auto start = text.size() - 1;
+  while (start > 0 &&
+         (static_cast<unsigned char>(text[start]) & 0xC0U) == 0x80U) {
+    start--;
+  }
+  text.resize(start);
+}
+
+inline void RemoveFirstUtf8CodePoint(std::string &text) {
+  if (text.empty()) {
+    return;
+  }
+  auto end = std::size_t{1};
+  while (end < text.size() &&
+         (static_cast<unsigned char>(text[end]) & 0xC0U) == 0x80U) {
+    end++;
+  }
+  text.erase(0, end);
+}
+
+} // namespace detail
+
+inline std::string MarqueeWindow(TEXTRENDER_SESSION_BASE auto &session,
+                                 std::string_view text, int available_width,
+                                 uint32_t frame) {
+  if (available_width <= 0) {
+    return {};
+  }
+
+  std::string suffix(text);
+  if (session.Extent(suffix).w <= available_width) {
+    return suffix;
+  }
+
+  std::string final_suffix = suffix;
+  uint32_t shift_count = 0;
+  while (!final_suffix.empty() &&
+         session.Extent(final_suffix).w > available_width) {
+    detail::RemoveFirstUtf8CodePoint(final_suffix);
+    shift_count++;
+  }
+
+  constexpr uint32_t kStartDelayFrames = 45;
+  constexpr uint32_t kEndDelayFrames = 45;
+  const auto scroll_frames = shift_count * kMarqueeStepFrames;
+  const auto cycle_frames = kStartDelayFrames + scroll_frames + kEndDelayFrames;
+  const auto phase = frame % cycle_frames;
+
+  uint32_t shifts = 0;
+  if (phase >= kStartDelayFrames) {
+    shifts = std::min(shift_count,
+                      1U + (phase - kStartDelayFrames) / kMarqueeStepFrames);
+  }
+  while (shifts-- != 0) {
+    detail::RemoveFirstUtf8CodePoint(suffix);
+  }
+
+  while (!suffix.empty() && session.Extent(suffix).w > available_width) {
+    detail::RemoveLastUtf8CodePoint(suffix);
+  }
+  return suffix;
+}
+
+} // namespace ui

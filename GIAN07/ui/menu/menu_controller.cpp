@@ -12,24 +12,9 @@
 #include "audio/snd.h"
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
+#include "ui/text_marquee.h"
 
 namespace menu {
-
-namespace {
-
-void RemoveLastUtf8CodePoint(std::string &text) {
-  if (text.empty()) {
-    return;
-  }
-  auto start = text.size() - 1;
-  while (start > 0 &&
-         (static_cast<unsigned char>(text[start]) & 0xC0U) == 0x80U) {
-    start--;
-  }
-  text.resize(start);
-}
-
-} // namespace
 
 bool EntryNode::OnAction(MenuController &ctrl) {
   ctrl.PushPage(*this);
@@ -136,6 +121,7 @@ void MenuController::Tick(INPUT_BITS key) {
   } else {
     ProcessInput(key);
   }
+  frame_count_++;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,6 +192,7 @@ void MenuController::ProcessInput(INPUT_BITS key) {
       cur = (cur + n + dir) % n;
     } while (!page.items[cur]->Enabled());
     page.selected = cur;
+    frame_count_ = 0;
 
     if (page.selected < page.scroll) {
       page.scroll = page.selected;
@@ -226,11 +213,13 @@ void MenuController::ProcessInput(INPUT_BITS key) {
 
   if (auto delta = Input_OptionKeyDelta(key)) {
     if (!Input_IsOK(key)) {
+      frame_count_ = 0;
       node->OnAdjust(*this, delta);
     }
   }
   if (Input_IsOK(key)) {
     if (node->Enabled()) {
+      frame_count_ = 0;
       bool stay = node->OnAction(*this);
       if (!stay) {
         if (stack_.size() > 1) {
@@ -264,12 +253,14 @@ void MenuController::ProcessInput(INPUT_BITS key) {
 void MenuController::PushPage(EntryNode &entry) {
   entry.OnPageEnter();
   BuildPageFromEntry(entry);
+  frame_count_ = 0;
   InvalidateAllSlots();
 }
 
 void MenuController::PopPage() {
   if (stack_.size() > 1) {
     stack_.pop_back();
+    frame_count_ = 0;
     InvalidateAllSlots();
   }
 }
@@ -403,11 +394,14 @@ void MenuController::RenderPage() {
       page.owner != nullptr ? page.owner->Title() : std::string_view{};
   auto &title_slot = slots_[0];
   std::string title_key = std::format("T|{}", title_str);
+  title_key += std::format("|{}", frame_count_ / ui::kMarqueeStepFrames);
   if (title_slot.cache_key != title_key) {
     title_slot.cache_key = title_key;
   }
   TextObj.Render(pos, title_slot.trr, title_slot.cache_key,
-                 [&](TEXTRENDER_SESSION &s) { DrawTitle(s, title_str, w_); });
+                 [&](TEXTRENDER_SESSION &s) {
+                   DrawTitle(s, title_str, w_, frame_count_);
+                 });
 
   pos.y += kMenuItemH;
   for (int i = page.scroll; i < page.scroll + visible; i++) {
@@ -417,11 +411,12 @@ void MenuController::RenderPage() {
     bool enabled = node.Enabled();
     bool highlighted = node.Highlighted();
     const auto value = node.Value();
+    const auto marquee_frame = selected ? frame_count_ : 0;
 
-    std::string key =
-        std::format("{}|\x01[{}]|\x01{}{}{}{}", node.Title(), value,
-                    selected ? 'S' : 'N', enabled ? 'E' : 'D',
-                    highlighted ? 'H' : 'N', node.Centered() ? 'C' : 'N');
+    std::string key = std::format(
+        "{}|\x01[{}]|\x01{}{}{}{}|{}", node.Title(), value,
+        selected ? 'S' : 'N', enabled ? 'E' : 'D', highlighted ? 'H' : 'N',
+        node.Centered() ? 'C' : 'N', marquee_frame / ui::kMarqueeStepFrames);
 
     if (slot.cache_key != key) {
       slot.cache_key = key;
@@ -429,7 +424,7 @@ void MenuController::RenderPage() {
 
     TextObj.Render(pos, slot.trr, slot.cache_key, [&](TEXTRENDER_SESSION &s) {
       DrawItem(s, node.Title(), value, w_, selected, enabled, highlighted,
-               node.Centered());
+               node.Centered(), marquee_frame);
     });
 
     pos.y += kMenuItemH;
@@ -442,11 +437,13 @@ void MenuController::RenderPage() {
 
 void MenuController::ActivateListView(ListView &view) {
   active_list_ = &view;
+  frame_count_ = 0;
   InvalidateAllSlots();
 }
 
 void MenuController::DeactivateListView() {
   active_list_ = nullptr;
+  frame_count_ = 0;
   InvalidateAllSlots();
 }
 
@@ -496,6 +493,7 @@ void MenuController::ProcessListInput(INPUT_BITS key) {
     } else {
       active_list_->MoveDown();
     }
+    frame_count_ = 0;
     Snd_SEPlay(SfxId::Select);
     return;
   }
@@ -555,12 +553,14 @@ void MenuController::RenderList() {
   WINDOW_POINT pos = {x_, y_};
   auto &title_slot = slots_[0];
   const auto title = view->title.Get();
-  std::string title_key = std::format("T|{}", title);
+  std::string title_key =
+      std::format("T|{}|{}", title, frame_count_ / ui::kMarqueeStepFrames);
   if (title_slot.cache_key != title_key) {
     title_slot.cache_key = title_key;
   }
-  TextObj.Render(pos, title_slot.trr, title_slot.cache_key,
-                 [&](TEXTRENDER_SESSION &s) { DrawTitle(s, title, w_); });
+  TextObj.Render(
+      pos, title_slot.trr, title_slot.cache_key,
+      [&](TEXTRENDER_SESSION &s) { DrawTitle(s, title, w_, frame_count_); });
 
   pos.y += kMenuItemH;
   for (int i = view->scroll; i < view->scroll + visible; i++) {
@@ -577,13 +577,16 @@ void MenuController::RenderList() {
 
     std::string key = std::format("{}|\x01{}|\x01{}{}{}{}", item_title, "",
                                   selected ? 'S' : 'N', 'E', 'N', 'N');
+    const auto marquee_frame = selected ? frame_count_ : 0;
+    key += std::format("|{}", marquee_frame / ui::kMarqueeStepFrames);
 
     if (slot.cache_key != key) {
       slot.cache_key = key;
     }
 
     TextObj.Render(pos, slot.trr, slot.cache_key, [&](TEXTRENDER_SESSION &s) {
-      DrawItem(s, item_title, "", w_, selected, true, false, false);
+      DrawItem(s, item_title, "", w_, selected, true, false, false,
+               marquee_frame);
     });
 
     pos.y += kMenuItemH;
@@ -591,21 +594,26 @@ void MenuController::RenderList() {
 }
 
 void MenuController::DrawTitle(TEXTRENDER_SESSION &s, std::string_view title,
-                               int rect_w) {
+                               int rect_w, uint32_t marquee_frame) {
   if (title.empty()) {
     return;
   }
   s.SetFont(kMenuFont);
-  int cx = (rect_w - s.Extent(title).w) / 2;
+  constexpr int kTitlePad = kMenuItemPadX;
+  const int available_width = rect_w - kTitlePad * 2;
+  const bool scroll = s.Extent(title).w > available_width;
+  const auto display_title =
+      ui::MarqueeWindow(s, title, available_width, marquee_frame);
+  const int x = scroll ? kTitlePad : (rect_w - s.Extent(display_title).w) / 2;
   RGB white{255, 255, 255};
-  s.Put({cx + 1, 0}, title, RGB{128, 128, 128});
-  s.Put({cx, 0}, title, white);
+  s.Put({x + 1, 0}, display_title, RGB{128, 128, 128});
+  s.Put({x, 0}, display_title, white);
 }
 
 void MenuController::DrawItem(TEXTRENDER_SESSION &s, std::string_view title,
                               std::string_view value, int window_w,
                               bool selected, bool enabled, bool highlighted,
-                              bool centered) {
+                              bool centered, uint32_t marquee_frame) {
   s.SetFont(kMenuFont);
 
   const RGB shadow = enabled ? RGB{128, 128, 128} : RGB{96, 96, 96};
@@ -616,28 +624,48 @@ void MenuController::DrawItem(TEXTRENDER_SESSION &s, std::string_view title,
   int value_right = window_w - kMenuItemPadX;
   int title_left = kMenuItemPadX;
 
-  int title_avail = value_right - kMenuTitleValueGap - title_left;
+  const std::string display_title(title);
+  const int title_width = s.Extent(display_title).w;
+  const int title_x =
+      centered ? TextLayoutXCenter(s, display_title) : title_left;
+
   if (!value.empty()) {
-    std::string bracketed = std::format("[{}]", value);
-    int vw = s.Extent(bracketed).w;
-    int vx = value_right - vw;
-    title_avail = vx - kMenuTitleValueGap - title_left;
-
-    s.Put({vx + 1, 0}, bracketed, shadow);
-    s.Put({vx, 0}, bracketed, text);
-  }
-
-  std::string display_title(title);
-  if (s.Extent(display_title).w > title_avail) {
-    auto ell_w = s.Extent("...").w;
-    while (!display_title.empty() &&
-           s.Extent(display_title).w + ell_w > title_avail) {
-      RemoveLastUtf8CodePoint(display_title);
+    const int value_left = display_title.empty()
+                               ? title_left
+                               : title_x + title_width + kMenuTitleValueGap;
+    const std::string bracketed = std::format("[{}]", value);
+    if (s.Extent(bracketed).w <= value_right - value_left) {
+      const int value_x = value_right - s.Extent(bracketed).w;
+      s.Put({value_x + 1, 0}, bracketed, shadow);
+      s.Put({value_x, 0}, bracketed, text);
+    } else {
+      const int open_width = s.Extent("[").w;
+      const int close_width = s.Extent("]").w;
+      const int content_left = value_left + open_width;
+      const int close_x = value_right - close_width;
+      const auto display_value =
+          ui::MarqueeWindow(s, value, close_x - content_left, marquee_frame);
+      if (content_left <= close_x) {
+        s.Put({value_left + 1, 0}, "[", shadow);
+        s.Put({value_left, 0}, "[", text);
+        s.Put({content_left + 1, 0}, display_value, shadow);
+        s.Put({content_left, 0}, display_value, text);
+        s.Put({close_x + 1, 0}, "]", shadow);
+        s.Put({close_x, 0}, "]", text);
+      }
     }
-    display_title += "...";
+  } else {
+    const int available_width = value_right - title_left;
+    const bool scroll = title_width > available_width;
+    const auto single_line =
+        ui::MarqueeWindow(s, title, available_width, marquee_frame);
+    const int single_x =
+        centered && !scroll ? TextLayoutXCenter(s, single_line) : title_left;
+    s.Put({single_x + 1, 0}, single_line, shadow);
+    s.Put({single_x, 0}, single_line, text);
+    return;
   }
 
-  int title_x = centered ? TextLayoutXCenter(s, display_title) : title_left;
   s.Put({title_x + 1, 0}, display_title, shadow);
   s.Put({title_x, 0}, display_title, text);
 }
