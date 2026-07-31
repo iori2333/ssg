@@ -12,7 +12,7 @@
 #include "util/guard.h"
 
 constexpr auto FORMAT = CAIRO_FORMAT_ARGB32;
-extern const ENUMARRAY<const char *, FONT_ID> FontSpecs;
+extern const util::EnumArray<const char *, FONT_ID> FontSpecs;
 
 struct PANGOCAIRO_FONT {
   PangoFontDescription *desc = nullptr;
@@ -60,7 +60,7 @@ bool MetricHintingNeededFor(PangoFontDescription *desc) {
   if (!pat_in) {
     return false;
   }
-  auto pat_in_guard = make_guard(pat_in, FcPatternDestroy);
+  auto pat_in_guard = util::MakeGuard(pat_in, FcPatternDestroy);
 
   // PangoFc only exposes a conversion from `PangoFontDescription` to
   // `FcPattern`, but *of course* not the other way around...
@@ -76,7 +76,7 @@ bool MetricHintingNeededFor(PangoFontDescription *desc) {
 
   FcResult result;
   auto *pat_out = FcFontMatch(nullptr, pat_in, &result);
-  auto pat_out_guard = make_guard(pat_out, FcPatternDestroy);
+  auto pat_out_guard = util::MakeGuard(pat_out, FcPatternDestroy);
 
   char *family_out = nullptr;
   const auto matched = FcPatternGetString(
@@ -106,7 +106,7 @@ TEXTRENDER TextObj;
 PANGOCAIRO_STATE State;
 
 static class {
-  ENUMARRAY<PANGOCAIRO_FONT, FONT_ID> arr;
+  util::EnumArray<PANGOCAIRO_FONT, FONT_ID> arr;
 
 public:
   const PANGOCAIRO_FONT &ForID(FONT_ID font) {

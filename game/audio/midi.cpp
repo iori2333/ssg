@@ -53,19 +53,19 @@ static constexpr uint8_t MIDI_CHANNELS = 16;
 #pragma pack(push, 1)
 
 typedef struct {
-  U32BE MThd;
-  U32BE size;
+  util::BigEndian<uint32_t> MThd;
+  util::BigEndian<uint32_t> size;
 } SMF_FILE;
 
 typedef struct {
-  U16BE format;
-  U16BE track;
-  U16BE timebase;
+  util::BigEndian<uint16_t> format;
+  util::BigEndian<uint16_t> track;
+  util::BigEndian<uint16_t> timebase;
 } SMF_MAIN;
 
 typedef struct {
-  U32BE MTrk;
-  U32BE size;
+  util::BigEndian<uint32_t> MTrk;
+  util::BigEndian<uint32_t> size;
 } SMF_TRACK;
 
 #pragma pack(pop)
@@ -215,7 +215,7 @@ MID_FLAGS Mid_SetFlags(MID_FLAGS flags_new) {
     if (!!(Mid_Flags & F::FIX_SYSEX_BUGS) == new_sysex) {
       return Mid_Flags;
     }
-    EnumFlagSet(Mid_Flags, F::FIX_SYSEX_BUGS, new_sysex);
+    SetEnumFlag(Mid_Flags, F::FIX_SYSEX_BUGS, new_sysex);
     restart = (Mid_Dev.state == MID_BACKEND_STATE::PLAY);
   }
   if (restart) {
@@ -598,8 +598,7 @@ void Mid_Proc(MID_REALTIME delta) {
     return;
   }
 
-  const auto interval =
-      ((delta * Mid_TempoNumerator) / Mid_TempoDenominator);
+  const auto interval = ((delta * Mid_TempoNumerator) / Mid_TempoDenominator);
   auto &time = Mid_Visualization.play_time;
   MID_PULSE pulse_sync = 0;
 

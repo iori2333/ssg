@@ -148,14 +148,15 @@ private:
     KeepOutsidePlayfield = 1 << 0,
     Grazed = 1 << 1,
     PendingRemoval = 1 << 7,
-    HAS_BITFLAG_OPERATORS,
   };
 
   [[nodiscard]] bool HasFlag(Flags flag) const {
-    return std::to_underlying(flags_ & flag) != 0;
+    return (std::to_underlying(flags_) & std::to_underlying(flag)) != 0;
   }
   void SetFlag(Flags flag, bool enabled) {
-    EnumFlagSet(flags_, flag, static_cast<uint8_t>(enabled));
+    const auto bits = std::to_underlying(flags_);
+    const auto flag_bit = std::to_underlying(flag);
+    flags_ = static_cast<Flags>(enabled ? bits | flag_bit : bits & ~flag_bit);
   }
 
   float x_{};

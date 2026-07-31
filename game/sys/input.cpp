@@ -45,10 +45,11 @@ static_assert(SDL_SCANCODE_COUNT <= std::numeric_limits<uint16_t>::max());
 static_assert(SDL_KMOD_SCROLL <= std::numeric_limits<uint16_t>::max());
 
 enum class KEY_MOD : uint8_t {
-  HAS_BITFLAG_OPERATORS,
   NONE = 0x00,
   LALT = 0x01,
 };
+
+template <> inline constexpr bool util::EnableEnumFlags<KEY_MOD> = true;
 
 // In-game scancode, received from SDL.
 struct KEY_SCANCODE {
@@ -167,14 +168,14 @@ Pad_GetAxisIDs(int device_index) {
   if (!gamepad) {
     return {axis_x, axis_y};
   }
-  auto gamepad_guard = make_guard(gamepad, SDL_CloseGamepad);
+  auto gamepad_guard = util::MakeGuard(gamepad, SDL_CloseGamepad);
 
   int binding_count = 0;
   auto **bindings = SDL_GetGamepadBindings(gamepad, &binding_count);
   if (!bindings) {
     return {axis_x, axis_y};
   }
-  auto bindings_guard = make_guard(bindings, SDL_free);
+  auto bindings_guard = util::MakeGuard(bindings, SDL_free);
 
   for (const auto i : std::views::iota(0, binding_count)) {
     const auto *binding = bindings[i];

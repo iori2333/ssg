@@ -10,14 +10,16 @@
 #include <string_view>
 
 #include "gfx/text.h"
+#include "util/enum_flags.h"
 
 // Message window flags
 enum class MsgWindowFlags : uint8_t {
   NONE = 0x0,
   WITH_FACE = 0x1, // Pads all text to leave room for a face portrait.
   CENTER = 0x2,    // Horizontally centers all text.
-  HAS_BITFLAG_OPERATORS = 3,
 };
+
+template <> inline constexpr bool util::EnableEnumFlags<MsgWindowFlags> = true;
 
 class MsgWindow {
 public:

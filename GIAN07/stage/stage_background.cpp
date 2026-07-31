@@ -10,7 +10,6 @@
 #include "effect/effect_manager.h"
 #include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 namespace stage {
@@ -296,7 +295,7 @@ void StageBackground::UpdateRaster(bool opening) {
         static_cast<float>(raster_angle_ + static_cast<int>(i) * angle_step) *
             math::kLegacyAngleStep,
         static_cast<float>(raster_width_));
-    raster_dx_[i] = Cast::down<int8_t>(offset.y);
+    raster_dx_[i] = static_cast<int8_t>(offset.y);
   }
   raster_angle_ = static_cast<uint8_t>(raster_angle_ + (opening ? 2 : 8));
   if (opening) {

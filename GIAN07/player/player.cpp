@@ -532,7 +532,7 @@ void Player::AddScore(int sc) { dscore_ += sc; }
 void Player::PowerUp(uint8_t damage) {
   exp2_ += damage;
 
-  switch ((Cast::up<uint16_t>(exp_) + 1) >> 5) {
+  switch ((static_cast<uint16_t>(exp_) + 1) >> 5) {
   case 0:
     if (exp2_ > 5 - 3) {
       exp_++, exp2_ = 0;

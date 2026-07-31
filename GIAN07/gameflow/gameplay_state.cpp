@@ -129,7 +129,7 @@ bool GameplayState::EnterDemo() {
   mode_ = Mode::Demo;
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
-  math::SeedRandom(Time_SteadyTicksMS());
+  math::SeedRandom(util::SteadyTicksMs());
   std::array<StageId, kRegularStageCount> available{};
   size_t available_count = 0;
   for (uint8_t index = 0; index < kRegularStageCount; ++index) {

@@ -18,12 +18,13 @@ static VOLUME BGMVolume = VOLUME_MAX;
 static VOLUME SEVolume = VOLUME_MAX;
 
 static enum class SND_SYS {
-  HAS_BITFLAG_OPERATORS,
   NOTHING = 0x0,
   SYSTEM = 0x1,
   BGM = 0x2,
   SE = 0x4,
 } Initialized;
+
+template <> inline constexpr bool util::EnableEnumFlags<SND_SYS> = true;
 
 bool Snd_SystemInit(void) {
   if (!!(Initialized & SND_SYS::SYSTEM)) {
@@ -112,7 +113,7 @@ bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
   if (!SDL_LoadWAV_IO(io, true, &spec, &pcm_buf, &pcm_len)) {
     return false;
   }
-  auto pcm_guard = make_guard(pcm_buf, SDL_free);
+  auto pcm_guard = util::MakeGuard(pcm_buf, SDL_free);
   return SndBackend_SELoad(id, max, spec, {pcm_buf, pcm_len});
 }
 

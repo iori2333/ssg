@@ -14,9 +14,9 @@ namespace data {
 
 // On-disk PBG entry descriptor.
 struct PbgEntryHeader {
-  ENDIAN_LITTLE<uint32_t> size_uncompressed;
-  ENDIAN_LITTLE<uint32_t> offset;
-  ENDIAN_LITTLE<uint32_t> checksum_compressed;
+  util::LittleEndian<uint32_t> size_uncompressed;
+  util::LittleEndian<uint32_t> offset;
+  util::LittleEndian<uint32_t> checksum_compressed;
 };
 
 // Packfile container (PBG format with LZSS compression).

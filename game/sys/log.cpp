@@ -234,7 +234,7 @@ void Write(Level level, Channel channel, std::string_view message) noexcept {
             now.time_since_epoch())
             .count();
     const auto millis = ((millis_since_epoch % 1000) + 1000) % 1000;
-    const auto local = Time_NowLocal();
+    const auto local = util::LocalTime();
 #ifdef PBG_DEBUG
     const auto prefix = std::format(
         "{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} [{}][{}][thread={}] ",

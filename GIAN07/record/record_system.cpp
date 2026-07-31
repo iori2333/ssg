@@ -43,13 +43,13 @@ constexpr uint8_t kInputFlagSpeedDown = 1 << 2;
 
 struct ScoreRecordFile {
   std::array<uint8_t, 4> magic{};
-  ENDIAN_LITTLE<uint16_t> version = 0;
-  ENDIAN_LITTLE<uint64_t> created_at = 0;
-  ENDIAN_LITTLE<uint64_t> score = 0;
-  ENDIAN_LITTLE<uint32_t> graze = 0;
-  ENDIAN_LITTLE<uint16_t> miss_count = 0;
-  ENDIAN_LITTLE<uint16_t> bomb_used = 0;
-  ENDIAN_LITTLE<uint16_t> deathbomb_count = 0;
+  util::LittleEndian<uint16_t> version = 0;
+  util::LittleEndian<uint64_t> created_at = 0;
+  util::LittleEndian<uint64_t> score = 0;
+  util::LittleEndian<uint32_t> graze = 0;
+  util::LittleEndian<uint16_t> miss_count = 0;
+  util::LittleEndian<uint16_t> bomb_used = 0;
+  util::LittleEndian<uint16_t> deathbomb_count = 0;
   uint8_t difficulty = 0;
   uint8_t stage = 0;
   uint8_t player_type = 0;

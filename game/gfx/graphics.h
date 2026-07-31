@@ -20,7 +20,6 @@
 #include "coords.h"
 #include "pixelformat.h"
 
-#include "util/cast.h"
 #include "util/enum_flags.h"
 
 // The backend will target a frame rate of
@@ -87,9 +86,9 @@ struct RGB216 {
 
   constexpr RGB ToRGB(void) const {
     return RGB{
-        .r = Cast::down<uint8_t>(r * 50u),
-        .g = Cast::down<uint8_t>(g * 50u),
-        .b = Cast::down<uint8_t>(b * 50u),
+        .r = static_cast<uint8_t>(r * 50u),
+        .g = static_cast<uint8_t>(g * 50u),
+        .b = static_cast<uint8_t>(b * 50u),
     };
   }
 
@@ -147,7 +146,6 @@ enum class GRAPHICS_FULLSCREEN_FIT : uint8_t {
 };
 
 enum class GRAPHICS_PARAM_FLAGS : uint8_t {
-  HAS_BITFLAG_OPERATORS,
   FULLSCREEN = 0x01,
   FULLSCREEN_EXCLUSIVE = 0x02,
 
@@ -159,6 +157,9 @@ enum class GRAPHICS_PARAM_FLAGS : uint8_t {
 
   MASK = (FULLSCREEN | FULLSCREEN_EXCLUSIVE | FULLSCREEN_FIT | SCALE_GEOMETRY),
 };
+
+template <>
+inline constexpr bool util::EnableEnumFlags<GRAPHICS_PARAM_FLAGS> = true;
 
 struct GRAPHICS_FULLSCREEN_FLAGS {
   bool fullscreen;

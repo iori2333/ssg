@@ -253,7 +253,7 @@ bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
   if (result != MA_SUCCESS) {
     return se.Clear();
   }
-  auto conv_guard = make_guard(
+  auto conv_guard = util::MakeGuard(
       &converter, [](auto *c) { ma_data_converter_uninit(c, nullptr); });
   const size_t input_frame_size = SDL_AUDIO_FRAMESIZE(spec);
   const size_t output_frame_size =

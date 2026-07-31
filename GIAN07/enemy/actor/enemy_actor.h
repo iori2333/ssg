@@ -22,8 +22,9 @@ enum class EnemyActorFlags : uint8_t {
   Damageable = 1 << 2,
   CollidesWithPlayer = 1 << 3,
   HorizontalMirror = 1 << 4,
-  HAS_BITFLAG_OPERATORS,
 };
+
+template <> inline constexpr bool util::EnableEnumFlags<EnemyActorFlags> = true;
 
 enum class EnemyActorState : uint8_t {
   Active,
@@ -105,7 +106,7 @@ struct EnemyActor {
     return std::to_underlying(flags & flag) != 0;
   }
   void SetFlag(EnemyActorFlags flag, bool enabled) {
-    EnumFlagSet(flags, flag, static_cast<uint8_t>(enabled));
+    SetEnumFlag(flags, flag, static_cast<uint8_t>(enabled));
   }
   [[nodiscard]] bool IsHitBy(const PlayerAttack &attack) const;
   void UpdateAnimation(const EnemyAnimationSet &animations);

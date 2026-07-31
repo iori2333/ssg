@@ -24,7 +24,7 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
   if (config.scaling_mode == ScalingMode::Geometry) {
     flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
   }
-  EnumFlagSet(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+  SetEnumFlag(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
               std::to_underlying(config.fullscreen_fit));
   const GRAPHICS_PARAMS requested{
       .flags = flags,
@@ -93,7 +93,7 @@ bool DisplayController::ApplyConfig(const GraphicsConfig &config) {
   if (config.scaling_mode == ScalingMode::Geometry) {
     flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
   }
-  EnumFlagSet(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+  SetEnumFlag(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
               std::to_underlying(config.fullscreen_fit));
   return Apply({
       .flags = flags,

@@ -22,7 +22,6 @@
 #include "item/item_system.h"
 #include "player/player.h"
 #include "stage/stage_session.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -1019,8 +1018,8 @@ EclVm::Step EclVm::ExecuteRegisterInstruction(EnemyActor &actor,
   case EclOpcode::Cosine: {
     const auto &args = Args<EclRegisterPairArguments>(instruction);
     auto &length = actor.script.registers[RegisterIndex(args.first)];
-    const auto angle =
-        Cast::down<uint8_t>(actor.script.registers[RegisterIndex(args.second)]);
+    const auto angle = static_cast<uint8_t>(
+        actor.script.registers[RegisterIndex(args.second)]);
     const auto vector = math::RoundedPolarVector(math::AngleFromLegacy(angle),
                                                  static_cast<float>(length));
     length = instruction.Opcode() == EclOpcode::Sine ? vector.y : vector.x;

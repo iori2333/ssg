@@ -13,7 +13,6 @@
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "player/player_attack.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -58,7 +57,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   case 1: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
         6.0f)));
     PlayerShotSpawnInfo si{
@@ -69,7 +68,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   case 2: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
         6.0f)));
     PlayerShotSpawnInfo si{player_.X() - 6_px,
@@ -89,7 +88,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   case 4:
   case 5: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
         6.0f)));
     PlayerShotSpawnInfo si{
@@ -100,7 +99,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   default: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
         6.0f)));
     PlayerShotSpawnInfo si{
@@ -191,7 +190,7 @@ void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
     return;
   }
 
-  const auto d = Cast::down<uint8_t>(remaining * 3U);
+  const auto d = static_cast<uint8_t>(remaining * 3U);
   l = (BombDuration() - remaining) * 26;
   const auto x_offset =
       math::RoundedPolarVector(math::AngleFromLegacy(d), l << 1);

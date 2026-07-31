@@ -56,7 +56,7 @@ void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
   constexpr WINDOW_COORD left_column = 0;
   const WINDOW_COORD right_column = GRP_RES.w - 128;
 
-  const auto now = Time_SteadyTicksMS();
+  const auto now = util::SteadyTicksMs();
   if (now - fps_sample_start_ <= 1000) {
     frame_count_++;
   } else {
@@ -79,7 +79,7 @@ void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
                        std::min(model.star_threshold, 9999U))
                .c_str());
 
-  const auto local_time = Time_NowLocal();
+  const auto local_time = util::LocalTime();
   GrpPut16(right_column, 0, "Date");
   GrpPut16(right_column, 20,
            std::format("{:02}/{:02}/{:02}", local_time.month, local_time.day,

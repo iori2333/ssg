@@ -114,8 +114,8 @@ private:
 
   EnemyAnimationSet animations_{};
   EnemyRenderer renderer_;
-  ObjectPool<EnemyActor, kEnemyCapacity> regular_enemies_;
-  ObjectPool<BossActor, kBossCapacity> bosses_;
+  util::ObjectPool<EnemyActor, kEnemyCapacity> regular_enemies_;
+  util::ObjectPool<BossActor, kBossCapacity> bosses_;
   BossHudModel boss_hud_{};
 
   EnemyHomingTarget homing_target_;

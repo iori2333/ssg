@@ -618,11 +618,11 @@ static bool cmd_disasm_scl(const char *in_file, const char *out_file) {
                     off += 1;
                     break;
                 case ArgType::I16:
-                    out += std::to_string(static_cast<int16_t>(I16LEAt(&data[pos + off])));
+                    out += std::to_string(*util::ReadLittleAt<int16_t>(data, pos + off));
                     off += 2;
                     break;
                 case ArgType::U32: {
-                    uint32_t v = static_cast<uint32_t>(U32LEAt(&data[pos + off]));
+                    uint32_t v = *util::ReadLittleAt<uint32_t>(data, pos + off);
                     if (ai == 0 && op == 0x0F) {
                         auto *cname = scwait_name(static_cast<uint8_t>(v));
                         out += cname ? cname : std::to_string(v);
@@ -753,13 +753,13 @@ static bool cmd_asm_scl(const char *in_file, const char *out_file) {
                 case ArgType::U8: out.push_back(static_cast<uint8_t>(v)); break;
                 case ArgType::I8: out.push_back(static_cast<uint8_t>(static_cast<int8_t>(v))); break;
                 case ArgType::I16: {
-                    I16LE w = static_cast<int16_t>(v);
+                    util::LittleEndian<int16_t> w = static_cast<int16_t>(v);
                     auto *b = reinterpret_cast<const uint8_t *>(&w);
                     out.insert(out.end(), b, b + 2);
                     break;
                 }
                 case ArgType::U32: {
-                    U32LE dw = static_cast<uint32_t>(v);
+                    util::LittleEndian<uint32_t> dw = static_cast<uint32_t>(v);
                     auto *b = reinterpret_cast<const uint8_t *>(&dw);
                     out.insert(out.end(), b, b + 4);
                     break;
@@ -930,7 +930,7 @@ static bool cmd_disasm_ecl(const char *in_file, const char *out_file) {
         return false;
     }
 
-    uint32_t script_count = static_cast<uint32_t>(U32LEAt(data.data()));
+    uint32_t script_count = *util::ReadLittleAt<uint32_t>(data, 0);
     if (script_count == 0 || script_count > 256) {
         std::println(stderr, "Error: Invalid script count {}", script_count);
         return false;
@@ -944,7 +944,7 @@ static bool cmd_disasm_ecl(const char *in_file, const char *out_file) {
 
     std::vector<uint32_t> entry_offsets(script_count);
     for (uint32_t i = 0; i < script_count; i++)
-        entry_offsets[i] = static_cast<uint32_t>(U32LEAt(data.data() + 4 + i * 4));
+        entry_offsets[i] = *util::ReadLittleAt<uint32_t>(data, 4 + i * 4);
 
     // Collect all label targets
     std::unordered_set<uint32_t> labels;
@@ -968,23 +968,23 @@ static bool cmd_disasm_ecl(const char *in_file, const char *out_file) {
             };
             switch (op) {
             case 0x02: case 0x04: case 0x09:
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 1]))); break;
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 1)); break;
             case 0x03: // LOOP
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 1]))); break;
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 1)); break;
             case 0x06: case 0x07: case 0x0A: case 0x0B:
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 5]))); break;
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 5)); break;
             case 0x08:
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 1])));
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 5])));
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 9])));
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 13])));
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 1));
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 5));
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 9));
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 13));
                 break;
             case 0x0C:
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 1]))); break;
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 1)); break;
             case 0xAB:
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 1]))); break;
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 1)); break;
             case 0xBA: case 0xBB: case 0xBE:
-                collect(static_cast<uint32_t>(U32LEAt(&data[pos + 1]))); break;
+                collect(*util::ReadLittleAt<uint32_t>(data, pos + 1)); break;
             }
             if (op == 0x01) break;
             pos += len;
@@ -1061,15 +1061,15 @@ static bool cmd_disasm_ecl(const char *in_file, const char *out_file) {
                     case ArgType::I8:
                         out += std::to_string(static_cast<int8_t>(data[pos + off])); off += 1; break;
                     case ArgType::U16:
-                        out += std::to_string(static_cast<uint16_t>(U16LEAt(&data[pos + off]))); off += 2; break;
+                        out += std::to_string(*util::ReadLittleAt<uint16_t>(data, pos + off)); off += 2; break;
                     case ArgType::I16:
-                        out += std::to_string(static_cast<int16_t>(I16LEAt(&data[pos + off]))); off += 2; break;
+                        out += std::to_string(*util::ReadLittleAt<int16_t>(data, pos + off)); off += 2; break;
                     case ArgType::U32:
-                        out += std::to_string(static_cast<uint32_t>(U32LEAt(&data[pos + off]))); off += 4; break;
+                        out += std::to_string(*util::ReadLittleAt<uint32_t>(data, pos + off)); off += 4; break;
                     case ArgType::I32:
-                        out += std::to_string(static_cast<int32_t>(I32LEAt(&data[pos + off]))); off += 4; break;
+                        out += std::to_string(*util::ReadLittleAt<int32_t>(data, pos + off)); off += 4; break;
                     case ArgType::LABEL: {
-                        uint32_t target = static_cast<uint32_t>(U32LEAt(&data[pos + off]));
+                        uint32_t target = *util::ReadLittleAt<uint32_t>(data, pos + off);
                         if (target >= data.size() || target < header_size) {
                             out += std::format("0x{:04X}", target);
                         } else {
@@ -1092,7 +1092,7 @@ static bool cmd_disasm_ecl(const char *in_file, const char *out_file) {
                     }
                 }
                 if (op == 0x00) {
-                    uint32_t hp = static_cast<uint32_t>(U32LEAt(&data[pos + 1]));
+                    uint32_t hp = *util::ReadLittleAt<uint32_t>(data, pos + 1);
                     if (hp == 0) out += "  ; death marker";
                 }
             } else {
@@ -1310,7 +1310,7 @@ static bool cmd_asm_ecl(const char *in_file, const char *out_file) {
                         auto ait = arg_vals.find(arg.name);
                         if (ait != arg_vals.end()) v = ait->second;
                     }
-                    U32LE dw = static_cast<uint32_t>(v);
+                    util::LittleEndian<uint32_t> dw = static_cast<uint32_t>(v);
                     std::memcpy(&out[current_pos + off], &dw, 4);
                     off += 4;
                     continue;
@@ -1330,15 +1330,15 @@ static bool cmd_asm_ecl(const char *in_file, const char *out_file) {
                 case ArgType::I8:
                     out[current_pos + off] = static_cast<uint8_t>(static_cast<int8_t>(v)); off += 1; break;
                 case ArgType::U16: {
-                    U16LE w = static_cast<uint16_t>(v);
+                    util::LittleEndian<uint16_t> w = static_cast<uint16_t>(v);
                     std::memcpy(&out[current_pos + off], &w, 2); off += 2; break;
                 }
                 case ArgType::I16: {
-                    I16LE w = static_cast<int16_t>(v);
+                    util::LittleEndian<int16_t> w = static_cast<int16_t>(v);
                     std::memcpy(&out[current_pos + off], &w, 2); off += 2; break;
                 }
                 case ArgType::U32: case ArgType::I32: {
-                    U32LE dw = static_cast<uint32_t>(v);
+                    util::LittleEndian<uint32_t> dw = static_cast<uint32_t>(v);
                     std::memcpy(&out[current_pos + off], &dw, 4); off += 4; break;
                 }
                 default: break;

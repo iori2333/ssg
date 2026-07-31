@@ -19,7 +19,6 @@
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 void EffectManager::ResetCircles() {
@@ -317,7 +316,7 @@ void EffectManager::DrawStrings() {
     case StringEffectState::GameOverEntering: {
       const int remaining = static_cast<int>(effect.time);
       for (int index = 0; index < 9; ++index) {
-        const auto angle = Cast::down<uint8_t>(effect.time * 3 + index * 26);
+        const auto angle = static_cast<uint8_t>(effect.time * 3 + index * 26);
         const auto offset = math::RoundedPolarVector(
             math::AngleFromLegacy(angle), remaining * 4);
         const int x = (effect.x >> 6) + offset.x;
@@ -332,7 +331,7 @@ void EffectManager::DrawStrings() {
       const int center_y = (effect.y >> 6) + 8;
       const int half_height = (35 - remaining) / 2;
       GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>((35 - remaining) * 3));
+      GrpGeom->SetAlphaNorm(static_cast<uint8_t>((35 - remaining) * 3));
       GrpGeom->DrawBoxA(center_x - 170, center_y - half_height, center_x + 170,
                         center_y + half_height);
       for (int index = 0; index < 9; ++index) {
@@ -344,8 +343,8 @@ void EffectManager::DrawStrings() {
     case StringEffectState::MusicTitleEntering:
     case StringEffectState::MusicTitleLeaving: {
       const auto phase = effect.state == StringEffectState::MusicTitleEntering
-                             ? Cast::down<uint8_t>(effect.time)
-                             : Cast::down<uint8_t>(128 - effect.time);
+                             ? static_cast<uint8_t>(effect.time)
+                             : static_cast<uint8_t>(128 - effect.time);
       const int amplitude =
           effect.state == StringEffectState::MusicTitleEntering ? 160 : 100;
       for (int column = 0; column < effect.velocity_x; ++column) {

@@ -13,8 +13,8 @@
 #ifdef WIN32
 #include <windows.h>
 
-extern constinit const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs = [] {
-  ENUMARRAY<LOGFONTW, FONT_ID> ret;
+extern constinit const util::EnumArray<LOGFONTW, FONT_ID> FontSpecs = [] {
+  util::EnumArray<LOGFONTW, FONT_ID> ret;
 
   LOGFONTW logfont = {.lfEscapement = 0,
                       .lfOrientation = 0,
@@ -67,7 +67,7 @@ void TextBackend_GDICleanup() {
 #elifdef LINUX
 #define GOTHIC "MS Gothic,IPAMonaGothic "
 
-extern constinit const ENUMARRAY<const char *, FONT_ID> FontSpecs = {
+extern constinit const util::EnumArray<const char *, FONT_ID> FontSpecs = {
     (GOTHIC "Regular 14px"),
     (GOTHIC "Regular 16px"),
     (GOTHIC "Medium 24px"),

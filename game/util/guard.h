@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <utility>
 
+namespace util {
+
 namespace detail {
 struct Nil {};
 } // namespace detail
@@ -68,10 +70,12 @@ public:
   }
 };
 
-template <typename T, typename F> Guard<T, F> make_guard(T v, F d) {
+template <typename T, typename F> Guard<T, F> MakeGuard(T v, F d) {
   return Guard<T, F>(std::move(v), std::move(d));
 }
 
-template <typename F> Guard<detail::Nil, F> make_guard(F f) {
+template <typename F> Guard<detail::Nil, F> MakeGuard(F f) {
   return Guard<detail::Nil, F>(detail::Nil{}, std::move(f));
 }
+
+} // namespace util

@@ -8,12 +8,14 @@
 
 #include "time.h"
 
-uint32_t Time_SteadyTicksMS() {
+namespace util {
+
+uint32_t SteadyTicksMs() {
   const auto now = (std::chrono::steady_clock::now().time_since_epoch());
   return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 }
 
-TIME_OF_DAY Time_NowLocal() {
+TimeOfDay LocalTime() {
   const auto ctime = std::time(nullptr);
   std::tm tm{};
 #ifdef _MSC_VER
@@ -29,7 +31,7 @@ TIME_OF_DAY Time_NowLocal() {
   assert(tm.tm_min >= 0);
   assert(tm.tm_sec >= 0);
 
-  return TIME_OF_DAY{
+  return TimeOfDay{
       .year = static_cast<uint32_t>(1900 + tm.tm_year),
       .month = static_cast<uint8_t>(1 + tm.tm_mon),
       .day = static_cast<uint8_t>(tm.tm_mday),
@@ -38,3 +40,5 @@ TIME_OF_DAY Time_NowLocal() {
       .second = static_cast<uint8_t>(tm.tm_sec),
   };
 }
+
+} // namespace util

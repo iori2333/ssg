@@ -242,5 +242,5 @@ private:
   uint8_t initial_bomb_stock_ = 0;
 
   // --- Shot pool ---
-  ObjectPool<PlayerShot, kPlayerShotCapacity> maid_tama_{};
+  util::ObjectPool<PlayerShot, kPlayerShotCapacity> maid_tama_{};
 };

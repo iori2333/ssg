@@ -25,27 +25,27 @@ struct SDL_IOStream;
 // Same as the standard Win32 BITMAPFILEHEADER structure, renamed to avoid
 // collisions.
 struct BMP_FILEHEADER {
-  U16LE bfType;
-  U32LE bfSize;
-  U16LE bfReserved1;
-  U16LE bfReserved2;
-  U32LE bfOffBits;
+  util::LittleEndian<uint16_t> bfType;
+  util::LittleEndian<uint32_t> bfSize;
+  util::LittleEndian<uint16_t> bfReserved1;
+  util::LittleEndian<uint16_t> bfReserved2;
+  util::LittleEndian<uint32_t> bfOffBits;
 };
 
 // Same as the standard Win32 BITMAPINFOHEADER structure, renamed to avoid
 // collisions.
 struct BMP_INFOHEADER {
-  U32LE biSize;
-  I32LE biWidth;
-  I32LE biHeight;
-  U16LE biPlanes;
-  U16LE biBitCount;
-  U32LE biCompression;
-  U32LE biSizeImage;
-  I32LE biXPelsPerMeter;
-  I32LE biYPelsPerMeter;
-  U32LE biClrUsed;
-  U32LE biClrImportant;
+  util::LittleEndian<uint32_t> biSize;
+  util::LittleEndian<int32_t> biWidth;
+  util::LittleEndian<int32_t> biHeight;
+  util::LittleEndian<uint16_t> biPlanes;
+  util::LittleEndian<uint16_t> biBitCount;
+  util::LittleEndian<uint32_t> biCompression;
+  util::LittleEndian<uint32_t> biSizeImage;
+  util::LittleEndian<int32_t> biXPelsPerMeter;
+  util::LittleEndian<int32_t> biYPelsPerMeter;
+  util::LittleEndian<uint32_t> biClrUsed;
+  util::LittleEndian<uint32_t> biClrImportant;
 
   uint32_t Stride() const {
     return ((((biWidth * biBitCount) + 31u) & ~31) / 8u);

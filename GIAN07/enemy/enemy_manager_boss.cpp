@@ -16,7 +16,6 @@
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "stage/stage_session.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 void EnemyManager::ResetBosses() {
@@ -154,7 +153,7 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
           &actor, ECL_ALL_LONG_LASERS,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
-    player_.PowerUp(Cast::down<uint8_t>(actor.hp));
+    player_.PowerUp(static_cast<uint8_t>(actor.hp));
     actor.BeginExplosion();
 
     // If it was the last one //

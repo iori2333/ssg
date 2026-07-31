@@ -199,7 +199,7 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     if (cfg.graphics.scaling_mode == ScalingMode::Geometry) {
       flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
     }
-    EnumFlagSet(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+    SetEnumFlag(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
                 std::to_underlying(cfg.graphics.fullscreen_fit));
     sec.emplace("graphics_param_flags", std::to_underlying(flags));
     sec.emplace("screenshot_effort", cfg.graphics.screenshot_effort);

@@ -13,7 +13,6 @@
 #include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -188,7 +187,7 @@ void EffectManager::UpdateBossWarning() {
   }
 
   if (warning_age_ < 192) {
-    UpdateWarningText(Cast::down<uint8_t>(warning_age_));
+    UpdateWarningText(static_cast<uint8_t>(warning_age_));
   } else {
     RotateWarningText(-1);
   }
@@ -299,7 +298,7 @@ void EffectManager::DrawWarningText() {
   if (warning_lines_[0].angle_x == 0) {
     const auto pulse = math::RoundedPolarVector(
         static_cast<float>(warning_pulse_) * math::kLegacyAngleStep, 48.0f);
-    GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>(128 + pulse.y));
+    GrpGeom->SetAlphaNorm(static_cast<uint8_t>(128 + pulse.y));
     GrpGeom->SetColor({5, 0, 0});
     GrpGeom->DrawBoxA(129, 46, 512, 66);
     GrpGeom->DrawBoxA(129, 136, 512, 156);

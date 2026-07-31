@@ -64,10 +64,10 @@ private:
   Player &player_;
   EffectManager &effects_;
 
-  ObjectPool<Bullet, kBulletCapacity> bullets_;
-  ObjectPool<LaserReflect, kReflectCapacity> reflect_lasers_;
-  ObjectPool<LaserLong, kLongLaserCapacity> long_lasers_;
-  ObjectPool<LaserHoming, kHomingCapacity> homing_lasers_;
+  util::ObjectPool<Bullet, kBulletCapacity> bullets_;
+  util::ObjectPool<LaserReflect, kReflectCapacity> reflect_lasers_;
+  util::ObjectPool<LaserLong, kLongLaserCapacity> long_lasers_;
+  util::ObjectPool<LaserHoming, kHomingCapacity> homing_lasers_;
 
   void UpdateBullet(const EnemyHomingTarget &target);
   void UpdateReflect();

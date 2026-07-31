@@ -31,10 +31,10 @@ int main(int argc, char **args) {
 #define APP_ID "GIAN07"
 #endif
   logging::Initialize(PathForData(), APP_ID, VERSION_TAG);
-  auto logging_guard = make_guard(logging::Shutdown);
+  auto logging_guard = util::MakeGuard(logging::Shutdown);
 #ifdef PBG_DEBUG
   crash::Install();
-  auto crash_guard = make_guard(crash::Uninstall);
+  auto crash_guard = util::MakeGuard(crash::Uninstall);
 #endif
 
   // SDL 3 automatically pulls the Desktop Entry name from the new app
@@ -45,7 +45,7 @@ int main(int argc, char **args) {
     logging::SdlError(logging::Channel::Platform, "Error initializing SDL");
     return 1;
   }
-  auto sdl_guard = make_guard(SDL_Quit);
+  auto sdl_guard = util::MakeGuard(SDL_Quit);
 
   // The X11 and Wayland backends load their dynamic symbols by trying to
   // look up each function in each of the hardcoded .so files until it's

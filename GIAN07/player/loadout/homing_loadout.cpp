@@ -9,7 +9,6 @@
 #include "enemy/enemy_manager.h"
 #include "gfx/coords.h"
 #include "player/player.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -47,7 +46,7 @@ void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   switch (tier) {
   case 0: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
         4.0f)));
     PlayerShotSpawnInfo si{

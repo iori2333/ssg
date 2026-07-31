@@ -18,7 +18,6 @@
 #include "item/item_system.h"
 #include "player/player.h"
 #include "player/player_attack.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 namespace {

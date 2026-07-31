@@ -5,7 +5,9 @@
 
 #include <cstdint>
 
-struct TIME_OF_DAY {
+namespace util {
+
+struct TimeOfDay {
   uint32_t year;
   uint8_t month; // 1-based
   uint8_t day;   // 1-based
@@ -15,7 +17,9 @@ struct TIME_OF_DAY {
 };
 
 // Returns some kind of steady system tick value in milliseconds.
-uint32_t Time_SteadyTicksMS();
+uint32_t SteadyTicksMs();
 
 // Returns the current local system time.
-TIME_OF_DAY Time_NowLocal();
+TimeOfDay LocalTime();
+
+} // namespace util

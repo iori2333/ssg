@@ -64,7 +64,7 @@ static SDL_Texture *EnsureSoftwareTexture(void);
 SDL_Renderer **Renderer = &PrimaryRenderer;
 
 // Storing their associated renderer (primary or software) in the user data.
-ENUMARRAY<SDL_Texture *, SURFACE_ID> Textures;
+util::EnumArray<SDL_Texture *, SURFACE_ID> Textures;
 
 GraphicsGeometry GrpGeomSDL;
 
@@ -105,7 +105,7 @@ constinit const auto TRIANGLE_STRIP = ([] {
   return ret;
 })();
 
-constinit const ENUMARRAY<std::span<const INDEX_TYPE>, TRIANGLE_PRIMITIVE>
+constinit const util::EnumArray<std::span<const INDEX_TYPE>, TRIANGLE_PRIMITIVE>
     INDICES = {TRIANGLE_FAN, TRIANGLE_STRIP};
 // --------------------------
 
@@ -475,7 +475,7 @@ void PrimarySetBorderlessFullscreenFit(GRAPHICS_PARAMS params,
 
   if (fs.fullscreen && !fs.exclusive) {
     constexpr auto MODES = [] {
-      ENUMARRAY<SDL_RendererLogicalPresentation, FIT> ret;
+      util::EnumArray<SDL_RendererLogicalPresentation, FIT> ret;
       ret[FIT::INTEGER] = SDL_LOGICAL_PRESENTATION_INTEGER_SCALE;
       ret[FIT::ASPECT] = SDL_LOGICAL_PRESENTATION_LETTERBOX;
       ret[FIT::STRETCH] = SDL_LOGICAL_PRESENTATION_STRETCH;
@@ -701,7 +701,7 @@ void TakeScreenshot(void) {
     logging::SdlError(LOG_CAT, "Error taking screenshot");
     return;
   }
-  auto src_guard = make_guard(src, SDL_DestroySurface);
+  auto src_guard = util::MakeGuard(src, SDL_DestroySurface);
   Grp_ScreenshotSave(src, t_start);
 }
 
@@ -714,7 +714,7 @@ void GrpBackend_Flip(bool take_screenshot) {
     if (SDL_MUSTLOCK(SoftwareSurface)) {
       SDL_LockSurface(SoftwareSurface);
     }
-    auto unlock_guard = make_guard([&] {
+    auto unlock_guard = util::MakeGuard([&] {
       if (SDL_MUSTLOCK(SoftwareSurface)) {
         SDL_UnlockSurface(SoftwareSurface);
       }
@@ -786,7 +786,7 @@ bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp) {
 
   auto *rwops = SDL_IOFromMem(bmp.buffer.data(), bmp.buffer.size());
   auto *surf = SDL_LoadBMP_IO(rwops, 1);
-  auto surf_guard = make_guard(surf, SDL_DestroySurface);
+  auto surf_guard = util::MakeGuard(surf, SDL_DestroySurface);
   std::ignore = std::move(bmp);
 
   if (surf->format == SDL_PIXELFORMAT_INDEX8) {

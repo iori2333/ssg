@@ -23,7 +23,6 @@
 #include "player/player.h"
 #include "settings/config.h"
 #include "sys/input.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -204,9 +203,10 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
   player_.Draw();
   player_.DrawProjectiles();
   GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, PIXEL_LTWH{72, 288, 56, 8});
-  GrpPutScore(500, 400,
-              std::format("{}", (Cast::up<uint16_t>(player_.Power()) + 1) >> 5)
-                  .c_str());
+  GrpPutScore(
+      500, 400,
+      std::format("{}", (static_cast<uint16_t>(player_.Power()) + 1) >> 5)
+          .c_str());
 
   GrpBackend_SetClip(GRP_RES_RECT);
   GrpGeom->SetColor({0, 0, 4});

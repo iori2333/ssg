@@ -12,7 +12,6 @@
 #include "music/music_player.h"
 #include "platform/text_backend.h"
 #include "stage/stage_loader.h"
-#include "util/cast.h"
 
 // Ending initialization
 bool EndingScene::Enter() {

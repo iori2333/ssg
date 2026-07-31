@@ -34,10 +34,10 @@ StartupScene::Lens StartupScene::Lens::Create(uint16_t radius, uint16_t bulge) {
   const auto rounded_sqrt = [](auto value) {
     return static_cast<int32_t>(std::lround(std::sqrt(value)));
   };
-  const auto radius_squared = Cast::up_sign<int32_t>(radius) * radius;
+  const auto radius_squared = static_cast<int32_t>(radius) * radius;
   const auto sphere_radius =
-      rounded_sqrt(radius_squared - Cast::up_sign<int32_t>(bulge) * bulge);
-  for (auto row = -Cast::up_sign<int32_t>(radius); std::cmp_less(row, radius);
+      rounded_sqrt(radius_squared - static_cast<int32_t>(bulge) * bulge);
+  for (auto row = -static_cast<int32_t>(radius); std::cmp_less(row, radius);
        ++row) {
     auto half_width = sphere_radius * sphere_radius - row * row;
     int width = 0;

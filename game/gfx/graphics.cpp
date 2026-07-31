@@ -122,7 +122,7 @@ static bool ScreenshotSaveBMP(SDL_Surface *src) {
   if (!stream) {
     return false;
   }
-  auto stream_guard = make_guard(stream, SDL_CloseIO);
+  auto stream_guard = util::MakeGuard(stream, SDL_CloseIO);
 
   // SDL_SaveBMP_IO() is very slow and unoptimized, especially on Windows
   // where SDL_IOStream still uses unbuffered writes as of SDL 3.2.24. For
@@ -169,7 +169,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   if (!WebPPictureInit(&pic)) {
     return false;
   }
-  auto pic_guard = make_guard(&pic, WebPPictureFree);
+  auto pic_guard = util::MakeGuard(&pic, WebPPictureFree);
 
   pic.width = src->w;
   pic.height = src->h;
@@ -245,7 +245,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
 
   WebPMemoryWriter wrt;
   WebPMemoryWriterInit(&wrt);
-  auto wrt_guard = make_guard(&wrt, WebPMemoryWriterClear);
+  auto wrt_guard = util::MakeGuard(&wrt, WebPMemoryWriterClear);
   pic.writer = WebPMemoryWrite;
   pic.custom_ptr = &wrt;
 
@@ -257,7 +257,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   if (!stream) {
     return false;
   }
-  auto stream_guard2 = make_guard(stream, SDL_CloseIO);
+  auto stream_guard2 = util::MakeGuard(stream, SDL_CloseIO);
   return SDL_WriteIO(stream, wrt.mem, wrt.size) == wrt.size;
 }
 
@@ -355,7 +355,7 @@ WINDOW_SIZE GRAPHICS_PARAMS::ScaledRes(void) const {
 void GRAPHICS_PARAMS::SetFlag(
     GRAPHICS_PARAM_FLAGS flag,
     std::underlying_type_t<GRAPHICS_PARAM_FLAGS> value) {
-  EnumFlagSet(flags, flag, value);
+  SetEnumFlag(flags, flag, value);
 }
 
 uint8_t Grp_WindowScale4xMax(void) {
@@ -385,7 +385,7 @@ std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
   const auto api_it =
       ((api_count > 0)
            ? std::views::iota(int8_t{-1}, api_count)
-           : std::views::iota(params.api, Cast::down<int8_t>(params.api + 1)));
+           : std::views::iota(params.api, static_cast<int8_t>(params.api + 1)));
 
   for (const auto api : api_it) {
     params.api = api;

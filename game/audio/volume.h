@@ -7,8 +7,6 @@
 #include <cmath>
 #include <cstdint>
 
-#include "util/cast.h"
-
 // Discrete volume values for MIDI and the UI.
 using VOLUME = uint8_t;
 
@@ -20,7 +18,7 @@ constexpr float VolumeLinear(VOLUME discrete) {
 
 constexpr VOLUME VolumeDiscrete(float linear) {
   assert((linear >= 0.0f) && (linear <= 1.0f));
-  return Cast::down_sign<VOLUME>((linear * VOLUME_MAX) + 0.5f);
+  return static_cast<VOLUME>((linear * VOLUME_MAX) + 0.5f);
 }
 
 // Maps a linear volume value to decibels, using the simple x² curve used by

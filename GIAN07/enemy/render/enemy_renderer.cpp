@@ -10,7 +10,6 @@
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
@@ -43,7 +42,7 @@ void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
 }
 
 void EnemyRenderer::DrawRegular(
-    const ObjectPool<EnemyActor, kEnemyCapacity> &actors) const {
+    const util::ObjectPool<EnemyActor, kEnemyCapacity> &actors) const {
   for (const auto &actor : actors) {
     if (actor.state == EnemyActorState::Exploding) {
       DrawExplosion(actor);
@@ -62,7 +61,7 @@ void EnemyRenderer::DrawExplosion(const EnemyActor &actor) const {
 }
 
 void EnemyRenderer::DrawBosses(
-    const ObjectPool<BossActor, kBossCapacity> &bosses,
+    const util::ObjectPool<BossActor, kBossCapacity> &bosses,
     const std::array<BitFormation, kBossCapacity> &formations) const {
   for (const auto &formation : formations) {
     DrawBossLinks(formation);
@@ -98,7 +97,7 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
   if (boss.mode == BossMode::BombSpirit && player_.IsBombActive() != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
     const PIXEL_LTRB spirit = PIXEL_LTWH{
-        160 + (Cast::sign<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
+        160 + (static_cast<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
     GrpBackend_SetClip(GRP_RES_RECT);
     GrpSurface_Blit({center.x - 20, center.y - 20}, surface, spirit);
     GrpBackend_SetClip({playfield::kLeft, playfield::kTop,

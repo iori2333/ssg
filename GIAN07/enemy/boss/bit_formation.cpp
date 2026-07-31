@@ -14,7 +14,6 @@
 #include "bullet/laser/long.h"
 #include "enemy/enemy_manager.h"
 #include "player/player.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 static constexpr auto BIT_VIRTUAL_HP = 990000;
@@ -300,7 +299,7 @@ void BitFormation::UpdateRotation() {
     const uint8_t d = ((base_angle_ >> 1) + (delta * bit->id));
 
     // Normal angle convergence processing
-    dir = (Cast::up_sign<int>(d) - Cast::up_sign<int>(bit->angle));
+    dir = (static_cast<int>(d) - static_cast<int>(bit->angle));
 
     if (dir < -128) {
       dir += 256;

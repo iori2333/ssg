@@ -11,7 +11,6 @@
 #include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "util/cast.h"
 #include "util/math_utils.h"
 
 int GetBulletHitRadius(uint8_t c) {
@@ -355,7 +354,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     tx_ += vx_;
     ty_ += vy_;
     if (rep_ == static_cast<uint8_t>(count_)) {
-      angle_ = math::AngleFromLegacy(Cast::sign<uint8_t>(vd_));
+      angle_ = math::AngleFromLegacy(static_cast<uint8_t>(vd_));
       RevertToNormal();
     }
     return;
@@ -391,7 +390,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       v_ -= a_;
     }
     angle_ +=
-        angle_delta * static_cast<float>(Cast::sign<uint8_t>(vd_)) / 255.0f;
+        angle_delta * static_cast<float>(static_cast<uint8_t>(vd_)) / 255.0f;
     {
       const auto velocity = math::PolarVector(angle_, v_);
       vx_ = velocity.x;
@@ -655,7 +654,7 @@ void Bullet::Render() const {
     break;
   }
   case kLargeExtraBulletVisual: {
-    const auto d = Cast::down_sign<uint8_t>(display_angle + 4) / 8;
+    const auto d = static_cast<uint8_t>(display_angle + 4) / 8;
     GrpSurface_Blit({x, y}, SURFACE_ID::ENEMY,
                     PIXEL_LTWH{d * 16, 320 + ((c_ & 3) << 4), 16, 16});
     break;
@@ -666,7 +665,7 @@ void Bullet::Render() const {
                       PIXEL_LTWH{((display_angle + 8) & 0xf0) + 384,
                                  24 + ((c_ & 0x0f) << 4), 16, 16});
     } else {
-      const auto d = Cast::down_sign<uint8_t>(display_angle + 4) / 8;
+      const auto d = static_cast<uint8_t>(display_angle + 4) / 8;
       int dx = (d % 8) * 32;
       int dy = (d / 8) * 32;
       GrpSurface_Blit({x - 8, y - 8}, SURFACE_ID::SYSTEM,

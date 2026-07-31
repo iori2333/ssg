@@ -307,7 +307,7 @@ void MusicRoomScene::DrawNotes() {
 
   for (const auto Track : std::views::iota(0, 16)) {
     const auto top = (22 + (Track * 24));
-    const auto pan = (Cast::sign<int8_t>(midi_visualization_.pan[Track]) - 64);
+    const auto pan = (static_cast<int8_t>(midi_visualization_.pan[Track]) - 64);
     GrpPutMidNum(50, top, midi_visualization_.volume[Track]);
     GrpPutMidNum(125, top, midi_visualization_.expression[Track]);
     GrpPutMidNum(181, top, pan);

@@ -11,6 +11,8 @@
 #include <type_traits>
 #include <utility>
 
+namespace util {
+
 template <typename T, std::size_t N> struct ObjectPool {
   // Forward iterator
   template <bool IsConst> struct Iterator {
@@ -108,3 +110,5 @@ private:
   std::array<std::size_t, N> indices_{};
   std::size_t count_ = 0;
 };
+
+} // namespace util

@@ -19,13 +19,16 @@
 
 #include "volume.h"
 
+#include "util/enum_flags.h"
+
 enum class MID_FLAGS : uint8_t {
-  HAS_BITFLAG_OPERATORS,
   NONE = 0x00,
   FIX_SYSEX_BUGS = 0x01,
 
   MASK = FIX_SYSEX_BUGS,
 };
+
+template <> inline constexpr bool util::EnableEnumFlags<MID_FLAGS> = true;
 
 enum class MID_BACKEND_STATE : uint8_t {
   STOP,  // Stopped

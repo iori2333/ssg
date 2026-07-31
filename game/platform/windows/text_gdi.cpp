@@ -11,7 +11,7 @@
 #include "platform/text_backend.h"
 #include "util/enum_array.h"
 
-extern const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs;
+extern const util::EnumArray<LOGFONTW, FONT_ID> FontSpecs;
 
 template <typename F> auto WithWideUTF8(std::string_view str, F &&func) {
   const int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str.data(),
@@ -28,7 +28,7 @@ template <typename F> auto WithWideUTF8(std::string_view str, F &&func) {
 TEXTRENDER TextObj;
 
 static class {
-  ENUMARRAY<HFONT, FONT_ID> arr;
+  util::EnumArray<HFONT, FONT_ID> arr;
 
 public:
   HFONT ForID(FONT_ID font) {

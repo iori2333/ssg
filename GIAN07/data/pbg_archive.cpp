@@ -30,8 +30,8 @@ constexpr const std::array<char, 4> kPbgHeadName = {'P', 'B', 'G', 0x1A};
 
 struct PbgHeader {
   std::array<char, kPbgHeadName.size()> name = kPbgHeadName;
-  ENDIAN_LITTLE<uint32_t> sum = 0;
-  ENDIAN_LITTLE<uint32_t> n = 0;
+  util::LittleEndian<uint32_t> sum = 0;
+  util::LittleEndian<uint32_t> n = 0;
 };
 
 } // namespace

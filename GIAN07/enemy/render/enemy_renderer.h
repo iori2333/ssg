@@ -18,9 +18,10 @@ public:
   EnemyRenderer(const EnemyAnimationSet &animations, const Player &player)
       : animations_(animations), player_(player) {}
 
-  void DrawRegular(const ObjectPool<EnemyActor, kEnemyCapacity> &actors) const;
   void
-  DrawBosses(const ObjectPool<BossActor, kBossCapacity> &bosses,
+  DrawRegular(const util::ObjectPool<EnemyActor, kEnemyCapacity> &actors) const;
+  void
+  DrawBosses(const util::ObjectPool<BossActor, kBossCapacity> &bosses,
              const std::array<BitFormation, kBossCapacity> &formations) const;
 
 private:

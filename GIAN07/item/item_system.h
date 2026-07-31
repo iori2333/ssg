@@ -50,5 +50,5 @@ private:
 
   Player &player_;
   EffectManager &effects_;
-  ObjectPool<ItemData, kItemCapacity> pool_;
+  util::ObjectPool<ItemData, kItemCapacity> pool_;
 };
