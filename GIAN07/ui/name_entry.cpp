@@ -6,7 +6,7 @@
 
 #include "name_entry.h"
 
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 
@@ -70,7 +70,7 @@ NameEntryResult NameEntry::Update(INPUT_BITS input) {
   }
 
   if (allow_cancel_ && !input_locked_ && input == KEY_ESC) {
-    Snd_SEPlay(SfxId::Cancel);
+    PlaySfx(SfxId::Cancel);
     awaiting_release_ = true;
     release_result_ = NameEntryResult::Cancelled;
     return NameEntryResult::Editing;
@@ -82,24 +82,24 @@ NameEntryResult NameEntry::Update(INPUT_BITS input) {
     switch (input) {
     case KEY_UP:
       cursor_y_ = (cursor_y_ + 2) % 3;
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
       break;
     case KEY_DOWN:
       cursor_y_ = (cursor_y_ + 1) % 3;
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
       break;
     case KEY_LEFT:
       cursor_x_ = cursor_y_ == 2 && cursor_x_ > 20 ? (cursor_x_ - 2) % 26
                                                    : (cursor_x_ + 25) % 26;
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
       break;
     case KEY_RIGHT:
       cursor_x_ = cursor_y_ == 2 && cursor_x_ >= 20 ? (cursor_x_ + 2) % 26
                                                     : (cursor_x_ + 1) % 26;
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
       break;
     case KEY_BOMB:
-      Snd_SEPlay(SfxId::Cancel);
+      PlaySfx(SfxId::Cancel);
       Backspace();
       break;
     case KEY_TAMA:
@@ -107,7 +107,7 @@ NameEntryResult NameEntry::Update(INPUT_BITS input) {
       if (input_locked_) {
         break;
       }
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
       const auto selected = SelectedCharacter();
       if (selected == kFinish || selected == kInvalid) {
         finish = true;

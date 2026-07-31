@@ -10,7 +10,7 @@
 
 #include "enemy_manager.h"
 
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
@@ -215,7 +215,7 @@ void EnemyManager::ClearRegular() {
             LongLaserUpdateInfo{
                 LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
-      Snd_SEPlay(SfxId::Bomb, e->x);
+      PlaySfx(SfxId::Bomb, e->x);
     } else {
       // Erasing non-drawing type enemies differs from other cases:
       // do not play explosion animation/sound
@@ -265,7 +265,7 @@ void EnemyManager::ResetRegular() {
 void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
   actor.damage_flash = actor.count & 1;
   if (std::cmp_less_equal(actor.hp, damage)) {
-    Snd_SEPlay(SfxId::Bomb, actor.x);
+    PlaySfx(SfxId::Bomb, actor.x);
     if (actor.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           &actor, ECL_ALL_LONG_LASERS,
@@ -278,7 +278,7 @@ void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
       items_.Spawn(actor.x, actor.y, actor.item);
     }
   } else {
-    Snd_SEPlay(SfxId::Hit, actor.x);
+    PlaySfx(SfxId::Hit, actor.x);
     player_.PowerUp(damage);
     actor.hp -= damage;
   }

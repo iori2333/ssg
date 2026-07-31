@@ -13,8 +13,7 @@
 
 #include "score_scene.h"
 
-#include "audio/constants.h"
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/constants.h"
@@ -147,17 +146,17 @@ ScoreSceneResult ScoreScene::UpdateLeaderboard(INPUT_BITS input,
     if (detail_open_) {
       if (Input_IsOK(input) || Input_IsCancel(input)) {
         detail_open_ = false;
-        Snd_SEPlay(SfxId::Cancel);
+        PlaySfx(SfxId::Cancel);
       }
     } else if (input == KEY_ESC || input == KEY_BOMB) {
-      Snd_SEPlay(SfxId::Cancel);
+      PlaySfx(SfxId::Cancel);
       return ScoreSceneResult::ExitRequested;
     } else if (input == KEY_UP && !scores_.empty()) {
       selected_ = (selected_ + scores_.size() - 1) % scores_.size();
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
     } else if (input == KEY_DOWN && !scores_.empty()) {
       selected_ = (selected_ + 1) % scores_.size();
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
     } else if ((input == KEY_LEFT || input == KEY_RIGHT) &&
                !rows_.back().moving) {
       const auto level_count = kGameLevelNames.size();
@@ -165,10 +164,10 @@ ScoreSceneResult ScoreScene::UpdateLeaderboard(INPUT_BITS input,
       current_difficulty_ =
           static_cast<uint8_t>((current_difficulty_ + direction) % level_count);
       LoadLeaderboard(static_cast<GameLevel>(current_difficulty_));
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
     } else if (Input_IsOK(input) && !scores_.empty()) {
       detail_open_ = true;
-      Snd_SEPlay(SfxId::Select);
+      PlaySfx(SfxId::Select);
     }
   }
 
@@ -206,8 +205,8 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
                   scores_.end());
   }
 
-  Snd_SEStop(SfxId::Warning);
-  Snd_SEStopAll();
+  StopSfx(SfxId::Warning);
+  StopAllSfx();
   ui_.ForceCloseMessageWindow();
   GrpBackend_Clear();
   Grp_Flip();
@@ -242,7 +241,7 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(INPUT_BITS input,
       return ScoreSceneResult::RegistrationComplete;
     }
     save_failed_ = true;
-    Snd_SEPlay(SfxId::Cancel);
+    PlaySfx(SfxId::Cancel);
   } else if (result == NameEntryResult::Cancelled) {
     current_record_.reset();
     return ScoreSceneResult::RegistrationComplete;

@@ -7,7 +7,7 @@
 #include "stage_session.h"
 
 #include "audio/bgm.h"
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
@@ -223,11 +223,11 @@ void StageSession::ExecuteEffect(SceneEffect effect,
                                  StageUpdateContext &context) {
   switch (effect) {
   case SceneEffect::Warning:
-    Snd_SEPlay(SfxId::Warning, playfield::kWorldCenterX, true);
+    PlaySfx(SfxId::Warning, playfield::kWorldCenterX, true);
     context.effects.StartBossWarning();
     break;
   case SceneEffect::StopWarning:
-    Snd_SEStop(SfxId::Warning);
+    StopSfx(SfxId::Warning);
     break;
   case SceneEffect::FadeMusic:
     BGM_FadeOut(120);

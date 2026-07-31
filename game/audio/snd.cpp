@@ -116,11 +116,11 @@ bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
   return SndBackend_SELoad(id, max, spec, {pcm_buf, pcm_len});
 }
 
-void Snd_SEPlay(SfxId id, int x, bool loop) {
-  return SndBackend_SEPlay(id, x, loop);
+void Snd_SEPlay(uint8_t id, float pan, bool loop) {
+  return SndBackend_SEPlay(id, pan, loop);
 }
 
-void Snd_SEStop(SfxId id) { return SndBackend_SEStop(std::to_underlying(id)); }
+void Snd_SEStop(uint8_t id) { return SndBackend_SEStop(id); }
 
 void Snd_SEStopAll(void) {
   for (auto i = 0; i < SND_OBJ_MAX; i++) {

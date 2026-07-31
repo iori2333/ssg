@@ -8,13 +8,12 @@
 
 #include "volume.h"
 
-#include "audio/constants.h"
 #include "util/enum_flags.h"
 
 // Constants & macros
 using SND_INSTANCE_ID = uint8_t;
 
-#define SND_OBJ_MAX 30 // Maximum number of SE types
+inline constexpr uint8_t SND_OBJ_MAX = 30;
 
 extern const uint8_t &Snd_BGMTempoNum;
 extern const uint8_t &Snd_BGMTempoDenom;
@@ -41,6 +40,6 @@ bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
                 SND_INSTANCE_ID max);
 
 // Playback & stop
-void Snd_SEPlay(SfxId id, int x = SND_X_MID, bool loop = false);
-void Snd_SEStop(SfxId id);
+void Snd_SEPlay(uint8_t id, float pan = 0.0f, bool loop = false);
+void Snd_SEStop(uint8_t id);
 void Snd_SEStopAll(void);

@@ -7,7 +7,7 @@
 
 #include "item_system.h"
 
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "effect/effect_manager.h"
 #include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
@@ -115,7 +115,7 @@ void ItemSystem::Update() {
       if ((dx * dx + dy * dy) < (static_cast<int64_t>(r) * r)) {
         switch (ip.kind) {
         case ItemKind::Score: {
-          Snd_SEPlay(SfxId::Select, ip.x);
+          PlaySfx(SfxId::Select, ip.x);
           player_.AddScore(point);
           effects_.SpawnPointValue(ip.x, ip.y, point);
           if (player_.GrazeCount() != 0U) {
@@ -140,13 +140,13 @@ void ItemSystem::Update() {
         }
 
         case ItemKind::Extend:
-          Snd_SEPlay(SfxId::Select, ip.x);
+          PlaySfx(SfxId::Select, ip.x);
           effects_.SpawnString(180 + 64, 80, "E x t e n d  !");
           player_.PickupExtend();
           break;
 
         case ItemKind::Bomb:
-          Snd_SEPlay(SfxId::Select, ip.x);
+          PlaySfx(SfxId::Select, ip.x);
           effects_.SpawnString(120 + 64, 80, "B o m b   E x t e n d  !");
           player_.PickupBomb();
           break;

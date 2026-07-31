@@ -2,6 +2,7 @@
 /// Sound via miniaudio
 ///
 
+#include <algorithm>
 #include <ranges>
 
 #include <SDL3/SDL_audio.h>
@@ -129,14 +130,6 @@ static ma_engine Engine;
 static ma_sound_group SEGroup;
 static BGM_OBJ BGMObj;
 static SE SndObj[SND_OBJ_MAX];
-
-float x_to_linear(int x) {
-  // The basic dB→linear conversion formula. (linear = 10 ^ (dB / 20))
-  const auto x_rel = (x - SND_X_MID);
-  const auto x_power = (x_rel / (SND_X_PER_DECIBEL * 20.0f));
-  return ((x_rel < 0) ? (powf(10.0f, x_power) - 1.0f)
-                      : (1.0f - powf(10.0f, -x_power)));
-}
 
 bool SndBackend_Init(void) {
   return (ma_engine_init(nullptr, &Engine) == MA_SUCCESS);
@@ -303,11 +296,11 @@ bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
   return true;
 }
 
-void SndBackend_SEPlay(SfxId id, int x, bool loop) {
-  if (std::to_underlying(id) >= SND_OBJ_MAX) {
+void SndBackend_SEPlay(uint8_t id, float pan, bool loop) {
+  if (id >= SND_OBJ_MAX) {
     return;
   }
-  auto &se = SndObj[std::to_underlying(id)];
+  auto &se = SndObj[id];
   if (!se.Loaded()) {
     return;
   }
@@ -321,7 +314,7 @@ void SndBackend_SEPlay(SfxId id, int x, bool loop) {
   // engine's node graph.
   ma_sound_stop(&instance.sound); // Both are necessary!
   ma_sound_set_looping(&instance.sound, loop);
-  ma_sound_set_pan(&instance.sound, x_to_linear(x));
+  ma_sound_set_pan(&instance.sound, std::clamp(pan, -1.0f, 1.0f));
   ma_sound_seek_to_pcm_frame(&instance.sound, 0); // Both are necessary!
   ma_sound_start(&instance.sound);
 

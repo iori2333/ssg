@@ -11,7 +11,7 @@
 #include "loadout/wide_loadout.h"
 #include "player.h"
 
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "effect/effect_manager.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
@@ -425,7 +425,7 @@ void Player::OnHit() {
 }
 
 void Player::PlayHitFeedback() const {
-  Snd_SEPlay(SfxId::Dead);
+  PlaySfx(SfxId::Dead);
   effects_.SpawnFragment(x_, y_, FragmentKind::ExpandingCircle);
 }
 
@@ -510,7 +510,7 @@ void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }
 void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   if (n != 0U) {
     if (!buzz_sound_) {
-      Snd_SEPlay(SfxId::Buzz, ex);
+      PlaySfx(SfxId::Buzz, ex);
       buzz_sound_ = true;
     }
     effects_.SpawnFragment(ex, ey, FragmentKind::Graze);

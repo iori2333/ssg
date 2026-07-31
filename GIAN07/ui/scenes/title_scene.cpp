@@ -7,7 +7,7 @@
 #include "title_scene.h"
 
 #include "audio/bgm.h"
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "audio/snd_backend.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
@@ -42,7 +42,7 @@ bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
     return false;
   }
   GrpBackend_SetClip(GRP_RES_RECT);
-  Snd_SEStop(SfxId::Warning);
+  StopSfx(SfxId::Warning);
 
   ui_.ForceCloseMessageWindow();
   ui_.InitMessageWindow({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480},

@@ -8,7 +8,7 @@
 
 #include "boss_health_gauge.h"
 
-#include "audio/snd.h"
+#include "audio/sfx.h"
 #include "gameplay/playfield.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
@@ -237,7 +237,7 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
       const int remain = std::min((timer_max_ - timer_now_) / 60, 99);
       if (remain >= 0) {
         if (remain <= 10 && remain != previous_timer_seconds_) {
-          Snd_SEPlay(SfxId::Sblaser);
+          PlaySfx(SfxId::Sblaser);
         }
         previous_timer_seconds_ = remain;
         if (remain < 10) {
@@ -253,7 +253,7 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
           (stage_timeout_end_ - static_cast<int32_t>(stage_frame)) / 60, 99);
       if (remain >= 0) {
         if (remain <= 10 && remain != previous_timer_seconds_) {
-          Snd_SEPlay(SfxId::Sblaser);
+          PlaySfx(SfxId::Sblaser);
         }
         previous_timer_seconds_ = remain;
         if (remain < 10) {
