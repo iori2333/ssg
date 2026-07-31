@@ -19,7 +19,6 @@ constexpr auto kMaxFpsDivisor = 3;
 constexpr auto kRegularStageCount = 6;
 
 struct GameConfig {
-  GameLevel game_level = GameLevel::Normal;
   PracticeMode practice_mode = PracticeMode::Off;
   uint8_t player_stock = 2;
   uint8_t bomb_stock = 2;

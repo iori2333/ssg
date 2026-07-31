@@ -55,6 +55,7 @@ private:
   void Draw() const;
 
   GameContext &context_;
+  GameLevel previous_level_ = GameLevel::Normal;
   Mode mode_ = Mode::Live;
   Phase phase_ = Phase::Running;
   int game_over_timer_ = 0;

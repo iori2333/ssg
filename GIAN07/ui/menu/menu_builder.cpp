@@ -110,7 +110,7 @@ BuildLanguageMenu(UiConfig &ui_cfg, i18n::Localization &localization) {
 static std::unique_ptr<EntryNode>
 BuildDifficultyMenu(GameConfig &game_cfg, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
-  ch.reserve(5);
+  ch.reserve(4);
 
   ch.push_back(std::make_unique<ChoiceNode>(
       Localized(localization, "ui.menu.player_stock.title"),
@@ -123,13 +123,6 @@ BuildDifficultyMenu(GameConfig &game_cfg, i18n::Localization &localization) {
       Localized(localization, "ui.menu.bomb_stock.help"), game_cfg.bomb_stock,
       0, kMaxBombStock,
       std::vector<std::string>{"0", "1", "2", "3", "4", "5", "6"}));
-
-  ch.push_back(std::make_unique<ChoiceNode>(
-      Localized(localization, "ui.menu.difficulty.title"),
-      Localized(localization, "ui.menu.difficulty.setting_help"),
-      game_cfg.game_level, GameLevel::Easy, GameLevel::Lunatic,
-      LocalizedLabels(localization, {"ui.value.easy", "ui.value.normal",
-                                     "ui.value.hard", "ui.value.lunatic"})));
 
   ch.push_back(std::make_unique<ChoiceNode>(
       Localized(localization, "ui.menu.practice.title"),

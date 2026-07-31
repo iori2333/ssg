@@ -19,9 +19,6 @@ static constexpr uint8_t kExtraStageFlagMask = 0x07;
 
 // Validation helpers
 
-static constexpr bool ValidGameLevel(GameLevel v) {
-  return std::to_underlying(v) <= std::to_underlying(GameLevel::Lunatic);
-}
 static constexpr bool ValidPlayerStock(uint8_t v) {
   return v <= kMaxLoadedPlayerStock;
 }
@@ -78,7 +75,6 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
 
   // [difficulty]
   if (auto *sec = tbl["difficulty"].as_table()) {
-    LoadToml(*sec, "game_level", cfg.game.game_level, ValidGameLevel);
     LoadToml(*sec, "player_stock", cfg.game.player_stock, ValidPlayerStock);
     LoadToml(*sec, "bomb_stock", cfg.game.bomb_stock, ValidBombStock);
     LoadToml(*sec, "practice_mode", cfg.game.practice_mode, ValidPracticeMode);
@@ -175,7 +171,6 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
   // [difficulty]
   {
     toml::table sec;
-    sec.emplace("game_level", std::to_underlying(cfg.game.game_level));
     sec.emplace("player_stock", cfg.game.player_stock);
     sec.emplace("bomb_stock", cfg.game.bomb_stock);
     sec.emplace("practice_mode", std::to_underlying(cfg.game.practice_mode));

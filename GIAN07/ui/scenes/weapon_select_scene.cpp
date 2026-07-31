@@ -45,13 +45,6 @@ void WeaponSelectScene::Enter() {
 
 WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
                                                   bool should_draw) {
-  constexpr std::array sprites = {
-      PIXEL_LTWH{0, 344, 56, 48},
-      PIXEL_LTWH{0, 392, 56, 48},
-      PIXEL_LTWH{56, 344, 56, 48},
-      PIXEL_LTWH{56, 392, 56, 48},
-  };
-
   angle_ += speed_;
   if (angle_ >= 85 || angle_ <= -85) {
     player_.RotateType(speed_ < 0 ? -1 : 1);
@@ -113,25 +106,13 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
       Snd_SEPlay(SfxId::Buzz);
       break;
     }
-    player_.Initialize(config_.game.player_stock, config_.game.bomb_stock);
-    count_ = 0;
     Snd_SEPlay(SfxId::Select);
     if (session_.stage != StageId::Extra) {
       if (forced_stage != 0) {
         session_.stage = static_cast<StageId>(forced_stage - 1);
-        if (session_.stage == StageId::Stage2) {
-          player_.SetPower(160);
-        }
-        if (session_.stage >= StageId::Stage3) {
-          player_.SetPower(255);
-        }
       } else {
         session_.stage = StageId::Stage1;
       }
-    } else {
-      player_.SetCredits(0);
-      player_.SetLives(2);
-      player_.SetPower(255);
     }
     return WeaponSelectSceneResult::StartGame;
   case KEY_ESC:
@@ -149,6 +130,19 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
   if (!should_draw) {
     return WeaponSelectSceneResult::Running;
   }
+
+  DrawPreview(KEY_TAMA | shift_held);
+  Grp_Flip();
+  return WeaponSelectSceneResult::Running;
+}
+
+void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
+  constexpr std::array sprites = {
+      PIXEL_LTWH{0, 344, 56, 48},
+      PIXEL_LTWH{0, 392, 56, 48},
+      PIXEL_LTWH{56, 344, 56, 48},
+      PIXEL_LTWH{56, 392, 56, 48},
+  };
 
   GrpBackend_Clear();
   GrpSurface_Blit({320 - 112, 20}, SURFACE_ID::SYSTEM,
@@ -200,7 +194,7 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
           static_cast<float>((count_ / 3) * 4) * math::kLegacyAngleStep, 30_px)
           .y;
   player_.SetPosition(400_px + player_x, 350_px + player_y);
-  static_cast<void>(player_.Update(enemies_, KEY_TAMA | shift_held));
+  static_cast<void>(player_.Update(enemies_, preview_input));
 
   GrpBackend_SetClip({400 - 110, 400 - 300 + 2, 400 + 110, 400 + 10});
   for (int x = 400 - 110 - 2; x < 400 + 110; x += 32) {
@@ -230,6 +224,17 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
     GeomCircle({120, 150}, 51 - 2 * std::abs(angle_));
   }
   GrpGeom->Unlock();
-  Grp_Flip();
-  return WeaponSelectSceneResult::Running;
+}
+
+void WeaponSelectScene::PrepareGameStart() {
+  player_.Initialize(config_.game.player_stock, config_.game.bomb_stock);
+  if (session_.stage == StageId::Extra) {
+    player_.SetCredits(0);
+    player_.SetLives(2);
+    player_.SetPower(255);
+  } else if (session_.stage == StageId::Stage2) {
+    player_.SetPower(160);
+  } else if (session_.stage >= StageId::Stage3) {
+    player_.SetPower(255);
+  }
 }

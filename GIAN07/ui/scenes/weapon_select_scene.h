@@ -27,6 +27,8 @@ public:
   void Enter();
   [[nodiscard]] WeaponSelectSceneResult Update(INPUT_BITS input,
                                                bool should_draw);
+  void DrawPreview(INPUT_BITS preview_input = KEY_TAMA);
+  void PrepareGameStart();
 
 private:
   const ConfigData &config_;

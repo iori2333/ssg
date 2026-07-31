@@ -1,10 +1,13 @@
 /// Application game-flow state machine.
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 #include <variant>
+#include <vector>
 
 #include "flow_types.h"
 #include "game_flow.h"
@@ -14,9 +17,13 @@
 #include "gameplay/game_rules.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
+#include "i18n/localization.h"
+#include "platform/text_backend.h"
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
+#include "ui/menu/menu_controller.h"
+#include "ui/menu/menu_tree.h"
 #include "ui/scenes/bullet_gallery_scene.h"
 #include "ui/scenes/ending_scene.h"
 #include "ui/scenes/music_room_scene.h"
@@ -96,13 +103,16 @@ class WeaponSelectFlowState {
 public:
   explicit WeaponSelectFlowState(GameContext &context)
       : context_(context), scene_(context.config, context.enemies,
-                                  context.session, context.player) {}
+                                  context.session, context.player) {
+    BuildDifficultyMenu();
+  }
 
   void Enter(bool extra_stage) {
     GrpBackend_Clear();
     Grp_Flip();
-    context_.session.level =
-        extra_stage ? GameLevel::Extra : context_.config.game.game_level;
+    extra_stage_ = extra_stage;
+    phase_ = Phase::WeaponSelect;
+    context_.session.level = extra_stage ? GameLevel::Extra : GameLevel::Normal;
     ResetGameplayRuntime(context_);
     context_.session.ResetRank();
     context_.player.SelectType(PlayerType::Wide);
@@ -115,18 +125,36 @@ public:
   }
 
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
+    if (phase_ == Phase::DifficultySelect) {
+      difficulty_menu_.Tick(frame.gameplay);
+      if (selected_difficulty_) {
+        context_.session.level = *selected_difficulty_;
+        context_.session.ResetRank();
+        return BeginGame();
+      }
+      if (!difficulty_menu_.Active()) {
+        phase_ = Phase::WeaponSelect;
+        scene_.Enter();
+        return NoEvent{};
+      }
+      if (frame.should_draw) {
+        scene_.DrawPreview();
+        difficulty_menu_.Draw();
+        Grp_Flip();
+      }
+      return NoEvent{};
+    }
+
     switch (scene_.Update(frame.gameplay, frame.should_draw)) {
     case WeaponSelectSceneResult::Running:
       return NoEvent{};
     case WeaponSelectSceneResult::StartGame:
-      if (context_.config.debug.demo_recording) {
-        context_.records.BeginDemoCapture(context_.player, context_.session,
-                                          context_.config);
-      } else {
-        context_.records.BeginRecording(context_.player, context_.session,
-                                        context_.config);
+      if (!extra_stage_) {
+        phase_ = Phase::DifficultySelect;
+        OpenDifficultyMenu(frame.gameplay);
+        return NoEvent{};
       }
-      return StartLiveGame{};
+      return BeginGame();
     case WeaponSelectSceneResult::Cancelled:
       return ReturnToTitle{.change_music = false};
     }
@@ -134,8 +162,67 @@ public:
   }
 
 private:
+  enum class Phase {
+    WeaponSelect,
+    DifficultySelect,
+  };
+
+  void BuildDifficultyMenu() {
+    constexpr std::array difficulties = {
+        GameLevel::Easy,
+        GameLevel::Normal,
+        GameLevel::Hard,
+        GameLevel::Lunatic,
+    };
+    std::vector<std::unique_ptr<menu::IMenuNode>> items;
+    items.reserve(difficulties.size());
+    for (const auto difficulty : difficulties) {
+      items.push_back(std::make_unique<menu::ActionNode>(
+          std::string(GameLevelName(difficulty)), "",
+          [this, difficulty](menu::MenuController &) {
+            selected_difficulty_ = difficulty;
+            return false;
+          }));
+    }
+
+    const auto title_id = i18n::TextIdFromKey("ui.menu.difficulty.title");
+    difficulty_menu_root_ = std::make_unique<menu::EntryNode>(
+        menu::MenuText(
+            [this, title_id] { return context_.localization.Text(title_id); }),
+        "", std::move(items));
+  }
+
+  void OpenDifficultyMenu(INPUT_BITS initial_input) {
+    constexpr WINDOW_POINT kTopLeft = {240, 192};
+    constexpr int kWidth = 160;
+    constexpr int kInitialSelection = std::to_underlying(GameLevel::Normal);
+
+    TextObj.Clear();
+    selected_difficulty_.reset();
+    difficulty_menu_.Init(kWidth);
+    difficulty_menu_.Navigate(*difficulty_menu_root_, kInitialSelection);
+    difficulty_menu_.Open(kTopLeft, kInitialSelection, initial_input);
+  }
+
+  [[nodiscard]] FlowEvent BeginGame() {
+    scene_.PrepareGameStart();
+    if (context_.config.debug.demo_recording) {
+      context_.records.BeginDemoCapture(context_.player, context_.session,
+                                        context_.config);
+    } else {
+      context_.records.BeginRecording(context_.player, context_.session,
+                                      context_.config);
+    }
+    return StartLiveGame{};
+  }
+
   GameContext &context_;
   WeaponSelectScene scene_;
+  std::unique_ptr<menu::EntryNode> difficulty_menu_root_;
+  menu::MenuController difficulty_menu_;
+  std::optional<GameLevel> selected_difficulty_;
+  Phase phase_ = Phase::WeaponSelect;
+  bool extra_stage_ = false;
 };
 
 class BulletGalleryFlowState {

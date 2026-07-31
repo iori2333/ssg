@@ -97,6 +97,7 @@ bool GameplayState::EnterLive() {
 
 bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
   auto &context = context_;
+  previous_level_ = context.session.level;
   if (!context.records.LoadReplay(path, stage)) {
     return false;
   }
@@ -121,6 +122,7 @@ bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
 
 bool GameplayState::EnterDemo() {
   auto &context = context_;
+  previous_level_ = context.session.level;
   GrpBackend_Clear();
   Grp_Flip();
   mode_ = Mode::Demo;
@@ -475,7 +477,7 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
 void GameplayState::StopPlayback() {
   auto &context = context_;
   context.records.StopPlayback();
-  context.session.level = context.config.game.game_level;
+  context.session.level = previous_level_;
   context.player.Configure(context.config.game.practice_mode,
                            context.config.input.z_spd_down_enabled);
   context.session.is_demoplay = false;
