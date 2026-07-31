@@ -8,6 +8,7 @@
 
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
+#include "util/enum_array.h"
 
 #ifdef WIN32
 #include <windows.h>

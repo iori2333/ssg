@@ -9,6 +9,7 @@
 #include "surface_gdi.h"
 
 #include "platform/text_backend.h"
+#include "util/enum_array.h"
 
 extern const ENUMARRAY<LOGFONTW, FONT_ID> FontSpecs;
 

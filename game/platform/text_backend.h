@@ -6,18 +6,6 @@
 
 #include "gfx/graphics.h"
 
-// Concept for pixel access within a text rendering session. Offers access
-// using both RGB colors and the raw underlying format.
-template <typename T>
-concept TEXTRENDER_SESSION_PIXELACCESS_BASE = requires(
-    T t, PIXEL_POINT xy_rel, decltype(t.GetRaw(xy_rel)) color_raw, RGB color) {
-  { t.GetRaw(xy_rel) } -> std::same_as<decltype(color_raw)>;
-  t.SetRaw(xy_rel, color_raw);
-
-  { t.Get(xy_rel) } -> std::same_as<RGB>;
-  t.Set(xy_rel, color);
-};
-
 #ifdef WIN32
 // GDI text rendering bridge to the graphics backend
 class SURFACE_GDI;
@@ -29,11 +17,6 @@ bool GrpSurface_GDIText_Update(const PIXEL_LTWH &r) noexcept;
 #elif defined(LINUX)
 #include "platform/linux/pangocairo/text_pangocairo.h"
 #endif
-
-static_assert(
-    TEXTRENDER_SESSION_PIXELACCESS_BASE<TEXTRENDER_SESSION::PIXELACCESS>);
-static_assert(TEXTRENDER_SESSION_BASE<TEXTRENDER_SESSION>);
-static_assert(TEXTRENDER_BASE<TEXTRENDER>);
 
 extern TEXTRENDER TextObj;
 

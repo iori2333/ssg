@@ -8,6 +8,7 @@
 #include <pango/pangocairo.h>
 
 #include "platform/text_backend.h"
+#include "util/enum_array.h"
 #include "util/guard.h"
 
 constexpr auto FORMAT = CAIRO_FORMAT_ARGB32;
