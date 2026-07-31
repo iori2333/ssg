@@ -110,7 +110,7 @@ BuildLanguageMenu(UiConfig &ui_cfg, i18n::Localization &localization) {
 static std::unique_ptr<EntryNode>
 BuildDifficultyMenu(GameConfig &game_cfg, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
-  ch.reserve(4);
+  ch.reserve(5);
 
   ch.push_back(std::make_unique<ChoiceNode>(
       Localized(localization, "ui.menu.player_stock.title"),
@@ -137,6 +137,13 @@ BuildDifficultyMenu(GameConfig &game_cfg, i18n::Localization &localization) {
       PracticeMode::Off, PracticeMode::Invincible,
       LocalizedLabels(localization, {"ui.common.off", "ui.value.auto_bomb",
                                      "ui.value.invincible"})));
+
+  auto focus_hitbox = std::make_unique<ToggleNode>(
+      Localized(localization, "ui.menu.focus_hitbox.title"),
+      Localized(localization, "ui.menu.focus_hitbox.help"),
+      std::ref(game_cfg.show_focus_hitbox));
+  LocalizeToggleValues(*focus_hitbox, localization);
+  ch.push_back(std::move(focus_hitbox));
 
   return std::make_unique<EntryNode>(
       Localized(localization, "ui.menu.difficulty.title"),

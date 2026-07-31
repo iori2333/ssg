@@ -20,7 +20,7 @@
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 void EffectManager::ResetCircles() {
   for (auto &effect : circles_) {
@@ -106,10 +106,12 @@ void EffectManager::DrawCircles() const {
               effect.angle + kAngleSpeeds[layer] * age / 10 + point * 256 / 5;
           const int next_angle = effect.angle + kAngleSpeeds[layer] * age / 10 +
                                  (point + 2) * 256 / 5;
-          GrpGeom->DrawLine(effect.x + cosl(angle, radius),
-                            effect.y + sinl(angle, radius),
-                            effect.x + cosl(next_angle, radius),
-                            effect.y + sinl(next_angle, radius));
+          const auto start = math::RoundedPolarVector(
+              static_cast<float>(angle) * math::kLegacyAngleStep, radius);
+          const auto end = math::RoundedPolarVector(
+              static_cast<float>(next_angle) * math::kLegacyAngleStep, radius);
+          GrpGeom->DrawLine(effect.x + start.x, effect.y + start.y,
+                            effect.x + end.x, effect.y + end.y);
         }
       }
       break;
@@ -226,11 +228,14 @@ void EffectManager::UpdateStrings() {
       break;
     case StringEffectState::CharacterPaused:
       if (effect.time == 0) {
-        const uint8_t angle = static_cast<uint8_t>(128 + rnd() % 128);
+        const uint8_t angle =
+            static_cast<uint8_t>(128 + math::RandomInt() % 128);
         effect.state = StringEffectState::CharacterScattering;
         effect.time = 64;
-        effect.velocity_x = cosl(angle, 10_px);
-        effect.velocity_y = sinl(angle, 10_px);
+        const auto velocity =
+            math::RoundedPolarVector(math::AngleFromLegacy(angle), 10_px);
+        effect.velocity_x = velocity.x;
+        effect.velocity_y = velocity.y;
       }
       break;
     case StringEffectState::CharacterScattering:
@@ -315,8 +320,10 @@ void EffectManager::DrawStrings() {
       const int remaining = static_cast<int>(effect.time);
       for (int index = 0; index < 9; ++index) {
         const auto angle = Cast::down<uint8_t>(effect.time * 3 + index * 26);
-        const int x = (effect.x >> 6) + cosl(angle, remaining * 4);
-        const int y = (effect.y >> 6) + sinl(angle, remaining * 4);
+        const auto offset = math::RoundedPolarVector(
+            math::AngleFromLegacy(angle), remaining * 4);
+        const int x = (effect.x >> 6) + offset.x;
+        const int y = (effect.y >> 6) + offset.y;
         GrpPutc(x, y, kGameOver[index]);
       }
       break;
@@ -347,11 +354,21 @@ void EffectManager::DrawStrings() {
           effect.state == StringEffectState::MusicTitleEntering ? 160 : 100;
       for (int column = 0; column < effect.velocity_x; ++column) {
         const PIXEL_LTWH source = {column, 0, 1, effect.velocity_y};
-        const int wave = sinl(phase, amplitude);
-        const int y = (effect.y >> 6) - sinl(phase + column, phase);
+        const int wave =
+            math::RoundedPolarVector(math::AngleFromLegacy(phase), amplitude).y;
+        const int y = (effect.y >> 6) - math::RoundedPolarVector(
+                                            static_cast<float>(phase + column) *
+                                                math::kLegacyAngleStep,
+                                            phase)
+                                            .y;
         for (int duplicate = 0; duplicate < 2; ++duplicate) {
-          const int x = (effect.x >> 6) + sinl(phase + column / 2, wave) +
-                        column + duplicate;
+          const int x =
+              (effect.x >> 6) +
+              math::RoundedPolarVector(static_cast<float>(phase + column / 2) *
+                                           math::kLegacyAngleStep,
+                                       wave)
+                  .y +
+              column + duplicate;
           RenderMusicTitle({x, y}, source);
         }
       }
@@ -360,10 +377,19 @@ void EffectManager::DrawStrings() {
     case StringEffectState::MusicTitleHolding: {
       GrpGeom->Lock();
       GrpGeom->SetColor({0, 0, 0});
-      GrpGeom->SetAlphaNorm(sinl(Cast::down<uint8_t>(effect.time - 32), 80) +
-                            80);
+      const auto alpha =
+          math::RoundedPolarVector(static_cast<float>(effect.time - 32) *
+                                       math::kLegacyAngleStep,
+                                   80.0f)
+              .y +
+          80;
+      GrpGeom->SetAlphaNorm(alpha);
       for (int row = 0; row < 16; ++row) {
-        const int inset = sinl(128 + row * 16, 16);
+        const int inset =
+            math::RoundedPolarVector(static_cast<float>(128 + row * 16) *
+                                         math::kLegacyAngleStep,
+                                     16.0f)
+                .y;
         GrpGeom->DrawBoxA((effect.x >> 6) + inset - 16, (effect.y >> 6) + row,
                           playfield::kRight - 16 - inset,
                           (effect.y >> 6) + row + 1);

@@ -11,26 +11,26 @@
 #include "gameplay/playfield.h"
 #include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace stage {
 
 void StageVisuals::Transform(Point3D &point, uint8_t angle_x, uint8_t angle_y,
                              uint8_t angle_z) {
-  int old_y = point.y;
-  int old_z = point.z;
-  point.y = cosl(angle_x, old_y) - sinl(angle_x, old_z);
-  point.z = sinl(angle_x, old_y) + cosl(angle_x, old_z);
+  auto rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_x),
+                                           point.y, point.z);
+  point.y = rotated.x;
+  point.z = rotated.y;
 
-  int old_x = point.x;
-  old_z = point.z;
-  point.x = cosl(angle_y, old_x) + sinl(angle_y, old_z);
-  point.z = -sinl(angle_y, old_x) + cosl(angle_y, old_z);
+  rotated = math::RoundedRotateVector(-math::AngleFromLegacy(angle_y), point.x,
+                                      point.z);
+  point.x = rotated.x;
+  point.z = rotated.y;
 
-  old_x = point.x;
-  old_y = point.y;
-  point.x = cosl(angle_z, old_x) - sinl(angle_z, old_y);
-  point.y = sinl(angle_z, old_x) + cosl(angle_z, old_y);
+  rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_z), point.x,
+                                      point.y);
+  point.x = rotated.x;
+  point.y = rotated.y;
 }
 
 void StageVisuals::StartCubes() {
@@ -42,15 +42,21 @@ void StageVisuals::StartCubes() {
   for (std::size_t index = 0; index < cubes_.size(); ++index) {
     auto &cube = cubes_[index];
     cube.half_size = 30_px;
-    cube.rotation = {.x = rnd(), .y = rnd(), .z = rnd()};
-    cube.position.x = cosl(static_cast<int>(index) * 256 / cube_count, 200_px);
-    cube.position.y = sinl(static_cast<int>(index) * 256 / cube_count, 200_px);
+    cube.rotation = {.x = math::RandomInt() & 0xff,
+                     .y = math::RandomInt() & 0xff,
+                     .z = math::RandomInt() & 0xff};
+    const auto position =
+        math::RoundedPolarVector(static_cast<float>(index) * math::kFullAngle /
+                                     static_cast<float>(cube_count),
+                                 200_px);
+    cube.position.x = position.x;
+    cube.position.y = position.y;
     cube.position.z = 0;
   }
   for (auto &star : cube_stars_) {
-    star.x = rnd() % (640 - 256) + 128;
-    star.y = -(rnd() % 480);
-    star.velocity_y = rnd() % 10 + 10;
+    star.x = math::RandomInt() % (640 - 256) + 128;
+    star.y = -(math::RandomInt() % 480);
+    star.velocity_y = math::RandomInt() % 10 + 10;
   }
 }
 
@@ -60,17 +66,28 @@ void StageVisuals::UpdateCubes() {
   cube_angle_x_ += 128;
   cube_angle_y_ -= 64;
 
-  const int angle_offset = sinl(cube_phase_ >> 8, 512 / cube_count);
-  const int radius = sinl(cube_phase_ >> 7, 100_px) + 180_px;
+  const int angle_offset =
+      math::RoundedPolarVector(static_cast<float>(cube_phase_ >> 8) *
+                                   math::kLegacyAngleStep,
+                               512.0f / static_cast<float>(cube_count))
+          .y;
+  const int radius =
+      math::RoundedPolarVector(
+          static_cast<float>(cube_phase_ >> 7) * math::kLegacyAngleStep, 100_px)
+          .y +
+      180_px;
   for (std::size_t index = 0; index < cubes_.size(); ++index) {
     auto &cube = cubes_[index];
     cube.half_size = 15_px + (radius >> 4) + static_cast<int>(index) * 128;
     cube.rotation.x += 4;
     cube.rotation.y -= 4;
-    cube.position.x =
-        cosl(static_cast<int>(index) * 500 / cube_count + angle_offset, radius);
-    cube.position.y =
-        sinl(static_cast<int>(index) * 500 / cube_count + angle_offset, radius);
+    const auto position = math::RoundedPolarVector(
+        static_cast<float>(static_cast<int>(index) * 500 / cube_count +
+                           angle_offset) *
+            math::kLegacyAngleStep,
+        radius);
+    cube.position.x = position.x;
+    cube.position.y = position.y;
     cube.position.z =
         (static_cast<int>(index) - static_cast<int>(cubes_.size() / 2)) * 40_px;
     Transform(cube.position, cube_angle_x_ >> 8, cube_angle_y_ >> 8,
@@ -80,9 +97,9 @@ void StageVisuals::UpdateCubes() {
   for (auto &star : cube_stars_) {
     star.y += star.velocity_y;
     if (star.y > 480) {
-      star.x = rnd() % (640 - 256) + 128;
+      star.x = math::RandomInt() % (640 - 256) + 128;
       star.y = 0;
-      star.velocity_y = rnd() % 10 + 10;
+      star.velocity_y = math::RandomInt() % 10 + 10;
     }
   }
 }
@@ -138,12 +155,12 @@ void StageVisuals::StartFakeEcl() {
   grid_offset_x_ = 320_px;
   grid_offset_y_ = 240_px;
   for (auto &line : fake_ecl_) {
-    static_cast<void>(rnd() % 128);
-    const int speed = rnd() % 5_px + 5_px;
-    line.source_x = rnd() % 7 * 9 * 8;
-    line.source_y = rnd() % 16 * 16;
-    line.x = PixelToWorld(28 + rnd() % 484);
-    line.y = -PixelToWorld(rnd() % 640);
+    static_cast<void>(math::RandomInt() % 128);
+    const int speed = math::RandomInt() % 5_px + 5_px;
+    line.source_x = math::RandomInt() % 7 * 9 * 8;
+    line.source_y = math::RandomInt() % 16 * 16;
+    line.x = PixelToWorld(28 + math::RandomInt() % 484);
+    line.y = -PixelToWorld(math::RandomInt() % 640);
     line.velocity_x = 0;
     line.velocity_y = speed;
   }
@@ -158,12 +175,12 @@ void StageVisuals::UpdateFakeEcl() {
     if (line.y < 480_px) {
       continue;
     }
-    static_cast<void>(rnd() % 128);
-    const int speed = rnd() % 5_px + 5_px;
-    line.source_x = rnd() % 7 * 9 * 8;
-    line.source_y = rnd() % 16 * 16;
-    line.x = PixelToWorld(28 + rnd() % 484);
-    line.y = -PixelToWorld(rnd() % 640);
+    static_cast<void>(math::RandomInt() % 128);
+    const int speed = math::RandomInt() % 5_px + 5_px;
+    line.source_x = math::RandomInt() % 7 * 9 * 8;
+    line.source_y = math::RandomInt() % 16 * 16;
+    line.x = PixelToWorld(28 + math::RandomInt() % 484);
+    line.y = -PixelToWorld(math::RandomInt() % 640);
     line.velocity_x = 0;
     line.velocity_y = speed;
   }
@@ -202,11 +219,11 @@ void StageVisuals::StartRocks() {
     if (index == rocks_.size() * 5 / 8 || index == rocks_.size() * 7 / 8) {
       --sprite;
     }
-    const int y_offset =
-        static_cast<int>(index % 4) * row_spacing + rnd() % (row_spacing / 2);
-    const int x = rnd() % 500_px - 250_px;
+    const int y_offset = static_cast<int>(index % 4) * row_spacing +
+                         math::RandomInt() % (row_spacing / 2);
+    const int x = math::RandomInt() % 500_px - 250_px;
     // Depth was never rendered, but this draw must remain in the RNG stream.
-    static_cast<void>(rnd() % 500_px);
+    static_cast<void>(math::RandomInt() % 500_px);
     auto &rock = rocks_[index];
     rock = {.x = x,
             .y = -250_px - y_offset,
@@ -218,8 +235,8 @@ void StageVisuals::StartRocks() {
 
 void StageVisuals::UpdateRocks() {
   const auto reset_above = [](Rock &rock, int velocity_scale) {
-    rock.x = rnd() % 500_px - 250_px;
-    rock.y = -PixelToWorld(290 + rnd() % 250);
+    rock.x = math::RandomInt() % 500_px - 250_px;
+    rock.y = -PixelToWorld(290 + math::RandomInt() % 250);
     rock.velocity_y = (4 - rock.sprite) * velocity_scale;
     rock.speed = rock.velocity_y;
   };
@@ -255,8 +272,8 @@ void StageVisuals::UpdateRocks() {
         rock.acceleration = 2;
         rock.state = RockState::Accelerating;
       } else if (rock.y > 290_px || rock.y < -290_px) {
-        rock.x = rnd() % 500_px - 250_px;
-        rock.y = 290_px + rnd() % 250;
+        rock.x = math::RandomInt() % 500_px - 250_px;
+        rock.y = 290_px + math::RandomInt() % 250;
         rock.velocity_y = -(4 - rock.sprite) * 96;
         rock.speed = rock.velocity_y;
         rock.acceleration = 0;
@@ -319,11 +336,11 @@ void StageVisuals::CommandRocks(Stage4RockCommand command) {
 
 void StageVisuals::StartRasters() {
   for (std::size_t index = 0; index < rasters_.size(); ++index) {
-    const int x = rnd() % (640 - 256) + 128;
-    const int y = -(rnd() % (480 + 160));
-    const auto angle = static_cast<uint8_t>(rnd());
-    const auto amplitude = static_cast<uint8_t>(rnd() % 80 + 70);
-    const auto velocity_y = static_cast<int8_t>(2 + rnd() % 3);
+    const int x = math::RandomInt() % (640 - 256) + 128;
+    const int y = -(math::RandomInt() % (480 + 160));
+    const auto angle = static_cast<uint8_t>(math::RandomInt());
+    const auto amplitude = static_cast<uint8_t>(math::RandomInt() % 80 + 70);
+    const auto velocity_y = static_cast<int8_t>(2 + math::RandomInt() % 3);
     rasters_[index] = {
         .x = x,
         .y = y,
@@ -334,9 +351,9 @@ void StageVisuals::StartRasters() {
     };
   }
   for (auto &star : raster_stars_) {
-    star = {.x = rnd() % (640 - 256) + 128,
-            .y = rnd() % 480,
-            .velocity_y = rnd() % 20 + 8};
+    star = {.x = math::RandomInt() % (640 - 256) + 128,
+            .y = math::RandomInt() % 480,
+            .velocity_y = math::RandomInt() % 20 + 8};
   }
 }
 
@@ -346,18 +363,18 @@ void StageVisuals::UpdateRasters() {
     raster.angle += static_cast<uint8_t>((index & 1) != 0 ? 2 : -2);
     raster.y += raster.velocity_y;
     if (raster.y > 480) {
-      raster.x = rnd() % (640 - 256) + 128;
+      raster.x = math::RandomInt() % (640 - 256) + 128;
       raster.y = -160;
-      raster.angle = static_cast<uint8_t>(rnd());
-      raster.amplitude = static_cast<uint8_t>(rnd() % 80 + 70);
+      raster.angle = static_cast<uint8_t>(math::RandomInt());
+      raster.amplitude = static_cast<uint8_t>(math::RandomInt() % 80 + 70);
     }
   }
   for (auto &star : raster_stars_) {
     star.y += star.velocity_y;
     if (star.y > 480) {
-      star.x = rnd() % (640 - 256) + 128;
+      star.x = math::RandomInt() % (640 - 256) + 128;
       star.y -= 480;
-      star.velocity_y = rnd() % 20 + 8;
+      star.velocity_y = math::RandomInt() % 20 + 8;
     }
   }
 }
@@ -375,7 +392,11 @@ void StageVisuals::DrawRasters() const {
     const int height = target.bottom - target.top;
     const int half_width = (target.right - target.left) / 2;
     for (int row = 0; row < height; row += 2) {
-      const int offset = sinl(raster.angle + row, raster.amplitude);
+      const int offset =
+          math::RoundedPolarVector(static_cast<float>(raster.angle + row) *
+                                       math::kLegacyAngleStep,
+                                   raster.amplitude)
+              .y;
       GrpSurface_Blit(
           {raster.x + offset - half_width, raster.y + row}, SURFACE_ID::MAPCHIP,
           PIXEL_LTRB{target.left, target.top + row, target.right, row + 2});
@@ -385,9 +406,9 @@ void StageVisuals::DrawRasters() const {
 
 void StageVisuals::StartStars() {
   for (auto &star : fast_stars_) {
-    star = {.x = rnd() % (640 - 256) + 128,
-            .y = rnd() % 480,
-            .velocity_y = rnd() % 20 + 8};
+    star = {.x = math::RandomInt() % (640 - 256) + 128,
+            .y = math::RandomInt() % 480,
+            .velocity_y = math::RandomInt() % 20 + 8};
   }
 }
 
@@ -395,9 +416,9 @@ void StageVisuals::UpdateStars() {
   for (auto &star : fast_stars_) {
     star.y += star.velocity_y;
     if (star.y > 480) {
-      star.x = rnd() % (640 - 256) + 128;
+      star.x = math::RandomInt() % (640 - 256) + 128;
       star.y -= 480;
-      star.velocity_y = rnd() % 20 + 8;
+      star.velocity_y = math::RandomInt() % 20 + 8;
     }
   }
 }

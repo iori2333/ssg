@@ -37,7 +37,7 @@ struct PlayerShot {
   int velocity_x_{}, velocity_y_{};
   int speed_{};
   int8_t acceleration_{};
-  uint8_t direction_{};
+  float direction_{};
   int8_t turn_rate_{};
   PlayerShotKind kind_{};
   PlayerShotMotion motion_{};

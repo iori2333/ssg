@@ -15,7 +15,7 @@
 #include "enemy/enemy_manager.h"
 #include "player/player.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 static constexpr auto BIT_VIRTUAL_HP = 990000;
 
@@ -70,7 +70,7 @@ void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
   radius_ = 0;
   target_radius_ = 80_px;
   count_ = count;
-  rotation_speed_ = (((rnd() >> 1) & 1) != 0) ? 2 : -2;
+  rotation_speed_ = (((math::RandomInt() >> 1) & 1) != 0) ? 2 : -2;
   base_angle_ = 0;
   laser_pattern_ = LaserPattern::Disabled;
   laser_active_ = false;
@@ -126,10 +126,12 @@ void BitFormation::Update() {
     break;
   }
 
-  case MotionState::MoveTowardPlayer:
+  case MotionState::MoveTowardPlayer: {
     speed_ += acceleration_;
-    center_x_ += cosl(direction_, speed_);
-    center_y_ += sinl(direction_, speed_);
+    const auto velocity =
+        math::RoundedPolarVector(math::AngleFromLegacy(direction_), speed_);
+    center_x_ += velocity.x;
+    center_y_ += velocity.y;
 
     if (speed_ <= -10_px) {
       motion_ = MotionState::Orbit;
@@ -138,6 +140,7 @@ void BitFormation::Update() {
     UpdateRadius();
     UpdateRotation();
     break;
+  }
 
   case MotionState::Disabled:
   default:
@@ -341,8 +344,10 @@ void BitFormation::UpdateRotation() {
     }
 
     e->d = bit->angle;
-    e->x = ox + cosl(e->d, l);
-    e->y = oy + sinl(e->d, l);
+    const auto offset =
+        math::RoundedPolarVector(math::AngleFromLegacy(e->d), l);
+    e->x = ox + offset.x;
+    e->y = oy + offset.y;
 
     // Reflect laser command
     switch (laser_pattern_) {
@@ -359,12 +364,12 @@ void BitFormation::UpdateRotation() {
           e, 0,
           LongLaserUpdateInfo{
               LongLaserUpdateInfo::Command::SetAngle,
-              AngleFromLegacy(static_cast<uint8_t>(e->d + LaserDeg))});
+              math::AngleFromLegacy(static_cast<uint8_t>(e->d + LaserDeg))});
       bullets_.ControlLongLaser(
           e, 1,
           LongLaserUpdateInfo{
               LongLaserUpdateInfo::Command::SetAngle,
-              AngleFromLegacy(static_cast<uint8_t>(e->d - LaserDeg))});
+              math::AngleFromLegacy(static_cast<uint8_t>(e->d - LaserDeg))});
       break;
     case LaserPattern::Disabled:
       break;
@@ -469,7 +474,7 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
         .dy = 0,
         .v = 1_px,
         .w = 8_px,
-        .angle = AngleFromLegacy(e->d),
+        .angle = math::AngleFromLegacy(e->d),
         .type = LongLaserType::Long,
     };
 
@@ -483,14 +488,14 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
       break;
 
     case EclBitLaserCommand::Bidirectional:
-      info.angle += kFullAngle / 4.0f;
+      info.angle += math::kFullAngle / 4.0f;
       info.c = 1;
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
 
-      info.angle += kFullAngle / 2.0f;
+      info.angle += math::kFullAngle / 2.0f;
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
@@ -502,12 +507,12 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
 
       delta = 64 + (256 / count_);
 
-      info.angle = AngleFromLegacy(static_cast<uint8_t>(e->d + delta));
+      info.angle = math::AngleFromLegacy(static_cast<uint8_t>(e->d + delta));
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
-      info.angle = AngleFromLegacy(static_cast<uint8_t>(e->d - delta));
+      info.angle = math::AngleFromLegacy(static_cast<uint8_t>(e->d - delta));
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
@@ -572,7 +577,9 @@ void BitFormation::Command(EclBitCommand command, int param) {
   case EclBitCommand::MoveTowardPlayer:
     speed_ = 10_px;
     acceleration_ = -8;
-    direction_ = atan8(player_.X() - center_x_, player_.Y() - center_y_);
+    direction_ = math::AngleToLegacy(
+        math::AngleTo(static_cast<float>(player_.X() - center_x_),
+                      static_cast<float>(player_.Y() - center_y_)));
     motion_ = MotionState::MoveTowardPlayer;
     break;
 

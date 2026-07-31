@@ -25,7 +25,7 @@
 #include "settings/config.h"
 #include "sys/input.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -162,8 +162,9 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
   for (int i = 0; i < 3; i++) {
     const int direction =
         (-i + PlayerTypeIndex(player_.Type())) * 85 + angle_ - 64;
-    const int x = 120 + cosl(direction, 90) - 56 / 2;
-    const int y = 260 + sinl(direction, 110) - 48 / 2;
+    const auto angle = math::AngleFromLegacy(direction);
+    const int x = 120 + math::RoundedPolarVector(angle, 90.0f).x - 56 / 2;
+    const int y = 260 + math::RoundedPolarVector(angle, 110.0f).y - 48 / 2;
     GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, sprites[i]);
   }
 
@@ -177,8 +178,9 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
     }
     const int direction =
         (-i + PlayerTypeIndex(player_.Type())) * 85 + angle_ - 64;
-    const int x = 120 + cosl(direction, 90) - 56 / 2;
-    const int y = 260 + sinl(direction, 110) - 48 / 2;
+    const auto angle = math::AngleFromLegacy(direction);
+    const int x = 120 + math::RoundedPolarVector(angle, 90.0f).x - 56 / 2;
+    const int y = 260 + math::RoundedPolarVector(angle, 110.0f).y - 48 / 2;
     GrpGeom->DrawBoxA(x, y, x + 56, y + 48);
   }
   GrpGeom->Unlock();
@@ -189,8 +191,15 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
   }
   enemies_.ResetHomingTarget();
   player_.ClearInvincibility();
-  player_.SetPosition(400_px + sinl((count_ / 3) * 6, 60_px),
-                      350_px + sinl((count_ / 3) * 4, 30_px));
+  const int player_x =
+      math::RoundedPolarVector(
+          static_cast<float>((count_ / 3) * 6) * math::kLegacyAngleStep, 60_px)
+          .y;
+  const int player_y =
+      math::RoundedPolarVector(
+          static_cast<float>((count_ / 3) * 4) * math::kLegacyAngleStep, 30_px)
+          .y;
+  player_.SetPosition(400_px + player_x, 350_px + player_y);
   static_cast<void>(player_.Update(enemies_, KEY_TAMA | shift_held));
 
   GrpBackend_SetClip({400 - 110, 400 - 300 + 2, 400 + 110, 400 + 10});

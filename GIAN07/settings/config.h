@@ -23,6 +23,7 @@ struct GameConfig {
   PracticeMode practice_mode = PracticeMode::Off;
   uint8_t player_stock = 2;
   uint8_t bomb_stock = 2;
+  bool show_focus_hitbox = true;
 };
 
 enum class DisplayMode : uint8_t {

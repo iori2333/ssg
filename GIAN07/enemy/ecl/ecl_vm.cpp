@@ -23,7 +23,7 @@
 #include "player/player.h"
 #include "stage/stage_session.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -213,11 +213,12 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
   }
 
   case EclOpcode::JumpDirection: {
-    const auto difference =
-        static_cast<uint8_t>(abs(atan8(host_.GetPlayer().X() - actor.x,
-                                       host_.GetPlayer().Y() - actor.y) -
-                                 actor.d));
-    if (difference < 4) {
+    const auto target =
+        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
+                      static_cast<float>(host_.GetPlayer().Y() - actor.y));
+    const auto difference = std::abs(
+        math::ShortestAngleDelta(target, math::AngleFromLegacy(actor.d)));
+    if (difference < 4.0f * math::kLegacyAngleStep) {
       actor.script.position = Args<EclJumpArguments>(instruction).target;
       return Step::Jump;
     }
@@ -281,8 +282,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     const auto frames = Args<EclDurationArguments>(instruction).frames;
     if (actor.script.wait_counter == 0) {
       actor.script.wait_counter = frames + 1;
-      actor.vx = cosl(actor.d, actor.v);
-      actor.vy = sinl(actor.d, actor.v);
+      const auto velocity =
+          math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
+      actor.vx = velocity.x;
+      actor.vy = velocity.y;
     }
     if (--actor.script.wait_counter != 0) {
       actor.x += actor.vx;
@@ -299,8 +302,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.vd = relative_angle(args.angle_delta);
     }
     if (--actor.script.wait_counter != 0) {
-      actor.x += cosl(actor.d, actor.v);
-      actor.y += sinl(actor.d, actor.v);
+      const auto velocity =
+          math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
+      actor.x += velocity.x;
+      actor.y += velocity.y;
       actor.d += actor.vd;
       return Step::Repeat;
     }
@@ -316,8 +321,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.vd = relative_angle(args.angle_delta);
     }
     if (--actor.script.wait_counter != 0) {
-      actor.x += cosl(actor.d, actor.v) + actor.vx;
-      actor.y += sinl(actor.d, actor.v) + actor.vy;
+      const auto velocity =
+          math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
+      actor.x += velocity.x + actor.vx;
+      actor.y += velocity.y + actor.vy;
       actor.d += actor.vd;
       return Step::Repeat;
     }
@@ -342,10 +349,16 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     if (--actor.script.wait_counter != 0) {
       if (instruction.Opcode() == EclOpcode::WaveX) {
         actor.x += actor.vx;
-        actor.y = actor.vy + sinl(actor.d, PixelToWorld(actor.amp));
+        actor.y =
+            actor.vy + math::RoundedPolarVector(math::AngleFromLegacy(actor.d),
+                                                PixelToWorld(actor.amp))
+                           .y;
       } else {
         actor.y += actor.vy;
-        actor.x = actor.vx + sinl(actor.d, PixelToWorld(actor.amp));
+        actor.x =
+            actor.vx + math::RoundedPolarVector(math::AngleFromLegacy(actor.d),
+                                                PixelToWorld(actor.amp))
+                           .y;
       }
       actor.d += actor.vd;
       return Step::Repeat;
@@ -424,8 +437,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     }
     if (--actor.script.wait_counter != 0) {
       actor.v += args.acceleration;
-      actor.x += cosl(actor.d, actor.v);
-      actor.y += sinl(actor.d, actor.v);
+      const auto velocity =
+          math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
+      actor.x += velocity.x;
+      actor.y += velocity.y;
       return Step::Repeat;
     }
     return Step::Advance;
@@ -438,8 +453,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     const auto gravity = Args<EclSignedByteArguments>(instruction).value;
     if (actor.script.wait_counter == 0) {
       actor.script.wait_counter = 9999;
-      actor.vx = cosl(actor.d, actor.v);
-      actor.vy = sinl(actor.d, actor.v);
+      const auto velocity =
+          math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
+      actor.vx = velocity.x;
+      actor.vy = velocity.y;
       actor.vd = gravity;
       actor.SetFlag(EnemyActorFlags::KeepOutsidePlayfield, true);
     } else {
@@ -468,11 +485,12 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     actor.d += relative_angle(Args<EclSignedByteArguments>(instruction).value);
     return Step::Advance;
   case EclOpcode::RandomAngle:
-    actor.d = rnd() & 0xff;
+    actor.d = math::RandomInt() & 0xff;
     return Step::Advance;
   case EclOpcode::AimAtPlayer:
-    actor.d =
-        atan8(host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y);
+    actor.d = math::AngleToLegacy(
+        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
+                      static_cast<float>(host_.GetPlayer().Y() - actor.y)));
     return Step::Advance;
   case EclOpcode::SetSpeed:
     actor.v = Args<EclSignedDwordArguments>(instruction).value;
@@ -493,10 +511,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     return Step::Advance;
   }
   case EclOpcode::RandomAngleUp:
-    actor.d = 128 + (rnd() & 0x7f);
+    actor.d = 128 + (math::RandomInt() & 0x7f);
     return Step::Advance;
   case EclOpcode::RandomAngleDown:
-    actor.d = rnd() & 0x7f;
+    actor.d = math::RandomInt() & 0x7f;
     return Step::Advance;
   case EclOpcode::SetSequenceAngle:
     actor.d = sequence_angle_;
@@ -524,7 +542,7 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       } else if (actor.x > bounds.right) {
         base = 80;
       } else {
-        base = 16 + 64 * ((rnd() >> 1) & 1);
+        base = 16 + 64 * ((math::RandomInt() >> 1) & 1);
       }
     } else if (actor.y > bounds.bottom) {
       if (actor.x < bounds.left) {
@@ -539,30 +557,37 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     } else if (actor.x > bounds.right) {
       base = 112;
     } else {
-      base = ((rnd() >> 1) & 1) != 0 ? static_cast<uint16_t>(-16) : 112;
+      base = ((math::RandomInt() >> 1) & 1) != 0 ? static_cast<uint16_t>(-16)
+                                                 : 112;
     }
-    actor.d = base + ((rnd() >> 1) % range);
+    actor.d = base + ((math::RandomInt() >> 1) % range);
     return Step::Advance;
   }
 
   case EclOpcode::RandomPosition:
     if (actor.x > playfield::kWorldCenterX) {
-      actor.x = PixelToWorld(playfield::kCenterX) -
-                ((rnd() % (playfield::kRight - playfield::kLeft - 100)) * 32);
+      actor.x =
+          PixelToWorld(playfield::kCenterX) -
+          ((math::RandomInt() % (playfield::kRight - playfield::kLeft - 100)) *
+           32);
     } else {
-      actor.x = PixelToWorld(playfield::kCenterX) +
-                ((rnd() % (playfield::kRight - playfield::kLeft - 100)) * 32);
+      actor.x =
+          PixelToWorld(playfield::kCenterX) +
+          ((math::RandomInt() % (playfield::kRight - playfield::kLeft - 100)) *
+           32);
     }
-    actor.y =
-        PixelToWorld(rnd() % (playfield::kCenterY - playfield::kTop - 160)) +
-        PixelToWorld(playfield::kTop + 40);
+    actor.y = PixelToWorld(math::RandomInt() %
+                           (playfield::kCenterY - playfield::kTop - 160)) +
+              PixelToWorld(playfield::kTop + 40);
     return Step::Advance;
 
   case EclOpcode::MovePolar: {
     const auto length =
         PixelToWorld(Args<EclSignedWordArguments>(instruction).value);
-    actor.x += cosl(actor.d, length);
-    actor.y += sinl(actor.d, length);
+    const auto offset =
+        math::RoundedPolarVector(math::AngleFromLegacy(actor.d), length);
+    actor.x += offset.x;
+    actor.y += offset.y;
     return Step::Advance;
   }
 
@@ -618,8 +643,9 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::AimBulletAtPlayer:
-    actor.bullet_command.d =
-        atan8(host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y);
+    actor.bullet_command.d = math::AngleToLegacy(
+        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
+                      static_cast<float>(host_.GetPlayer().Y() - actor.y)));
     break;
   case EclOpcode::SyncBulletAngle:
     actor.bullet_command.d = actor.d;
@@ -691,7 +717,7 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         .w = actor.laser_command.w,
         .l = actor.laser_command.l,
         .l2 = actor.laser_command.l2,
-        .angle = AngleFromLegacy(actor.laser_command.d),
+        .angle = math::AngleFromLegacy(actor.laser_command.d),
         .dw = actor.laser_command.dw,
         .n = actor.laser_command.n,
         .c = actor.laser_command.c,
@@ -734,8 +760,9 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::AimLaserAtPlayer:
-    actor.laser_command.d =
-        atan8(host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y);
+    actor.laser_command.d = math::AngleToLegacy(
+        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
+                      static_cast<float>(host_.GetPlayer().Y() - actor.y)));
     break;
   case EclOpcode::SyncLaserAngle:
     actor.laser_command.d = actor.d;
@@ -774,7 +801,7 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
             .dy = actor.laser_command.y,
             .v = actor.laser_command.v,
             .w = actor.laser_command.w,
-            .angle = AngleFromLegacy(actor.laser_command.d),
+            .angle = math::AngleFromLegacy(actor.laser_command.d),
             .c = actor.laser_command.c,
             .type = static_cast<LongLaserType>(actor.laser_command.type),
         })) {
@@ -808,14 +835,14 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         &actor, args.id,
         LongLaserUpdateInfo{LongLaserUpdateInfo::Command::AdjustAngle, 0.0f,
                             static_cast<float>(args.angle_delta) *
-                                kLegacyAngleStep});
+                                math::kLegacyAngleStep});
     break;
   }
   case EclOpcode::FireHomingLaser:
     host_.Bullets().SpawnHoming(HomingSpawnInfo{
         .x = actor.x + actor.laser_command.x,
         .y = actor.y + actor.laser_command.y,
-        .angle = AngleFromLegacy(actor.laser_command.d),
+        .angle = math::AngleFromLegacy(actor.laser_command.d),
         .dw = actor.laser_command.dw,
         .n = actor.laser_command.n,
         .c = actor.laser_command.c,
@@ -994,8 +1021,9 @@ EclVm::Step EclVm::ExecuteRegisterInstruction(EnemyActor &actor,
     auto &length = actor.script.registers[RegisterIndex(args.first)];
     const auto angle =
         Cast::down<uint8_t>(actor.script.registers[RegisterIndex(args.second)]);
-    length = instruction.Opcode() == EclOpcode::Sine ? sinl(angle, length)
-                                                     : cosl(angle, length);
+    const auto vector = math::RoundedPolarVector(math::AngleFromLegacy(angle),
+                                                 static_cast<float>(length));
+    length = instruction.Opcode() == EclOpcode::Sine ? vector.y : vector.x;
     break;
   }
   case EclOpcode::Modulo: {
@@ -1009,7 +1037,8 @@ EclVm::Step EclVm::ExecuteRegisterInstruction(EnemyActor &actor,
     const auto destination =
         Args<EclRegisterArguments>(instruction).destination;
     actor.script.registers[RegisterIndex(destination)] =
-        Cast::up<uint32_t>(rnd()) * rnd();
+        static_cast<uint32_t>(math::RandomInt()) *
+        static_cast<uint32_t>(math::RandomInt());
     break;
   }
   case EclOpcode::CompareRegisters: {

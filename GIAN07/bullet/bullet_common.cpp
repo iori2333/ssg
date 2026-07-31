@@ -6,7 +6,7 @@
 
 #include "bullet_common.h"
 
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace bullet_common {
 
@@ -33,14 +33,14 @@ float CalcSpreadAngle(uint16_t i, BulletPattern pattern, uint8_t n,
     const auto direction = 1 - ((i & 1) << 1);
     const auto offset = static_cast<int>(i >> 1) * dw * direction;
     const auto centered = (n & 1) != 0 ? offset : offset - (dw >> 1);
-    return base_angle + static_cast<float>(centered) * kLegacyAngleStep;
+    return base_angle + static_cast<float>(centered) * math::kLegacyAngleStep;
   }
   case BulletPattern::Circle:
     return base_angle +
-           (static_cast<float>(i) * kFullAngle / static_cast<float>(n));
+           (static_cast<float>(i) * math::kFullAngle / static_cast<float>(n));
   case BulletPattern::Random: {
-    const auto offset = dw == 0 ? 0 : (rnd() % dw) - (dw >> 1);
-    return base_angle + static_cast<float>(offset) * kLegacyAngleStep;
+    const auto offset = dw == 0 ? 0 : (math::RandomInt() % dw) - (dw >> 1);
+    return base_angle + static_cast<float>(offset) * math::kLegacyAngleStep;
   }
   }
   return base_angle;

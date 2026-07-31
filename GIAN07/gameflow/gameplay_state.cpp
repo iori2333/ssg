@@ -21,8 +21,8 @@
 #include "settings/config.h"
 #include "sys/input.h"
 #include "util/debug.h"
+#include "util/math_utils.h"
 #include "util/time.h"
-#include "util/ut_math.h"
 
 namespace gameflow {
 namespace {
@@ -37,6 +37,7 @@ void ResetGameplayRuntime(GameContext &context) {
   context.ui.ForceCloseMessageWindow();
   context.player.Configure(context.config.game.practice_mode,
                            context.config.input.z_spd_down_enabled);
+  context.player.SetFocusHitboxVisible(context.config.game.show_focus_hitbox);
   context.enemies.Reset();
   context.ui.UpdateBossHud(context.enemies.BossHud());
   context.bullets.Init();
@@ -125,7 +126,7 @@ bool GameplayState::EnterDemo() {
   mode_ = Mode::Demo;
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
-  rnd_seed_set(Time_SteadyTicksMS());
+  math::SeedRandom(Time_SteadyTicksMS());
   std::array<StageId, kRegularStageCount> available{};
   size_t available_count = 0;
   for (uint8_t index = 0; index < kRegularStageCount; ++index) {
@@ -137,7 +138,7 @@ bool GameplayState::EnterDemo() {
   if (available_count == 0) {
     return false;
   }
-  context.session.stage = available[rnd() % available_count];
+  context.session.stage = available[math::RandomInt() % available_count];
   if (!context.records.LoadStageDemo(context.session.stage, context.player,
                                      context.session)) {
     return false;

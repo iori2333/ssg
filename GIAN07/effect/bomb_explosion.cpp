@@ -3,6 +3,7 @@
 ///
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -10,7 +11,7 @@
 
 #include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 void EffectManager::ResetBombExplosions() {
   for (auto &effect : bomb_explosions_) {
@@ -71,23 +72,31 @@ void EffectManager::DrawBombExplosion(const BombExplosion &effect) {
 }
 
 void EffectManager::UpdateBombExplosion(BombExplosion &effect) {
-  const int speed = sinl(effect.age / 2 - 64, 200_px) + 200_px;
+  const int speed =
+      static_cast<int>(
+          std::lround(std::sin((static_cast<float>(effect.age) / 2.0f - 64.0f) *
+                               math::kLegacyAngleStep) *
+                      200_px)) +
+      200_px;
   int spawned = 0;
   for (auto &particle : effect.particles) {
     if (particle.frame > 14) {
       if (effect.age > 192) {
         continue;
       }
-      const uint8_t direction = static_cast<uint8_t>(rnd());
-      const int velocity = rnd() % 256 + 128;
-      particle.velocity_x = cosl(direction, velocity);
-      particle.velocity_y = sinl(direction, velocity);
+      const auto direction = math::RandomAngle();
+      const int velocity = math::RandomInt() % 256 + 128;
+      const auto movement = math::RoundedPolarVector(direction, velocity);
+      particle.velocity_x = movement.x;
+      particle.velocity_y = movement.y;
 
-      const uint8_t angle =
-          static_cast<uint8_t>(effect.age * 2 + (spawned % 8) * 32);
-      const int radius = speed - rnd() % (speed >> 2);
-      particle.x = cosl(angle, radius) + effect.x;
-      particle.y = sinl(angle, radius) + effect.y;
+      const auto angle =
+          static_cast<float>(effect.age * 2 + (spawned % 8) * 32) *
+          math::kLegacyAngleStep;
+      const int radius = speed - math::RandomInt() % (speed >> 2);
+      const auto offset = math::RoundedPolarVector(angle, radius);
+      particle.x = offset.x + effect.x;
+      particle.y = offset.y + effect.y;
       particle.frame = 0;
       ++spawned;
       continue;

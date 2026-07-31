@@ -12,7 +12,7 @@
 #include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -31,8 +31,8 @@ template <GRAPHICS_GEOMETRY_POLY Gp>
 void DrawCircleA16(Gp &gp, float x, float y, float r, float angle) {
   std::array<VERTEX_XY, 10> src{};
   for (int j = 0, i = -64; j <= 8; j++) {
-    const auto offset =
-        PolarVector(angle + static_cast<float>(i) * kLegacyAngleStep, r);
+    const auto offset = math::PolarVector(
+        angle + static_cast<float>(i) * math::kLegacyAngleStep, r);
     src[j].x = (x + offset.x) / WORLD_COORD_SCALE;
     src[j].y = (y + offset.y) / WORLD_COORD_SCALE;
     i += 16;
@@ -85,11 +85,12 @@ void LaserHoming::Update(const UpdateInfo &info) {
 
   switch (subtype_) {
   case HomingType::Type1: {
-    const auto target = AngleTo(static_cast<float>(info.player_x) - prev_x,
-                                static_cast<float>(info.player_y) - prev_y);
-    const auto angle_delta = ShortestAngleDelta(target, prev_angle);
+    const auto target =
+        math::AngleTo(static_cast<float>(info.player_x) - prev_x,
+                      static_cast<float>(info.player_y) - prev_y);
+    const auto angle_delta = math::ShortestAngleDelta(target, prev_angle);
 
-    if (std::abs(angle_delta) < 8.0f * kLegacyAngleStep) {
+    if (std::abs(angle_delta) < 8.0f * math::kLegacyAngleStep) {
       subtype_ = HomingType::None;
       Snd_SEPlay(SfxId::Hlaser, static_cast<int>(std::lround(p_[current_].x)));
     } else {
@@ -98,14 +99,15 @@ void LaserHoming::Update(const UpdateInfo &info) {
       }
       const auto turn =
           angle_delta * static_cast<float>(1 + (count_ / 32)) / 32.0f;
-      prev_angle += std::abs(turn) >= kLegacyAngleStep ? turn : angle_delta;
+      prev_angle +=
+          std::abs(turn) >= math::kLegacyAngleStep ? turn : angle_delta;
     }
 
     if (count_ > 120) {
       subtype_ = HomingType::None;
     }
 
-    const auto velocity = PolarVector(prev_angle, v_);
+    const auto velocity = math::PolarVector(prev_angle, v_);
     p_[current_].angle = prev_angle;
     p_[current_].x = prev_x + velocity.x;
     p_[current_].y = prev_y + velocity.y;
@@ -115,7 +117,7 @@ void LaserHoming::Update(const UpdateInfo &info) {
   case HomingType::None:
     v_ += a_ * 2;
     {
-      const auto velocity = PolarVector(prev_angle, v_);
+      const auto velocity = math::PolarVector(prev_angle, v_);
       p_[current_].angle = prev_angle;
       p_[current_].x = prev_x + velocity.x;
       p_[current_].y = prev_y + velocity.y;
@@ -150,7 +152,8 @@ void LaserHoming::Render() const {
   int cur = current_;
   const auto *pt = &p_[cur];
   const auto edge = [](const TrailPoint &point, float width) {
-    const auto offset = PolarVector(point.angle - (kFullAngle / 4.0f), width);
+    const auto offset =
+        math::PolarVector(point.angle - (math::kFullAngle / 4.0f), width);
     return std::array{VERTEX_XY{(point.x + offset.x) / WORLD_COORD_SCALE,
                                 (point.y + offset.y) / WORLD_COORD_SCALE},
                       VERTEX_XY{(point.x - offset.x) / WORLD_COORD_SCALE,

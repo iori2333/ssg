@@ -19,7 +19,7 @@
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -27,12 +27,14 @@ constexpr int kRandomCoordinate = -30000;
 
 int RandomWorldX() {
   return PixelToWorld(playfield::kLeft +
-                      rnd() % (playfield::kRight - playfield::kLeft));
+                      math::RandomInt() %
+                          (playfield::kRight - playfield::kLeft));
 }
 
 int RandomWorldY() {
   return PixelToWorld(playfield::kTop +
-                      rnd() % (playfield::kBottom - playfield::kTop));
+                      math::RandomInt() %
+                          (playfield::kBottom - playfield::kTop));
 }
 
 } // namespace
@@ -321,11 +323,13 @@ void EnemyManager::InitializeActor(EnemyActor &actor, WORLD_POINT position,
   actor.d = 64;
   actor.flags = EnemyActorFlags::Damageable | EnemyActorFlags::Draw |
                 EnemyActorFlags::CollidesWithPlayer;
-  actor.auto_fire_frame = Cast::down<uint8_t>(rnd());
+  actor.auto_fire_frame = static_cast<uint8_t>(math::RandomInt());
   actor.item = ItemKind::Score;
   actor.v = 64;
-  actor.vx = cosl(actor.d, actor.v);
-  actor.vy = sinl(actor.d, actor.v);
+  const auto velocity =
+      math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
+  actor.vx = velocity.x;
+  actor.vy = velocity.y;
 
   actor.bullet_command = {.d = 64,
                           .dw = 16,

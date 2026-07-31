@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <ranges>
 
@@ -13,7 +14,7 @@
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -25,20 +26,20 @@ struct Point3D {
 
 void RotatePoint(Point3D &point, uint8_t angle_x, uint8_t angle_y,
                  uint8_t angle_z) {
-  auto old_y = point.y;
-  auto old_z = point.z;
-  point.y = cosl(angle_x, old_y) - sinl(angle_x, old_z);
-  point.z = sinl(angle_x, old_y) + cosl(angle_x, old_z);
+  auto rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_x),
+                                           point.y, point.z);
+  point.y = rotated.x;
+  point.z = rotated.y;
 
-  auto old_x = point.x;
-  old_z = point.z;
-  point.x = cosl(angle_y, old_x) + sinl(angle_y, old_z);
-  point.z = -sinl(angle_y, old_x) + cosl(angle_y, old_z);
+  rotated = math::RoundedRotateVector(-math::AngleFromLegacy(angle_y), point.x,
+                                      point.z);
+  point.x = rotated.x;
+  point.z = rotated.y;
 
-  old_x = point.x;
-  old_y = point.y;
-  point.x = cosl(angle_z, old_x) - sinl(angle_z, old_y);
-  point.y = sinl(angle_z, old_x) + cosl(angle_z, old_y);
+  rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_z), point.x,
+                                      point.y);
+  point.x = rotated.x;
+  point.y = rotated.y;
 }
 
 } // namespace
@@ -143,7 +144,8 @@ void EffectManager::DrawCircleFade(int x, int y, int radius) {
     for (int tile_y = 0; tile_y < GRP_RES.h; tile_y += 16) {
       const int dx = tile_x - x;
       const int dy = tile_y - y;
-      const int distance = isqrt(dx * dx + dy * dy);
+      const int distance =
+          static_cast<int>(std::lround(std::sqrt(dx * dx + dy * dy)));
       if (distance < radius && radius - distance < 8 * 16) {
         const PIXEL_LTWH source = {((radius - distance) >> 3) << 4, 128, 16,
                                    16};
@@ -298,8 +300,9 @@ void EffectManager::DrawWarningText() {
   warning_pulse_ += 8;
   if (warning_lines_[0].angle_x == 0) {
     GrpGeom->Lock();
-    GrpGeom->SetAlphaNorm(
-        Cast::down_sign<uint8_t>(128 + sinl(warning_pulse_, 48)));
+    const auto pulse = math::RoundedPolarVector(
+        static_cast<float>(warning_pulse_) * math::kLegacyAngleStep, 48.0f);
+    GrpGeom->SetAlphaNorm(Cast::down_sign<uint8_t>(128 + pulse.y));
     GrpGeom->SetColor({5, 0, 0});
     GrpGeom->DrawBoxA(129, 46, 512, 66);
     GrpGeom->DrawBoxA(129, 136, 512, 156);

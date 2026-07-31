@@ -11,7 +11,7 @@
 #include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace stage {
 
@@ -187,7 +187,13 @@ void StageBackground::Draw() const {
     break;
   }
 
-  const int quake_dx = quake_ == 0 ? 0 : sinl(quake_ * 16, (256 - quake_) >> 5);
+  const int quake_dx =
+      quake_ == 0
+          ? 0
+          : math::RoundedPolarVector(static_cast<float>(quake_ * 16) *
+                                         math::kLegacyAngleStep,
+                                     static_cast<float>((256 - quake_) >> 5))
+                .y;
   map_.Draw(raster_dx_, quake_dx);
   if (mode_ == Mode::Stage4Rock) {
     visuals_.DrawRocks();
@@ -286,8 +292,11 @@ void StageBackground::UpdateStage2Boss() {
 void StageBackground::UpdateRaster(bool opening) {
   const int angle_step = opening ? 16 : 2;
   for (size_t i = 0; i < raster_dx_.size(); ++i) {
-    raster_dx_[i] = Cast::down<int8_t>(
-        sinl(raster_angle_ + static_cast<int>(i) * angle_step, raster_width_));
+    const auto offset = math::RoundedPolarVector(
+        static_cast<float>(raster_angle_ + static_cast<int>(i) * angle_step) *
+            math::kLegacyAngleStep,
+        static_cast<float>(raster_width_));
+    raster_dx_[i] = Cast::down<int8_t>(offset.y);
   }
   raster_angle_ = static_cast<uint8_t>(raster_angle_ + (opening ? 2 : 8));
   if (opening) {

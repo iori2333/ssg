@@ -8,7 +8,7 @@
 
 #include "data/graphics_assets.h"
 #include "platform/text_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -225,7 +225,10 @@ void MsgWindow::Draw() {
     time = face_time >> 2;
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
-      len = cosl(time + (i * 153), (64 - time) / 2);
+      len = math::RoundedPolarVector(static_cast<float>(time + (i * 153)) *
+                                         math::kLegacyAngleStep,
+                                     static_cast<float>(64 - time) / 2.0f)
+                .x;
       src = PIXEL_LTWH{((face_id % kFaceColumns) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
     }
@@ -235,7 +238,10 @@ void MsgWindow::Draw() {
     time = (255 - face_time) >> 2;
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
-      len = cosl(time + (i * 153), (64 - time) / 2);
+      len = math::RoundedPolarVector(static_cast<float>(time + (i * 153)) *
+                                         math::kLegacyAngleStep,
+                                     static_cast<float>(64 - time) / 2.0f)
+                .x;
       src = PIXEL_LTWH{((face_id % kFaceColumns) * FACE_W), i, FACE_W, 1};
       GrpSurface_Blit({(x + len + 2), (oy + i)}, sid, src);
     }
@@ -245,7 +251,10 @@ void MsgWindow::Draw() {
     time = face_time >> 1;
     oy = max_size.bottom - 100;
     for (auto i = 0; i < FACE_H; i++) {
-      len = cosl(time + (i * 4), time);
+      len = math::RoundedPolarVector(static_cast<float>(time + (i * 4)) *
+                                         math::kLegacyAngleStep,
+                                     static_cast<float>(time))
+                .x;
       src = PIXEL_LTWH{((face_id % kFaceColumns) * FACE_W), i, FACE_W, 1};
       if ((i & 1) != 0) {
         GrpSurface_Blit({(x - len + 2), (oy + i)}, sid, src);

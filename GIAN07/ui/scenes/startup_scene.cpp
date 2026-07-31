@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <span>
@@ -14,7 +15,7 @@
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 StartupScene::Lens StartupScene::Lens::Create(uint16_t radius, uint16_t bulge) {
   assert(radius > 0);
@@ -30,15 +31,18 @@ StartupScene::Lens StartupScene::Lens::Create(uint16_t radius, uint16_t bulge) {
   };
 
   auto *table = lens.table.data();
+  const auto rounded_sqrt = [](auto value) {
+    return static_cast<int32_t>(std::lround(std::sqrt(value)));
+  };
   const auto radius_squared = Cast::up_sign<int32_t>(radius) * radius;
   const auto sphere_radius =
-      isqrt(radius_squared - Cast::up_sign<int32_t>(bulge) * bulge);
+      rounded_sqrt(radius_squared - Cast::up_sign<int32_t>(bulge) * bulge);
   for (auto row = -Cast::up_sign<int32_t>(radius); std::cmp_less(row, radius);
        ++row) {
     auto half_width = sphere_radius * sphere_radius - row * row;
     int width = 0;
     if (half_width > 0) {
-      half_width = isqrt(half_width);
+      half_width = rounded_sqrt(half_width);
       width = half_width * 2;
       *table++ = static_cast<uint32_t>(width);
       *table++ =
@@ -51,7 +55,8 @@ StartupScene::Lens StartupScene::Lens::Create(uint16_t radius, uint16_t bulge) {
 
     while (width-- != 0) {
       const auto column = half_width - width;
-      const auto depth = isqrt(radius_squared - column * column - row * row);
+      const auto depth =
+          rounded_sqrt(radius_squared - column * column - row * row);
       const auto source_y = ((row * bulge) / depth) + radius;
       const auto source_x = ((column * bulge) / depth) + radius;
       *table++ = static_cast<uint32_t>(source_y * diameter + source_x);
@@ -137,7 +142,15 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
     fade(timer_ * 4);
   } else if (lens_) {
     const uint8_t offset = timer_ - 64;
-    lens_->Draw({320 + sinl(offset - 64, 240), 295 + sinl(offset * 2, 20)});
+    const int x =
+        math::RoundedPolarVector(
+            static_cast<float>(offset - 64) * math::kLegacyAngleStep, 240.0f)
+            .y;
+    const int y =
+        math::RoundedPolarVector(
+            static_cast<float>(offset * 2) * math::kLegacyAngleStep, 20.0f)
+            .y;
+    lens_->Draw({320 + x, 295 + y});
   }
   Grp_Flip();
   return StartupSceneResult::Running;

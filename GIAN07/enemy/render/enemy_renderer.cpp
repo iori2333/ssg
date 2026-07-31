@@ -11,7 +11,7 @@
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
   if (actor.animation >= animations_.size()) {
@@ -114,7 +114,11 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
     for (uint8_t layer = 0; layer <= 5; ++layer) {
       GrpGeom->SetColor({5U - layer, 5U - layer, 5U});
       GeomCircle({center.x, center.y},
-                 sinl(boss.count * 4, 30 + layer * 4) + 80);
+                 math::RoundedPolarVector(static_cast<float>(boss.count * 4) *
+                                              math::kLegacyAngleStep,
+                                          static_cast<float>(30 + layer * 4))
+                         .y +
+                     80);
     }
     GrpGeom->Unlock();
   }

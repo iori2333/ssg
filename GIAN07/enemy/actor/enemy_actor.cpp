@@ -9,7 +9,7 @@
 
 #include "gameplay/playfield.h"
 #include "player/player_attack.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 void EnemyActor::BeginExplosion() {
   hp = 0;
@@ -68,10 +68,10 @@ bool EnemyActor::IsHitBy(const PlayerAttack &attack) const {
         std::min(hitbox_half_height, hitbox_half_width) + PixelToWorld(3);
     const int offset_x = x - attack.origin.x;
     const int offset_y = y - attack.origin.y;
-    const int length =
-        cosl(attack.direction, offset_x) + sinl(attack.direction, offset_y);
-    const int width = std::abs(-sinl(attack.direction, offset_x) +
-                               cosl(attack.direction, offset_y));
+    const auto projected = math::RoundedRotateVector(
+        -math::AngleFromLegacy(attack.direction), offset_x, offset_y);
+    const int length = projected.x;
+    const int width = std::abs(projected.y);
     return length > 0 && width < hit_width;
   }
 

@@ -17,7 +17,7 @@
 #include "player/player_attack.h"
 #include "stage/stage_session.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 void EnemyManager::ResetBosses() {
   snakes_.Reset();

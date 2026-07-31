@@ -4,7 +4,7 @@
 
 #include "geometry.h"
 
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace Geometry {
 
@@ -15,8 +15,10 @@ void ApproximateCircle(std::span<VERTEX_XY, CIRCLE_POINTS> ret,
   auto i = 0;
   for (auto &v : ret) {
     const uint8_t angle = (i++ * CIRCLE_STEP);
-    v.x = (center.x + cosl(angle, radius));
-    v.y = (center.y + sinl(angle, radius));
+    const auto offset =
+        math::RoundedPolarVector(math::AngleFromLegacy(angle), radius);
+    v.x = static_cast<VERTEX_COORD>(center.x + offset.x);
+    v.y = static_cast<VERTEX_COORD>(center.y + offset.y);
   }
 }
 
@@ -25,8 +27,10 @@ void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
   auto v = ret.begin();
   for (const auto i : std::views::iota(0U, CIRCLE_POINTS)) {
     const uint8_t angle = (i * CIRCLE_STEP);
-    const auto [lx, ly] = std::pair(cosl(angle, r), sinl(angle, r));
-    const auto [wx, wy] = std::pair(cosl(angle, w), sinl(angle, w));
+    const auto [lx, ly] =
+        math::RoundedPolarVector(math::AngleFromLegacy(angle), r);
+    const auto [wx, wy] =
+        math::RoundedPolarVector(math::AngleFromLegacy(angle), w);
     v[0] = {
         static_cast<VERTEX_COORD>(center.x + lx - wx),
         static_cast<VERTEX_COORD>(center.y + ly - wy),

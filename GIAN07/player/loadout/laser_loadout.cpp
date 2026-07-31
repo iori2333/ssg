@@ -12,7 +12,7 @@
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "player/player_attack.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 constexpr PlayerTraits kLaserTraits{
@@ -193,13 +193,15 @@ void LaserLoadout::DrawBombForeground(const Player &player,
         for (int i = -3; i <= 3; i++) {
           const auto direction =
               side > 0 ? RightAngle(angle, i) : LeftAngle(angle, i);
-          const int length_x = cosl(direction, 850);
-          const int length_y = sinl(direction, 850);
-          const int width_x = cosl(direction + 64, width);
-          const int width_y = sinl(direction + 64, width);
+          const auto length = math::RoundedPolarVector(
+              math::AngleFromLegacy(direction), 850.0f);
+          const auto beam_width = math::RoundedPolarVector(
+              math::AngleFromLegacy(static_cast<uint8_t>(direction + 64)),
+              width);
           const int origin_x = (player.OpX() >> 6) + side * OptionOffset(false);
           const int origin_y = player.OpY() >> 6;
-          set_points(origin_x, origin_y, length_x, length_y, width_x, width_y);
+          set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
+                     beam_width.y);
           if (auto *poly = GrpGeom_Poly()) {
             poly->SetAlphaOne();
             GeomGrdRectA(*poly, points, color);
@@ -222,13 +224,15 @@ void LaserLoadout::DrawBombForeground(const Player &player,
         for (int i = -3; i <= 3; i++) {
           const auto direction =
               side > 0 ? RightAngle(angle, i) : LeftAngle(angle, i);
-          const int length_x = cosl(direction, 850);
-          const int length_y = sinl(direction, 850);
-          const int width_x = cosl(direction + 64, width);
-          const int width_y = sinl(direction + 64, width);
+          const auto length = math::RoundedPolarVector(
+              math::AngleFromLegacy(direction), 850.0f);
+          const auto beam_width = math::RoundedPolarVector(
+              math::AngleFromLegacy(static_cast<uint8_t>(direction + 64)),
+              width);
           const int origin_x = (player.OpX() >> 6) + side * OptionOffset(false);
           const int origin_y = player.OpY() >> 6;
-          set_points(origin_x, origin_y, length_x, length_y, width_x, width_y);
+          set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
+                     beam_width.y);
           if (auto *poly = GrpGeom_Poly()) {
             poly->SetAlphaOne();
             GeomGrdRectA(*poly, points, color);

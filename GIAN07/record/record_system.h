@@ -13,7 +13,7 @@
 #include "gameplay/game_rules.h"
 #include "player/player.h"
 #include "sys/input.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace data {
 class GameData;
@@ -109,7 +109,7 @@ private:
   struct StageCheckpoint {
     StageId stage = StageId::Stage1;
     uint32_t frame_count = 0;
-    RandomState rng{};
+    math::RandomState rng{};
     PlayerProgress player{};
     int32_t rank = 0;
   };

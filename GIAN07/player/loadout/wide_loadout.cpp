@@ -3,6 +3,7 @@
 ///
 
 #include <algorithm>
+#include <cmath>
 
 #include "wide_loadout.h"
 
@@ -13,7 +14,7 @@
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 constexpr PlayerTraits kWideTraits{
@@ -57,7 +58,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   case 1: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
+    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+        std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
+        6.0f)));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 0, 1,
         13.5_px,     0,           PlayerShotKind::WideMain};
@@ -66,7 +69,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   case 2: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
+    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+        std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
+        6.0f)));
     PlayerShotSpawnInfo si{player_.X() - 6_px,
                            player_.Y(),
                            static_cast<uint8_t>(-64 + dd),
@@ -84,7 +89,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   case 4:
   case 5: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
+    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+        std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
+        6.0f)));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 4, 3,
         13.5_px,     0,           PlayerShotKind::WideMain};
@@ -93,7 +100,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   default: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 6));
+    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+        std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
+        6.0f)));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 3, 5,
         13.5_px,     0,           PlayerShotKind::WideMain};
@@ -184,8 +193,14 @@ void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
 
   const auto d = Cast::down<uint8_t>(remaining * 3U);
   l = (BombDuration() - remaining) * 26;
-  dx = playfield::kWorldCenterX + 35_px + cosl(d, l << 1);
-  dy = playfield::kWorldCenterY - 45_px + sinl(d << 1, l);
+  const auto x_offset =
+      math::RoundedPolarVector(math::AngleFromLegacy(d), l << 1);
+  const auto y_offset =
+      std::sin(static_cast<float>(d << 1) * math::kLegacyAngleStep) *
+      static_cast<float>(l);
+  dx = playfield::kWorldCenterX + 35_px + x_offset.x;
+  dy = playfield::kWorldCenterY - 45_px +
+       static_cast<int>(std::lround(y_offset));
 
   effects.SpawnFragment(dx, dy, FragmentKind::SmallStar);
   effects.SpawnFragment(dx, dy, FragmentKind::SmallStar);

@@ -15,7 +15,7 @@
 #include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 inline constexpr auto kDebugLaserEvadeWidth = 12_px;
@@ -56,7 +56,7 @@ LaserReflect::CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
     return {};
   }
 
-  const auto head = PolarVector(self.angle_, static_cast<float>(self.l_));
+  const auto head = math::PolarVector(self.angle_, static_cast<float>(self.l_));
   const float lx = self.x_ + head.x;
   const float ly = self.y_ + head.y;
 
@@ -104,7 +104,7 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
                                           info.n, info.base_angle, info.dw);
 
   if (info.l2 != 0) {
-    const auto offset = PolarVector(angle_, static_cast<float>(info.l2));
+    const auto offset = math::PolarVector(angle_, static_cast<float>(info.l2));
     x_ = static_cast<float>(info.x) + offset.x;
     y_ = static_cast<float>(info.y) + offset.y;
   } else {
@@ -113,7 +113,7 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
   }
 
   v_ = info.v;
-  const auto velocity = PolarVector(angle_, v_);
+  const auto velocity = math::PolarVector(angle_, v_);
   vx_ = velocity.x;
   vy_ = velocity.y;
 
@@ -123,7 +123,7 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
   lx_ = 0;
   ly_ = 0;
   const auto width =
-      PolarVector(angle_, static_cast<float>(w_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(w_) / WORLD_COORD_SCALE);
   wx_ = -width.y;
   wy_ = width.x;
 
@@ -182,7 +182,7 @@ void LaserReflect::UpdateGrowing() {
   if (l_ < lmax_) {
     l_ += v_;
     const auto length =
-        PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+        math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
     lx_ = length.x;
     ly_ = length.y;
     auto *p = p_;
@@ -218,7 +218,7 @@ auto LaserReflect::UpdateShooting(std::span<const LaserLong *> longs)
     -> UpdateResult {
   l_ += v_;
   const auto length =
-      PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
   lx_ = length.x;
   ly_ = length.y;
   auto *p = p_;
@@ -232,7 +232,7 @@ auto LaserReflect::UpdateShooting(std::span<const LaserLong *> longs)
     return {};
   }
 
-  const auto velocity = PolarVector(angle_, v_);
+  const auto velocity = math::PolarVector(angle_, v_);
 
   for (const auto *ll : longs) {
     if (auto hit = CheckLongLaser(*this, *ll, velocity.x, velocity.y);
@@ -254,7 +254,7 @@ void LaserReflect::UpdateReflected() {
   x_ += vx_;
   y_ += vy_;
   const auto length =
-      PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
   lx_ = length.x;
   ly_ = length.y;
   auto *p = p_;
@@ -269,7 +269,7 @@ void LaserReflect::UpdateClearing() {
     l_ += v_;
     w_ += 16;
     const auto length =
-        PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+        math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
     lx_ = length.x;
     ly_ = length.y;
     auto *p = p_;
@@ -282,7 +282,7 @@ void LaserReflect::UpdateClearing() {
   }
 
   const auto width =
-      PolarVector(angle_, static_cast<float>(w_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(w_) / WORLD_COORD_SCALE);
   wx_ = -width.y;
   wy_ = width.x;
   SetupGeometry();

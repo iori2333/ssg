@@ -20,7 +20,7 @@
 #include "gfx/graphics_backend.h"
 #include "item/item_system.h"
 #include "player/player.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 // ── BulletManager: Init ──────────────────────────────────────────
 
@@ -52,9 +52,10 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
   const auto n = si.count;
   const uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
 
-  auto base_angle = si.aimed ? AngleTo(static_cast<float>(player_.X() - si.x),
-                                       static_cast<float>(player_.Y() - si.y))
-                             : 0.0f;
+  auto base_angle = si.aimed
+                        ? math::AngleTo(static_cast<float>(player_.X() - si.x),
+                                        static_cast<float>(player_.Y() - si.y))
+                        : 0.0f;
   base_angle += si.angle;
 
   for (uint16_t i = 0; i < setmax; i++) {
@@ -71,13 +72,13 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
     case BulletSpeedVariance::None:
       break;
     case BulletSpeedVariance::Small:
-      temp = (rnd() % 16) - 8;
+      temp = (math::RandomInt() % 16) - 8;
       break;
     case BulletSpeedVariance::Medium:
-      temp = (rnd() % 32) - 16;
+      temp = (math::RandomInt() % 32) - 16;
       break;
     case BulletSpeedVariance::Large:
-      temp = (rnd() % 64) - 32;
+      temp = (math::RandomInt() % 64) - 32;
       break;
     }
     si2.speed = si.speed + temp;
@@ -102,7 +103,7 @@ void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
                                                si.angle, si.spread);
 
     const int i_mod = (i % n) + 1;
-    const auto relative_angle = ShortestAngleDelta(si2.angle, si.angle);
+    const auto relative_angle = math::ShortestAngleDelta(si2.angle, si.angle);
     float v_ret = si.speed / std::cos(relative_angle);
     if (si.rapid) {
       v_ret += (v_ret * 0.125f) * (i_mod - 1);
@@ -131,17 +132,18 @@ void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
     case BulletSpeedVariance::None:
       break;
     case BulletSpeedVariance::Small:
-      temp = (rnd() % 16) - 8;
+      temp = (math::RandomInt() % 16) - 8;
       break;
     case BulletSpeedVariance::Medium:
-      temp = (rnd() % 32) - 16;
+      temp = (math::RandomInt() % 32) - 16;
       break;
     case BulletSpeedVariance::Large:
-      temp = (rnd() % 64) - 32;
+      temp = (math::RandomInt() % 64) - 32;
       break;
     }
-    const auto delta = std::abs(ShortestAngleDelta(si.angle, si2.angle));
-    si2.speed = si.speed - ((si.speed * delta) / AngleFromLegacy(23)) + temp;
+    const auto delta = std::abs(math::ShortestAngleDelta(si.angle, si2.angle));
+    si2.speed =
+        si.speed - ((si.speed * delta) / math::AngleFromLegacy(23)) + temp;
 
     t->Spawn(si2);
   }
@@ -173,9 +175,10 @@ void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
     cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, session_.rank);
   }
 
-  auto base_angle = cmd.aimed ? AngleTo(static_cast<float>(player_.X() - cmd.x),
+  auto base_angle = cmd.aimed
+                        ? math::AngleTo(static_cast<float>(player_.X() - cmd.x),
                                         static_cast<float>(player_.Y() - cmd.y))
-                              : 0.0f;
+                        : 0.0f;
   base_angle += cmd.angle;
 
   for (uint8_t i = 0; i < cmd.n; i++) {
@@ -422,7 +425,7 @@ void BulletManager::ConvertBulletsToItems(uint8_t frequency) {
 
   for (auto &b : bullets_) {
     if (!b.IsClearing()) {
-      if (rnd() % frequency == 0) {
+      if (math::RandomInt() % frequency == 0) {
         items_.Spawn(b.X(), b.Y(), ItemKind::Score);
         b.RemoveImmediately();
       } else {

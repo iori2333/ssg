@@ -13,7 +13,7 @@
 #include "enemy/ecl/ecl.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -60,14 +60,14 @@ void LaserLong::Spawn(const LongLaserSpawnInfo &info) {
   angle_ = info.angle;
 
   if (info.type == LongLaserType::LongZ) {
-    angle_ += AngleTo(static_cast<float>(info.player_x) - x_,
-                      static_cast<float>(info.player_y) - y_);
+    angle_ += math::AngleTo(static_cast<float>(info.player_x) - x_,
+                            static_cast<float>(info.player_y) - y_);
     subtype_ = LongLaserType::Long;
   } else {
     subtype_ = info.type;
   }
 
-  const auto beam = PolarVector(angle_, static_cast<float>(kBeamLength));
+  const auto beam = math::PolarVector(angle_, static_cast<float>(kBeamLength));
   infx_ = beam.x;
   infy_ = beam.y;
   count_ = 0;
@@ -116,7 +116,7 @@ void LaserLong::TickUpdate() {
     }
   } else {
     if (subtype_ == LongLaserType::SetDeg) {
-      const auto enemy_angle = AngleFromLegacy(e_->d);
+      const auto enemy_angle = math::AngleFromLegacy(e_->d);
       if (angle_ != enemy_angle) {
         angle_ = enemy_angle;
         FixAngleGeometry();
@@ -159,7 +159,7 @@ void LaserLong::UpdateOpening() {
   }
 
   const auto width =
-      PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+      math::PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
   lx_ = width.x;
   ly_ = width.y;
   wx_ = -width.y;
@@ -181,7 +181,7 @@ void LaserLong::UpdateClosing() {
   }
 
   const auto width =
-      PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+      math::PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
   lx_ = width.x;
   ly_ = width.y;
   wx_ = -width.y;
@@ -271,9 +271,9 @@ void LaserLong::DrawBeam() const {
       p2[kBeamVertexCount - 1].x = p_[3].x;
       p2[kBeamVertexCount - 1].y = p_[3].y;
       for (auto n = 2; n < (kBeamVertexCount - 1); n++) {
-        const auto cap_angle = angle_ + (kFullAngle / 4.0f) +
-                               (kFullAngle / 2.0f) * (n - 1) / 32.0f;
-        const auto offset = PolarVector(cap_angle, len);
+        const auto cap_angle = angle_ + (math::kFullAngle / 4.0f) +
+                               (math::kFullAngle / 2.0f) * (n - 1) / 32.0f;
+        const auto offset = math::PolarVector(cap_angle, len);
         p2[n].x = p2[0].x + offset.x;
         p2[n].y = p2[0].y + offset.y;
       }
@@ -377,12 +377,12 @@ void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, float angle,
 
 void LaserLong::FixAngleGeometry() {
   const auto width =
-      PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+      math::PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
   lx_ = width.x;
   ly_ = width.y;
   wx_ = -width.y;
   wy_ = width.x;
-  const auto beam = PolarVector(angle_, static_cast<float>(kBeamLength));
+  const auto beam = math::PolarVector(angle_, static_cast<float>(kBeamLength));
   infx_ = beam.x;
   infy_ = beam.y;
   RecalcGeometry();

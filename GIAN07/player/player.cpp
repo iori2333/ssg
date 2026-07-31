@@ -20,7 +20,7 @@
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -71,9 +71,11 @@ void Player::SpawnShot(const PlayerShotSpawnInfo &si) {
     t->y_ = si.y;
     t->speed_ = si.speed;
     t->acceleration_ = si.acceleration;
-    t->direction_ = d;
-    t->velocity_x_ = cosl(d, si.speed);
-    t->velocity_y_ = sinl(d, si.speed);
+    t->direction_ = math::AngleFromLegacy(d);
+    const auto velocity =
+        math::RoundedPolarVector(math::AngleFromLegacy(d), si.speed);
+    t->velocity_x_ = velocity.x;
+    t->velocity_y_ = velocity.y;
     t->turn_rate_ = si.turn_rate;
     t->kind_ = si.kind;
     t->motion_ = si.motion;
@@ -91,7 +93,8 @@ int Player::HitRadiusPixels() const {
 }
 
 void Player::DrawFocusHitbox() const {
-  if (!focused_ || invincibility_time_ >= kRespawnInvincibilityDuration) {
+  if (!focus_hitbox_visible_ || !focused_ ||
+      invincibility_time_ >= kRespawnInvincibilityDuration) {
     return;
   }
 

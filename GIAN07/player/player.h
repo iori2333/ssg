@@ -94,6 +94,7 @@ public:
     practice_mode_ = practice_mode;
     focus_while_firing_ = focus_while_firing;
   }
+  void SetFocusHitboxVisible(bool visible) { focus_hitbox_visible_ = visible; }
   void Draw();
   void DrawBombBackground() const;
   void DrawDebugHitbox() const;
@@ -237,6 +238,7 @@ private:
   stage::StageSession &stage_;
   PracticeMode practice_mode_ = PracticeMode::Off;
   bool focus_while_firing_ = false;
+  bool focus_hitbox_visible_ = true;
   uint8_t initial_bomb_stock_ = 0;
 
   // --- Shot pool ---

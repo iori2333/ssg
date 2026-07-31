@@ -19,7 +19,7 @@
 #include "platform/text_backend.h"
 #include "sys/input.h"
 #include "util/debug.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 // Constants
 // ---------
@@ -171,43 +171,48 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
     ftable2[i] = (temp / temp2);
   }
 
+  const auto attenuation = [](int angle) {
+    return 256 - math::RoundedPolarVector(
+                     static_cast<float>(angle) * math::kLegacyAngleStep, 256.0f)
+                     .y;
+  };
   for (int i = 0; i < std::size(ftable); i++) {
     ftable[i] =
-        ((i >= 8 && i <= 128 + 7) ? ftable2[i - 8] : 0) * (256 - sinm(0)) / 256;
+        ((i >= 8 && i <= 128 + 7) ? ftable2[i - 8] : 0) * attenuation(0) / 256;
 
     ftable[i] +=
-        ((i >= 9 && i <= 128 + 8) ? ftable2[i - 9] : 0) * (256 - sinm(8)) / 256;
+        ((i >= 9 && i <= 128 + 8) ? ftable2[i - 9] : 0) * attenuation(8) / 256;
     ftable[i] += ((i >= 10 && i <= 128 + 9) ? ftable2[i - 10] : 0) *
-                 (256 - sinm(16)) / 256;
+                 attenuation(16) / 256;
     ftable[i] += ((i >= 11 && i <= 128 + 10) ? ftable2[i - 11] : 0) *
-                 (256 - sinm(24)) / 256;
+                 attenuation(24) / 256;
     ftable[i] += ((i >= 12 && i <= 128 + 11) ? ftable2[i - 12] : 0) *
-                 (256 - sinm(32)) / 256;
+                 attenuation(32) / 256;
     ftable[i] += ((i >= 13 && i <= 128 + 12) ? ftable2[i - 13] : 0) *
-                 (256 - sinm(40)) / 256;
+                 attenuation(40) / 256;
     ftable[i] += ((i >= 14 && i <= 128 + 13) ? ftable2[i - 14] : 0) *
-                 (256 - sinm(48)) / 256;
+                 attenuation(48) / 256;
     ftable[i] += ((i >= 15 && i <= 128 + 14) ? ftable2[i - 15] : 0) *
-                 (256 - sinm(56)) / 256;
+                 attenuation(56) / 256;
     ftable[i] += ((i >= 16 && i <= 128 + 15) ? ftable2[i - 16] : 0) *
-                 (256 - sinm(63)) / 256;
+                 attenuation(63) / 256;
 
     ftable[i] +=
-        ((i <= 128 + 6 && i >= 7) ? ftable2[i - 7] : 0) * (256 - sinm(8)) / 256;
-    ftable[i] += ((i <= 128 + 5 && i >= 6) ? ftable2[i - 6] : 0) *
-                 (256 - sinm(16)) / 256;
-    ftable[i] += ((i <= 128 + 4 && i >= 5) ? ftable2[i - 5] : 0) *
-                 (256 - sinm(24)) / 256;
-    ftable[i] += ((i <= 128 + 3 && i >= 4) ? ftable2[i - 4] : 0) *
-                 (256 - sinm(32)) / 256;
-    ftable[i] += ((i <= 128 + 2 && i >= 3) ? ftable2[i - 3] : 0) *
-                 (256 - sinm(40)) / 256;
-    ftable[i] += ((i <= 128 + 1 && i >= 2) ? ftable2[i - 2] : 0) *
-                 (256 - sinm(48)) / 256;
-    ftable[i] += ((i <= 128 + 0 && i >= 1) ? ftable2[i - 1] : 0) *
-                 (256 - sinm(56)) / 256;
-    ftable[i] += ((i <= 128 - 1 && i >= 0) ? ftable2[i - 0] : 0) *
-                 (256 - sinm(63)) / 256;
+        ((i <= 128 + 6 && i >= 7) ? ftable2[i - 7] : 0) * attenuation(8) / 256;
+    ftable[i] +=
+        ((i <= 128 + 5 && i >= 6) ? ftable2[i - 6] : 0) * attenuation(16) / 256;
+    ftable[i] +=
+        ((i <= 128 + 4 && i >= 5) ? ftable2[i - 5] : 0) * attenuation(24) / 256;
+    ftable[i] +=
+        ((i <= 128 + 3 && i >= 4) ? ftable2[i - 4] : 0) * attenuation(32) / 256;
+    ftable[i] +=
+        ((i <= 128 + 2 && i >= 3) ? ftable2[i - 3] : 0) * attenuation(40) / 256;
+    ftable[i] +=
+        ((i <= 128 + 1 && i >= 2) ? ftable2[i - 2] : 0) * attenuation(48) / 256;
+    ftable[i] +=
+        ((i <= 128 + 0 && i >= 1) ? ftable2[i - 1] : 0) * attenuation(56) / 256;
+    ftable[i] +=
+        ((i <= 128 - 1 && i >= 0) ? ftable2[i - 0] : 0) * attenuation(63) / 256;
 
     ftable[i] >>= 3;
 

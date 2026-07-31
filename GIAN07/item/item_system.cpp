@@ -2,6 +2,9 @@
 /// ItemSystem - collectible item entities and pickup processing
 ///
 
+#include <cmath>
+#include <cstdint>
+
 #include "item_system.h"
 
 #include "audio/snd.h"
@@ -9,7 +12,7 @@
 #include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 int ItemSystem::HitRadius(ItemKind kind) {
   switch (kind) {
@@ -30,7 +33,7 @@ void ItemSystem::Spawn(int x, int y, ItemKind kind) {
     return;
   }
 
-  constexpr uint8_t deg = -64;
+  constexpr auto angle = -math::kFullAngle / 4.0f;
   ip->x = x;
   ip->y = y;
   ip->kind = kind;
@@ -40,20 +43,23 @@ void ItemSystem::Spawn(int x, int y, ItemKind kind) {
   switch (kind) {
   case ItemKind::None:
     return;
-  case ItemKind::Score:
-    ip->vx = cosl(deg, 3_px);
-    ip->vy = sinl(deg, 3_px);
-    break;
+  case ItemKind::Score: {
+    const auto velocity = math::RoundedPolarVector(angle, 3_px);
+    ip->vx = velocity.x;
+    ip->vy = velocity.y;
+  } break;
 
-  case ItemKind::Extend:
-    ip->vx = cosl(deg, 2_px);
-    ip->vy = sinl(deg, 2_px);
-    break;
+  case ItemKind::Extend: {
+    const auto velocity = math::RoundedPolarVector(angle, 2_px);
+    ip->vx = velocity.x;
+    ip->vy = velocity.y;
+  } break;
 
-  case ItemKind::Bomb:
-    ip->vx = cosl(deg, 2_px);
-    ip->vy = sinl(deg, 2_px);
-    break;
+  case ItemKind::Bomb: {
+    const auto velocity = math::RoundedPolarVector(angle, 2_px);
+    ip->vx = velocity.x;
+    ip->vy = velocity.y;
+  } break;
   }
 }
 
@@ -75,7 +81,11 @@ void ItemSystem::Update() {
         ip.auto_collect = true;
         tx = (player_.X() - ip.x);
         ty = (player_.Y() - ip.y);
-        l = 1 + (isqrt((tx * tx) + (ty * ty)) / 500);
+        const auto distance_squared =
+            static_cast<int64_t>(tx) * tx + static_cast<int64_t>(ty) * ty;
+        const auto distance =
+            static_cast<int>(std::lround(std::sqrt(distance_squared)));
+        l = 1 + (distance / 500);
         ip.x += tx / l;
         ip.y += ty / l;
       } else {
@@ -85,7 +95,11 @@ void ItemSystem::Update() {
     } else {
       tx = (player_.X() - ip.x);
       ty = (player_.Y() - ip.y);
-      l = 1 + (isqrt((tx * tx) + (ty * ty)) / 700); // 512(3+6)
+      const auto distance_squared =
+          static_cast<int64_t>(tx) * tx + static_cast<int64_t>(ty) * ty;
+      const auto distance =
+          static_cast<int>(std::lround(std::sqrt(distance_squared)));
+      l = 1 + (distance / 700); // 512(3+6)
       ip.x += tx / l;
       ip.y += ty / l;
     }
@@ -174,8 +188,12 @@ void ItemSystem::Draw() const {
     case ItemKind::Extend:
       for (j = 0; j < 8; j++) {
         src = PIXEL_LTWH{(384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16};
-        x = (ip.x >> 6) - 8 + cosl(ip.count + (j * 256 / 8), 12);
-        y = (ip.y >> 6) - 8 + sinl(ip.count + (j * 256 / 8), 12);
+        const auto offset = math::RoundedPolarVector(
+            static_cast<float>(ip.count + (j * 256 / 8)) *
+                math::kLegacyAngleStep,
+            12.0f);
+        x = (ip.x >> 6) - 8 + offset.x;
+        y = (ip.y >> 6) - 8 + offset.y;
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
       }
 
@@ -184,8 +202,12 @@ void ItemSystem::Draw() const {
     case ItemKind::Bomb:
       for (j = 0; j < 8; j++) {
         src = PIXEL_LTWH{(384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16};
-        x = (ip.x >> 6) - 8 + cosl((-2 * ip.count) + (j * 256 / 8), 12);
-        y = (ip.y >> 6) - 8 + sinl((-2 * ip.count) + (j * 256 / 8), 12);
+        const auto offset = math::RoundedPolarVector(
+            static_cast<float>((-2 * ip.count) + (j * 256 / 8)) *
+                math::kLegacyAngleStep,
+            12.0f);
+        x = (ip.x >> 6) - 8 + offset.x;
+        y = (ip.y >> 6) - 8 + offset.y;
         GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
       }
 

@@ -23,7 +23,7 @@
 #include "settings/config.h"
 #include "util/byte_io.h"
 #include "util/endian.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 
@@ -301,9 +301,9 @@ void RecordSystem::BeginDemoCapture(const Player &player,
 void RecordSystem::BeginCapture(const Player &player,
                                 const GameSession &session,
                                 const ConfigData &config, bool demo_capture) {
-  const auto seed = ((static_cast<uint32_t>(rnd()) + 1U) *
-                     (static_cast<uint32_t>(rnd()) + 1U));
-  rnd_seed_set(seed);
+  const auto seed = ((static_cast<uint32_t>(math::RandomInt()) + 1U) *
+                     (static_cast<uint32_t>(math::RandomInt()) + 1U));
+  math::SeedRandom(seed);
 
   state_.emplace<RecordingState>(RecordingState{
       .settings =
@@ -343,7 +343,7 @@ void RecordSystem::BeginStage(const Player &player,
   recording->current_checkpoint = {
       .stage = session.stage,
       .frame_count = 0,
-      .rng = rnd_state(),
+      .rng = math::CaptureRandomState(),
       .player = player.CaptureProgress(),
       .rank = session.rank,
   };
@@ -725,7 +725,7 @@ void RecordSystem::RestorePlaybackStage(Player &player, GameSession &session) {
   session.stage = checkpoint.stage;
   session.rank = checkpoint.rank;
   player.RestoreProgress(checkpoint.player);
-  rnd_state_restore(checkpoint.rng);
+  math::RestoreRandomState(checkpoint.rng);
   playback.frame_cursor = 0;
   playback.active = true;
 }
@@ -778,10 +778,9 @@ bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
   std::vector<ReplayStage> stages;
   std::error_code error;
   const auto local_path = DemoPath(stage);
-  bool loaded =
-      std::filesystem::is_regular_file(local_path, error) &&
-      LoadDemoArchive(data::PbgArchive::Open(local_path), stage, settings,
-                      stages);
+  bool loaded = std::filesystem::is_regular_file(local_path, error) &&
+                LoadDemoArchive(data::PbgArchive::Open(local_path), stage,
+                                settings, stages);
   const auto index = std::to_underlying(stage);
   if (!loaded && index < data_.DemoCount()) {
     loaded = LoadDemoArchive(data::PbgArchive::Open(data_.ExtractDemo(index)),

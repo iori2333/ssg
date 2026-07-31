@@ -10,7 +10,7 @@
 #include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 void EffectManager::ResetFragments() {
   for (auto &fragment : fragments_) {
@@ -23,53 +23,72 @@ void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
   auto &fragment = fragments_[next_fragment_];
   fragment = {.x = x, .y = y, .kind = kind};
 
-  uint8_t angle = 0;
+  float angle = 0.0f;
   int speed = 0;
   switch (kind) {
   case FragmentKind::Hit:
-    angle = static_cast<uint8_t>(rnd());
-    speed = 1_px + rnd() % 3_px;
+    angle = math::RandomAngle();
+    speed = 1_px + math::RandomInt() % 3_px;
     fragment.remaining = 24;
-    fragment.velocity_x = cosl(angle, speed);
-    fragment.velocity_y = sinl(angle, speed);
+    {
+      const auto velocity = math::RoundedPolarVector(angle, speed);
+      fragment.velocity_x = velocity.x;
+      fragment.velocity_y = velocity.y;
+    }
     break;
   case FragmentKind::Graze:
-    angle = static_cast<uint8_t>(rnd());
-    speed = 4_px + rnd() % 3_px;
+    angle = math::RandomAngle();
+    speed = 4_px + math::RandomInt() % 3_px;
     fragment.remaining = 24;
-    fragment.velocity_x = cosl(angle, speed);
-    fragment.velocity_y = sinl(angle, speed);
+    {
+      const auto velocity = math::RoundedPolarVector(angle, speed);
+      fragment.velocity_x = velocity.x;
+      fragment.velocity_y = velocity.y;
+    }
     break;
   case FragmentKind::Smoke:
     fragment.remaining = 24;
     break;
   case FragmentKind::SmallStar:
-    angle = static_cast<uint8_t>(rnd());
-    speed = 5_px + rnd() % 3_px;
+    angle = math::RandomAngle();
+    speed = 5_px + math::RandomInt() % 3_px;
     fragment.remaining = 64;
-    fragment.velocity_x = cosl(angle, speed);
-    fragment.velocity_y = sinl(angle, speed);
+    {
+      const auto velocity = math::RoundedPolarVector(angle, speed);
+      fragment.velocity_x = velocity.x;
+      fragment.velocity_y = velocity.y;
+    }
     break;
   case FragmentKind::LargeStar:
-    angle = static_cast<uint8_t>(rnd());
-    speed = 4_px + rnd() % 3_px;
+    angle = math::RandomAngle();
+    speed = 4_px + math::RandomInt() % 3_px;
     fragment.remaining = 64;
-    fragment.velocity_x = cosl(angle, speed);
-    fragment.velocity_y = sinl(angle, speed);
+    {
+      const auto velocity = math::RoundedPolarVector(angle, speed);
+      fragment.velocity_x = velocity.x;
+      fragment.velocity_y = velocity.y;
+    }
     break;
   case FragmentKind::RisingStar:
-    angle = static_cast<uint8_t>(-112 + rnd() % 96);
-    speed = 6_px + rnd() % 4_px;
+    angle = static_cast<float>(-112 + math::RandomInt() % 96) *
+            math::kLegacyAngleStep;
+    speed = 6_px + math::RandomInt() % 4_px;
     fragment.remaining = 64;
-    fragment.velocity_x = cosl(angle, speed);
-    fragment.velocity_y = sinl(angle, speed);
+    {
+      const auto velocity = math::RoundedPolarVector(angle, speed);
+      fragment.velocity_x = velocity.x;
+      fragment.velocity_y = velocity.y;
+    }
     break;
   case FragmentKind::Heart:
-    angle = static_cast<uint8_t>(rnd());
-    speed = 2_px + rnd() % 5_px;
+    angle = math::RandomAngle();
+    speed = 2_px + math::RandomInt() % 5_px;
     fragment.remaining = 105;
-    fragment.velocity_x = cosl(angle, speed);
-    fragment.velocity_y = sinl(angle, speed);
+    {
+      const auto velocity = math::RoundedPolarVector(angle, speed);
+      fragment.velocity_x = velocity.x;
+      fragment.velocity_y = velocity.y;
+    }
     break;
   case FragmentKind::ExpandingCircle:
     fragment.remaining = 60;

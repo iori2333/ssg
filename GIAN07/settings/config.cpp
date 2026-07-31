@@ -82,6 +82,7 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "player_stock", cfg.game.player_stock, ValidPlayerStock);
     LoadToml(*sec, "bomb_stock", cfg.game.bomb_stock, ValidBombStock);
     LoadToml(*sec, "practice_mode", cfg.game.practice_mode, ValidPracticeMode);
+    LoadToml(*sec, "show_focus_hitbox", cfg.game.show_focus_hitbox);
   }
 
   // [graphics]
@@ -178,6 +179,7 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("player_stock", cfg.game.player_stock);
     sec.emplace("bomb_stock", cfg.game.bomb_stock);
     sec.emplace("practice_mode", std::to_underlying(cfg.game.practice_mode));
+    sec.emplace("show_focus_hitbox", cfg.game.show_focus_hitbox);
     tbl.emplace("difficulty", std::move(sec));
   }
 

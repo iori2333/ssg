@@ -12,7 +12,7 @@
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 int GetBulletHitRadius(uint8_t c) {
   switch (c & kBulletVisualCategoryMask) {
@@ -167,7 +167,7 @@ BulletSpawnInfo MakeBulletSpawnInfo(const EclBulletState &cmd, int ox, int oy,
       .y = cmd.y + oy,
       .speed = static_cast<float>(bullet_common::DecodeSpeed(cmd.v)),
       .acceleration = static_cast<float>(cmd.a),
-      .angle = AngleFromLegacy(cmd.d),
+      .angle = math::AngleFromLegacy(cmd.d),
       .spread = cmd.dw,
       .count = cmd.n,
       .rapid_count = cmd.ns,
@@ -205,7 +205,7 @@ void Bullet::Spawn(const BulletSpawnInfo &info) {
   option_ = info.option;
   option_count_ = info.option_count;
   effect_ = info.effect;
-  const auto velocity = PolarVector(angle_, v_);
+  const auto velocity = math::PolarVector(angle_, v_);
   vx_ = velocity.x;
   vy_ = velocity.y;
   count_ = 0;
@@ -236,7 +236,7 @@ BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
 void Bullet::RevertToNormal() {
   motion_ = BulletMotion::Normal;
   SetFlag(Flags::KeepOutsidePlayfield, false);
-  const auto velocity = PolarVector(angle_, v_);
+  const auto velocity = math::PolarVector(angle_, v_);
   vx_ = velocity.x;
   vy_ = velocity.y;
 }
@@ -252,7 +252,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
   case BulletMotion::Accelerating:
     v_ += a_;
     {
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
@@ -263,7 +263,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
   case BulletMotion::Retargeting:
     v_ += a_;
     {
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
@@ -275,20 +275,20 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     }
     if (a_ < 0 && v_ <= 0) {
       a_ = -a_;
-      angle_ = AngleTo(static_cast<float>(info.player_x) - x_,
-                       static_cast<float>(info.player_y) - y_);
+      angle_ = math::AngleTo(static_cast<float>(info.player_x) - x_,
+                             static_cast<float>(info.player_y) - y_);
     }
     return;
   case BulletMotion::Homing:
     if (count_ > 19 && count_ % 2 == 0) {
-      const auto target = AngleTo(static_cast<float>(info.player_x) - x_,
-                                  static_cast<float>(info.player_y) - y_);
-      angle_delta = ShortestAngleDelta(target, angle_);
+      const auto target = math::AngleTo(static_cast<float>(info.player_x) - x_,
+                                        static_cast<float>(info.player_y) - y_);
+      angle_delta = math::ShortestAngleDelta(target, angle_);
       angle_ += angle_delta * static_cast<float>(vd_) / 255.0f;
     }
     v_ += a_;
     {
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
@@ -297,9 +297,9 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     }
     return;
   case BulletMotion::Turning:
-    angle_ += static_cast<float>(vd_) * kLegacyAngleStep;
+    angle_ += static_cast<float>(vd_) * math::kLegacyAngleStep;
     {
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
@@ -310,10 +310,10 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
   case BulletMotion::TurningAccelerating:
     v_ += a_;
     if (a_ > 0) {
-      angle_ += static_cast<float>(vd_) * kLegacyAngleStep;
+      angle_ += static_cast<float>(vd_) * math::kLegacyAngleStep;
     }
     {
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
@@ -329,14 +329,14 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     return;
   case BulletMotion::TurningReversing:
     v_ += a_;
-    angle_ += static_cast<float>(vd_) * kLegacyAngleStep;
+    angle_ += static_cast<float>(vd_) * math::kLegacyAngleStep;
     {
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
     if (a_ < 0 && v_ <= 0) {
-      angle_ += kFullAngle / 2.0f;
+      angle_ += math::kFullAngle / 2.0f;
       a_ = -a_;
     }
     if (a_ > 0 && v_ >= v0_) {
@@ -355,7 +355,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     tx_ += vx_;
     ty_ += vy_;
     if (rep_ == static_cast<uint8_t>(count_)) {
-      angle_ = AngleFromLegacy(Cast::sign<uint8_t>(vd_));
+      angle_ = math::AngleFromLegacy(Cast::sign<uint8_t>(vd_));
       RevertToNormal();
     }
     return;
@@ -368,17 +368,18 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     tx_ += vx_;
     ty_ += vy_;
     if (count_ < 130 - 60 && info.enemy_homing_valid) {
-      const auto target = AngleTo(static_cast<float>(info.enemy_homing_x) - x_,
-                                  static_cast<float>(info.enemy_homing_y) - y_);
-      angle_delta = ShortestAngleDelta(target, angle_);
+      const auto target =
+          math::AngleTo(static_cast<float>(info.enemy_homing_x) - x_,
+                        static_cast<float>(info.enemy_homing_y) - y_);
+      angle_delta = math::ShortestAngleDelta(target, angle_);
     } else if (count_ < 130 - 60) {
-      const auto target = AngleTo(0.0f, static_cast<float>(-20_px) - y_);
-      angle_delta = ShortestAngleDelta(target, angle_);
+      const auto target = math::AngleTo(0.0f, static_cast<float>(-20_px) - y_);
+      angle_delta = math::ShortestAngleDelta(target, angle_);
     } else {
       flags_ = Flags::None;
       angle_delta = 0.0f;
     }
-    if (std::abs(angle_delta) < kLegacyAngleStep * 0.5f) {
+    if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5f) {
       if (vd_ != 0) {
         vd_--;
       }
@@ -392,7 +393,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
     angle_ +=
         angle_delta * static_cast<float>(Cast::sign<uint8_t>(vd_)) / 255.0f;
     {
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       vx_ = velocity.x;
       vy_ = velocity.y;
     }
@@ -413,19 +414,20 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     y_ = ty_;
     return;
   case BulletOptionKind::Wave:
-    op_temp = std::sin(static_cast<float>(count_ << 2) * kLegacyAngleStep) *
-              static_cast<float>(option_count_ << 7);
+    op_temp =
+        std::sin(static_cast<float>(count_ << 2) * math::kLegacyAngleStep) *
+        static_cast<float>(option_count_ << 7);
     {
-      const auto offset = PolarVector(angle_, op_temp);
+      const auto offset = math::PolarVector(angle_, op_temp);
       x_ = tx_ - offset.y;
       y_ = ty_ + offset.x;
     }
     return;
   case BulletOptionKind::Orbit: {
     const auto angle =
-        angle_ + static_cast<float>(count_ << 1) * kLegacyAngleStep;
+        angle_ + static_cast<float>(count_ << 1) * math::kLegacyAngleStep;
     op_temp = option_count_ << 8;
-    const auto offset = PolarVector(angle, op_temp);
+    const auto offset = math::PolarVector(angle, op_temp);
     x_ = tx_ + offset.x;
     y_ = ty_ + offset.y;
   }
@@ -434,9 +436,9 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     return;
   case BulletOptionKind::ReflectX:
     if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
-      angle_ = (kFullAngle / 2.0f) - angle_;
+      angle_ = (math::kFullAngle / 2.0f) - angle_;
       vx_ = -vx_;
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       x_ = tx_ + velocity.x;
       y_ = ty_ + velocity.y;
       if (option_count_ == 0) {
@@ -453,7 +455,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     if (ty_ < playfield::kWorldTop) {
       angle_ = -angle_;
       vy_ = -vy_;
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       x_ = tx_ + velocity.x;
       y_ = ty_ + velocity.y;
       if (option_count_ == 0) {
@@ -468,9 +470,9 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     return;
   case BulletOptionKind::ReflectXY:
     if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
-      angle_ = (kFullAngle / 2.0f) - angle_;
+      angle_ = (math::kFullAngle / 2.0f) - angle_;
       vx_ = -vx_;
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       x_ = tx_ + velocity.x;
       y_ = ty_ + velocity.y;
       if (option_count_ == 0) {
@@ -481,7 +483,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     } else if (ty_ < playfield::kWorldTop) {
       angle_ = -angle_;
       vy_ = -vy_;
-      const auto velocity = PolarVector(angle_, v_);
+      const auto velocity = math::PolarVector(angle_, v_);
       x_ = tx_ + velocity.x;
       y_ = ty_ + velocity.y;
       if (option_count_ == 0) {
@@ -500,14 +502,14 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     float new_angle = 0.0f;
     if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
       op_temp = 1.0f;
-      new_angle = (kFullAngle / 2.0f) - angle_;
+      new_angle = (math::kFullAngle / 2.0f) - angle_;
     } else if (ty_ < playfield::kWorldTop) {
       op_temp = 1.0f;
       new_angle = -angle_;
     }
     if (op_temp == 1.0f) {
       SetFlag(Flags::PendingRemoval, true);
-      const auto velocity = PolarVector(new_angle, v_);
+      const auto velocity = math::PolarVector(new_angle, v_);
       const int cx = static_cast<int>(std::lround(tx_ + velocity.x));
       const int cy = static_cast<int>(std::lround(ty_ + velocity.y));
       constexpr uint8_t kCircleEffect = 0x50;
@@ -523,7 +525,8 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
       case BulletPattern::Circle:
         n = 10;
         sv = 13;
-        new_angle = AngleFromLegacy(Cast::down<uint8_t>(rnd()));
+        new_angle =
+            math::AngleFromLegacy(static_cast<uint8_t>(math::RandomInt()));
         if ((ecmd & kRapidFlag) != 0) {
           sv -= 2;
         }
@@ -681,7 +684,7 @@ int Bullet::X() const { return static_cast<int>(std::lround(x_)); }
 
 int Bullet::Y() const { return static_cast<int>(std::lround(y_)); }
 
-uint8_t Bullet::DisplayAngle() const { return AngleToLegacy(angle_); }
+uint8_t Bullet::DisplayAngle() const { return math::AngleToLegacy(angle_); }
 
 bool Bullet::IsSmall() const {
   return (c_ & kBulletVisualCategoryMask) == kSmallBulletVisual;
@@ -703,7 +706,7 @@ void Bullet::UpdateDisplayAngle() {
   const auto category = c_ & kBulletVisualCategoryMask;
   if (category == kDirectionalBulletVisual ||
       category == kLargeExtraBulletVisual) {
-    angle_ += 4.0f * kLegacyAngleStep;
+    angle_ += 4.0f * math::kLegacyAngleStep;
   }
 }
 

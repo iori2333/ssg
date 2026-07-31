@@ -2,13 +2,15 @@
 /// HomingLoadout - tracking shots and focused straight columns.
 ///
 
+#include <cmath>
+
 #include "homing_loadout.h"
 
 #include "enemy/enemy_manager.h"
 #include "gfx/coords.h"
 #include "player/player.h"
 #include "util/cast.h"
-#include "util/ut_math.h"
+#include "util/math_utils.h"
 
 namespace {
 constexpr PlayerTraits kHomingTraits{
@@ -45,7 +47,9 @@ void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   switch (tier) {
   case 0: {
     shot_phase_ += 32;
-    const auto dd = Cast::down<int8_t>(sinl(shot_phase_, 4));
+    const auto dd = Cast::down<int8_t>(static_cast<int>(std::lround(
+        std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
+        4.0f)));
     PlayerShotSpawnInfo si{
         player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 0, 1,
         13.5_px,     0,           PlayerShotKind::HomingMain};
