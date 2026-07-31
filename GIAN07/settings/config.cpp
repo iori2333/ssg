@@ -11,6 +11,7 @@
 #include "config.h"
 
 #include "gfx/graphics_backend.h"
+#include "music/music_player.h"
 
 static constexpr auto CFG_FN = "SSG.TOML";
 static constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
@@ -33,6 +34,9 @@ static constexpr bool ValidScreenshotEffort(uint8_t v) {
   return v <= GRP_SCREENSHOT_EFFORT_MAX;
 }
 static constexpr bool ValidVolume(VOLUME v) { return v <= VOLUME_MAX; }
+static constexpr bool ValidMidiVariant(MidiVariant v) {
+  return v <= MidiVariant::Arranged;
+}
 static constexpr bool ValidWinMMPad(INPUT_PAD_BUTTON v) { return v <= 32; }
 static constexpr bool ValidExtraStageFlags(uint8_t v) {
   return (v & ~kExtraStageFlagMask) == 0;
@@ -142,6 +146,7 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "bgm_volume", cfg.audio.bgm_volume, ValidVolume);
     LoadToml(*sec, "bgm_pack", cfg.audio.bgm_pack);
     LoadToml(*sec, "soundfont", cfg.audio.soundfont);
+    LoadToml(*sec, "midi_variant", cfg.audio.midi_variant, ValidMidiVariant);
     bool midi_fix = cfg.audio.fix_sysex_bugs;
     LoadToml(*sec, "midi_fix_sysex_bugs", midi_fix);
     cfg.audio.fix_sysex_bugs = midi_fix;
@@ -225,6 +230,7 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("bgm_volume", cfg.audio.bgm_volume);
     sec.emplace("bgm_pack", cfg.audio.bgm_pack);
     sec.emplace("soundfont", cfg.audio.soundfont);
+    sec.emplace("midi_variant", std::to_underlying(cfg.audio.midi_variant));
     sec.emplace("midi_fix_sysex_bugs", cfg.audio.fix_sysex_bugs);
     tbl.emplace("sound", std::move(sec));
   }

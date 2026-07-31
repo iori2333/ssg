@@ -19,7 +19,7 @@ namespace {
 constexpr std::string_view kDirectoryName = "data";
 constexpr std::string_view kArchiveName = "data.pak";
 constexpr std::array<uint32_t, std::to_underlying(data::DataSectionId::Count)>
-    kMinimumEntries = {7, 39, 20, 20, 0};
+    kMinimumEntries = {7, 39, 20, 20, 20, 0};
 
 bool IsStandardMidi(std::span<const uint8_t> data) {
   static constexpr std::array<uint8_t, 8> kHeader = {'M', 'T', 'h', 'd',
@@ -34,8 +34,8 @@ bool IsBitmap(std::span<const uint8_t> data) {
 
 bool IsWave(std::span<const uint8_t> data) {
   return data.size() >= 12 && data[0] == 'R' && data[1] == 'I' &&
-         data[2] == 'F' && data[3] == 'F' && data[8] == 'W' &&
-         data[9] == 'A' && data[10] == 'V' && data[11] == 'E';
+         data[2] == 'F' && data[3] == 'F' && data[8] == 'W' && data[9] == 'A' &&
+         data[10] == 'V' && data[11] == 'E';
 }
 
 std::optional<uint32_t> ParseEntryIndex(const std::filesystem::path &path,
@@ -107,13 +107,18 @@ LoadErrors GameData::Load(std::string_view data_path) {
 LoadErrors GameData::LoadDirectory(const std::filesystem::path &path) {
   DataManifest manifest;
   for (size_t section = 0; section < manifest.sections.size(); ++section) {
-    const auto count = CountDirectoryEntries(
-        path / kDataSectionNames[section], kDataSectionExtensions[section]);
+    const auto count = CountDirectoryEntries(path / kDataSectionNames[section],
+                                             kDataSectionExtensions[section]);
     if (!count || *count < kMinimumEntries[section] ||
         (section == std::to_underlying(DataSectionId::Demos) && *count > 6)) {
       return {{LoadErrorKind::Invalid, DataSourceKind::Directory}};
     }
     manifest.sections[section].entry_count = *count;
+  }
+  if (manifest.sections[std::to_underlying(DataSectionId::Music)].entry_count !=
+      manifest.sections[std::to_underlying(DataSectionId::MusicArranged)]
+          .entry_count) {
+    return {{LoadErrorKind::Invalid, DataSourceKind::Directory}};
   }
 
   directory_ = path;
@@ -153,6 +158,12 @@ LoadErrors GameData::LoadArchive(const std::filesystem::path &path) {
       6) {
     return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
   }
+  if (manifest->sections[std::to_underlying(DataSectionId::Music)]
+          .entry_count !=
+      manifest->sections[std::to_underlying(DataSectionId::MusicArranged)]
+          .entry_count) {
+    return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
+  }
 
   archive_ = std::move(archive);
   manifest_ = *manifest;
@@ -182,6 +193,7 @@ bool GameData::ValidateContents() const {
                         [](const auto &bytes) { return !bytes.empty(); }) ||
       !validate_section(DataSectionId::Images, IsBitmap) ||
       !validate_section(DataSectionId::Music, IsStandardMidi) ||
+      !validate_section(DataSectionId::MusicArranged, IsStandardMidi) ||
       !validate_section(DataSectionId::Sounds, IsWave)) {
     return false;
   }
@@ -204,10 +216,10 @@ std::vector<uint8_t> GameData::Extract(DataSectionId section,
     return {};
   }
   if (!directory_.empty()) {
-    return File_Load(directory_ / kDataSectionNames[std::to_underlying(section)] /
-                     std::format("{:03}{}", index,
-                                 kDataSectionExtensions[std::to_underlying(
-                                     section)]));
+    return File_Load(
+        directory_ / kDataSectionNames[std::to_underlying(section)] /
+        std::format("{:03}{}", index,
+                    kDataSectionExtensions[std::to_underlying(section)]));
   }
   return archive_.Extract(range.first_entry + index);
 }
@@ -226,6 +238,11 @@ std::vector<uint8_t> GameData::ExtractSound(uint32_t index) const {
 
 std::vector<uint8_t> GameData::ExtractMusicMidi(uint32_t index) const {
   auto raw = Extract(DataSectionId::Music, index);
+  return IsStandardMidi(raw) ? std::move(raw) : std::vector<uint8_t>{};
+}
+
+std::vector<uint8_t> GameData::ExtractArrangedMusicMidi(uint32_t index) const {
+  auto raw = Extract(DataSectionId::MusicArranged, index);
   return IsStandardMidi(raw) ? std::move(raw) : std::vector<uint8_t>{};
 }
 

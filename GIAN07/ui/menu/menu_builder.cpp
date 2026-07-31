@@ -327,9 +327,17 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
 // ---------------------------------------------------------------------------
 
 static std::unique_ptr<EntryNode>
-BuildMidiMenu(AudioConfig &audio_cfg, i18n::Localization &localization) {
+BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
+              i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
-  ch.reserve(2);
+  ch.reserve(3);
+
+  ch.push_back(std::make_unique<ChoiceNode>(
+      Localized(localization, "ui.menu.midi_variant.title"),
+      Localized(localization, "ui.menu.midi_variant.help"),
+      audio_cfg.midi_variant, MidiVariant::Original, MidiVariant::Arranged,
+      LocalizedLabels(localization, {"ui.value.original", "ui.value.arranged"}),
+      [&audio_cfg, &music] { music.SetMidiVariant(audio_cfg.midi_variant); }));
 
   auto sf_node = std::make_unique<ListNode>(
       Localized(localization, "ui.menu.soundfont.title"),
@@ -523,7 +531,7 @@ BuildSoundMenu(AudioConfig &audio_cfg, data::SfxLoader &sound_effects,
     ch.push_back(std::move(bgm_pack));
   }
 
-  ch.push_back(BuildMidiMenu(audio_cfg, localization));
+  ch.push_back(BuildMidiMenu(audio_cfg, music, localization));
 
   return std::make_unique<EntryNode>(
       Localized(localization, "ui.menu.sound.title"),

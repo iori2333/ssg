@@ -17,6 +17,7 @@ enum class DataSectionId : uint32_t {
   Maps,
   Images,
   Music,
+  MusicArranged,
   Sounds,
   Demos,
   Count,
@@ -24,11 +25,12 @@ enum class DataSectionId : uint32_t {
 
 inline constexpr std::array<std::string_view,
                             std::to_underlying(DataSectionId::Count)>
-    kDataSectionNames = {"maps", "images", "music", "sounds", "demos"};
+    kDataSectionNames = {"maps",           "images", "music",
+                         "music-arranged", "sounds", "demos"};
 
 inline constexpr std::array<std::string_view,
                             std::to_underlying(DataSectionId::Count)>
-    kDataSectionExtensions = {".map", ".bmp", ".mid", ".wav", ".dat"};
+    kDataSectionExtensions = {".map", ".bmp", ".mid", ".mid", ".wav", ".dat"};
 
 struct DataSectionRange {
   uint32_t first_entry = 0;

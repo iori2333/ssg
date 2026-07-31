@@ -296,22 +296,21 @@ int PackUnified(const fs::path &input, const fs::path &packfile) {
   for (size_t section = 0; section < kSectionCount; ++section) {
     const bool is_demo =
         section == std::to_underlying(data::DataSectionId::Demos);
-    auto entries = ReadEntryDirectory(
-        input / data::kDataSectionNames[section],
-        data::kDataSectionExtensions[section], is_demo);
+    auto entries =
+        ReadEntryDirectory(input / data::kDataSectionNames[section],
+                           data::kDataSectionExtensions[section], is_demo);
     if (!entries) {
       return 1;
     }
     const auto contents_valid = [&] {
       switch (static_cast<data::DataSectionId>(section)) {
       case data::DataSectionId::Maps:
-        return std::ranges::all_of(*entries,
-                                   [](const auto &entry) {
-                                     return !entry.empty();
-                                   });
+        return std::ranges::all_of(
+            *entries, [](const auto &entry) { return !entry.empty(); });
       case data::DataSectionId::Images:
         return std::ranges::all_of(*entries, IsBitmap);
       case data::DataSectionId::Music:
+      case data::DataSectionId::MusicArranged:
         return std::ranges::all_of(*entries, IsStandardMidi);
       case data::DataSectionId::Sounds:
         return std::ranges::all_of(*entries, IsWave);
@@ -366,6 +365,13 @@ int PackUnified(const fs::path &input, const fs::path &packfile) {
     section_counts[section] = static_cast<uint32_t>(entries->size());
     combined.insert(combined.end(), std::make_move_iterator(entries->begin()),
                     std::make_move_iterator(entries->end()));
+  }
+  if (section_counts[std::to_underlying(data::DataSectionId::Music)] !=
+      section_counts[std::to_underlying(data::DataSectionId::MusicArranged)]) {
+    std::println(stderr,
+                 "The music and music-arranged sections must contain the "
+                 "same number of entries");
+    return 1;
   }
 
   const auto manifest = data::BuildDataManifest(section_counts);

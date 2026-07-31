@@ -25,7 +25,9 @@ bool MusicPlayer::Play(unsigned int id) {
   BGM_ClearWaveform();
 
   // Always load MIDI for sequencer notes and fallback audio.
-  auto midi = data_.ExtractMusicMidi(id);
+  auto midi = midi_variant_ == MidiVariant::Arranged
+                  ? data_.ExtractArrangedMusicMidi(id)
+                  : data_.ExtractMusicMidi(id);
   if (midi.empty() || !Mid_Load(std::move(midi))) {
     return false;
   }
@@ -44,6 +46,16 @@ bool MusicPlayer::Play(unsigned int id) {
 }
 
 size_t MusicPlayer::TrackCount() const { return data_.TrackCount(); }
+
+void MusicPlayer::SetMidiVariant(MidiVariant variant) {
+  if (midi_variant_ == variant) {
+    return;
+  }
+  midi_variant_ = variant;
+  if (loaded_num_ != 0 && BGM_Playing() != BGM_PLAYING::NONE) {
+    Play(loaded_num_ - 1);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // BGM pack management

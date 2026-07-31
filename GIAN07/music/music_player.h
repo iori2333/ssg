@@ -15,6 +15,11 @@
 
 #include "data/game_data.h"
 
+enum class MidiVariant : uint8_t {
+  Original,
+  Arranged,
+};
+
 class MusicPlayer {
 public:
   explicit MusicPlayer(const data::GameData &data) : data_(data) {}
@@ -22,6 +27,8 @@ public:
   // Track switching. Loads the MIDI track from game data, then tries to
   // open a replacement waveform from the active BGM pack. Plays on success.
   bool Play(unsigned int id);
+
+  void SetMidiVariant(MidiVariant variant);
 
   // Total number of tracks in game data.
   [[nodiscard]] size_t TrackCount() const;
@@ -34,6 +41,7 @@ public:
 private:
   const data::GameData &data_;
   unsigned int loaded_num_ = 0; // 0 = nothing loaded
+  MidiVariant midi_variant_ = MidiVariant::Original;
   std::string pack_path_;
   std::optional<bool> packs_available_{};
 };

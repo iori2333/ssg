@@ -12,6 +12,8 @@
 #include "gfx/graphics.h"
 #include "sys/input.h"
 
+enum class MidiVariant : uint8_t;
+
 // Limits
 constexpr auto kMaxPlayerStock = 6;
 constexpr auto kMaxBombStock = 6;
@@ -70,6 +72,7 @@ struct AudioConfig {
   bool se_enabled = true;
   bool bgm_vol_norm = true;
   bool fix_sysex_bugs = true;
+  MidiVariant midi_variant{};
   std::string soundfont;
   VOLUME se_volume = ((VOLUME_MAX * 4) / 10);
   VOLUME bgm_volume = ((VOLUME_MAX * 4) / 10);

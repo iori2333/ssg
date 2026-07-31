@@ -41,6 +41,8 @@ public:
   [[nodiscard]] std::vector<uint8_t> ExtractImage(uint32_t index) const;
   [[nodiscard]] std::vector<uint8_t> ExtractSound(uint32_t index) const;
   [[nodiscard]] std::vector<uint8_t> ExtractMusicMidi(uint32_t index) const;
+  [[nodiscard]] std::vector<uint8_t>
+  ExtractArrangedMusicMidi(uint32_t index) const;
   [[nodiscard]] std::vector<uint8_t> ExtractDemo(uint32_t index) const;
 
   [[nodiscard]] size_t TrackCount() const {

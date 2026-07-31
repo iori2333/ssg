@@ -38,6 +38,8 @@ data/
   maps/      000.map ... 006.map
   images/    000.bmp ... 038.bmp
   music/     000.mid ... 019.mid
+  music-arranged/
+              000.mid ... 019.mid
   sounds/    000.wav ... 019.wav
   demos/     000.dat ... 005.dat
 ```
@@ -48,10 +50,11 @@ separate header or input encoding. Each demo must contain exactly one stage,
 and `000.dat`–`005.dat` must correspond to Stage 1–6. The section may be empty
 or contain a contiguous prefix while demos are being regenerated.
 
-When all five section directories are present, `pack` writes a versioned
+When all six section directories are present, `pack` writes a versioned
 manifest as archive entry 0 and appends the sections in manifest order. Music
-entries must be raw SMF files beginning with `MThd`; titles and Music Room
-comments are compiled from `scripts/i18n/<language>/music.txt` instead.
+entries in both variants must be raw SMF files beginning with `MThd`; titles
+and Music Room comments are compiled from
+`scripts/i18n/<language>/music.txt` instead.
 
 ```sh
 pack_tool extract bin/data.pak work/data

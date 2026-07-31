@@ -110,6 +110,7 @@ bool GameApplication::Initialize() {
   if (config.audio.se_enabled && !context_.sound_effects.Load()) {
     SDL_LogWarn(SDL_LOG_CATEGORY_AUDIO, "Failed to load sound effects");
   }
+  context_.music.SetMidiVariant(config.audio.midi_variant);
   (void)context_.music.SetPack(config.audio.bgm_pack);
   context_.ui.ConfigureMain(config_, {.display = context_.display,
                                       .sound_effects = context_.sound_effects,
