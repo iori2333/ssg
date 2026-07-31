@@ -36,8 +36,11 @@ public:
       return std::nullopt;
     }
     const auto length = static_cast<size_t>(end - remaining.begin());
-    const auto *text = reinterpret_cast<const char *>(remaining.data());
-    static_cast<void>(reader_.ReadBytes(length + 1));
+    const auto encoded = reader_.ReadBytes(length + 1);
+    if (!encoded) {
+      return std::nullopt;
+    }
+    const auto *text = reinterpret_cast<const char *>(encoded->data());
     return std::string_view(text, length);
   }
 

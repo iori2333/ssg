@@ -27,9 +27,7 @@ constexpr size_t InvalidPosition = std::numeric_limits<size_t>::max();
 
 class EclReader {
 public:
-  explicit EclReader(std::span<const uint8_t> bytes) : reader_(bytes) {
-    static_cast<void>(reader_.Read<uint8_t>());
-  }
+  explicit EclReader(std::span<const uint8_t> bytes) : reader_(bytes) {}
 
   uint8_t U8() { return reader_.Read<uint8_t>().value(); }
   int8_t I8() { return std::bit_cast<int8_t>(U8()); }
@@ -230,7 +228,7 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
                   const std::vector<size_t> &address_to_position,
                   size_t script_count) {
   const auto opcode = static_cast<EclOpcode>(bytes[address]);
-  EclReader reader(bytes.subspan(address));
+  EclReader reader(bytes.subspan(address + 1));
   const auto target = [&]() -> std::optional<size_t> {
     const auto byte_address = reader.U32();
     if (byte_address >= address_to_position.size() ||

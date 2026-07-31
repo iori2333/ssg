@@ -40,7 +40,10 @@ bool AudioSystem::EnableBgm(bool enabled, std::string_view soundfont) {
   if (!BGM_Init(soundfont)) {
     return false;
   }
-  static_cast<void>(music_.Play(0));
+  if (!music_.Play(0)) {
+    BGM_Cleanup();
+    return false;
+  }
   return true;
 }
 

@@ -21,8 +21,7 @@ std::array Registrations = {
     SignalRegistration{SIGSEGV},
 };
 
-void HandleFatalSignal(int signal, siginfo_t *info, void *) {
-  static_cast<void>(info);
+void HandleFatalSignal(int signal, siginfo_t *, void *) {
   constexpr char prefix[] = "Fatal signal ";
   std::array<char, 32> message{};
   std::size_t size = sizeof(prefix) - 1;
@@ -41,7 +40,8 @@ void HandleFatalSignal(int signal, siginfo_t *info, void *) {
     message[size++] = digits[--digit_count];
   }
   message[size++] = '\n';
-  static_cast<void>(write(STDERR_FILENO, message.data(), size));
+  // Fatal-signal diagnostics are best effort; there is no recovery path here.
+  (void)write(STDERR_FILENO, message.data(), size);
 
   kill(getpid(), signal);
   _exit(128 + signal);

@@ -193,7 +193,8 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
           static_cast<float>((count_ / 3) * 4) * math::kLegacyAngleStep, 30_px)
           .y;
   player_.SetPosition(400_px + player_x, 350_px + player_y);
-  static_cast<void>(player_.Update(enemies_, preview_input));
+  // The preview only needs the update's visual side effects.
+  (void)player_.Update(enemies_, preview_input);
 
   GrpBackend_SetClip({400 - 110, 400 - 300 + 2, 400 + 110, 400 + 10});
   for (int x = 400 - 110 - 2; x < 400 + 110; x += 32) {

@@ -155,7 +155,8 @@ void StageVisuals::StartFakeEcl() {
   grid_offset_x_ = 320_px;
   grid_offset_y_ = 240_px;
   for (auto &line : fake_ecl_) {
-    static_cast<void>(math::RandomInt() % 128);
+    // Preserve the established RNG sequence used by later stage effects.
+    (void)math::RandomInt();
     const int speed = math::RandomInt() % 5_px + 5_px;
     line.source_x = math::RandomInt() % 7 * 9 * 8;
     line.source_y = math::RandomInt() % 16 * 16;
@@ -175,7 +176,8 @@ void StageVisuals::UpdateFakeEcl() {
     if (line.y < 480_px) {
       continue;
     }
-    static_cast<void>(math::RandomInt() % 128);
+    // Preserve the established RNG sequence used by later stage effects.
+    (void)math::RandomInt();
     const int speed = math::RandomInt() % 5_px + 5_px;
     line.source_x = math::RandomInt() % 7 * 9 * 8;
     line.source_y = math::RandomInt() % 16 * 16;
@@ -223,7 +225,7 @@ void StageVisuals::StartRocks() {
                          math::RandomInt() % (row_spacing / 2);
     const int x = math::RandomInt() % 500_px - 250_px;
     // Depth was never rendered, but this draw must remain in the RNG stream.
-    static_cast<void>(math::RandomInt() % 500_px);
+    (void)math::RandomInt();
     auto &rock = rocks_[index];
     rock = {.x = x,
             .y = -250_px - y_offset,
