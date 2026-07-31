@@ -1,13 +1,10 @@
 /// Linux fatal signal entry point.
 
-#include <algorithm>
 #include <array>
-#include <charconv>
 #include <csignal>
 #include <cstddef>
-#include <string_view>
 
-#include "util/crash_handler.h"
+#include <unistd.h>
 
 namespace crash::platform {
 namespace {
@@ -26,15 +23,28 @@ std::array Registrations = {
 
 void HandleFatalSignal(int signal, siginfo_t *info, void *) {
   static_cast<void>(info);
-  constexpr std::string_view prefix = "Fatal signal ";
-  std::array<char, 32> reason{};
-  std::ranges::copy(prefix, reason.begin());
-  const auto result =
-      std::to_chars(reason.data() + prefix.size(), reason.end(), signal);
-  const auto reason_size = static_cast<std::size_t>(result.ptr - reason.data());
-  Report(std::string_view(reason.data(), reason_size), 1);
-  std::signal(signal, SIG_DFL);
-  std::raise(signal);
+  constexpr char prefix[] = "Fatal signal ";
+  std::array<char, 32> message{};
+  std::size_t size = sizeof(prefix) - 1;
+  for (std::size_t i = 0; i < size; i++) {
+    message[i] = prefix[i];
+  }
+
+  std::array<char, 10> digits{};
+  std::size_t digit_count = 0;
+  auto value = static_cast<unsigned int>(signal);
+  do {
+    digits[digit_count++] = static_cast<char>('0' + (value % 10));
+    value /= 10;
+  } while (value != 0);
+  while (digit_count != 0) {
+    message[size++] = digits[--digit_count];
+  }
+  message[size++] = '\n';
+  static_cast<void>(write(STDERR_FILENO, message.data(), size));
+
+  kill(getpid(), signal);
+  _exit(128 + signal);
 }
 
 } // namespace

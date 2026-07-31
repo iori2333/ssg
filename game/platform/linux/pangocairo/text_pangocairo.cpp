@@ -157,6 +157,18 @@ PANGOCAIRO_STATE::operator bool(void) const { return (cr && layout); }
 
 PANGOCAIRO_STATE &
 PANGOCAIRO_STATE::operator=(PANGOCAIRO_STATE &&other) noexcept {
+  if (this == &other) {
+    return *this;
+  }
+  if (layout) {
+    g_object_unref(layout);
+  }
+  if (cr) {
+    cairo_destroy(cr);
+  }
+  if (surf) {
+    cairo_surface_destroy(surf);
+  }
   surf = std::exchange(other.surf, nullptr);
   cr = std::exchange(other.cr, nullptr);
   layout = std::exchange(other.layout, nullptr);

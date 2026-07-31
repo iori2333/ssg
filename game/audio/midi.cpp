@@ -6,6 +6,7 @@
 // max_align_t'` if this appears after a module import.
 #include <algorithm>
 #include <cstdlib>
+#include <mutex>
 #include <thread>
 
 #include <malloc.h>
@@ -198,32 +199,34 @@ struct MID_SEQUENCE {
 MID_DEVICE Mid_Dev;
 MID_FLAGS Mid_Flags = MID_FLAGS::NONE;
 static MID_SEQUENCE Mid_Seq;
-uint8_t Mid_PlayTable[16][128];  // For spectrum analyzer
-uint8_t Mid_PlayTable2[16][128]; // For level meter
-uint8_t Mid_NoteTable[16][128];  // For note display
-uint8_t Mid_NoteWTable[16][128]; // For note display (2)
-uint8_t Mid_PanpodTable[16];     // Panpot
-uint8_t Mid_ExpressionTable[16]; // Expression
-uint8_t Mid_VolumeTable[16];     // Volume
+static std::recursive_mutex Mid_Mutex;
+static MID_VISUALIZATION Mid_Visualization;
 static VOLUME Mid_Volume = VOLUME_MAX;
-
-MID_PLAYTIME Mid_PlayTime;
+static uint8_t Mid_TempoNumerator = 1;
+static uint8_t Mid_TempoDenominator = 1;
 
 MID_FLAGS Mid_SetFlags(MID_FLAGS flags_new) {
   using F = MID_FLAGS;
 
   const auto new_sysex = !!(flags_new & F::FIX_SYSEX_BUGS);
-  if (!!(Mid_Flags & F::FIX_SYSEX_BUGS) != new_sysex) {
-    EnumFlagSet(Mid_Flags, F::FIX_SYSEX_BUGS, new_sysex);
-    if (Mid_Dev.state == MID_BACKEND_STATE::PLAY) {
-      Mid_Stop();
-      Mid_Play();
+  bool restart = false;
+  {
+    const std::scoped_lock lock(Mid_Mutex);
+    if (!!(Mid_Flags & F::FIX_SYSEX_BUGS) == new_sysex) {
+      return Mid_Flags;
     }
+    EnumFlagSet(Mid_Flags, F::FIX_SYSEX_BUGS, new_sysex);
+    restart = (Mid_Dev.state == MID_BACKEND_STATE::PLAY);
+  }
+  if (restart) {
+    Mid_Stop();
+    Mid_Play();
   }
   return Mid_Flags;
 }
 
 void Mid_Play(void) {
+  const std::scoped_lock lock(Mid_Mutex);
   if (!MidBackend_DeviceName() || Mid_Seq.tracks.empty() ||
       (Mid_Dev.state == MID_BACKEND_STATE::PLAY)) {
     return;
@@ -262,13 +265,14 @@ void Mid_Play(void) {
 }
 
 void Mid_Stop(void) {
+  MidBackend_StopTimer();
+  const std::scoped_lock lock(Mid_Mutex);
   if (Mid_Dev.state == MID_BACKEND_STATE::STOP) {
     return;
   }
 
   Mid_Dev.FadeDuration = 0s;
 
-  MidBackend_StopTimer();
   MidBackend_Panic();
 
   Mid_TableInit();
@@ -281,11 +285,12 @@ void Mid_Stop(void) {
 }
 
 void Mid_Pause(void) {
+  MidBackend_StopTimer();
+  const std::scoped_lock lock(Mid_Mutex);
   if (Mid_Dev.state != MID_BACKEND_STATE::PLAY) {
     return;
   }
   Mid_Dev.state = MID_BACKEND_STATE::PAUSE;
-  MidBackend_StopTimer();
 
   // Set volume on all channels to 0 while leaving all notes playing.
   // Not perfect, as sustained notes will continue to be sampled and will
@@ -297,6 +302,7 @@ void Mid_Pause(void) {
 }
 
 void Mid_Resume(void) {
+  const std::scoped_lock lock(Mid_Mutex);
   if (Mid_Dev.state != MID_BACKEND_STATE::PAUSE) {
     return;
   }
@@ -307,30 +313,39 @@ void Mid_Resume(void) {
 
 // Initialize various tables
 void Mid_TableInit(void) {
+  const std::scoped_lock lock(Mid_Mutex);
   for (auto i = 0; i < MIDI_CHANNELS; i++) {
     for (auto j = 0; j < 128; j++) {
-      Mid_PlayTable[i][j] = 0;
-      Mid_PlayTable2[i][j] = 0;
-      Mid_NoteTable[i][j] = 0;
-      Mid_NoteWTable[i][j] = 0;
+      Mid_Visualization.play[i][j] = 0;
+      Mid_Visualization.levels[i][j] = 0;
+      Mid_Visualization.notes[i][j] = 0;
+      Mid_Visualization.note_highlights[i][j] = 0;
     }
 
-    Mid_PanpodTable[i] = 0x40;
-    Mid_ExpressionTable[i] = 0x7f;
-    Mid_VolumeTable[i] = 0x64;
+    Mid_Visualization.pan[i] = 0x40;
+    Mid_Visualization.expression[i] = 0x7f;
+    Mid_Visualization.volume[i] = 0x64;
   }
 }
 
-VOLUME Mid_GetFadeVolume(void) { return Mid_Dev.FadeNowVolume; }
+VOLUME Mid_GetFadeVolume(void) {
+  const std::scoped_lock lock(Mid_Mutex);
+  return Mid_Dev.FadeNowVolume;
+}
 
-void Mid_UpdateVolume(void) { Mid_Dev.ApplyVolume(); }
+void Mid_UpdateVolume(void) {
+  const std::scoped_lock lock(Mid_Mutex);
+  Mid_Dev.ApplyVolume();
+}
 
 void Mid_SetVolume(VOLUME volume) {
+  const std::scoped_lock lock(Mid_Mutex);
   Mid_Volume = std::min(volume, VOLUME_MAX);
   Mid_UpdateVolume();
 }
 
 void Mid_FadeOut(VOLUME volume_start, std::chrono::milliseconds duration) {
+  const std::scoped_lock lock(Mid_Mutex);
   Mid_Dev.FadeStartVolume = volume_start;
   Mid_Dev.FadeEndVolume = 0;
   Mid_Dev.FadeProgress = 0s;
@@ -338,6 +353,7 @@ void Mid_FadeOut(VOLUME volume_start, std::chrono::milliseconds duration) {
 }
 
 bool Mid_Load(std::vector<uint8_t> buffer) {
+  const std::scoped_lock lock(Mid_Mutex);
   Mid_Seq = {};
   Mid_Seq.smf = std::move(buffer);
 
@@ -382,15 +398,56 @@ bool Mid_Load(std::vector<uint8_t> buffer) {
   return true;
 }
 
-void Mid_SetLoop(const MID_LOOP &loop) { Mid_Seq.loop = loop; }
+void Mid_SetLoop(const MID_LOOP &loop) {
+  const std::scoped_lock lock(Mid_Mutex);
+  Mid_Seq.loop = loop;
+}
 
-bool Mid_Loaded(void) { return !Mid_Seq.tracks.empty(); }
+void Mid_SetTempo(uint8_t numerator, uint8_t denominator) {
+  const std::scoped_lock lock(Mid_Mutex);
+  Mid_TempoNumerator = numerator;
+  Mid_TempoDenominator = denominator;
+}
+
+bool Mid_Loaded(void) {
+  const std::scoped_lock lock(Mid_Mutex);
+  return !Mid_Seq.tracks.empty();
+}
+
+MID_PLAYTIME Mid_GetPlayTime(void) {
+  const std::scoped_lock lock(Mid_Mutex);
+  return Mid_Visualization.play_time;
+}
+
+MID_VISUALIZATION Mid_GetVisualization(void) {
+  const std::scoped_lock lock(Mid_Mutex);
+  auto snapshot = Mid_Visualization;
+  snapshot.loaded = !Mid_Seq.tracks.empty();
+
+  for (auto channel = 0UZ; channel < MIDI_CHANNELS; channel++) {
+    for (auto note = 0UZ; note < 128; note++) {
+      auto &play = Mid_Visualization.play[channel][note];
+      if (play != 0) {
+        play -= ((play >> 3) + 1);
+      }
+      auto &level = Mid_Visualization.levels[channel][note];
+      if (level != 0) {
+        level -= (std::max)((level / 50), 1);
+      }
+      auto &highlight = Mid_Visualization.note_highlights[channel][note];
+      if (highlight != 0) {
+        highlight--;
+      }
+    }
+  }
+  return snapshot;
+}
 
 void MID_SEQUENCE::Rewind(void) {
   // Mid_Fade = 0;
   //  BGM_SetTempo(0);
 
-  Mid_PlayTime = {};
+  Mid_Visualization.play_time = {};
   for (auto &t : Mid_Seq.tracks) {
     // We do *not* reset [next_time] here. This preserves the overshot
     // amount of time when we rewind at the end of the track.
@@ -502,7 +559,7 @@ std::optional<MID_EVENT> MID_TRACK_ITERATOR::ConsumeEvent(void) {
 }
 
 VOLUME MID_DEVICE::VolumeFor(decltype(MIDI_CHANNELS) ch) const {
-  return ((Mid_VolumeTable[ch] * FadeNowVolume * Mid_Volume) /
+  return ((Mid_Visualization.volume[ch] * FadeNowVolume * Mid_Volume) /
           ((VOLUME_MAX + 1) * (VOLUME_MAX + 1)));
 }
 
@@ -536,12 +593,14 @@ void MID_DEVICE::FadeIO(MID_REALTIME delta) {
 }
 
 void Mid_Proc(MID_REALTIME delta) {
+  const std::scoped_lock lock(Mid_Mutex);
   if (!Mid_Loaded()) {
     return;
   }
 
-  const auto interval = ((delta * Mid_TempoNum) / Mid_TempoDenom);
-  auto &time = Mid_PlayTime;
+  const auto interval =
+      ((delta * Mid_TempoNumerator) / Mid_TempoDenominator);
+  auto &time = Mid_Visualization.play_time;
   MID_PULSE pulse_sync = 0;
 
   // Advance the timer of all tracks first. Must be done before we process
@@ -741,13 +800,13 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
   case MID_EVENT_KIND::CONTROLLER: // Control Change
     switch (event.extra_data[0]) {
     case 0x07: // Volume
-      Mid_VolumeTable[event.Channel()] = event.extra_data[1];
+      Mid_Visualization.volume[event.Channel()] = event.extra_data[1];
       break;
     case 0x0a: // Panpot
-      Mid_PanpodTable[event.Channel()] = event.extra_data[1];
+      Mid_Visualization.pan[event.Channel()] = event.extra_data[1];
       break;
     case 0x0b: // Expression
-      Mid_ExpressionTable[event.Channel()] = event.extra_data[1];
+      Mid_Visualization.expression[event.Channel()] = event.extra_data[1];
       break;
     default:
       break;
@@ -755,7 +814,7 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
     break;
 
   case MID_EVENT_KIND::NOTE_OFF: // Note Off
-    Mid_NoteTable[event.Channel()][event.extra_data[0]] = 0;
+    Mid_Visualization.notes[event.Channel()][event.extra_data[0]] = 0;
     break;
 
   case MID_EVENT_KIND::NOTE_ON:
@@ -764,15 +823,15 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
     const auto note = event.extra_data[0];
     const auto vel = event.extra_data[1];
 
-    if (Mid_PlayTable[channel][note] < vel) {
-      Mid_PlayTable[channel][note] = vel;
-      Mid_PlayTable2[channel][note] = vel;
+    if (Mid_Visualization.play[channel][note] < vel) {
+      Mid_Visualization.play[channel][note] = vel;
+      Mid_Visualization.levels[channel][note] = vel;
     }
     // Mid_PlayTable[channel][note]  += vel;
     // Mid_PlayTable2[channel][note] += vel;
-    Mid_NoteTable[channel][note] = vel;
-    if (Mid_NoteTable[channel][note]) {
-      Mid_NoteWTable[channel][note] = 5;
+    Mid_Visualization.notes[channel][note] = vel;
+    if (Mid_Visualization.notes[channel][note]) {
+      Mid_Visualization.note_highlights[channel][note] = 5;
     }
     break;
   }
@@ -785,6 +844,7 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
 }
 
 std::string_view Mid_GetTitle(void) {
+  const std::scoped_lock lock(Mid_Mutex);
   std::optional<MID_EVENT> maybe_ev;
 
   const auto extra_data_as_string_view = [](const MID_EVENT &ev) {

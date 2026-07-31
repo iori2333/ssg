@@ -37,9 +37,6 @@ static std::string_view WaveformTitle;       // cached from waveform metadata
 // External dependencies for MIDI tempo — exposed as global references
 // ---------------------
 
-const uint8_t &Mid_TempoNum = BGM_Tempo_Num;
-const uint8_t &Mid_TempoDenom = BGM_TEMPO_DENOM;
-
 const uint8_t &Snd_BGMTempoNum = BGM_Tempo_Num;
 const uint8_t &Snd_BGMTempoDenom = BGM_TEMPO_DENOM;
 // ---------------------
@@ -75,7 +72,7 @@ std::chrono::duration<int32_t, std::milli> BGM_PlayTime(void) {
   if (Waveform) {
     return SndBackend_BGMPlayTime();
   }
-  return Mid_PlayTime.realtime;
+  return Mid_GetPlayTime().realtime;
 }
 
 bool BGM_ChangeMIDIDevice(int8_t direction) {
@@ -194,7 +191,7 @@ void BGM_FadeOut(uint8_t speed) {
   const VOLUME volume_cur =
       (Waveform ? VolumeDiscrete(Waveform->FadeVolumeLinear())
                 : Mid_GetFadeVolume());
-  const auto volume_start = (volume_cur - 1);
+  const auto volume_start = (volume_cur == 0) ? 0 : (volume_cur - 1);
 
   const auto duration =
       (10ms * VOLUME_MAX * ((((256 - speed) * 4) / (VOLUME_MAX + 1)) + 1));
@@ -210,5 +207,6 @@ int8_t BGM_GetTempo(void) { return (BGM_Tempo_Num - BGM_TEMPO_DENOM); }
 void BGM_SetTempo(int8_t tempo) {
   tempo = std::clamp(tempo, BGM_TEMPO_MIN, BGM_TEMPO_MAX);
   BGM_Tempo_Num = (BGM_TEMPO_DENOM + tempo);
+  Mid_SetTempo(BGM_Tempo_Num, BGM_TEMPO_DENOM);
   SndBackend_BGMUpdateTempo();
 }

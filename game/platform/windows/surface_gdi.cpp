@@ -15,7 +15,7 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")
 
-SURFACE_GDI::SURFACE_GDI() noexcept : dc(CreateCompatibleDC(GetDC(nullptr))) {}
+SURFACE_GDI::SURFACE_GDI() noexcept : dc(CreateCompatibleDC(nullptr)) {}
 
 SURFACE_GDI::~SURFACE_GDI() {
   Delete();

@@ -11,6 +11,7 @@
 //            : If there are MIDI backends that cannot keep up,
 //            : the message sending may need to be improved.
 
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <string_view>
@@ -60,15 +61,12 @@ struct MID_PLAYTIME {
   MID_REALTIME realtime_since_last_event = MID_REALTIME::zero();
 };
 
-// External dependencies
-extern const uint8_t &Mid_TempoNum;
-extern const uint8_t &Mid_TempoDenom;
-
 // Functions
 
 // Returns the new current MIDI flags.
 [[nodiscard]] MID_FLAGS Mid_SetFlags(MID_FLAGS flags_new);
 void Mid_SetVolume(VOLUME volume);
+void Mid_SetTempo(uint8_t numerator, uint8_t denominator);
 
 // Starts outputting the loaded MIDI to the backend.
 void Mid_Play(void); // Starts playback
@@ -92,6 +90,21 @@ void Mid_SetLoop(const MID_LOOP &loop);
 
 bool Mid_Loaded(void);
 
+struct MID_VISUALIZATION {
+  std::array<std::array<uint8_t, 128>, 16> play{};
+  std::array<std::array<uint8_t, 128>, 16> levels{};
+  std::array<std::array<uint8_t, 128>, 16> notes{};
+  std::array<std::array<uint8_t, 128>, 16> note_highlights{};
+  std::array<uint8_t, 16> pan{};
+  std::array<uint8_t, 16> expression{};
+  std::array<uint8_t, 16> volume{};
+  MID_PLAYTIME play_time{};
+  bool loaded = false;
+};
+
+[[nodiscard]] MID_PLAYTIME Mid_GetPlayTime(void);
+[[nodiscard]] MID_VISUALIZATION Mid_GetVisualization(void);
+
 std::string_view Mid_GetTitle(void); // Returns the title of the current song
 
 // Processes and outputs the next time [delta] of the currently loaded MIDI
@@ -99,15 +112,5 @@ std::string_view Mid_GetTitle(void); // Returns the title of the current song
 void Mid_Proc(MID_REALTIME delta);
 
 void Mid_TableInit(void); // Initializes various tables
-
-// Global variables
-extern uint8_t Mid_PlayTable[16][128];
-extern uint8_t Mid_PlayTable2[16][128]; // For level meter
-extern uint8_t Mid_NoteTable[16][128];  // For note display
-extern uint8_t Mid_NoteWTable[16][128]; // For note display (2)
-extern uint8_t Mid_PanpodTable[16];     // Panpot
-extern uint8_t Mid_ExpressionTable[16]; // Expression
-extern uint8_t Mid_VolumeTable[16];     // Volume
-extern MID_PLAYTIME Mid_PlayTime;
 
 #endif

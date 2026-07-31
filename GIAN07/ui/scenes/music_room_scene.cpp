@@ -167,13 +167,8 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
     int temp = 0;
     int temp2 = 0;
     for (const auto j : std::views::iota(0, 16)) {
-      temp += Mid_PlayTable[j][i];
-      temp2 += ((Mid_PlayTable[j][i] != 0U) ? 1 : 0);
-      if (Mid_PlayTable[j][i] != 0) {
-        Mid_PlayTable[j][i] -= ((Mid_PlayTable[j][i] >> 3) + 1); // 4
-      }
-      // if(Mid_PlayTable[j][i])
-      // Mid_PlayTable[j][i]-=(Mid_PlayTable[j][i]>>3)+1;
+      temp += midi_visualization_.play[j][i];
+      temp2 += ((midi_visualization_.play[j][i] != 0U) ? 1 : 0);
     }
     if (temp2 == 0) {
       temp2 = 1;
@@ -327,32 +322,28 @@ void MusicRoomScene::DrawNotes() {
 
   for (const auto Track : std::views::iota(0, 16)) {
     const auto top = (22 + (Track * 24));
-    const auto pan = (Cast::sign<int8_t>(Mid_PanpodTable[Track]) - 64);
-    GrpPutMidNum(50, top, Mid_VolumeTable[Track]);
-    GrpPutMidNum(125, top, Mid_ExpressionTable[Track]);
+    const auto pan =
+        (Cast::sign<int8_t>(midi_visualization_.pan[Track]) - 64);
+    GrpPutMidNum(50, top, midi_visualization_.volume[Track]);
+    GrpPutMidNum(125, top, midi_visualization_.expression[Track]);
     GrpPutMidNum(181, top, pan);
 
     int LevelSum = 0;
     int num = 0;
     for (const auto NoteNo : std::views::iota(0, 128)) {
-      if (Mid_NoteWTable[Track][NoteNo] != 0U) {
+      if (midi_visualization_.note_highlights[Track][NoteNo] != 0U) {
         const auto x = (40 + destX[NoteNo % 12] + ((NoteNo / 12) * 28));
         const auto y = (9 + (Track * 24));
         GrpSurface_Blit({x, y}, SURFACE_ID::MUSIC, src[NoteNo % 12]);
-        Mid_NoteWTable[Track][NoteNo]--;
       }
 
-      if (Mid_NoteTable[Track][NoteNo] != 0U) {
+      if (midi_visualization_.notes[Track][NoteNo] != 0U) {
         const auto x = (40 + destX[NoteNo % 12] + ((NoteNo / 12) * 28));
         const auto y = (9 + (Track * 24));
         GrpSurface_Blit({x, y}, SURFACE_ID::MUSIC, src[NoteNo % 12]);
       }
-      if (Mid_PlayTable2[Track][NoteNo] != 0U) {
-        LevelSum += (Mid_PlayTable2[Track][NoteNo]);
-        // if(Mid_PlayTable2[Track][NoteNo]>128)
-        // Mid_PlayTable2[Track][NoteNo]=128;
-        Mid_PlayTable2[Track][NoteNo] -=
-            (std::max)((Mid_PlayTable2[Track][NoteNo] / 50), 1);
+      if (midi_visualization_.levels[Track][NoteNo] != 0U) {
+        LevelSum += midi_visualization_.levels[Track][NoteNo];
         num++;
       }
     }
@@ -423,6 +414,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
   }
 
   if (should_draw) {
+    midi_visualization_ = Mid_GetVisualization();
     GrpBackend_Clear();
 
     auto BlitBG = [](const PIXEL_LTWH &rect) {
@@ -457,10 +449,12 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
     GrpPut7B(560, 44, std::format("{:02} : {:02}", m, s).c_str());
     // TextOut(hdc,561,40+2,buf,strlen(buf));
 
-    if (Mid_Loaded()) {
+    if (midi_visualization_.loaded) {
       BlitBG({504, 59, 136, 24}); // MIDI TIMER
       GrpPut7B(560, 68,
-               std::format("{:07}", Mid_PlayTime.pulse_interpolated).c_str());
+               std::format("{:07}",
+                           midi_visualization_.play_time.pulse_interpolated)
+                   .c_str());
       // TextOut(hdc,561,64+2,buf,strlen(buf));
     }
 
