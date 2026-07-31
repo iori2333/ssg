@@ -359,6 +359,10 @@ static constexpr auto TIMER_INTERVAL = std::chrono::milliseconds(10);
 static std::jthread FsTimer;
 
 void MidBackend_StartTimer(void) {
+  if (FsTimer.joinable() && FsTimer.get_stop_token().stop_requested()) {
+    FsTimer.join();
+  }
+
   if (!FsTimer.joinable()) {
     FsTimer = std::jthread([](std::stop_token stop) {
       auto next_tick = std::chrono::steady_clock::now();
@@ -376,7 +380,9 @@ void MidBackend_StartTimer(void) {
 void MidBackend_StopTimer(void) {
   if (FsTimer.joinable()) {
     FsTimer.request_stop();
-    FsTimer.join();
+    if (FsTimer.get_id() != std::this_thread::get_id()) {
+      FsTimer.join();
+    }
   }
 }
 
