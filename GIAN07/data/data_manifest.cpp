@@ -20,13 +20,6 @@ constexpr std::array<uint8_t, 8> kMagic = {'S', 'S', 'G', 'D',
                                            'A', 'T', 'A', 0x1a};
 constexpr uint32_t kVersion = 3;
 
-void AppendU32(std::vector<uint8_t> &bytes, uint32_t value) {
-  bytes.push_back(static_cast<uint8_t>(value));
-  bytes.push_back(static_cast<uint8_t>(value >> 8));
-  bytes.push_back(static_cast<uint8_t>(value >> 16));
-  bytes.push_back(static_cast<uint8_t>(value >> 24));
-}
-
 } // namespace
 
 std::optional<DataManifest> ParseDataManifest(std::span<const uint8_t> bytes,
@@ -90,17 +83,18 @@ std::vector<uint8_t> BuildDataManifest(
     first_entry += count;
   }
 
-  std::vector<uint8_t> bytes(kMagic.begin(), kMagic.end());
-  AppendU32(bytes, kVersion);
-  AppendU32(bytes, static_cast<uint32_t>(section_counts.size()));
+  util::ByteWriter writer;
+  writer.WriteBytes(kMagic);
+  writer.Write(kVersion);
+  writer.Write(static_cast<uint32_t>(section_counts.size()));
   first_entry = 1;
   for (uint32_t id = 0; id < section_counts.size(); ++id) {
-    AppendU32(bytes, id);
-    AppendU32(bytes, first_entry);
-    AppendU32(bytes, section_counts[id]);
+    writer.Write(id);
+    writer.Write(first_entry);
+    writer.Write(section_counts[id]);
     first_entry += section_counts[id];
   }
-  return bytes;
+  return std::move(writer).TakeBytes();
 }
 
 } // namespace data

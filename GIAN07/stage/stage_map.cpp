@@ -7,7 +7,7 @@
 
 #include "stage_map.h"
 
-#include "util/endian.h"
+#include "util/byte_io.h"
 
 namespace {
 
@@ -26,11 +26,15 @@ std::optional<MapLayerHeader> ReadLayerHeader(std::span<const uint8_t> data,
   if (offset > data.size() || data.size() - offset < kLayerHeaderSize) {
     return std::nullopt;
   }
+  util::ByteReader reader(data.subspan(offset, kLayerHeaderSize));
+  const auto address = reader.Read<uint32_t>();
+  const auto scroll_wait = reader.Read<uint32_t>();
+  const auto length = reader.Read<uint32_t>();
+  if (!address || !scroll_wait || !length) {
+    return std::nullopt;
+  }
   return MapLayerHeader{
-      .address = U32LEAt(data.data() + offset),
-      .scroll_wait = U32LEAt(data.data() + offset + sizeof(uint32_t)),
-      .length = U32LEAt(data.data() + offset + sizeof(uint32_t) * 2),
-  };
+      .address = *address, .scroll_wait = *scroll_wait, .length = *length};
 }
 
 } // namespace
@@ -42,7 +46,12 @@ std::optional<StageMap> StageMap::Parse(std::span<const uint8_t> bytes) {
     return std::nullopt;
   }
 
-  const uint32_t layer_count = U32LEAt(bytes.data());
+  util::ByteReader reader(bytes);
+  const auto layer_count_value = reader.Read<uint32_t>();
+  if (!layer_count_value) {
+    return std::nullopt;
+  }
+  const uint32_t layer_count = *layer_count_value;
   const size_t data_start = kMapHeaderSize + layer_count * kLayerHeaderSize;
   if (layer_count == 0 || layer_count > kMapLayerLimit ||
       data_start > bytes.size()) {
@@ -71,7 +80,11 @@ std::optional<StageMap> StageMap::Parse(std::span<const uint8_t> bytes) {
         if (offset > bytes.size() || bytes.size() - offset < sizeof(uint16_t)) {
           return std::nullopt;
         }
-        const uint16_t value = U16LEAt(bytes.data() + offset);
+        const auto value_read = util::ReadLittleAt<uint16_t>(bytes, offset);
+        if (!value_read) {
+          return std::nullopt;
+        }
+        const uint16_t value = *value_read;
         offset += sizeof(uint16_t);
         if (value != kEmptyMapTile) {
           if (value >= kMapTileCount) {
@@ -84,7 +97,11 @@ std::optional<StageMap> StageMap::Parse(std::span<const uint8_t> bytes) {
         if (offset > bytes.size() || bytes.size() - offset < sizeof(uint16_t)) {
           return std::nullopt;
         }
-        const uint16_t run = U16LEAt(bytes.data() + offset);
+        const auto run_read = util::ReadLittleAt<uint16_t>(bytes, offset);
+        if (!run_read) {
+          return std::nullopt;
+        }
+        const uint16_t run = *run_read;
         offset += sizeof(uint16_t);
         if (run == 0 || run > row.size() - column) {
           return std::nullopt;

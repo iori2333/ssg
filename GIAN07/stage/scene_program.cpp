@@ -7,56 +7,42 @@
 
 #include "scene_program.h"
 
-#include "util/endian.h"
+#include "util/byte_io.h"
 
 namespace {
 
 class SceneReader {
 public:
-  explicit SceneReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
+  explicit SceneReader(std::span<const uint8_t> bytes) : reader_(bytes) {}
 
-  [[nodiscard]] bool Empty() const { return offset_ == bytes_.size(); }
+  [[nodiscard]] bool Empty() const { return reader_.Empty(); }
 
   [[nodiscard]] std::optional<uint8_t> ReadU8() {
-    if (offset_ >= bytes_.size()) {
-      return std::nullopt;
-    }
-    return bytes_[offset_++];
+    return reader_.Read<uint8_t>();
   }
 
   [[nodiscard]] std::optional<int16_t> ReadI16() {
-    if (bytes_.size() - offset_ < sizeof(int16_t)) {
-      return std::nullopt;
-    }
-    const auto value = I16LEAt(bytes_.data() + offset_);
-    offset_ += sizeof(int16_t);
-    return value;
+    return reader_.Read<int16_t>();
   }
 
   [[nodiscard]] std::optional<uint32_t> ReadU32() {
-    if (bytes_.size() - offset_ < sizeof(uint32_t)) {
-      return std::nullopt;
-    }
-    const auto value = U32LEAt(bytes_.data() + offset_);
-    offset_ += sizeof(uint32_t);
-    return value;
+    return reader_.Read<uint32_t>();
   }
 
   [[nodiscard]] std::optional<std::string_view> ReadString() {
-    const auto begin = bytes_.begin() + static_cast<ptrdiff_t>(offset_);
-    const auto end = std::ranges::find(begin, bytes_.end(), uint8_t{0});
-    if (end == bytes_.end()) {
+    const auto remaining = reader_.RemainingBytes();
+    const auto end = std::ranges::find(remaining, uint8_t{0});
+    if (end == remaining.end()) {
       return std::nullopt;
     }
-    const auto length = static_cast<size_t>(end - begin);
-    const auto *text = reinterpret_cast<const char *>(bytes_.data() + offset_);
-    offset_ += length + 1;
+    const auto length = static_cast<size_t>(end - remaining.begin());
+    const auto *text = reinterpret_cast<const char *>(remaining.data());
+    static_cast<void>(reader_.ReadBytes(length + 1));
     return std::string_view(text, length);
   }
 
 private:
-  std::span<const uint8_t> bytes_;
-  size_t offset_ = 0;
+  util::ByteReader reader_;
 };
 
 } // namespace

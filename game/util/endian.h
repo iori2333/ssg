@@ -6,6 +6,7 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 template <typename T, bool Big> class ENDIAN_VALUE {
@@ -60,11 +61,33 @@ using U16BE = ENDIAN_SELECT_BIG<uint16_t>;
 using I32BE = ENDIAN_SELECT_BIG<int32_t>;
 using U32BE = ENDIAN_SELECT_BIG<uint32_t>;
 
-static I16LE I16LEAt(const void *p) { return *static_cast<const I16LE *>(p); }
-static U16LE U16LEAt(const void *p) { return *static_cast<const U16LE *>(p); }
-static I32LE I32LEAt(const void *p) { return *static_cast<const I32LE *>(p); }
-static U32LE U32LEAt(const void *p) { return *static_cast<const U32LE *>(p); }
-static I16BE I16BEAt(const void *p) { return *static_cast<const I16BE *>(p); }
-static U16BE U16BEAt(const void *p) { return *static_cast<const U16BE *>(p); }
-static I32BE I32BEAt(const void *p) { return *static_cast<const I32BE *>(p); }
-static U32BE U32BEAt(const void *p) { return *static_cast<const U32BE *>(p); }
+template <typename T> static T EndianValueAt(const void *pointer) {
+  T value;
+  std::memcpy(&value, pointer, sizeof(value));
+  return value;
+}
+
+static I16LE I16LEAt(const void *pointer) {
+  return EndianValueAt<I16LE>(pointer);
+}
+static U16LE U16LEAt(const void *pointer) {
+  return EndianValueAt<U16LE>(pointer);
+}
+static I32LE I32LEAt(const void *pointer) {
+  return EndianValueAt<I32LE>(pointer);
+}
+static U32LE U32LEAt(const void *pointer) {
+  return EndianValueAt<U32LE>(pointer);
+}
+static I16BE I16BEAt(const void *pointer) {
+  return EndianValueAt<I16BE>(pointer);
+}
+static U16BE U16BEAt(const void *pointer) {
+  return EndianValueAt<U16BE>(pointer);
+}
+static I32BE I32BEAt(const void *pointer) {
+  return EndianValueAt<I32BE>(pointer);
+}
+static U32BE U32BEAt(const void *pointer) {
+  return EndianValueAt<U32BE>(pointer);
+}

@@ -31,6 +31,7 @@
 #include <utility>
 #include <vector>
 
+#include "util/byte_io.h"
 #include "util/endian.h"
 #include "util/text_id.h"
 
@@ -1358,9 +1359,15 @@ static bool cmd_asm_ecl(const char *in_file, const char *out_file) {
 
     // Write header
     ensure_size(4 + script_count * 4);
-    *reinterpret_cast<U32LE *>(&out[0]) = U32LE(static_cast<uint32_t>(script_count));
+    if (!util::WriteLittleAt<uint32_t>(out, 0,
+                                       static_cast<uint32_t>(script_count))) {
+        return false;
+    }
     for (int si = 0; si < script_count; si++) {
-        *reinterpret_cast<U32LE *>(&out[4 + si * 4]) = U32LE(entry_offsets[si]);
+        if (!util::WriteLittleAt<uint32_t>(out, 4 + si * 4,
+                                           entry_offsets[si])) {
+            return false;
+        }
     }
 
     std::println("Assembled ECL: {} bytes", out.size());

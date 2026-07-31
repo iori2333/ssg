@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <bit>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
@@ -9,15 +10,18 @@
 #include <optional>
 #include <span>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace util {
 
 class ByteWriter {
 public:
-  template <std::unsigned_integral T> void Write(T value) {
+  template <std::integral T> void Write(T value) {
+    using U = std::make_unsigned_t<T>;
+    const auto encoded = static_cast<U>(value);
     for (std::size_t i = 0; i < sizeof(T); i++) {
-      bytes_.push_back(static_cast<uint8_t>(value >> (i * 8)));
+      bytes_.push_back(static_cast<uint8_t>(encoded >> (i * 8)));
     }
   }
 
@@ -26,6 +30,9 @@ public:
   }
 
   [[nodiscard]] const std::vector<uint8_t> &Bytes() const { return bytes_; }
+  [[nodiscard]] std::vector<uint8_t> TakeBytes() && {
+    return std::move(bytes_);
+  }
 
 private:
   std::vector<uint8_t> bytes_;
@@ -36,19 +43,23 @@ public:
   ByteReader() = default;
   explicit ByteReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
 
-  template <std::unsigned_integral T> [[nodiscard]] std::optional<T> Read() {
+  template <std::integral T> [[nodiscard]] std::optional<T> Read() {
     if (bytes_.size() - position_ < sizeof(T)) {
       return std::nullopt;
     }
-    T value = 0;
+    using U = std::make_unsigned_t<T>;
+    U value = 0;
     for (std::size_t i = 0; i < sizeof(T); i++) {
-      value |= static_cast<T>(bytes_[position_++]) << (i * 8);
+      value |= static_cast<U>(bytes_[position_++]) << (i * 8);
     }
-    return value;
+    if constexpr (std::is_signed_v<T>) {
+      return std::bit_cast<T>(value);
+    } else {
+      return value;
+    }
   }
 
-  template <std::unsigned_integral T>
-  [[nodiscard]] std::optional<T> Peek() const {
+  template <std::integral T> [[nodiscard]] std::optional<T> Peek() const {
     auto copy = *this;
     return copy.Read<T>();
   }
@@ -80,6 +91,10 @@ public:
   [[nodiscard]] std::size_t Remaining() const {
     return bytes_.size() - position_;
   }
+  [[nodiscard]] std::span<const uint8_t> RemainingBytes() const {
+    return bytes_.subspan(position_);
+  }
+  [[nodiscard]] std::size_t Position() const { return position_; }
   [[nodiscard]] bool Seek(std::size_t position) {
     if (position > bytes_.size()) {
       return false;
@@ -92,5 +107,29 @@ private:
   std::span<const uint8_t> bytes_;
   std::size_t position_ = 0;
 };
+
+template <std::integral T>
+[[nodiscard]] std::optional<T> ReadLittleAt(std::span<const uint8_t> bytes,
+                                            std::size_t offset) {
+  ByteReader reader(bytes);
+  if (!reader.Seek(offset)) {
+    return std::nullopt;
+  }
+  return reader.Read<T>();
+}
+
+template <std::integral T>
+[[nodiscard]] bool WriteLittleAt(std::span<uint8_t> bytes, std::size_t offset,
+                                 T value) {
+  if (offset > bytes.size() || bytes.size() - offset < sizeof(T)) {
+    return false;
+  }
+  using U = std::make_unsigned_t<T>;
+  const auto encoded = static_cast<U>(value);
+  for (std::size_t i = 0; i < sizeof(T); i++) {
+    bytes[offset + i] = static_cast<uint8_t>(encoded >> (i * 8));
+  }
+  return true;
+}
 
 } // namespace util

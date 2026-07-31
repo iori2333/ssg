@@ -24,6 +24,7 @@
 #include "data/data_manifest.h"
 #include "data/pbg_archive.h"
 #include "sys/input.h"
+#include "util/byte_io.h"
 
 namespace fs = std::filesystem;
 
@@ -161,28 +162,19 @@ bool IsWave(std::span<const uint8_t> bytes) {
          bytes[9] == 'A' && bytes[10] == 'V' && bytes[11] == 'E';
 }
 
-std::optional<uint32_t> ReadU32(std::span<const uint8_t> bytes, size_t offset) {
-  if (offset > bytes.size() || bytes.size() - offset < 4) {
-    return std::nullopt;
-  }
-  return static_cast<uint32_t>(bytes[offset]) |
-         (static_cast<uint32_t>(bytes[offset + 1]) << 8) |
-         (static_cast<uint32_t>(bytes[offset + 2]) << 16) |
-         (static_cast<uint32_t>(bytes[offset + 3]) << 24);
-}
-
 std::optional<std::vector<uint8_t>>
 NormalizeMusicEntry(std::span<const uint8_t> bytes) {
   if (IsStandardMidi(bytes)) {
     return std::vector<uint8_t>(bytes.begin(), bytes.end());
   }
 
-  const auto title_size = ReadU32(bytes, 0);
+  const auto title_size = util::ReadLittleAt<uint32_t>(bytes, 0);
   if (!title_size || *title_size > bytes.size() - 4) {
     return std::nullopt;
   }
   const size_t comment_size_offset = 4 + *title_size;
-  const auto comment_size = ReadU32(bytes, comment_size_offset);
+  const auto comment_size =
+      util::ReadLittleAt<uint32_t>(bytes, comment_size_offset);
   if (!comment_size || *comment_size > bytes.size() - comment_size_offset - 4) {
     return std::nullopt;
   }

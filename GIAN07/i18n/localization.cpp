@@ -8,7 +8,7 @@
 #include "localization.h"
 
 #include "messages_data.h"
-#include "util/endian.h"
+#include "util/byte_io.h"
 
 namespace {
 
@@ -60,40 +60,30 @@ constexpr std::array kMusicCommentIds = {
 
 class CatalogReader {
 public:
-  explicit CatalogReader(std::span<const uint8_t> bytes) : bytes_(bytes) {}
+  explicit CatalogReader(std::span<const uint8_t> bytes) : reader_(bytes) {}
 
   [[nodiscard]] std::optional<uint32_t> ReadU32() {
-    if (bytes_.size() - offset_ < sizeof(uint32_t)) {
-      return std::nullopt;
-    }
-    const auto value = static_cast<uint32_t>(U32LEAt(bytes_.data() + offset_));
-    offset_ += sizeof(uint32_t);
-    return value;
+    return reader_.Read<uint32_t>();
   }
 
   [[nodiscard]] std::optional<std::string_view> ReadString(size_t size) {
-    if (bytes_.size() - offset_ < size) {
+    const auto bytes = reader_.ReadBytes(size);
+    if (!bytes) {
       return std::nullopt;
     }
-    const auto *text = reinterpret_cast<const char *>(bytes_.data() + offset_);
-    offset_ += size;
-    return std::string_view(text, size);
+    const auto *text = reinterpret_cast<const char *>(bytes->data());
+    return std::string_view(text, bytes->size());
   }
 
   [[nodiscard]] bool ReadMagic(std::span<const uint8_t> magic) {
-    if (bytes_.size() - offset_ < magic.size() ||
-        !std::ranges::equal(bytes_.subspan(offset_, magic.size()), magic)) {
-      return false;
-    }
-    offset_ += magic.size();
-    return true;
+    const auto bytes = reader_.ReadBytes(magic.size());
+    return bytes && std::ranges::equal(*bytes, magic);
   }
 
-  [[nodiscard]] bool Empty() const { return offset_ == bytes_.size(); }
+  [[nodiscard]] bool Empty() const { return reader_.Empty(); }
 
 private:
-  std::span<const uint8_t> bytes_;
-  size_t offset_ = 0;
+  util::ByteReader reader_;
 };
 
 } // namespace

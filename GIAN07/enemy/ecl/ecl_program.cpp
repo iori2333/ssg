@@ -11,7 +11,7 @@
 
 #include "ecl_program.h"
 
-#include "util/endian.h"
+#include "util/byte_io.h"
 
 class EclInstructionFactory {
 public:
@@ -27,38 +27,23 @@ constexpr size_t InvalidPosition = std::numeric_limits<size_t>::max();
 
 class EclReader {
 public:
-  explicit EclReader(const uint8_t *bytes) : bytes_(bytes) {}
+  explicit EclReader(std::span<const uint8_t> bytes) : reader_(bytes) {
+    static_cast<void>(reader_.Read<uint8_t>());
+  }
 
-  uint8_t U8() { return bytes_[offset_++]; }
+  uint8_t U8() { return reader_.Read<uint8_t>().value(); }
   int8_t I8() { return std::bit_cast<int8_t>(U8()); }
 
-  uint16_t U16() {
-    const auto value = U16LEAt(bytes_ + offset_);
-    offset_ += sizeof(uint16_t);
-    return value;
-  }
+  uint16_t U16() { return reader_.Read<uint16_t>().value(); }
 
-  int16_t I16() {
-    const auto value = I16LEAt(bytes_ + offset_);
-    offset_ += sizeof(int16_t);
-    return value;
-  }
+  int16_t I16() { return reader_.Read<int16_t>().value(); }
 
-  uint32_t U32() {
-    const auto value = U32LEAt(bytes_ + offset_);
-    offset_ += sizeof(uint32_t);
-    return value;
-  }
+  uint32_t U32() { return reader_.Read<uint32_t>().value(); }
 
-  int32_t I32() {
-    const auto value = I32LEAt(bytes_ + offset_);
-    offset_ += sizeof(int32_t);
-    return value;
-  }
+  int32_t I32() { return reader_.Read<int32_t>().value(); }
 
 private:
-  const uint8_t *bytes_;
-  size_t offset_ = 1;
+  util::ByteReader reader_;
 };
 
 std::optional<size_t> EncodedSize(uint8_t raw_opcode) {
@@ -245,7 +230,7 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
                   const std::vector<size_t> &address_to_position,
                   size_t script_count) {
   const auto opcode = static_cast<EclOpcode>(bytes[address]);
-  EclReader reader(bytes.data() + address);
+  EclReader reader(bytes.subspan(address));
   const auto target = [&]() -> std::optional<size_t> {
     const auto byte_address = reader.U32();
     if (byte_address >= address_to_position.size() ||
@@ -680,10 +665,12 @@ std::optional<EclProgram> EclProgram::Parse(std::span<const uint8_t> bytes) {
     return std::nullopt;
   }
 
-  const auto script_count = U32LEAt(bytes.data());
-  if (script_count == 0 || script_count > 256) {
+  const auto script_count_value = util::ReadLittleAt<uint32_t>(bytes, 0);
+  if (!script_count_value || *script_count_value == 0 ||
+      *script_count_value > 256) {
     return std::nullopt;
   }
+  const auto script_count = *script_count_value;
 
   const size_t header_size =
       sizeof(uint32_t) + static_cast<size_t>(script_count) * sizeof(uint32_t);
@@ -717,13 +704,13 @@ std::optional<EclProgram> EclProgram::Parse(std::span<const uint8_t> bytes) {
   EclProgram program;
   program.entries_.reserve(script_count);
   for (uint32_t i = 0; i < script_count; ++i) {
-    const auto entry_address =
-        U32LEAt(bytes.data() + sizeof(uint32_t) + i * sizeof(uint32_t));
-    if (entry_address >= address_to_position.size() ||
-        address_to_position[entry_address] == InvalidPosition) {
+    const auto entry_address = util::ReadLittleAt<uint32_t>(
+        bytes, sizeof(uint32_t) + i * sizeof(uint32_t));
+    if (!entry_address || *entry_address >= address_to_position.size() ||
+        address_to_position[*entry_address] == InvalidPosition) {
       return std::nullopt;
     }
-    program.entries_.push_back(address_to_position[entry_address]);
+    program.entries_.push_back(address_to_position[*entry_address]);
   }
 
   program.instructions_.reserve(addresses.size());
