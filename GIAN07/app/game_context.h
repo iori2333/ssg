@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <functional>
+#include <utility>
+
 #include "display_controller.h"
 
 #include "bullet/bullet_manager.h"
@@ -22,9 +25,11 @@
 #include "ui/ui_manager.h"
 
 struct GameContext {
-  explicit GameContext(const ConfigData &config) : config(config) {}
+  explicit GameContext(ConfigData &config, std::function<void()> save_config)
+      : config(config), save_config(std::move(save_config)) {}
 
-  const ConfigData &config;
+  ConfigData &config;
+  std::function<void()> save_config;
 
   i18n::Localization localization;
   data::GameData data;

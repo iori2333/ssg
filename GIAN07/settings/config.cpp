@@ -15,6 +15,7 @@
 static constexpr auto CFG_FN = "SSG.TOML";
 static constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
 static constexpr auto kMaxLoadedBombStock = kMaxBombStock + 1;
+static constexpr uint8_t kExtraStageFlagMask = 0x07;
 
 // Validation helpers
 
@@ -36,6 +37,9 @@ static constexpr bool ValidScreenshotEffort(uint8_t v) {
 }
 static constexpr bool ValidVolume(VOLUME v) { return v <= VOLUME_MAX; }
 static constexpr bool ValidWinMMPad(INPUT_PAD_BUTTON v) { return v <= 32; }
+static constexpr bool ValidExtraStageFlags(uint8_t v) {
+  return (v & ~kExtraStageFlagMask) == 0;
+}
 
 namespace {
 
@@ -156,6 +160,12 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "pad_shift", cfg.input.pad_shift, ValidWinMMPad);
     LoadToml(*sec, "pad_cancel", cfg.input.pad_cancel, ValidWinMMPad);
   }
+
+  // [progress]
+  if (auto *sec = tbl["progress"].as_table()) {
+    LoadToml(*sec, "extra_stg_flags", cfg.progress.extra_stg_flags,
+             ValidExtraStageFlags);
+  }
 }
 
 static void TOMLSave(const char *fn, const ConfigData &cfg) {
@@ -233,6 +243,13 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("pad_shift", cfg.input.pad_shift);
     sec.emplace("pad_cancel", cfg.input.pad_cancel);
     tbl.emplace("input", std::move(sec));
+  }
+
+  // [progress]
+  {
+    toml::table sec;
+    sec.emplace("extra_stg_flags", cfg.progress.extra_stg_flags);
+    tbl.emplace("progress", std::move(sec));
   }
 
   std::ofstream file(fn, std::ios::binary | std::ios::trunc);

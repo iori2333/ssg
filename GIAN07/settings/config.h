@@ -91,6 +91,10 @@ struct DebugConfig {
   bool demo_recording = false;
 };
 
+struct ProgressConfig {
+  uint8_t extra_stg_flags = 0;
+};
+
 struct ConfigData {
   GameConfig game;
   GraphicsConfig graphics;
@@ -98,6 +102,7 @@ struct ConfigData {
   AudioConfig audio;
   InputConfig input;
   DebugConfig debug;
+  ProgressConfig progress;
 };
 
 [[nodiscard]] ConfigData LoadConfig();

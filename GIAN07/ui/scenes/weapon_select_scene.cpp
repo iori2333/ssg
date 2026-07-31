@@ -107,6 +107,12 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
     if (speed_ != 0) {
       break;
     }
+    if (session_.stage == StageId::Extra &&
+        ((1U << PlayerTypeIndex(player_.Type())) &
+         config_.progress.extra_stg_flags) == 0) {
+      Snd_SEPlay(SfxId::Buzz);
+      break;
+    }
     player_.Initialize(config_.game.player_stock, config_.game.bomb_stock);
     count_ = 0;
     Snd_SEPlay(SfxId::Select);
@@ -166,7 +172,7 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
   GrpGeom->SetAlphaNorm(128);
   for (int i = 0; i < 3; i++) {
     if (session_.stage != StageId::Extra ||
-        ((1 << i) & session_.extra_stg_flags) != 0) {
+        ((1U << i) & config_.progress.extra_stg_flags) != 0) {
       continue;
     }
     const int direction =

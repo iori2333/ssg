@@ -663,13 +663,16 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
         return true;
       }));
 
-  ch.push_back(std::make_unique<ActionNode>(
+  auto extra_start = std::make_unique<ActionNode>(
       Localized(localization, "ui.menu.extra_start.title"),
       Localized(localization, "ui.menu.extra_start.help"),
       [on_action](MenuController &) {
         on_action(MainMenuAction::StartExtra);
         return true;
-      }));
+      });
+  extra_start->BindEnabled(
+      [&cfg] { return cfg.progress.extra_stg_flags != 0; });
+  ch.push_back(std::move(extra_start));
 
   ch.push_back(std::make_unique<ActionNode>(
       Localized(localization, "ui.menu.replay.title"),

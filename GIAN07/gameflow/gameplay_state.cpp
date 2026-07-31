@@ -199,8 +199,13 @@ GameplayState::HandleStageTransition(stage::StageTransition transition) {
       return StepResult::Running;
     }
     if (context.session.level != GameLevel::Easy) {
-      context.session.extra_stg_flags |=
+      auto &flags = context.config.progress.extra_stg_flags;
+      const auto unlocked =
           static_cast<uint8_t>(1U << PlayerTypeIndex(context.player.Type()));
+      if ((flags & unlocked) == 0) {
+        flags |= unlocked;
+        context.save_config();
+      }
     }
     if (context.records.IsRecording()) {
       context.records.FlushStage();

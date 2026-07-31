@@ -13,7 +13,6 @@ struct GameSession {
   GameLevel level = GameLevel::Normal;
   bool is_demoplay = false;
   int rank = 0;
-  uint8_t extra_stg_flags = 0;
 
   [[nodiscard]] GameLevel EffectiveLevel() const;
   void AdvanceStage();
