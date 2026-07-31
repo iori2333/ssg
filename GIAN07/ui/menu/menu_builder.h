@@ -11,6 +11,7 @@
 
 struct ConfigData;
 class DisplayController;
+class InputSystem;
 class MusicPlayer;
 
 namespace i18n {
@@ -35,6 +36,7 @@ enum class MainMenuAction {
 
 struct MainMenuServices {
   DisplayController &display;
+  InputSystem &input;
   data::SfxLoader &sound_effects;
   MusicPlayer &music;
   i18n::Localization &localization;

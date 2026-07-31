@@ -542,32 +542,33 @@ BuildSoundMenu(AudioConfig &audio_cfg, data::SfxLoader &sound_effects,
 // JoyPad
 // ---------------------------------------------------------------------------
 
-static void ApplyPadBindings(const InputConfig &input_cfg) {
+static void ApplyPadBindings(InputSystem &input, const InputConfig &input_cfg) {
   const std::array bindings = {
       INPUT_PAD_BINDING{input_cfg.pad_tama, KEY_TAMA},
       INPUT_PAD_BINDING{input_cfg.pad_bomb, KEY_BOMB},
       INPUT_PAD_BINDING{input_cfg.pad_shift, KEY_SHIFT},
       INPUT_PAD_BINDING{input_cfg.pad_cancel, KEY_ESC},
   };
-  Key_SetPadBindings(bindings);
+  input.SetPadBindings(bindings);
 }
 
 static std::unique_ptr<EntryNode>
-BuildPadMenu(InputConfig &input_cfg, i18n::Localization &localization) {
+BuildPadMenu(InputConfig &input_cfg, InputSystem &input,
+             i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(4);
 
-  auto make_pad = [&input_cfg, &localization](std::string_view label_key,
-                                              INPUT_PAD_BUTTON &btn) {
+  auto make_pad = [&input_cfg, &input, &localization](
+                      std::string_view label_key, INPUT_PAD_BUTTON &btn) {
     auto node = std::make_unique<ActionNode>(
         Localized(localization, label_key),
         Localized(localization, "ui.menu.pad_binding.help"),
-        [&btn, &input_cfg](MenuController &ctrl) {
+        [&btn, &input_cfg, &input](MenuController &ctrl) {
           INPUT_BITS key = ctrl.LastKey();
-          key &= static_cast<INPUT_BITS>(~Pad_Data);
-          if (auto temp = Key_PadSingle()) {
+          key &= static_cast<INPUT_BITS>(~input.Current().pad);
+          if (auto temp = input.PadSingle()) {
             btn = temp.value();
-            ApplyPadBindings(input_cfg);
+            ApplyPadBindings(input, input_cfg);
           }
           return !Input_IsOK(key);
         });
@@ -590,7 +591,8 @@ BuildPadMenu(InputConfig &input_cfg, i18n::Localization &localization) {
 // ---------------------------------------------------------------------------
 
 static std::unique_ptr<EntryNode>
-BuildInputMenu(InputConfig &input_cfg, i18n::Localization &localization) {
+BuildInputMenu(InputConfig &input_cfg, InputSystem &input,
+               i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(3);
 
@@ -608,7 +610,7 @@ BuildInputMenu(InputConfig &input_cfg, i18n::Localization &localization) {
   LocalizeToggleValues(*speed_down, localization);
   ch.push_back(std::move(speed_down));
 
-  ch.push_back(BuildPadMenu(input_cfg, localization));
+  ch.push_back(BuildPadMenu(input_cfg, input, localization));
 
   return std::make_unique<EntryNode>(
       Localized(localization, "ui.menu.input.title"),
@@ -700,7 +702,7 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
       BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display, localization));
   config->AddChild(BuildSoundMenu(cfg.audio, services.sound_effects,
                                   services.music, localization));
-  config->AddChild(BuildInputMenu(cfg.input, localization));
+  config->AddChild(BuildInputMenu(cfg.input, services.input, localization));
   ch.push_back(std::move(config));
 
   ch.push_back(std::make_unique<ActionNode>(

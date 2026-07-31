@@ -32,4 +32,5 @@ std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void);
 
 // Runs the main loop each frame, calling [frame_func] for each iteration, and
 // returns the exit code after the game was quit.
-int WndBackend_Run(std::function<bool()> frame_func);
+int WndBackend_Run(std::function<void()> input_func,
+                   std::function<bool()> frame_func);

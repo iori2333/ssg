@@ -123,6 +123,7 @@ void Grp_ScreenshotSetEffort(uint8_t effort);
 
 // Required to enable the screenshot feature as a whole.
 void Grp_ScreenshotSetPrefix(std::string_view prefix);
+void Grp_RequestScreenshot(bool requested);
 
 struct SDL_Surface;
 

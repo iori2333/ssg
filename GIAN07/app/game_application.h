@@ -6,6 +6,8 @@
 
 #include "game_context.h"
 
+#include "sys/input.h"
+
 namespace gameflow {
 class GameFlow;
 }
@@ -28,6 +30,8 @@ private:
   void PersistConfig();
 
   ConfigData config_;
+  InputSystem input_;
+  InputSnapshot input_snapshot_;
   GameContext context_{config_, [this] { PersistConfig(); }};
   std::unique_ptr<gameflow::GameFlow> flow_;
   bool config_loaded_ = false;

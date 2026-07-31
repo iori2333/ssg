@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
 #include <utility>
@@ -51,7 +52,7 @@ int_fast8_t Input_OptionKeyDelta(INPUT_BITS key);
 
 // Additional virtual keys for inputs that were read using GetAsyncKeyState()
 // in the original game. Treated separately to not complicate any existing
-// comparisons of [Key_Data] with 0.
+// comparisons of the regular game input with 0.
 using INPUT_SYSTEM_BITS = uint16_t;
 
 constexpr INPUT_SYSTEM_BITS SYSKEY_SNAPSHOT = {0x0001};
@@ -62,21 +63,29 @@ constexpr INPUT_SYSTEM_BITS SYSKEY_DEMO_RECORD = {0x0010};
 
 using INPUT_PAD_BINDING = std::pair<INPUT_PAD_BUTTON, INPUT_BITS>;
 
-// Global variables (Public)
-extern INPUT_BITS Key_Data;
-extern INPUT_BITS Pad_Data;
-extern INPUT_SYSTEM_BITS SystemKey_Data;
+struct InputSnapshot {
+  INPUT_BITS game = 0;
+  INPUT_BITS pad = 0;
+  INPUT_SYSTEM_BITS system = 0;
+};
 
-///
-/// Input backend interface
-///
+class InputSystem {
+public:
+  InputSystem();
+  ~InputSystem();
+  InputSystem(const InputSystem &) = delete;
+  InputSystem(InputSystem &&) = delete;
+  InputSystem &operator=(const InputSystem &) = delete;
+  InputSystem &operator=(InputSystem &&) = delete;
 
-void Key_SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings);
-void Key_End(void);
-void Key_Read(void);
+  void SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings);
+  [[nodiscard]] InputSnapshot Poll();
+  [[nodiscard]] const InputSnapshot &Current() const;
 
-// Returns:
-// - >= 1: ID of the single gamepad button that is being pressed
-// -  0: More than one gamepad button is being pressed
-// - std::nullopt: No gamepad button is being pressed
-std::optional<INPUT_PAD_BUTTON> Key_PadSingle(void);
+  // >= 1: one button; 0: multiple buttons; nullopt: no button.
+  [[nodiscard]] std::optional<INPUT_PAD_BUTTON> PadSingle() const;
+
+private:
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
+};

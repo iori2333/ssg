@@ -17,11 +17,6 @@
 #include "util/enum_flags.h"
 #include "util/guard.h"
 
-// Global variable (Public) definitions
-INPUT_BITS Key_Data = 0;
-INPUT_BITS Pad_Data = 0;
-INPUT_SYSTEM_BITS SystemKey_Data = 0;
-
 // MSVC's static analyzer suggests to make the functions below `constexpr`,
 // which won't work because they are used in other translation units and this
 // is not a header.
@@ -132,7 +127,12 @@ struct JOYPAD {
   uint8_t buttons_held = 0;
 };
 
-static std::vector<JOYPAD> Pads;
+struct InputSystem::Impl {
+  InputSnapshot current;
+  INPUT_BITS keyboard = 0;
+  std::vector<JOYPAD> pads;
+  std::vector<INPUT_PAD_BINDING> pad_bindings;
+};
 
 // SDL provides two abstractions for joypads:
 //
@@ -190,36 +190,35 @@ Pad_GetAxisIDs(int device_index) {
   return {axis_x, axis_y};
 }
 
-std::vector<JOYPAD>::iterator Pad_Find(SDL_JoystickID id) {
+std::vector<JOYPAD>::iterator Pad_Find(std::vector<JOYPAD> &pads,
+                                       SDL_JoystickID id) {
   auto *joystick = SDL_GetJoystickFromID(id);
   const auto it = std::ranges::find_if(
-      Pads, [joystick](const auto &pad) { return (pad.joystick == joystick); });
-  assert(it != Pads.end());
+      pads, [joystick](const auto &pad) { return (pad.joystick == joystick); });
+  assert(it != pads.end());
   return it;
 }
 
-static std::vector<INPUT_PAD_BINDING> PadBindings;
+InputSystem::InputSystem() : impl_(std::make_unique<Impl>()) {}
 
-void Key_SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings) {
-  PadBindings.assign(bindings.begin(), bindings.end());
-}
-
-void Key_End(void) {
-  for (auto &pad : Pads) {
+InputSystem::~InputSystem() {
+  for (auto &pad : impl_->pads) {
     SDL_CloseJoystick(pad.joystick);
   }
-  Pads.clear();
 }
 
-void Key_Read(void) {
-  static INPUT_BITS Key_Data_Real = 0;
+void InputSystem::SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings) {
+  impl_->pad_bindings.assign(bindings.begin(), bindings.end());
+}
 
+InputSnapshot InputSystem::Poll() {
+  auto &state = *impl_;
   SDL_Event event;
   while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_EVENT_KEY_DOWN,
                         SDL_EVENT_JOYSTICK_REMOVED) == 1) {
     switch (event.type) {
     case SDL_EVENT_JOYSTICK_AXIS_MOTION: {
-      auto &pad = *Pad_Find(event.jaxis.which);
+      auto &pad = *Pad_Find(state.pads, event.jaxis.which);
 
       // The original WinMM backend did this without even taking the
       // range reported by joyGetDevCaps() into account. However, that
@@ -228,11 +227,12 @@ void Key_Read(void) {
       // can do it here as well.
       const auto v = (event.jaxis.value >> 11);
       if (event.jaxis.axis == pad.axis_x) {
-        Pad_Data &= ~(KEY_LEFT | KEY_RIGHT);
-        Pad_Data |= ((v <= -4) ? KEY_LEFT : ((v >= 4) ? KEY_RIGHT : 0));
+        state.current.pad &= ~(KEY_LEFT | KEY_RIGHT);
+        state.current.pad |=
+            ((v <= -4) ? KEY_LEFT : ((v >= 4) ? KEY_RIGHT : 0));
       } else if (event.jaxis.axis == pad.axis_y) {
-        Pad_Data &= ~(KEY_UP | KEY_DOWN);
-        Pad_Data |= ((v <= -4) ? KEY_UP : ((v >= 4) ? KEY_DOWN : 0));
+        state.current.pad &= ~(KEY_UP | KEY_DOWN);
+        state.current.pad |= ((v <= -4) ? KEY_UP : ((v >= 4) ? KEY_DOWN : 0));
       }
       break;
     }
@@ -241,13 +241,13 @@ void Key_Read(void) {
     case SDL_EVENT_JOYSTICK_BUTTON_UP: {
       // SDL's numbering starts at 0.
       const INPUT_PAD_BUTTON id = (event.jbutton.button + 1);
-      for (const auto &binding : PadBindings) {
+      for (const auto &binding : state.pad_bindings) {
         if (id == binding.first) {
-          Key_Flip(Pad_Data, event.jbutton, binding.second);
+          Key_Flip(state.current.pad, event.jbutton, binding.second);
         }
       }
 
-      auto &pad = *Pad_Find(event.jbutton.which);
+      auto &pad = *Pad_Find(state.pads, event.jbutton.which);
       using HELD = std::numeric_limits<decltype(pad.button_pressed_last)>;
       if (event.jbutton.down) {
         if (pad.buttons_held < HELD::max()) {
@@ -272,24 +272,24 @@ void Key_Read(void) {
       };
       for (const auto &binding : KeyBindings) {
         if (binding.first.Matches(scancode)) {
-          Key_Flip(Key_Data_Real, event.key, binding.second);
+          Key_Flip(state.keyboard, event.key, binding.second);
         }
       }
       for (const auto &binding : SystemKeyBindings) {
         if (binding.first.Matches(scancode)) {
-          Key_Flip(SystemKey_Data, event.key, binding.second);
+          Key_Flip(state.current.system, event.key, binding.second);
         }
       }
       break;
     }
 
     case SDL_EVENT_JOYSTICK_REMOVED: {
-      const auto pad = Pad_Find(event.jdevice.which);
+      const auto pad = Pad_Find(state.pads, event.jdevice.which);
       SDL_CloseJoystick(pad->joystick);
-      if (pad != (Pads.end() - 1)) {
-        *pad = Pads.back();
+      if (pad != (state.pads.end() - 1)) {
+        *pad = state.pads.back();
       }
-      Pads.pop_back();
+      state.pads.pop_back();
       break;
     }
 
@@ -299,7 +299,7 @@ void Key_Read(void) {
         break;
       }
       const auto [axis_x, axis_y] = Pad_GetAxisIDs(event.jdevice.which);
-      Pads.emplace_back(JOYPAD{
+      state.pads.emplace_back(JOYPAD{
           .joystick = joystick,
           .axis_x = axis_x,
           .axis_y = axis_y,
@@ -311,11 +311,14 @@ void Key_Read(void) {
       break;
     }
   }
-  Key_Data = (Key_Data_Real | Pad_Data);
+  state.current.game = (state.keyboard | state.current.pad);
+  return state.current;
 }
 
-std::optional<INPUT_PAD_BUTTON> Key_PadSingle(void) {
-  for (const auto &pad : Pads) {
+const InputSnapshot &InputSystem::Current() const { return impl_->current; }
+
+std::optional<INPUT_PAD_BUTTON> InputSystem::PadSingle() const {
+  for (const auto &pad : impl_->pads) {
     if (pad.buttons_held > 1) {
       return 0;
     } else if (pad.buttons_held == 1) {

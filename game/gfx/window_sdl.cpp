@@ -16,7 +16,6 @@
 #include "window_sdl.h"
 
 #include "gfx/constants.h"
-#include "sys/input.h"
 #include "sys/log.h"
 
 constexpr auto LOG_CAT = logging::Channel::Graphics;
@@ -282,14 +281,15 @@ std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void) {
   return HelpGetWindowPosition(Window);
 }
 
-int WndBackend_Run(std::function<bool()> frame_func) {
+int WndBackend_Run(std::function<void()> input_func,
+                   std::function<bool()> frame_func) {
   bool quit = false;
   uint64_t ticks_last = 0;
 
   while (!quit) {
     // Read input events first to remove them from the queue
     SDL_PumpEvents();
-    Key_Read();
+    input_func();
 
     SDL_Event event;
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_EVENT_FIRST,

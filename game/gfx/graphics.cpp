@@ -18,7 +18,6 @@
 #include "graphics.h"
 #include "graphics_backend.h"
 
-#include "sys/input.h"
 #include "sys/path.h"
 #include "util/guard.h"
 
@@ -52,6 +51,7 @@ using NUM_TYPE = unsigned int;
 
 static NUM_TYPE ScreenshotNum = 0;
 static std::string ScreenshotBuf;
+static bool ScreenshotRequested = false;
 
 static void ScreenshotFindLastFor(std::string_view ext) {
   const auto extension_matches = [ext](std::string_view candidate) {
@@ -406,5 +406,7 @@ std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
 }
 
 void Grp_Flip(void) {
-  GrpBackend_Flip((SystemKey_Data & SYSKEY_SNAPSHOT) && ScreenshotBuf.size());
+  GrpBackend_Flip(ScreenshotRequested && ScreenshotBuf.size());
 }
+
+void Grp_RequestScreenshot(bool requested) { ScreenshotRequested = requested; }

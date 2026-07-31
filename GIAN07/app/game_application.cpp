@@ -36,14 +36,14 @@ bool PrepareWorkingDirectory() {
   return true;
 }
 
-void ApplyPadBindings(const InputConfig &config) {
+void ApplyPadBindings(InputSystem &input, const InputConfig &config) {
   const std::array bindings = {
       INPUT_PAD_BINDING{config.pad_tama, KEY_TAMA},
       INPUT_PAD_BINDING{config.pad_bomb, KEY_BOMB},
       INPUT_PAD_BINDING{config.pad_shift, KEY_SHIFT},
       INPUT_PAD_BINDING{config.pad_cancel, KEY_ESC},
   };
-  Key_SetPadBindings(bindings);
+  input.SetPadBindings(bindings);
 }
 
 } // namespace
@@ -62,7 +62,7 @@ bool GameApplication::Initialize() {
   config_ = LoadConfig();
   config_loaded_ = true;
   const auto &config = config_;
-  ApplyPadBindings(config.input);
+  ApplyPadBindings(input_, config.input);
   (void)Mid_SetFlags(config.audio.fix_sysex_bugs ? MID_FLAGS::FIX_SYSEX_BUGS
                                                  : MID_FLAGS::NONE);
   Mid_SetVolume(config.audio.bgm_volume);
@@ -119,6 +119,7 @@ bool GameApplication::Initialize() {
   context_.music.SetMidiVariant(config.audio.midi_variant);
   (void)context_.music.SetPack(config.audio.bgm_pack);
   context_.ui.ConfigureMain(config_, {.display = context_.display,
+                                      .input = input_,
                                       .sound_effects = context_.sound_effects,
                                       .music = context_.music,
                                       .localization = context_.localization});
@@ -135,10 +136,14 @@ bool GameApplication::Initialize() {
 }
 
 int GameApplication::Run() {
-  return WndBackend_Run([this] { return Tick(); });
+  return WndBackend_Run([this] { input_snapshot_ = input_.Poll(); },
+                        [this] { return Tick(); });
 }
 
-bool GameApplication::Tick() { return flow_->Tick(Key_Data, SystemKey_Data); }
+bool GameApplication::Tick() {
+  Grp_RequestScreenshot((input_snapshot_.system & SYSKEY_SNAPSHOT) != 0);
+  return flow_->Tick(input_snapshot_.game, input_snapshot_.system);
+}
 
 void GameApplication::PersistConfig() { SaveConfig(config_); }
 
@@ -151,7 +156,6 @@ void GameApplication::Shutdown() {
 
   BGM_Cleanup();
   Snd_Cleanup();
-  Key_End();
   if (display_initialized_) {
     TextBackend_Cleanup();
     GrpBackend_Cleanup();
