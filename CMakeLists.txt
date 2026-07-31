@@ -79,6 +79,22 @@ file(GLOB PLATFORM_LINUX_SRC CONFIGURE_DEPENDS
     "game/platform/linux/*/*.cpp"
 )
 
+set(GAME_VERSION "v${PROJECT_VERSION}")
+find_package(Git QUIET)
+if(Git_FOUND)
+    execute_process(
+        COMMAND "${GIT_EXECUTABLE}" -C "${CMAKE_CURRENT_SOURCE_DIR}"
+                rev-parse --short HEAD
+        RESULT_VARIABLE GIT_REVISION_RESULT
+        OUTPUT_VARIABLE GIT_REVISION
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(GIT_REVISION_RESULT EQUAL 0 AND GIT_REVISION MATCHES "^[0-9a-fA-F]+$")
+        set(GAME_VERSION "${GIT_REVISION}")
+    endif()
+endif()
+
 # ============================================================
 # Create the executable
 # ============================================================
@@ -88,6 +104,7 @@ add_executable(GIAN07
 )
 
 target_compile_definitions(GIAN07 PRIVATE
+    GAME_VERSION="${GAME_VERSION}"
     $<$<CONFIG:Debug>:PBG_DEBUG>
 )
 
@@ -115,9 +132,6 @@ target_include_directories(GIAN07 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}/GIAN07
 )
-
-# Include generated version header
-target_include_directories(GIAN07 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 # ============================================================
 # Link libraries

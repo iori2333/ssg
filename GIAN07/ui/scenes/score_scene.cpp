@@ -29,9 +29,9 @@
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
+#include "sys/log.h"
 #include "ui/name_entry.h"
 #include "ui/ui_manager.h"
-#include "util/debug.h"
 
 namespace {
 constexpr auto kDefaultScoreName = "Vivit!";
@@ -126,7 +126,8 @@ bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty,
   GrpBackend_Clear();
   Grp_Flip();
   if (!graphics_.LoadNameRegistration()) {
-    DebugOut("ゲームデータが破壊されています");
+    logging::Error(logging::Channel::Ui,
+                   "Failed to load Score screen graphics");
     return false;
   }
 
@@ -194,7 +195,7 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   if (pending_rank_ >= kRowCount) {
     current_record_->name = kDefaultScoreName;
     if (record_system_.SaveScore(*current_record_) != RecordSaveResult::Saved) {
-      DebugOut("スコアデータを保存できませんでした");
+      logging::Error(logging::Channel::Record, "Score could not be saved");
     }
     current_record_.reset();
     return ScoreRegistrationStart::Complete;
@@ -211,7 +212,8 @@ ScoreScene::StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
   GrpBackend_Clear();
   Grp_Flip();
   if (!graphics_.LoadNameRegistration()) {
-    DebugOut("ゲームデータが破壊されています");
+    logging::Error(logging::Channel::Ui,
+                   "Failed to load Score registration graphics");
     current_record_.reset();
     return ScoreRegistrationStart::Complete;
   }

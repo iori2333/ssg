@@ -15,7 +15,7 @@ using TEXTRENDER_RECT_ID = unsigned int;
 
 // Concept for a text render session on a single rectangle, abstracting away
 // the rasterizer.
-template <class T>
+template <typename T>
 concept TEXTRENDER_SESSION_BASE =
     (ENUMARRAY_ID<FONT_ID> &&
      requires(T t, PIXEL_POINT topleft_rel, std::string_view str, RGB color,
@@ -45,7 +45,7 @@ PIXEL_COORD TextLayoutXCenter(TEXTRENDER_SESSION_BASE auto &s,
 }
 
 // Concept for a text rendering backend.
-template <class T>
+template <typename T>
 concept TEXTRENDER_BASE =
     requires(T t, FONT_ID font, PIXEL_SIZE size, WINDOW_POINT dst,
              std::string_view contents, TEXTRENDER_RECT_ID rect_id,

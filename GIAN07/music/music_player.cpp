@@ -9,6 +9,7 @@
 
 #include "audio/bgm.h"
 #include "audio/midi.h"
+#include "sys/log.h"
 #include "sys/path.h"
 
 static constexpr std::string_view BGM_ROOT = "bgm/";
@@ -29,19 +30,27 @@ bool MusicPlayer::Play(unsigned int id) {
                   ? data_.ExtractArrangedMusicMidi(id)
                   : data_.ExtractMusicMidi(id);
   if (midi.empty() || !Mid_Load(std::move(midi))) {
+    logging::Error(logging::Channel::Music,
+                   "Failed to load MIDI for track {} variant={}", id,
+                   std::to_underlying(midi_variant_));
     return false;
   }
 
   // Try to open a replacement waveform from the active BGM pack.
   if (!pack_path_.empty()) {
     auto path = std::format("{}{:02}", pack_path_, id + 1);
-    BGM_LoadWaveform(path); // may fail silently — MIDI remains loaded
+    if (!BGM_LoadWaveform(path)) {
+      logging::Debug(logging::Channel::Music,
+                     "No waveform replacement for track {}; using MIDI", id);
+    }
   }
 
   loaded_num_ = id + 1;
   BGM_SetLoadedNum(loaded_num_);
   BGM_SetTempo(BGM_GetTempo());
   BGM_Play();
+  logging::Debug(logging::Channel::Music, "Playing track {} variant={}", id,
+                 std::to_underlying(midi_variant_));
   return true;
 }
 
@@ -108,6 +117,8 @@ bool MusicPlayer::SetPack(std::string_view pack) {
 
     std::error_code error;
     if (!std::filesystem::is_directory(pack_path_, error)) {
+      logging::Warning(logging::Channel::Music,
+                       "BGM pack directory is unavailable: {}", pack_path_);
       pack_path_.clear();
       return false;
     }

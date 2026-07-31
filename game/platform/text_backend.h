@@ -8,7 +8,7 @@
 
 // Concept for pixel access within a text rendering session. Offers access
 // using both RGB colors and the raw underlying format.
-template <class T>
+template <typename T>
 concept TEXTRENDER_SESSION_PIXELACCESS_BASE = requires(
     T t, PIXEL_POINT xy_rel, decltype(t.GetRaw(xy_rel)) color_raw, RGB color) {
   { t.GetRaw(xy_rel) } -> std::same_as<decltype(color_raw)>;

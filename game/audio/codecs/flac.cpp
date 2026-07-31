@@ -29,7 +29,7 @@ namespace BGM {
 // load the intro file twice (once with metadata, and once without), and employ
 // a bit of trickery to avoid duplicating the read and seek callbacks for the
 // two cases...
-template <class T>
+template <typename T>
 concept CB_DATA = requires(T t) {
   { t.stream() } -> std::same_as<std::istream &>;
 };

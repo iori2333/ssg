@@ -115,7 +115,7 @@ static constexpr std::pair<KEY_BIND, INPUT_SYSTEM_BITS> SystemKeyBindings[] = {
     {SDL_SCANCODE_D, SYSKEY_BGM_DEVICE}, {SDL_SCANCODE_R, SYSKEY_DEMO_RECORD},
 };
 
-template <class Bits>
+template <typename Bits>
 void Key_Flip(Bits &key_data, const auto &key_or_jbutton, Bits bits) {
   if (key_or_jbutton.down) {
     key_data |= bits;

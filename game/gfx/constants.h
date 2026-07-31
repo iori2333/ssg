@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 
 #include "coords.h"
 
@@ -11,8 +12,8 @@
 constexpr WINDOW_SIZE GRP_RES = {.w = 640, .h = 480};
 inline constexpr WINDOW_LTRB GRP_RES_RECT = {{.x = 0, .y = 0}, GRP_RES};
 
-constexpr auto GAME_TITLE = "秋霜玉";
-constexpr auto VERSION_TAG = "v1.0";
+constexpr std::string_view GAME_TITLE = "秋霜玉";
+constexpr std::string_view VERSION_TAG = GAME_VERSION;
 
 // Maximum number of triangles rendered in a single draw call.
 constexpr auto GRP_TRIANGLES_MAX = 66;

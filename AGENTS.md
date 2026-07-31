@@ -144,7 +144,6 @@ where the guard logic requires it.
 
 ## Known gotchas
 
-- `VERSION_TAG` is hardcoded in `game/gfx/constants.h` (currently `"v1.0"`). Build-script comments about a git-generated version header are outdated.
 - `.vscode/launch.json` is stale: it references tasks that no longer exist in `.vscode/tasks.json` and expects binaries in `bin/` instead of `build/bin/`.
 - `README.md` mentions `install_linux.sh` and a Tup-based workflow; neither exists in this branch.
 

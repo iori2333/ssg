@@ -28,11 +28,11 @@
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
+#include "sys/log.h"
 #include "ui/menu/menu_controller.h"
 #include "ui/menu/menu_tree.h"
 #include "ui/name_entry.h"
 #include "ui/ui_manager.h"
-#include "util/debug.h"
 
 namespace {
 std::string_view Text(const i18n::Localization &localization,
@@ -98,7 +98,8 @@ bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
   GrpBackend_Clear();
   Grp_Flip();
   if (!graphics_.LoadNameRegistration()) {
-    DebugOut("ゲームデータが破壊されています");
+    logging::Error(logging::Channel::Ui,
+                   "Failed to load Replay screen graphics");
     return false;
   }
 

@@ -19,7 +19,7 @@
 #include "sys/input.h"
 #include "sys/log.h"
 
-constexpr auto LOG_CAT = SDL_LOG_CATEGORY_VIDEO;
+constexpr auto LOG_CAT = logging::Channel::Graphics;
 
 static SDL_Window *Window;
 std::optional<std::pair<int16_t, int16_t>> TopleftBeforeFullscreen;
@@ -92,8 +92,8 @@ HelpSetFullscreenMode(SDL_Window *window, GRAPHICS_FULLSCREEN_FLAGS fs) {
     if (!SDL_GetClosestFullscreenDisplayMode(HelpGetDisplayForWindow(),
                                              GRP_RES.w, GRP_RES.h, rate, false,
                                              &mode)) {
-      Log_Fail(LOG_CAT, "Could not find a display mode for exclusive "
-                        "fullscreen, falling back on borderless");
+      logging::SdlError(LOG_CAT, "Could not find a display mode for exclusive "
+                                 "fullscreen, falling back on borderless");
       fs.exclusive = false;
       return HelpSetFullscreenMode(window, fs);
     }
@@ -102,7 +102,7 @@ HelpSetFullscreenMode(SDL_Window *window, GRAPHICS_FULLSCREEN_FLAGS fs) {
     SDL_SetWindowFullscreenMode(window, nullptr);
   }
   if (!SDL_SetWindowFullscreen(window, fs.fullscreen)) {
-    Log_Fail(LOG_CAT, "Error changing display mode");
+    logging::SdlError(LOG_CAT, "Error changing display mode");
     return std::nullopt;
   }
   return fs;
@@ -116,11 +116,11 @@ int8_t WndBackend_ValidateRenderDriver(std::string_view hint) {
   const auto *default_driver =
       (GRP_SDL_DEFAULT_API ? GRP_SDL_DEFAULT_API
                            : GrpBackend_APIString(0).data());
-  SDL_LogCritical(
+  logging::Warning(
       LOG_CAT,
-      "Unsupported renderer \"%s\" specified in " SDL_HINT_RENDER_DRIVER
-      " hint, falling back to %s default (%s).",
-      hint.data(), (GRP_SDL_DEFAULT_API ? "the" : "SDL's"), default_driver);
+      "Unsupported renderer \"{}\" specified in " SDL_HINT_RENDER_DRIVER
+      " hint; falling back to {} default ({})",
+      hint, (GRP_SDL_DEFAULT_API ? "the" : "SDL's"), default_driver);
   SDL_UnsetEnvironmentVariable(SDL_GetEnvironment(), SDL_HINT_RENDER_DRIVER);
 
   // If this succeeds, the hint came from SDL, not the environment.
@@ -235,7 +235,8 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   }
 
   const SDL_PropertiesID props = SDL_CreateProperties();
-  SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, GAME_TITLE);
+  SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
+                        GAME_TITLE.data());
   SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER, rect.x);
   SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, rect.y);
   SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, rect.w);
@@ -249,7 +250,7 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   Window = SDL_CreateWindowWithProperties(props);
   SDL_DestroyProperties(props);
   if (!Window) {
-    Log_Fail(LOG_CAT, "Error creating SDL window");
+    logging::SdlError(LOG_CAT, "Error creating SDL window");
     return std::nullopt;
   }
   const auto maybe_fs_actual = HelpSetFullscreenMode(Window, fs);

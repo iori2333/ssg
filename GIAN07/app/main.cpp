@@ -21,20 +21,27 @@
 #include "game_application.h"
 #include "gfx/constants.h"
 #include "sys/log.h"
+#include "sys/path.h"
+#include "util/crash_handler.h"
 #include "util/guard.h"
 
 int main(int argc, char **args) {
-  Log_Init(GAME_TITLE);
-
 #ifndef APP_ID
 #define APP_ID "GIAN07"
 #endif
+  logging::Initialize(PathForData(), APP_ID, VERSION_TAG);
+  auto logging_guard = make_guard(logging::Shutdown);
+#ifdef PBG_DEBUG
+  crash::Install();
+  auto crash_guard = make_guard(crash::Uninstall);
+#endif
+
   // SDL 3 automatically pulls the Desktop Entry name from the new app
   // metadata, avoiding the need for the environment variable below.
-  SDL_SetAppMetadata(GAME_TITLE, VERSION_TAG, APP_ID);
+  SDL_SetAppMetadata(GAME_TITLE.data(), VERSION_TAG.data(), APP_ID);
 
   if (!SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO)) {
-    Log_Fail(SDL_LOG_CATEGORY_VIDEO, "Error initializing SDL");
+    logging::SdlError(logging::Channel::Platform, "Error initializing SDL");
     return 1;
   }
   auto sdl_guard = make_guard(SDL_Quit);
@@ -45,7 +52,11 @@ int main(int argc, char **args) {
   // level during SDL_VideoInit() that might confuse Linux users, but we'd
   // like this log level for everything we call ourselves. So let's only
   // activate it after SDL_Init().
+#ifdef PBG_DEBUG
   SDL_SetLogPriorities(SDL_LOG_PRIORITY_VERBOSE);
+#else
+  SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
+#endif
 
   // Use the backend API's line drawing algorithm, which at least gives us
   // pixel-perfect accuracy with pbg's original 16-bit code when using

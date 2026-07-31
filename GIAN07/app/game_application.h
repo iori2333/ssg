@@ -32,6 +32,5 @@ private:
   std::unique_ptr<gameflow::GameFlow> flow_;
   bool config_loaded_ = false;
   bool display_initialized_ = false;
-  bool debug_initialized_ = false;
   bool running_ = false;
 };

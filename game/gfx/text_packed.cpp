@@ -19,7 +19,7 @@ struct created_splits {
 
   static auto none() { return created_splits(); }
 
-  template <class... Args>
+  template <typename... Args>
   created_splits(Args &&...args) noexcept
       : count(sizeof...(Args)), spaces({std::forward<Args>(args)...}) {}
 

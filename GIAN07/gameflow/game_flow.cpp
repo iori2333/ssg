@@ -36,7 +36,7 @@
 namespace gameflow {
 namespace {
 
-template <class... Ts> struct Overload : Ts... {
+template <typename... Ts> struct Overload : Ts... {
   using Ts::operator()...;
 };
 

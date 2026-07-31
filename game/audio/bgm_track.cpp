@@ -37,7 +37,7 @@ void TRACK_VOL::SetVolumeLinear(float v) {
   volume_factor = VolumeFactorSquare(v);
 }
 
-template <class BitDepth>
+template <typename BitDepth>
 static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
                         TRACK_VOL &vol) {
   const auto samples =

@@ -21,6 +21,7 @@
 #include "data/pbg_archive.h"
 #include "gameplay/game_session.h"
 #include "settings/config.h"
+#include "sys/log.h"
 #include "util/byte_io.h"
 #include "util/endian.h"
 #include "util/math_utils.h"
@@ -516,9 +517,12 @@ RecordSaveResult RecordSystem::SaveRecording(std::string_view replay_name,
   }
 
   if (!archive.Write(std::filesystem::path{path})) {
+    logging::Error(logging::Channel::Record,
+                   "Failed to write replay archive: {}", path);
     return RecordSaveResult::IoError;
   }
   state_.emplace<IdleState>();
+  logging::Info(logging::Channel::Record, "Saved replay archive: {}", path);
   return RecordSaveResult::Saved;
 }
 
@@ -685,10 +689,15 @@ bool RecordSystem::LoadReplay(std::string_view path, StageId start_stage) {
   std::vector<ReplayStage> stages;
   std::optional<ReplayRecord> record;
   if (!LoadArchive(path, &record, &settings, &stages)) {
+    logging::Error(logging::Channel::Record,
+                   "Failed to load replay archive: {}", path);
     return false;
   }
   const auto selected = std::ranges::find(record->stages, start_stage);
   if (selected == record->stages.end()) {
+    logging::Error(logging::Channel::Record,
+                   "Replay {} does not contain stage {}", path,
+                   std::to_underlying(start_stage) + 1);
     return false;
   }
 
@@ -699,6 +708,9 @@ bool RecordSystem::LoadReplay(std::string_view path, StageId start_stage) {
           static_cast<std::size_t>(selected - record->stages.begin()),
       .multi_stage = true,
   });
+  logging::Debug(logging::Channel::Record,
+                 "Loaded replay archive {} from stage {}", path,
+                 std::to_underlying(start_stage) + 1);
   return true;
 }
 

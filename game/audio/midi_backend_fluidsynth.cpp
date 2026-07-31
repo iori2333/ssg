@@ -15,6 +15,7 @@
 #include "midi.h"
 #include "midi_backend.h"
 
+#include "sys/log.h"
 #include "sys/path.h"
 
 static fluid_settings_t *FsSettings = nullptr;
@@ -205,6 +206,7 @@ bool MidBackend_Init(std::string_view preferred_soundfont) {
 
   ScanSoundFonts(PathForData());
   if (FsFontPaths.empty()) {
+    logging::Error(logging::Channel::Audio, "No SoundFont files were found");
     return false;
   }
 
@@ -215,15 +217,21 @@ bool MidBackend_Init(std::string_view preferred_soundfont) {
   }
 
   if (!FsInitAudio()) {
+    logging::Error(logging::Channel::Audio,
+                   "Failed to initialize FluidSynth audio");
     return false;
   }
 
   FsFontId = fluid_synth_sfload(FsSynth, FsFontPaths[FsFontIndex].c_str(), 1);
   if (FsFontId == FLUID_FAILED) {
+    logging::Error(logging::Channel::Audio, "Failed to load SoundFont: {}",
+                   FsFontPaths[FsFontIndex]);
     FsCleanupAudio();
     return false;
   }
 
+  logging::Info(logging::Channel::Audio, "Using SoundFont: {}",
+                Basename(FsFontPaths[FsFontIndex]));
   return true;
 }
 

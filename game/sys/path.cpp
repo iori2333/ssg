@@ -14,6 +14,7 @@ std::string_view PathForData(void) {
   if (PathDataView.data() != nullptr) {
     return PathDataView;
   }
-  PathDataView = SDL_GetBasePath();
+  const auto *path = SDL_GetBasePath();
+  PathDataView = path ? std::string_view(path) : std::string_view{};
   return PathDataView;
 }

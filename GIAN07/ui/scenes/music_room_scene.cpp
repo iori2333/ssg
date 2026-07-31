@@ -18,8 +18,8 @@
 #include "music/music_player.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
+#include "sys/log.h"
 #include "ui/text_marquee.h"
-#include "util/debug.h"
 #include "util/math_utils.h"
 
 // Constants
@@ -117,7 +117,7 @@ bool MusicRoomScene::Enter() {
   Grp_Flip();
 
   if (!graphics_.LoadMusicRoom()) {
-    DebugOut("ゲームデータが破壊されています");
+    logging::Error(logging::Channel::Ui, "Failed to load Music Room graphics");
     return false;
   }
 
@@ -138,7 +138,8 @@ bool MusicRoomScene::Enter() {
 
   // BGM_Stop();
   if (music_.TrackCount() == 0 || localization_.MusicComment(0).empty()) {
-    DebugOut("Music Room text catalog is invalid");
+    logging::Error(logging::Channel::I18n,
+                   "Music Room text catalog is invalid");
     return false;
   }
 

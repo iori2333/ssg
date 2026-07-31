@@ -8,12 +8,12 @@
 #include <type_traits>
 #include <utility>
 
-template <class E>
+template <typename E>
 concept ENUMARRAY_ID =
     (std::is_enum_v<E> && std::is_unsigned_v<std::underlying_type_t<E>> &&
      requires { E::COUNT; });
 
-template <class T, ENUMARRAY_ID IDType>
+template <typename T, ENUMARRAY_ID IDType>
 class ENUMARRAY : public std::array<T, std::to_underlying(IDType::COUNT)> {
   using BASE = std::array<T, std::to_underlying(IDType::COUNT)>;
 

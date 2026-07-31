@@ -28,6 +28,7 @@ namespace {
 
 constexpr WINDOW_POINT kMainWindowTopLeft = {400, 250};
 constexpr auto kBuildLabel = "BUILD";
+constexpr PIXEL_COORD kBuildTagGap = 4;
 
 } // namespace
 
@@ -77,7 +78,8 @@ void TitleScene::DrawVersion(PIXEL_COORD top) const {
     return 180;
   };
   constexpr auto label_extent = GrpExtent5(kBuildLabel);
-  const WINDOW_POINT label_position = {version_left_ - label_extent.w,
+  const WINDOW_POINT label_position = {version_left_ - label_extent.w -
+                                           kBuildTagGap,
                                        top + 2 + 7 - label_extent.h};
   GrpPut55(label_position, kBuildLabel);
   TextObj.Render({version_left_, top}, version_rect_, VERSION_TAG,

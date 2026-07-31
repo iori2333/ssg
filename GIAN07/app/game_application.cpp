@@ -6,7 +6,6 @@
 #include <string>
 #include <string_view>
 
-#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_messagebox.h>
 
 #include "game_application.h"
@@ -22,8 +21,8 @@
 #include "i18n/localization.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
+#include "sys/log.h"
 #include "sys/path.h"
-#include "util/debug.h"
 
 namespace {
 
@@ -55,13 +54,10 @@ GameApplication::~GameApplication() { Shutdown(); }
 
 bool GameApplication::Initialize() {
   if (!PrepareWorkingDirectory()) {
-    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to prepare the game data directory");
+    logging::Critical(logging::Channel::Application,
+                      "Failed to prepare the game data directory");
     return false;
   }
-
-  DebugSetup();
-  debug_initialized_ = true;
 
   config_ = LoadConfig();
   config_loaded_ = true;
@@ -73,28 +69,38 @@ bool GameApplication::Initialize() {
   Snd_SetVolumes(config.audio.bgm_volume, config.audio.se_volume);
 
   if (!context_.localization.Initialize(config.ui.language)) {
-    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to initialize embedded message catalogs");
+    logging::Critical(logging::Channel::I18n,
+                      "Failed to initialize embedded message catalogs");
     return false;
   }
   config_.ui.language = context_.localization.Language();
 
   if (!context_.display.Initialize(config_.graphics)) {
-    SDL_LogCritical(SDL_LOG_CATEGORY_VIDEO,
-                    "Failed to initialize the graphics backend");
+    logging::Critical(logging::Channel::Graphics,
+                      "Failed to initialize the graphics backend");
     return false;
   }
   display_initialized_ = true;
   Grp_ScreenshotSetPrefix("screenshots/");
 
   if (config.audio.bgm_enabled && !BGM_Init(config.audio.soundfont)) {
-    SDL_LogWarn(SDL_LOG_CATEGORY_AUDIO,
-                "No background music backend is available");
+    logging::Warning(logging::Channel::Audio,
+                     "No background music backend is available");
   }
   BGM_SetGainApply(config.audio.bgm_vol_norm);
 
   const auto data_errors = context_.data.Load(PathForData());
   if (!data_errors.empty()) {
+    for (const auto &error : data_errors) {
+      const auto source = error.source == data::DataSourceKind::Directory
+                              ? "directory"
+                              : "archive";
+      const auto reason =
+          error.kind == data::LoadErrorKind::Missing ? "missing" : "invalid";
+      logging::Error(logging::Channel::Data,
+                     "Failed to load game data: source={} reason={}", source,
+                     reason);
+    }
     const auto text = [this](std::string_view key) {
       return context_.localization.Text(i18n::TextIdFromKey(key));
     };
@@ -108,7 +114,7 @@ bool GameApplication::Initialize() {
   }
 
   if (config.audio.se_enabled && !context_.sound_effects.Load()) {
-    SDL_LogWarn(SDL_LOG_CATEGORY_AUDIO, "Failed to load sound effects");
+    logging::Warning(logging::Channel::Audio, "Failed to load sound effects");
   }
   context_.music.SetMidiVariant(config.audio.midi_variant);
   (void)context_.music.SetPack(config.audio.bgm_pack);
@@ -119,11 +125,12 @@ bool GameApplication::Initialize() {
 
   flow_ = std::make_unique<gameflow::GameFlow>(context_);
   if (!flow_->Start()) {
-    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to start the game flow");
+    logging::Critical(logging::Channel::GameFlow,
+                      "Failed to start the game flow");
     return false;
   }
   running_ = true;
+  logging::Info(logging::Channel::Application, "Application initialized");
   return true;
 }
 
@@ -149,9 +156,5 @@ void GameApplication::Shutdown() {
     TextBackend_Cleanup();
     GrpBackend_Cleanup();
     display_initialized_ = false;
-  }
-  if (debug_initialized_) {
-    DebugCleanup();
-    debug_initialized_ = false;
   }
 }

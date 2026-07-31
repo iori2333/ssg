@@ -13,7 +13,7 @@
 using PIXEL_COORD = int;
 
 // X/Y coordinate in unscaled pixel space. Relative to any origin.
-template <class Coord> struct PIXEL_POINT_BASE {
+template <typename Coord> struct PIXEL_POINT_BASE {
   Coord x;
   Coord y;
 
@@ -42,7 +42,7 @@ template <class Coord> struct PIXEL_POINT_BASE {
 // Using signed integers to avoid complicating the conversion into rectangle
 // types, where signed coordinates often represent meaningful points outside
 // the screen.
-template <class Coord> struct PIXEL_SIZE_BASE {
+template <typename Coord> struct PIXEL_SIZE_BASE {
   Coord w;
   Coord h;
 
@@ -74,19 +74,19 @@ template <class Coord> struct PIXEL_SIZE_BASE {
   std::partial_ordering operator<=>(const PIXEL_SIZE_BASE &) const = default;
 };
 
-template <class Coord>
+template <typename Coord>
 PIXEL_POINT_BASE<Coord> operator+(const PIXEL_POINT_BASE<Coord> &self,
                                   const PIXEL_SIZE_BASE<Coord> &other) {
   return {.x = (self.x + other.w), .y = (self.y + other.h)};
 }
 
-template <class Coord>
+template <typename Coord>
 PIXEL_POINT_BASE<Coord> operator-(const PIXEL_POINT_BASE<Coord> &self,
                                   const PIXEL_SIZE_BASE<Coord> &other) {
   return {.x = (self.x - other.w), .y = (self.y - other.h)};
 }
 
-template <class Coord>
+template <typename Coord>
 PIXEL_POINT_BASE<Coord> &operator+=(PIXEL_POINT_BASE<Coord> &self,
                                     const PIXEL_SIZE_BASE<Coord> &other) {
   self.x += other.w;
@@ -94,7 +94,7 @@ PIXEL_POINT_BASE<Coord> &operator+=(PIXEL_POINT_BASE<Coord> &self,
   return self;
 }
 
-template <class Coord>
+template <typename Coord>
 PIXEL_POINT_BASE<Coord> &operator-=(PIXEL_POINT_BASE<Coord> &self,
                                     const PIXEL_SIZE_BASE<Coord> &other) {
   self.x -= other.w;
@@ -104,7 +104,7 @@ PIXEL_POINT_BASE<Coord> &operator-=(PIXEL_POINT_BASE<Coord> &self,
 
 // Left-top-width-height rectangle in unscaled pixel space. Relative to any
 // origin.
-template <class Coord> struct PIXEL_LTWH_BASE {
+template <typename Coord> struct PIXEL_LTWH_BASE {
   Coord left = 0;
   Coord top = 0;
   Coord w = 0;
@@ -126,7 +126,7 @@ template <class Coord> struct PIXEL_LTWH_BASE {
 
 // Left-top-right-bottom rectangle in unscaled pixel space. Relative to any
 // origin.
-template <class Coord> struct PIXEL_LTRB_BASE {
+template <typename Coord> struct PIXEL_LTRB_BASE {
   Coord left;
   Coord top;
   Coord right;
@@ -157,7 +157,7 @@ using WINDOW_COORD = PIXEL_COORD;
 
 // X/Y coordinate in unscaled game window space. The visible area ranges from
 // (0, 0) inclusive to [GRP_RES] exclusive.
-template <class Coord>
+template <typename Coord>
 struct WINDOW_POINT_BASE : public PIXEL_POINT_BASE<Coord> {
   constexpr WINDOW_POINT_BASE
   operator+(const PIXEL_POINT_BASE<Coord> &other) const {
@@ -170,17 +170,19 @@ struct WINDOW_POINT_BASE : public PIXEL_POINT_BASE<Coord> {
 };
 
 // Area size in unscaled game window space.
-template <class Coord> using WINDOW_SIZE_BASE = PIXEL_SIZE_BASE<Coord>;
+template <typename Coord> using WINDOW_SIZE_BASE = PIXEL_SIZE_BASE<Coord>;
 
 // Left-top-width-height rectangle in unscaled game window space. The visible
 // area ranges from (0, 0) inclusive to [GRP_RES] exclusive.
-template <class Coord> struct WINDOW_LTWH_BASE : public PIXEL_LTWH_BASE<Coord> {
+template <typename Coord>
+struct WINDOW_LTWH_BASE : public PIXEL_LTWH_BASE<Coord> {
   using PIXEL_LTWH_BASE<Coord>::PIXEL_LTWH_BASE;
 };
 
 // Left-top-right-bottom rectangle in unscaled game window space. The visible
 // area ranges from (0, 0) inclusive to [GRP_RES] exclusive.
-template <class Coord> struct WINDOW_LTRB_BASE : public PIXEL_LTRB_BASE<Coord> {
+template <typename Coord>
+struct WINDOW_LTRB_BASE : public PIXEL_LTRB_BASE<Coord> {
   using PIXEL_LTRB_BASE<Coord>::PIXEL_LTRB_BASE;
 
   constexpr WINDOW_LTRB_BASE(const WINDOW_LTWH_BASE<Coord> &o)

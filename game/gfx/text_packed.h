@@ -19,7 +19,7 @@ protected:
   std::vector<PIXEL_LTWH> spaces;
   std::vector<RECT_AND_CONTENTS> rects;
 
-  template <class T> void SpaceAdd(T &&space) {
+  template <typename T> void SpaceAdd(T &&space) {
     if ((space.w > 0) && (space.h > 0)) {
       spaces.emplace_back(std::forward<T>(space));
     }

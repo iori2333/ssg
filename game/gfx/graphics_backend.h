@@ -164,7 +164,7 @@ GRAPHICS_GEOMETRY_SDL *GrpGeom_FB(void);
 // • empty or omitted (which will render all vertices using the last SetColor()
 //   and SetAlpha*() value), or
 // • have as many elements as [points].
-template <class T>
+template <typename T>
 concept GRAPHICS_GEOMETRY_POLY =
     requires(T t, WINDOW_COORD coord, TRIANGLE_PRIMITIVE tp,
              VERTEX_XY_SPAN<> points, VERTEX_RGBA_SPAN<> colors, RGB rgb) {
@@ -177,7 +177,7 @@ concept GRAPHICS_GEOMETRY_POLY =
     };
 
 // Interface for framebuffer-exclusive geometry draw calls.
-template <class T>
+template <typename T>
 concept GRAPHICS_GEOMETRY_FB =
     requires(T t, WINDOW_COORD coord, WINDOW_POINT p) {
       t.DrawPoint(p);

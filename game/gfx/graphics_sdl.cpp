@@ -22,7 +22,7 @@ using SDL_COLOR = SDL_FColor;
 #include "util/enum_array.h"
 #include "util/guard.h"
 
-static constexpr auto LOG_CAT = SDL_LOG_CATEGORY_RENDER;
+static constexpr auto LOG_CAT = logging::Channel::Graphics;
 
 /// State
 /// -----
@@ -322,14 +322,14 @@ PIXEL_SIZE GrpBackend_DisplaySize(bool fullscreen) {
   if (fullscreen) {
     const auto *display_mode = SDL_GetDesktopDisplayMode(display_i);
     if (!display_mode) {
-      Log_Fail(LOG_CAT, "Error retrieving display size");
+      logging::SdlError(LOG_CAT, "Error retrieving display size");
       return GRP_RES;
     }
     return {.w = display_mode->w, .h = display_mode->h};
   }
 
   if (!SDL_GetDisplayUsableBounds(display_i, &rect)) {
-    Log_Fail(LOG_CAT, "Error retrieving display size");
+    logging::SdlError(LOG_CAT, "Error retrieving display size");
     return GRP_RES;
   }
   return {.w = rect.w, .h = rect.h};
@@ -414,7 +414,7 @@ bool PrimarySetScale(bool geometry, const WINDOW_SIZE &scaled_res) {
     PrimaryTexture = SDL_CreateTexture(PrimaryRenderer, format,
                                        SDL_TEXTUREACCESS_TARGET, res.w, res.h);
     if (!PrimaryTexture) {
-      Log_Fail(LOG_CAT, "Error creating native resolution texture");
+      logging::SdlError(LOG_CAT, "Error creating native resolution texture");
       return set_geometry();
     }
     SDL_SetTextureScaleMode(PrimaryTexture, TextureScaleMode);
@@ -422,7 +422,7 @@ bool PrimarySetScale(bool geometry, const WINDOW_SIZE &scaled_res) {
 
   // We might be software-rendering.
   if (!SetRenderTargetFor(*Renderer)) {
-    Log_Fail(LOG_CAT, "Error setting texture as render target");
+    logging::SdlError(LOG_CAT, "Error setting texture as render target");
     return set_geometry();
   }
   return geometry;
@@ -503,11 +503,13 @@ std::optional<GRAPHICS_INIT_RESULT> PrimaryInitFull(GRAPHICS_PARAMS params) {
     const auto driver_str = WndBackend_SDLRendererName(params.api);
     const auto label = GrpBackend_APILabel(driver_str);
     const auto *api = label.data();
-    SDL_LogCritical(LOG_CAT, "Error creating %s renderer: %s", api,
-                    SDL_GetError());
+    logging::Critical(LOG_CAT, "Error creating {} renderer: {}", api,
+                      SDL_GetError());
     return PrimaryCleanup();
   }
   const auto driver_str = GrpBackend_APIString();
+  logging::Info(LOG_CAT, "Using SDL renderer: {}",
+                GrpBackend_APILabel(driver_str));
 
   const auto props = SDL_GetRendererProperties(PrimaryRenderer);
   const auto *formats_start =
@@ -526,10 +528,11 @@ std::optional<GRAPHICS_INIT_RESULT> PrimaryInitFull(GRAPHICS_PARAMS params) {
   constexpr auto sdl_format = SDL_PIXELFORMAT_ARGB8888;
   if (!std::ranges::contains(PrimaryFormats, sdl_format)) {
     const auto label = GrpBackend_APILabel(driver_str);
-    SDL_LogCritical(LOG_CAT,
-                    "The \"%s\" renderer does not support the BGRA8888 pixel "
-                    "format required for software rendering.",
-                    label.data());
+    logging::Critical(
+        LOG_CAT,
+        "The \"{}\" renderer does not support the BGRA8888 pixel format "
+        "required for software rendering",
+        label);
     return PrimaryCleanup();
   }
 
@@ -541,7 +544,8 @@ std::optional<GRAPHICS_INIT_RESULT> PrimaryInitFull(GRAPHICS_PARAMS params) {
     SoftwareSurface = SafeDestroy(SDL_DestroySurface, SoftwareSurface);
     SoftwareSurface = SDL_CreateSurface(GRP_RES.w, GRP_RES.h, sdl_format);
     if (!SoftwareSurface) {
-      Log_Fail(LOG_CAT, "Error creating surface for software rendering");
+      logging::SdlError(LOG_CAT,
+                        "Error creating surface for software rendering");
       return PrimaryCleanup();
     }
   }
@@ -699,7 +703,7 @@ void TakeScreenshot(void) {
 
   SDL_Surface *src = SDL_RenderReadPixels(PrimaryRenderer, nullptr);
   if (!src) {
-    Log_Fail(LOG_CAT, "Error taking screenshot");
+    logging::SdlError(LOG_CAT, "Error taking screenshot");
     return;
   }
   auto src_guard = make_guard(src, SDL_DestroySurface);
@@ -766,12 +770,12 @@ bool CreateTextureWithFormat(SURFACE_ID sid, SDL_PixelFormat fmt,
   tex = SDL_CreateTexture(*Renderer, fmt, SDL_TEXTUREACCESS_STREAMING, size.w,
                           size.h);
   if (!tex) {
-    Log_Fail(LOG_CAT, "Error creating blank texture");
+    logging::SdlError(LOG_CAT, "Error creating blank texture");
     return false;
   }
   TexturePostInit(*tex, *Renderer);
   if (!SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND)) {
-    Log_Fail(LOG_CAT, "Error enabling alpha blending for texture");
+    logging::SdlError(LOG_CAT, "Error enabling alpha blending for texture");
     return false;
   }
   return true;
@@ -804,7 +808,7 @@ bool GrpSurface_Load(SURFACE_ID sid, BMP_OWNED &&bmp) {
 
   tex = SDL_CreateTextureFromSurface(*Renderer, surf);
   if (!tex) {
-    Log_Fail(LOG_CAT, "Error loading .BMP as texture");
+    logging::SdlError(LOG_CAT, "Error loading .BMP as texture");
     return false;
   }
   TexturePostInit(*tex, *Renderer);
@@ -815,8 +819,8 @@ bool GrpSurface_Update(SURFACE_ID sid, const PIXEL_LTWH *subrect,
                        std::tuple<const std::byte *, size_t> pixels) noexcept {
   const auto [buf, pitch] = pixels;
   if (pitch > std::numeric_limits<int>::max()) {
-    SDL_LogCritical(LOG_CAT, "Pitch of %zu bytes does not fit into an integer.",
-                    pitch);
+    logging::Critical(LOG_CAT, "Pitch of {} bytes does not fit into an integer",
+                      pitch);
     return false;
   }
 
@@ -896,16 +900,18 @@ bool GrpSurface_GDIText_Create(int32_t w, int32_t h, RGB colorkey) {
   GrText.Delete();
 
   if (!std::ranges::contains(PrimaryFormats, GDITEXT_SDL_FORMAT)) {
-    SDL_LogCritical(LOG_CAT,
-                    "Renderer \"%s\" does not support the BGRA8888 pixel "
-                    "format required for rendering text via GDI.",
-                    GrpBackend_APIString().data());
+    logging::Critical(
+        LOG_CAT,
+        "Renderer \"{}\" does not support the BGRA8888 pixel format "
+        "required for rendering text via GDI",
+        GrpBackend_APIString());
     return false;
   };
 
   const auto *format_struct = SDL_GetPixelFormatDetails(GDITEXT_SDL_FORMAT);
   if (!format_struct) {
-    Log_Fail(LOG_CAT, "Error retrieving format structure for GDI text surface");
+    logging::SdlError(LOG_CAT,
+                      "Error retrieving format structure for GDI text surface");
     return false;
   }
 
@@ -928,7 +934,7 @@ bool GrpSurface_GDIText_Create(int32_t w, int32_t h, RGB colorkey) {
   void *dib_bits = nullptr;
   GrText.img = CreateDIBSection(GrText.dc, bi, 0, &dib_bits, nullptr, 0);
   if (!GrText.img) {
-    SDL_LogCritical(LOG_CAT, "%s", "Error creating GDI text surface");
+    logging::Critical(LOG_CAT, "Error creating GDI text surface");
     return false;
   }
   GrText.size = {w, h};
@@ -1112,7 +1118,7 @@ static SDL_Texture *EnsureSoftwareTexture(void) {
                                       SDL_TEXTUREACCESS_STREAMING,
                                       SoftwareSurface->w, SoftwareSurface->h);
   if (!SoftwareTexture) {
-    Log_Fail(LOG_CAT, "Error creating software rendering texture");
+    logging::SdlError(LOG_CAT, "Error creating software rendering texture");
     DestroySoftwareRenderer();
     return nullptr;
   }
@@ -1126,7 +1132,7 @@ bool GrpBackend_PixelAccessStart(void) {
   }
   SoftwareRenderer = SDL_CreateSoftwareRenderer(SoftwareSurface);
   if (!SoftwareRenderer) {
-    Log_Fail(LOG_CAT, "Error creating software renderer");
+    logging::SdlError(LOG_CAT, "Error creating software renderer");
     return DestroySoftwareRenderer();
   }
   SwitchActiveRenderer(&SoftwareRenderer);
@@ -1148,7 +1154,7 @@ std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock(void) {
 
   if (SDL_MUSTLOCK(SoftwareSurface)) {
     if (!SDL_LockSurface(SoftwareSurface)) {
-      Log_Fail(LOG_CAT, "Error locking CPU backbuffer");
+      logging::SdlError(LOG_CAT, "Error locking CPU backbuffer");
       return {nullptr, 0};
     }
   }

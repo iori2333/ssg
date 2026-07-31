@@ -20,7 +20,7 @@
 #include "player/loadout/player_loadout.h"
 #include "settings/config.h"
 #include "sys/input.h"
-#include "util/debug.h"
+#include "sys/log.h"
 #include "util/math_utils.h"
 #include "util/time.h"
 
@@ -50,12 +50,13 @@ void ResetGameplayRuntime(GameContext &context) {
 bool GameplayState::LoadCurrentStage() {
   auto &context = context_;
   if (!context.graphics.LoadStage(context.session.stage)) {
-    DebugOut("ゲームデータが破壊されています");
+    logging::Error(logging::Channel::Graphics,
+                   "Failed to load graphics for stage {}",
+                   std::to_underlying(context.session.stage) + 1);
     return false;
   }
   if (!context.stage_loader.Load(context.session.stage, context.enemies,
                                  context.stage)) {
-    DebugOut("ゲームデータが破壊されています");
     return false;
   }
   return true;
@@ -385,7 +386,7 @@ FlowEvent GameplayState::ExitDemoCapture() {
   auto &context = context_;
   const auto saved = context.records.SaveDemo(context.session.stage);
   if (saved == RecordSaveResult::IoError) {
-    DebugOut("Demo replay could not be saved");
+    logging::Error(logging::Channel::Record, "Demo replay could not be saved");
   }
   if (saved != RecordSaveResult::Saved) {
     context.records.CancelRecording();

@@ -13,6 +13,7 @@
 #include "game_data.h"
 
 #include "sys/file.h"
+#include "sys/log.h"
 
 namespace {
 
@@ -99,9 +100,14 @@ LoadErrors GameData::Load(std::string_view data_path) {
   std::error_code error;
   const auto directory = root / kDirectoryName;
   if (std::filesystem::is_directory(directory, error)) {
+    logging::Info(logging::Channel::Data, "Loading unpacked game data from {}",
+                  directory.string());
     return LoadDirectory(directory);
   }
-  return LoadArchive(root / kArchiveName);
+  const auto archive = root / kArchiveName;
+  logging::Info(logging::Channel::Data, "Loading game data archive {}",
+                archive.string());
+  return LoadArchive(archive);
 }
 
 LoadErrors GameData::LoadDirectory(const std::filesystem::path &path) {
@@ -130,6 +136,7 @@ LoadErrors GameData::LoadDirectory(const std::filesystem::path &path) {
     loaded_ = false;
     return {{LoadErrorKind::Invalid, DataSourceKind::Directory}};
   }
+  logging::Info(logging::Channel::Data, "Validated unpacked game data");
   return {};
 }
 
@@ -174,6 +181,7 @@ LoadErrors GameData::LoadArchive(const std::filesystem::path &path) {
     loaded_ = false;
     return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
   }
+  logging::Info(logging::Channel::Data, "Validated game data archive");
   return {};
 }
 
