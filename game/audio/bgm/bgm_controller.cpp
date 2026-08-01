@@ -77,6 +77,7 @@ void BgmController::Play() {
     waveform_.Play();
     UpdateWaveformVolume();
   } else if (midi_loaded_) {
+    synth_.Resume();
     sequencer_.Rewind();
     synth_.Panic();
     ApplyMidiVolume();
@@ -88,6 +89,7 @@ void BgmController::Play() {
 void BgmController::Stop() {
   playing_ = false;
   waveform_.Stop();
+  synth_.Resume();
   synth_.Panic();
   midi_fade_remaining_ = {};
   state_ =
@@ -101,6 +103,9 @@ void BgmController::Pause() {
   }
   playing_ = false;
   waveform_.Pause();
+  if (mode_ == BgmMode::Midi && midi_loaded_) {
+    synth_.Pause();
+  }
   state_ = PlaybackState::Paused;
 }
 
@@ -111,7 +116,7 @@ void BgmController::Resume() {
   if (mode_ == BgmMode::Waveform) {
     waveform_.Resume();
   } else if (midi_loaded_) {
-    ApplyMidiVolume();
+    synth_.Resume();
   }
   playing_ = true;
   state_ = PlaybackState::Playing;

@@ -45,6 +45,8 @@ public:
               std::uint8_t b) override;
   void OutputSysEx(std::span<const std::uint8_t> message) override;
   void Panic();
+  void Pause();
+  void Resume();
 
 private:
   struct Impl;

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -54,7 +55,7 @@ private:
 
   BgmMode mode_ = BgmMode::None;
   PlaybackState state_ = PlaybackState::Idle;
-  bool playing_ = false;
+  std::atomic<bool> playing_ = false;
   bool midi_loaded_ = false;
   bool gain_applied_ = true;
   Volume volume_ = kMaxVolume;

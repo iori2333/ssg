@@ -436,5 +436,26 @@ void MidiSynth::Panic() {
   }
 }
 
+void MidiSynth::Pause() {
+  std::scoped_lock lock(impl_->mutex);
+  if (impl_->audio_driver) {
+    delete_fluid_audio_driver(impl_->audio_driver);
+    impl_->audio_driver = nullptr;
+  }
+}
+
+void MidiSynth::Resume() {
+  std::scoped_lock lock(impl_->mutex);
+  if (!impl_->synth || impl_->audio_driver) {
+    return;
+  }
+  impl_->audio_driver =
+      new_fluid_audio_driver(impl_->settings, impl_->synth);
+  if (!impl_->audio_driver) {
+    logging::Error(logging::Channel::Audio,
+                   "Failed to resume FluidSynth audio driver");
+  }
+}
+
 } // namespace audio::midi
 
