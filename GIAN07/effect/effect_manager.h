@@ -15,8 +15,12 @@
 #include "gfx/coords.h"
 #include "gfx/text.h"
 
+namespace audio { class AudioSystem; }
+
 class EffectManager {
 public:
+  explicit EffectManager(audio::AudioSystem &audio) : audio_(audio) {}
+
   void Reset();
   void ClearTextEffects() { ResetStrings(); }
   void InitializeTextRenderer();
@@ -40,6 +44,8 @@ public:
   void DrawScreenTransition() const;
 
 private:
+  audio::AudioSystem &audio_;
+
   static constexpr std::size_t kStringEffectCapacity = 1000;
   static constexpr std::size_t kCircleEffectCapacity = 10;
   static constexpr std::size_t kFragmentCapacity = 1000;

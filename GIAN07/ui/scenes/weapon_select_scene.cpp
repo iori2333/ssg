@@ -9,6 +9,7 @@
 
 #include "weapon_select_scene.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_rules.h"
@@ -48,7 +49,7 @@ WeaponSelectSceneResult WeaponSelectScene::Update(InputBits input,
     player_.RotateType(speed_ < 0 ? -1 : 1);
     speed_ = 0;
     angle_ = 0;
-    PlaySfx(SfxId::Buzz);
+    audio_.PlaySfx(SfxId::Buzz);
   }
 
   if (key_wait_ != 0U) {
@@ -101,10 +102,10 @@ WeaponSelectSceneResult WeaponSelectScene::Update(InputBits input,
     if (session_.stage == StageId::Extra &&
         ((1U << PlayerTypeIndex(player_.Type())) &
          config_.progress.extra_stg_flags) == 0) {
-      PlaySfx(SfxId::Buzz);
+      audio_.PlaySfx(SfxId::Buzz);
       break;
     }
-    PlaySfx(SfxId::Select);
+    audio_.PlaySfx(SfxId::Select);
     if (session_.stage != StageId::Extra) {
       if (forced_stage != 0) {
         session_.stage = static_cast<StageId>(forced_stage - 1);
@@ -116,7 +117,7 @@ WeaponSelectSceneResult WeaponSelectScene::Update(InputBits input,
   case KeyEscape:
   case KeyBomb:
     if (speed_ == 0) {
-      PlaySfx(SfxId::Cancel);
+      audio_.PlaySfx(SfxId::Cancel);
       return WeaponSelectSceneResult::Cancelled;
     }
     break;

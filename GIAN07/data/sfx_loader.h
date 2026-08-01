@@ -5,16 +5,22 @@
 
 #include "game_data.h"
 
+namespace audio {
+class AudioSystem;
+}
+
 namespace data {
 
 class SfxLoader {
 public:
-  explicit SfxLoader(const GameData &data) : data_(&data) {}
+  SfxLoader(const GameData &data, audio::AudioSystem &audio)
+      : data_(&data), audio_(&audio) {}
 
   [[nodiscard]] bool Load() const;
 
 private:
   const GameData *data_;
+  audio::AudioSystem *audio_ = nullptr;
 };
 
 } // namespace data

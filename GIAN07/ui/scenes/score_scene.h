@@ -15,6 +15,8 @@
 class MusicPlayer;
 class UiManager;
 
+namespace audio { class AudioSystem; }
+
 namespace i18n {
 class Localization;
 }
@@ -35,9 +37,9 @@ class ScoreScene {
 public:
   ScoreScene(RecordSystem &records, data::GraphicsLoader &graphics,
              MusicPlayer &music, UiManager &ui,
-             i18n::Localization &localization)
+             i18n::Localization &localization, audio::AudioSystem &audio)
       : record_system_(records), graphics_(graphics), music_(music), ui_(ui),
-        localization_(localization) {}
+        localization_(localization), audio_(audio), name_entry_(audio) {}
 
   [[nodiscard]] bool ShowLeaderboard(GameLevel initial_difficulty,
                                      InputBits initial_input);
@@ -74,9 +76,10 @@ private:
   bool detail_open_ = false;
   bool save_failed_ = false;
   TextRenderRectId ui_text_ = 0;
-  NameEntry name_entry_;
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
   UiManager &ui_;
   i18n::Localization &localization_;
+  audio::AudioSystem &audio_;
+  NameEntry name_entry_;
 };

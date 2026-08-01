@@ -9,6 +9,7 @@
 
 #include "menu_controller.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
@@ -199,14 +200,14 @@ void MenuController::ProcessInput(InputBits key) {
     } else if (page.selected >= page.scroll + kMaxVisibleItems) {
       page.scroll = page.selected - kMaxVisibleItems + 1;
     }
-    PlaySfx(SfxId::Select);
+    audio_.PlaySfx(SfxId::Select);
     return;
   }
 
   if (InputIsCancel(key)) {
-    PlaySfx(SfxId::Cancel);
+    audio_.PlaySfx(SfxId::Cancel);
   } else if (InputOptionKeyDelta(key) != 0) {
-    PlaySfx(SfxId::Select);
+    audio_.PlaySfx(SfxId::Select);
   } else if (key == 0) {
     fast_repeat_wait_ = kMenuKeyWait;
   }
@@ -492,23 +493,23 @@ void MenuController::ProcessListInput(InputBits key) {
       active_list_->MoveDown();
     }
     frame_count_ = 0;
-    PlaySfx(SfxId::Select);
+    audio_.PlaySfx(SfxId::Select);
     return;
   }
 
   if (InputIsOk(key)) {
     bool stay = active_list_->Confirm();
     if (!stay) {
-      PlaySfx(SfxId::Cancel);
+      audio_.PlaySfx(SfxId::Cancel);
       DeactivateListView();
     } else {
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
     }
     return;
   }
 
   if (InputIsCancel(key)) {
-    PlaySfx(SfxId::Cancel);
+    audio_.PlaySfx(SfxId::Cancel);
     DeactivateListView();
     return;
   }

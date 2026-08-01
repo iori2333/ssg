@@ -14,10 +14,12 @@
 class EclHost;
 class EffectManager;
 
+namespace audio { class AudioSystem; }
+
 class EclVm {
 public:
-  EclVm(EclHost &host, EffectManager &effects)
-      : host_(host), effects_(effects) {}
+  EclVm(EclHost &host, EffectManager &effects, audio::AudioSystem &audio)
+      : host_(host), effects_(effects), audio_(audio) {}
 
   void Install(EclProgram program) { program_ = std::move(program); }
   [[nodiscard]] bool Start(EnemyActor &actor, uint32_t script_id) const;
@@ -52,6 +54,7 @@ private:
   EclProgram program_;
   EclHost &host_;
   EffectManager &effects_;
+  audio::AudioSystem &audio_;
   uint8_t sequence_angle_ = 0;
   uint8_t sequence_angle_delta_ = 0;
 };

@@ -18,6 +18,8 @@
 
 class UiManager;
 
+namespace audio { class AudioSystem; }
+
 namespace i18n {
 class Localization;
 }
@@ -41,9 +43,11 @@ struct ReplaySceneResult {
 class ReplayScene {
 public:
   ReplayScene(RecordSystem &records, data::GraphicsLoader &graphics,
-              UiManager &ui, i18n::Localization &localization)
+              UiManager &ui, i18n::Localization &localization,
+              audio::AudioSystem &audio)
       : record_system_(records), graphics_(graphics), ui_(ui),
-        localization_(localization) {}
+        localization_(localization), audio_(audio), stage_menu_(audio),
+        name_entry_(audio) {}
 
   [[nodiscard]] bool EnterBrowser(InputBits initial_input);
   [[nodiscard]] bool BeginSave(bool extra_stage, InputBits initial_input);
@@ -75,6 +79,7 @@ private:
   data::GraphicsLoader &graphics_;
   UiManager &ui_;
   i18n::Localization &localization_;
+  audio::AudioSystem &audio_;
   Mode mode_ = Mode::Browser;
   std::vector<ReplayRecord> replays_;
   std::size_t selected_ = 0;

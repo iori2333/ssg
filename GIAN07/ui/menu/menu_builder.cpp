@@ -20,10 +20,7 @@
 
 #include "app/display_controller.h"
 #include "audio/audio_system.h"
-#include "audio/bgm.h"
-#include "audio/midi.h"
-#include "audio/midi_backend.h"
-#include "audio/volume.h"
+#include "data/sfx_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics_backend.h"
 #include "i18n/localization.h"
@@ -319,7 +316,8 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
 
 static std::unique_ptr<EntryNode>
 BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
-              i18n::Localization &localization) {
+              i18n::Localization &localization, audio::AudioSystem &audio) {
+  auto *system = &audio;
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(3);
 
@@ -333,20 +331,20 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
   auto sf_node = std::make_unique<ListNode>(
       Localized(localization, "ui.menu.soundfont.title"),
       Localized(localization, "ui.menu.soundfont.help"),
-      [] { return MidiBackendDeviceCount(); },
-      [](size_t i) {
-        auto name = MidiBackendDeviceNameAt(i);
-        auto src = MidiBackendDeviceSource(i);
+      [system] { return system->MidiDeviceCount(); },
+      [system](size_t i) {
+        auto name = system->MidiDeviceNameAt(i);
+        auto src = system->MidiDeviceSourceAt(i);
         const char *label = "?";
         if (src) {
           switch (src.value()) {
-          case MidiDeviceSource::Local:
+          case audio::midi::DeviceSource::Local:
             label = "local";
             break;
-          case MidiDeviceSource::System:
+          case audio::midi::DeviceSource::System:
             label = "system";
             break;
-          case MidiDeviceSource::Environment:
+          case audio::midi::DeviceSource::Environment:
             label = "env";
             break;
           }
@@ -356,26 +354,28 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
         }
         return std::string();
       },
-      [&audio_cfg](size_t i) -> bool {
-        if (BgmIsEnabled()) {
-          MidiStop();
-          MidiBackendSelectDevice(i);
-          if (auto sf = MidiBackendCurrentSoundFont()) {
-            audio_cfg.soundfont = sf.value();
-          }
-          if (BgmPlayingSource() == BgmPlaybackSource::Midi) {
-            MidiPlay();
-          }
+      [&audio_cfg, system](size_t i) -> bool {
+        const auto snapshot = system->BgmSnapshot();
+        const bool was_midi =
+            (snapshot.mode == audio::BgmMode::Midi &&
+             snapshot.state == audio::PlaybackState::Playing);
+        system->StopBgm();
+        (void)system->SelectMidiDevice(i);
+        if (auto sf = system->MidiCurrentDeviceName()) {
+          audio_cfg.soundfont = sf.value();
+        }
+        if (was_midi) {
+          system->PlayBgm();
         }
         return false;
       },
-      [] {
-        auto cur_name = MidiBackendDeviceName();
+      [system] {
+        auto cur_name = system->MidiCurrentDeviceName();
         if (!cur_name.has_value())
           return 0;
-        auto count = MidiBackendDeviceCount();
+        auto count = system->MidiDeviceCount();
         for (size_t i = 0; i < count; i++) {
-          if (auto name = MidiBackendDeviceNameAt(i);
+          if (auto name = system->MidiDeviceNameAt(i);
               name && name.value() == cur_name.value())
             return static_cast<int>(i);
         }
@@ -386,9 +386,8 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
   auto compat = std::make_unique<ToggleNode>(
       Localized(localization, "ui.menu.sc88_compat.title"),
       Localized(localization, "ui.menu.sc88_compat.help"),
-      std::ref(audio_cfg.fix_sysex_bugs), [&audio_cfg](bool on) {
-        (void)MidiSetFlags(on ? MidiFlags::FixSysExBugs : MidiFlags::None);
-      });
+      std::ref(audio_cfg.fix_sysex_bugs),
+      [system](bool on) { system->SetMidiFixSysExBugs(on); });
   LocalizeToggleValues(*compat, localization);
   ch.push_back(std::move(compat));
 
@@ -402,7 +401,8 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
 // ---------------------------------------------------------------------------
 
 static std::unique_ptr<EntryNode>
-BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
+BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
+               data::SfxLoader &sound_effects, MusicPlayer &music,
                i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(7);
@@ -410,8 +410,12 @@ BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
   auto sound_enabled = std::make_unique<ToggleNode>(
       Localized(localization, "ui.menu.sound_effects.title"),
       Localized(localization, "ui.menu.sound_effects.help"),
-      std::ref(audio_cfg.se_enabled), [&audio_cfg, &audio](bool on) {
-        if (!audio.EnableSfx(on)) {
+      std::ref(audio_cfg.se_enabled),
+      [&audio_cfg, &audio, &sound_effects](bool on) {
+        if (!on) {
+          audio.StopAllSfx();
+          audio_cfg.se_enabled = false;
+        } else if (!sound_effects.Load()) {
           audio_cfg.se_enabled = false;
         }
       });
@@ -421,9 +425,11 @@ BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
   auto bgm_enabled = std::make_unique<ToggleNode>(
       Localized(localization, "ui.menu.bgm.title"),
       Localized(localization, "ui.menu.bgm.help"),
-      std::ref(audio_cfg.bgm_enabled), [&audio_cfg, &audio](bool on) {
+      std::ref(audio_cfg.bgm_enabled), [&audio_cfg, &audio, &music](bool on) {
         if (!audio.EnableBgm(on, audio_cfg.soundfont)) {
           audio_cfg.bgm_enabled = false;
+        } else if (on) {
+          (void)music.Play(0);
         }
       });
   LocalizeToggleValues(*bgm_enabled, localization);
@@ -431,14 +437,14 @@ BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
 
   {
     std::vector<std::string> vol_labels;
-    vol_labels.reserve(kMaxAudioVolume + 1);
-    for (int i = 0; i <= kMaxAudioVolume; i++) {
+    vol_labels.reserve(audio::kMaxVolume + 1);
+    for (int i = 0; i <= audio::kMaxVolume; i++) {
       vol_labels.push_back(std::format("{}", i));
     }
     ch.push_back(std::make_unique<ChoiceNode>(
         Localized(localization, "ui.menu.sound_volume.title"),
         Localized(localization, "ui.menu.sound_volume.help"),
-        audio_cfg.se_volume, 0, kMaxAudioVolume, std::move(vol_labels),
+        audio_cfg.se_volume, 0, audio::kMaxVolume, std::move(vol_labels),
         [&audio_cfg, &audio] {
           audio.SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
         }));
@@ -446,14 +452,14 @@ BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
 
   {
     std::vector<std::string> vol_labels;
-    vol_labels.reserve(kMaxAudioVolume + 1);
-    for (int i = 0; i <= kMaxAudioVolume; i++) {
+    vol_labels.reserve(audio::kMaxVolume + 1);
+    for (int i = 0; i <= audio::kMaxVolume; i++) {
       vol_labels.push_back(std::format("{}", i));
     }
     ch.push_back(std::make_unique<ChoiceNode>(
         Localized(localization, "ui.menu.bgm_volume.title"),
         Localized(localization, "ui.menu.bgm_volume.help"),
-        audio_cfg.bgm_volume, 0, kMaxAudioVolume, std::move(vol_labels),
+        audio_cfg.bgm_volume, 0, audio::kMaxVolume, std::move(vol_labels),
         [&audio_cfg, &audio] {
           audio.SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
         }));
@@ -514,7 +520,7 @@ BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
     ch.push_back(std::move(bgm_pack));
   }
 
-  ch.push_back(BuildMidiMenu(audio_cfg, music, localization));
+  ch.push_back(BuildMidiMenu(audio_cfg, music, localization, audio));
 
   return std::make_unique<EntryNode>(
       Localized(localization, "ui.menu.sound.title"),
@@ -684,7 +690,8 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
   config->AddChild(
       BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display, localization));
   config->AddChild(
-      BuildSoundMenu(cfg.audio, services.audio, services.music, localization));
+      BuildSoundMenu(cfg.audio, services.audio, services.sound_effects,
+                     services.music, localization));
   config->AddChild(BuildInputMenu(cfg.input, services.input, localization));
   ch.push_back(std::move(config));
 
@@ -703,7 +710,10 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
         on_action(MainMenuAction::OpenMusicRoom);
         return true;
       });
-  music->BindEnabled([] { return BgmIsEnabled(); });
+  music->BindEnabled(
+      [audio = &services.audio] {
+        return audio->IsMidiAvailable();
+      });
   ch.push_back(std::move(music));
 
   ch.push_back(BuildDebugMenu(cfg.debug, localization, on_action));

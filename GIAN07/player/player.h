@@ -42,6 +42,8 @@ class EnemyManager;
 class EffectManager;
 struct GameSession;
 
+namespace audio { class AudioSystem; }
+
 namespace stage {
 class StageSession;
 }
@@ -82,7 +84,7 @@ class Player {
 
 public:
   Player(EffectManager &effects, GameSession &session,
-         stage::StageSession &stage);
+         stage::StageSession &stage, audio::AudioSystem &audio);
   ~Player() = default;
   Player(const Player &other) = delete;
   Player(Player &&other) = delete;
@@ -172,6 +174,7 @@ public:
 private:
   std::unique_ptr<PlayerLoadout> loadout_;
   EffectManager &effects_;
+  audio::AudioSystem &audio_;
 
   [[nodiscard]] bool IsMainShotFrame(uint16_t time) const;
   [[nodiscard]] bool IsSubShotFrame(uint16_t time) const;

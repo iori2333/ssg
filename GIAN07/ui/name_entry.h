@@ -9,11 +9,15 @@
 
 #include "sys/input.h"
 
+namespace audio { class AudioSystem; }
+
 enum class NameEntryResult : uint8_t { Editing, Confirmed, Cancelled };
 inline constexpr std::size_t kNameEntryLength = 8;
 
 class NameEntry {
 public:
+  explicit NameEntry(audio::AudioSystem &audio) : audio_(audio) {}
+
   void Begin(bool allow_cancel, InputBits initial_input);
   [[nodiscard]] NameEntryResult Update(InputBits input);
   void Draw(int name_x, int name_y) const;
@@ -21,6 +25,8 @@ public:
   [[nodiscard]] std::string_view Name() const { return name_.data(); }
 
 private:
+  audio::AudioSystem &audio_;
+
   [[nodiscard]] int SelectedCharacter() const;
   void Backspace();
 

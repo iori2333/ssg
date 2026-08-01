@@ -10,10 +10,17 @@
 #include "menu_tree.h"
 
 struct ConfigData;
-class AudioSystem;
 class DisplayController;
 class InputSystem;
 class MusicPlayer;
+
+namespace audio {
+class AudioSystem;
+}
+
+namespace data {
+class SfxLoader;
+}
 
 namespace i18n {
 class Localization;
@@ -33,7 +40,8 @@ enum class MainMenuAction {
 struct MainMenuServices {
   DisplayController &display;
   InputSystem &input;
-  AudioSystem &audio;
+  audio::AudioSystem &audio;
+  data::SfxLoader &sound_effects;
   MusicPlayer &music;
   i18n::Localization &localization;
 };

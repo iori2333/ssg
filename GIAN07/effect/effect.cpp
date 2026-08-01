@@ -12,6 +12,7 @@
 #include "effect_manager.h"
 #include "effect_types.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "gameplay/playfield.h"
 #include "gfx/coords.h"
@@ -41,7 +42,7 @@ void EffectManager::SpawnCircle(int x, int y, CircleEffectKind kind) {
   case CircleEffectKind::None:
     return;
   case CircleEffectKind::Star:
-    PlaySfx(SfxId::Tamefast);
+    audio_.PlaySfx(SfxId::Tamefast);
     found->radius = 400;
     break;
   case CircleEffectKind::Converging:

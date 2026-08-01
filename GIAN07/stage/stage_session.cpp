@@ -6,7 +6,7 @@
 
 #include "stage_session.h"
 
-#include "audio/bgm.h"
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "effect/effect_manager.h"
@@ -138,9 +138,7 @@ StageSession::RunScene(StageUpdateContext &context, InputBits input) {
 
     case SceneOpcode::Music:
       if (!context.session.is_demoplay) {
-        BgmStop();
         if (context.music.Play(instruction->track_id)) {
-          BgmPlay();
           const auto title =
               context.localization.MusicTitle(instruction->track_id);
           if (!title.empty()) {
@@ -223,14 +221,14 @@ void StageSession::ExecuteEffect(SceneEffect effect,
                                  StageUpdateContext &context) {
   switch (effect) {
   case SceneEffect::Warning:
-    PlaySfx(SfxId::Warning, playfield::kWorldCenterX, true);
+    context.audio.PlaySfx(SfxId::Warning, playfield::kWorldCenterX, true);
     context.effects.StartBossWarning();
     break;
   case SceneEffect::StopWarning:
-    StopSfx(SfxId::Warning);
+    context.audio.StopSfx(SfxId::Warning);
     break;
   case SceneEffect::FadeMusic:
-    BgmFadeOut(120);
+    context.audio.FadeOutBgm(120);
     break;
   case SceneEffect::Stage2Boss:
     background_.Command(BackgroundCommand::Stage2Boss, context.effects);

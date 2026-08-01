@@ -8,6 +8,7 @@
 
 #include "homing.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "gameplay/playfield.h"
 #include "gfx/geometry.h"
@@ -71,7 +72,7 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
 
 // ── State machine ──────────────────────────────────────────────────
 
-void LaserHoming::Update(const UpdateInfo &info) {
+void LaserHoming::Update(audio::AudioSystem &audio, const UpdateInfo &info) {
   float prev_x = p_[current_].x;
   float prev_y = p_[current_].y;
   float prev_angle = p_[current_].angle;
@@ -88,7 +89,8 @@ void LaserHoming::Update(const UpdateInfo &info) {
 
     if (std::abs(angle_delta) < 8.0f * math::kLegacyAngleStep) {
       subtype_ = HomingType::None;
-      PlaySfx(SfxId::Hlaser, static_cast<int>(std::lround(p_[current_].x)));
+      audio.PlaySfx(SfxId::Hlaser,
+                    static_cast<int>(std::lround(p_[current_].x)));
     } else {
       if (v_ > 2_px) {
         v_ -= a_;

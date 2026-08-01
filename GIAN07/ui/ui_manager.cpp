@@ -21,7 +21,9 @@ menu::MenuText Localized(i18n::Localization &localization,
 
 } // namespace
 
-UiManager::UiManager() = default;
+UiManager::UiManager(audio::AudioSystem &audio)
+    : boss_health_(audio), main_window_(audio), exit_window_(audio),
+      game_over_window_(audio) {}
 
 void UiManager::ConfigureMain(ConfigData &config,
                               menu::MainMenuServices services) {

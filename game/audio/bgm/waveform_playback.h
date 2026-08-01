@@ -1,24 +1,26 @@
-/// BGM waveform playback around a miniaudio sound.
+/// BGM waveform playback backed by miniaudio.
 
 #pragma once
 
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string_view>
 
 #include <miniaudio.h>
 
 #include "audio/core/audio_types.h"
-#include "waveform_source.h"
 
-namespace audio::stream {
+namespace audio::bgm {
 
-class WaveformPlayer {
+class WaveformSource;
+
+class WaveformPlayback {
 public:
-  explicit WaveformPlayer(ma_engine &engine);
-  ~WaveformPlayer();
-  WaveformPlayer(const WaveformPlayer &) = delete;
-  WaveformPlayer &operator=(const WaveformPlayer &) = delete;
+  explicit WaveformPlayback(ma_engine &engine);
+  ~WaveformPlayback();
+  WaveformPlayback(const WaveformPlayback &) = delete;
+  WaveformPlayback &operator=(const WaveformPlayback &) = delete;
 
   AudioResult Load(std::string_view path);
   void Unload();
@@ -34,7 +36,8 @@ public:
   [[nodiscard]] bool IsLoaded() const;
   [[nodiscard]] std::string_view Title() const;
   [[nodiscard]] std::chrono::milliseconds PlayTime() const;
-  [[nodiscard]] ::bgm::Track &Track();
+  [[nodiscard]] float FadeVolumeLinear() const;
+  [[nodiscard]] std::optional<float> GainFactor() const;
 
 private:
   ma_engine &engine_;
@@ -43,4 +46,4 @@ private:
   bool sound_initialized_ = false;
 };
 
-} // namespace audio::stream
+} // namespace audio::bgm

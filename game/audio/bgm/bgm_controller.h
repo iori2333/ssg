@@ -7,12 +7,10 @@
 #include <string>
 #include <string_view>
 
+#include "waveform_playback.h"
+
 #include "audio/core/audio_types.h"
 #include "audio/midi/midi_parser.h"
-
-namespace audio::stream {
-class WaveformPlayer;
-}
 
 namespace audio::midi {
 class MidiSequencer;
@@ -23,8 +21,8 @@ namespace audio::bgm {
 
 class BgmController {
 public:
-  BgmController(stream::WaveformPlayer &waveform,
-                midi::MidiSequencer &sequencer, midi::MidiSynth &synth);
+  BgmController(ma_engine &engine, midi::MidiSequencer &sequencer,
+                midi::MidiSynth &synth);
 
   AudioResult LoadMidi(midi::SequenceData sequence);
   AudioResult LoadWaveform(std::string_view path);
@@ -50,7 +48,7 @@ private:
   void UpdateWaveformVolume();
   void StopIfFadeComplete();
 
-  stream::WaveformPlayer &waveform_;
+  WaveformPlayback waveform_;
   midi::MidiSequencer &sequencer_;
   midi::MidiSynth &synth_;
 

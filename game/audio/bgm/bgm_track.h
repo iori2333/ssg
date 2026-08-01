@@ -39,7 +39,7 @@ struct PcmFormat {
 };
 // -----------------
 
-namespace bgm {
+namespace audio::bgm {
 
 using SampleCount = uint32_t;
 
@@ -171,4 +171,4 @@ using PcmPartOpen = std::unique_ptr<PcmPart>(
 // of the supported codec extensions.
 std::unique_ptr<Track> OpenTrack(std::string_view base_fn);
 
-} // namespace bgm
+} // namespace audio::bgm

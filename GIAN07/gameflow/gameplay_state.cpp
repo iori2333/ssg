@@ -9,8 +9,7 @@
 #include "gameplay_state.h"
 
 #include "app/game_context.h"
-#include "audio/bgm.h"
-#include "audio/snd_backend.h"
+#include "audio/audio_system.h"
 #include "effect/effect_manager.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/playfield.h"
@@ -44,7 +43,7 @@ void ResetGameplayRuntime(GameContext &context) {
   context.items.Reset();
   context.effects.Reset();
   context.effects.StartScreenTransition(ScreenTransition::CircleFadeIn);
-  BgmSetTempo(0);
+  context.audio.SetBgmTempo(0);
 }
 
 bool GameplayState::LoadCurrentStage() {
@@ -66,7 +65,7 @@ void GameplayState::InitializeGameplayView(bool interactive) {
   auto &context = context_;
   TextRenderer().Clear();
   if (mode_ != Mode::Demo) {
-    BgmFadeOut(240);
+    context.audio.FadeOutBgm(240);
     context.effects.InitializeTextRenderer();
   }
 
@@ -236,6 +235,7 @@ GameplayState::StepResult GameplayState::Step(InputBits &input) {
        .ui = context.ui,
        .graphics = context.graphics,
        .music = context.music,
+       .audio = context.audio,
        .session = context.session,
        .localization = context.localization,
        .messages_disabled =
@@ -270,7 +270,7 @@ void GameplayState::BeginGameOver() {
   auto &context = context_;
   context.effects.SpawnGameOver();
   if (mode_ == Mode::Live) {
-    BgmPause();
+    context.audio.PauseBgm();
   }
   game_over_timer_ = 120;
   phase_ = Phase::GameOverIntro;
@@ -312,8 +312,8 @@ FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
     context.ui.PrepareExitMenu(!context.config.debug.demo_recording &&
                                context.records.HasRecordedStages());
     context.ui.Exit().Open({230, 150}, 0, input);
-    BgmPause();
-    AudioBackendPauseAll();
+    context.audio.PauseBgm();
+    context.audio.PauseAll();
     phase_ = Phase::Paused;
     return NoEvent{};
   }
@@ -365,8 +365,8 @@ FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
       }
       return ReturnToTitle{.change_music = true};
     case UiManager::PauseAction::Resume:
-      BgmResume();
-      AudioBackendResumeAll();
+      context.audio.ResumeBgm();
+      context.audio.ResumeAll();
       phase_ = Phase::Running;
       return NoEvent{};
     }
@@ -410,7 +410,7 @@ FlowEvent GameplayState::UpdateGameOverIntro(const FrameInput &frame) {
     if (frame.gameplay != 0) {
       break;
     }
-    AudioBackendPauseAll();
+    context.audio.PauseAll();
     context.ui.PrepareGameOverMenu(context.player.Credits() != 0U,
                                    !context.config.debug.demo_recording &&
                                        context.records.HasRecordedStages());
@@ -436,8 +436,8 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
       if (context.player.Credits() == 0U) {
         return NoEvent{};
       }
-      BgmResume();
-      AudioBackendResumeAll();
+      context.audio.ResumeBgm();
+      context.audio.ResumeAll();
       context.records.CancelRecording();
       context.player.ResetForContinue(context.config.game.player_stock);
       if (context.player.Credits() != 0U) {

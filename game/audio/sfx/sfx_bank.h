@@ -35,8 +35,6 @@ public:
   void Stop(std::uint8_t id);
   void StopAll();
   void SetVolume(float linear);
-  void PauseAll();
-  void ResumeAll();
 
   [[nodiscard]] bool IsLoaded(std::uint8_t id) const;
 

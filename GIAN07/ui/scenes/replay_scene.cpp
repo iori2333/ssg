@@ -13,6 +13,7 @@
 
 #include "replay_scene.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
@@ -158,7 +159,7 @@ ReplaySceneResult ReplayScene::UpdateBrowser(InputBits input,
   } else if (previous_input_ == 0) {
     previous_input_ = input;
     if (input == KeyEscape || input == KeyBomb) {
-      PlaySfx(SfxId::Cancel);
+      audio_.PlaySfx(SfxId::Cancel);
       return {.type = ReplaySceneResult::Type::ExitRequested};
     }
     if (!replays_.empty()) {
@@ -170,13 +171,13 @@ ReplaySceneResult ReplayScene::UpdateBrowser(InputBits input,
         const auto page_size =
             std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + page_size - 1) % page_size;
-        PlaySfx(SfxId::Select);
+        audio_.PlaySfx(SfxId::Select);
       } else if (input == KeyDown) {
         const auto page_start = page * kPageSize;
         const auto page_size =
             std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + 1) % page_size;
-        PlaySfx(SfxId::Select);
+        audio_.PlaySfx(SfxId::Select);
       } else if (input == KeyLeft || input == KeyRight) {
         if (page_count > 1 && !rows_.back().moving) {
           const auto direction = input == KeyLeft ? page_count - 1 : 1;
@@ -184,10 +185,10 @@ ReplaySceneResult ReplayScene::UpdateBrowser(InputBits input,
           selected_ =
               std::min(next_page * kPageSize + row, replays_.size() - 1);
           ResetRows();
-          PlaySfx(SfxId::Select);
+          audio_.PlaySfx(SfxId::Select);
         }
       } else if (input == KeyReturn || input == KeyTama) {
-        PlaySfx(SfxId::Select);
+        audio_.PlaySfx(SfxId::Select);
         OpenStageSelect();
       }
     }
@@ -269,7 +270,7 @@ ReplaySceneResult ReplayScene::UpdateNameEntry(InputBits input,
       return {.type = ReplaySceneResult::Type::SaveComplete, .saved = true};
     }
     save_failed_ = true;
-    PlaySfx(SfxId::Cancel);
+    audio_.PlaySfx(SfxId::Cancel);
   } else if (result == NameEntryResult::Cancelled) {
     record_system_.CancelRecording();
     return {.type = ReplaySceneResult::Type::SaveComplete, .saved = false};

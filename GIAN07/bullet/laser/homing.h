@@ -8,6 +8,8 @@
 
 #include "bullet/bullet_common.h"
 
+namespace audio { class AudioSystem; }
+
 enum class HomingType : uint8_t {
   None,
   Type1,
@@ -51,7 +53,7 @@ struct LaserHoming {
   void Spawn(const HomingSpawnInfo &info);
   [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
                                    int player_radius) const;
-  void Update(const UpdateInfo &info = {});
+  void Update(audio::AudioSystem &audio, const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
 private:

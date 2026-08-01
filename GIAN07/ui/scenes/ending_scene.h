@@ -17,6 +17,8 @@
 
 class MusicPlayer;
 
+namespace audio { class AudioSystem; }
+
 namespace i18n {
 class Localization;
 }
@@ -32,9 +34,10 @@ class StageLoader;
 class EndingScene {
 public:
   EndingScene(data::GraphicsLoader &graphics, stage::StageLoader &stage_loader,
-              MusicPlayer &music, i18n::Localization &localization)
+              MusicPlayer &music, i18n::Localization &localization,
+              audio::AudioSystem &audio)
       : graphics_(graphics), stage_loader_(stage_loader), music_(music),
-        localization_(localization) {}
+        localization_(localization), audio_(audio) {}
 
   [[nodiscard]] bool Enter();
   [[nodiscard]] bool Update(bool should_draw);
@@ -119,4 +122,5 @@ private:
   stage::StageLoader &stage_loader_;
   MusicPlayer &music_;
   i18n::Localization &localization_;
+  audio::AudioSystem &audio_;
 };

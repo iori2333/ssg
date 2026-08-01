@@ -11,6 +11,7 @@
 #include "bullet_common.h"
 #include "bullet_manager.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
@@ -29,7 +30,7 @@ void BulletManager::Init() {
   reflect_lasers_.Reset();
   long_lasers_.Reset();
   homing_lasers_.Reset();
-  StopSfx(SfxId::Laser);
+  audio_.StopSfx(SfxId::Laser);
 }
 
 // ── BulletManager: Spawn (bullets) ────────────────────────────────
@@ -241,7 +242,7 @@ void BulletManager::UpdateBullet(const EnemyHomingTarget &target) {
       effects_.SpawnFragment(r.smoke_x, r.smoke_y, FragmentKind::Smoke);
     }
     if (r.division_requested) {
-      PlaySfx(SfxId::Joint, r.division_cx);
+      audio_.PlaySfx(SfxId::Joint, r.division_cx);
       auto si = r.division_info;
       ScaleBulletSpawnInfo(si, session_);
       SpawnBullet(si);
@@ -277,7 +278,7 @@ void BulletManager::UpdateLong() {
 void BulletManager::UpdateHoming() {
   const auto pi = HomingUpdateInfo{player_.X(), player_.Y()};
   for (auto &h : homing_lasers_) {
-    h.Update(pi);
+    h.Update(audio_, pi);
   }
   homing_lasers_.Compact([](const LaserHoming &h) { return h.IsDead(); });
 }
@@ -377,7 +378,7 @@ void BulletManager::Clear() {
   for (auto &ll : long_lasers_) {
     ll.Kill();
   }
-  StopSfx(SfxId::Laser);
+  audio_.StopSfx(SfxId::Laser);
   for (auto &h : homing_lasers_) {
     h.Kill();
   }
@@ -445,12 +446,12 @@ void BulletManager::ControlLongLaser(const EnemyActor *e, uint8_t id,
     ll.Update(info);
     switch (info.command) {
     case LongLaserUpdateInfo::Command::Open:
-      PlaySfx(SfxId::Laser, ll.X(), true);
+      audio_.PlaySfx(SfxId::Laser, ll.X(), true);
       break;
     case LongLaserUpdateInfo::Command::Close:
     case LongLaserUpdateInfo::Command::CloseToLine:
     case LongLaserUpdateInfo::Command::ForceClose:
-      StopSfx(SfxId::Laser);
+      audio_.StopSfx(SfxId::Laser);
       break;
     default:
       break;

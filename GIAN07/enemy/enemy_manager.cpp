@@ -10,6 +10,7 @@
 
 #include "enemy_manager.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
 #include "gameplay/game_rules.h"
@@ -40,15 +41,17 @@ int RandomWorldY() {
 
 EnemyManager::EnemyManager(BulletManager &bullets, ItemSystem &items,
                            GameSession &session, Player &player,
-                           stage::StageSession &stage, EffectManager &effects)
+                           stage::StageSession &stage, EffectManager &effects,
+                           audio::AudioSystem &audio)
     : renderer_(animations_, player), bullets_(bullets), session_(session),
       items_(items), player_(player), stage_(stage), effects_(effects),
+      audio_(audio),
       ecl_host_(*this, bullets, session, player, stage),
-      ecl_(ecl_host_, effects), snakes_(*this, bullets),
-      bits_{BitFormation(*this, bullets, player),
-            BitFormation(*this, bullets, player),
-            BitFormation(*this, bullets, player),
-            BitFormation(*this, bullets, player)} {
+      ecl_(ecl_host_, effects, audio), snakes_(*this, bullets),
+      bits_{BitFormation(*this, bullets, player, audio),
+            BitFormation(*this, bullets, player, audio),
+            BitFormation(*this, bullets, player, audio),
+            BitFormation(*this, bullets, player, audio)} {
   Reset();
 }
 
@@ -214,7 +217,7 @@ void EnemyManager::ClearRegular() {
             LongLaserUpdateInfo{
                 LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
-      PlaySfx(SfxId::Bomb, e->x);
+      audio_.PlaySfx(SfxId::Bomb, e->x);
     } else {
       // Erasing non-drawing type enemies differs from other cases:
       // do not play explosion animation/sound
@@ -264,7 +267,7 @@ void EnemyManager::ResetRegular() {
 void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
   actor.damage_flash = actor.count & 1;
   if (std::cmp_less_equal(actor.hp, damage)) {
-    PlaySfx(SfxId::Bomb, actor.x);
+    audio_.PlaySfx(SfxId::Bomb, actor.x);
     if (actor.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           &actor, kEclAllLongLasers,
@@ -277,7 +280,7 @@ void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
       items_.Spawn(actor.x, actor.y, actor.item);
     }
   } else {
-    PlaySfx(SfxId::Hit, actor.x);
+    audio_.PlaySfx(SfxId::Hit, actor.x);
     player_.PowerUp(damage);
     actor.hp -= damage;
   }

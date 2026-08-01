@@ -16,9 +16,8 @@
 #include <version>
 
 #include "bgm_track.h"
-#include "volume.h"
 
-namespace bgm {
+namespace audio::bgm {
 
 void OnVorbisComment(MetadataCallback func, std::string_view comment) {
   const auto eq_i = comment.find('=');
@@ -207,4 +206,4 @@ std::unique_ptr<Track> OpenTrack(std::string_view base_fn) {
   return nullptr;
 }
 
-} // namespace bgm
+} // namespace audio::bgm

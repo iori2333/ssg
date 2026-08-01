@@ -60,7 +60,8 @@ class TitleFlowState {
 public:
   explicit TitleFlowState(GameContext &context)
       : context_(context),
-        scene_(context.graphics, context.music, context.session, context.ui) {}
+        scene_(context.graphics, context.music, context.session, context.ui,
+               context.audio) {}
 
   [[nodiscard]] bool Enter(InputBits initial_input, bool change_music) {
     return scene_.Enter(initial_input, change_music);
@@ -102,8 +103,10 @@ private:
 class WeaponSelectFlowState {
 public:
   explicit WeaponSelectFlowState(GameContext &context)
-      : context_(context), scene_(context.config, context.enemies,
-                                  context.session, context.player) {
+      : context_(context),
+        scene_(context.config, context.enemies, context.session,
+               context.player, context.audio),
+        difficulty_menu_(context.audio) {
     BuildDifficultyMenu();
   }
 
@@ -248,7 +251,7 @@ class EndingFlowState {
 public:
   explicit EndingFlowState(GameContext &context)
       : scene_(context.graphics, context.stage_loader, context.music,
-               context.localization) {}
+               context.localization, context.audio) {}
 
   [[nodiscard]] bool Enter() { return scene_.Enter(); }
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
@@ -266,7 +269,8 @@ private:
 class MusicRoomFlowState {
 public:
   explicit MusicRoomFlowState(GameContext &context)
-      : scene_(context.graphics, context.music, context.localization) {}
+      : scene_(context.graphics, context.music, context.localization,
+               context.audio) {}
 
   [[nodiscard]] bool Enter() { return scene_.Enter(); }
   [[nodiscard]] FlowEvent Update(const FrameInput &frame) {
@@ -285,7 +289,7 @@ public:
   explicit ScoreFlowState(GameContext &context)
       : context_(context),
         scene_(context.records, context.graphics, context.music, context.ui,
-               context.localization) {}
+               context.localization, context.audio) {}
 
   [[nodiscard]] bool EnterBrowser(GameLevel difficulty,
                                   InputBits initial_input) {
@@ -333,7 +337,7 @@ class ReplayFlowState {
 public:
   explicit ReplayFlowState(GameContext &context)
       : context_(context), scene_(context.records, context.graphics, context.ui,
-                                  context.localization) {}
+                                  context.localization, context.audio) {}
 
   [[nodiscard]] bool EnterBrowser(InputBits initial_input) {
     return scene_.EnterBrowser(initial_input);

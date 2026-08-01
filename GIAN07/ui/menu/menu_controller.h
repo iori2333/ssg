@@ -18,6 +18,8 @@
 #include "gfx/text.h"
 #include "sys/input.h"
 
+namespace audio { class AudioSystem; }
+
 namespace menu {
 
 inline constexpr auto kMenuItemH = 16;
@@ -44,7 +46,7 @@ struct MenuPage {
 
 class MenuController {
 public:
-  MenuController() = default;
+  explicit MenuController(audio::AudioSystem &audio) : audio_(audio) {}
 
   void Init(int window_width);
   void Open(WindowPoint topleft, int select, InputBits initial_input);
@@ -83,6 +85,8 @@ public:
   void Close();
 
 private:
+  audio::AudioSystem &audio_;
+
   struct RenderSlot {
     TextRenderRectId trr;
     std::string cache_key;

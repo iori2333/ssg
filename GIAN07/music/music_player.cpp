@@ -7,8 +7,9 @@
 
 #include "music_player.h"
 
-#include "audio/bgm.h"
-#include "audio/midi.h"
+#include "audio/core/audio_types.h"
+#include "audio/midi/midi_parser.h"
+#include "audio/audio_system.h"
 #include "sys/log.h"
 #include "sys/path.h"
 
@@ -19,17 +20,24 @@ static constexpr std::string_view kBgmRoot = "bgm/";
 // ---------------------------------------------------------------------------
 
 bool MusicPlayer::Play(unsigned int id) {
-  if (!BgmIsEnabled()) {
+  if (!audio_.IsEnabled()) {
     return false;
   }
-  BgmStop();
-  BgmClearWaveform();
+  audio_.StopBgm();
+  audio_.ClearBgmWaveform();
 
   // Always load MIDI for sequencer notes and fallback audio.
   auto midi = midi_variant_ == MidiVariant::Arranged
                   ? data_.ExtractArrangedMusicMidi(id)
                   : data_.ExtractMusicMidi(id);
-  if (midi.empty() || !MidiLoad(std::move(midi))) {
+  if (midi.empty()) {
+    logging::Error(logging::Channel::Music,
+                   "Failed to load MIDI for track {} variant={}", id,
+                   std::to_underlying(midi_variant_));
+    return false;
+  }
+  auto sequence = audio::midi::ParseMidi(midi);
+  if (!sequence || !audio_.LoadBgmMidi(std::move(*sequence)).success) {
     logging::Error(logging::Channel::Music,
                    "Failed to load MIDI for track {} variant={}", id,
                    std::to_underlying(midi_variant_));
@@ -39,16 +47,15 @@ bool MusicPlayer::Play(unsigned int id) {
   // Try to open a replacement waveform from the active BGM pack.
   if (!pack_path_.empty()) {
     auto path = std::format("{}{:02}", pack_path_, id + 1);
-    if (!BgmLoadWaveform(path)) {
+    if (!audio_.LoadBgmWaveform(path).success) {
       logging::Debug(logging::Channel::Music,
                      "No waveform replacement for track {}; using MIDI", id);
     }
   }
 
   loaded_num_ = id + 1;
-  BgmSetLoadedTrackNumber(loaded_num_);
-  BgmSetTempo(BgmTempo());
-  BgmPlay();
+  audio_.SetBgmTempo(audio_.BgmSnapshot().tempo);
+  audio_.PlayBgm();
   logging::Debug(logging::Channel::Music, "Playing track {} variant={}", id,
                  std::to_underlying(midi_variant_));
   return true;
@@ -61,7 +68,8 @@ void MusicPlayer::SetMidiVariant(MidiVariant variant) {
     return;
   }
   midi_variant_ = variant;
-  if (loaded_num_ != 0 && BgmPlayingSource() != BgmPlaybackSource::None) {
+  if (loaded_num_ != 0 &&
+      audio_.BgmSnapshot().mode != audio::BgmMode::None) {
     Play(loaded_num_ - 1);
   }
 }
@@ -129,7 +137,8 @@ bool MusicPlayer::SetPack(std::string_view pack) {
     pack_path_.clear();
   }
 
-  if ((loaded_num_ != 0) && (BgmPlayingSource() != BgmPlaybackSource::None)) {
+  if ((loaded_num_ != 0) &&
+      (audio_.BgmSnapshot().mode != audio::BgmMode::None)) {
     Play(loaded_num_ - 1);
   }
   return true;

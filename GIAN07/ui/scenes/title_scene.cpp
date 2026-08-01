@@ -6,9 +6,7 @@
 
 #include "title_scene.h"
 
-#include "audio/bgm.h"
-#include "audio/sfx.h"
-#include "audio/snd_backend.h"
+#include "audio/audio_system.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
@@ -33,7 +31,7 @@ constexpr PixelCoord kBuildTagGap = 4;
 } // namespace
 
 bool TitleScene::Enter(InputBits initial_input, bool change_music) {
-  AudioBackendResumeAll();
+  audio_.ResumeAll();
   GraphicsBackendPixelAccessEnd();
   TextRenderer().Clear();
   GraphicsBackendClear();
@@ -42,7 +40,7 @@ bool TitleScene::Enter(InputBits initial_input, bool change_music) {
     return false;
   }
   GraphicsBackendSetClip(kGameResolutionRect);
-  StopSfx(SfxId::Warning);
+  audio_.StopSfx(SfxId::Warning);
 
   ui_.ForceCloseMessageWindow();
   ui_.InitMessageWindow({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480},
@@ -93,7 +91,6 @@ void TitleScene::DrawVersion(PixelCoord top) const {
 
 TitleSceneResult TitleScene::Update(InputBits input, bool should_draw) {
   constexpr PixelLtrb source = {0, 0, 640, 396};
-  BgmUpdateMidiTables();
 
   if (input == 0) {
     demo_timer_++;

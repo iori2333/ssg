@@ -9,6 +9,7 @@
 
 #include "enemy_manager.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
 #include "effect/effect_manager.h"
@@ -122,7 +123,7 @@ void EnemyManager::KillBosses() {
     snakes_.Remove(boss);
     effects_.SpawnFragment(boss.x, boss.y, FragmentKind::ExpandingCircle);
     effects_.SpawnBombExplosion(boss.x, boss.y);
-    PlaySfx(SfxId::Bossbomb, boss.x);
+    audio_.PlaySfx(SfxId::Bossbomb, boss.x);
     if (boss.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           &boss, kEclAllLongLasers,
@@ -147,7 +148,7 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
     effects_.SpawnFragment(actor.x, actor.y, FragmentKind::ExpandingCircle);
     effects_.SpawnBombExplosion(actor.x, actor.y);
     stage_.Command(stage::BackgroundCommand::Quake, effects_);
-    PlaySfx(SfxId::Bossbomb, actor.x);
+    audio_.PlaySfx(SfxId::Bossbomb, actor.x);
     if (actor.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           &actor, kEclAllLongLasers,
@@ -171,7 +172,7 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
     player_.AddScore(actor.score);
     bullets_.Clear();
   } else {
-    PlaySfx(SfxId::Hit, actor.x);
+    audio_.PlaySfx(SfxId::Hit, actor.x);
     player_.PowerUp(damage);
     actor.hp -= damage;
   }

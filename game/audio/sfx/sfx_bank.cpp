@@ -195,10 +195,6 @@ void SfxBank::SetVolume(float linear) {
   }
 }
 
-void SfxBank::PauseAll() { ma_engine_stop(&engine_); }
-
-void SfxBank::ResumeAll() { ma_engine_start(&engine_); }
-
 bool SfxBank::IsLoaded(std::uint8_t id) const {
   return id < kSfxObjectCount && effects_[id].Loaded();
 }

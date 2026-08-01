@@ -11,6 +11,7 @@
 #include "loadout/wide_loadout.h"
 #include "player.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "effect/effect_manager.h"
 #include "gameplay/game_rules.h"
@@ -36,9 +37,9 @@ inline constexpr auto kStartY = playfield::kWorldBottom + 180_px;
 // --- Player method implementations ---
 
 Player::Player(EffectManager &effects, GameSession &session,
-               stage::StageSession &stage)
+               stage::StageSession &stage, audio::AudioSystem &audio)
     : loadout_(std::make_unique<WideLoadout>()), effects_(effects),
-      session_(session), stage_(stage) {}
+      audio_(audio), session_(session), stage_(stage) {}
 
 bool Player::IsMainShotFrame(uint16_t t) const {
   return (t == kMainShotFrame || t == kMainShotFrame * 2 ||
@@ -418,7 +419,7 @@ void Player::OnHit() {
 }
 
 void Player::PlayHitFeedback() const {
-  PlaySfx(SfxId::Dead);
+  audio_.PlaySfx(SfxId::Dead);
   effects_.SpawnFragment(x_, y_, FragmentKind::ExpandingCircle);
 }
 
@@ -503,7 +504,7 @@ void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }
 void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   if (n != 0U) {
     if (!buzz_sound_) {
-      PlaySfx(SfxId::Buzz, ex);
+      audio_.PlaySfx(SfxId::Buzz, ex);
       buzz_sound_ = true;
     }
     effects_.SpawnFragment(ex, ey, FragmentKind::Graze);

@@ -2,14 +2,13 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
+#include <algorithm>
 #include <cinttypes>
 #include <format>
 
 #include "music_room_scene.h"
 
-#include "audio/bgm.h"
-#include "audio/midi.h"
-#include "audio/midi_backend.h"
+#include "audio/audio_system.h"
 #include "data/graphics_loader.h"
 #include "gfx/constants.h"
 #include "gfx/font_uty.h"
@@ -42,13 +41,12 @@ void MusicRoomScene::Text::RenderVersion(WindowPoint topleft,
   });
 }
 
-void MusicRoomScene::Text::RenderMidDev(WindowPoint topleft) const {
-  const auto maybe_dev_full = MidiBackendDeviceName();
-  if (!maybe_dev_full) {
+void MusicRoomScene::Text::RenderMidDev(WindowPoint topleft,
+                                        std::string_view value) const {
+  if (value.empty()) {
     return;
   }
-  const auto dev_full = maybe_dev_full.value();
-  std::string_view dev = {dev_full.data(), std::min(dev_full.size(), 13UZ)};
+  std::string_view dev = {value.data(), std::min(value.size(), 13UZ)};
   TextRenderer().Render(topleft, mid_dev, dev, [&dev](TextRenderSession &s) {
     s.SetFont(FontId::Small);
     s.SetColor(ColorDefault);
@@ -130,13 +128,8 @@ bool MusicRoomScene::Enter() {
   spectrum_peaks_.fill(0);
   spectrum_decay_frame_ = 0;
 
-  BgmSetTempo(0);
+  audio_.SetBgmTempo(0);
 
-  // Still necessary because the note arrays aren't actually processed
-  // outside of the Music Room.
-  MidiResetTables();
-
-  // BgmStop();
   if (music_.TrackCount() == 0 || localization_.MusicComment(0).empty()) {
     logging::Error(logging::Channel::I18n,
                    "Music Room text catalog is invalid");
@@ -346,7 +339,11 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
   }
   auto &text = text_.value();
 
-  const auto playing = BgmPlayingSource();
+  auto &audio = audio_;
+  const auto snapshot = audio.BgmSnapshot();
+  const bool midi_playing =
+      (snapshot.mode == audio::BgmMode::Midi &&
+       snapshot.state == audio::PlaybackState::Playing);
 
   if (input != previous_input_) {
     if (InputIsCancel(input)) {
@@ -358,7 +355,7 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
       if (input == KeyRight) {
         track_id_ += 2;
       }
-      BgmStop();
+      audio.StopBgm();
       const auto track_count = music_.TrackCount();
       track_id_ = ((track_id_ + track_count - 1) % track_count);
       music_.Play(track_id_);
@@ -369,26 +366,24 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
 
   switch (input) {
   case KeyUp:
-    BgmSetTempo(BgmTempo() + 1);
+    audio.SetBgmTempo(snapshot.tempo + 1);
     break;
   case KeyDown:
-    BgmSetTempo(BgmTempo() - 1);
+    audio.SetBgmTempo(snapshot.tempo - 1);
     break;
   case KeyShift:
-    BgmSetTempo(0);
+    audio.SetBgmTempo(0);
     break;
   }
 
   if ((system_input & SystemKeyBgmFade) != 0) {
-    BgmFadeOut(120);
+    audio.FadeOutBgm(120);
   }
 
-  BgmUpdateMidiTables();
-
-  if ((playing == BgmPlaybackSource::Midi) &&
+  if (midi_playing &&
       ((system_input & SystemKeyBgmDevice) != 0)) {
     if (!device_change_wait_) {
-      BgmChangeMidiDevice(1);
+      audio.ChangeMidiDevice(1);
       device_change_wait_ = true;
     }
   } else {
@@ -397,7 +392,7 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
   }
 
   if (should_draw) {
-    midi_visualization_ = MidiVisualizationState();
+    midi_visualization_ = audio.MidiVisualization();
     GraphicsBackendClear();
 
     auto BlitBG = [](const PixelLtwh &rect) {
@@ -417,7 +412,7 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
     BlitLegend({0, 0, 176, 40});    // Left side
     BlitLegend({176, 11, 464, 29}); // Right side without device key
 
-    if (playing == BgmPlaybackSource::Midi) {
+    if (midi_playing) {
       BlitBG({504, 83, 136, 25});    // MIDI DEVICE
       BlitLegend({176, 0, 176, 11}); // Device change key
 
@@ -426,7 +421,7 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
       DrawNotes();
     }
 
-    const auto millis = BgmPlayTime().count();
+    const auto millis = snapshot.play_time.count();
     const auto m = ((millis / 1000) / 60);
     const auto s = ((millis / 1000) % 60);
     DrawFont7B(560, 44, std::format("{:02} : {:02}", m, s).c_str());
@@ -441,12 +436,13 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
       // TextOut(hdc,561,64+2,buf,strlen(buf));
     }
 
-    DrawFont7B(560, 116, std::format("{:3}", BgmTempo()).c_str());
+    DrawFont7B(560, 116, std::format("{:3}", snapshot.tempo).c_str());
     // TextOut(hdc,561,112+2,buf,strlen(buf));
     // SetTextColor(hdc,Rgb(255*5/5,255*2/5,255*1/5));
 
-    if (playing == BgmPlaybackSource::Midi) {
-      text.RenderMidDev({(540 + 2), (96 - 3)});
+    if (midi_playing) {
+      text.RenderMidDev({(540 + 2), (96 - 3)},
+                        audio.MidiCurrentDeviceName().value_or(""));
     }
     text.RenderTitle({400, (144 + 2)}, track_id_,
                      localization_.MusicTitle(track_id_), title_marquee_frame_);

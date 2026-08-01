@@ -1,4 +1,5 @@
 #include "bgm_controller.h"
+#include "waveform_playback.h"
 
 #include <algorithm>
 #include <chrono>
@@ -10,7 +11,6 @@
 #include "audio/midi/midi_parser.h"
 #include "audio/midi/midi_sequencer.h"
 #include "audio/midi/midi_synth.h"
-#include "audio/stream/waveform_player.h"
 
 namespace audio::bgm {
 namespace {
@@ -25,10 +25,10 @@ float LinearVolume(Volume volume) {
 
 } // namespace
 
-BgmController::BgmController(stream::WaveformPlayer &waveform,
+BgmController::BgmController(ma_engine &engine,
                              midi::MidiSequencer &sequencer,
                              midi::MidiSynth &synth)
-    : waveform_(waveform), sequencer_(sequencer), synth_(synth) {}
+    : waveform_(engine), sequencer_(sequencer), synth_(synth) {}
 
 AudioResult BgmController::LoadMidi(midi::SequenceData sequence) {
   waveform_.Unload();
@@ -159,7 +159,7 @@ void BgmController::Tick(std::chrono::milliseconds delta) {
   }
 
   if (mode_ == BgmMode::Waveform) {
-    if (waveform_.Track().FadeVolumeLinear() <= 0.0f) {
+    if (waveform_.FadeVolumeLinear() <= 0.0f) {
       Stop();
       return;
     }
@@ -222,9 +222,8 @@ void BgmController::UpdateWaveformVolume() {
   }
   float gain = 1.0f;
   if (gain_applied_) {
-    if (const auto &metadata = waveform_.Track().metadata;
-        metadata.gain_factor) {
-      gain = *metadata.gain_factor;
+    if (const auto gain_factor = waveform_.GainFactor(); gain_factor) {
+      gain = *gain_factor;
     }
   }
   waveform_.SetVolume(LinearVolume(volume_) * gain);

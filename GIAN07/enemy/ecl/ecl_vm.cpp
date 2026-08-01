@@ -11,6 +11,7 @@
 #include "ecl_program.h"
 #include "ecl_vm.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "bullet/bullet_common.h"
 #include "bullet/bullet_manager.h"
@@ -907,8 +908,8 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::PlaySound:
-    PlaySfx(static_cast<SfxId>(Args<EclByteArguments>(instruction).value),
-            actor.x);
+    audio_.PlaySfx(
+        static_cast<SfxId>(Args<EclByteArguments>(instruction).value), actor.x);
     break;
   case EclOpcode::BossAction:
     host_.HandleBossAction(actor,

@@ -1,12 +1,10 @@
-/// Game-specific sound effect identifiers and playback helpers.
+/// Game sound effect identifiers and world-space pan conversion.
 
 #pragma once
 
 #include <cmath>
 #include <cstdint>
-#include <utility>
 
-#include "audio/snd.h"
 #include "gfx/coords.h"
 
 enum class SfxId : uint8_t {
@@ -41,11 +39,3 @@ inline constexpr int kSoundWorldUnitsPerDecibel = PixelToWorld(25);
   return relative < 0 ? (std::pow(10.0f, power) - 1.0f)
                       : (1.0f - std::pow(10.0f, -power));
 }
-
-inline void PlaySfx(SfxId id, int x = kSoundFieldCenterX, bool loop = false) {
-  AudioPlaySoundEffect(std::to_underlying(id), SoundPanForWorldX(x), loop);
-}
-
-inline void StopSfx(SfxId id) { AudioStopSoundEffect(std::to_underlying(id)); }
-
-inline void StopAllSfx() { AudioStopAllSoundEffects(); }

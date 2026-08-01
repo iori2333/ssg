@@ -16,6 +16,7 @@ class EnemyManager;
 struct GameSession;
 class MusicPlayer;
 class UiManager;
+namespace audio { class AudioSystem; }
 
 namespace i18n {
 class Localization;
@@ -40,6 +41,7 @@ struct StageUpdateContext {
   UiManager &ui;
   data::GraphicsLoader &graphics;
   MusicPlayer &music;
+  audio::AudioSystem &audio;
   const GameSession &session;
   i18n::Localization &localization;
   bool messages_disabled;

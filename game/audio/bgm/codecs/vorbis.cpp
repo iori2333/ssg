@@ -11,9 +11,9 @@
 #define OV_EXCLUDE_STATIC_CALLBACKS
 #include <vorbis/vorbisfile.h>
 
-#include "audio/bgm_track.h"
+#include "audio/bgm/bgm_track.h"
 
-namespace bgm {
+namespace audio::bgm {
 
 // Callbacks
 // ---------
@@ -141,4 +141,4 @@ OpenVorbis(std::istream &stream,
   return std::make_unique<VorbisPcmPart>(std::move(vf), pcmf);
 }
 
-} // namespace bgm
+} // namespace audio::bgm

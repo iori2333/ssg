@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <string>
 
-#include "audio/volume.h"
+#include "audio/core/audio_types.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics.h"
 #include "sys/input.h"
@@ -73,8 +73,8 @@ struct AudioConfig {
   bool fix_sysex_bugs = true;
   MidiVariant midi_variant{};
   std::string soundfont;
-  AudioVolume se_volume = ((kMaxAudioVolume * 4) / 10);
-  AudioVolume bgm_volume = ((kMaxAudioVolume * 4) / 10);
+  audio::Volume se_volume = ((audio::kMaxVolume * 4) / 10);
+  audio::Volume bgm_volume = ((audio::kMaxVolume * 4) / 10);
   std::string bgm_pack;
 };
 

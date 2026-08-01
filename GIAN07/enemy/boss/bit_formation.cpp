@@ -9,6 +9,7 @@
 
 #include "bit_formation.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
@@ -175,7 +176,7 @@ void BitFormation::Update() {
       }
       e->BeginExplosion();
 
-      PlaySfx(SfxId::Bomb, e->x);
+      audio_.PlaySfx(SfxId::Bomb, e->x);
 
       for (j = i + 1; std::cmp_less(j, count_); j++) {
         parts_[j - 1] = parts_[j];
@@ -399,7 +400,7 @@ void BitFormation::Destroy() {
     }
     e->BeginExplosion();
 
-    PlaySfx(SfxId::Bomb, e->x);
+    audio_.PlaySfx(SfxId::Bomb, e->x);
   }
 
   // Delegate the rest to this function

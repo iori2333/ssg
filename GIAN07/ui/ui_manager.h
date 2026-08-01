@@ -19,9 +19,11 @@
 
 struct ConfigData;
 
+namespace audio { class AudioSystem; }
+
 class UiManager {
 public:
-  UiManager();
+  explicit UiManager(audio::AudioSystem &audio);
 
   enum class PauseAction { SaveReplayAndExit, Exit, Resume };
   enum class GameOverAction { Continue, SaveReplayAndExit, Exit };

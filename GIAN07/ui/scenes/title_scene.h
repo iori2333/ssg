@@ -12,6 +12,8 @@ class GameSession;
 class MusicPlayer;
 class UiManager;
 
+namespace audio { class AudioSystem; }
+
 namespace data {
 class GraphicsLoader;
 } // namespace data
@@ -31,8 +33,9 @@ enum class TitleSceneResult : uint8_t {
 class TitleScene {
 public:
   TitleScene(data::GraphicsLoader &graphics, MusicPlayer &music,
-             GameSession &session, UiManager &ui)
-      : graphics_(graphics), music_(music), session_(session), ui_(ui) {}
+             GameSession &session, UiManager &ui, audio::AudioSystem &audio)
+      : graphics_(graphics), music_(music), session_(session), ui_(ui),
+        audio_(audio) {}
 
   [[nodiscard]] bool Enter(InputBits initial_input, bool change_music);
   [[nodiscard]] TitleSceneResult Update(InputBits input, bool should_draw);
@@ -45,6 +48,7 @@ private:
   MusicPlayer &music_;
   GameSession &session_;
   UiManager &ui_;
+  audio::AudioSystem &audio_;
   TextRenderRectId version_rect_{};
   WindowCoord version_left_ = 0;
   uint16_t demo_timer_ = 0;

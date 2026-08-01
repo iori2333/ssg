@@ -25,6 +25,8 @@ class ItemSystem;
 struct PlayerAttack;
 class Player;
 
+namespace audio { class AudioSystem; }
+
 namespace stage {
 class StageSession;
 }
@@ -39,7 +41,7 @@ class EnemyManager {
 public:
   EnemyManager(BulletManager &bullets, ItemSystem &items, GameSession &game,
                Player &player, stage::StageSession &stage,
-               EffectManager &effects);
+               EffectManager &effects, audio::AudioSystem &audio);
 
   [[nodiscard]] bool InstallStageAssets(EclProgram program,
                                         EnemyAnimationSet animations);
@@ -127,6 +129,7 @@ private:
   Player &player_;
   stage::StageSession &stage_;
   EffectManager &effects_;
+  audio::AudioSystem &audio_;
 
   EclHost ecl_host_;
   EclVm ecl_;

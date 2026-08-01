@@ -13,6 +13,7 @@
 
 #include "score_scene.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
@@ -147,17 +148,17 @@ ScoreSceneResult ScoreScene::UpdateLeaderboard(InputBits input,
     if (detail_open_) {
       if (InputIsOk(input) || InputIsCancel(input)) {
         detail_open_ = false;
-        PlaySfx(SfxId::Cancel);
+        audio_.PlaySfx(SfxId::Cancel);
       }
     } else if (input == KeyEscape || input == KeyBomb) {
-      PlaySfx(SfxId::Cancel);
+      audio_.PlaySfx(SfxId::Cancel);
       return ScoreSceneResult::ExitRequested;
     } else if (input == KeyUp && !scores_.empty()) {
       selected_ = (selected_ + scores_.size() - 1) % scores_.size();
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
     } else if (input == KeyDown && !scores_.empty()) {
       selected_ = (selected_ + 1) % scores_.size();
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
     } else if ((input == KeyLeft || input == KeyRight) &&
                !rows_.back().moving) {
       const auto level_count = kGameLevelNames.size();
@@ -165,10 +166,10 @@ ScoreSceneResult ScoreScene::UpdateLeaderboard(InputBits input,
       current_difficulty_ =
           static_cast<uint8_t>((current_difficulty_ + direction) % level_count);
       LoadLeaderboard(static_cast<GameLevel>(current_difficulty_));
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
     } else if (InputIsOk(input) && !scores_.empty()) {
       detail_open_ = true;
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
     }
   }
 
@@ -206,8 +207,8 @@ ScoreScene::StartNameRegistration(ScoreRecord record, InputBits initial_input,
                   scores_.end());
   }
 
-  StopSfx(SfxId::Warning);
-  StopAllSfx();
+  audio_.StopSfx(SfxId::Warning);
+  audio_.StopAllSfx();
   ui_.ForceCloseMessageWindow();
   GraphicsBackendClear();
   GraphicsFlip();
@@ -242,7 +243,7 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(InputBits input,
       return ScoreSceneResult::RegistrationComplete;
     }
     save_failed_ = true;
-    PlaySfx(SfxId::Cancel);
+    audio_.PlaySfx(SfxId::Cancel);
   } else if (result == NameEntryResult::Cancelled) {
     current_record_.reset();
     return ScoreSceneResult::RegistrationComplete;

@@ -4,7 +4,7 @@
 
 #include "ending_scene.h"
 
-#include "audio/bgm.h"
+#include "audio/audio_system.h"
 #include "data/graphics_assets.h"
 #include "data/graphics_loader.h"
 #include "gfx/constants.h"
@@ -23,7 +23,7 @@ bool EndingScene::Enter() {
   if (!graphics_.LoadEnding() || !stage_loader_.LoadEnding(scene_)) {
     return false;
   }
-  BgmStop();
+  audio_.StopBgm();
 
   flash_state = 0;
 

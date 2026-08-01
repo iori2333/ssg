@@ -12,6 +12,8 @@
 class EffectManager;
 class Player;
 
+namespace audio { class AudioSystem; }
+
 inline constexpr std::size_t kItemCapacity = 100;
 
 enum class ItemKind : uint8_t {
@@ -37,8 +39,9 @@ struct ItemData {
 
 class ItemSystem {
 public:
-  ItemSystem(Player &player, EffectManager &effects)
-      : player_(player), effects_(effects) {}
+  ItemSystem(Player &player, EffectManager &effects,
+             audio::AudioSystem &audio)
+      : player_(player), effects_(effects), audio_(audio) {}
 
   void Reset();
   void Spawn(int x, int y, ItemKind kind);
@@ -50,5 +53,6 @@ private:
 
   Player &player_;
   EffectManager &effects_;
+  audio::AudioSystem &audio_;
   util::ObjectPool<ItemData, kItemCapacity> pool_;
 };

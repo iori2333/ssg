@@ -76,7 +76,12 @@ bool GameApplication::Initialize() {
   display_initialized_ = true;
   GraphicsScreenshotSetPrefix("screenshots/");
 
-  if (!context_.audio.Initialize(config.audio)) {
+  const auto audio_result =
+      context_.audio.Initialize(PathForData(), config.audio.soundfont);
+  context_.audio.SetMidiFixSysExBugs(config.audio.fix_sysex_bugs);
+  context_.audio.SetVolumes(config.audio.bgm_volume, config.audio.se_volume);
+  context_.audio.SetNormalization(config.audio.bgm_vol_norm);
+  if (!audio_result.success) {
     logging::Warning(logging::Channel::Audio,
                      "No background music backend is available");
   }
@@ -105,7 +110,7 @@ bool GameApplication::Initialize() {
     return false;
   }
 
-  if (config.audio.se_enabled && !context_.audio.EnableSfx(true)) {
+  if (config.audio.se_enabled && !context_.sound_effects.Load()) {
     logging::Warning(logging::Channel::Audio, "Failed to load sound effects");
   }
   context_.music.SetMidiVariant(config.audio.midi_variant);
@@ -113,6 +118,7 @@ bool GameApplication::Initialize() {
   context_.ui.ConfigureMain(config_, {.display = context_.display,
                                       .input = input_,
                                       .audio = context_.audio,
+                                      .sound_effects = context_.sound_effects,
                                       .music = context_.music,
                                       .localization = context_.localization});
 

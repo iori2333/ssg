@@ -8,7 +8,6 @@
 
 #include "long.h"
 
-#include "audio/snd.h"
 #include "enemy/actor/enemy_actor.h"
 #include "enemy/ecl/ecl.h"
 #include "gfx/geometry.h"

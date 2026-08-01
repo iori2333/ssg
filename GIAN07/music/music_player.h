@@ -15,6 +15,10 @@
 
 #include "data/game_data.h"
 
+namespace audio {
+class AudioSystem;
+}
+
 enum class MidiVariant : uint8_t {
   Original,
   Arranged,
@@ -22,7 +26,8 @@ enum class MidiVariant : uint8_t {
 
 class MusicPlayer {
 public:
-  explicit MusicPlayer(const data::GameData &data) : data_(data) {}
+  MusicPlayer(const data::GameData &data, audio::AudioSystem &audio)
+      : data_(data), audio_(audio) {}
 
   // Track switching. Loads the MIDI track from game data, then tries to
   // open a replacement waveform from the active BGM pack. Plays on success.
@@ -40,6 +45,7 @@ public:
 
 private:
   const data::GameData &data_;
+  audio::AudioSystem &audio_;
   unsigned int loaded_num_ = 0; // 0 = nothing loaded
   MidiVariant midi_variant_ = MidiVariant::Original;
   std::string pack_path_;

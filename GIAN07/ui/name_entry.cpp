@@ -6,6 +6,7 @@
 
 #include "name_entry.h"
 
+#include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
@@ -70,7 +71,7 @@ NameEntryResult NameEntry::Update(InputBits input) {
   }
 
   if (allow_cancel_ && !input_locked_ && input == KeyEscape) {
-    PlaySfx(SfxId::Cancel);
+    audio_.PlaySfx(SfxId::Cancel);
     awaiting_release_ = true;
     release_result_ = NameEntryResult::Cancelled;
     return NameEntryResult::Editing;
@@ -82,24 +83,24 @@ NameEntryResult NameEntry::Update(InputBits input) {
     switch (input) {
     case KeyUp:
       cursor_y_ = (cursor_y_ + 2) % 3;
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
       break;
     case KeyDown:
       cursor_y_ = (cursor_y_ + 1) % 3;
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
       break;
     case KeyLeft:
       cursor_x_ = cursor_y_ == 2 && cursor_x_ > 20 ? (cursor_x_ - 2) % 26
                                                    : (cursor_x_ + 25) % 26;
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
       break;
     case KeyRight:
       cursor_x_ = cursor_y_ == 2 && cursor_x_ >= 20 ? (cursor_x_ + 2) % 26
                                                     : (cursor_x_ + 1) % 26;
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
       break;
     case KeyBomb:
-      PlaySfx(SfxId::Cancel);
+      audio_.PlaySfx(SfxId::Cancel);
       Backspace();
       break;
     case KeyTama:
@@ -107,7 +108,7 @@ NameEntryResult NameEntry::Update(InputBits input) {
       if (input_locked_) {
         break;
       }
-      PlaySfx(SfxId::Select);
+      audio_.PlaySfx(SfxId::Select);
       const auto selected = SelectedCharacter();
       if (selected == kFinish || selected == kInvalid) {
         finish = true;

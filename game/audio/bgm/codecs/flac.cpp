@@ -14,9 +14,9 @@
 // max_align_t'` if this appears after a module import.
 #include <dr_flac.h>
 
-#include "audio/bgm_track.h"
+#include "audio/bgm/bgm_track.h"
 
-namespace bgm {
+namespace audio::bgm {
 
 // Callbacks
 // ---------
@@ -153,4 +153,4 @@ std::unique_ptr<PcmPart> OpenFlac(std::istream &stream,
                                        *read_func);
 }
 
-} // namespace bgm
+} // namespace audio::bgm

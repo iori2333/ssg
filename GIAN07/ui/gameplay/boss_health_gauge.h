@@ -10,10 +10,14 @@
 
 #include "enemy/boss/boss.h"
 
+namespace audio { class AudioSystem; }
+
 inline constexpr std::size_t kBossHealthGaugeHeight = 24;
 
 class BossHealthGauge {
 public:
+  explicit BossHealthGauge(audio::AudioSystem &audio) : audio_(audio) {}
+
   void Reset();
   void Sync(const BossHudModel &model);
   void Open(uint32_t max_hp);
@@ -25,6 +29,8 @@ public:
   void SetStageTimeout(int32_t timeout_end);
 
 private:
+  audio::AudioSystem &audio_;
+
   enum class State : uint8_t {
     Hidden,
     OpeningFrame,

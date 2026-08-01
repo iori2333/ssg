@@ -16,6 +16,8 @@ struct BulletManager;
 class EnemyManager;
 class Player;
 
+namespace audio { class AudioSystem; }
+
 inline constexpr std::size_t kBitCapacity = 6;
 
 struct BitLink {
@@ -30,8 +32,9 @@ struct BitLinkGeometry {
 
 class BitFormation {
 public:
-  BitFormation(EnemyManager &enemies, BulletManager &bullets, Player &player)
-      : enemies_(enemies), bullets_(bullets), player_(player) {}
+  BitFormation(EnemyManager &enemies, BulletManager &bullets, Player &player,
+               audio::AudioSystem &audio)
+      : enemies_(enemies), bullets_(bullets), player_(player), audio_(audio) {}
 
   void Reset();
   void Spawn(BossActor &parent, uint8_t count, uint32_t script_id);
@@ -87,4 +90,5 @@ private:
   EnemyManager &enemies_;
   BulletManager &bullets_;
   Player &player_;
+  audio::AudioSystem &audio_;
 };

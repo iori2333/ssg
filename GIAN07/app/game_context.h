@@ -34,20 +34,20 @@ struct GameContext {
 
   i18n::Localization localization;
   data::GameData data;
+  audio::AudioSystem audio;
   data::GraphicsLoader graphics{data};
   DisplayController display{graphics};
-  data::SfxLoader sound_effects{data};
-  MusicPlayer music{data};
-  AudioSystem audio{music, sound_effects};
+  data::SfxLoader sound_effects{data, audio};
+  MusicPlayer music{data, audio};
   stage::StageLoader stage_loader{data};
   RecordSystem records{data};
   stage::StageSession stage;
 
-  EffectManager effects;
+  EffectManager effects{audio};
   GameSession session;
-  Player player{effects, session, stage};
-  ItemSystem items{player, effects};
-  BulletManager bullets{items, session, player, effects};
-  EnemyManager enemies{bullets, items, session, player, stage, effects};
-  UiManager ui;
+  Player player{effects, session, stage, audio};
+  ItemSystem items{player, effects, audio};
+  BulletManager bullets{items, session, player, effects, audio};
+  EnemyManager enemies{bullets, items, session, player, stage, effects, audio};
+  UiManager ui{audio};
 };

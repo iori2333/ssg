@@ -6,7 +6,7 @@
 
 #include "sfx_loader.h"
 
-#include "audio/snd.h"
+#include "audio/audio_system.h"
 
 namespace data {
 
@@ -15,16 +15,15 @@ bool SfxLoader::Load() const {
       5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 1, 1, 1, 1, 5, 1, 5, 1,
   };
 
-  if (!AudioInitializeSoundEffects()) {
+  if (!audio_ || !audio_->IsEnabled()) {
     return false;
   }
   for (uint8_t id = 0; id < kMaxInstances.size(); ++id) {
-    if (!AudioLoadSoundEffect(data_->ExtractSound(id), id, kMaxInstances[id])) {
-      AudioCleanupSoundEffects();
+    const auto buffer = data_->ExtractSound(id);
+    if (!audio_->LoadSfx(id, buffer, kMaxInstances[id]).success) {
       return false;
     }
   }
-  AudioUpdateVolumes();
   return true;
 }
 

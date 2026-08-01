@@ -20,11 +20,14 @@ class ItemSystem;
 struct GameSession;
 class Player;
 
+namespace audio { class AudioSystem; }
+
 class BulletManager {
 public:
   BulletManager(ItemSystem &items, GameSession &session, Player &player,
-                EffectManager &effects)
-      : items_(items), session_(session), player_(player), effects_(effects) {}
+                EffectManager &effects, audio::AudioSystem &audio)
+      : items_(items), session_(session), player_(player), effects_(effects),
+        audio_(audio) {}
 
   void Init();
 
@@ -63,6 +66,7 @@ private:
   GameSession &session_;
   Player &player_;
   EffectManager &effects_;
+  audio::AudioSystem &audio_;
 
   util::ObjectPool<Bullet, kBulletCapacity> bullets_;
   util::ObjectPool<LaserReflect, kReflectCapacity> reflect_lasers_;
