@@ -50,7 +50,7 @@ RendererState &RenderState() {
 
 GraphicsGeometry &Geometry() { return RenderState().geometry; }
 
-static SDL_Texture *EnsureSoftwareTexture(void);
+static SDL_Texture *EnsureSoftwareTexture();
 
 // Compile-time index buffers
 // --------------------------
@@ -259,13 +259,13 @@ void Update(std::string_view driver_str) {
 /// Enumeration and pre-initialization queries
 /// ------------------------------------------
 
-bool GrpBackend_Enum(void) {
+bool GrpBackend_Enum() {
   // Any SDL-specific initialization was already done as part of
   // SDL_Init(SDL_INIT_VIDEO).
   return true;
 }
 
-int8_t GrpBackend_APICount(void) { return SDL_GetNumRenderDrivers(); }
+int8_t GrpBackend_APICount() { return SDL_GetNumRenderDrivers(); }
 
 std::string_view GrpBackend_APILabel(std::string_view api) {
   for (const auto &nice : API_NICE) {
@@ -318,7 +318,7 @@ PIXEL_SIZE GrpBackend_DisplaySize(bool fullscreen) {
 /// Initialization and cleanup
 /// --------------------------
 
-bool DestroySoftwareRenderer(void) {
+bool DestroySoftwareRenderer() {
   RenderState().software_renderer =
       SafeDestroy(SDL_DestroyRenderer, RenderState().software_renderer);
   RenderState().software_texture =
@@ -326,7 +326,7 @@ bool DestroySoftwareRenderer(void) {
   return false;
 }
 
-std::nullopt_t PrimaryCleanup(void) {
+std::nullopt_t PrimaryCleanup() {
   for (auto &tex : RenderState().textures) {
     tex = SafeDestroy(SDL_DestroyTexture, tex);
   }
@@ -650,7 +650,7 @@ GrpBackend_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
   return ret;
 }
 
-void GrpBackend_Cleanup(void) {
+void GrpBackend_Cleanup() {
   PrimaryCleanup();
   DestroySoftwareRenderer();
   RenderState().software_surface =
@@ -674,7 +674,7 @@ void GrpBackend_SetClip(const WINDOW_LTRB &rect) {
   SDL_SetRenderClipRect(*RenderState().renderer, &sdl_rect);
 }
 
-std::string_view GrpBackend_APIString(void) {
+std::string_view GrpBackend_APIString() {
   // More efficient than the hash table insertion done by
   // SDL_GetRendererName().
   assert(RenderState().primary_renderer);
@@ -682,7 +682,7 @@ std::string_view GrpBackend_APIString(void) {
   return SDL_GetStringProperty(props, SDL_PROP_RENDERER_NAME_STRING, nullptr);
 }
 
-void TakeScreenshot(void) {
+void TakeScreenshot() {
   SDL_FlushRenderer(*RenderState().renderer);
 
   if (RenderState().software_renderer) {
@@ -895,9 +895,7 @@ GdiTextState &GdiText() {
   return state;
 }
 
-SURFACE_GDI &GrpSurface_GDIText_Surface(void) noexcept {
-  return GdiText().surface;
-}
+SURFACE_GDI &GrpSurface_GDIText_Surface() noexcept { return GdiText().surface; }
 
 bool GrpSurface_GDIText_Create(int32_t w, int32_t h, RGB colorkey) {
   auto &state = GdiText();
@@ -1037,7 +1035,7 @@ void GraphicsGeometry::SetAlphaNorm(uint8_t a) {
   RenderState().alpha_mode = SDL_BLENDMODE_BLEND;
 }
 
-void GraphicsGeometry::SetAlphaOne(void) {
+void GraphicsGeometry::SetAlphaOne() {
   RenderState().color.a = 0xFF;
   RenderState().alpha_mode = SDL_BLENDMODE_ADD;
 }
@@ -1113,7 +1111,7 @@ void GraphicsGeometry::DrawGrdLineEx(int x, int y1, RGB c1, int y2, RGB c2) {
 /// Software rendering with pixel access
 /// ------------------------------------
 
-static SDL_Texture *EnsureSoftwareTexture(void) {
+static SDL_Texture *EnsureSoftwareTexture() {
   if (RenderState().software_texture) {
     return RenderState().software_texture;
   }
@@ -1131,7 +1129,7 @@ static SDL_Texture *EnsureSoftwareTexture(void) {
   return RenderState().software_texture;
 }
 
-bool GrpBackend_PixelAccessStart(void) {
+bool GrpBackend_PixelAccessStart() {
   if (RenderState().software_renderer) {
     return true;
   }
@@ -1145,7 +1143,7 @@ bool GrpBackend_PixelAccessStart(void) {
   return (EnsureSoftwareTexture() != nullptr);
 }
 
-bool GrpBackend_PixelAccessEnd(void) {
+bool GrpBackend_PixelAccessEnd() {
   if (!RenderState().software_renderer) {
     return true;
   }
@@ -1154,7 +1152,7 @@ bool GrpBackend_PixelAccessEnd(void) {
   return true;
 }
 
-std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock(void) {
+std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock() {
   // Necessary in SDL 3!
   SDL_FlushRenderer(RenderState().software_renderer);
 
@@ -1169,7 +1167,7 @@ std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock(void) {
   return {pixels, RenderState().software_surface->pitch};
 }
 
-void GrpBackend_PixelAccessUnlock(void) {
+void GrpBackend_PixelAccessUnlock() {
   if (SDL_MUSTLOCK(RenderState().software_surface)) {
     SDL_UnlockSurface(RenderState().software_surface);
   }

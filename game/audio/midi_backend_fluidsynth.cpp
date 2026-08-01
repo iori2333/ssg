@@ -154,7 +154,7 @@ static size_t FindSoundFont(std::string_view name) {
   return SIZE_MAX;
 }
 
-static bool FsInitAudio(void) {
+static bool FsInitAudio() {
   State().settings = new_fluid_settings();
   if (!State().settings) {
     return false;
@@ -192,7 +192,7 @@ static bool FsInitAudio(void) {
   return true;
 }
 
-static void FsCleanupAudio(void) {
+static void FsCleanupAudio() {
   if (State().audio_driver) {
     delete_fluid_audio_driver(State().audio_driver);
     State().audio_driver = nullptr;
@@ -247,7 +247,7 @@ bool MidiBackendInitialize(std::string_view preferred_soundfont) {
   return true;
 }
 
-void MidiBackendCleanup(void) { FsCleanupAudio(); }
+void MidiBackendCleanup() { FsCleanupAudio(); }
 
 std::optional<std::string_view> MidiBackendCurrentSoundFont() {
   if (!State().synth || State().font_index >= State().font_paths.size()) {
@@ -258,7 +258,7 @@ std::optional<std::string_view> MidiBackendCurrentSoundFont() {
   return cached;
 }
 
-std::optional<std::string_view> MidiBackendDeviceName(void) {
+std::optional<std::string_view> MidiBackendDeviceName() {
   if (!State().synth || State().font_index >= State().font_paths.size()) {
     return std::nullopt;
   }
@@ -268,7 +268,7 @@ std::optional<std::string_view> MidiBackendDeviceName(void) {
   return cached;
 }
 
-size_t MidiBackendDeviceCount(void) { return State().font_paths.size(); }
+size_t MidiBackendDeviceCount() { return State().font_paths.size(); }
 
 std::optional<std::string_view> MidiBackendDeviceNameAt(size_t index) {
   if (index >= State().font_paths.size()) {
@@ -382,7 +382,7 @@ bool MidiBackendChangeDevice(int8_t direction) {
   return true;
 }
 
-void MidiBackendStartTimer(void) {
+void MidiBackendStartTimer() {
   if (State().timer.joinable() &&
       State().timer.get_stop_token().stop_requested()) {
     State().timer.join();
@@ -402,7 +402,7 @@ void MidiBackendStartTimer(void) {
   }
 }
 
-void MidiBackendStopTimer(void) {
+void MidiBackendStopTimer() {
   if (State().timer.joinable()) {
     State().timer.request_stop();
     if (State().timer.get_id() != std::this_thread::get_id()) {
@@ -477,7 +477,7 @@ void MidiBackendOutput(std::span<uint8_t> event) {
   MidiBackendOutput(event[0], a, b);
 }
 
-void MidiBackendPanic(void) {
+void MidiBackendPanic() {
   if (!State().synth) {
     return;
   }

@@ -71,7 +71,7 @@ void CleanupSubsystem(bool &initialized, void (*cleanup)()) {
 
 } // namespace
 
-void AudioCleanup(void) {
+void AudioCleanup() {
   auto &state = State();
   CleanupSubsystem(state.se_initialized, AudioBackendCleanupSoundEffects);
   CleanupSubsystem(state.bgm_initialized, AudioBackendCleanupBgm);
@@ -83,11 +83,11 @@ void AudioSetVolumes(AudioVolume bgm, AudioVolume se) {
   AudioUpdateVolumes();
 }
 
-AudioVolume AudioBgmVolume(void) { return State().bgm_volume; }
+AudioVolume AudioBgmVolume() { return State().bgm_volume; }
 
-AudioVolume AudioSoundEffectVolume(void) { return State().se_volume; }
+AudioVolume AudioSoundEffectVolume() { return State().se_volume; }
 
-void AudioUpdateVolumes(void) {
+void AudioUpdateVolumes() {
   if (State().bgm_initialized) {
     AudioBackendUpdateBgmVolume();
   }
@@ -96,21 +96,21 @@ void AudioUpdateVolumes(void) {
   }
 }
 
-bool AudioInitializeBgm(void) {
+bool AudioInitializeBgm() {
   return InitializeSubsystem(State().bgm_initialized,
                              AudioBackendInitializeBgm);
 }
 
-bool AudioInitializeSoundEffects(void) {
+bool AudioInitializeSoundEffects() {
   return InitializeSubsystem(State().se_initialized,
                              AudioBackendInitializeSoundEffects);
 }
 
-void AudioCleanupBgm(void) {
+void AudioCleanupBgm() {
   CleanupSubsystem(State().bgm_initialized, AudioBackendCleanupBgm);
 }
 
-void AudioCleanupSoundEffects(void) {
+void AudioCleanupSoundEffects() {
   CleanupSubsystem(State().se_initialized, AudioBackendCleanupSoundEffects);
 }
 
@@ -139,7 +139,7 @@ void AudioStopSoundEffect(uint8_t id) {
   return AudioBackendStopSoundEffect(id);
 }
 
-void AudioStopAllSoundEffects(void) {
+void AudioStopAllSoundEffects() {
   for (auto i = 0; i < kSoundObjectCount; i++) {
     AudioBackendStopSoundEffect(i);
   }

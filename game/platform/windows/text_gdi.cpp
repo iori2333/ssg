@@ -85,7 +85,7 @@ public:
     return arr[font];
   }
 
-  void Cleanup(void) {
+  void Cleanup() {
     for (auto &font : arr) {
       if (font) {
         DeleteObject(font);
@@ -164,7 +164,7 @@ TEXTRENDER_SESSION::~TEXTRENDER_SESSION() {
   GrpSurface_GDIText_Update(rect);
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::RectSize(void) const { return {rect.w, rect.h}; }
+PIXEL_SIZE TEXTRENDER_SESSION::RectSize() const { return {rect.w, rect.h}; }
 
 void TEXTRENDER_SESSION::SetFont(FONT_ID font) {
   if (font_cur != font) {
@@ -242,7 +242,7 @@ PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
   return TextGDIExtent(Fonts().ForID(font), str);
 }
 
-void TextBackend_Cleanup(void) {
+void TextBackend_Cleanup() {
   Fonts().Cleanup();
   TextBackend_GDICleanup();
 }

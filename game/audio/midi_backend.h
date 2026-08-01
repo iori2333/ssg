@@ -25,14 +25,14 @@ bool MidiBackendInitialize(std::string_view preferred_soundfont = {});
 std::optional<std::string_view> MidiBackendCurrentSoundFont();
 
 // Shuts down the backend.
-void MidiBackendCleanup(void); // MIDI-related cleanup
+void MidiBackendCleanup(); // MIDI-related cleanup
 
 // Returns the name of the current MIDI device, or std::nullopt if the backend
 // is not initialized. Can also be used for general initialization checks.
-std::optional<std::string_view> MidiBackendDeviceName(void);
+std::optional<std::string_view> MidiBackendDeviceName();
 
 // Returns the number of available devices (SoundFont files).
-size_t MidiBackendDeviceCount(void);
+size_t MidiBackendDeviceCount();
 
 // Returns the name of the device at the given zero-based [index], or
 // std::nullopt if [index] is out of range or the backend is not initialized.
@@ -51,10 +51,10 @@ bool MidiBackendChangeDevice(int8_t direction); // Change output device
 bool MidiBackendSelectDevice(size_t index); // Select device by index
 
 // Starts a timer that periodically calls MidiProcess().
-void MidiBackendStartTimer(void);
+void MidiBackendStartTimer();
 
 // Stops the timer.
-void MidiBackendStopTimer(void);
+void MidiBackendStopTimer();
 
 // Sends a raw MIDI event to the active device. [event] unfortunately has to be
 // mutable because MIDIHDR on Windows wants a non-const pointer...
@@ -62,4 +62,4 @@ void MidiBackendOutput(uint8_t byte_1, uint8_t byte_2, uint8_t byte_3 = 0x00);
 void MidiBackendOutput(std::span<uint8_t> event);
 
 // Stops all currently playing notes.
-void MidiBackendPanic(void);
+void MidiBackendPanic();

@@ -34,12 +34,12 @@ struct PANGOCAIRO_STATE {
   cairo_t *cr = nullptr;
   PangoLayout *layout = nullptr;
 
-  PANGOCAIRO_STATE(void) {}
+  PANGOCAIRO_STATE() {}
   PANGOCAIRO_STATE(cairo_surface_t *);
   PANGOCAIRO_STATE(PANGOCAIRO_STATE &&) noexcept;
-  ~PANGOCAIRO_STATE(void);
+  ~PANGOCAIRO_STATE();
 
-  explicit operator bool(void) const;
+  explicit operator bool() const;
   PANGOCAIRO_STATE &operator=(PANGOCAIRO_STATE &&) noexcept;
 
   void SetFont(const PANGOCAIRO_FONT *);
@@ -128,7 +128,7 @@ public:
     return arr[font];
   }
 
-  void Cleanup(void) {
+  void Cleanup() {
     for (auto &font : arr) {
       pango_font_description_free(font.desc);
       font.desc = nullptr;
@@ -160,7 +160,7 @@ PANGOCAIRO_STATE::PANGOCAIRO_STATE(PANGOCAIRO_STATE &&other) noexcept {
   *this = std::move(other);
 }
 
-PANGOCAIRO_STATE::~PANGOCAIRO_STATE(void) {
+PANGOCAIRO_STATE::~PANGOCAIRO_STATE() {
   // Actually throws a warning if we pass a `nullptr`!
   if (layout) {
     g_object_unref(layout);
@@ -173,7 +173,7 @@ PANGOCAIRO_STATE::~PANGOCAIRO_STATE(void) {
   }
 }
 
-PANGOCAIRO_STATE::operator bool(void) const { return (cr && layout); }
+PANGOCAIRO_STATE::operator bool() const { return (cr && layout); }
 
 PANGOCAIRO_STATE &
 PANGOCAIRO_STATE::operator=(PANGOCAIRO_STATE &&other) noexcept {
@@ -267,13 +267,13 @@ void TEXTRENDER_SESSION::PIXELACCESS::Set(const PIXEL_POINT &xy_rel,
   SetRaw(xy_rel, (0xFF000000u | (c.r << 16u) | (c.g << 8u) | c.b));
 }
 
-TEXTRENDER_SESSION::PIXELACCESS::PIXELACCESS(void) {
+TEXTRENDER_SESSION::PIXELACCESS::PIXELACCESS() {
   cairo_surface_flush(PangoState().surf);
   buf = cairo_image_surface_get_data(PangoState().surf);
   stride = cairo_image_surface_get_stride(PangoState().surf);
 }
 
-TEXTRENDER_SESSION::PIXELACCESS::~PIXELACCESS(void) {
+TEXTRENDER_SESSION::PIXELACCESS::~PIXELACCESS() {
   cairo_surface_mark_dirty(PangoState().surf);
 }
 
@@ -290,7 +290,7 @@ TEXTRENDER_SESSION::~TEXTRENDER_SESSION() {
                     {std::bit_cast<const std::byte *>(buf), stride});
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::RectSize(void) const { return size; }
+PIXEL_SIZE TEXTRENDER_SESSION::RectSize() const { return size; }
 
 void TEXTRENDER_SESSION::SetFont(FONT_ID font) {
   if (font_cur != font) {
@@ -367,7 +367,7 @@ PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
   return PangoState().Extent(&Fonts().ForID(font), str);
 }
 
-void TextBackend_Cleanup(void) {
+void TextBackend_Cleanup() {
   PangoState() = {};
   Fonts().Cleanup();
 }

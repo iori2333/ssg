@@ -48,7 +48,7 @@ std::pair<int16_t, int16_t> HelpGetWindowPosition(SDL_Window *window) {
   return std::make_pair(static_cast<int16_t>(left), static_cast<int16_t>(top));
 }
 
-SDL_DisplayID HelpGetDisplayForWindow(void) {
+SDL_DisplayID HelpGetDisplayForWindow() {
   if (!State().window) {
     return SDL_GetPrimaryDisplay();
   }
@@ -168,7 +168,7 @@ std::string_view WndBackend_SDLRendererName(int8_t id) {
   return GrpBackend_APIString(id);
 }
 
-SDL_Window *WndBackend_SDL(void) { return State().window; }
+SDL_Window *WndBackend_SDL() { return State().window; }
 
 std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   assert(State().window == nullptr);
@@ -280,14 +280,14 @@ std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS params) {
   return params;
 }
 
-void WndBackend_Cleanup(void) {
+void WndBackend_Cleanup() {
   if (State().window) {
     SDL_DestroyWindow(State().window);
     State().window = nullptr;
   }
 }
 
-std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void) {
+std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft() {
   // A fullscreen window is always positioned at (0, 0), and we don't want to
   // override any previous windowed position.
   if (!State().window ||

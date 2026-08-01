@@ -18,17 +18,17 @@ struct GRAPHICS_PARAMS;
 typedef struct SDL_Window SDL_Window;
 
 // Returns the SDL handle of the current window.
-SDL_Window *WndBackend_SDL(void);
+SDL_Window *WndBackend_SDL();
 
 // Creates the game window and returns the actual configuration the backend is
 // running. Fails if the window already exists.
 std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS);
 
-void WndBackend_Cleanup(void);
+void WndBackend_Cleanup();
 // --------------
 
 // Returns the current top-left position of the game window.
-std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft(void);
+std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft();
 
 // Runs the main loop each frame, calling [frame_func] for each iteration, and
 // returns the exit code after the game was quit.

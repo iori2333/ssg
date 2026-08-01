@@ -10,7 +10,7 @@ class GraphicsGeometry {
 public:
   void SetColor(RGB216 col);
   void SetAlphaNorm(uint8_t a);
-  void SetAlphaOne(void);
+  void SetAlphaOne();
   void DrawLine(int x1, int y1, int x2, int y2);
   void DrawBox(int x1, int y1, int x2, int y2);
   void DrawBoxA(int x1, int y1, int x2, int y2);

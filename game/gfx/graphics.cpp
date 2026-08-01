@@ -303,7 +303,7 @@ void Grp_ScreenshotSetEffort(uint8_t effort) {
 }
 // -----------
 
-GRAPHICS_FULLSCREEN_FLAGS GRAPHICS_PARAMS::FullscreenFlags(void) const {
+GRAPHICS_FULLSCREEN_FLAGS GRAPHICS_PARAMS::FullscreenFlags() const {
   using F = GRAPHICS_PARAM_FLAGS;
   return {
       .fullscreen = !!(flags & F::FULLSCREEN),
@@ -313,11 +313,11 @@ GRAPHICS_FULLSCREEN_FLAGS GRAPHICS_PARAMS::FullscreenFlags(void) const {
   };
 }
 
-bool GRAPHICS_PARAMS::ScaleGeometry(void) const {
+bool GRAPHICS_PARAMS::ScaleGeometry() const {
   return !!(flags & GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY);
 }
 
-uint8_t GRAPHICS_PARAMS::Scale4x(void) const {
+uint8_t GRAPHICS_PARAMS::Scale4x() const {
   const auto fs = FullscreenFlags();
   if (fs.fullscreen) {
     return (fs.exclusive ? 4 : 0);
@@ -325,7 +325,7 @@ uint8_t GRAPHICS_PARAMS::Scale4x(void) const {
   return window_scale_4x;
 }
 
-WINDOW_SIZE GRAPHICS_PARAMS::ScaledRes(void) const {
+WINDOW_SIZE GRAPHICS_PARAMS::ScaledRes() const {
   const auto fs = FullscreenFlags();
   if (fs.fullscreen) {
     if (fs.exclusive) {
@@ -363,7 +363,7 @@ void GRAPHICS_PARAMS::SetFlag(
   SetEnumFlag(flags, flag, value);
 }
 
-uint8_t Grp_WindowScale4xMax(void) {
+uint8_t Grp_WindowScale4xMax() {
   const auto factors = ((GrpBackend_DisplaySize(false) * 4) / GRP_RES);
   return std::min(factors.w, factors.h);
 }
@@ -401,7 +401,7 @@ std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
   return std::nullopt;
 }
 
-void Grp_Flip(void) {
+void Grp_Flip() {
   const auto &state = State();
   GrpBackend_Flip(state.screenshot_requested &&
                   !state.screenshot_prefix.empty());

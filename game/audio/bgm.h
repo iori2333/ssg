@@ -9,7 +9,7 @@
 #include <vector>
 
 bool BgmInitialize(std::string_view preferred_soundfont = {});
-void BgmCleanup(void);
+void BgmCleanup();
 
 // General queries
 // ---------------
@@ -20,11 +20,11 @@ enum class BgmPlaybackSource {
   Midi,
 };
 
-bool BgmIsEnabled(void);
-bool BgmHasGainFactor(void);
-bool BgmIsGainApplied(void);
-BgmPlaybackSource BgmPlayingSource(void);
-std::chrono::duration<int32_t, std::milli> BgmPlayTime(void);
+bool BgmIsEnabled();
+bool BgmHasGainFactor();
+bool BgmIsGainApplied();
+BgmPlaybackSource BgmPlayingSource();
+std::chrono::duration<int32_t, std::milli> BgmPlayTime();
 // ---------------
 
 bool BgmChangeMidiDevice(int8_t direction);
@@ -32,11 +32,11 @@ bool BgmChangeMidiDevice(int8_t direction);
 // Playback
 // --------
 
-void BgmPlay(void);
-void BgmStop(void);
+void BgmPlay();
+void BgmStop();
 
-void BgmPause(void);
-void BgmResume(void);
+void BgmPause();
+void BgmResume();
 // --------
 
 // Audio source loading. At most one of LoadWaveform/LoadMIDI is active
@@ -58,7 +58,7 @@ void BgmClearWaveform();
 
 // Processes all MIDI events of a playing waveform track's source MIDI that
 // have occurred since the last call to this function.
-void BgmUpdateMidiTables(void);
+void BgmUpdateMidiTables();
 
 // Volume control
 // --------------
@@ -67,7 +67,7 @@ void BgmUpdateMidiTables(void);
 // waveform track.
 void BgmSetGainApplied(bool apply);
 
-void BgmUpdateVolume(void);
+void BgmUpdateVolume();
 
 // Fade out (higher number = faster)
 void BgmFadeOut(uint8_t speed);
@@ -80,7 +80,7 @@ inline constexpr uint8_t kBgmTempoDenominator = 1 << 7;
 inline constexpr int8_t kBgmTempoMin = -100;
 inline constexpr int8_t kBgmTempoMax = 100;
 
-int8_t BgmTempo(void);
+int8_t BgmTempo();
 void BgmSetTempo(int8_t tempo); // Change tempo
 float BgmTempoFactor();
 float BgmGainFactor();

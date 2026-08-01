@@ -10,7 +10,7 @@
 
 static std::string_view PathDataView;
 
-std::string_view PathForData(void) {
+std::string_view PathForData() {
   if (PathDataView.data() != nullptr) {
     return PathDataView;
   }

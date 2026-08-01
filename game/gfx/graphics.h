@@ -76,11 +76,11 @@ struct RGB216 {
     return RGB216{(std::min)(r, MAX), (std::min)(g, MAX), (std::min)(b, MAX)};
   }
 
-  constexpr uint8_t PaletteIndex(void) const {
+  constexpr uint8_t PaletteIndex() const {
     return (20 + r + (g * (MAX + 1)) + (b * ((MAX + 1) * (MAX + 1))));
   }
 
-  constexpr RGB ToRGB(void) const {
+  constexpr RGB ToRGB() const {
     return RGB{
         .r = static_cast<uint8_t>(r * 50u),
         .g = static_cast<uint8_t>(g * 50u),
@@ -175,10 +175,10 @@ struct GRAPHICS_PARAMS {
 
   std::strong_ordering operator<=>(const GRAPHICS_PARAMS &) const = default;
 
-  GRAPHICS_FULLSCREEN_FLAGS FullscreenFlags(void) const;
-  bool ScaleGeometry(void) const;
-  uint8_t Scale4x(void) const;
-  WINDOW_SIZE ScaledRes(void) const;
+  GRAPHICS_FULLSCREEN_FLAGS FullscreenFlags() const;
+  bool ScaleGeometry() const;
+  uint8_t Scale4x() const;
+  WINDOW_SIZE ScaledRes() const;
 
   void SetFlag(GRAPHICS_PARAM_FLAGS flag,
                std::underlying_type_t<GRAPHICS_PARAM_FLAGS> value);
@@ -186,7 +186,7 @@ struct GRAPHICS_PARAMS {
 
 // Returns the maximum 4× scaling factor for the game window on the current
 // display.
-uint8_t Grp_WindowScale4xMax(void);
+uint8_t Grp_WindowScale4xMax();
 
 struct GRAPHICS_INIT_RESULT {
   GRAPHICS_PARAMS live;
@@ -212,4 +212,4 @@ Grp_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
 std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params);
 
 // Wraps screenshot handling around GrpBackend_Flip().
-void Grp_Flip(void);
+void Grp_Flip();

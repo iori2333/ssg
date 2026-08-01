@@ -12,7 +12,7 @@
 void WndBackend_RememberTopleft(std::pair<int16_t, int16_t> position);
 
 // Falls back to the primary display if the window doesn't exist yet.
-SDL_DisplayID HelpGetDisplayForWindow(void);
+SDL_DisplayID HelpGetDisplayForWindow();
 
 std::pair<int16_t, int16_t> HelpGetWindowPosition(SDL_Window *window);
 

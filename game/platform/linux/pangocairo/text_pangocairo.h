@@ -21,7 +21,7 @@ public:
     uint8_t *buf;
     int stride;
 
-    PIXELACCESS(void);
+    PIXELACCESS();
     uint32_t &PixelAt(const PIXEL_POINT &xy_rel);
 
   public:
@@ -31,10 +31,10 @@ public:
     RGB Get(const PIXEL_POINT &xy_rel);
     void Set(const PIXEL_POINT &xy_rel, const RGB col);
 
-    ~PIXELACCESS(void);
+    ~PIXELACCESS();
   };
 
-  PIXEL_SIZE RectSize(void) const;
+  PIXEL_SIZE RectSize() const;
   void SetFont(FONT_ID font);
   void SetColor(const RGB &color);
   PIXEL_SIZE Extent(std::string_view str);

@@ -43,7 +43,7 @@ public:
     void Set(const PIXEL_POINT &xy_rel, const RGB col);
   };
 
-  PIXEL_SIZE RectSize(void) const;
+  PIXEL_SIZE RectSize() const;
   void SetFont(FONT_ID font);
   void SetColor(const RGB color);
   PIXEL_SIZE Extent(std::string_view str);

@@ -14,10 +14,10 @@
 /// ------------------------------------------
 
 // Should initialize everything needed for device and API queries.
-bool GrpBackend_Enum(void);
+bool GrpBackend_Enum();
 
 // Rendering APIs.
-int8_t GrpBackend_APICount(void);
+int8_t GrpBackend_APICount();
 std::string_view GrpBackend_APILabel(std::string_view api);
 
 // Maps an API string back to its ID. Returns -1 for an unavailable API.
@@ -47,7 +47,7 @@ GrpBackend_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
                 GRAPHICS_PARAMS params);
 
 // Normal cleanup (abnormal termination on failure)
-void GrpBackend_Cleanup(void);
+void GrpBackend_Cleanup();
 /// --------------------------
 
 /// General
@@ -62,7 +62,7 @@ void GrpBackend_Clear(uint8_t col_palettized = RGB216{0, 0, 0}.PaletteIndex(),
 void GrpBackend_SetClip(const WINDOW_LTRB &rect);
 
 // Returns the currently active rendering API.
-std::string_view GrpBackend_APIString(void);
+std::string_view GrpBackend_APIString();
 
 struct FILE_STREAM_WRITE;
 void GrpBackend_Flip(bool take_screenshot);
@@ -155,22 +155,22 @@ GraphicsGeometry &Geometry();
 // Enters the software-rendered pixel access mode if necessary, and returns
 // `true` if successful. Does nothing if the renderer is already in this mode.
 // If a mode change occurred, all surfaces are invalidated.
-bool GrpBackend_PixelAccessStart(void);
+bool GrpBackend_PixelAccessStart();
 
 // Leaves the software-rendered pixel access mode and returns to regular
 // hardware-accelerated rendering if necessary, and returns `true` if
 // successful. Does nothing if the renderer is already in hardware mode.
 // If a mode change occurred, all surfaces are invalidated.
-bool GrpBackend_PixelAccessEnd(void);
+bool GrpBackend_PixelAccessEnd();
 
 // Locks the backbuffer, returning a pointer to its pixels and the row pitch.
 // Should return a pitch of 0 on failure.
 // On success, the returned buffer has a size of [GRP_RES.h] times the returned
 // pitch, and always uses a 32-bit BGRA pixel format.
-std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock(void);
+std::tuple<std::byte *, size_t> GrpBackend_PixelAccessLock();
 
 // Unlocks the backbuffer.
-void GrpBackend_PixelAccessUnlock(void);
+void GrpBackend_PixelAccessUnlock();
 
 // Calls [func] with a locked backbuffer.
 void GrpBackend_PixelAccessEdit(auto func) {

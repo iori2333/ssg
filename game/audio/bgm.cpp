@@ -49,29 +49,29 @@ bool BgmInitialize(std::string_view preferred_soundfont) {
   return State().enabled;
 }
 
-void BgmCleanup(void) {
+void BgmCleanup() {
   BgmStop();
   MidiBackendCleanup();
   AudioCleanupBgm();
   State().enabled = false;
 }
 
-bool BgmIsEnabled(void) { return State().enabled; }
+bool BgmIsEnabled() { return State().enabled; }
 
-bool BgmHasGainFactor(void) {
+bool BgmHasGainFactor() {
   return (State().waveform &&
           State().waveform->metadata.gain_factor.has_value());
 }
 
-bool BgmIsGainApplied(void) { return State().apply_gain; }
+bool BgmIsGainApplied() { return State().apply_gain; }
 
-BgmPlaybackSource BgmPlayingSource(void) {
+BgmPlaybackSource BgmPlayingSource() {
   return ((!State().enabled || !State().playing) ? BgmPlaybackSource::None
           : State().waveform                     ? BgmPlaybackSource::Waveform
                                                  : BgmPlaybackSource::Midi);
 }
 
-std::chrono::duration<int32_t, std::milli> BgmPlayTime(void) {
+std::chrono::duration<int32_t, std::milli> BgmPlayTime() {
   if (State().waveform) {
     return AudioBackendBgmPlayTime();
   }
@@ -115,7 +115,7 @@ void BgmClearWaveform() { State().waveform = nullptr; }
 
 // --- Playback ---
 
-void BgmPlay(void) {
+void BgmPlay() {
   BgmSetGainApplied(State().apply_gain);
   if (State().waveform) {
     AudioBackendPlayBgm();
@@ -127,7 +127,7 @@ void BgmPlay(void) {
   State().playing = true;
 }
 
-void BgmStop(void) {
+void BgmStop() {
   if (State().waveform) {
     AudioBackendStopBgm();
 
@@ -140,7 +140,7 @@ void BgmStop(void) {
   State().playing = false;
 }
 
-void BgmPause(void) {
+void BgmPause() {
   if (State().waveform) {
     AudioBackendStopBgm();
   } else {
@@ -148,7 +148,7 @@ void BgmPause(void) {
   }
 }
 
-void BgmResume(void) {
+void BgmResume() {
   if (State().waveform) {
     AudioBackendPlayBgm();
   } else {
@@ -156,7 +156,7 @@ void BgmResume(void) {
   }
 }
 
-void BgmUpdateMidiTables(void) {
+void BgmUpdateMidiTables() {
   if (State().waveform && State().playing) {
     if (State().waveform->FadeVolumeLinear() <= 0.0f) {
       BgmStop();
@@ -184,7 +184,7 @@ float BgmGainFactor() {
   return State().waveform->metadata.gain_factor.value_or(1.0f);
 }
 
-void BgmUpdateVolume(void) {
+void BgmUpdateVolume() {
   if (State().waveform) {
     AudioBackendUpdateBgmVolume();
   } else {
@@ -212,9 +212,7 @@ void BgmFadeOut(uint8_t speed) {
   }
 }
 
-int8_t BgmTempo(void) {
-  return (State().tempo_numerator - kBgmTempoDenominator);
-}
+int8_t BgmTempo() { return (State().tempo_numerator - kBgmTempoDenominator); }
 
 void BgmSetTempo(int8_t tempo) {
   tempo = std::clamp(tempo, kBgmTempoMin, kBgmTempoMax);

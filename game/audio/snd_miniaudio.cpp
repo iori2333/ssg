@@ -143,15 +143,15 @@ AudioBackendState &State() {
 
 } // namespace
 
-bool AudioBackendInitialize(void) {
+bool AudioBackendInitialize() {
   return (ma_engine_init(nullptr, &State().engine) == MA_SUCCESS);
 }
 
-void AudioBackendCleanup(void) { ma_engine_uninit(&State().engine); }
+void AudioBackendCleanup() { ma_engine_uninit(&State().engine); }
 
-bool AudioBackendInitializeBgm(void) { return true; }
+bool AudioBackendInitializeBgm() { return true; }
 
-void AudioBackendCleanupBgm(void) { State().bgm.Clear(); }
+void AudioBackendCleanupBgm() { State().bgm.Clear(); }
 
 bool AudioBackendLoadBgm(std::shared_ptr<bgm::Track> track) {
   ma_result result = MA_SUCCESS;
@@ -175,21 +175,21 @@ bool AudioBackendLoadBgm(std::shared_ptr<bgm::Track> track) {
   return true;
 }
 
-void AudioBackendPlayBgm(void) {
+void AudioBackendPlayBgm() {
   if (!State().bgm.track) {
     return;
   }
   ma_sound_start(&State().bgm.sound);
 }
 
-void AudioBackendStopBgm(void) {
+void AudioBackendStopBgm() {
   if (!State().bgm.track) {
     return;
   }
   ma_sound_stop(&State().bgm.sound);
 }
 
-std::chrono::milliseconds AudioBackendBgmPlayTime(void) {
+std::chrono::milliseconds AudioBackendBgmPlayTime() {
   if (!State().bgm.track) {
     return std::chrono::milliseconds::zero();
   }
@@ -197,7 +197,7 @@ std::chrono::milliseconds AudioBackendBgmPlayTime(void) {
   return std::chrono::milliseconds{ret};
 }
 
-void AudioBackendUpdateBgmVolume(void) {
+void AudioBackendUpdateBgmVolume() {
   if (!State().bgm.track) {
     return;
   }
@@ -205,7 +205,7 @@ void AudioBackendUpdateBgmVolume(void) {
                       (BgmGainFactor() * LinearVolumeFactor(AudioBgmVolume())));
 }
 
-void AudioBackendUpdateBgmTempo(void) {
+void AudioBackendUpdateBgmTempo() {
   if (!State().bgm.track) {
     return;
   }
@@ -213,20 +213,20 @@ void AudioBackendUpdateBgmTempo(void) {
   ma_sound_set_pitch(&State().bgm.sound, t);
 }
 
-bool AudioBackendInitializeSoundEffects(void) {
+bool AudioBackendInitializeSoundEffects() {
   const auto ret = ma_sound_group_init(&State().engine, MA_SOUND_FLAG_NO_PITCH,
                                        nullptr, &State().sound_effect_group);
   return (ret == MA_SUCCESS);
 }
 
-void AudioBackendCleanupSoundEffects(void) {
+void AudioBackendCleanupSoundEffects() {
   for (auto &se : State().sound_effects) {
     se.Clear();
   }
   ma_sound_group_uninit(&State().sound_effect_group);
 }
 
-void AudioBackendUpdateSoundEffectVolume(void) {
+void AudioBackendUpdateSoundEffectVolume() {
   ma_sound_group_set_volume(&State().sound_effect_group,
                             LinearVolumeFactor(AudioSoundEffectVolume()));
 }
@@ -345,6 +345,6 @@ void AudioBackendStopSoundEffect(uint8_t id) {
   }
 }
 
-void AudioBackendPauseAll(void) { ma_engine_stop(&State().engine); }
+void AudioBackendPauseAll() { ma_engine_stop(&State().engine); }
 
-void AudioBackendResumeAll(void) { ma_engine_start(&State().engine); }
+void AudioBackendResumeAll() { ma_engine_start(&State().engine); }

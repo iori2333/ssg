@@ -64,18 +64,18 @@ void MidiSetVolume(AudioVolume volume);
 void MidiSetTempo(uint8_t numerator, uint8_t denominator);
 
 // Starts outputting the loaded MIDI to the backend.
-void MidiPlay(void); // Starts playback
+void MidiPlay(); // Starts playback
 
 // Stops backend output and resets the tables.
-void MidiStop(void); // Stops playback
+void MidiStop(); // Stops playback
 
-void MidiPause(void);
-void MidiResume(void);
+void MidiPause();
+void MidiResume();
 
 // Returns the current (not maximum) MIDI master volume.
-AudioVolume MidiFadeVolume(void);
+AudioVolume MidiFadeVolume();
 
-void MidiUpdateVolume(void);
+void MidiUpdateVolume();
 void MidiFadeOut(AudioVolume volume_start, std::chrono::milliseconds duration);
 
 bool MidiLoad(std::vector<uint8_t> buffer); // Load a MIDI file from a buffer
@@ -83,7 +83,7 @@ bool MidiLoad(std::vector<uint8_t> buffer); // Load a MIDI file from a buffer
 // Sets a loop point for the currently loaded sequence.
 void MidiSetLoop(const MidiLoop &loop);
 
-bool MidiIsLoaded(void);
+bool MidiIsLoaded();
 
 struct MidiVisualization {
   std::array<std::array<uint8_t, 128>, 16> play{};
@@ -97,13 +97,13 @@ struct MidiVisualization {
   bool loaded = false;
 };
 
-[[nodiscard]] MidiPlayTime MidiPlayTimePosition(void);
-[[nodiscard]] MidiVisualization MidiVisualizationState(void);
+[[nodiscard]] MidiPlayTime MidiPlayTimePosition();
+[[nodiscard]] MidiVisualization MidiVisualizationState();
 
-std::string_view MidiTitle(void); // Returns the title of the current song
+std::string_view MidiTitle(); // Returns the title of the current song
 
 // Processes and outputs the next time [delta] of the currently loaded MIDI
 // sequence.
 void MidiProcess(MidiRealtime delta);
 
-void MidiResetTables(void); // Initializes various tables
+void MidiResetTables(); // Initializes various tables

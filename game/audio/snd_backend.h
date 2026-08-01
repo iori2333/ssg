@@ -10,40 +10,40 @@
 #include "snd.h"
 struct SDL_AudioSpec;
 
-bool AudioBackendInitialize(void);
-void AudioBackendCleanup(void);
+bool AudioBackendInitialize();
+void AudioBackendCleanup();
 
 // The platform-independent layer always calls this after
 // AudioBackendInitialize().
-bool AudioBackendInitializeBgm(void);
+bool AudioBackendInitializeBgm();
 
 // The platform-independent layer always calls this before
 // AudioBackendCleanup().
-void AudioBackendCleanupBgm(void);
+void AudioBackendCleanupBgm();
 
 namespace bgm {
 struct Track;
 }
 bool AudioBackendLoadBgm(std::shared_ptr<bgm::Track> track);
-void AudioBackendPlayBgm(void);
-void AudioBackendStopBgm(void);
+void AudioBackendPlayBgm();
+void AudioBackendStopBgm();
 
 // Returns the amount of milliseconds that the subsystem has been playing the
 // BGM track for.
-std::chrono::milliseconds AudioBackendBgmPlayTime(void);
+std::chrono::milliseconds AudioBackendBgmPlayTime();
 
-void AudioBackendUpdateBgmVolume(void);
-void AudioBackendUpdateBgmTempo(void);
+void AudioBackendUpdateBgmVolume();
+void AudioBackendUpdateBgmTempo();
 
 // The platform-independent layer always calls this after
 // AudioBackendInitialize().
-bool AudioBackendInitializeSoundEffects(void);
+bool AudioBackendInitializeSoundEffects();
 
 // The platform-independent layer always calls this before
 // AudioBackendCleanup().
-void AudioBackendCleanupSoundEffects(void);
+void AudioBackendCleanupSoundEffects();
 
-void AudioBackendUpdateSoundEffectVolume(void);
+void AudioBackendUpdateSoundEffectVolume();
 
 bool AudioBackendLoadSoundEffect(uint8_t id, SoundInstanceId max,
                                  const SDL_AudioSpec &spec,
