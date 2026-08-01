@@ -10,7 +10,6 @@
 #include <string_view>
 
 #include "audio/core/audio_types.h"
-#include "midi_sequencer.h"
 
 namespace audio::bgm {
 
@@ -20,7 +19,7 @@ enum class DeviceSource : std::uint8_t {
   Local,
 };
 
-class MidiSynth : public MidiSink {
+class MidiSynth {
 public:
   MidiSynth();
   ~MidiSynth();
@@ -41,8 +40,8 @@ public:
   AudioResult SelectDevice(std::size_t index);
   AudioResult ChangeDevice(int direction);
 
-  void Output(std::uint8_t status, std::uint8_t a, std::uint8_t b) override;
-  void OutputSysEx(std::span<const std::uint8_t> message) override;
+  void Output(std::uint8_t status, std::uint8_t a, std::uint8_t b);
+  void OutputSysEx(std::span<const std::uint8_t> message);
   void Panic();
   void Pause();
   void Resume();

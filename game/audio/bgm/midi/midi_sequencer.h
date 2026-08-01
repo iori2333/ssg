@@ -39,13 +39,7 @@ struct Visualization {
   bool loaded = false;
 };
 
-class MidiSink {
-public:
-  virtual ~MidiSink() = default;
-
-  virtual void Output(std::uint8_t status, std::uint8_t a, std::uint8_t b) = 0;
-  virtual void OutputSysEx(std::span<const std::uint8_t> message) = 0;
-};
+class MidiSynth;
 
 class MidiSequencer {
 public:
@@ -64,7 +58,7 @@ public:
   void SetFixSysExBugs(bool enabled);
 
   void Rewind();
-  void Tick(std::chrono::nanoseconds delta, MidiSink &sink,
+  void Tick(std::chrono::nanoseconds delta, MidiSynth &sink,
             bool output_enabled);
 
   [[nodiscard]] Visualization Snapshot() const;

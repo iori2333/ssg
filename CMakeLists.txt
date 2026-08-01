@@ -51,9 +51,6 @@ if(WIN32)
     set(osal cpp11 CACHE STRING "fluidsynth OS abstraction (cpp11 avoids GLib2)" FORCE)
 endif()
 add_subdirectory(libs/fluidsynth EXCLUDE_FROM_ALL)
-add_library(dr_libs INTERFACE)
-target_include_directories(dr_libs INTERFACE libs/dr_libs)
-
 # ============================================================
 # Main executable sources
 # ============================================================
@@ -128,7 +125,7 @@ endif()
 target_link_libraries(game_runtime
     PUBLIC SDL3::SDL3-static
     PRIVATE
-    vorbis vorbisfile miniaudio dr_libs
+    vorbis vorbisfile miniaudio
     webp libfluidsynth
 )
 

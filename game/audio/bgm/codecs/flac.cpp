@@ -1,118 +1,112 @@
 ///
-/// FLAC streaming support (adapted from thcrap's bgmmod module)
+/// FLAC streaming support using miniaudio's decoder backend.
 ///
-
-#define DR_FLAC_IMPLEMENTATION
-#define DR_FLAC_NO_STDIO
 
 #include <cstdint>
 #include <istream>
 #include <limits>
 #include <memory>
 
-// GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
-// max_align_t'` if this appears after a module import.
-#include <dr_flac.h>
+#include <miniaudio.h>
 
 #include "audio/bgm/pcm_source.h"
 
 namespace audio::bgm {
 
-// Callbacks
-// ---------
-
-struct FlacCallbackData {
-  std::istream &stream;
-
-  explicit FlacCallbackData(std::istream &stream) : stream(stream) {}
-};
-
-size_t FlacRead(void *user_data, void *buf, size_t size) {
+ma_result FlacRead(ma_decoder *decoder, void *buf, size_t size,
+                   size_t *bytes_read) {
   if (static_cast<uintmax_t>(size) >
       static_cast<uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
-    return 0;
+    return MA_INVALID_ARGS;
   }
-  auto &stream = static_cast<FlacCallbackData *>(user_data)->stream;
+  auto &stream = *static_cast<std::istream *>(decoder->pUserData);
   stream.read(static_cast<char *>(buf), static_cast<std::streamsize>(size));
-  return static_cast<size_t>(stream.gcount());
+  *bytes_read = static_cast<size_t>(stream.gcount());
+  return MA_SUCCESS;
 }
 
-drflac_bool32 FlacSeek(void *user_data, int offset, drflac_seek_origin origin) {
-  auto &stream = static_cast<FlacCallbackData *>(user_data)->stream;
+ma_result FlacSeek(ma_decoder *decoder, ma_int64 offset,
+                   ma_seek_origin origin) {
+  auto &stream = *static_cast<std::istream *>(decoder->pUserData);
   std::ios_base::seekdir whence;
   switch (origin) {
-  case DRFLAC_SEEK_SET:
+  case ma_seek_origin_start:
     whence = std::ios::beg;
     break;
-  case DRFLAC_SEEK_CUR:
+  case ma_seek_origin_current:
     whence = std::ios::cur;
     break;
-  case DRFLAC_SEEK_END:
+  case ma_seek_origin_end:
     whence = std::ios::end;
     break;
   }
   stream.clear();
   stream.seekg(offset, whence);
-  return stream ? DRFLAC_TRUE : DRFLAC_FALSE;
+  return stream ? MA_SUCCESS : MA_BAD_SEEK;
 }
-
-drflac_bool32 FlacTell(void *user_data, drflac_int64 *cursor) {
-  auto &stream = static_cast<FlacCallbackData *>(user_data)->stream;
-  const std::streamoff offset = stream.tellg();
-  if (!cursor || offset < 0) {
-    return DRFLAC_FALSE;
-  }
-  *cursor = offset;
-  return DRFLAC_TRUE;
-}
-// ---------
-
-using FlacReadFunction = drflac_uint64(drflac *, drflac_uint64, void *);
 
 struct FlacPcmPart : public PcmPart {
-  std::unique_ptr<FlacCallbackData> callback_data;
-  drflac *ff;
-  FlacReadFunction &read_func;
+  std::unique_ptr<ma_decoder> decoder;
 
   size_t PartDecodeSingle(std::span<std::byte> buf) override;
   void PartSeekToSample(size_t sample) override;
 
-  FlacPcmPart(std::unique_ptr<FlacCallbackData> callback_data, drflac *ff,
-              const PcmFormat &pcmf, FlacReadFunction &read_func)
-      : PcmPart(pcmf), callback_data(std::move(callback_data)), ff(ff),
-        read_func(read_func) {}
+  FlacPcmPart(std::unique_ptr<ma_decoder> decoder, const PcmFormat &pcmf)
+      : PcmPart(pcmf), decoder(std::move(decoder)) {}
   ~FlacPcmPart() override;
 };
 
 size_t FlacPcmPart::PartDecodeSingle(std::span<std::byte> buf) {
   const auto sample_size = pcmf.SampleSize();
-  const auto samples = (buf.size_bytes() / sample_size);
-  return (read_func(ff, samples, buf.data()) * sample_size);
+  const auto frames = (buf.size_bytes() / sample_size);
+  ma_uint64 frames_read = 0;
+  const auto result = ma_decoder_read_pcm_frames(decoder.get(), buf.data(),
+                                                 frames, &frames_read);
+  if ((result != MA_SUCCESS) && (result != MA_AT_END)) {
+    return static_cast<size_t>(-1);
+  }
+  return static_cast<size_t>(frames_read * sample_size);
 }
 
 void FlacPcmPart::PartSeekToSample(size_t sample) {
-  drflac_seek_to_pcm_frame(ff, sample);
+  ma_decoder_seek_to_pcm_frame(decoder.get(), sample);
 }
 
-FlacPcmPart::~FlacPcmPart() { drflac_close(ff); }
+FlacPcmPart::~FlacPcmPart() { ma_decoder_uninit(decoder.get()); }
 
 std::unique_ptr<PcmPart> OpenFlac(std::istream &stream) {
-  auto callback_data = std::make_unique<FlacCallbackData>(stream);
-  auto *ff =
-      drflac_open(FlacRead, FlacSeek, FlacTell, callback_data.get(), nullptr);
-  if (!ff) {
+  auto decoder = std::make_unique<ma_decoder>();
+  const auto config = ma_decoder_config_init_default();
+  if (ma_decoder_init(FlacRead, FlacSeek, &stream, &config, decoder.get()) !=
+      MA_SUCCESS) {
     return nullptr;
   }
-  const auto output_format =
-      ((ff->bitsPerSample <= 16) ? PcmSampleFormat::Int16
-                                 : PcmSampleFormat::Int32);
-  const auto read_func =
-      ((ff->bitsPerSample <= 16)
-           ? reinterpret_cast<FlacReadFunction &>(drflac_read_pcm_frames_s16)
-           : reinterpret_cast<FlacReadFunction &>(drflac_read_pcm_frames_s32));
-  PcmFormat pcmf = {ff->sampleRate, ff->channels, output_format};
-  return std::make_unique<FlacPcmPart>(std::move(callback_data), ff, pcmf,
-                                       *read_func);
+
+  ma_format format = ma_format_unknown;
+  ma_uint32 channels = 0;
+  ma_uint32 sample_rate = 0;
+  if (ma_decoder_get_data_format(decoder.get(), &format, &channels,
+                                 &sample_rate, nullptr, 0) != MA_SUCCESS) {
+    ma_decoder_uninit(decoder.get());
+    return nullptr;
+  }
+
+  PcmSampleFormat sample_format;
+  switch (format) {
+  case ma_format_s16:
+    sample_format = PcmSampleFormat::Int16;
+    break;
+  case ma_format_s32:
+    sample_format = PcmSampleFormat::Int32;
+    break;
+  default:
+    ma_decoder_uninit(decoder.get());
+    return nullptr;
+  }
+
+  PcmFormat pcmf = {sample_rate, static_cast<uint16_t>(channels),
+                    sample_format};
+  return std::make_unique<FlacPcmPart>(std::move(decoder), pcmf);
 }
 
 } // namespace audio::bgm

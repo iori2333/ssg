@@ -33,7 +33,6 @@ All vendored dependencies live under `libs/` as Git submodules:
 
 - `libs/SDL3`
 - `libs/miniaudio`
-- `libs/dr_libs`
 - `libs/libogg`
 - `libs/libvorbis`
 - `libs/libwebp`

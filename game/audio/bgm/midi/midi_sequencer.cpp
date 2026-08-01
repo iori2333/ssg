@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "midi_synth.h"
 #include "util/byte_io.h"
 
 namespace audio::bgm {
@@ -195,7 +196,7 @@ struct MidiTrack {
   }
 };
 
-void SendEvent(const MidiEvent &event, MidiSink &sink, bool fix_sysex) {
+void SendEvent(const MidiEvent &event, MidiSynth &sink, bool fix_sysex) {
   switch (event.kind) {
   case EventKind::SysEx: {
     std::vector<std::uint8_t> message(event.extra_data.size() + 1);
@@ -388,7 +389,7 @@ void MidiSequencer::Rewind() {
   impl_->Rewind();
 }
 
-void MidiSequencer::Tick(std::chrono::nanoseconds delta, MidiSink &sink,
+void MidiSequencer::Tick(std::chrono::nanoseconds delta, MidiSynth &sink,
                          bool output_enabled) {
   std::scoped_lock lock(impl_->mutex);
   if (impl_->sequence.tracks.empty()) {
