@@ -40,10 +40,19 @@ elseif(UNIX)
 endif()
 
 add_subdirectory(libs/SDL3 EXCLUDE_FROM_ALL)
-add_subdirectory(libs/libogg EXCLUDE_FROM_ALL)
-add_subdirectory(libs/libvorbis EXCLUDE_FROM_ALL)
 add_subdirectory(libs/libwebp EXCLUDE_FROM_ALL)
+set(MINIAUDIO_NO_LIBVORBIS ON CACHE BOOL "Disable miniaudio's libvorbis backend" FORCE)
 add_subdirectory(libs/miniaudio EXCLUDE_FROM_ALL)
+target_compile_definitions(miniaudio PRIVATE STB_VORBIS_NO_INTEGER_CONVERSION)
+if(MSVC)
+    target_compile_options(miniaudio PRIVATE
+        "/FI${CMAKE_CURRENT_SOURCE_DIR}/libs/miniaudio/extras/stb_vorbis.c"
+    )
+else()
+    target_compile_options(miniaudio PRIVATE
+        "-include;${CMAKE_CURRENT_SOURCE_DIR}/libs/miniaudio/extras/stb_vorbis.c"
+    )
+endif()
 add_subdirectory(libs/tomlplusplus EXCLUDE_FROM_ALL)
 # fluidsynth defaults to osal=glib which requires GLib2 (not available on Windows).
 # Use cpp11 OS abstraction instead, which depends only on C++17 std::filesystem.
@@ -125,7 +134,7 @@ endif()
 target_link_libraries(game_runtime
     PUBLIC SDL3::SDL3-static
     PRIVATE
-    vorbis vorbisfile miniaudio
+    miniaudio
     webp libfluidsynth
 )
 

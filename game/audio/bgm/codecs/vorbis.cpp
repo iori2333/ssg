@@ -1,125 +1,105 @@
 ///
-/// Vorbis streaming support (adapted from thcrap's bgmmod module)
+/// Vorbis streaming support using miniaudio's built-in decoder backend.
 ///
 
-#include <cassert>
+#include <cstdint>
 #include <istream>
 #include <limits>
+#include <memory>
 
-// GCC 15 throws an internal compiler error if this appears after a module
-// import.
-#define OV_EXCLUDE_STATIC_CALLBACKS
-#include <vorbis/vorbisfile.h>
+#define STB_VORBIS_INCLUDE_STB_VORBIS_H
+#include <miniaudio.h>
 
 #include "audio/bgm/pcm_source.h"
 
 namespace audio::bgm {
 
-// Callbacks
-// ---------
-
-static size_t VorbisRead(void *ptr, size_t size, size_t nmemb,
-                         void *datasource) {
-  if (size == 0 || nmemb == 0) {
-    return 0;
-  }
-  if (nmemb > std::numeric_limits<size_t>::max() / size) {
-    return 0;
-  }
-  const auto byte_count = size * nmemb;
-  if (static_cast<uintmax_t>(byte_count) >
+ma_result VorbisRead(ma_decoder *decoder, void *buf, size_t size,
+                     size_t *bytes_read) {
+  if (static_cast<uintmax_t>(size) >
       static_cast<uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
-    return 0;
+    return MA_INVALID_ARGS;
   }
-  auto &stream = *static_cast<std::istream *>(datasource);
-  stream.read(static_cast<char *>(ptr),
-              static_cast<std::streamsize>(byte_count));
-  return static_cast<size_t>(stream.gcount()) / size;
+  auto &stream = *static_cast<std::istream *>(decoder->pUserData);
+  stream.read(static_cast<char *>(buf), static_cast<std::streamsize>(size));
+  *bytes_read = static_cast<size_t>(stream.gcount());
+  return MA_SUCCESS;
 }
 
-int VorbisSeek(void *datasource, ogg_int64_t offset, int ov_whence) {
-  auto &stream = *static_cast<std::istream *>(datasource);
-
-#pragma warning(suppress : 26494) // type.5
+ma_result VorbisSeek(ma_decoder *decoder, ma_int64 offset,
+                     ma_seek_origin origin) {
+  auto &stream = *static_cast<std::istream *>(decoder->pUserData);
   std::ios_base::seekdir whence;
-  switch (ov_whence) {
-  case 0:
+  switch (origin) {
+  case ma_seek_origin_start:
     whence = std::ios::beg;
     break;
-  case 1:
+  case ma_seek_origin_current:
     whence = std::ios::cur;
     break;
-  case 2:
+  case ma_seek_origin_end:
     whence = std::ios::end;
     break;
-  default:
-    assert(!"Invalid seek origin?");
-    return -1;
-  }
-  if (offset < std::numeric_limits<std::streamoff>::min() ||
-      offset > std::numeric_limits<std::streamoff>::max()) {
-    return -1;
   }
   stream.clear();
-  stream.seekg(static_cast<std::streamoff>(offset), whence);
-  return stream ? 0 : -1;
+  stream.seekg(offset, whence);
+  return stream ? MA_SUCCESS : MA_BAD_SEEK;
 }
-
-long VorbisTell(void *datasource) {
-  auto &stream = *static_cast<std::istream *>(datasource);
-  const std::streamoff offset = stream.tellg();
-  if (offset < 0 || offset > std::numeric_limits<long>::max()) {
-    return -1;
-  }
-  return static_cast<long>(offset);
-}
-
-static const ov_callbacks kVorbisCallbacks = {
-    VorbisRead,
-    VorbisSeek,
-    nullptr,
-    VorbisTell,
-};
-// ---------
 
 struct VorbisPcmPart : public PcmPart {
-  OggVorbis_File vf;
+  std::unique_ptr<ma_decoder> decoder;
 
   size_t PartDecodeSingle(std::span<std::byte> buf) override;
   void PartSeekToSample(size_t sample) override;
 
-  VorbisPcmPart(OggVorbis_File &&vf, const PcmFormat &pcmf)
-      : vf(vf), PcmPart(pcmf) {}
-  virtual ~VorbisPcmPart();
+  VorbisPcmPart(std::unique_ptr<ma_decoder> decoder, const PcmFormat &pcmf)
+      : PcmPart(pcmf), decoder(std::move(decoder)) {}
+  ~VorbisPcmPart() override;
 };
 
 size_t VorbisPcmPart::PartDecodeSingle(std::span<std::byte> buf) {
-  assert(pcmf.format == PcmSampleFormat::Int16);
-  auto *buf_as_char = reinterpret_cast<char *>(buf.data());
-  return ov_read(&vf, buf_as_char, buf.size_bytes(), 0, 2, 1, nullptr);
+  const auto sample_size = pcmf.SampleSize();
+  const auto frames = (buf.size_bytes() / sample_size);
+  ma_uint64 frames_read = 0;
+  const auto result =
+      ma_decoder_read_pcm_frames(decoder.get(), buf.data(), frames,
+                                 &frames_read);
+  if ((result != MA_SUCCESS) && (result != MA_AT_END)) {
+    return static_cast<size_t>(-1);
+  }
+  return static_cast<size_t>(frames_read * sample_size);
 }
 
 void VorbisPcmPart::PartSeekToSample(size_t sample) {
-  const auto ret = ov_pcm_seek(&vf, sample);
-  assert(ret == 0);
+  ma_decoder_seek_to_pcm_frame(decoder.get(), sample);
 }
 
-VorbisPcmPart::~VorbisPcmPart() { ov_clear(&vf); }
+VorbisPcmPart::~VorbisPcmPart() { ma_decoder_uninit(decoder.get()); }
 
 std::unique_ptr<PcmPart> OpenVorbis(std::istream &stream) {
-  OggVorbis_File vf = {0};
-  const auto ret =
-      ov_open_callbacks(&stream, &vf, nullptr, 0, kVorbisCallbacks);
-  if (ret || !vf.vi) {
+  auto decoder = std::make_unique<ma_decoder>();
+  const auto config = ma_decoder_config_init(ma_format_s16, 0, 0);
+  if (ma_decoder_init(VorbisRead, VorbisSeek, &stream, &config,
+                      decoder.get()) != MA_SUCCESS) {
     return nullptr;
   }
-  assert(vf.vi->rate >= 0);
-  assert(vf.vi->channels >= 0);
 
-  const auto samplingrate = static_cast<uint32_t>(vf.vi->rate);
-  const auto channels = static_cast<uint16_t>(vf.vi->channels);
-  PcmFormat pcmf = {samplingrate, channels, PcmSampleFormat::Int16};
-  return std::make_unique<VorbisPcmPart>(std::move(vf), pcmf);
+  ma_format format = ma_format_unknown;
+  ma_uint32 channels = 0;
+  ma_uint32 sample_rate = 0;
+  if (ma_decoder_get_data_format(decoder.get(), &format, &channels,
+                                 &sample_rate, nullptr, 0) != MA_SUCCESS) {
+    ma_decoder_uninit(decoder.get());
+    return nullptr;
+  }
+  if (format != ma_format_s16) {
+    ma_decoder_uninit(decoder.get());
+    return nullptr;
+  }
+
+  PcmFormat pcmf = {sample_rate, static_cast<uint16_t>(channels),
+                    PcmSampleFormat::Int16};
+  return std::make_unique<VorbisPcmPart>(std::move(decoder), pcmf);
 }
 
 } // namespace audio::bgm

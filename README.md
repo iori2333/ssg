@@ -54,7 +54,7 @@ cmake --build build --config Debug
 | `platform/c/` | Standard-library fallback implementations |
 | `platform/miniaudio/` | Audio backend |
 | `platform/pangocairo/` | Linux text rendering |
-| `libs/` | Vendored Git submodules (SDL3, miniaudio, libogg, libvorbis, libwebp) |
+| `libs/` | Vendored Git submodules (SDL3, miniaudio, libwebp) |
 
 Entry point: `platform/sdl/main.cpp`.
 
