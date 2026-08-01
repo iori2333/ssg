@@ -56,8 +56,8 @@ struct EclScriptState {
   size_t position = 0;
   size_t return_position = 0;
   uint32_t interrupt_timer = 0;
-  std::array<uint32_t, ECL_REGISTER_COUNT> registers{};
-  std::array<EclInterruptState, ECL_INTERRUPT_COUNT> interrupts{};
+  std::array<uint32_t, kEclRegisterCount> registers{};
+  std::array<EclInterruptState, kEclInterruptCount> interrupts{};
   uint16_t loop_counter = 0;
   uint16_t wait_counter = 0;
 };
@@ -65,10 +65,10 @@ struct EclScriptState {
 struct EnemyAnimation {
   EnemyAnimationMode mode = EnemyAnimationMode::Loop;
   uint8_t n = 0;
-  PIXEL_SIZE size{};
-  PIXEL_LTRB ptn[kEnemyAnimationFrameCapacity]{};
+  PixelSize size{};
+  PixelLtrb ptn[kEnemyAnimationFrameCapacity]{};
 
-  void SetSheet(PIXEL_POINT topleft, uint8_t frame_count, PIXEL_SIZE frame_size,
+  void SetSheet(PixelPoint topleft, uint8_t frame_count, PixelSize frame_size,
                 EnemyAnimationMode animation_mode) {
     size = frame_size;
     n = static_cast<uint8_t>(
@@ -76,19 +76,19 @@ struct EnemyAnimation {
     mode = animation_mode;
 
     for (uint8_t frame = 0; frame < n; ++frame) {
-      ptn[frame] = PIXEL_LTWH{topleft.x, topleft.y, frame_size.w, frame_size.h};
+      ptn[frame] = PixelLtwh{topleft.x, topleft.y, frame_size.w, frame_size.h};
       topleft.x += frame_size.w;
     }
   }
 
-  void SetSquareSheet(PIXEL_POINT topleft, uint8_t frame_count,
-                      PIXEL_COORD frame_size,
+  void SetSquareSheet(PixelPoint topleft, uint8_t frame_count,
+                      PixelCoord frame_size,
                       EnemyAnimationMode animation_mode) {
     SetSheet(topleft, frame_count, {.w = frame_size, .h = frame_size},
              animation_mode);
   }
 
-  void SetDirectionalSheet(PIXEL_POINT topleft, PIXEL_COORD frame_size) {
+  void SetDirectionalSheet(PixelPoint topleft, PixelCoord frame_size) {
     SetSquareSheet(topleft, static_cast<uint8_t>(kEnemyAnimationFrameCapacity),
                    frame_size, EnemyAnimationMode::Directional);
   }
@@ -113,8 +113,8 @@ struct EnemyActor {
 
   EnemyActorState state = EnemyActorState::Active;
 
-  WORLD_COORD x{}, y{}; // Display coordinates
-  int vx{}, vy{};       // Velocity (x,y) components (x64)
+  WorldCoord x{}, y{}; // Display coordinates
+  int vx{}, vy{};      // Velocity (x,y) components (x64)
 
   int v{}; // Velocity component (x64)
 

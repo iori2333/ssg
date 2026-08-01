@@ -8,36 +8,36 @@
 
 namespace geometry {
 
-constexpr uint8_t CIRCLE_STEP = (0x100 / (CIRCLE_POINTS - 1));
+constexpr uint8_t kCircleStep = (0x100 / (kCirclePointCount - 1));
 
-void ApproximateCircle(std::span<VERTEX_XY, CIRCLE_POINTS> ret,
-                       WINDOW_POINT center, PIXEL_COORD radius) {
+void ApproximateCircle(std::span<VertexXy, kCirclePointCount> ret,
+                       WindowPoint center, PixelCoord radius) {
   auto i = 0;
   for (auto &v : ret) {
-    const uint8_t angle = (i++ * CIRCLE_STEP);
+    const uint8_t angle = (i++ * kCircleStep);
     const auto offset =
         math::RoundedPolarVector(math::AngleFromLegacy(angle), radius);
-    v.x = static_cast<VERTEX_COORD>(center.x + offset.x);
-    v.y = static_cast<VERTEX_COORD>(center.y + offset.y);
+    v.x = static_cast<VertexCoord>(center.x + offset.x);
+    v.y = static_cast<VertexCoord>(center.y + offset.y);
   }
 }
 
-void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
-                          WINDOW_POINT center, PIXEL_COORD r, PIXEL_COORD w) {
+void ApproximateFatCircle(std::span<VertexXy, (kCirclePointCount * 2)> ret,
+                          WindowPoint center, PixelCoord r, PixelCoord w) {
   auto v = ret.begin();
-  for (const auto i : std::views::iota(0U, CIRCLE_POINTS)) {
-    const uint8_t angle = (i * CIRCLE_STEP);
+  for (const auto i : std::views::iota(0U, kCirclePointCount)) {
+    const uint8_t angle = (i * kCircleStep);
     const auto [lx, ly] =
         math::RoundedPolarVector(math::AngleFromLegacy(angle), r);
     const auto [wx, wy] =
         math::RoundedPolarVector(math::AngleFromLegacy(angle), w);
     v[0] = {
-        static_cast<VERTEX_COORD>(center.x + lx - wx),
-        static_cast<VERTEX_COORD>(center.y + ly - wy),
+        static_cast<VertexCoord>(center.x + lx - wx),
+        static_cast<VertexCoord>(center.y + ly - wy),
     };
     v[1] = {
-        static_cast<VERTEX_COORD>(center.x + lx + wx),
-        static_cast<VERTEX_COORD>(center.y + ly + wy),
+        static_cast<VertexCoord>(center.x + lx + wx),
+        static_cast<VertexCoord>(center.y + ly + wy),
     };
     v += 2;
   }
@@ -45,10 +45,10 @@ void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
 
 } // namespace geometry
 
-void GeomCircle(WINDOW_POINT center, PIXEL_COORD radius) {
+void GeomCircle(WindowPoint center, PixelCoord radius) {
   geometry::DrawCircle(Geometry(), center, radius);
 }
 
-void GeomCircleF(WINDOW_POINT center, PIXEL_COORD radius) {
+void GeomCircleF(WindowPoint center, PixelCoord radius) {
   geometry::DrawFilledCircle(Geometry(), center, radius, false);
 }

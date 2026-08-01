@@ -224,7 +224,7 @@ std::vector<uint8_t> GameData::Extract(DataSectionId section,
     return {};
   }
   if (!directory_.empty()) {
-    return File_Load(
+    return LoadFile(
         directory_ / kDataSectionNames[std::to_underlying(section)] /
         std::format("{:03}{}", index,
                     kDataSectionExtensions[std::to_underlying(section)]));

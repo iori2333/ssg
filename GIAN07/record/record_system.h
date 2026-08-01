@@ -73,8 +73,8 @@ public:
   void BeginStage(const Player &player, const GameSession &session);
   [[nodiscard]] bool HasRecordedStages() const;
   void FlushStage();
-  void Record(INPUT_BITS input);
-  void UpdateLastRecordedInput(INPUT_BITS input);
+  void Record(InputBits input);
+  void UpdateLastRecordedInput(InputBits input);
   void CancelRecording();
   [[nodiscard]] RecordSaveResult SaveReplay(std::string_view name,
                                             bool extra_stage);
@@ -91,7 +91,7 @@ public:
   [[nodiscard]] bool LoadStageDemo(StageId stage, Player &player,
                                    GameSession &session);
   [[nodiscard]] bool HasStageDemo(StageId stage) const;
-  [[nodiscard]] INPUT_BITS NextInput();
+  [[nodiscard]] InputBits NextInput();
   void StopPlayback();
   [[nodiscard]] bool IsPlaying() const;
   [[nodiscard]] bool IsRecording() const;
@@ -116,7 +116,7 @@ private:
 
   struct ReplayStage {
     StageCheckpoint checkpoint;
-    std::vector<INPUT_BITS> inputs;
+    std::vector<InputBits> inputs;
   };
 
   struct IdleState {};
@@ -127,7 +127,7 @@ private:
     bool has_current_checkpoint = false;
     bool demo_capture = false;
     std::optional<std::size_t> demo_start_frame;
-    std::vector<INPUT_BITS> current_inputs;
+    std::vector<InputBits> current_inputs;
     std::vector<ReplayStage> stages;
   };
 

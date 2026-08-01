@@ -10,8 +10,8 @@
 namespace util {
 
 template <typename T, typename Id>
-class EnumArray : public std::array<T, std::to_underlying(Id::COUNT)> {
-  using Base = std::array<T, std::to_underlying(Id::COUNT)>;
+class EnumArray : public std::array<T, std::to_underlying(Id::Count)> {
+  using Base = std::array<T, std::to_underlying(Id::Count)>;
 
 public:
   // We could do something like
@@ -38,7 +38,7 @@ namespace cast {
 
 template <typename Id>
 constexpr Id down_enum(std::underlying_type_t<Id> value) {
-  assert(value < std::to_underlying(Id::COUNT));
+  assert(value < std::to_underlying(Id::Count));
   return static_cast<Id>(value);
 }
 

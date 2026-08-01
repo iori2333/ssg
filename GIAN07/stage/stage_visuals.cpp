@@ -106,8 +106,8 @@ void StageVisuals::UpdateCubes() {
 
 void StageVisuals::DrawCubes() const {
   for (const auto &star : cube_stars_) {
-    GrpSurface_Blit({star.x, star.y}, SURFACE_ID::SYSTEM,
-                    PIXEL_LTWH{136, 272, 16, 24});
+    GraphicsSurfaceBlit({star.x, star.y}, SurfaceId::System,
+                        PixelLtwh{136, 272, 16, 24});
   }
   for (const auto &cube : cubes_) {
     DrawCube(cube);
@@ -203,11 +203,11 @@ void StageVisuals::DrawFakeEcl() const {
   }
 
   for (const auto &line : fake_ecl_) {
-    GrpSurface_Blit({line.x >> 6, line.y >> 6}, SURFACE_ID::MAPCHIP,
-                    PIXEL_LTWH{line.source_x, line.source_y, 72, 16});
+    GraphicsSurfaceBlit({line.x >> 6, line.y >> 6}, SurfaceId::MapChip,
+                        PixelLtwh{line.source_x, line.source_y, 72, 16});
   }
-  GrpSurface_Blit({128, 400}, SURFACE_ID::MAPCHIP,
-                  PIXEL_LTRB{0, 272, 416, 352});
+  GraphicsSurfaceBlit({128, 400}, SurfaceId::MapChip,
+                      PixelLtrb{0, 272, 416, 352});
 }
 
 void StageVisuals::StartRocks() {
@@ -292,17 +292,17 @@ void StageVisuals::UpdateRocks() {
 }
 
 void StageVisuals::DrawRocks() const {
-  static constexpr std::array sources = {PIXEL_LTRB{0, 224, 80, 288},
-                                         PIXEL_LTRB{0, 288, 48, 336},
-                                         PIXEL_LTRB{48, 288, 80, 320}};
+  static constexpr std::array sources = {PixelLtrb{0, 224, 80, 288},
+                                         PixelLtrb{0, 288, 48, 336},
+                                         PixelLtrb{48, 288, 80, 320}};
   static constexpr std::array half_widths = {40, 24, 16};
   static constexpr std::array half_heights = {32, 24, 16};
   for (const auto &rock : rocks_) {
     const int x = (rock.x + playfield::kWorldCenterX) >> 6;
     const int y = (rock.y + playfield::kWorldCenterY) >> 6;
-    GrpSurface_Blit(
+    GraphicsSurfaceBlit(
         {x - half_widths[rock.sprite], y - half_heights[rock.sprite]},
-        SURFACE_ID::MAPCHIP, sources[rock.sprite]);
+        SurfaceId::MapChip, sources[rock.sprite]);
   }
 }
 
@@ -378,12 +378,12 @@ void StageVisuals::UpdateRasters() {
 }
 
 void StageVisuals::DrawRasters() const {
-  static constexpr std::array sources = {PIXEL_LTRB{608, 272, 640, 352},
-                                         PIXEL_LTRB{592, 160, 640, 272},
-                                         PIXEL_LTRB{576, 0, 640, 160}};
+  static constexpr std::array sources = {PixelLtrb{608, 272, 640, 352},
+                                         PixelLtrb{592, 160, 640, 272},
+                                         PixelLtrb{576, 0, 640, 160}};
   for (const auto &star : raster_stars_) {
-    GrpSurface_Blit({star.x, star.y}, SURFACE_ID::MAPCHIP,
-                    PIXEL_LTRB{624, 352, 640, 368});
+    GraphicsSurfaceBlit({star.x, star.y}, SurfaceId::MapChip,
+                        PixelLtrb{624, 352, 640, 368});
   }
   for (const auto &raster : rasters_) {
     const auto target = sources[raster.type];
@@ -395,9 +395,9 @@ void StageVisuals::DrawRasters() const {
                                        math::kLegacyAngleStep,
                                    raster.amplitude)
               .y;
-      GrpSurface_Blit(
-          {raster.x + offset - half_width, raster.y + row}, SURFACE_ID::MAPCHIP,
-          PIXEL_LTRB{target.left, target.top + row, target.right, row + 2});
+      GraphicsSurfaceBlit(
+          {raster.x + offset - half_width, raster.y + row}, SurfaceId::MapChip,
+          PixelLtrb{target.left, target.top + row, target.right, row + 2});
     }
   }
 }
@@ -423,8 +423,8 @@ void StageVisuals::UpdateStars() {
 
 void StageVisuals::DrawStars() const {
   for (const auto &star : fast_stars_) {
-    GrpSurface_Blit({star.x, star.y}, SURFACE_ID::MAPCHIP,
-                    PIXEL_LTRB{624, 0, 640, 16});
+    GraphicsSurfaceBlit({star.x, star.y}, SurfaceId::MapChip,
+                        PixelLtrb{624, 0, 640, 16});
   }
 }
 

@@ -14,8 +14,8 @@ inline constexpr std::size_t kNameEntryLength = 8;
 
 class NameEntry {
 public:
-  void Begin(bool allow_cancel, INPUT_BITS initial_input);
-  [[nodiscard]] NameEntryResult Update(INPUT_BITS input);
+  void Begin(bool allow_cancel, InputBits initial_input);
+  [[nodiscard]] NameEntryResult Update(InputBits input);
   void Draw(int name_x, int name_y) const;
 
   [[nodiscard]] std::string_view Name() const { return name_.data(); }

@@ -7,54 +7,54 @@
 #include "gfx/graphics_backend.h"
 #include "gfx/text_packed.h"
 
-class TEXTRENDER_SESSION {
+class TextRenderSession {
 protected:
-  PIXEL_POINT tex_origin;
-  PIXEL_SIZE size;
-  FONT_ID font_cur = FONT_ID::COUNT;
-  RGB color_cur = {0, 0, 0};
+  PixelPoint tex_origin;
+  PixelSize size;
+  FontId font_cur = FontId::Count;
+  Rgb color_cur = {0, 0, 0};
 
 public:
-  class PIXELACCESS {
-    friend class TEXTRENDER_SESSION;
+  class PixelSession {
+    friend class TextRenderSession;
 
     uint8_t *buf;
     int stride;
 
-    PIXELACCESS();
-    uint32_t &PixelAt(const PIXEL_POINT &xy_rel);
+    PixelSession();
+    uint32_t &PixelAt(const PixelPoint &xy_rel);
 
   public:
-    uint32_t GetRaw(const PIXEL_POINT &xy_rel);
-    void SetRaw(const PIXEL_POINT &xy_rel, uint32_t col);
+    uint32_t GetRaw(const PixelPoint &xy_rel);
+    void SetRaw(const PixelPoint &xy_rel, uint32_t col);
 
-    RGB Get(const PIXEL_POINT &xy_rel);
-    void Set(const PIXEL_POINT &xy_rel, const RGB col);
+    Rgb Get(const PixelPoint &xy_rel);
+    void Set(const PixelPoint &xy_rel, const Rgb col);
 
-    ~PIXELACCESS();
+    ~PixelSession();
   };
 
-  PIXEL_SIZE RectSize() const;
-  void SetFont(FONT_ID font);
-  void SetColor(const RGB &color);
-  PIXEL_SIZE Extent(std::string_view str);
-  void Put(const PIXEL_POINT &topleft_rel, std::string_view str,
-           std::optional<RGB> color = std::nullopt);
-  auto PixelAccess(std::invocable<PIXELACCESS &> auto f) {
-    PIXELACCESS p;
+  PixelSize RectSize() const;
+  void SetFont(FontId font);
+  void SetColor(const Rgb &color);
+  PixelSize Extent(std::string_view str);
+  void Put(const PixelPoint &topleft_rel, std::string_view str,
+           std::optional<Rgb> color = std::nullopt);
+  auto EditPixels(std::invocable<PixelSession &> auto f) {
+    PixelSession p;
     return f(p);
   }
 
-  TEXTRENDER_SESSION(const PIXEL_LTWH rect);
-  ~TEXTRENDER_SESSION();
+  TextRenderSession(const PixelLtwh rect);
+  ~TextRenderSession();
 };
 
-class TEXTRENDER : public TEXTRENDER_PACKED {
-  friend class TEXTRENDER_PACKED;
+class TextRender : public TextRenderPacked {
+  friend class TextRenderPacked;
 
-  std::optional<TEXTRENDER_SESSION> Session(TEXTRENDER_RECT_ID rect_id);
+  std::optional<TextRenderSession> Session(TextRenderRectId rect_id);
 
 public:
   void WipeBeforeNextRender();
-  PIXEL_SIZE TextExtent(FONT_ID font, std::string_view str);
+  PixelSize TextExtent(FontId font, std::string_view str);
 };

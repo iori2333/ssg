@@ -25,7 +25,7 @@ public:
 private:
   struct Lens {
     [[nodiscard]] static Lens Create(uint16_t radius, uint16_t bulge);
-    void Draw(WINDOW_POINT center);
+    void Draw(WindowPoint center);
 
     uint16_t radius;
     uint16_t diameter;

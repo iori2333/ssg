@@ -12,23 +12,23 @@
 #include "gfx/text.h"
 
 // [Functions]
-void GrpPut16(int x, int y,
-              const char *s); // Draw string in 16x16 transparent font (fast)
-void GrpPut16c2(int x, int y,
-                const char *s); // Same as above but x-advance is 16
-void GrpPutc(int x, int y,
-             char c); // Draw char in 16x16 transparent font (w/ clipping)
-void GrpPut57(int x, int y, const char *s); // 05x07 opaque font
-void GrpPut7B(int x, int y, const char *s); // 07x11 music-room font
-void GrpPutScore(int x, int y,
-                 const char *s); // Draw score item score
+void DrawFont16(int x, int y,
+                const char *s); // Draw string in 16x16 transparent font (fast)
+void DrawFont16C2(int x, int y,
+                  const char *s); // Same as above but x-advance is 16
+void DrawGlyph(int x, int y,
+               char c); // Draw char in 16x16 transparent font (w/ clipping)
+void DrawFont57(int x, int y, const char *s); // 05x07 opaque font
+void DrawFont7B(int x, int y, const char *s); // 07x11 music-room font
+void DrawScore(int x, int y,
+               const char *s); // Draw score item score
 
-void GrpPutMidNum(int x, int y, int n); // Draw MIDI font
+void DrawFontMid(int x, int y, int n); // Draw MIDI font
 
-// 5-pixel variable-width font in [SURFACE_ID::SYSTEM]. Supports A-Z.
+// 5-pixel variable-width font in [SurfaceId::System]. Supports A-Z.
 // ------------------------------------------------------------------
 
-constexpr PIXEL_COORD GrpExtent5(const char c) {
+constexpr PixelCoord FontExtent5(const char c) {
   if ((c < 'A') || (c > 'Z')) {
     assert(!"Character not supported in 5-pixel system font");
     return 0;
@@ -50,19 +50,19 @@ constexpr PIXEL_COORD GrpExtent5(const char c) {
   }
 }
 
-constexpr PIXEL_SIZE GrpExtent5(std::string_view s) {
-  PIXEL_SIZE ret = {.w = 0, .h = 5};
+constexpr PixelSize FontExtent5(std::string_view s) {
+  PixelSize ret = {.w = 0, .h = 5};
   for (const char c : s) {
-    ret.w += (GrpExtent5(c) + 1);
+    ret.w += (FontExtent5(c) + 1);
   }
   ret.w = (std::max)(0, (ret.w - 1));
   return ret;
 }
 
-void GrpPut55(WINDOW_POINT topleft, std::string_view s);
+void DrawFont55(WindowPoint topleft, std::string_view s);
 // ------------------------------------------------------------------
 
 // Draw gradient font
-PIXEL_SIZE DrawGrdFont(TEXTRENDER_SESSION &s, std::span<std::string_view> strs,
-                       FONT_ID font, bool shadow,
-                       uint8_t (*gradient_func)(PIXEL_COORD y));
+PixelSize DrawGrdFont(TextRenderSession &s, std::span<std::string_view> strs,
+                      FontId font, bool shadow,
+                      uint8_t (*gradient_func)(PixelCoord y));

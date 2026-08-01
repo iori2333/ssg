@@ -24,8 +24,8 @@ public:
   void SetScreenshotEffort(uint8_t effort);
 
 private:
-  [[nodiscard]] bool Apply(GRAPHICS_PARAMS requested);
+  [[nodiscard]] bool Apply(GraphicsParams requested);
 
   data::GraphicsLoader &graphics_;
-  GRAPHICS_PARAMS params_{};
+  GraphicsParams params_{};
 };

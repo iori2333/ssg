@@ -335,7 +335,7 @@ int PackUnified(const fs::path &input, const fs::path &packfile) {
         for (size_t offset = 0; offset + 1 < inputs.size(); offset += 2) {
           const auto input = static_cast<uint16_t>(inputs[offset]) |
                              (static_cast<uint16_t>(inputs[offset + 1]) << 8);
-          has_demo_start |= (input & KEY_DEMO_START) != 0;
+          has_demo_start |= (input & KeyDemoStart) != 0;
         }
         const bool valid =
             replay.EntryCount() == 2 && manifest.size() >= 6 &&

@@ -30,7 +30,7 @@ public:
         player_(player), localization_(localization) {}
 
   [[nodiscard]] bool Enter();
-  [[nodiscard]] BulletGallerySceneResult Update(INPUT_BITS input,
+  [[nodiscard]] BulletGallerySceneResult Update(InputBits input,
                                                 bool should_draw);
 
 private:
@@ -39,5 +39,5 @@ private:
   BulletManager &bullets_;
   const Player &player_;
   i18n::Localization &localization_;
-  TEXTRENDER_RECT_ID help_text_ = 0;
+  TextRenderRectId help_text_ = 0;
 };

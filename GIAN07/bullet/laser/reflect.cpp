@@ -37,10 +37,10 @@ inline constexpr auto kLaserEvadeWidth = 12_px;
 
 void LaserReflect::SetupGeometry() {
   auto *p = p_;
-  p[1].x = p[0].x = (x_ / WORLD_COORD_SCALE) + wx_;
-  p[1].y = p[0].y = (y_ / WORLD_COORD_SCALE) + wy_;
-  p[2].x = p[3].x = (x_ / WORLD_COORD_SCALE) - wx_;
-  p[2].y = p[3].y = (y_ / WORLD_COORD_SCALE) - wy_;
+  p[1].x = p[0].x = (x_ / kWorldCoordScale) + wx_;
+  p[1].y = p[0].y = (y_ / kWorldCoordScale) + wy_;
+  p[2].x = p[3].x = (x_ / kWorldCoordScale) - wx_;
+  p[2].y = p[3].y = (y_ / kWorldCoordScale) - wy_;
   p[1].x += lx_;
   p[1].y += ly_;
   p[2].x += lx_;
@@ -123,7 +123,7 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
   lx_ = 0;
   ly_ = 0;
   const auto width =
-      math::PolarVector(angle_, static_cast<float>(w_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(w_) / kWorldCoordScale);
   wx_ = -width.y;
   wy_ = width.x;
 
@@ -182,7 +182,7 @@ void LaserReflect::UpdateGrowing() {
   if (l_ < lmax_) {
     l_ += v_;
     const auto length =
-        math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+        math::PolarVector(angle_, static_cast<float>(l_) / kWorldCoordScale);
     lx_ = length.x;
     ly_ = length.y;
     auto *p = p_;
@@ -218,7 +218,7 @@ auto LaserReflect::UpdateShooting(std::span<const LaserLong *> longs)
     -> UpdateResult {
   l_ += v_;
   const auto length =
-      math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(l_) / kWorldCoordScale);
   lx_ = length.x;
   ly_ = length.y;
   auto *p = p_;
@@ -254,7 +254,7 @@ void LaserReflect::UpdateReflected() {
   x_ += vx_;
   y_ += vy_;
   const auto length =
-      math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(l_) / kWorldCoordScale);
   lx_ = length.x;
   ly_ = length.y;
   auto *p = p_;
@@ -269,7 +269,7 @@ void LaserReflect::UpdateClearing() {
     l_ += v_;
     w_ += 16;
     const auto length =
-        math::PolarVector(angle_, static_cast<float>(l_) / WORLD_COORD_SCALE);
+        math::PolarVector(angle_, static_cast<float>(l_) / kWorldCoordScale);
     lx_ = length.x;
     ly_ = length.y;
     auto *p = p_;
@@ -282,7 +282,7 @@ void LaserReflect::UpdateClearing() {
   }
 
   const auto width =
-      math::PolarVector(angle_, static_cast<float>(w_) / WORLD_COORD_SCALE);
+      math::PolarVector(angle_, static_cast<float>(w_) / kWorldCoordScale);
   wx_ = -width.y;
   wy_ = width.x;
   SetupGeometry();
@@ -327,14 +327,14 @@ void LaserReflect::Render() const {
 }
 
 void LaserReflect::DrawClearing() const {
-  constexpr RGB216 col = {1, 0, 5};
+  constexpr Rgb216 col = {1, 0, 5};
   Geometry().SetColor(col);
   Geometry().DrawLine(p_[0].x, p_[0].y, p_[1].x, p_[1].y);
   Geometry().DrawLine(p_[3].x, p_[3].y, p_[2].x, p_[2].y);
 }
 
 void LaserReflect::DrawOuter() const {
-  GeomGrdRect(Geometry(), p_, RGB216{1, 0, 5}.ToRGB());
+  GeomGrdRect(Geometry(), p_, Rgb216{1, 0, 5}.ToRgb());
 }
 
 bool LaserReflect::IsDead() const { return state_ == ReflectState::Dead; }
@@ -358,16 +358,16 @@ void LaserReflect::RenderDebugHitbox(int mode) const {
   if (state_ == ReflectState::Dead || state_ == ReflectState::Clearing) {
     return;
   }
-  const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
-  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+  const std::array<VertexXy, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
+  Geometry().DrawTrianglesA(TrianglePrimitive::Strip, strip);
 
   if (mode >= 2 && w_ > 0) {
-    const float bx = x_ / WORLD_COORD_SCALE;
-    const float by = y_ / WORLD_COORD_SCALE;
+    const float bx = x_ / kWorldCoordScale;
+    const float by = y_ / kWorldCoordScale;
     const float scale = w_ + kDebugLaserEvadeWidth;
     const float wx2 = wx_ * scale / w_;
     const float wy2 = wy_ * scale / w_;
-    VERTEX_XY ep[4];
+    VertexXy ep[4];
     ep[1].x = ep[0].x = static_cast<float>(bx + wx2);
     ep[1].y = ep[0].y = static_cast<float>(by + wy2);
     ep[2].x = ep[3].x = static_cast<float>(bx - wx2);
@@ -376,7 +376,7 @@ void LaserReflect::RenderDebugHitbox(int mode) const {
     ep[1].y += static_cast<float>(ly_);
     ep[2].x += static_cast<float>(lx_);
     ep[2].y += static_cast<float>(ly_);
-    const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
-    Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
+    const std::array<VertexXy, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
+    Geometry().DrawTrianglesA(TrianglePrimitive::Strip, estrip);
   }
 }

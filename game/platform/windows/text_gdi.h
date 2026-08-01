@@ -9,62 +9,62 @@
 
 // Loads any required fonts from the game directory, and cleans them up at
 // process termination.
-void TextBackend_GDIInit();
-void TextBackend_GDICleanup();
+void TextBackendGDIInit();
+void TextBackendGDICleanup();
 
-class TEXTRENDER_SESSION {
+class TextRenderSession {
 protected:
   // HFONT would require a cast of the value returned from SelectObject().
   // Thankfully, this type doesn't even require <windows.h>.
-  using HGDIOBJ = void *;
+  using HdcObject = void *;
 
-  std::optional<HGDIOBJ> font_initial = std::nullopt;
+  std::optional<HdcObject> font_initial = std::nullopt;
 
-  // A COLORREF created with the RGB macro always has 0x00 in the topmost 8
+  // A COLORREF created with the Rgb macro always has 0x00 in the topmost 8
   // bits.
   uint32_t color_cur = -1;
 
-  FONT_ID font_cur = FONT_ID::COUNT;
-  const PIXEL_LTWH rect;
+  FontId font_cur = FontId::Count;
+  const PixelLtwh rect;
 
 public:
-  class PIXELACCESS {
-    friend class TEXTRENDER_SESSION;
+  class PixelSession {
+    friend class TextRenderSession;
 
-    const PIXEL_LTWH rect;
+    const PixelLtwh rect;
 
-    PIXELACCESS(const PIXEL_LTWH rect) : rect(rect) {}
+    PixelSession(const PixelLtwh rect) : rect(rect) {}
 
   public:
-    uint32_t GetRaw(const PIXEL_POINT &xy_rel);
-    void SetRaw(const PIXEL_POINT &xy_rel, uint32_t col);
+    uint32_t GetRaw(const PixelPoint &xy_rel);
+    void SetRaw(const PixelPoint &xy_rel, uint32_t col);
 
-    RGB Get(const PIXEL_POINT &xy_rel);
-    void Set(const PIXEL_POINT &xy_rel, const RGB col);
+    Rgb Get(const PixelPoint &xy_rel);
+    void Set(const PixelPoint &xy_rel, const Rgb col);
   };
 
-  PIXEL_SIZE RectSize() const;
-  void SetFont(FONT_ID font);
-  void SetColor(const RGB color);
-  PIXEL_SIZE Extent(std::string_view str);
-  void Put(const PIXEL_POINT &topleft_rel, std::string_view str,
-           std::optional<RGB> color = std::nullopt);
-  auto PixelAccess(std::invocable<PIXELACCESS &> auto f) {
-    PIXELACCESS p = {rect};
+  PixelSize RectSize() const;
+  void SetFont(FontId font);
+  void SetColor(const Rgb color);
+  PixelSize Extent(std::string_view str);
+  void Put(const PixelPoint &topleft_rel, std::string_view str,
+           std::optional<Rgb> color = std::nullopt);
+  auto EditPixels(std::invocable<PixelSession &> auto f) {
+    PixelSession p = {rect};
     return f(p);
   }
 
-  TEXTRENDER_SESSION(const PIXEL_LTWH &rect);
-  ~TEXTRENDER_SESSION();
+  TextRenderSession(const PixelLtwh &rect);
+  ~TextRenderSession();
 };
 
-class TEXTRENDER : public TEXTRENDER_PACKED {
-  friend class TEXTRENDER_PACKED;
+class TextRender : public TextRenderPacked {
+  friend class TextRenderPacked;
 
   bool Wipe();
-  std::optional<TEXTRENDER_SESSION> Session(TEXTRENDER_RECT_ID rect_id);
+  std::optional<TextRenderSession> Session(TextRenderRectId rect_id);
 
 public:
   void WipeBeforeNextRender();
-  PIXEL_SIZE TextExtent(FONT_ID font, std::string_view str);
+  PixelSize TextExtent(FontId font, std::string_view str);
 };

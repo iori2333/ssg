@@ -72,10 +72,8 @@ void BitWriter::WriteBits(uint32_t bits, unsigned int bit_count) {
   }
 }
 
-bool BitWriter::Save(const char *path) const {
-  return File_Save(path, buffer_);
-}
+bool BitWriter::Save(const char *path) const { return SaveFile(path, buffer_); }
 
 BitFileReader LoadBitFile(const char *path) {
-  return BitFileReader{File_Load(path)};
+  return BitFileReader{LoadFile(path)};
 }

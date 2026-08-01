@@ -15,10 +15,10 @@
 
 // Ending initialization
 bool EndingScene::Enter() {
-  GrpBackend_SetClip(GRP_RES_RECT);
-  GrpBackend_Clear();
-  Grp_Flip();
-  GrpBackend_Clear();
+  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsBackendClear();
+  GraphicsFlip();
+  GraphicsBackendClear();
 
   if (!graphics_.LoadEnding() || !stage_loader_.LoadEnding(scene_)) {
     return false;
@@ -32,7 +32,7 @@ bool EndingScene::Enter() {
 
   TextRenderer().Clear();
   text.Blank();
-  text.Rect = TextRenderer().Register({.w = GRP_RES.w, .h = 131});
+  text.Rect = TextRenderer().Register({.w = kGameResolution.w, .h = 131});
 
   return true;
 }
@@ -57,7 +57,7 @@ bool EndingScene::Update(bool should_draw) {
 // Ending draw processing
 void EndingScene::Draw() {
   // Clear screen
-  GrpBackend_Clear(255, RGB{.r = 0, .g = 0, .b = 0});
+  GraphicsBackendClear(255, Rgb{.r = 0, .g = 0, .b = 0});
 
   // Draw each graphic
   DrawGrpInfo();
@@ -67,7 +67,7 @@ void EndingScene::Draw() {
   // Apply fade info
   DrawFadeInfo();
 
-  Grp_Flip();
+  GraphicsFlip();
 }
 
 // Staff name fadeout function
@@ -123,7 +123,7 @@ void EndingScene::DrawGrpInfo() {
   // Display image
   const auto sid =
       data::graphics_assets::EndingPictureSurface(grp_info.picture_id);
-  GrpSurface_BlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
+  GraphicsSurfaceBlitOpaque({grp_info.x, grp_info.y}, sid, {0, 0, 320, 240});
 }
 
 // Staff drawing
@@ -132,24 +132,24 @@ void EndingScene::DrawStfInfo() {
     return;
   }
 
-  auto Blit = [](WINDOW_POINT dst, const PIXEL_LTRB &src) {
+  auto Blit = [](WindowPoint dst, const PixelLtrb &src) {
     dst -= (src.Size() / 2);
-    GrpSurface_Blit({dst.x, dst.y}, SURFACE_ID::ENDING_CREDITS, src);
+    GraphicsSurfaceBlit({dst.x, dst.y}, SurfaceId::EndingCredits, src);
   };
 
   Blit({stf_task.ox, stf_task.oy}, staff_label[stf_task.TitleID]);
   for (decltype(stf_task.NumStf) i = 0; i < stf_task.NumStf; i++) {
-    const WINDOW_POINT dst = {stf_task.ox, (stf_task.oy + (i * 30) + 50)};
+    const WindowPoint dst = {stf_task.ox, (stf_task.oy + (i * 30) + 50)};
     Blit(dst, staff_member[stf_task.StfID[i]]);
   }
 }
 
 // Text drawing
-void EndingScene::Text::Render(WINDOW_POINT topleft) {
-  TextRenderer().Render(topleft, Rect, TextStr, [this](TEXTRENDER_SESSION &s) {
+void EndingScene::Text::Render(WindowPoint topleft) {
+  TextRenderer().Render(topleft, Rect, TextStr, [this](TextRenderSession &s) {
     int max_px = 0;
 
-    s.SetFont(FONT_ID::NORMAL);
+    s.SetFont(FontId::Normal);
     for (size_t i = 0; i < Text.size(); i++) {
       max_px = (std::max)(max_px, s.Extent(Text[i]).w);
     }
@@ -186,9 +186,9 @@ void EndingScene::DrawFadeInfo() {
     Geometry().SetAlphaNorm(255 - stf_task.alpha);
     Geometry().SetColor({0, 0, 0});
     if (stf_task.ox == 320) {
-      Geometry().DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
+      Geometry().DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
     } else if (stf_task.ox > 320) {
-      Geometry().DrawBoxA(320, 0, GRP_RES.w, 300);
+      Geometry().DrawBoxA(320, 0, kGameResolution.w, 300);
     } else {
       Geometry().DrawBoxA(0, 0, (320 - 50), 300);
     }
@@ -196,7 +196,7 @@ void EndingScene::DrawFadeInfo() {
   if (flash_state != 0U) {
     Geometry().SetAlphaNorm(255 - flash_state);
     Geometry().SetColor({5, 5, 5});
-    Geometry().DrawBoxA(0, 0, GRP_RES.w, GRP_RES.h);
+    Geometry().DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
   }
 }
 

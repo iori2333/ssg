@@ -10,10 +10,9 @@
 
 #include "gfx/constants.h"
 
-using TEXTRENDER_RECT_ID = unsigned int;
+using TextRenderRectId = unsigned int;
 
-class TEXTRENDER_SESSION;
+class TextRenderSession;
 
 // Horizontally centers [str] on [s]'s rectangle.
-PIXEL_COORD TextLayoutXCenter(TEXTRENDER_SESSION &session,
-                              std::string_view text);
+PixelCoord TextLayoutXCenter(TextRenderSession &session, std::string_view text);

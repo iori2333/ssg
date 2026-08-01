@@ -173,42 +173,42 @@ void ItemSystem::Draw() const {
   int j = 0;
   int x = 0;
   int y = 0;
-  PIXEL_LTRB src;
+  PixelLtrb src;
 
   for (const auto &ip : pool_) {
     const uint8_t ptn = ((ip.count >> 2) & 3);
     switch (ip.kind) {
     case ItemKind::Score:
-      src = PIXEL_LTWH{(384 + (ptn << 4)), (256 + 16), 16, 16};
+      src = PixelLtwh{(384 + (ptn << 4)), (256 + 16), 16, 16};
       x = (ip.x >> 6) - 8;
       y = (ip.y >> 6) - 8;
-      GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
+      GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
       break;
 
     case ItemKind::Extend:
       for (j = 0; j < 8; j++) {
-        src = PIXEL_LTWH{(384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16};
+        src = PixelLtwh{(384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16};
         const auto offset = math::RoundedPolarVector(
             static_cast<float>(ip.count + (j * 256 / 8)) *
                 math::kLegacyAngleStep,
             12.0f);
         x = (ip.x >> 6) - 8 + offset.x;
         y = (ip.y >> 6) - 8 + offset.y;
-        GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
+        GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
       }
 
       break;
 
     case ItemKind::Bomb:
       for (j = 0; j < 8; j++) {
-        src = PIXEL_LTWH{(384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16};
+        src = PixelLtwh{(384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16};
         const auto offset = math::RoundedPolarVector(
             static_cast<float>((-2 * ip.count) + (j * 256 / 8)) *
                 math::kLegacyAngleStep,
             12.0f);
         x = (ip.x >> 6) - 8 + offset.x;
         y = (ip.y >> 6) - 8 + offset.y;
-        GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
+        GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
       }
 
       break;

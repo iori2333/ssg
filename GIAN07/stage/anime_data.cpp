@@ -77,7 +77,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[26].n = 16;
     animations[26].mode = EnemyAnimationMode::Directional;
     for (i = 0; i < 16; i++)
-      animations[26].ptn[i] = PIXEL_LTWH{((i * 80) % 640), 160, 80, 80};
+      animations[26].ptn[i] = PixelLtwh{((i * 80) % 640), 160, 80, 80};
     animations[27].SetSquareSheet({.x = 560, .y = 320}, 1, 80,
                                   EnemyAnimationMode::Loop);
     animations[28].SetSquareSheet({.x = 0, .y = 384}, 8, 32,
@@ -98,7 +98,7 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[38].size = {.w = 40, .h = 56};
     animations[38].n = 1;
     animations[38].mode = EnemyAnimationMode::Loop;
-    animations[38].ptn[0] = PIXEL_LTWH{512, 0, 40, 56};
+    animations[38].ptn[0] = PixelLtwh{512, 0, 40, 56};
     animations[39].size = {.w = 72, .h = 56};
     animations[39].n = 2;
     animations[39].mode = EnemyAnimationMode::Loop;
@@ -111,14 +111,14 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[41].size = {.w = 40, .h = 64};
     animations[41].n = 1;
     animations[41].mode = EnemyAnimationMode::Loop;
-    animations[41].ptn[0] = PIXEL_LTWH{512, 56, 40, 56};
+    animations[41].ptn[0] = PixelLtwh{512, 56, 40, 56};
     animations[42].size = {.w = 24, .h = 24};
     animations[42].n = 4;
     animations[42].mode = EnemyAnimationMode::Loop;
-    animations[42].ptn[0] = PIXEL_LTWH{552, 0, 24, 24};
-    animations[42].ptn[1] = PIXEL_LTWH{552, 24, 24, 24};
-    animations[42].ptn[2] = PIXEL_LTWH{552, 0, 24, 24};
-    animations[42].ptn[3] = PIXEL_LTWH{552, 48, 24, 24};
+    animations[42].ptn[0] = PixelLtwh{552, 0, 24, 24};
+    animations[42].ptn[1] = PixelLtwh{552, 24, 24, 24};
+    animations[42].ptn[2] = PixelLtwh{552, 0, 24, 24};
+    animations[42].ptn[3] = PixelLtwh{552, 48, 24, 24};
     break;
   case StageId::Stage1:
     animations[0].size = {.w = 72, .h = 56};
@@ -196,26 +196,26 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[0].n = 16;
     animations[0].mode = EnemyAnimationMode::Directional;
     for (i = 0; i < 8; i++)
-      animations[0].ptn[i] = PIXEL_LTWH{i * 56, 0, 56, 56};
+      animations[0].ptn[i] = PixelLtwh{i * 56, 0, 56, 56};
     for (i = 0; i < 8; i++)
-      animations[0].ptn[i + 8] = PIXEL_LTWH{i * 56, 56, 56, 56};
+      animations[0].ptn[i + 8] = PixelLtwh{i * 56, 56, 56, 56};
     animations[1].SetDirectionalSheet({.x = 0, .y = 112}, 32);
     animations[2].SetDirectionalSheet({.x = 0, .y = 144}, 32);
     animations[3].SetDirectionalSheet({.x = 0, .y = 176}, 32);
     animations[4].size = {.w = 48, .h = 16};
     animations[4].n = 2;
     animations[4].mode = EnemyAnimationMode::Loop;
-    animations[4].ptn[0] = PIXEL_LTWH{592, 0, 48, 16};
-    animations[4].ptn[1] = PIXEL_LTWH{592, 16, 48, 16};
+    animations[4].ptn[0] = PixelLtwh{592, 0, 48, 16};
+    animations[4].ptn[1] = PixelLtwh{592, 16, 48, 16};
     animations[5].size = {.w = 48, .h = 16};
     animations[5].n = 2;
     animations[5].mode = EnemyAnimationMode::Loop;
-    animations[5].ptn[0] = PIXEL_LTWH{592, 32, 48, 16};
-    animations[5].ptn[1] = PIXEL_LTWH{592, 48, 48, 16};
+    animations[5].ptn[0] = PixelLtwh{592, 32, 48, 16};
+    animations[5].ptn[1] = PixelLtwh{592, 48, 48, 16};
     animations[6].size = {.w = 11 * 16, .h = (5 * 16) + 8};
     animations[6].n = 1;
     animations[6].mode = EnemyAnimationMode::Loop;
-    animations[6].ptn[0] = PIXEL_LTWH{464, 392, (11 * 16), ((5 * 16) + 8)};
+    animations[6].ptn[0] = PixelLtwh{464, 392, (11 * 16), ((5 * 16) + 8)};
     animations[7].SetDirectionalSheet({.x = 0, .y = 208}, 32);
     animations[8].SetDirectionalSheet({.x = 0, .y = 240}, 40);
     animations[10].size = {.w = 196, .h = 100};
@@ -257,10 +257,10 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[7].size = {.w = 24, .h = 24};
     animations[7].n = 4;
     animations[7].mode = EnemyAnimationMode::Loop;
-    animations[7].ptn[0] = PIXEL_LTWH{592, (96 + 0), 24, 24};
-    animations[7].ptn[1] = PIXEL_LTWH{592, (96 + 24), 24, 24};
-    animations[7].ptn[2] = PIXEL_LTWH{592, (96 + 0), 24, 24};
-    animations[7].ptn[3] = PIXEL_LTWH{592, (96 + 48), 24, 24};
+    animations[7].ptn[0] = PixelLtwh{592, (96 + 0), 24, 24};
+    animations[7].ptn[1] = PixelLtwh{592, (96 + 24), 24, 24};
+    animations[7].ptn[2] = PixelLtwh{592, (96 + 0), 24, 24};
+    animations[7].ptn[3] = PixelLtwh{592, (96 + 48), 24, 24};
     animations[8].SetSheet({.x = 512, .y = 96}, 1, {.w = 80, .h = 72},
                            EnemyAnimationMode::Loop);
     animations[9].SetSheet({.x = 304, .y = 256}, 1, {.w = 336, .h = 224},
@@ -271,47 +271,47 @@ void SetupStageAnime(StageId stage_num, EnemyAnimationSet &animations) {
     animations[0].n = 6;
     animations[0].mode = EnemyAnimationMode::StopAtEnd;
     for (i = 0; i < 6; i++)
-      animations[0].ptn[i] = PIXEL_LTWH{(56 * i), 72, 56, 72};
+      animations[0].ptn[i] = PixelLtwh{(56 * i), 72, 56, 72};
     animations[1].size = {.w = 56, .h = 72};
     animations[1].n = 6;
     animations[1].mode = EnemyAnimationMode::StopAtEnd;
     for (i = 0; i < 6; i++)
-      animations[1].ptn[i] = PIXEL_LTWH{(56 * (5 - i)), 72, 56, 72};
+      animations[1].ptn[i] = PixelLtwh{(56 * (5 - i)), 72, 56, 72};
     animations[2].size = {.w = 56, .h = 72};
     animations[2].n = 4;
     animations[2].mode = EnemyAnimationMode::Loop;
-    animations[2].ptn[0] = PIXEL_LTWH{(56 * 6), 72, 56, 72};
-    animations[2].ptn[1] = PIXEL_LTWH{(56 * 7), 72, 56, 72};
-    animations[2].ptn[2] = PIXEL_LTWH{(56 * 6), 72, 56, 72};
-    animations[2].ptn[3] = PIXEL_LTWH{(56 * 8), 72, 56, 72};
+    animations[2].ptn[0] = PixelLtwh{(56 * 6), 72, 56, 72};
+    animations[2].ptn[1] = PixelLtwh{(56 * 7), 72, 56, 72};
+    animations[2].ptn[2] = PixelLtwh{(56 * 6), 72, 56, 72};
+    animations[2].ptn[3] = PixelLtwh{(56 * 8), 72, 56, 72};
     animations[3].size = {.w = 56, .h = 72};
     animations[3].n = 10;
     animations[3].mode = EnemyAnimationMode::StopAtEnd;
     for (i = 0; i < 9; i++)
-      animations[3].ptn[i] = PIXEL_LTWH{(56 * i), 0, 56, 72};
-    animations[3].ptn[9] = PIXEL_LTWH{(56 * 5), 72, 56, 72};
+      animations[3].ptn[i] = PixelLtwh{(56 * i), 0, 56, 72};
+    animations[3].ptn[9] = PixelLtwh{(56 * 5), 72, 56, 72};
     SetAnimeRect(animations[4], 432, 272, 632, 464);
     animations[5].size = {.w = 56, .h = 72};
     animations[5].n = 11;
     animations[5].mode = EnemyAnimationMode::StopAtEnd;
     for (i = 0; i < 6; i++)
-      animations[5].ptn[i] = PIXEL_LTWH{(56 * i), 72, 56, 72};
+      animations[5].ptn[i] = PixelLtwh{(56 * i), 72, 56, 72};
     for (i = 0; i < 5; i++)
-      animations[5].ptn[i + 6] = PIXEL_LTWH{(56 * (4 - i)), 72, 56, 72};
+      animations[5].ptn[i + 6] = PixelLtwh{(56 * (4 - i)), 72, 56, 72};
     animations[6].size = {.w = 33, .h = 32};
     animations[6].n = 10;
     animations[6].mode = EnemyAnimationMode::StopAtEnd;
     for (i = 0; i < 6; i++)
-      animations[6].ptn[i] = PIXEL_LTWH{(32 * i), 416, 32, 32};
+      animations[6].ptn[i] = PixelLtwh{(32 * i), 416, 32, 32};
     for (i = 0; i < 4; i++)
-      animations[6].ptn[i + 6] = PIXEL_LTWH{(32 * i), 448, 32, 32};
+      animations[6].ptn[i + 6] = PixelLtwh{(32 * i), 448, 32, 32};
     animations[7].size = {.w = 33, .h = 32};
     animations[7].n = 10;
     animations[7].mode = EnemyAnimationMode::StopAtEnd;
     for (i = 0; i < 4; i++)
-      animations[7].ptn[i] = PIXEL_LTWH{(32 * (3 - i)), 448, 32, 32};
+      animations[7].ptn[i] = PixelLtwh{(32 * (3 - i)), 448, 32, 32};
     for (i = 0; i < 6; i++)
-      animations[7].ptn[i + 4] = PIXEL_LTWH{(32 * (5 - i)), 416, 32, 32};
+      animations[7].ptn[i + 4] = PixelLtwh{(32 * (5 - i)), 416, 32, 32};
     animations[8].SetSheet({.x = 0, .y = 368}, 1, {.w = 48, .h = 48},
                            EnemyAnimationMode::Loop);
     break;

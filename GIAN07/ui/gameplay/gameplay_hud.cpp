@@ -15,7 +15,7 @@
 #include "util/time.h"
 
 void GameplayHud::DrawTop(const GameplayHudModel &model) const {
-  constexpr PIXEL_LTRB graze_frame = {0, 80, 128, 104};
+  constexpr PixelLtrb graze_frame = {0, 80, 128, 104};
 
   Geometry().SetColor({0, 0, 0});
   Geometry().SetAlphaNorm(128);
@@ -33,28 +33,28 @@ void GameplayHud::DrawTop(const GameplayHudModel &model) const {
     }
   }
 
-  GrpSurface_Blit({128, 16}, SURFACE_ID::SYSTEM, graze_frame);
-  GrpPut57(128 + 95, 16 + 91 - 80,
-           std::format("{:3}", model.graze_count).c_str());
-  GrpPut16(128, 0, std::format("{:9}", model.score).c_str());
+  GraphicsSurfaceBlit({128, 16}, SurfaceId::System, graze_frame);
+  DrawFont57(128 + 95, 16 + 91 - 80,
+             std::format("{:3}", model.graze_count).c_str());
+  DrawFont16(128, 0, std::format("{:9}", model.score).c_str());
 
-  constexpr PIXEL_LTWH life_icon = {448, 272, 16, 16};
-  constexpr PIXEL_LTWH bomb_icon = {512, 272, 16, 16};
-  constexpr PIXEL_LTWH star_icon = {624, 432, 16, 16};
+  constexpr PixelLtwh life_icon = {448, 272, 16, 16};
+  constexpr PixelLtwh bomb_icon = {512, 272, 16, 16};
+  constexpr PixelLtwh star_icon = {624, 432, 16, 16};
   for (int i = 0; std::cmp_less(i, model.lives); i++) {
-    GrpSurface_Blit({280 + i * 14, 0}, SURFACE_ID::SYSTEM, life_icon);
+    GraphicsSurfaceBlit({280 + i * 14, 0}, SurfaceId::System, life_icon);
   }
   for (int i = 0; std::cmp_less(i, model.bombs); i++) {
-    GrpSurface_Blit({280 + i * 14, 0}, SURFACE_ID::SYSTEM, bomb_icon);
+    GraphicsSurfaceBlit({280 + i * 14, 0}, SurfaceId::System, bomb_icon);
   }
-  GrpSurface_Blit({408, 0}, SURFACE_ID::SYSTEM, star_icon);
-  GrpPut16(424, 0,
-           std::format("{:<4}", std::min(model.star_counter, 9999U)).c_str());
+  GraphicsSurfaceBlit({408, 0}, SurfaceId::System, star_icon);
+  DrawFont16(424, 0,
+             std::format("{:<4}", std::min(model.star_counter, 9999U)).c_str());
 }
 
 void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
-  constexpr WINDOW_COORD left_column = 0;
-  const WINDOW_COORD right_column = GRP_RES.w - 128;
+  constexpr WindowCoord left_column = 0;
+  const WindowCoord right_column = kGameResolution.w - 128;
 
   const auto now = util::SteadyTicksMs();
   if (now - fps_sample_start_ <= 1000) {
@@ -65,44 +65,45 @@ void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
     fps_sample_start_ = now;
   }
 
-  GrpPut16(left_column, 0, std::format("FPS   {:3}", fps_).c_str());
-  GrpPut16(left_column, 40, std::format("R {:7}", model.rank).c_str());
-  GrpPut16(left_column, 60, std::format("L {:>7}", model.level_name).c_str());
-  GrpPut16(left_column, 100,
-           std::format("Miss {:4}", model.miss_count).c_str());
-  GrpPut16(left_column, 120, std::format("Bomb {:4}", model.bomb_used).c_str());
-  GrpPut16(left_column, 140,
-           std::format("DthB {:4}", model.deathbomb_count).c_str());
-  GrpPut16(left_column, 180, "Stars");
-  GrpPut16(left_column, 200,
-           std::format("{:4}/{:4}", std::min(model.star_counter, 9999U),
-                       std::min(model.star_threshold, 9999U))
-               .c_str());
+  DrawFont16(left_column, 0, std::format("FPS   {:3}", fps_).c_str());
+  DrawFont16(left_column, 40, std::format("R {:7}", model.rank).c_str());
+  DrawFont16(left_column, 60, std::format("L {:>7}", model.level_name).c_str());
+  DrawFont16(left_column, 100,
+             std::format("Miss {:4}", model.miss_count).c_str());
+  DrawFont16(left_column, 120,
+             std::format("Bomb {:4}", model.bomb_used).c_str());
+  DrawFont16(left_column, 140,
+             std::format("DthB {:4}", model.deathbomb_count).c_str());
+  DrawFont16(left_column, 180, "Stars");
+  DrawFont16(left_column, 200,
+             std::format("{:4}/{:4}", std::min(model.star_counter, 9999U),
+                         std::min(model.star_threshold, 9999U))
+                 .c_str());
 
   const auto local_time = util::LocalTime();
-  GrpPut16(right_column, 0, "Date");
-  GrpPut16(right_column, 20,
-           std::format("{:02}/{:02}/{:02}", local_time.month, local_time.day,
-                       local_time.year % 100U)
-               .c_str());
-  GrpPut16(right_column, 50, "Time");
-  GrpPut16(right_column, 70,
-           std::format("{:02}:{:02}:{:02}", local_time.hour, local_time.minute,
-                       local_time.second)
-               .c_str());
+  DrawFont16(right_column, 0, "Date");
+  DrawFont16(right_column, 20,
+             std::format("{:02}/{:02}/{:02}", local_time.month, local_time.day,
+                         local_time.year % 100U)
+                 .c_str());
+  DrawFont16(right_column, 50, "Time");
+  DrawFont16(right_column, 70,
+             std::format("{:02}:{:02}:{:02}", local_time.hour,
+                         local_time.minute, local_time.second)
+                 .c_str());
 
 #ifdef PBG_DEBUG
-  GrpPut16(right_column, 360, "Debug  ON");
+  DrawFont16(right_column, 360, "Debug  ON");
 #endif
 
   if (model.practice_mode == PracticeMode::AutoBomb) {
-    GrpPut16(right_column, 380, "Prac AUTO");
+    DrawFont16(right_column, 380, "Prac AUTO");
   } else if (model.practice_mode == PracticeMode::Invincible) {
-    GrpPut16(right_column, 380, "Prac  INV");
+    DrawFont16(right_column, 380, "Prac  INV");
   }
 
-  GrpPut16(right_column, 420, std::format("Bomb {:4}", model.bombs).c_str());
-  GrpPut16(right_column, 440, std::format("Left {:4}", model.lives).c_str());
-  GrpPut16(right_column, 460,
-           std::format("Credit {:2}", model.credits).c_str());
+  DrawFont16(right_column, 420, std::format("Bomb {:4}", model.bombs).c_str());
+  DrawFont16(right_column, 440, std::format("Left {:4}", model.lives).c_str());
+  DrawFont16(right_column, 460,
+             std::format("Credit {:2}", model.credits).c_str());
 }

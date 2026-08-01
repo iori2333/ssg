@@ -10,7 +10,7 @@
 
 class GameSession;
 class MusicPlayer;
-class UIManager;
+class UiManager;
 
 namespace data {
 class GraphicsLoader;
@@ -31,21 +31,21 @@ enum class TitleSceneResult : uint8_t {
 class TitleScene {
 public:
   TitleScene(data::GraphicsLoader &graphics, MusicPlayer &music,
-             GameSession &session, UIManager &ui)
+             GameSession &session, UiManager &ui)
       : graphics_(graphics), music_(music), session_(session), ui_(ui) {}
 
-  [[nodiscard]] bool Enter(INPUT_BITS initial_input, bool change_music);
-  [[nodiscard]] TitleSceneResult Update(INPUT_BITS input, bool should_draw);
+  [[nodiscard]] bool Enter(InputBits initial_input, bool change_music);
+  [[nodiscard]] TitleSceneResult Update(InputBits input, bool should_draw);
 
 private:
   void InitVersion();
-  void DrawVersion(PIXEL_COORD top) const;
+  void DrawVersion(PixelCoord top) const;
 
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
   GameSession &session_;
-  UIManager &ui_;
-  TEXTRENDER_RECT_ID version_rect_{};
-  WINDOW_COORD version_left_ = 0;
+  UiManager &ui_;
+  TextRenderRectId version_rect_{};
+  WindowCoord version_left_ = 0;
   uint16_t demo_timer_ = 0;
 };

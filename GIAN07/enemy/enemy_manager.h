@@ -52,7 +52,7 @@ public:
   void DrawRegular();
 
   void SpawnFromScene(int16_t x, int16_t y, uint8_t script_id);
-  void SpawnBoss(PIXEL_POINT position, uint32_t script_id);
+  void SpawnBoss(PixelPoint position, uint32_t script_id);
   void KillBosses();
   void SetBossTimeout(int32_t timeout_end);
 
@@ -77,7 +77,7 @@ private:
   void BeginActorFrame(EnemyActor &actor, bool allow_fire_with_zero_hp);
   void CheckPlayerCollision(const EnemyActor &actor) const;
   void FinishActorFrame(EnemyActor &actor, bool consider_homing);
-  void InitializeActor(EnemyActor &actor, WORLD_POINT position,
+  void InitializeActor(EnemyActor &actor, WorldPoint position,
                        uint32_t script_id);
   void RetireActor(EnemyActor &actor);
   void ConsiderHomingTarget(const EnemyActor &actor);
@@ -85,7 +85,7 @@ private:
   // Regular enemies.
   void ClearRegular();
   void CompactRegular();
-  EnemyActor *SpawnRegular(WORLD_POINT position, uint32_t script_id);
+  EnemyActor *SpawnRegular(WorldPoint position, uint32_t script_id);
   void UpdateRegular();
   void ApplyRegularDamage(EnemyActor &actor, int damage);
 
@@ -93,9 +93,9 @@ private:
   void ResetBosses();
   void UpdateBosses();
   void ClearBossProjectiles();
-  void SpawnBossActor(WORLD_POINT position, uint32_t script_id,
+  void SpawnBossActor(WorldPoint position, uint32_t script_id,
                       bool starts_encounter);
-  void SpawnBossFromEcl(WORLD_POINT position, uint32_t script_id);
+  void SpawnBossFromEcl(WorldPoint position, uint32_t script_id);
   void RemoveFinishedBosses();
   void OnActorRetired(const EnemyActor &actor);
 

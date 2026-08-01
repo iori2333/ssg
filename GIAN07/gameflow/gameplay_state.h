@@ -40,7 +40,7 @@ private:
   [[nodiscard]] bool LoadNextStage();
   [[nodiscard]] bool LoadNextReplayStage();
   void InitializeGameplayView(bool interactive);
-  [[nodiscard]] StepResult Step(INPUT_BITS &input);
+  [[nodiscard]] StepResult Step(InputBits &input);
   [[nodiscard]] StepResult
   HandleStageTransition(stage::StageTransition transition);
   [[nodiscard]] FlowEvent UpdateLive(const FrameInput &frame);

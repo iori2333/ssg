@@ -10,24 +10,24 @@
 
 namespace playfield {
 
-inline constexpr WINDOW_COORD kLeft = 128;
-inline constexpr WINDOW_COORD kRight = 511;
-inline constexpr WINDOW_COORD kCenterX = (kLeft + kRight) / 2;
-inline constexpr WINDOW_COORD kTop = 0;
-inline constexpr WINDOW_COORD kBottom = GRP_RES.h - 1;
-inline constexpr WINDOW_COORD kCenterY = (kTop + kBottom) / 2;
+inline constexpr WindowCoord kLeft = 128;
+inline constexpr WindowCoord kRight = 511;
+inline constexpr WindowCoord kCenterX = (kLeft + kRight) / 2;
+inline constexpr WindowCoord kTop = 0;
+inline constexpr WindowCoord kBottom = kGameResolution.h - 1;
+inline constexpr WindowCoord kCenterY = (kTop + kBottom) / 2;
 
-inline constexpr WINDOW_LTRB kClip = {kLeft, kTop, kRight + 1, kBottom + 1};
+inline constexpr WindowLtrb kClip = {kLeft, kTop, kRight + 1, kBottom + 1};
 
-inline constexpr WORLD_COORD kWorldLeft = PixelToWorld(kLeft);
-inline constexpr WORLD_COORD kWorldRight = PixelToWorld(kRight);
-inline constexpr WORLD_COORD kWorldCenterX = (kWorldLeft + kWorldRight) / 2;
-inline constexpr WORLD_COORD kWorldTop = PixelToWorld(kTop);
-inline constexpr WORLD_COORD kWorldBottom = PixelToWorld(kBottom);
-inline constexpr WORLD_COORD kWorldCenterY = (kWorldTop + kWorldBottom) / 2;
+inline constexpr WorldCoord kWorldLeft = PixelToWorld(kLeft);
+inline constexpr WorldCoord kWorldRight = PixelToWorld(kRight);
+inline constexpr WorldCoord kWorldCenterX = (kWorldLeft + kWorldRight) / 2;
+inline constexpr WorldCoord kWorldTop = PixelToWorld(kTop);
+inline constexpr WorldCoord kWorldBottom = PixelToWorld(kBottom);
+inline constexpr WorldCoord kWorldCenterY = (kWorldTop + kWorldBottom) / 2;
 
-[[nodiscard]] inline bool WithinAxisDistance(WORLD_COORD lhs, WORLD_COORD rhs,
-                                             WORLD_COORD distance) {
+[[nodiscard]] inline bool WithinAxisDistance(WorldCoord lhs, WorldCoord rhs,
+                                             WorldCoord distance) {
   return std::abs(lhs - rhs) < distance;
 }
 

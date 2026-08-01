@@ -19,7 +19,7 @@ bool WriteExact(SDL_IOStream *stream, const void *data, size_t size) {
 
 } // namespace
 
-uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {
+uint16_t BmpPaletteSizeFromBpp(uint8_t bpp) {
   const auto ret = [bpp]() -> uint16_t {
     if (bpp <= 4) {
       return (1 << 4);
@@ -28,17 +28,17 @@ uint16_t BMPPaletteSizeFromBPP(uint8_t bpp) {
     }
     return 0;
   }();
-  assert(ret <= BMP_PALETTE_SIZE_MAX);
+  assert(ret <= kBmpPaletteSizeMax);
   return ret;
 }
 
-std::optional<BMP_OWNED> BMPLoad(std::vector<uint8_t> buffer) {
+std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer) {
   if (buffer.empty()) {
     return std::nullopt;
   }
 
   util::ByteReader reader{buffer};
-  const auto header_file = reader.ReadObject<BMP_FILEHEADER>();
+  const auto header_file = reader.ReadObject<BmpFileHeader>();
   if (!header_file) {
     return std::nullopt;
   }
@@ -51,15 +51,15 @@ std::optional<BMP_OWNED> BMPLoad(std::vector<uint8_t> buffer) {
   // automatic file type detection, which should have failed in the two
   // checks above. But if we got here, we expect this to be a valid .BMP,
   // and therefore assert() that it is.
-  const auto header_info = reader.ReadObject<BMP_INFOHEADER>();
+  const auto header_info = reader.ReadObject<BmpInfoHeader>();
   if (!header_info) {
     assert(!"Not a .BMP file?");
     return std::nullopt;
   }
 
   const auto palette_size =
-      BMPPaletteSizeFromBPP(header_info->biPlanes * header_info->biBitCount);
-  if (!reader.ReadBytes(palette_size * sizeof(BGRA))) {
+      BmpPaletteSizeFromBpp(header_info->biPlanes * header_info->biBitCount);
+  if (!reader.ReadBytes(palette_size * sizeof(Bgra))) {
     assert(!"Needs a palette, but doesn't contain a full one?");
     return std::nullopt;
   }
@@ -76,11 +76,11 @@ std::optional<BMP_OWNED> BMPLoad(std::vector<uint8_t> buffer) {
     return std::nullopt;
   }
 
-  return BMP_OWNED{std::move(buffer), *header_info, header_file->bfOffBits,
-                   size};
+  return BmpOwned{std::move(buffer), *header_info, header_file->bfOffBits,
+                  size};
 }
 
-bool BMPSaveSupports(SDL_PixelFormat format) {
+bool BmpSaveSupports(SDL_PixelFormat format) {
   switch (format) {
   case SDL_PIXELFORMAT_INDEX8:
   case SDL_PIXELFORMAT_XRGB1555:
@@ -92,13 +92,13 @@ bool BMPSaveSupports(SDL_PixelFormat format) {
   }
 }
 
-bool BMPSave(SDL_IOStream *stream, PIXEL_SIZE size, uint16_t planes,
-             uint16_t bpp, std::span<BGRA> palette,
+bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
+             uint16_t bpp, std::span<Bgra> palette,
              std::span<const std::byte> pixels) {
   assert(pixels.size_bytes() <= std::numeric_limits<uint32_t>::max());
   assert(palette.size() <= std::numeric_limits<uint32_t>::max());
-  const BMP_INFOHEADER header_info = {
-      .biSize = sizeof(BMP_INFOHEADER),
+  const BmpInfoHeader header_info = {
+      .biSize = sizeof(BmpInfoHeader),
       .biWidth = size.w,
       .biHeight = size.h,
       .biPlanes = planes,
@@ -108,8 +108,8 @@ bool BMPSave(SDL_IOStream *stream, PIXEL_SIZE size, uint16_t planes,
       .biClrUsed = static_cast<uint32_t>(palette.size()),
   };
   const uint32_t pixel_offset =
-      (sizeof(BMP_FILEHEADER) + header_info.biSize + palette.size_bytes());
-  const BMP_FILEHEADER header_file = {
+      (sizeof(BmpFileHeader) + header_info.biSize + palette.size_bytes());
+  const BmpFileHeader header_file = {
       .bfType = 0x4D42, // "BM"
       .bfSize = pixel_offset,
       .bfReserved1 = 0,

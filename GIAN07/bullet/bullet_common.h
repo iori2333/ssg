@@ -20,7 +20,7 @@ inline constexpr auto kZSet = 0x08;
 inline constexpr auto kCmdMask = 0x03;
 
 [[nodiscard]] inline int DecodeSpeed(uint8_t value) {
-  return static_cast<int>(value & 0x3f) * WORLD_COORD_SCALE / 4;
+  return static_cast<int>(value & 0x3f) * kWorldCoordScale / 4;
 }
 
 [[nodiscard]] BulletPattern DecodePattern(uint8_t command);

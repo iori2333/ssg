@@ -33,11 +33,11 @@ void EnemyManager::ResetBosses() {
   boss_hud_ = {.encounter_revision = next_revision};
 }
 
-void EnemyManager::SpawnBossFromEcl(WORLD_POINT position, uint32_t script_id) {
+void EnemyManager::SpawnBossFromEcl(WorldPoint position, uint32_t script_id) {
   SpawnBossActor(position, script_id, false);
 }
 
-void EnemyManager::SpawnBossActor(WORLD_POINT position, uint32_t script_id,
+void EnemyManager::SpawnBossActor(WorldPoint position, uint32_t script_id,
                                   bool starts_encounter) {
   auto *boss = bosses_.Alloc();
   if (boss == nullptr) {
@@ -125,7 +125,7 @@ void EnemyManager::KillBosses() {
     PlaySfx(SfxId::Bossbomb, boss.x);
     if (boss.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
-          &boss, ECL_ALL_LONG_LASERS,
+          &boss, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     boss.BeginExplosion();
@@ -150,7 +150,7 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
     PlaySfx(SfxId::Bossbomb, actor.x);
     if (actor.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
-          &actor, ECL_ALL_LONG_LASERS,
+          &actor, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     player_.PowerUp(static_cast<uint8_t>(actor.hp));

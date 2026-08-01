@@ -9,6 +9,6 @@
 #include <span>
 #include <vector>
 
-[[nodiscard]] std::vector<uint8_t> File_Load(const std::filesystem::path &path);
-[[nodiscard]] bool File_Save(const std::filesystem::path &path,
-                             std::span<const uint8_t> data);
+[[nodiscard]] std::vector<uint8_t> LoadFile(const std::filesystem::path &path);
+[[nodiscard]] bool SaveFile(const std::filesystem::path &path,
+                            std::span<const uint8_t> data);

@@ -32,7 +32,7 @@ bool StageSession::Load(std::span<const uint8_t> map,
 }
 
 StageTransition StageSession::Update(StageUpdateContext context,
-                                     INPUT_BITS input) {
+                                     InputBits input) {
   const auto result = RunScene(context, input);
   if (result.advance_frame) {
     scene_.AdvanceFrame();
@@ -42,11 +42,11 @@ StageTransition StageSession::Update(StageUpdateContext context,
 }
 
 StageSession::SceneStepResult
-StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
+StageSession::RunScene(StageUpdateContext &context, InputBits input) {
   while (const auto *instruction = scene_.Current()) {
     switch (instruction->opcode) {
     case SceneOpcode::KeyWait:
-      if (scene_.KeyReady((input & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) != 0)) {
+      if (scene_.KeyReady((input & (KeyTama | KeyReturn | KeyBomb)) != 0)) {
         scene_.Advance();
         break;
       }
@@ -54,8 +54,8 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
 
     case SceneOpcode::Time: {
       const auto target = static_cast<uint32_t>(instruction->value);
-      if (!scene_.TimeReady(
-              target, (input & (KEY_TAMA | KEY_RETURN | KEY_BOMB)) != 0)) {
+      if (!scene_.TimeReady(target,
+                            (input & (KeyTama | KeyReturn | KeyBomb)) != 0)) {
         return {.advance_frame = true};
       }
       scene_.Advance();

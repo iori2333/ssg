@@ -24,7 +24,7 @@ struct SDL_IOStream;
 
 // Same as the standard Win32 BITMAPFILEHEADER structure, renamed to avoid
 // collisions.
-struct BMP_FILEHEADER {
+struct BmpFileHeader {
   util::LittleEndian<uint16_t> bfType;
   util::LittleEndian<uint32_t> bfSize;
   util::LittleEndian<uint16_t> bfReserved1;
@@ -34,7 +34,7 @@ struct BMP_FILEHEADER {
 
 // Same as the standard Win32 BITMAPINFOHEADER structure, renamed to avoid
 // collisions.
-struct BMP_INFOHEADER {
+struct BmpInfoHeader {
   util::LittleEndian<uint32_t> biSize;
   util::LittleEndian<int32_t> biWidth;
   util::LittleEndian<int32_t> biHeight;
@@ -56,9 +56,9 @@ struct BMP_INFOHEADER {
 // --------------------------------------
 
 // A validated .BMP buffer with its decoded header and pixel range.
-struct BMP_OWNED {
+struct BmpOwned {
   std::vector<uint8_t> buffer;
-  BMP_INFOHEADER info;
+  BmpInfoHeader info;
   size_t pixel_offset;
   size_t pixel_size;
 
@@ -69,20 +69,20 @@ struct BMP_OWNED {
 };
 
 // Can be safely used for static allocations.
-constexpr uint16_t BMP_PALETTE_SIZE_MAX = 256;
+constexpr uint16_t kBmpPaletteSizeMax = 256;
 
-// Returns a value between 0 and [BMP_PALETTE_SIZE_MAX].
-uint16_t BMPPaletteSizeFromBPP(uint8_t bpp);
+// Returns a value between 0 and [kBmpPaletteSizeMax].
+uint16_t BmpPaletteSizeFromBpp(uint8_t bpp);
 
-std::optional<BMP_OWNED> BMPLoad(std::vector<uint8_t> buffer);
+std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer);
 
 #ifndef SDL_pixels_h_
 enum SDL_PixelFormat : uint32_t;
 #endif
 
-// Returns `true` if BMPSave() supports the given [format].
-bool BMPSaveSupports(SDL_PixelFormat format);
+// Returns `true` if BmpSave() supports the given [format].
+bool BmpSaveSupports(SDL_PixelFormat format);
 
-bool BMPSave(SDL_IOStream *stream, PIXEL_SIZE size, uint16_t planes,
-             uint16_t bpp, std::span<BGRA> palette,
+bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
+             uint16_t bpp, std::span<Bgra> palette,
              std::span<const std::byte> pixels);

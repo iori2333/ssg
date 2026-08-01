@@ -121,10 +121,10 @@ void LaserLoadout::ApplyContinuousAttack(const Player &player,
   const int offset = OptionOffset(focused);
   const int damage = (beam_group_ / 3) + 1;
   enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
-      WORLD_POINT::FromWorld(player.OpX() + PixelToWorld(offset), player.OpY()),
+      WorldPoint::FromWorld(player.OpX() + PixelToWorld(offset), player.OpY()),
       damage));
   enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
-      WORLD_POINT::FromWorld(player.OpX() - PixelToWorld(offset), player.OpY()),
+      WorldPoint::FromWorld(player.OpX() - PixelToWorld(offset), player.OpY()),
       damage));
 }
 
@@ -155,13 +155,13 @@ void LaserLoadout::UpdateBomb(Player &player, EnemyManager &enemies,
   const int right_x = player.OpX() + PixelToWorld(OptionOffset(false));
   for (int i = -3; i <= 3; i++) {
     enemies.ApplyPlayerAttack(PlayerAttack::DirectedBeam(
-        WORLD_POINT::FromWorld(right_x, player.OpY()), RightAngle(angle, i)));
+        WorldPoint::FromWorld(right_x, player.OpY()), RightAngle(angle, i)));
   }
 
   const int left_x = player.OpX() - PixelToWorld(OptionOffset(false));
   for (int i = -3; i <= 3; i++) {
     enemies.ApplyPlayerAttack(PlayerAttack::DirectedBeam(
-        WORLD_POINT::FromWorld(left_x, player.OpY()), LeftAngle(angle, i)));
+        WorldPoint::FromWorld(left_x, player.OpY()), LeftAngle(angle, i)));
   }
 }
 
@@ -171,9 +171,9 @@ void LaserLoadout::DrawBombForeground(const Player &player,
     return;
   }
 
-  constexpr RGBA color = RGB216{0, 0, 5}.ToRGB().WithAlpha(0xFF);
+  constexpr Rgba color = Rgb216{0, 0, 5}.ToRgb().WithAlpha(0xFF);
   const auto angle = BombAngle(remaining);
-  VERTEX_XY points[4];
+  VertexXy points[4];
   const auto set_points = [&](int origin_x, int origin_y, int length_x,
                               int length_y, int width_x, int width_y) {
     points[0].x = origin_x + width_x;
@@ -219,18 +219,18 @@ void LaserLoadout::DrawContinuousAttack(const Player &player,
   }
 
   const int offset = OptionOffset(focused);
-  auto source = PIXEL_LTWH{384 + ((beam_group_ - 1) << 4), 240, 8, 16};
+  auto source = PixelLtwh{384 + ((beam_group_ - 1) << 4), 240, 8, 16};
   for (const int side : {-1, 1}) {
-    GrpSurface_Blit(
+    GraphicsSurfaceBlit(
         {(player.OpX() >> 6) - 4 + side * offset, (player.OpY() >> 6) - 20},
-        SURFACE_ID::SYSTEM, source);
+        SurfaceId::System, source);
   }
 
-  source = PIXEL_LTWH{384 + 8 + ((beam_group_ - 1) << 4), 240, 8, 16};
+  source = PixelLtwh{384 + 8 + ((beam_group_ - 1) << 4), 240, 8, 16};
   for (const int side : {-1, 1}) {
     for (int y = (player.OpY() >> 6) - 36; y > -16; y -= 16) {
-      GrpSurface_Blit({(player.OpX() >> 6) - 4 + side * offset, y},
-                      SURFACE_ID::SYSTEM, source);
+      GraphicsSurfaceBlit({(player.OpX() >> 6) - 4 + side * offset, y},
+                          SurfaceId::System, source);
     }
   }
 }

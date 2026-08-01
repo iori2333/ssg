@@ -1,5 +1,5 @@
 ///
-/// UIManager - UI Manager
+/// UiManager - UI Manager
 ///
 
 #pragma once
@@ -19,16 +19,16 @@
 
 struct ConfigData;
 
-class UIManager {
+class UiManager {
 public:
-  UIManager();
+  UiManager();
 
   enum class PauseAction { SaveReplayAndExit, Exit, Resume };
   enum class GameOverAction { Continue, SaveReplayAndExit, Exit };
 
   // --- Message window ---
-  void InitMessageWindow(const WINDOW_LTRB &rect,
-                         MsgWindowFlags flags = MsgWindowFlags::NONE);
+  void InitMessageWindow(const WindowLtrb &rect,
+                         MsgWindowFlags flags = MsgWindowFlags::None);
   void OpenMessageWindow();
   void CloseMessageWindow();
   void ForceCloseMessageWindow();

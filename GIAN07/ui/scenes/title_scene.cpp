@@ -26,27 +26,27 @@
 
 namespace {
 
-constexpr WINDOW_POINT kMainWindowTopLeft = {400, 250};
+constexpr WindowPoint kMainWindowTopLeft = {400, 250};
 constexpr auto kBuildLabel = "BUILD";
-constexpr PIXEL_COORD kBuildTagGap = 4;
+constexpr PixelCoord kBuildTagGap = 4;
 
 } // namespace
 
-bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
+bool TitleScene::Enter(InputBits initial_input, bool change_music) {
   AudioBackendResumeAll();
-  GrpBackend_PixelAccessEnd();
+  GraphicsBackendPixelAccessEnd();
   TextRenderer().Clear();
-  GrpBackend_Clear();
-  Grp_Flip();
+  GraphicsBackendClear();
+  GraphicsFlip();
   if (!graphics_.LoadTitle()) {
     return false;
   }
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   StopSfx(SfxId::Warning);
 
   ui_.ForceCloseMessageWindow();
   ui_.InitMessageWindow({(128 + 8), (400 + 16 + 20), (640 - 128 - 8), 480},
-                        MsgWindowFlags::CENTER);
+                        MsgWindowFlags::Center);
   ui_.OpenMessageWindow();
 
   demo_timer_ = 0;
@@ -63,13 +63,13 @@ bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
 
 void TitleScene::InitVersion() {
   const auto build_width =
-      TextRenderer().TextExtent(FONT_ID::TINY, VERSION_TAG).w;
+      TextRenderer().TextExtent(FontId::Tiny, kVersionTag).w;
   version_rect_ = TextRenderer().Register({.w = 136, .h = 10});
-  version_left_ = GRP_RES.w - build_width;
+  version_left_ = kGameResolution.w - build_width;
 }
 
-void TitleScene::DrawVersion(PIXEL_COORD top) const {
-  const auto gradient = [](PIXEL_COORD y) -> uint8_t {
+void TitleScene::DrawVersion(PixelCoord top) const {
+  const auto gradient = [](PixelCoord y) -> uint8_t {
     if (y <= 3) {
       return 254;
     }
@@ -78,21 +78,21 @@ void TitleScene::DrawVersion(PIXEL_COORD top) const {
     }
     return 180;
   };
-  constexpr auto label_extent = GrpExtent5(kBuildLabel);
-  const WINDOW_POINT label_position = {version_left_ - label_extent.w -
-                                           kBuildTagGap,
-                                       top + 2 + 7 - label_extent.h};
-  GrpPut55(label_position, kBuildLabel);
-  TextRenderer().Render({version_left_, top}, version_rect_, VERSION_TAG,
+  constexpr auto label_extent = FontExtent5(kBuildLabel);
+  const WindowPoint label_position = {version_left_ - label_extent.w -
+                                          kBuildTagGap,
+                                      top + 2 + 7 - label_extent.h};
+  DrawFont55(label_position, kBuildLabel);
+  TextRenderer().Render({version_left_, top}, version_rect_, kVersionTag,
                         [gradient](auto &session) {
-                          std::array<std::string_view, 1> text = {VERSION_TAG};
-                          DrawGrdFont(session, {text}, FONT_ID::TINY, false,
+                          std::array<std::string_view, 1> text = {kVersionTag};
+                          DrawGrdFont(session, {text}, FontId::Tiny, false,
                                       gradient);
                         });
 }
 
-TitleSceneResult TitleScene::Update(INPUT_BITS input, bool should_draw) {
-  constexpr PIXEL_LTRB source = {0, 0, 640, 396};
+TitleSceneResult TitleScene::Update(InputBits input, bool should_draw) {
+  constexpr PixelLtrb source = {0, 0, 640, 396};
   BgmUpdateMidiTables();
 
   if (input == 0) {
@@ -135,12 +135,12 @@ TitleSceneResult TitleScene::Update(INPUT_BITS input, bool should_draw) {
   ui_.Main().AdjustYForTallMenu(kMainWindowTopLeft.y, 9);
 
   if (should_draw) {
-    GrpBackend_Clear();
-    GrpSurface_Blit({0, 42}, SURFACE_ID::TITLE, source);
+    GraphicsBackendClear();
+    GraphicsSurfaceBlit({0, 42}, SurfaceId::Title, source);
     ui_.DrawMessageWindow();
     main_menu.Draw();
     DrawVersion(438);
-    Grp_Flip();
+    GraphicsFlip();
   }
   return TitleSceneResult::Running;
 }

@@ -7,7 +7,7 @@
 
 #include "file.h"
 
-std::vector<uint8_t> File_Load(const std::filesystem::path &path) {
+std::vector<uint8_t> LoadFile(const std::filesystem::path &path) {
   std::ifstream stream(path, std::ios::binary | std::ios::ate);
   if (!stream) {
     return {};
@@ -27,8 +27,8 @@ std::vector<uint8_t> File_Load(const std::filesystem::path &path) {
   return stream ? std::move(data) : std::vector<uint8_t>{};
 }
 
-bool File_Save(const std::filesystem::path &path,
-               std::span<const uint8_t> data) {
+bool SaveFile(const std::filesystem::path &path,
+              std::span<const uint8_t> data) {
   if (static_cast<uintmax_t>(data.size()) >
       static_cast<uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
     return false;

@@ -13,7 +13,7 @@
 #include "gfx/graphics_backend.h"
 #include "music/music_player.h"
 
-static constexpr auto CFG_FN = "SSG.TOML";
+static constexpr auto kConfigFileName = "SSG.TOML";
 static constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
 static constexpr auto kMaxLoadedBombStock = kMaxBombStock + 1;
 static constexpr uint8_t kExtraStageFlagMask = 0x07;
@@ -39,7 +39,7 @@ static constexpr bool ValidVolume(AudioVolume v) {
 static constexpr bool ValidMidiVariant(MidiVariant v) {
   return v <= MidiVariant::Arranged;
 }
-static constexpr bool ValidWinMMPad(INPUT_PAD_BUTTON v) { return v <= 32; }
+static constexpr bool ValidWinMMPad(InputPadButton v) { return v <= 32; }
 static constexpr bool ValidExtraStageFlags(uint8_t v) {
   return (v & ~kExtraStageFlagMask) == 0;
 }
@@ -95,14 +95,14 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "window_left", cfg.graphics.window_left);
     LoadToml(*sec, "window_top", cfg.graphics.window_top);
     LoadToml(*sec, "fps_divisor", cfg.graphics.fps_divisor, ValidFPSDivisor);
-    GRAPHICS_PARAM_FLAGS stored_flags{};
+    GraphicsParamFlags stored_flags{};
     LoadToml(*sec, "graphics_param_flags", stored_flags,
-             [](GRAPHICS_PARAM_FLAGS f) {
+             [](GraphicsParamFlags f) {
                return (std::to_underlying(f) &
-                       ~std::to_underlying(GRAPHICS_PARAM_FLAGS::MASK)) == 0;
+                       ~std::to_underlying(GraphicsParamFlags::Mask)) == 0;
              });
     const auto fullscreen =
-        GRAPHICS_PARAMS{.flags = stored_flags}.FullscreenFlags();
+        GraphicsParams{.flags = stored_flags}.FullscreenFlags();
     cfg.graphics.display_mode =
         fullscreen.fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed;
     cfg.graphics.fullscreen_mode = fullscreen.exclusive
@@ -110,7 +110,7 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
                                        : FullscreenMode::Borderless;
     cfg.graphics.fullscreen_fit = fullscreen.fit;
     cfg.graphics.scaling_mode =
-        !!(stored_flags & GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY)
+        !!(stored_flags & GraphicsParamFlags::ScaleGeometry)
             ? ScalingMode::Geometry
             : ScalingMode::Framebuffer;
     LoadToml(*sec, "screenshot_effort", cfg.graphics.screenshot_effort,
@@ -191,17 +191,17 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("window_left", cfg.graphics.window_left);
     sec.emplace("window_top", cfg.graphics.window_top);
     sec.emplace("fps_divisor", cfg.graphics.fps_divisor);
-    GRAPHICS_PARAM_FLAGS flags{};
+    GraphicsParamFlags flags{};
     if (cfg.graphics.display_mode == DisplayMode::Fullscreen) {
-      flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+      flags |= GraphicsParamFlags::Fullscreen;
     }
     if (cfg.graphics.fullscreen_mode == FullscreenMode::Exclusive) {
-      flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+      flags |= GraphicsParamFlags::FullscreenExclusive;
     }
     if (cfg.graphics.scaling_mode == ScalingMode::Geometry) {
-      flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
+      flags |= GraphicsParamFlags::ScaleGeometry;
     }
-    SetEnumFlag(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+    SetEnumFlag(flags, GraphicsParamFlags::FullscreenFit,
                 std::to_underlying(cfg.graphics.fullscreen_fit));
     sec.emplace("graphics_param_flags", std::to_underlying(flags));
     sec.emplace("screenshot_effort", cfg.graphics.screenshot_effort);
@@ -263,8 +263,8 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
 
 ConfigData LoadConfig() {
   ConfigData config;
-  TOMLLoad(CFG_FN, config);
+  TOMLLoad(kConfigFileName, config);
   return config;
 }
 
-void SaveConfig(const ConfigData &config) { TOMLSave(CFG_FN, config); }
+void SaveConfig(const ConfigData &config) { TOMLSave(kConfigFileName, config); }

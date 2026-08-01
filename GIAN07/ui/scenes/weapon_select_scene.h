@@ -25,9 +25,9 @@ public:
   }
 
   void Enter();
-  [[nodiscard]] WeaponSelectSceneResult Update(INPUT_BITS input,
+  [[nodiscard]] WeaponSelectSceneResult Update(InputBits input,
                                                bool should_draw);
-  void DrawPreview(INPUT_BITS preview_input = KEY_TAMA);
+  void DrawPreview(InputBits preview_input = KeyTama);
   void PrepareGameStart();
 
 private:

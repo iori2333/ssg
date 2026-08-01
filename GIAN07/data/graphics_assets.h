@@ -14,15 +14,15 @@ namespace data::graphics_assets {
 inline constexpr uint8_t kFaceSurfaceCount = 3;
 inline constexpr uint8_t kEndingPictureCount = 6;
 
-inline SURFACE_ID FaceSurface(uint8_t index) {
+inline SurfaceId FaceSurface(uint8_t index) {
   assert(index < kFaceSurfaceCount);
-  return static_cast<SURFACE_ID>(std::to_underlying(SURFACE_ID::FACE) + index);
+  return static_cast<SurfaceId>(std::to_underlying(SurfaceId::Face) + index);
 }
 
-inline SURFACE_ID EndingPictureSurface(uint8_t index) {
+inline SurfaceId EndingPictureSurface(uint8_t index) {
   assert(index < kEndingPictureCount);
-  return static_cast<SURFACE_ID>(std::to_underlying(SURFACE_ID::ENDING_PIC) +
-                                 index);
+  return static_cast<SurfaceId>(std::to_underlying(SurfaceId::EndingPicture) +
+                                index);
 }
 
 } // namespace data::graphics_assets

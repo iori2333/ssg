@@ -25,39 +25,38 @@
 // Constants
 // ---------
 
-static constexpr RGB ColorHighlight = {.r = 51, .g = 102, .b = 153};
-static constexpr RGB ColorDefault = {.r = 153, .g = 204, .b = 255};
+static constexpr Rgb ColorHighlight = {.r = 51, .g = 102, .b = 153};
+static constexpr Rgb ColorDefault = {.r = 153, .g = 204, .b = 255};
 static constexpr int TitleAreaWidth = 232;
 // ---------
 
 // State
 // -----
 
-void MusicRoomScene::Text::RenderVersion(WINDOW_POINT topleft,
+void MusicRoomScene::Text::RenderVersion(WindowPoint topleft,
                                          std::string_view value) const {
-  TextRenderer().Render(topleft, version, value,
-                        [value](TEXTRENDER_SESSION &s) {
-                          s.SetFont(FONT_ID::SMALL);
-                          s.SetColor(ColorDefault);
-                          s.Put({.x = 0, .y = 0}, value);
-                        });
+  TextRenderer().Render(topleft, version, value, [value](TextRenderSession &s) {
+    s.SetFont(FontId::Small);
+    s.SetColor(ColorDefault);
+    s.Put({.x = 0, .y = 0}, value);
+  });
 }
 
-void MusicRoomScene::Text::RenderMidDev(WINDOW_POINT topleft) const {
+void MusicRoomScene::Text::RenderMidDev(WindowPoint topleft) const {
   const auto maybe_dev_full = MidiBackendDeviceName();
   if (!maybe_dev_full) {
     return;
   }
   const auto dev_full = maybe_dev_full.value();
   std::string_view dev = {dev_full.data(), std::min(dev_full.size(), 13UZ)};
-  TextRenderer().Render(topleft, mid_dev, dev, [&dev](TEXTRENDER_SESSION &s) {
-    s.SetFont(FONT_ID::SMALL);
+  TextRenderer().Render(topleft, mid_dev, dev, [&dev](TextRenderSession &s) {
+    s.SetFont(FontId::Small);
     s.SetColor(ColorDefault);
     s.Put({.x = 0, .y = 0}, dev);
   });
 }
 
-void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
+void MusicRoomScene::Text::RenderTitle(WindowPoint topleft,
                                        std::size_t track_id,
                                        std::string_view track_title,
                                        uint32_t marquee_frame) const {
@@ -71,8 +70,8 @@ void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
                                      marquee_frame / ui::kMarqueeStepFrames);
   TextRenderer().Render(
       topleft, title, cache_key,
-      [&num, track_title, marquee_frame](TEXTRENDER_SESSION &s) {
-        s.SetFont(FONT_ID::NORMAL);
+      [&num, track_title, marquee_frame](TextRenderSession &s) {
+        s.SetFont(FontId::Normal);
         // GDI would calculate a trailing space as 4 pixels wide, not 8.
         const auto title_left = (s.Extent(num).w + 8);
 
@@ -85,15 +84,15 @@ void MusicRoomScene::Text::RenderTitle(WINDOW_POINT topleft,
       });
 }
 
-void MusicRoomScene::Text::RenderComment(WINDOW_POINT topleft,
+void MusicRoomScene::Text::RenderComment(WindowPoint topleft,
                                          std::string_view comment_text) const {
   if (comment_text.empty()) {
     return;
   }
   TextRenderer().Render(
-      topleft, comment, comment_text, [comment_text](TEXTRENDER_SESSION &s) {
+      topleft, comment, comment_text, [comment_text](TextRenderSession &s) {
         int y = 0;
-        s.SetFont(FONT_ID::SMALL);
+        s.SetFont(FontId::Small);
         s.SetColor(ColorDefault);
 
         size_t pos = 0;
@@ -114,15 +113,15 @@ void MusicRoomScene::Text::RenderComment(WINDOW_POINT topleft,
 
 bool MusicRoomScene::Enter() {
   TextRenderer().Clear();
-  GrpBackend_Clear();
-  Grp_Flip();
+  GraphicsBackendClear();
+  GraphicsFlip();
 
   if (!graphics_.LoadMusicRoom()) {
     logging::Error(logging::Channel::Ui, "Failed to load Music Room graphics");
     return false;
   }
 
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
 
   track_id_ = 0;
   previous_input_ = 0;
@@ -159,8 +158,7 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
   uint16_t ftable[128 + 8 + 8];
   uint16_t ftable2[128];
 
-  constexpr PIXEL_LTRB src = {(16 * 16), 0, ((16 * 16) + (8 * 21)),
-                              8}; // ,,,8*4
+  constexpr PixelLtrb src = {(16 * 16), 0, ((16 * 16) + (8 * 21)), 8}; // ,,,8*4
 
   spectrum_decay_frame_ = ((spectrum_decay_frame_ + 1) % 5);
 
@@ -229,11 +227,11 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
     }
   }
 
-  // GrpSurface_Blit({ (SPECT_X - 7), SPECT_Y }, SURFACE_ID::SYSTEM, src);
+  // GraphicsSurfaceBlit({ (SPECT_X - 7), SPECT_Y }, SurfaceId::System, src);
 
   for (int i = 0; i < std::size(ftable); i++) {
-    constexpr RGB c1 = {.r = 200, .g = 0, .b = 0};
-    constexpr RGB c2 = {.r = 250, .g = 250, .b = 0};
+    constexpr Rgb c1 = {.r = 200, .g = 0, .b = 0};
+    constexpr Rgb c2 = {.r = 250, .g = 250, .b = 0};
     Geometry().DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
   }
 }
@@ -244,7 +242,7 @@ void MusicRoomScene::DrawNotes() {
   // o#o#oo#o#o#o
   // o o oo o o o
 
-  constexpr const PIXEL_LTRB src[12] = {
+  constexpr const PixelLtrb src[12] = {
       {0, 464, 3, 474}, // white
       {0, 456, 3, 461}, // black
 
@@ -264,7 +262,7 @@ void MusicRoomScene::DrawNotes() {
       {24, 464, 27, 474}, // white
   };
 
-  constexpr const PIXEL_LTRB src2[12] = {
+  constexpr const PixelLtrb src2[12] = {
       {0, (464 - 24), 3, (474 - 24)}, // white
       {0, (456 - 24), 3, (461 - 24)}, // black
 
@@ -284,7 +282,7 @@ void MusicRoomScene::DrawNotes() {
       {24, (464 - 24), 27, (474 - 24)}, // white
   };
 
-  constexpr const PIXEL_COORD destX[12] = {
+  constexpr const PixelCoord destX[12] = {
       0, // white
       2, // black
 
@@ -304,14 +302,14 @@ void MusicRoomScene::DrawNotes() {
       24, // white
   };
 
-  PIXEL_LTRB rc;
+  PixelLtrb rc;
 
   for (const auto Track : std::views::iota(0, 16)) {
     const auto top = (22 + (Track * 24));
     const auto pan = (static_cast<int8_t>(midi_visualization_.pan[Track]) - 64);
-    GrpPutMidNum(50, top, midi_visualization_.volume[Track]);
-    GrpPutMidNum(125, top, midi_visualization_.expression[Track]);
-    GrpPutMidNum(181, top, pan);
+    DrawFontMid(50, top, midi_visualization_.volume[Track]);
+    DrawFontMid(125, top, midi_visualization_.expression[Track]);
+    DrawFontMid(181, top, pan);
 
     int LevelSum = 0;
     int num = 0;
@@ -319,13 +317,13 @@ void MusicRoomScene::DrawNotes() {
       if (midi_visualization_.note_highlights[Track][NoteNo] != 0U) {
         const auto x = (40 + destX[NoteNo % 12] + ((NoteNo / 12) * 28));
         const auto y = (9 + (Track * 24));
-        GrpSurface_Blit({x, y}, SURFACE_ID::MUSIC, src[NoteNo % 12]);
+        GraphicsSurfaceBlit({x, y}, SurfaceId::Music, src[NoteNo % 12]);
       }
 
       if (midi_visualization_.notes[Track][NoteNo] != 0U) {
         const auto x = (40 + destX[NoteNo % 12] + ((NoteNo / 12) * 28));
         const auto y = (9 + (Track * 24));
-        GrpSurface_Blit({x, y}, SURFACE_ID::MUSIC, src[NoteNo % 12]);
+        GraphicsSurfaceBlit({x, y}, SurfaceId::Music, src[NoteNo % 12]);
       }
       if (midi_visualization_.levels[Track][NoteNo] != 0U) {
         LevelSum += midi_visualization_.levels[Track][NoteNo];
@@ -334,13 +332,13 @@ void MusicRoomScene::DrawNotes() {
     }
 
     if (num != 0) {
-      rc = PIXEL_LTWH{80, 456, (std::min)((LevelSum / num), 96), 5};
-      GrpSurface_Blit({240, (22 + (Track * 24))}, SURFACE_ID::MUSIC, rc);
+      rc = PixelLtwh{80, 456, (std::min)((LevelSum / num), 96), 5};
+      GraphicsSurfaceBlit({240, (22 + (Track * 24))}, SurfaceId::Music, rc);
     }
   }
 }
 
-bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
+bool MusicRoomScene::Update(InputBits input, InputBits system_input,
                             bool should_draw) {
   if (!text_) {
     assert(!"Music Room not initialized?");
@@ -351,13 +349,13 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
   const auto playing = BgmPlayingSource();
 
   if (input != previous_input_) {
-    if (Input_IsCancel(input)) {
+    if (InputIsCancel(input)) {
       device_change_wait_ = false;
       text_ = std::nullopt;
       return true;
     }
-    if ((input == KEY_RIGHT) || (input == KEY_LEFT)) {
-      if (input == KEY_RIGHT) {
+    if ((input == KeyRight) || (input == KeyLeft)) {
+      if (input == KeyRight) {
         track_id_ += 2;
       }
       BgmStop();
@@ -370,25 +368,25 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
   }
 
   switch (input) {
-  case KEY_UP:
+  case KeyUp:
     BgmSetTempo(BgmTempo() + 1);
     break;
-  case KEY_DOWN:
+  case KeyDown:
     BgmSetTempo(BgmTempo() - 1);
     break;
-  case KEY_SHIFT:
+  case KeyShift:
     BgmSetTempo(0);
     break;
   }
 
-  if ((system_input & SYSKEY_BGM_FADE) != 0) {
+  if ((system_input & SystemKeyBgmFade) != 0) {
     BgmFadeOut(120);
   }
 
   BgmUpdateMidiTables();
 
   if ((playing == BgmPlaybackSource::Midi) &&
-      ((system_input & SYSKEY_BGM_DEVICE) != 0)) {
+      ((system_input & SystemKeyBgmDevice) != 0)) {
     if (!device_change_wait_) {
       BgmChangeMidiDevice(1);
       device_change_wait_ = true;
@@ -400,16 +398,16 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
 
   if (should_draw) {
     midi_visualization_ = MidiVisualizationState();
-    GrpBackend_Clear();
+    GraphicsBackendClear();
 
-    auto BlitBG = [](const PIXEL_LTWH &rect) {
-      GrpSurface_Blit({rect.left, rect.top}, SURFACE_ID::MUSIC, rect);
+    auto BlitBG = [](const PixelLtwh &rect) {
+      GraphicsSurfaceBlit({rect.left, rect.top}, SurfaceId::Music, rect);
     };
 
-    auto BlitLegend = [](const PIXEL_LTWH &rect) {
-      const PIXEL_LTRB src = (rect + PIXEL_POINT{.x = 0, .y = 392});
-      GrpSurface_Blit({(8 + rect.left), (410 + rect.top)}, SURFACE_ID::MUSIC,
-                      src);
+    auto BlitLegend = [](const PixelLtwh &rect) {
+      const PixelLtrb src = (rect + PixelPoint{.x = 0, .y = 392});
+      GraphicsSurfaceBlit({(8 + rect.left), (410 + rect.top)}, SurfaceId::Music,
+                          src);
     };
 
     BlitBG({0, 0, 504, 392});     // From keyboard to spectrum analyzer
@@ -431,21 +429,21 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
     const auto millis = BgmPlayTime().count();
     const auto m = ((millis / 1000) / 60);
     const auto s = ((millis / 1000) % 60);
-    GrpPut7B(560, 44, std::format("{:02} : {:02}", m, s).c_str());
+    DrawFont7B(560, 44, std::format("{:02} : {:02}", m, s).c_str());
     // TextOut(hdc,561,40+2,buf,strlen(buf));
 
     if (midi_visualization_.loaded) {
       BlitBG({504, 59, 136, 24}); // MIDI TIMER
-      GrpPut7B(
+      DrawFont7B(
           560, 68,
           std::format("{:07}", midi_visualization_.play_time.pulse_interpolated)
               .c_str());
       // TextOut(hdc,561,64+2,buf,strlen(buf));
     }
 
-    GrpPut7B(560, 116, std::format("{:3}", BgmTempo()).c_str());
+    DrawFont7B(560, 116, std::format("{:3}", BgmTempo()).c_str());
     // TextOut(hdc,561,112+2,buf,strlen(buf));
-    // SetTextColor(hdc,RGB(255*5/5,255*2/5,255*1/5));
+    // SetTextColor(hdc,Rgb(255*5/5,255*2/5,255*1/5));
 
     if (playing == BgmPlaybackSource::Midi) {
       text.RenderMidDev({(540 + 2), (96 - 3)});
@@ -458,7 +456,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
         {(200 - 50), 460},
         localization_.Text(i18n::TextIdFromKey("ui.music_room.version")));
 
-    Grp_Flip();
+    GraphicsFlip();
   }
   title_marquee_frame_++;
   return false;

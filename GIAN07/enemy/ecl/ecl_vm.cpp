@@ -131,7 +131,7 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
   case EclOpcode::End:
     if (actor.long_laser_count != 0U) {
       host_.Bullets().ControlLongLaser(
-          &actor, ECL_ALL_LONG_LASERS,
+          &actor, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     actor.state = EnemyActorState::PendingRemoval;
@@ -525,7 +525,7 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     return Step::Advance;
 
   case EclOpcode::RandomBoundedAngle: {
-    const PIXEL_LTRB bounds = {
+    const PixelLtrb bounds = {
         playfield::kWorldLeft + 150_px,
         playfield::kWorldTop +
             ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3),
@@ -816,7 +816,7 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     const auto id = Args<EclLongLaserArguments>(instruction).id;
     host_.Bullets().ControlLongLaser(
         &actor, id, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
-    if (id == ECL_ALL_LONG_LASERS) {
+    if (id == kEclAllLongLasers) {
       actor.long_laser_count = 0;
     } else {
       --actor.long_laser_count;
@@ -920,7 +920,7 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
   case EclOpcode::SpawnEnemy:
   case EclOpcode::SpawnEnemyWithAngle: {
     const auto &args = Args<EclSpawnEnemyArguments>(instruction);
-    WORLD_POINT position{&actor.x, &actor.y};
+    WorldPoint position{&actor.x, &actor.y};
     position.x += PixelToWorld(args.offset_x);
     position.y += PixelToWorld(args.offset_y);
     auto *spawned = host_.SpawnRegular(position, args.script_id);
@@ -970,7 +970,7 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::SpawnBoss: {
-    const WORLD_POINT position{&actor.x, &actor.y};
+    const WorldPoint position{&actor.x, &actor.y};
     host_.SpawnBoss(position, Args<EclScriptArguments>(instruction).script_id);
     break;
   }

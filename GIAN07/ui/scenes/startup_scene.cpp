@@ -65,16 +65,16 @@ StartupScene::Lens StartupScene::Lens::Create(uint16_t radius, uint16_t bulge) {
   return lens;
 }
 
-void StartupScene::Lens::Draw(WINDOW_POINT center) {
-  const WINDOW_COORD left = center.x - radius;
-  const WINDOW_COORD top = center.y - radius;
-  if (left < 0 || top < 0 || left + diameter > GRP_RES.w - 1 ||
-      top + diameter > GRP_RES.h - 1) {
+void StartupScene::Lens::Draw(WindowPoint center) {
+  const WindowCoord left = center.x - radius;
+  const WindowCoord top = center.y - radius;
+  if (left < 0 || top < 0 || left + diameter > kGameResolution.w - 1 ||
+      top + diameter > kGameResolution.h - 1) {
     return;
   }
 
-  GrpBackend_PixelAccessEdit([&]<class Pixel>(std::byte *pixels,
-                                              std::size_t pitch) {
+  GraphicsBackendPixelAccessEdit([&]<class Pixel>(std::byte *pixels,
+                                                  std::size_t pitch) {
     auto *captured = reinterpret_cast<Pixel *>(field_of_view.data());
     const std::span field{captured,
                           static_cast<std::size_t>(diameter) * diameter};
@@ -99,7 +99,7 @@ void StartupScene::Lens::Draw(WINDOW_POINT center) {
 }
 
 bool StartupScene::Enter() {
-  GrpBackend_PixelAccessStart();
+  GraphicsBackendPixelAccessStart();
   if (!graphics_.LoadProjectScreen()) {
     return false;
   }
@@ -109,9 +109,9 @@ bool StartupScene::Enter() {
 }
 
 StartupSceneResult StartupScene::Update(bool should_draw) {
-  constexpr PIXEL_SIZE logo_size = {.w = 320, .h = 42};
-  constexpr WINDOW_LTRB logo = WINDOW_LTWH{
-      (320 - (logo_size.w / 2)), (240 + 40), logo_size.w, logo_size.h};
+  constexpr PixelSize logo_size = {.w = 320, .h = 42};
+  constexpr WindowLtrb logo = WindowLtwh{(320 - (logo_size.w / 2)), (240 + 40),
+                                         logo_size.w, logo_size.h};
 
   timer_++;
   if (timer_ >= 256) {
@@ -122,9 +122,9 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
     return StartupSceneResult::Running;
   }
 
-  GrpBackend_Clear();
-  constexpr PIXEL_LTRB source = {0, 0, logo_size.w, logo_size.h};
-  GrpSurface_Blit({logo.left, logo.top}, SURFACE_ID::SPROJECT, source);
+  GraphicsBackendClear();
+  constexpr PixelLtrb source = {0, 0, logo_size.w, logo_size.h};
+  GraphicsSurfaceBlit({logo.left, logo.top}, SurfaceId::Project, source);
 
   const auto fade = [logo](uint8_t black_alpha) {
     Geometry().SetAlphaNorm(black_alpha);
@@ -148,6 +148,6 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
             .y;
     lens_->Draw({320 + x, 295 + y});
   }
-  Grp_Flip();
+  GraphicsFlip();
   return StartupSceneResult::Running;
 }

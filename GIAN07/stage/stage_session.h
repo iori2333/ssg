@@ -15,7 +15,7 @@ class EffectManager;
 class EnemyManager;
 struct GameSession;
 class MusicPlayer;
-class UIManager;
+class UiManager;
 
 namespace i18n {
 class Localization;
@@ -37,7 +37,7 @@ enum class StageTransition : uint8_t {
 struct StageUpdateContext {
   EnemyManager &enemies;
   EffectManager &effects;
-  UIManager &ui;
+  UiManager &ui;
   data::GraphicsLoader &graphics;
   MusicPlayer &music;
   const GameSession &session;
@@ -51,7 +51,7 @@ public:
                           std::span<const uint8_t> scene);
 
   [[nodiscard]] StageTransition Update(StageUpdateContext context,
-                                       INPUT_BITS input);
+                                       InputBits input);
   void Draw() const { background_.Draw(); }
   void Command(BackgroundCommand command, EffectManager &effects) {
     background_.Command(command, effects);
@@ -70,7 +70,7 @@ private:
   };
 
   [[nodiscard]] SceneStepResult RunScene(StageUpdateContext &context,
-                                         INPUT_BITS input);
+                                         InputBits input);
   [[nodiscard]] int32_t FindBossTimeout() const;
   void ExecuteEffect(SceneEffect effect, StageUpdateContext &context);
 

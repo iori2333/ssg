@@ -8,18 +8,18 @@
 
 #include "gfx/coords.h"
 
-struct SURFACE {
-  PIXEL_SIZE size = {0, 0};
+struct Surface {
+  PixelSize size = {0, 0};
 };
 
 // Only required for the HBITMAP type, which is basically void*.
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-struct BMP_OWNED;
+struct BmpOwned;
 struct SDL_IOStream;
 
-class SURFACE_GDI : public SURFACE {
+class SurfaceGdi : public Surface {
 public:
   // Required for unselecting [img] prior to deleting it. Could have probably
   // been `static`, but let's keep it correct for now.
@@ -31,13 +31,13 @@ public:
   // Always has any valid [img] selected into it.
   HDC dc;
 
-  SURFACE_GDI() noexcept;
-  SURFACE_GDI(const SURFACE_GDI &) = delete;
-  SURFACE_GDI &operator=(const SURFACE_GDI &) = delete;
-  ~SURFACE_GDI();
+  SurfaceGdi() noexcept;
+  SurfaceGdi(const SurfaceGdi &) = delete;
+  SurfaceGdi &operator=(const SurfaceGdi &) = delete;
+  ~SurfaceGdi();
 
   // Calls Delete() and reinitializes [img].
-  bool Load(const BMP_OWNED &bmp);
+  bool Load(const BmpOwned &bmp);
 
   // Saves [img] as a .BMP file to the given stream.
   bool Save(SDL_IOStream *) const;

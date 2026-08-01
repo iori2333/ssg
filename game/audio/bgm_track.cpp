@@ -115,15 +115,15 @@ struct PcmCodec {
   PcmPartOpen &open;
 };
 
-std::unique_ptr<PcmPart> FLAC_Open(std::istream &stream,
-                                   std::optional<MetadataCallback> on_metadata);
+std::unique_ptr<PcmPart> OpenFlac(std::istream &stream,
+                                  std::optional<MetadataCallback> on_metadata);
 std::unique_ptr<PcmPart>
-Vorbis_Open(std::istream &stream, std::optional<MetadataCallback> on_metadata);
+OpenVorbis(std::istream &stream, std::optional<MetadataCallback> on_metadata);
 
 // Sorted in order of preference.
 constexpr PcmCodec kPcmCodecs[] = {
-    {".flac", FLAC_Open},
-    {".ogg", Vorbis_Open},
+    {".flac", OpenFlac},
+    {".ogg", OpenVorbis},
 };
 // ------
 

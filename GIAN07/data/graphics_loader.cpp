@@ -14,48 +14,48 @@
 
 namespace data {
 
-bool GraphicsLoader::LoadBmp(uint32_t file_no, SURFACE_ID surface) const {
-  auto bmp = BMPLoad(data_->ExtractImage(file_no));
-  return bmp && GrpSurface_Load(surface, std::move(*bmp));
+bool GraphicsLoader::LoadBmp(uint32_t file_no, SurfaceId surface) const {
+  auto bmp = BmpLoad(data_->ExtractImage(file_no));
+  return bmp && GraphicsSurfaceLoad(surface, std::move(*bmp));
 }
 
 bool GraphicsLoader::Load(Set set) {
   bool loaded = false;
   switch (set) {
   case Set::MusicRoom:
-    loaded = LoadBmp(0, SURFACE_ID::SYSTEM) && LoadBmp(23, SURFACE_ID::MUSIC);
+    loaded = LoadBmp(0, SurfaceId::System) && LoadBmp(23, SurfaceId::Music);
     break;
   case Set::Title:
-    loaded = LoadBmp(0, SURFACE_ID::SYSTEM) && LoadBmp(24, SURFACE_ID::TITLE);
+    loaded = LoadBmp(0, SurfaceId::System) && LoadBmp(24, SurfaceId::Title);
     break;
   case Set::NameRegistration:
-    loaded = LoadBmp(0, SURFACE_ID::SYSTEM) && LoadBmp(25, SURFACE_ID::NAMEREG);
+    loaded = LoadBmp(0, SurfaceId::System) &&
+             LoadBmp(25, SurfaceId::NameRegistration);
     break;
   case Set::ProjectScreen:
-    loaded = LoadBmp(31, SURFACE_ID::SPROJECT);
+    loaded = LoadBmp(31, SurfaceId::Project);
     break;
   case Set::Ending:
-    loaded = LoadBmp(32, SURFACE_ID::ENDING_CREDITS);
+    loaded = LoadBmp(32, SurfaceId::EndingCredits);
     for (uint8_t i = 0; loaded && i < graphics_assets::kEndingPictureCount;
          ++i) {
       loaded = LoadBmp(33 + i, graphics_assets::EndingPictureSurface(i));
     }
     break;
   case Set::Extra:
-    loaded = LoadBmp(0, SURFACE_ID::SYSTEM) && LoadBmp(28, SURFACE_ID::ENEMY) &&
-             LoadBmp(27, SURFACE_ID::MAPCHIP) &&
-             LoadBmp(26, SURFACE_ID::BOMBER);
+    loaded = LoadBmp(0, SurfaceId::System) && LoadBmp(28, SurfaceId::Enemy) &&
+             LoadBmp(27, SurfaceId::MapChip) && LoadBmp(26, SurfaceId::Bomber);
     break;
   case Set::BulletGallery:
-    loaded = LoadBmp(0, SURFACE_ID::SYSTEM) && LoadGalleryEnemySurface();
+    loaded = LoadBmp(0, SurfaceId::System) && LoadGalleryEnemySurface();
     break;
   default: {
     const auto stage = std::to_underlying(set);
     constexpr std::array<uint32_t, 6> kMapChipIds = {7, 8, 9, 10, 11, 12};
-    loaded = LoadBmp(0, SURFACE_ID::SYSTEM) &&
-             LoadBmp(stage + 1, SURFACE_ID::ENEMY) &&
-             LoadBmp(kMapChipIds[stage], SURFACE_ID::MAPCHIP) &&
-             LoadBmp(26, SURFACE_ID::BOMBER);
+    loaded = LoadBmp(0, SurfaceId::System) &&
+             LoadBmp(stage + 1, SurfaceId::Enemy) &&
+             LoadBmp(kMapChipIds[stage], SurfaceId::MapChip) &&
+             LoadBmp(26, SurfaceId::Bomber);
     break;
   }
   }
@@ -91,12 +91,12 @@ bool GraphicsLoader::LoadBulletGallery() { return Load(Set::BulletGallery); }
 bool GraphicsLoader::Reload() { return loaded_set_ && Load(*loaded_set_); }
 
 bool GraphicsLoader::SwapEnemySurface(uint8_t image_no) {
-  return LoadBmp(image_no, SURFACE_ID::ENEMY);
+  return LoadBmp(image_no, SurfaceId::Enemy);
 }
 
 bool GraphicsLoader::LoadGalleryEnemySurface() const {
-  auto bmp29 = BMPLoad(data_->ExtractImage(29));
-  auto bmp30 = BMPLoad(data_->ExtractImage(30));
+  auto bmp29 = BmpLoad(data_->ExtractImage(29));
+  auto bmp30 = BmpLoad(data_->ExtractImage(30));
   if (!bmp29 || !bmp30) {
     return false;
   }
@@ -123,7 +123,7 @@ bool GraphicsLoader::LoadGalleryEnemySurface() const {
       }
     }
   }
-  return GrpSurface_Load(SURFACE_ID::ENEMY, std::move(*bmp29));
+  return GraphicsSurfaceLoad(SurfaceId::Enemy, std::move(*bmp29));
 }
 
 bool GraphicsLoader::LoadFace(uint8_t face_id, uint8_t file_no) {

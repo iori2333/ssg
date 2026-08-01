@@ -106,7 +106,7 @@ private:
   float wy_{};
   float w_{};
   float wmax_{};
-  VERTEX_XY p_[4]{};
+  VertexXy p_[4]{};
   uint8_t enemy_id_{};
 
   LongLaserType subtype_{LongLaserType::Long};

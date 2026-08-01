@@ -18,8 +18,8 @@ namespace bgm {
 // Callbacks
 // ---------
 
-static size_t CB_Vorbis_Read(void *ptr, size_t size, size_t nmemb,
-                             void *datasource) {
+static size_t VorbisRead(void *ptr, size_t size, size_t nmemb,
+                         void *datasource) {
   if (size == 0 || nmemb == 0) {
     return 0;
   }
@@ -37,7 +37,7 @@ static size_t CB_Vorbis_Read(void *ptr, size_t size, size_t nmemb,
   return static_cast<size_t>(stream.gcount()) / size;
 }
 
-int CB_Vorbis_Seek(void *datasource, ogg_int64_t offset, int ov_whence) {
+int VorbisSeek(void *datasource, ogg_int64_t offset, int ov_whence) {
   auto &stream = *static_cast<std::istream *>(datasource);
 
 #pragma warning(suppress : 26494) // type.5
@@ -65,7 +65,7 @@ int CB_Vorbis_Seek(void *datasource, ogg_int64_t offset, int ov_whence) {
   return stream ? 0 : -1;
 }
 
-long CB_Vorbis_Tell(void *datasource) {
+long VorbisTell(void *datasource) {
   auto &stream = *static_cast<std::istream *>(datasource);
   const std::streamoff offset = stream.tellg();
   if (offset < 0 || offset > std::numeric_limits<long>::max()) {
@@ -75,10 +75,10 @@ long CB_Vorbis_Tell(void *datasource) {
 }
 
 static const ov_callbacks kVorbisCallbacks = {
-    CB_Vorbis_Read,
-    CB_Vorbis_Seek,
+    VorbisRead,
+    VorbisSeek,
     nullptr,
-    CB_Vorbis_Tell,
+    VorbisTell,
 };
 // ---------
 
@@ -107,8 +107,8 @@ void VorbisPcmPart::PartSeekToSample(size_t sample) {
 VorbisPcmPart::~VorbisPcmPart() { ov_clear(&vf); }
 
 std::unique_ptr<bgm::PcmPart>
-Vorbis_Open(std::istream &stream,
-            std::optional<bgm::MetadataCallback> on_metadata) {
+OpenVorbis(std::istream &stream,
+           std::optional<bgm::MetadataCallback> on_metadata) {
   OggVorbis_File vf = {0};
   const auto ret =
       ov_open_callbacks(&stream, &vf, nullptr, 0, kVorbisCallbacks);

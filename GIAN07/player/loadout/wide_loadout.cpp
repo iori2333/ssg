@@ -315,7 +315,7 @@ void WideLoadout::FireSubFocused(Player &player_, uint8_t tier) {
 
 void WideLoadout::DrawBombBackground(const Player & /*player*/,
                                      uint16_t remaining) const {
-  static constexpr PIXEL_LTRB frames[6] = {
+  static constexpr PixelLtrb frames[6] = {
       {0, 0, 210, 240},           {210, 0, 210 * 2, 240},
       {210 * 2, 0, 210 * 3, 240}, {0, 240, 210, 480},
       {210, 240, 210 * 2, 480},   {210 * 2, 240, 210 * 3, 480}};
@@ -330,6 +330,6 @@ void WideLoadout::DrawBombBackground(const Player & /*player*/,
   } else {
     frame = std::min<int>(remaining / 4, 5);
   }
-  GrpSurface_Blit({playfield::kLeft + 100, playfield::kTop + 100},
-                  SURFACE_ID::BOMBER, frames[frame]);
+  GraphicsSurfaceBlit({playfield::kLeft + 100, playfield::kTop + 100},
+                      SurfaceId::Bomber, frames[frame]);
 }

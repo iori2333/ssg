@@ -19,7 +19,7 @@ namespace {
 
 // ── Color tables ────────────────────────────────────────────────────
 // clang-format off
-inline constexpr RGB216 kTable16Bit[16] = {
+inline constexpr Rgb216 kTable16Bit[16] = {
     {3, 0, 3}, {0, 2, 0}, {0, 0, 4}, {4, 2, 0}, {0, 0, 1},
 };
 // clang-format on
@@ -73,11 +73,11 @@ void LaserLong::Spawn(const LongLaserSpawnInfo &info) {
 void LaserLong::RecalcGeometry() {
   auto *pp = p_;
 
-  pp[1].x = pp[0].x = (x_ / WORLD_COORD_SCALE) + wx_ + lx_;
-  pp[1].y = pp[0].y = (y_ / WORLD_COORD_SCALE) + wy_ + ly_;
+  pp[1].x = pp[0].x = (x_ / kWorldCoordScale) + wx_ + lx_;
+  pp[1].y = pp[0].y = (y_ / kWorldCoordScale) + wy_ + ly_;
 
-  pp[2].x = pp[3].x = (x_ / WORLD_COORD_SCALE) - wx_ + lx_;
-  pp[2].y = pp[3].y = (y_ / WORLD_COORD_SCALE) - wy_ + ly_;
+  pp[2].x = pp[3].x = (x_ / kWorldCoordScale) - wx_ + lx_;
+  pp[2].y = pp[3].y = (y_ / kWorldCoordScale) - wy_ + ly_;
 
   pp[1].x += infx_;
   pp[1].y += infy_;
@@ -150,7 +150,7 @@ void LaserLong::UpdateOpening() {
   }
 
   const auto width =
-      math::PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+      math::PolarVector(angle_, w_ / static_cast<float>(kWorldCoordScale));
   lx_ = width.x;
   ly_ = width.y;
   wx_ = -width.y;
@@ -172,7 +172,7 @@ void LaserLong::UpdateClosing() {
   }
 
   const auto width =
-      math::PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+      math::PolarVector(angle_, w_ / static_cast<float>(kWorldCoordScale));
   lx_ = width.x;
   ly_ = width.y;
   wx_ = -width.y;
@@ -236,24 +236,24 @@ void LaserLong::Kill() {
 
 void LaserLong::DrawBeam() const {
   const auto cval = c_;
-  const auto px = (x_ / WORLD_COORD_SCALE) + lx_;
-  const auto py = (y_ / WORLD_COORD_SCALE) + ly_;
+  const auto px = (x_ / kWorldCoordScale) + lx_;
+  const auto py = (y_ / kWorldCoordScale) + ly_;
   const auto len = std::hypot(wx_, wy_);
   if (len == 0) {
     return;
   }
 
-  const RGBA col = kTable16Bit[cval].ToRGB().WithAlpha(0xFF);
+  const Rgba col = kTable16Bit[cval].ToRgb().WithAlpha(0xFF);
   Geometry().SetAlphaOne();
   GeomGrdRectA(Geometry(), p_, col);
 
-  std::array<VERTEX_RGBA, kBeamVertexCount> vcs{};
+  std::array<VertexRgba, kBeamVertexCount> vcs{};
   vcs[0] = {255, 255, 255, 0xFF};
   for (auto &vc : vcs | std::views::drop(1)) {
     vc = col;
   }
 
-  std::array<VERTEX_XY, kBeamVertexCount> points{};
+  std::array<VertexXy, kBeamVertexCount> points{};
   points[0] = {px, py};
   points[1] = p_[0];
   points[kBeamVertexCount - 1] = p_[3];
@@ -263,12 +263,12 @@ void LaserLong::DrawBeam() const {
     const auto offset = math::PolarVector(cap_angle, len);
     points[n] = {points[0].x + offset.x, points[0].y + offset.y};
   }
-  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, points, vcs);
+  Geometry().DrawTrianglesA(TrianglePrimitive::Fan, points, vcs);
 }
 
 void LaserLong::DrawPreviewLine() const {
-  const auto px = x_ / WORLD_COORD_SCALE;
-  const auto py = y_ / WORLD_COORD_SCALE;
+  const auto px = x_ / kWorldCoordScale;
+  const auto py = y_ / kWorldCoordScale;
   Geometry().SetColor({4, 4, 4});
   Geometry().DrawLine(px, py, (px + infx_), (py + infy_));
 }
@@ -316,7 +316,7 @@ void LaserLong::ApplyCommand(LongLaserUpdateInfo::Command cmd, float angle,
 
 void LaserLong::FixAngleGeometry() {
   const auto width =
-      math::PolarVector(angle_, w_ / static_cast<float>(WORLD_COORD_SCALE));
+      math::PolarVector(angle_, w_ / static_cast<float>(kWorldCoordScale));
   lx_ = width.x;
   ly_ = width.y;
   wx_ = -width.y;
@@ -329,7 +329,7 @@ void LaserLong::FixAngleGeometry() {
 
 bool LaserLong::BelongsTo(const EnemyActor *e, uint8_t id) const {
   return e_ == e && e != nullptr &&
-         (enemy_id_ == id || id == ECL_ALL_LONG_LASERS);
+         (enemy_id_ == id || id == kEclAllLongLasers);
 }
 
 // ── Debug ──────────────────────────────────────────────────────────
@@ -338,18 +338,18 @@ void LaserLong::RenderDebugHitbox(int mode) const {
   if (state_ != LongState::Active && state_ != LongState::Opening) {
     return;
   }
-  const std::array<VERTEX_XY, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
-  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, strip);
+  const std::array<VertexXy, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
+  Geometry().DrawTrianglesA(TrianglePrimitive::Strip, strip);
 
   if (mode >= 2 && w_ > 0) {
-    const float bx = x_ / WORLD_COORD_SCALE;
-    const float by = y_ / WORLD_COORD_SCALE;
+    const float bx = x_ / kWorldCoordScale;
+    const float by = y_ / kWorldCoordScale;
     const float scale = w_ + kDebugLaserEvadeWidth;
     const float wx2 = wx_ * scale / w_;
     const float wy2 = wy_ * scale / w_;
     const float lx2 = lx_ * scale / w_;
     const float ly2 = ly_ * scale / w_;
-    VERTEX_XY ep[4];
+    VertexXy ep[4];
     ep[1].x = ep[0].x = static_cast<float>(bx + wx2 + lx2);
     ep[1].y = ep[0].y = static_cast<float>(by + wy2 + ly2);
     ep[2].x = ep[3].x = static_cast<float>(bx - wx2 + lx2);
@@ -358,7 +358,7 @@ void LaserLong::RenderDebugHitbox(int mode) const {
     ep[1].y += static_cast<float>(infy_);
     ep[2].x += static_cast<float>(infx_);
     ep[2].y += static_cast<float>(infy_);
-    const std::array<VERTEX_XY, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
-    Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, estrip);
+    const std::array<VertexXy, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
+    Geometry().DrawTrianglesA(TrianglePrimitive::Strip, estrip);
   }
 }

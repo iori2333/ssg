@@ -16,7 +16,7 @@
 #include "player/player.h"
 #include "util/math_utils.h"
 
-static constexpr auto BIT_VIRTUAL_HP = 990000;
+static constexpr auto kBitVirtualHp = 990000;
 
 // Initialize bit array
 void BitFormation::Reset() {
@@ -73,10 +73,10 @@ void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
   base_angle_ = 0;
   laser_pattern_ = LaserPattern::Disabled;
   laser_active_ = false;
-  const WORLD_POINT position{&center_x_, &center_y_};
+  const WorldPoint position{&center_x_, &center_y_};
   for (i = 0; std::cmp_less(i, count); i++) {
     if (auto *e = enemies_.SpawnRegular(position, script_id)) {
-      e->hp = BIT_VIRTUAL_HP;
+      e->hp = kBitVirtualHp;
       e->d = i * (256 / count);
       e->script.registers[0] = i;
       e->script.registers[1] = count;
@@ -152,7 +152,7 @@ void BitFormation::Update() {
     // -> To accumulate damage, comment out the for loop below
     for (i = 0; std::cmp_less(i, count_); i++) {
       if (auto *actor = parts_[i].actor) {
-        actor->hp = BIT_VIRTUAL_HP;
+        actor->hp = kBitVirtualHp;
       }
     }
     return;
@@ -165,12 +165,12 @@ void BitFormation::Update() {
       continue;
     }
 
-    const uint32_t damage = (BIT_VIRTUAL_HP - e->hp);
+    const uint32_t damage = (kBitVirtualHp - e->hp);
     if (parts_[i].hp <= damage) {
       // Send deletion request to enemy associated with bit array
       if (e->long_laser_count != 0U) {
         bullets_.ControlLongLaser(
-            e, ECL_ALL_LONG_LASERS,
+            e, kEclAllLongLasers,
             LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
       }
       e->BeginExplosion();
@@ -208,7 +208,7 @@ void BitFormation::Update() {
       i--;
     } else {
       // Restore enemy HP to virtual HP
-      e->hp = BIT_VIRTUAL_HP;
+      e->hp = kBitVirtualHp;
 
       // Where actual damage is applied
       parts_[i].hp -= damage;
@@ -394,7 +394,7 @@ void BitFormation::Destroy() {
 
     if (e->long_laser_count != 0U) {
       bullets_.ControlLongLaser(
-          e, ECL_ALL_LONG_LASERS,
+          e, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     e->BeginExplosion();
@@ -431,9 +431,9 @@ BitLinkGeometry BitFormation::LinkGeometry() const {
     const auto next = index + (actor_count >= 5 ? 2 : 1);
     geometry.links[geometry.count++] = {
         .from =
-            WORLD_POINT::FromWorld(references[index]->x, references[index]->y)
+            WorldPoint::FromWorld(references[index]->x, references[index]->y)
                 .ToPixel(),
-        .to = WORLD_POINT::FromWorld(references[next]->x, references[next]->y)
+        .to = WorldPoint::FromWorld(references[next]->x, references[next]->y)
                   .ToPixel(),
     };
   }
@@ -520,13 +520,13 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
 
     case EclBitLaserCommand::Open:
       bullets_.ControlLongLaser(
-          e, ECL_ALL_LONG_LASERS,
+          e, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
       continue;
 
     case EclBitLaserCommand::Close:
       bullets_.ControlLongLaser(
-          e, ECL_ALL_LONG_LASERS,
+          e, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
       e->long_laser_count = 0;
       laser_active_ = false;
@@ -534,7 +534,7 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
 
     case EclBitLaserCommand::CloseToLine:
       bullets_.ControlLongLaser(
-          e, ECL_ALL_LONG_LASERS,
+          e, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
       continue;
     }

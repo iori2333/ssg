@@ -14,9 +14,9 @@
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 
-static constexpr auto BOSS_HEALTH_GAUGE_WIDTH = 256;
-static constexpr auto BOSS_HEALTH_GAUGE_START_X = playfield::kRight;
-static constexpr auto BOSS_HEALTH_GAUGE_END_X = 260;
+static constexpr auto kBossHealthGaugeWidth = 256;
+static constexpr auto kBossHealthGaugeStartX = playfield::kRight;
+static constexpr auto kBossHealthGaugeEndX = 260;
 
 void BossHealthGauge::Sync(const BossHudModel &model) {
   if (encounter_revision_ != model.encounter_revision) {
@@ -76,7 +76,7 @@ void BossHealthGauge::Open(uint32_t max) {
   previous_timer_seconds_ = -1;
 
   for (std::size_t index = 0; index < row_x_.size(); ++index) {
-    row_x_[index] = BOSS_HEALTH_GAUGE_START_X + static_cast<int>(index * 20);
+    row_x_[index] = kBossHealthGaugeStartX + static_cast<int>(index * 20);
   }
 }
 
@@ -94,8 +94,8 @@ void BossHealthGauge::Update(uint32_t now) {
   case State::OpeningFrame: {
     for (auto &it : row_x_) {
       it -= 6;
-      if (it <= BOSS_HEALTH_GAUGE_END_X) {
-        it = BOSS_HEALTH_GAUGE_END_X;
+      if (it <= kBossHealthGaugeEndX) {
+        it = kBossHealthGaugeEndX;
         ++settled_rows;
       }
     }
@@ -137,11 +137,11 @@ void BossHealthGauge::Update(uint32_t now) {
     break;
 
   case State::Closing:
-    row_x_[BOSS_HEALTH_GAUGE_HEIGHT - 1] += 6;
+    row_x_[kBossHealthGaugeHeight - 1] += 6;
     for (std::size_t index = row_x_.size() - 1; index-- > 0;) {
       row_x_[index] = std::max(row_x_[index], row_x_[index + 1] - 20);
     }
-    if (row_x_[0] >= BOSS_HEALTH_GAUGE_START_X) {
+    if (row_x_[0] >= kBossHealthGaugeStartX) {
       state_ = State::Hidden;
     }
     break;
@@ -154,31 +154,31 @@ void BossHealthGauge::Update(uint32_t now) {
 void BossHealthGauge::Close() { state_ = State::Closing; }
 
 void BossHealthGauge::Draw(uint32_t stage_frame) {
-  PIXEL_LTRB src;
+  PixelLtrb src;
   int i = 0;
 
   switch (state_) {
   case State::OpeningFrame:
   case State::Closing:
-    for (i = 0; i < BOSS_HEALTH_GAUGE_HEIGHT; i++) {
-      src = {0, (104 + i), BOSS_HEALTH_GAUGE_WIDTH, (104 + i + 1)};
-      GrpSurface_Blit({row_x_[i], (16 + i)}, SURFACE_ID::SYSTEM, src);
+    for (i = 0; i < kBossHealthGaugeHeight; i++) {
+      src = {0, (104 + i), kBossHealthGaugeWidth, (104 + i + 1)};
+      GraphicsSurfaceBlit({row_x_[i], (16 + i)}, SurfaceId::System, src);
     }
     break;
 
   case State::Filling:
   case State::Ready:
   case State::Refilling: {
-    constexpr WINDOW_COORD left = (BOSS_HEALTH_GAUGE_END_X + 3);
-    constexpr WINDOW_COORD top = (16 + 3);
-    constexpr WINDOW_COORD bottom = (top + 11);
+    constexpr WindowCoord left = (kBossHealthGaugeEndX + 3);
+    constexpr WindowCoord top = (16 + 3);
+    constexpr WindowCoord bottom = (top + 11);
     const auto x1 = (left + ((target_hp_ * 30 * 8) / max_hp_));
     const auto x2 = (left + ((current_hp_ * 30 * 8) / max_hp_));
     constexpr uint8_t alpha = (128 + 64);
-    constexpr RGB216 col = {0, 1, 5};
+    constexpr Rgb216 col = {0, 1, 5};
 
     Geometry().SetAlphaNorm(alpha);
-    VERTEX_XY src_vertices[4] = {
+    VertexXy src_vertices[4] = {
         {0, top},
         {left, top},
         {left, bottom},
@@ -186,16 +186,16 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
     };
     if (x1 < x2) {
       src_vertices[0].x = src_vertices[3].x = x1;
-      GeomGrdRectA(Geometry(), src_vertices, col.ToRGB().WithAlpha(alpha));
+      GeomGrdRectA(Geometry(), src_vertices, col.ToRgb().WithAlpha(alpha));
       Geometry().SetColor({5, 0, 0});
       Geometry().DrawBoxA(x1, top, x2, bottom);
     } else {
       src_vertices[0].x = src_vertices[3].x = x2;
-      GeomGrdRectA(Geometry(), src_vertices, col.ToRGB().WithAlpha(alpha));
+      GeomGrdRectA(Geometry(), src_vertices, col.ToRgb().WithAlpha(alpha));
     }
 
-    src = {0, 104, BOSS_HEALTH_GAUGE_WIDTH, 128};
-    GrpSurface_Blit({BOSS_HEALTH_GAUGE_END_X, 16}, SURFACE_ID::SYSTEM, src);
+    src = {0, 104, kBossHealthGaugeWidth, 128};
+    GraphicsSurfaceBlit({kBossHealthGaugeEndX, 16}, SurfaceId::System, src);
 
     if (phase_threshold_hp_ > 0 && max_hp_ > 0) {
       const auto separator_x =
@@ -217,11 +217,11 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
         }
         previous_timer_seconds_ = remain;
         if (remain < 10) {
-          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 64, 64);
+          GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 64, 64);
         }
-        GrpPut16(476, 0, std::format("{:>2}", remain).c_str());
+        DrawFont16(476, 0, std::format("{:>2}", remain).c_str());
         if (remain < 10) {
-          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 255, 255);
+          GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 255, 255);
         }
       }
     } else if (stage_timeout_end_ > 0) {
@@ -233,11 +233,11 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
         }
         previous_timer_seconds_ = remain;
         if (remain < 10) {
-          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 64, 64);
+          GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 64, 64);
         }
-        GrpPut16(476, 0, std::format("{:>2}", remain).c_str());
+        DrawFont16(476, 0, std::format("{:>2}", remain).c_str());
         if (remain < 10) {
-          GrpSurface_SetColorMod(SURFACE_ID::SYSTEM, 255, 255, 255);
+          GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 255, 255);
         }
       }
     }

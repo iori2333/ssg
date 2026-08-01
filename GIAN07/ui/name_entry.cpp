@@ -16,7 +16,7 @@ constexpr int kFinish = -1;
 constexpr int kInvalid = -2;
 } // namespace
 
-void NameEntry::Begin(bool allow_cancel, INPUT_BITS initial_input) {
+void NameEntry::Begin(bool allow_cancel, InputBits initial_input) {
   name_.fill('\0');
   cursor_x_ = 0;
   cursor_y_ = 0;
@@ -60,7 +60,7 @@ void NameEntry::Backspace() {
   }
 }
 
-NameEntryResult NameEntry::Update(INPUT_BITS input) {
+NameEntryResult NameEntry::Update(InputBits input) {
   if (awaiting_release_) {
     if (input == 0) {
       awaiting_release_ = false;
@@ -69,7 +69,7 @@ NameEntryResult NameEntry::Update(INPUT_BITS input) {
     return NameEntryResult::Editing;
   }
 
-  if (allow_cancel_ && !input_locked_ && input == KEY_ESC) {
+  if (allow_cancel_ && !input_locked_ && input == KeyEscape) {
     PlaySfx(SfxId::Cancel);
     awaiting_release_ = true;
     release_result_ = NameEntryResult::Cancelled;
@@ -80,30 +80,30 @@ NameEntryResult NameEntry::Update(INPUT_BITS input) {
   if (key_repeat_ == 0) {
     key_repeat_ = 8;
     switch (input) {
-    case KEY_UP:
+    case KeyUp:
       cursor_y_ = (cursor_y_ + 2) % 3;
       PlaySfx(SfxId::Select);
       break;
-    case KEY_DOWN:
+    case KeyDown:
       cursor_y_ = (cursor_y_ + 1) % 3;
       PlaySfx(SfxId::Select);
       break;
-    case KEY_LEFT:
+    case KeyLeft:
       cursor_x_ = cursor_y_ == 2 && cursor_x_ > 20 ? (cursor_x_ - 2) % 26
                                                    : (cursor_x_ + 25) % 26;
       PlaySfx(SfxId::Select);
       break;
-    case KEY_RIGHT:
+    case KeyRight:
       cursor_x_ = cursor_y_ == 2 && cursor_x_ >= 20 ? (cursor_x_ + 2) % 26
                                                     : (cursor_x_ + 1) % 26;
       PlaySfx(SfxId::Select);
       break;
-    case KEY_BOMB:
+    case KeyBomb:
       PlaySfx(SfxId::Cancel);
       Backspace();
       break;
-    case KEY_TAMA:
-    case KEY_RETURN: {
+    case KeyTama:
+    case KeyReturn: {
       if (input_locked_) {
         break;
       }
@@ -159,16 +159,16 @@ void NameEntry::Draw(int name_x, int name_y) const {
     Geometry().DrawBox(caret_x, name_y, caret_x + 14, name_y + 16);
   }
 
-  constexpr auto surface = SURFACE_ID::NAMEREG;
-  GrpSurface_Blit({120, 0}, surface, {0, 0, 400, 64});
-  GrpSurface_Blit({112, 420}, surface, {0, 432, 416, 480});
+  constexpr auto surface = SurfaceId::NameRegistration;
+  GraphicsSurfaceBlit({120, 0}, surface, {0, 0, 400, 64});
+  GraphicsSurfaceBlit({112, 420}, surface, {0, 432, 416, 480});
 
-  PIXEL_LTRB cursor_src;
+  PixelLtrb cursor_src;
   if (cursor_x_ >= 20 && cursor_y_ == 2) {
-    cursor_src = PIXEL_LTWH{432, 432 + ((cursor_frame_ >> 3) << 4), 32, 16};
+    cursor_src = PixelLtwh{432, 432 + ((cursor_frame_ >> 3) << 4), 32, 16};
   } else {
-    cursor_src = PIXEL_LTWH{416, 432 + ((cursor_frame_ >> 3) << 4), 16, 16};
+    cursor_src = PixelLtwh{416, 432 + ((cursor_frame_ >> 3) << 4), 16, 16};
   }
-  GrpSurface_Blit({112 + (cursor_x_ << 4), 420 + (cursor_y_ << 4)}, surface,
-                  cursor_src);
+  GraphicsSurfaceBlit({112 + (cursor_x_ << 4), 420 + (cursor_y_ << 4)}, surface,
+                      cursor_src);
 }

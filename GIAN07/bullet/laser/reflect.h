@@ -94,7 +94,7 @@ private:
   float ly_{};
   float wx_{};
   float wy_{};
-  VERTEX_XY p_[4]{};
+  VertexXy p_[4]{};
 
   float w_{};
   float wmax_{};

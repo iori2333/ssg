@@ -47,8 +47,8 @@ void MenuController::Init(int window_width) {
   RegisterTRRs();
 }
 
-void MenuController::Open(WINDOW_POINT topleft, int select,
-                          INPUT_BITS initial_input) {
+void MenuController::Open(WindowPoint topleft, int select,
+                          InputBits initial_input) {
   ResetNavigation(select);
 
   x_ = topleft.x;
@@ -111,7 +111,7 @@ void MenuController::ResetNavigation(int initial_select) {
   }
 }
 
-void MenuController::Tick(INPUT_BITS key) {
+void MenuController::Tick(InputBits key) {
   if (stack_.empty()) {
     return;
   }
@@ -128,7 +128,7 @@ void MenuController::Tick(INPUT_BITS key) {
 // Input handling
 // ---------------------------------------------------------------------------
 
-void MenuController::ProcessInput(INPUT_BITS key) {
+void MenuController::ProcessInput(InputBits key) {
   auto &page = stack_.back();
 
   if (first_wait_) {
@@ -161,7 +161,7 @@ void MenuController::ProcessInput(INPUT_BITS key) {
     }
     return;
   }
-  if (node->FastRepeat() && Input_OptionKeyDelta(last_key_) != 0) {
+  if (node->FastRepeat() && InputOptionKeyDelta(last_key_) != 0) {
     key_wait_ = fast_repeat_wait_;
     fast_repeat_wait_ = (std::max)(fast_repeat_wait_ - 2, 0);
     if (key_wait_ == 0) {
@@ -169,12 +169,12 @@ void MenuController::ProcessInput(INPUT_BITS key) {
     }
     return;
   }
-  if (last_key_ == KEY_UP || last_key_ == KEY_DOWN || last_key_ == KEY_LEFT ||
-      last_key_ == KEY_RIGHT) {
+  if (last_key_ == KeyUp || last_key_ == KeyDown || last_key_ == KeyLeft ||
+      last_key_ == KeyRight) {
     key_wait_ = kMenuKeyWait;
     return;
   }
-  if (Input_IsOK(last_key_) || Input_IsCancel(last_key_)) {
+  if (InputIsOk(last_key_) || InputIsCancel(last_key_)) {
     if (key == last_key_) {
       return;
     }
@@ -184,8 +184,8 @@ void MenuController::ProcessInput(INPUT_BITS key) {
 
   last_key_ = key;
 
-  if (key == KEY_UP || key == KEY_DOWN) {
-    int dir = (key == KEY_UP) ? -1 : 1;
+  if (key == KeyUp || key == KeyDown) {
+    int dir = (key == KeyUp) ? -1 : 1;
     int n = static_cast<int>(page.items.size());
     int cur = page.selected;
     do {
@@ -203,21 +203,21 @@ void MenuController::ProcessInput(INPUT_BITS key) {
     return;
   }
 
-  if (Input_IsCancel(key)) {
+  if (InputIsCancel(key)) {
     PlaySfx(SfxId::Cancel);
-  } else if (Input_OptionKeyDelta(key) != 0) {
+  } else if (InputOptionKeyDelta(key) != 0) {
     PlaySfx(SfxId::Select);
   } else if (key == 0) {
     fast_repeat_wait_ = kMenuKeyWait;
   }
 
-  if (auto delta = Input_OptionKeyDelta(key)) {
-    if (!Input_IsOK(key)) {
+  if (auto delta = InputOptionKeyDelta(key)) {
+    if (!InputIsOk(key)) {
       frame_count_ = 0;
       node->OnAdjust(*this, delta);
     }
   }
-  if (Input_IsOK(key)) {
+  if (InputIsOk(key)) {
     if (node->Enabled()) {
       frame_count_ = 0;
       bool stay = node->OnAction(*this);
@@ -234,7 +234,7 @@ void MenuController::ProcessInput(INPUT_BITS key) {
     return;
   }
 
-  if (Input_IsCancel(key)) {
+  if (InputIsCancel(key)) {
     if (stack_.size() > 1) {
       PopPage();
     } else if (root_cancel_enabled_) {
@@ -387,7 +387,7 @@ void MenuController::RenderPage() {
     }
   }
 
-  WINDOW_POINT pos = {x_, y_};
+  WindowPoint pos = {x_, y_};
   const auto title_str =
       page.owner != nullptr ? page.owner->Title() : std::string_view{};
   auto &title_slot = slots_[0];
@@ -396,10 +396,9 @@ void MenuController::RenderPage() {
   if (title_slot.cache_key != title_key) {
     title_slot.cache_key = title_key;
   }
-  TextRenderer().Render(pos, title_slot.trr, title_slot.cache_key,
-                        [&](TEXTRENDER_SESSION &s) {
-                          DrawTitle(s, title_str, w_, frame_count_);
-                        });
+  TextRenderer().Render(
+      pos, title_slot.trr, title_slot.cache_key,
+      [&](TextRenderSession &s) { DrawTitle(s, title_str, w_, frame_count_); });
 
   pos.y += kMenuItemH;
   for (int i = page.scroll; i < page.scroll + visible; i++) {
@@ -421,7 +420,7 @@ void MenuController::RenderPage() {
     }
 
     TextRenderer().Render(
-        pos, slot.trr, slot.cache_key, [&](TEXTRENDER_SESSION &s) {
+        pos, slot.trr, slot.cache_key, [&](TextRenderSession &s) {
           DrawItem(s, node.Title(), value, w_, selected, enabled, highlighted,
                    node.Centered(), marquee_frame);
         });
@@ -450,7 +449,7 @@ void MenuController::DeactivateListView() {
 // List-view input handling
 // ---------------------------------------------------------------------------
 
-void MenuController::ProcessListInput(INPUT_BITS key) {
+void MenuController::ProcessListInput(InputBits key) {
   if (first_wait_) {
     if (key != 0) {
       return;
@@ -472,11 +471,11 @@ void MenuController::ProcessListInput(INPUT_BITS key) {
     return;
   }
 
-  if (last_key_ == KEY_UP || last_key_ == KEY_DOWN) {
+  if (last_key_ == KeyUp || last_key_ == KeyDown) {
     key_wait_ = kMenuKeyWait;
     return;
   }
-  if (Input_IsOK(last_key_) || Input_IsCancel(last_key_)) {
+  if (InputIsOk(last_key_) || InputIsCancel(last_key_)) {
     if (key == last_key_) {
       return;
     }
@@ -486,8 +485,8 @@ void MenuController::ProcessListInput(INPUT_BITS key) {
 
   last_key_ = key;
 
-  if (key == KEY_UP || key == KEY_DOWN) {
-    if (key == KEY_UP) {
+  if (key == KeyUp || key == KeyDown) {
+    if (key == KeyUp) {
       active_list_->MoveUp();
     } else {
       active_list_->MoveDown();
@@ -497,7 +496,7 @@ void MenuController::ProcessListInput(INPUT_BITS key) {
     return;
   }
 
-  if (Input_IsOK(key)) {
+  if (InputIsOk(key)) {
     bool stay = active_list_->Confirm();
     if (!stay) {
       PlaySfx(SfxId::Cancel);
@@ -508,7 +507,7 @@ void MenuController::ProcessListInput(INPUT_BITS key) {
     return;
   }
 
-  if (Input_IsCancel(key)) {
+  if (InputIsCancel(key)) {
     PlaySfx(SfxId::Cancel);
     DeactivateListView();
     return;
@@ -547,7 +546,7 @@ void MenuController::RenderList() {
     }
   }
 
-  WINDOW_POINT pos = {x_, y_};
+  WindowPoint pos = {x_, y_};
   auto &title_slot = slots_[0];
   const auto title = view->title.Get();
   std::string title_key =
@@ -557,7 +556,7 @@ void MenuController::RenderList() {
   }
   TextRenderer().Render(
       pos, title_slot.trr, title_slot.cache_key,
-      [&](TEXTRENDER_SESSION &s) { DrawTitle(s, title, w_, frame_count_); });
+      [&](TextRenderSession &s) { DrawTitle(s, title, w_, frame_count_); });
 
   pos.y += kMenuItemH;
   for (int i = view->scroll; i < view->scroll + visible; i++) {
@@ -582,7 +581,7 @@ void MenuController::RenderList() {
     }
 
     TextRenderer().Render(pos, slot.trr, slot.cache_key,
-                          [&](TEXTRENDER_SESSION &s) {
+                          [&](TextRenderSession &s) {
                             DrawItem(s, item_title, "", w_, selected, true,
                                      false, false, marquee_frame);
                           });
@@ -591,7 +590,7 @@ void MenuController::RenderList() {
   }
 }
 
-void MenuController::DrawTitle(TEXTRENDER_SESSION &s, std::string_view title,
+void MenuController::DrawTitle(TextRenderSession &s, std::string_view title,
                                int rect_w, uint32_t marquee_frame) {
   if (title.empty()) {
     return;
@@ -603,21 +602,21 @@ void MenuController::DrawTitle(TEXTRENDER_SESSION &s, std::string_view title,
   const auto display_title =
       ui::MarqueeWindow(s, title, available_width, marquee_frame);
   const int x = scroll ? kTitlePad : (rect_w - s.Extent(display_title).w) / 2;
-  RGB white{255, 255, 255};
-  s.Put({x + 1, 0}, display_title, RGB{128, 128, 128});
+  Rgb white{255, 255, 255};
+  s.Put({x + 1, 0}, display_title, Rgb{128, 128, 128});
   s.Put({x, 0}, display_title, white);
 }
 
-void MenuController::DrawItem(TEXTRENDER_SESSION &s, std::string_view title,
+void MenuController::DrawItem(TextRenderSession &s, std::string_view title,
                               std::string_view value, int window_w,
                               bool selected, bool enabled, bool highlighted,
                               bool centered, uint32_t marquee_frame) {
   s.SetFont(kMenuFont);
 
-  const RGB shadow = enabled ? RGB{128, 128, 128} : RGB{96, 96, 96};
-  const RGB text = enabled
-                       ? (highlighted ? RGB{255, 255, 70} : RGB{255, 255, 255})
-                       : (highlighted ? RGB{192, 192, 70} : RGB{192, 192, 192});
+  const Rgb shadow = enabled ? Rgb{128, 128, 128} : Rgb{96, 96, 96};
+  const Rgb text = enabled
+                       ? (highlighted ? Rgb{255, 255, 70} : Rgb{255, 255, 255})
+                       : (highlighted ? Rgb{192, 192, 70} : Rgb{192, 192, 192});
 
   int value_right = window_w - kMenuItemPadX;
   int title_left = kMenuItemPadX;

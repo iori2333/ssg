@@ -205,7 +205,7 @@ std::optional<size_t> EncodedSize(uint8_t raw_opcode) {
 }
 
 std::optional<EclValue> DecodeValue(uint8_t raw) {
-  if (raw < ECL_REGISTER_COUNT ||
+  if (raw < kEclRegisterCount ||
       (raw >= static_cast<uint8_t>(EclValue::LaserAngle) &&
        raw <= static_cast<uint8_t>(EclValue::ActorAngle))) {
     return static_cast<EclValue>(raw);
@@ -332,7 +332,7 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
   case EclOpcode::SetInterrupt: {
     const auto position = target();
     const auto raw_interrupt = reader.U8();
-    if (!position || raw_interrupt >= ECL_INTERRUPT_COUNT) {
+    if (!position || raw_interrupt >= kEclInterruptCount) {
       return std::nullopt;
     }
     return MakeInstruction(
@@ -344,7 +344,7 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
 
   case EclOpcode::ClearInterrupt: {
     const auto raw_interrupt = reader.U8();
-    if (raw_interrupt >= ECL_INTERRUPT_COUNT) {
+    if (raw_interrupt >= kEclInterruptCount) {
       return std::nullopt;
     }
     return MakeInstruction(

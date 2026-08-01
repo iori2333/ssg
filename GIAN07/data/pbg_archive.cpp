@@ -20,11 +20,11 @@ namespace data {
 
 namespace {
 
-constexpr auto LZSS_DICT_BITS = 13;
-constexpr auto LZSS_SEQ_BITS = 4;
-constexpr auto LZSS_SEQ_MIN = 3;
-constexpr auto LZSS_DICT_MASK = ((1 << LZSS_DICT_BITS) - 1);
-constexpr auto LZSS_SEQ_MAX = (LZSS_SEQ_MIN + ((1 << LZSS_SEQ_BITS) - 1));
+constexpr auto kLzssDictBits = 13;
+constexpr auto kLzssSeqBits = 4;
+constexpr auto kLzssSeqMin = 3;
+constexpr auto kLzssDictMask = ((1 << kLzssDictBits) - 1);
+constexpr auto kLzssSeqMax = (kLzssSeqMin + ((1 << kLzssSeqBits) - 1));
 
 constexpr const std::array<char, 4> kPbgHeadName = {'P', 'B', 'G', 0x1A};
 
@@ -69,12 +69,12 @@ static std::vector<uint8_t> Decompress(std::span<const uint8_t> compressed,
                                        uint32_t size_uncompressed) {
   std::vector<uint8_t> uncompressed(size_uncompressed);
 
-  std::array<uint8_t, (1 << LZSS_DICT_BITS)> dict{};
+  std::array<uint8_t, (1 << kLzssDictBits)> dict{};
   uint32_t out_i = 0;
 
   auto output = [&](uint8_t literal) {
     uncompressed[out_i] = literal;
-    dict[out_i & LZSS_DICT_MASK] = literal;
+    dict[out_i & kLzssDictMask] = literal;
     out_i++;
   };
 
@@ -90,23 +90,23 @@ static std::vector<uint8_t> Decompress(std::span<const uint8_t> compressed,
       }
       output(device.ReadBits(8));
     } else {
-      if (!device.CanRead(LZSS_DICT_BITS)) {
+      if (!device.CanRead(kLzssDictBits)) {
         return {};
       }
-      auto seq_offset = device.ReadBits(LZSS_DICT_BITS);
+      auto seq_offset = device.ReadBits(kLzssDictBits);
       if (seq_offset == 0) {
         return {};
       }
       seq_offset--;
-      if (!device.CanRead(LZSS_SEQ_BITS)) {
+      if (!device.CanRead(kLzssSeqBits)) {
         return {};
       }
-      const auto seq_length = (device.ReadBits(LZSS_SEQ_BITS) + LZSS_SEQ_MIN);
+      const auto seq_length = (device.ReadBits(kLzssSeqBits) + kLzssSeqMin);
       if (seq_length > size_uncompressed - out_i) {
         return {};
       }
       for (auto i = decltype(seq_length){0}; i < seq_length; i++) {
-        output(dict[seq_offset++ & LZSS_DICT_MASK]);
+        output(dict[seq_offset++ & kLzssDictMask]);
       }
     }
   }
@@ -114,17 +114,18 @@ static std::vector<uint8_t> Decompress(std::span<const uint8_t> compressed,
 }
 
 std::vector<uint8_t> Compress(std::span<const uint8_t> buffer) {
-  constexpr auto DICT_WINDOW = ((1 << LZSS_DICT_BITS) - LZSS_SEQ_MAX);
+  constexpr auto kLzssDictWindow = ((1 << kLzssDictBits) - kLzssSeqMax);
   BitWriter device;
   uint32_t in_i = 0;
 
   while (in_i < buffer.size()) {
     unsigned int seq_offset = 0;
     unsigned int seq_length = 0;
-    unsigned int dict_i = ((in_i > DICT_WINDOW) ? (in_i - DICT_WINDOW) : 1);
-    while ((dict_i < in_i) && (seq_length < LZSS_SEQ_MAX)) {
+    unsigned int dict_i =
+        ((in_i > kLzssDictWindow) ? (in_i - kLzssDictWindow) : 1);
+    while ((dict_i < in_i) && (seq_length < kLzssSeqMax)) {
       unsigned int length_new = 0;
-      while (length_new < LZSS_SEQ_MAX) {
+      while (length_new < kLzssSeqMax) {
         if ((in_i + length_new) >= buffer.size()) {
           break;
         }
@@ -134,26 +135,26 @@ std::vector<uint8_t> Compress(std::span<const uint8_t> buffer) {
         length_new++;
       }
       if (length_new > seq_length) {
-        if ((dict_i & LZSS_DICT_MASK) != LZSS_DICT_MASK) {
+        if ((dict_i & kLzssDictMask) != kLzssDictMask) {
           seq_length = length_new;
           seq_offset = dict_i;
         }
       }
       dict_i++;
     }
-    if (seq_length < LZSS_SEQ_MIN) {
+    if (seq_length < kLzssSeqMin) {
       device.WriteBit(1U);
       device.WriteBits(buffer[in_i], 8);
       in_i++;
     } else {
       device.WriteBit(0U);
-      device.WriteBits((seq_offset + 1), LZSS_DICT_BITS);
-      device.WriteBits((seq_length - LZSS_SEQ_MIN), LZSS_SEQ_BITS);
+      device.WriteBits((seq_offset + 1), kLzssDictBits);
+      device.WriteBits((seq_length - kLzssSeqMin), kLzssSeqBits);
       in_i += seq_length;
     }
   }
   device.WriteBit(0U);
-  device.WriteBits(0, LZSS_DICT_BITS);
+  device.WriteBits(0, kLzssDictBits);
   return device.Buffer();
 }
 
@@ -164,7 +165,7 @@ uint32_t PbgArchive::EntryCount() const {
 }
 
 PbgArchive PbgArchive::Open(const std::filesystem::path &path) {
-  return FromBuffer(File_Load(path));
+  return FromBuffer(LoadFile(path));
 }
 
 PbgArchive PbgArchive::Open(std::span<const uint8_t> bytes) {

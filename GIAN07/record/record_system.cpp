@@ -386,25 +386,25 @@ void RecordSystem::FlushStage() {
   recording->has_current_checkpoint = false;
 }
 
-void RecordSystem::Record(INPUT_BITS input) {
+void RecordSystem::Record(InputBits input) {
   auto *recording = std::get_if<RecordingState>(&state_);
-  if (recording == nullptr || (input & KEY_ESC) != 0 ||
+  if (recording == nullptr || (input & KeyEscape) != 0 ||
       recording->current_inputs.size() >= kReplayBufferCapacity) {
     return;
   }
-  input &= ~KEY_DEMO_START;
+  input &= ~KeyDemoStart;
   if (recording->demo_capture && recording->demo_start_frame &&
       recording->current_inputs.size() == *recording->demo_start_frame) {
-    input |= KEY_DEMO_START;
+    input |= KeyDemoStart;
   }
   recording->current_inputs.push_back(input);
 }
 
-void RecordSystem::UpdateLastRecordedInput(INPUT_BITS input) {
+void RecordSystem::UpdateLastRecordedInput(InputBits input) {
   auto *recording = std::get_if<RecordingState>(&state_);
   if (recording != nullptr && !recording->current_inputs.empty()) {
-    const auto demo_marker = recording->current_inputs.back() & KEY_DEMO_START;
-    recording->current_inputs.back() = (input & ~KEY_DEMO_START) | demo_marker;
+    const auto demo_marker = recording->current_inputs.back() & KeyDemoStart;
+    recording->current_inputs.back() = (input & ~KeyDemoStart) | demo_marker;
   }
 }
 
@@ -456,7 +456,7 @@ RecordSaveResult RecordSystem::SaveDemo(StageId stage) {
   if (recording == nullptr || recording->stages.size() != 1 ||
       recording->stages.front().checkpoint.stage != stage ||
       !std::ranges::any_of(recording->stages.front().inputs, [](auto input) {
-        return (input & KEY_DEMO_START) != 0;
+        return (input & KeyDemoStart) != 0;
       })) {
     return RecordSaveResult::NoData;
   }
@@ -649,7 +649,7 @@ bool RecordSystem::LoadArchive(const data::PbgArchive &archive,
         if (!ReadValue(input_reader, input)) {
           return false;
         }
-        replay_stage.inputs.push_back(static_cast<INPUT_BITS>(input));
+        replay_stage.inputs.push_back(static_cast<InputBits>(input));
       }
     }
     parsed_stages.push_back(std::move(replay_stage));
@@ -822,19 +822,19 @@ bool RecordSystem::LoadDemoArchive(const data::PbgArchive &archive,
   return archive && LoadArchive(archive, nullptr, &settings, &stages) &&
          stages.size() == 1 && stages.front().checkpoint.stage == stage &&
          std::ranges::any_of(stages.front().inputs, [](auto input) {
-           return (input & KEY_DEMO_START) != 0;
+           return (input & KeyDemoStart) != 0;
          });
 }
 
-INPUT_BITS RecordSystem::NextInput() {
+InputBits RecordSystem::NextInput() {
   auto *playback = std::get_if<PlaybackState>(&state_);
   if (playback == nullptr || !playback->active || playback->stages.empty()) {
-    return KEY_ESC;
+    return KeyEscape;
   }
   const auto &inputs = playback->stages[playback->stage_index].inputs;
   if (playback->frame_cursor >= inputs.size()) {
     playback->active = false;
-    return KEY_ESC;
+    return KeyEscape;
   }
   return inputs[playback->frame_cursor++];
 }

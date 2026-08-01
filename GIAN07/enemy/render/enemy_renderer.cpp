@@ -17,16 +17,17 @@ void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
     return;
   }
 
-  constexpr auto surface = SURFACE_ID::ENEMY;
+  constexpr auto surface = SurfaceId::Enemy;
   const auto &animation = animations_[actor.animation];
-  const WORLD_POINT center = WORLD_POINT::FromWorld(actor.x, actor.y);
+  const WorldPoint center = WorldPoint::FromWorld(actor.x, actor.y);
   const auto topleft = center.ToPixel(animation.size);
 
   const auto frame = animation.mode == EnemyAnimationMode::Directional
                          ? static_cast<uint8_t>(actor.d - 64 + 8) >> 4
                          : actor.animation_frame;
   if (frame >= kEnemyAnimationFrameCapacity ||
-      !GrpSurface_Blit({topleft.x, topleft.y}, surface, animation.ptn[frame])) {
+      !GraphicsSurfaceBlit({topleft.x, topleft.y}, surface,
+                           animation.ptn[frame])) {
     return;
   }
 
@@ -37,8 +38,8 @@ void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
 
   const auto &damage_animation = animations_[actor.damage_animation];
   const auto damage_topleft = center.ToPixel(damage_animation.size);
-  GrpSurface_Blit({damage_topleft.x, damage_topleft.y}, surface,
-                  damage_animation.ptn[0]);
+  GraphicsSurfaceBlit({damage_topleft.x, damage_topleft.y}, surface,
+                      damage_animation.ptn[0]);
 }
 
 void EnemyRenderer::DrawRegular(
@@ -54,10 +55,11 @@ void EnemyRenderer::DrawRegular(
 
 void EnemyRenderer::DrawExplosion(const EnemyActor &actor) const {
   const auto frame = actor.count / kEnemyExplosionSpeed;
-  const PIXEL_LTRB source = {static_cast<PIXEL_COORD>(frame * 48), 296,
-                             static_cast<PIXEL_COORD>((frame + 1) * 48), 344};
-  const PIXEL_POINT center = WORLD_POINT::FromWorld(actor.x, actor.y).ToPixel();
-  GrpSurface_Blit({center.x - 24, center.y - 24}, SURFACE_ID::SYSTEM, source);
+  const PixelLtrb source = {static_cast<PixelCoord>(frame * 48), 296,
+                            static_cast<PixelCoord>((frame + 1) * 48), 344};
+  const PixelPoint center = WorldPoint::FromWorld(actor.x, actor.y).ToPixel();
+  GraphicsSurfaceBlit({center.x - 24, center.y - 24}, SurfaceId::System,
+                      source);
 }
 
 void EnemyRenderer::DrawBosses(
@@ -91,17 +93,17 @@ void EnemyRenderer::DrawBossLinks(const BitFormation &formation) const {
 }
 
 bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
-  constexpr auto surface = SURFACE_ID::ENEMY;
-  const auto center = WORLD_POINT::FromWorld(boss.x, boss.y).ToPixel();
+  constexpr auto surface = SurfaceId::Enemy;
+  const auto center = WorldPoint::FromWorld(boss.x, boss.y).ToPixel();
 
   if (boss.mode == BossMode::BombSpirit && player_.IsBombActive() != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
-    const PIXEL_LTRB spirit = PIXEL_LTWH{
+    const PixelLtrb spirit = PixelLtwh{
         160 + (static_cast<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
-    GrpBackend_SetClip(GRP_RES_RECT);
-    GrpSurface_Blit({center.x - 20, center.y - 20}, surface, spirit);
-    GrpBackend_SetClip({playfield::kLeft, playfield::kTop,
-                        playfield::kRight + 1, playfield::kBottom + 1});
+    GraphicsBackendSetClip(kGameResolutionRect);
+    GraphicsSurfaceBlit({center.x - 20, center.y - 20}, surface, spirit);
+    GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
+                            playfield::kRight + 1, playfield::kBottom + 1});
     return true;
   }
 
@@ -122,17 +124,17 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
   case BossMode::ButterflyWings: {
     const auto offset =
         std::max((static_cast<int>(boss.mode_frame) - 72) << 2, 0);
-    GrpSurface_Blit({center.x - 64 - offset, center.y - 92}, surface,
-                    {0, 176, 128, 360});
-    GrpSurface_Blit({center.x - 64 + offset, center.y - 92}, surface,
-                    {128, 176, 256, 360});
+    GraphicsSurfaceBlit({center.x - 64 - offset, center.y - 92}, surface,
+                        {0, 176, 128, 360});
+    GraphicsSurfaceBlit({center.x - 64 + offset, center.y - 92}, surface,
+                        {128, 176, 256, 360});
     break;
   }
   case BossMode::BirdWings:
-    GrpSurface_Blit({center.x - 94, center.y - 52}, surface,
-                    {552, 0, 640, 104});
-    GrpSurface_Blit({center.x + 6, center.y - 52}, surface,
-                    {552, 104, 640, 208});
+    GraphicsSurfaceBlit({center.x - 94, center.y - 52}, surface,
+                        {552, 0, 640, 104});
+    GraphicsSurfaceBlit({center.x + 6, center.y - 52}, surface,
+                        {552, 104, 640, 208});
     break;
   case BossMode::Normal:
   case BossMode::BombShield:

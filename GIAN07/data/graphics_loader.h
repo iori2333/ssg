@@ -46,7 +46,7 @@ private:
   };
 
   [[nodiscard]] bool Load(Set set);
-  [[nodiscard]] bool LoadBmp(uint32_t file_no, SURFACE_ID surface) const;
+  [[nodiscard]] bool LoadBmp(uint32_t file_no, SurfaceId surface) const;
   [[nodiscard]] bool LoadGalleryEnemySurface() const;
 
   const GameData *data_;

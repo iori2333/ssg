@@ -29,20 +29,20 @@ constexpr int GetNext(int current) {
 
 void DrawCircleA16(GraphicsGeometry &geometry, float x, float y, float r,
                    float angle) {
-  std::array<VERTEX_XY, 10> src{};
+  std::array<VertexXy, 10> src{};
   for (int j = 0, i = -64; j <= 8; j++) {
     const auto offset = math::PolarVector(
         angle + static_cast<float>(i) * math::kLegacyAngleStep, r);
-    src[j].x = (x + offset.x) / WORLD_COORD_SCALE;
-    src[j].y = (y + offset.y) / WORLD_COORD_SCALE;
+    src[j].x = (x + offset.x) / kWorldCoordScale;
+    src[j].y = (y + offset.y) / kWorldCoordScale;
     i += 16;
   }
   src[9] = src[0];
-  geometry.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
+  geometry.DrawTrianglesA(TrianglePrimitive::Fan, src);
 }
 
-void DrawTriangleFanAlpha(std::span<const VERTEX_XY, 4> src) {
-  Geometry().DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, src);
+void DrawTriangleFanAlpha(std::span<const VertexXy, 4> src) {
+  Geometry().DrawTrianglesA(TrianglePrimitive::Fan, src);
 }
 
 } // namespace
@@ -133,8 +133,8 @@ void LaserHoming::Update(const UpdateInfo &info) {
 // ── Virtual overrides ──────────────────────────────────────────────
 
 void LaserHoming::Render() const {
-  constexpr RGB216 kOuterColor{1, 2, 5};
-  constexpr RGB216 kInnerColor{3, 4, 5};
+  constexpr Rgb216 kOuterColor{1, 2, 5};
+  constexpr Rgb216 kInnerColor{3, 4, 5};
 
   // Pass 1: wide outer ribbon
   Geometry().SetColor(kOuterColor);
@@ -146,13 +146,13 @@ void LaserHoming::Render() const {
   const auto edge = [](const TrailPoint &point, float width) {
     const auto offset =
         math::PolarVector(point.angle - (math::kFullAngle / 4.0f), width);
-    return std::array{VERTEX_XY{(point.x + offset.x) / WORLD_COORD_SCALE,
-                                (point.y + offset.y) / WORLD_COORD_SCALE},
-                      VERTEX_XY{(point.x - offset.x) / WORLD_COORD_SCALE,
-                                (point.y - offset.y) / WORLD_COORD_SCALE}};
+    return std::array{VertexXy{(point.x + offset.x) / kWorldCoordScale,
+                               (point.y + offset.y) / kWorldCoordScale},
+                      VertexXy{(point.x - offset.x) / kWorldCoordScale,
+                               (point.y - offset.y) / kWorldCoordScale}};
   };
 
-  VERTEX_XY src[4];
+  VertexXy src[4];
   const auto first_edge = edge(*pt, static_cast<float>(w));
   src[0] = first_edge[0];
   src[1] = first_edge[1];
@@ -248,8 +248,8 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
   int current = current_;
   for (int j = 0; j < kHomingTrailLength; j++) {
     const auto &pt = p_[current];
-    const int cx = static_cast<int>(pt.x / WORLD_COORD_SCALE);
-    const int cy = static_cast<int>(pt.y / WORLD_COORD_SCALE);
+    const int cx = static_cast<int>(pt.x / kWorldCoordScale);
+    const int cy = static_cast<int>(pt.y / kWorldCoordScale);
 
     if (mode >= 2) {
       geometry::DrawFilledCircle(Geometry(), {cx, cy}, evade_r, true);

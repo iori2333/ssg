@@ -197,9 +197,9 @@ void EffectManager::SetMusicTitle(int y, std::string_view title) {
   }
 
   music_title_text_[1] = title;
-  PIXEL_SIZE extent{};
+  PixelSize extent{};
   for (const auto text : music_title_text_) {
-    const auto text_extent = TextRenderer().TextExtent(FONT_ID::NORMAL, text);
+    const auto text_extent = TextRenderer().TextExtent(FontId::Normal, text);
     extent.w += text_extent.w;
     extent.h = text_extent.h;
   }
@@ -284,16 +284,15 @@ void EffectManager::UpdateStrings() {
   }
 }
 
-void EffectManager::RenderMusicTitle(WINDOW_POINT top_left,
-                                     const PIXEL_LTWH &subrect) {
+void EffectManager::RenderMusicTitle(WindowPoint top_left,
+                                     const PixelLtwh &subrect) {
   TextRenderer().Render(
       top_left, music_title_rect_, music_title_text_[1],
-      [this](TEXTRENDER_SESSION &session) {
-        const auto gradient = [](PIXEL_COORD y) -> uint8_t {
+      [this](TextRenderSession &session) {
+        const auto gradient = [](PixelCoord y) -> uint8_t {
           return 255 + 8 - y * 8;
         };
-        DrawGrdFont(session, music_title_text_, FONT_ID::NORMAL, true,
-                    gradient);
+        DrawGrdFont(session, music_title_text_, FontId::Normal, true, gradient);
       },
       subrect);
 }
@@ -306,11 +305,11 @@ void EffectManager::DrawStrings() {
     case StringEffectState::CharacterEntering:
     case StringEffectState::CharacterPaused:
     case StringEffectState::CharacterScattering:
-      GrpPutc(effect.x >> 6, effect.y >> 6, effect.character);
+      DrawGlyph(effect.x >> 6, effect.y >> 6, effect.character);
       break;
     case StringEffectState::PointValue: {
       const auto points = std::format("{}", effect.points);
-      GrpPutScore(effect.x >> 6, effect.y >> 6, points.c_str());
+      DrawScore(effect.x >> 6, effect.y >> 6, points.c_str());
       break;
     }
     case StringEffectState::GameOverEntering: {
@@ -321,7 +320,7 @@ void EffectManager::DrawStrings() {
             math::AngleFromLegacy(angle), remaining * 4);
         const int x = (effect.x >> 6) + offset.x;
         const int y = (effect.y >> 6) + offset.y;
-        GrpPutc(x, y, kGameOver[index]);
+        DrawGlyph(x, y, kGameOver[index]);
       }
       break;
     }
@@ -335,8 +334,8 @@ void EffectManager::DrawStrings() {
       Geometry().DrawBoxA(center_x - 170, center_y - half_height,
                           center_x + 170, center_y + half_height);
       for (int index = 0; index < 9; ++index) {
-        GrpPutc((effect.x >> 6) + (index - 4) * (35 - remaining), effect.y >> 6,
-                kGameOver[index]);
+        DrawGlyph((effect.x >> 6) + (index - 4) * (35 - remaining),
+                  effect.y >> 6, kGameOver[index]);
       }
       break;
     }
@@ -348,7 +347,7 @@ void EffectManager::DrawStrings() {
       const int amplitude =
           effect.state == StringEffectState::MusicTitleEntering ? 160 : 100;
       for (int column = 0; column < effect.velocity_x; ++column) {
-        const PIXEL_LTWH source = {column, 0, 1, effect.velocity_y};
+        const PixelLtwh source = {column, 0, 1, effect.velocity_y};
         const int wave =
             math::RoundedPolarVector(math::AngleFromLegacy(phase), amplitude).y;
         const int y = (effect.y >> 6) - math::RoundedPolarVector(

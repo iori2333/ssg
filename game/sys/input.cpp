@@ -21,19 +21,19 @@
 // which won't work because they are used in other translation units and this
 // is not a header.
 #pragma warning(suppress : 26497) // f.4
-bool Input_IsOK(INPUT_BITS key) {
-  return ((key == KEY_RETURN) || (key == KEY_TAMA));
+bool InputIsOk(InputBits key) {
+  return ((key == KeyReturn) || (key == KeyTama));
 }
 
 #pragma warning(suppress : 26497) // f.4
-bool Input_IsCancel(INPUT_BITS key) {
-  return ((key == KEY_BOMB) || (key == KEY_ESC));
+bool InputIsCancel(InputBits key) {
+  return ((key == KeyBomb) || (key == KeyEscape));
 }
 
-int_fast8_t Input_OptionKeyDelta(INPUT_BITS key) {
-  return ((Input_IsOK(key) || (key == KEY_RIGHT)) ? 1
-          : (key == KEY_LEFT)                     ? -1
-                                                  : 0);
+int_fast8_t InputOptionKeyDelta(InputBits key) {
+  return ((InputIsOk(key) || (key == KeyRight)) ? 1
+          : (key == KeyLeft)                    ? -1
+                                                : 0);
 }
 
 ///
@@ -44,75 +44,75 @@ int_fast8_t Input_OptionKeyDelta(INPUT_BITS key) {
 static_assert(SDL_SCANCODE_COUNT <= std::numeric_limits<uint16_t>::max());
 static_assert(SDL_KMOD_SCROLL <= std::numeric_limits<uint16_t>::max());
 
-enum class KEY_MOD : uint8_t {
-  NONE = 0x00,
-  LALT = 0x01,
+enum class KeyMod : uint8_t {
+  None = 0x00,
+  LeftAlt = 0x01,
 };
 
-template <> inline constexpr bool util::EnableEnumFlags<KEY_MOD> = true;
+template <> inline constexpr bool util::EnableEnumFlags<KeyMod> = true;
 
 // In-game scancode, received from SDL.
-struct KEY_SCANCODE {
+struct KeyScancode {
   uint16_t scancode;
-  KEY_MOD mod;
+  KeyMod mod;
 };
 
 // Static key binding.
-struct KEY_BIND {
+struct KeyBind {
   uint16_t scancode;
 
   // Modifiers that *must* match.
-  KEY_MOD mod_must = KEY_MOD::NONE;
+  KeyMod mod_must = KeyMod::None;
 
   // Modifiers that *must not* match. Should contain all modifiers of other
   // bindings that share the same [scancode] to allow the matching to work
   // independently of the order within the binding array.
-  KEY_MOD mod_filter = KEY_MOD::NONE;
+  KeyMod mod_filter = KeyMod::None;
 
-  constexpr KEY_BIND(SDL_Scancode scancode, KEY_MOD mod_must = KEY_MOD::NONE,
-                     KEY_MOD mod_filter = KEY_MOD::NONE)
+  constexpr KeyBind(SDL_Scancode scancode, KeyMod mod_must = KeyMod::None,
+                    KeyMod mod_filter = KeyMod::None)
       : scancode(scancode), mod_must(mod_must), mod_filter(mod_filter) {}
 
-  bool Matches(const KEY_SCANCODE &sc) const {
+  bool Matches(const KeyScancode &sc) const {
     return ((scancode == sc.scancode) && !(sc.mod & mod_filter) &&
             ((mod_must & sc.mod) == mod_must));
   }
 };
 
-static constexpr std::pair<KEY_BIND, INPUT_BITS> KeyBindings[] = {
-    {SDL_SCANCODE_UP, KEY_UP},
-    {SDL_SCANCODE_DOWN, KEY_DOWN},
-    {SDL_SCANCODE_LEFT, KEY_LEFT},
-    {SDL_SCANCODE_RIGHT, KEY_RIGHT},
-    {SDL_SCANCODE_KP_1, KEY_DLEFT},
-    {SDL_SCANCODE_KP_2, KEY_DOWN},
-    {SDL_SCANCODE_KP_3, KEY_DRIGHT},
-    {SDL_SCANCODE_KP_4, KEY_LEFT},
-    {SDL_SCANCODE_KP_6, KEY_RIGHT},
-    {SDL_SCANCODE_KP_7, KEY_ULEFT},
-    {SDL_SCANCODE_KP_8, KEY_UP},
-    {SDL_SCANCODE_KP_9, KEY_URIGHT},
-    {SDL_SCANCODE_Z, KEY_TAMA},
-    {SDL_SCANCODE_X, KEY_BOMB},
-    {SDL_SCANCODE_LSHIFT, KEY_SHIFT},
-    {SDL_SCANCODE_ESCAPE, KEY_ESC},
-    {SDL_SCANCODE_1, KEY_STAGE1},
-    {SDL_SCANCODE_2, KEY_STAGE2},
-    {SDL_SCANCODE_3, KEY_STAGE3},
-    {SDL_SCANCODE_4, KEY_STAGE4},
-    {SDL_SCANCODE_5, KEY_STAGE5},
-    {SDL_SCANCODE_6, KEY_STAGE6},
+static constexpr std::pair<KeyBind, InputBits> KeyBindings[] = {
+    {SDL_SCANCODE_UP, KeyUp},
+    {SDL_SCANCODE_DOWN, KeyDown},
+    {SDL_SCANCODE_LEFT, KeyLeft},
+    {SDL_SCANCODE_RIGHT, KeyRight},
+    {SDL_SCANCODE_KP_1, KeyDownLeft},
+    {SDL_SCANCODE_KP_2, KeyDown},
+    {SDL_SCANCODE_KP_3, KeyDownRight},
+    {SDL_SCANCODE_KP_4, KeyLeft},
+    {SDL_SCANCODE_KP_6, KeyRight},
+    {SDL_SCANCODE_KP_7, KeyUpLeft},
+    {SDL_SCANCODE_KP_8, KeyUp},
+    {SDL_SCANCODE_KP_9, KeyUpRight},
+    {SDL_SCANCODE_Z, KeyTama},
+    {SDL_SCANCODE_X, KeyBomb},
+    {SDL_SCANCODE_LSHIFT, KeyShift},
+    {SDL_SCANCODE_ESCAPE, KeyEscape},
+    {SDL_SCANCODE_1, KeyStage1},
+    {SDL_SCANCODE_2, KeyStage2},
+    {SDL_SCANCODE_3, KeyStage3},
+    {SDL_SCANCODE_4, KeyStage4},
+    {SDL_SCANCODE_5, KeyStage5},
+    {SDL_SCANCODE_6, KeyStage6},
 
-    {{SDL_SCANCODE_RETURN, KEY_MOD::NONE, KEY_MOD::LALT}, KEY_RETURN},
+    {{SDL_SCANCODE_RETURN, KeyMod::None, KeyMod::LeftAlt}, KeyReturn},
 };
-static constexpr std::pair<KEY_BIND, INPUT_SYSTEM_BITS> SystemKeyBindings[] = {
-    {SDL_SCANCODE_P, SYSKEY_SNAPSHOT},   {SDL_SCANCODE_LCTRL, SYSKEY_SKIP},
-    {SDL_SCANCODE_RCTRL, SYSKEY_SKIP},   {SDL_SCANCODE_F, SYSKEY_BGM_FADE},
-    {SDL_SCANCODE_D, SYSKEY_BGM_DEVICE}, {SDL_SCANCODE_R, SYSKEY_DEMO_RECORD},
+static constexpr std::pair<KeyBind, InputSystemBits> SystemKeyBindings[] = {
+    {SDL_SCANCODE_P, SystemKeySnapshot},  {SDL_SCANCODE_LCTRL, SystemKeySkip},
+    {SDL_SCANCODE_RCTRL, SystemKeySkip},  {SDL_SCANCODE_F, SystemKeyBgmFade},
+    {SDL_SCANCODE_D, SystemKeyBgmDevice}, {SDL_SCANCODE_R, SystemKeyDemoRecord},
 };
 
 template <typename Bits>
-void Key_Flip(Bits &key_data, const auto &key_or_jbutton, Bits bits) {
+void FlipKey(Bits &key_data, const auto &key_or_jbutton, Bits bits) {
   if (key_or_jbutton.down) {
     key_data |= bits;
   } else {
@@ -120,19 +120,19 @@ void Key_Flip(Bits &key_data, const auto &key_or_jbutton, Bits bits) {
   }
 }
 
-struct JOYPAD {
+struct Joypad {
   SDL_Joystick *joystick;
   uint8_t axis_x;
   uint8_t axis_y;
-  INPUT_PAD_BUTTON button_pressed_last = 0;
+  InputPadButton button_pressed_last = 0;
   uint8_t buttons_held = 0;
 };
 
 struct InputSystem::Impl {
   InputSnapshot current;
-  INPUT_BITS keyboard = 0;
-  std::vector<JOYPAD> pads;
-  std::vector<INPUT_PAD_BINDING> pad_bindings;
+  InputBits keyboard = 0;
+  std::vector<Joypad> pads;
+  std::vector<InputPadBinding> pad_bindings;
 };
 
 // SDL provides two abstractions for joypads:
@@ -156,10 +156,10 @@ struct InputSystem::Impl {
 // (= the "bind") for the standard X and Y axes:
 //
 // 	https://discourse.libsdl.org/t/difference-between-joysticks-and-game-controllers/24028/2
-std::tuple<decltype(JOYPAD::axis_x), decltype(JOYPAD::axis_y)>
-Pad_GetAxisIDs(int device_index) {
-  decltype(JOYPAD::axis_x) axis_x = 0;
-  decltype(JOYPAD::axis_y) axis_y = 1;
+std::tuple<decltype(Joypad::axis_x), decltype(Joypad::axis_y)>
+GetPadAxisIds(int device_index) {
+  decltype(Joypad::axis_x) axis_x = 0;
+  decltype(Joypad::axis_y) axis_y = 1;
 
   if (!SDL_IsGamepad(device_index)) {
     return {axis_x, axis_y};
@@ -191,8 +191,8 @@ Pad_GetAxisIDs(int device_index) {
   return {axis_x, axis_y};
 }
 
-std::vector<JOYPAD>::iterator Pad_Find(std::vector<JOYPAD> &pads,
-                                       SDL_JoystickID id) {
+std::vector<Joypad>::iterator FindPad(std::vector<Joypad> &pads,
+                                      SDL_JoystickID id) {
   auto *joystick = SDL_GetJoystickFromID(id);
   const auto it = std::ranges::find_if(
       pads, [joystick](const auto &pad) { return (pad.joystick == joystick); });
@@ -208,7 +208,7 @@ InputSystem::~InputSystem() {
   }
 }
 
-void InputSystem::SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings) {
+void InputSystem::SetPadBindings(std::span<const InputPadBinding> bindings) {
   impl_->pad_bindings.assign(bindings.begin(), bindings.end());
 }
 
@@ -219,7 +219,7 @@ InputSnapshot InputSystem::Poll() {
                         SDL_EVENT_JOYSTICK_REMOVED) == 1) {
     switch (event.type) {
     case SDL_EVENT_JOYSTICK_AXIS_MOTION: {
-      auto &pad = *Pad_Find(state.pads, event.jaxis.which);
+      auto &pad = *FindPad(state.pads, event.jaxis.which);
 
       // The original WinMM backend did this without even taking the
       // range reported by joyGetDevCaps() into account. However, that
@@ -228,12 +228,11 @@ InputSnapshot InputSystem::Poll() {
       // can do it here as well.
       const auto v = (event.jaxis.value >> 11);
       if (event.jaxis.axis == pad.axis_x) {
-        state.current.pad &= ~(KEY_LEFT | KEY_RIGHT);
-        state.current.pad |=
-            ((v <= -4) ? KEY_LEFT : ((v >= 4) ? KEY_RIGHT : 0));
+        state.current.pad &= ~(KeyLeft | KeyRight);
+        state.current.pad |= ((v <= -4) ? KeyLeft : ((v >= 4) ? KeyRight : 0));
       } else if (event.jaxis.axis == pad.axis_y) {
-        state.current.pad &= ~(KEY_UP | KEY_DOWN);
-        state.current.pad |= ((v <= -4) ? KEY_UP : ((v >= 4) ? KEY_DOWN : 0));
+        state.current.pad &= ~(KeyUp | KeyDown);
+        state.current.pad |= ((v <= -4) ? KeyUp : ((v >= 4) ? KeyDown : 0));
       }
       break;
     }
@@ -241,22 +240,22 @@ InputSnapshot InputSystem::Poll() {
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
     case SDL_EVENT_JOYSTICK_BUTTON_UP: {
       // SDL's numbering starts at 0.
-      const INPUT_PAD_BUTTON id = (event.jbutton.button + 1);
+      const InputPadButton id = (event.jbutton.button + 1);
       for (const auto &binding : state.pad_bindings) {
         if (id == binding.first) {
-          Key_Flip(state.current.pad, event.jbutton, binding.second);
+          FlipKey(state.current.pad, event.jbutton, binding.second);
         }
       }
 
-      auto &pad = *Pad_Find(state.pads, event.jbutton.which);
-      using HELD = std::numeric_limits<decltype(pad.button_pressed_last)>;
+      auto &pad = *FindPad(state.pads, event.jbutton.which);
+      using Held = std::numeric_limits<decltype(pad.button_pressed_last)>;
       if (event.jbutton.down) {
-        if (pad.buttons_held < HELD::max()) {
+        if (pad.buttons_held < Held::max()) {
           pad.buttons_held++;
         }
         pad.button_pressed_last = id;
       } else {
-        if (pad.buttons_held > HELD::min()) {
+        if (pad.buttons_held > Held::min()) {
           pad.buttons_held--;
         }
       }
@@ -267,25 +266,25 @@ InputSnapshot InputSystem::Poll() {
     case SDL_EVENT_KEY_UP: {
       const auto mod = SDL_GetModState();
 
-      const KEY_SCANCODE scancode = {
+      const KeyScancode scancode = {
           .scancode = static_cast<uint16_t>(event.key.scancode),
-          .mod = ((mod & SDL_KMOD_LALT) ? KEY_MOD::LALT : KEY_MOD::NONE),
+          .mod = ((mod & SDL_KMOD_LALT) ? KeyMod::LeftAlt : KeyMod::None),
       };
       for (const auto &binding : KeyBindings) {
         if (binding.first.Matches(scancode)) {
-          Key_Flip(state.keyboard, event.key, binding.second);
+          FlipKey(state.keyboard, event.key, binding.second);
         }
       }
       for (const auto &binding : SystemKeyBindings) {
         if (binding.first.Matches(scancode)) {
-          Key_Flip(state.current.system, event.key, binding.second);
+          FlipKey(state.current.system, event.key, binding.second);
         }
       }
       break;
     }
 
     case SDL_EVENT_JOYSTICK_REMOVED: {
-      const auto pad = Pad_Find(state.pads, event.jdevice.which);
+      const auto pad = FindPad(state.pads, event.jdevice.which);
       SDL_CloseJoystick(pad->joystick);
       if (pad != (state.pads.end() - 1)) {
         *pad = state.pads.back();
@@ -299,8 +298,8 @@ InputSnapshot InputSystem::Poll() {
       if (!joystick) {
         break;
       }
-      const auto [axis_x, axis_y] = Pad_GetAxisIDs(event.jdevice.which);
-      state.pads.emplace_back(JOYPAD{
+      const auto [axis_x, axis_y] = GetPadAxisIds(event.jdevice.which);
+      state.pads.emplace_back(Joypad{
           .joystick = joystick,
           .axis_x = axis_x,
           .axis_y = axis_y,
@@ -318,7 +317,7 @@ InputSnapshot InputSystem::Poll() {
 
 const InputSnapshot &InputSystem::Current() const { return impl_->current; }
 
-std::optional<INPUT_PAD_BUTTON> InputSystem::PadSingle() const {
+std::optional<InputPadButton> InputSystem::PadSingle() const {
   for (const auto &pad : impl_->pads) {
     if (pad.buttons_held > 1) {
       return 0;

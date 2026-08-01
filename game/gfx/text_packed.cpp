@@ -9,7 +9,7 @@
 
 struct created_splits {
   int count = 0;
-  std::array<PIXEL_LTWH, 2> spaces;
+  std::array<PixelLtwh, 2> spaces;
 
   static auto failed() {
     created_splits result;
@@ -26,7 +26,7 @@ struct created_splits {
   explicit operator bool() const { return count != -1; }
 };
 
-created_splits insert_and_split(const PIXEL_SIZE &nw, const PIXEL_LTWH &sp) {
+created_splits insert_and_split(const PixelSize &nw, const PixelLtwh &sp) {
   const auto free_w = (sp.w - nw.w);
   const auto free_h = (sp.h - nw.h);
 
@@ -74,8 +74,8 @@ created_splits insert_and_split(const PIXEL_SIZE &nw, const PIXEL_LTWH &sp) {
   // This is why, if we had more of width remaining than we had of height,
   // we split along the vertical axis, and if we had more of height remaining
   // than we had of width, we split along the horizontal axis.
-  PIXEL_LTWH bigger_split;
-  PIXEL_LTWH lesser_split;
+  PixelLtwh bigger_split;
+  PixelLtwh lesser_split;
   if (free_w > free_h) {
     bigger_split = {(sp.left + nw.w), sp.top, free_w, sp.h};
     lesser_split = {sp.left, (sp.top + nw.h), nw.w, free_h};
@@ -86,12 +86,12 @@ created_splits insert_and_split(const PIXEL_SIZE &nw, const PIXEL_LTWH &sp) {
   return created_splits(bigger_split, lesser_split);
 }
 
-PIXEL_LTWH TEXTRENDER_PACKED::Insert(const PIXEL_SIZE &subrect_size) {
-  PIXEL_LTWH *closest = nullptr;
+PixelLtwh TextRenderPacked::Insert(const PixelSize &subrect_size) {
+  PixelLtwh *closest = nullptr;
 
   assert(subrect_size);
   for (int i = static_cast<int>(spaces.size()) - 1; i >= 0; --i) {
-    const PIXEL_LTWH candidate = spaces[i];
+    const PixelLtwh candidate = spaces[i];
 
     if (!closest || ((candidate.w * candidate.h) < (closest->w * closest->h))) {
       closest = &spaces[i];
@@ -106,8 +106,8 @@ PIXEL_LTWH TEXTRENDER_PACKED::Insert(const PIXEL_SIZE &subrect_size) {
         SpaceAdd(splits.spaces[s]);
       }
 
-      const PIXEL_LTWH ret = {candidate.left, candidate.top, subrect_size.w,
-                              subrect_size.h};
+      const PixelLtwh ret = {candidate.left, candidate.top, subrect_size.w,
+                             subrect_size.h};
       bounds.w = std::max(bounds.w, (ret.left + ret.w));
       bounds.h = std::max(bounds.h, (ret.top + ret.h));
       return ret;
@@ -122,16 +122,16 @@ PIXEL_LTWH TEXTRENDER_PACKED::Insert(const PIXEL_SIZE &subrect_size) {
     closest->w = subrect_size.w;
     closest->h = subrect_size.h;
   } else {
-    constexpr auto coord_max = std::numeric_limits<PIXEL_COORD>::max();
+    constexpr auto coord_max = std::numeric_limits<PixelCoord>::max();
 
     if (bounds.w <= bounds.h) {
       assert(subrect_size.w <= (coord_max - bounds.w));
-      SpaceAdd(PIXEL_LTWH{bounds.w, 0, subrect_size.w,
-                          std::max(bounds.h, subrect_size.h)});
+      SpaceAdd(PixelLtwh{bounds.w, 0, subrect_size.w,
+                         std::max(bounds.h, subrect_size.h)});
     } else {
       assert(subrect_size.h <= (coord_max - bounds.h));
-      SpaceAdd(PIXEL_LTWH{0, bounds.h, std::max(bounds.w, subrect_size.w),
-                          subrect_size.h});
+      SpaceAdd(PixelLtwh{0, bounds.h, std::max(bounds.w, subrect_size.w),
+                         subrect_size.h});
     }
   }
   // Might as well recurse for the assignment of the resulting rectangle to
@@ -139,8 +139,8 @@ PIXEL_LTWH TEXTRENDER_PACKED::Insert(const PIXEL_SIZE &subrect_size) {
   return Insert(subrect_size);
 }
 
-PIXEL_LTWH TEXTRENDER_PACKED::Subrect(TEXTRENDER_RECT_ID rect_id,
-                                      std::optional<PIXEL_LTWH> maybe_subrect) {
+PixelLtwh TextRenderPacked::Subrect(TextRenderRectId rect_id,
+                                    std::optional<PixelLtwh> maybe_subrect) {
   assert(rect_id < rects.size());
   auto ret = rects[rect_id].rect;
   if (maybe_subrect) {
@@ -153,26 +153,26 @@ PIXEL_LTWH TEXTRENDER_PACKED::Subrect(TEXTRENDER_RECT_ID rect_id,
   return ret;
 }
 
-TEXTRENDER_RECT_ID TEXTRENDER_PACKED::Register(const PIXEL_SIZE &size) {
+TextRenderRectId TextRenderPacked::Register(const PixelSize &size) {
   rects.emplace_back(Insert(size));
-  return static_cast<TEXTRENDER_RECT_ID>(rects.size() - 1);
+  return static_cast<TextRenderRectId>(rects.size() - 1);
 }
 
-bool TEXTRENDER_PACKED::Wipe() {
+bool TextRenderPacked::Wipe() {
   for (auto &rect : rects) {
     rect.contents = std::nullopt;
   }
   return true;
 }
 
-void TEXTRENDER_PACKED::Clear() {
+void TextRenderPacked::Clear() {
   bounds = {};
   spaces.clear();
   rects.clear();
 }
 
-bool TEXTRENDER_PACKED::Blit(WINDOW_POINT dst, TEXTRENDER_RECT_ID rect_id,
-                             std::optional<PIXEL_LTWH> subrect) {
-  const PIXEL_LTRB rect = Subrect(rect_id, subrect);
-  return GrpSurface_Blit(dst, SURFACE_ID::TEXT, rect);
+bool TextRenderPacked::Blit(WindowPoint dst, TextRenderRectId rect_id,
+                            std::optional<PixelLtwh> subrect) {
+  const PixelLtrb rect = Subrect(rect_id, subrect);
+  return GraphicsSurfaceBlit(dst, SurfaceId::Text, rect);
 }

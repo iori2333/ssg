@@ -95,9 +95,9 @@ void TileMapScroller::Draw(const std::array<int8_t, kVisibleMapRows> &raster_dx,
         const int y = (row_y << 4) + position.dy;
         const int source_x = (tile % (640 / 16)) << 4;
         const int source_y = (tile / (640 / 16)) << 4;
-        const PIXEL_LTRB source = {source_x, source_y, source_x + 16,
-                                   source_y + 16};
-        GrpSurface_Blit({x, y}, SURFACE_ID::MAPCHIP, source);
+        const PixelLtrb source = {source_x, source_y, source_x + 16,
+                                  source_y + 16};
+        GraphicsSurfaceBlit({x, y}, SurfaceId::MapChip, source);
       }
     }
   }
@@ -315,8 +315,8 @@ void StageBackground::UpdateRaster(bool opening) {
 void StageBackground::DrawStage3Boss() const {
   for (int y = playfield::kTop - static_cast<int>(effect_count_);
        y < playfield::kBottom; y += 208) {
-    constexpr PIXEL_LTRB source = {0, 272, (640 - 256), (272 + 208)};
-    GrpSurface_Blit({playfield::kLeft, y}, SURFACE_ID::MAPCHIP, source);
+    constexpr PixelLtrb source = {0, 272, (640 - 256), (272 + 208)};
+    GraphicsSurfaceBlit({playfield::kLeft, y}, SurfaceId::MapChip, source);
   }
 }
 

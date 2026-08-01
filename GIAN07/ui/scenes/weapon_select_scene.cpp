@@ -34,14 +34,14 @@ constexpr uint8_t PlayerTypeIndex(PlayerType type) {
 } // namespace
 
 void WeaponSelectScene::Enter() {
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   key_wait_ = 1;
   count_ = 0;
   angle_ = 0;
   speed_ = 0;
 }
 
-WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
+WeaponSelectSceneResult WeaponSelectScene::Update(InputBits input,
                                                   bool should_draw) {
   angle_ += speed_;
   if (angle_ >= 85 || angle_ <= -85) {
@@ -60,41 +60,41 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
   }
 
   int forced_stage = 0;
-  if ((input & KEY_STAGE1) != 0) {
+  if ((input & KeyStage1) != 0) {
     forced_stage = 1;
-  } else if ((input & KEY_STAGE2) != 0) {
+  } else if ((input & KeyStage2) != 0) {
     forced_stage = 2;
-  } else if ((input & KEY_STAGE3) != 0) {
+  } else if ((input & KeyStage3) != 0) {
     forced_stage = 3;
-  } else if ((input & KEY_STAGE4) != 0) {
+  } else if ((input & KeyStage4) != 0) {
     forced_stage = 4;
-  } else if ((input & KEY_STAGE5) != 0) {
+  } else if ((input & KeyStage5) != 0) {
     forced_stage = 5;
-  } else if ((input & KEY_STAGE6) != 0) {
+  } else if ((input & KeyStage6) != 0) {
     forced_stage = 6;
   }
-  input &= ~(KEY_STAGE1 | KEY_STAGE2 | KEY_STAGE3 | KEY_STAGE4 | KEY_STAGE5 |
-             KEY_STAGE6);
-  const auto shift_held = input & KEY_SHIFT;
-  input &= ~KEY_SHIFT;
+  input &=
+      ~(KeyStage1 | KeyStage2 | KeyStage3 | KeyStage4 | KeyStage5 | KeyStage6);
+  const auto shift_held = input & KeyShift;
+  input &= ~KeyShift;
 
   switch (input) {
-  case KEY_RIGHT:
+  case KeyRight:
     if (speed_ < 0) {
       player_.RotateType(-1);
       angle_ += 85;
     }
     speed_ = 3;
     break;
-  case KEY_LEFT:
+  case KeyLeft:
     if (speed_ > 0) {
       player_.RotateType(1);
       angle_ -= 85;
     }
     speed_ = -3;
     break;
-  case KEY_TAMA:
-  case KEY_RETURN:
+  case KeyTama:
+  case KeyReturn:
     if (speed_ != 0) {
       break;
     }
@@ -113,8 +113,8 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
       }
     }
     return WeaponSelectSceneResult::StartGame;
-  case KEY_ESC:
-  case KEY_BOMB:
+  case KeyEscape:
+  case KeyBomb:
     if (speed_ == 0) {
       PlaySfx(SfxId::Cancel);
       return WeaponSelectSceneResult::Cancelled;
@@ -129,27 +129,27 @@ WeaponSelectSceneResult WeaponSelectScene::Update(INPUT_BITS input,
     return WeaponSelectSceneResult::Running;
   }
 
-  DrawPreview(KEY_TAMA | shift_held);
-  Grp_Flip();
+  DrawPreview(KeyTama | shift_held);
+  GraphicsFlip();
   return WeaponSelectSceneResult::Running;
 }
 
-void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
+void WeaponSelectScene::DrawPreview(InputBits preview_input) {
   constexpr std::array sprites = {
-      PIXEL_LTWH{0, 344, 56, 48},
-      PIXEL_LTWH{0, 392, 56, 48},
-      PIXEL_LTWH{56, 344, 56, 48},
-      PIXEL_LTWH{56, 392, 56, 48},
+      PixelLtwh{0, 344, 56, 48},
+      PixelLtwh{0, 392, 56, 48},
+      PixelLtwh{56, 344, 56, 48},
+      PixelLtwh{56, 392, 56, 48},
   };
 
-  GrpBackend_Clear();
-  GrpSurface_Blit({320 - 112, 20}, SURFACE_ID::SYSTEM,
-                  {0, 264 - 8, 224, 296 - 24});
-  GrpSurface_Blit({120 - 32, 260 - 12}, SURFACE_ID::SYSTEM,
-                  PIXEL_LTWH{0, 272, 64, 24});
+  GraphicsBackendClear();
+  GraphicsSurfaceBlit({320 - 112, 20}, SurfaceId::System,
+                      {0, 264 - 8, 224, 296 - 24});
+  GraphicsSurfaceBlit({120 - 32, 260 - 12}, SurfaceId::System,
+                      PixelLtwh{0, 272, 64, 24});
   const uint8_t prompt_offset = ((count_ / 8) % 2) << 3;
-  GrpSurface_Blit({400 - 28 + 4, 420}, SURFACE_ID::SYSTEM,
-                  PIXEL_LTWH{72, 272 + prompt_offset, 56, 8});
+  GraphicsSurfaceBlit({400 - 28 + 4, 420}, SurfaceId::System,
+                      PixelLtwh{72, 272 + prompt_offset, 56, 8});
 
   for (int i = 0; i < 3; i++) {
     const int direction =
@@ -157,7 +157,7 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
     const auto angle = math::AngleFromLegacy(direction);
     const int x = 120 + math::RoundedPolarVector(angle, 90.0f).x - 56 / 2;
     const int y = 260 + math::RoundedPolarVector(angle, 110.0f).y - 48 / 2;
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, sprites[i]);
+    GraphicsSurfaceBlit({x, y}, SurfaceId::System, sprites[i]);
   }
 
   Geometry().SetColor({0, 0, 1});
@@ -193,22 +193,22 @@ void WeaponSelectScene::DrawPreview(INPUT_BITS preview_input) {
   // The preview only needs the update's visual side effects.
   (void)player_.Update(enemies_, preview_input);
 
-  GrpBackend_SetClip({400 - 110, 400 - 300 + 2, 400 + 110, 400 + 10});
+  GraphicsBackendSetClip({400 - 110, 400 - 300 + 2, 400 + 110, 400 + 10});
   for (int x = 400 - 110 - 2; x < 400 + 110; x += 32) {
     for (int y = 400 - 300 + 2 + ((count_ * 2) % 32) - 32; y < 400 + 10;
          y += 32) {
-      GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, PIXEL_LTWH{224, 256, 32, 32});
+      GraphicsSurfaceBlit({x, y}, SurfaceId::System,
+                          PixelLtwh{224, 256, 32, 32});
     }
   }
   player_.Draw();
   player_.DrawProjectiles();
-  GrpSurface_Blit({468, 400}, SURFACE_ID::SYSTEM, PIXEL_LTWH{72, 288, 56, 8});
-  GrpPutScore(
-      500, 400,
-      std::format("{}", (static_cast<uint16_t>(player_.Power()) + 1) >> 5)
-          .c_str());
+  GraphicsSurfaceBlit({468, 400}, SurfaceId::System, PixelLtwh{72, 288, 56, 8});
+  DrawScore(500, 400,
+            std::format("{}", (static_cast<uint16_t>(player_.Power()) + 1) >> 5)
+                .c_str());
 
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   Geometry().SetColor({0, 0, 4});
   Geometry().DrawLine(290, 100, 510, 100);
   Geometry().DrawLine(290, 410, 510, 410);

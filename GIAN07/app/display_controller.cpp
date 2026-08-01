@@ -11,35 +11,35 @@
 #include "settings/config.h"
 
 bool DisplayController::Initialize(GraphicsConfig &config) {
-  if (!GrpBackend_Enum()) {
+  if (!GraphicsBackendEnum()) {
     return false;
   }
-  GRAPHICS_PARAM_FLAGS flags{};
+  GraphicsParamFlags flags{};
   if (config.display_mode == DisplayMode::Fullscreen) {
-    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+    flags |= GraphicsParamFlags::Fullscreen;
   }
   if (config.fullscreen_mode == FullscreenMode::Exclusive) {
-    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+    flags |= GraphicsParamFlags::FullscreenExclusive;
   }
   if (config.scaling_mode == ScalingMode::Geometry) {
-    flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
+    flags |= GraphicsParamFlags::ScaleGeometry;
   }
-  SetEnumFlag(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+  SetEnumFlag(flags, GraphicsParamFlags::FullscreenFit,
               std::to_underlying(config.fullscreen_fit));
-  const GRAPHICS_PARAMS requested{
+  const GraphicsParams requested{
       .flags = flags,
-      .api = GrpBackend_APIID(config.graphics_api),
+      .api = GraphicsBackendAPIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,
       .top = config.window_top,
   };
-  const auto result = Grp_InitOrFallback(requested);
+  const auto result = GraphicsInitOrFallback(requested);
   if (!result) {
     return false;
   }
   params_ = result->live;
-  const auto active_api = GrpBackend_APIString();
-  params_.api = GrpBackend_APIID(active_api);
+  const auto active_api = GraphicsBackendAPIString();
+  params_.api = GraphicsBackendAPIID(active_api);
   const auto fullscreen = params_.FullscreenFlags();
   config.display_mode =
       fullscreen.fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed;
@@ -52,26 +52,26 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
   config.window_scale_4x = params_.window_scale_4x;
   config.window_left = params_.left;
   config.window_top = params_.top;
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   SetFrameRate(config.fps_divisor);
   SetScreenshotEffort(config.screenshot_effort);
   return true;
 }
 
-bool DisplayController::Apply(GRAPHICS_PARAMS requested) {
+bool DisplayController::Apply(GraphicsParams requested) {
   const auto previous = params_;
   if (previous == requested) {
     return true;
   }
 
-  if (const auto topleft = WndBackend_Topleft()) {
+  if (const auto topleft = WindowBackendTopleft()) {
     requested.left = topleft->first;
     requested.top = topleft->second;
   }
 
-  auto result = Grp_Init(previous, requested);
+  auto result = GraphicsInit(previous, requested);
   if (!result) {
-    result = Grp_InitOrFallback(previous);
+    result = GraphicsInitOrFallback(previous);
   }
   if (!result) {
     return false;
@@ -83,21 +83,21 @@ bool DisplayController::Apply(GRAPHICS_PARAMS requested) {
 }
 
 bool DisplayController::ApplyConfig(const GraphicsConfig &config) {
-  GRAPHICS_PARAM_FLAGS flags{};
+  GraphicsParamFlags flags{};
   if (config.display_mode == DisplayMode::Fullscreen) {
-    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN;
+    flags |= GraphicsParamFlags::Fullscreen;
   }
   if (config.fullscreen_mode == FullscreenMode::Exclusive) {
-    flags |= GRAPHICS_PARAM_FLAGS::FULLSCREEN_EXCLUSIVE;
+    flags |= GraphicsParamFlags::FullscreenExclusive;
   }
   if (config.scaling_mode == ScalingMode::Geometry) {
-    flags |= GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY;
+    flags |= GraphicsParamFlags::ScaleGeometry;
   }
-  SetEnumFlag(flags, GRAPHICS_PARAM_FLAGS::FULLSCREEN_FIT,
+  SetEnumFlag(flags, GraphicsParamFlags::FullscreenFit,
               std::to_underlying(config.fullscreen_fit));
   return Apply({
       .flags = flags,
-      .api = GrpBackend_APIID(config.graphics_api),
+      .api = GraphicsBackendAPIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,
       .top = config.window_top,
@@ -109,5 +109,5 @@ void DisplayController::SetFrameRate(uint8_t divisor) {
 }
 
 void DisplayController::SetScreenshotEffort(uint8_t effort) {
-  Grp_ScreenshotSetEffort(effort);
+  GraphicsScreenshotSetEffort(effort);
 }

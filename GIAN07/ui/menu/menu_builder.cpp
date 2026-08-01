@@ -35,7 +35,7 @@ namespace menu {
 
 namespace {
 
-static std::string PadButtonLabel(INPUT_PAD_BUTTON v) {
+static std::string PadButtonLabel(InputPadButton v) {
   if (v > 0) {
     return std::format("Button{}", static_cast<int>(v));
   }
@@ -179,22 +179,23 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
 static std::unique_ptr<ListNode>
 BuildApiMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
              i18n::Localization &localization) {
-  auto init_sel = static_cast<int>(GrpBackend_APIID(gfx_cfg.graphics_api));
+  auto init_sel = static_cast<int>(GraphicsBackendAPIID(gfx_cfg.graphics_api));
   auto node = std::make_unique<ListNode>(
       Localized(localization, "ui.menu.api.title"),
       Localized(localization, "ui.menu.api.help"),
-      [] { return GrpBackend_APICount(); },
+      [] { return GraphicsBackendAPICount(); },
       [](size_t i) {
-        return std::string(GrpBackend_APILabel(GrpBackend_APIString(i)));
+        return std::string(
+            GraphicsBackendAPILabel(GraphicsBackendAPIString(i)));
       },
       [&gfx_cfg, &display](size_t i) {
-        gfx_cfg.graphics_api = GrpBackend_APIString(i);
+        gfx_cfg.graphics_api = GraphicsBackendAPIString(i);
         (void)display.ApplyConfig(gfx_cfg);
         return false;
       },
       init_sel);
   node->BindSelection(
-      [&gfx_cfg] { return GrpBackend_APIID(gfx_cfg.graphics_api); });
+      [&gfx_cfg] { return GraphicsBackendAPIID(gfx_cfg.graphics_api); });
   return node;
 }
 
@@ -232,7 +233,7 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
   }
 
   {
-    const auto max_scale = Grp_WindowScale4xMax();
+    const auto max_scale = GraphicsWindowScale4xMax();
     std::vector<MenuText> labels;
     labels.reserve(max_scale + 1);
     labels.push_back(Localized(localization, "ui.value.screen"));
@@ -254,8 +255,8 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
     auto fullscreen_fit = std::make_unique<ChoiceNode>(
         Localized(localization, "ui.menu.fullscreen_fit.title"),
         Localized(localization, "ui.menu.fullscreen_fit.help"),
-        gfx_cfg.fullscreen_fit, GRAPHICS_FULLSCREEN_FIT::INTEGER,
-        GRAPHICS_FULLSCREEN_FIT::STRETCH,
+        gfx_cfg.fullscreen_fit, GraphicsFullscreenFit::Integer,
+        GraphicsFullscreenFit::Stretch,
         LocalizedLabels(localization, {"ui.value.integer", "ui.value.aspect",
                                        "ui.value.stretch"}),
         [&gfx_cfg, &display] { (void)display.ApplyConfig(gfx_cfg); });
@@ -293,7 +294,7 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
 
   {
     auto api_entry = BuildApiMenu(gfx_cfg, display, localization);
-    api_entry->BindEnabled([] { return GrpBackend_APICount() >= 2; });
+    api_entry->BindEnabled([] { return GraphicsBackendAPICount() >= 2; });
     ch.push_back(std::move(api_entry));
   }
 
@@ -526,10 +527,10 @@ BuildSoundMenu(AudioConfig &audio_cfg, AudioSystem &audio, MusicPlayer &music,
 
 static void ApplyPadBindings(InputSystem &input, const InputConfig &input_cfg) {
   const std::array bindings = {
-      INPUT_PAD_BINDING{input_cfg.pad_tama, KEY_TAMA},
-      INPUT_PAD_BINDING{input_cfg.pad_bomb, KEY_BOMB},
-      INPUT_PAD_BINDING{input_cfg.pad_shift, KEY_SHIFT},
-      INPUT_PAD_BINDING{input_cfg.pad_cancel, KEY_ESC},
+      InputPadBinding{input_cfg.pad_tama, KeyTama},
+      InputPadBinding{input_cfg.pad_bomb, KeyBomb},
+      InputPadBinding{input_cfg.pad_shift, KeyShift},
+      InputPadBinding{input_cfg.pad_cancel, KeyEscape},
   };
   input.SetPadBindings(bindings);
 }
@@ -541,18 +542,18 @@ BuildPadMenu(InputConfig &input_cfg, InputSystem &input,
   ch.reserve(4);
 
   auto make_pad = [&input_cfg, &input, &localization](
-                      std::string_view label_key, INPUT_PAD_BUTTON &btn) {
+                      std::string_view label_key, InputPadButton &btn) {
     auto node = std::make_unique<ActionNode>(
         Localized(localization, label_key),
         Localized(localization, "ui.menu.pad_binding.help"),
         [&btn, &input_cfg, &input](MenuController &ctrl) {
-          INPUT_BITS key = ctrl.LastKey();
-          key &= static_cast<INPUT_BITS>(~input.Current().pad);
+          InputBits key = ctrl.LastKey();
+          key &= static_cast<InputBits>(~input.Current().pad);
           if (auto temp = input.PadSingle()) {
             btn = temp.value();
             ApplyPadBindings(input, input_cfg);
           }
-          return !Input_IsOK(key);
+          return !InputIsOk(key);
         });
     node->BindValue([&btn] { return PadButtonLabel(btn); });
     return node;

@@ -46,11 +46,11 @@ struct GraphicsConfig {
   std::string graphics_api;
   DisplayMode display_mode = DisplayMode::Windowed;
   FullscreenMode fullscreen_mode = FullscreenMode::Borderless;
-  GRAPHICS_FULLSCREEN_FIT fullscreen_fit = GRAPHICS_FULLSCREEN_FIT::INTEGER;
+  GraphicsFullscreenFit fullscreen_fit = GraphicsFullscreenFit::Integer;
   ScalingMode scaling_mode = ScalingMode::Framebuffer;
   uint8_t window_scale_4x = 0;
-  int16_t window_left = GRAPHICS_TOPLEFT_UNDEFINED;
-  int16_t window_top = GRAPHICS_TOPLEFT_UNDEFINED;
+  int16_t window_left = kGraphicsTopleftUndefined;
+  int16_t window_top = kGraphicsTopleftUndefined;
   uint8_t fps_divisor = 1;
   uint8_t screenshot_effort = 0;
 };
@@ -82,10 +82,10 @@ struct InputConfig {
   bool joypad_enabled = false;
   bool z_msg_skip_enabled = true;
   bool z_spd_down_enabled = false;
-  INPUT_PAD_BUTTON pad_tama = 1;
-  INPUT_PAD_BUTTON pad_bomb = 2;
-  INPUT_PAD_BUTTON pad_shift = 0;
-  INPUT_PAD_BUTTON pad_cancel = 0;
+  InputPadButton pad_tama = 1;
+  InputPadButton pad_bomb = 2;
+  InputPadButton pad_shift = 0;
+  InputPadButton pad_cancel = 0;
 };
 
 struct DebugConfig {

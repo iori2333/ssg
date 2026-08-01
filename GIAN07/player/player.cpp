@@ -89,7 +89,7 @@ void Player::DrawBombBackground() const {
 }
 
 int Player::HitRadiusPixels() const {
-  return (HitRadius() + WORLD_COORD_SCALE - 1) / WORLD_COORD_SCALE;
+  return (HitRadius() + kWorldCoordScale - 1) / kWorldCoordScale;
 }
 
 void Player::DrawFocusHitbox() const {
@@ -98,7 +98,7 @@ void Player::DrawFocusHitbox() const {
     return;
   }
 
-  const WINDOW_POINT center{x_ >> WORLD_COORD_BITS, y_ >> WORLD_COORD_BITS};
+  const WindowPoint center{x_ >> kWorldCoordBits, y_ >> kWorldCoordBits};
 
   Geometry().SetColor({5, 5, 5});
   GeomCircleF(center, HitRadiusPixels());
@@ -107,14 +107,14 @@ void Player::DrawFocusHitbox() const {
 }
 
 void Player::DrawDebugHitbox() const {
-  const WINDOW_POINT center{x_ >> WORLD_COORD_BITS, y_ >> WORLD_COORD_BITS};
+  const WindowPoint center{x_ >> kWorldCoordBits, y_ >> kWorldCoordBits};
   Geometry().SetColor({0, 0, 0});
   Geometry().SetAlphaNorm(204);
   geometry::DrawFilledCircle(Geometry(), center, HitRadiusPixels(), true);
 }
 
 void Player::Draw() {
-  static PIXEL_LTRB VivBit[4][2] = {
+  static PixelLtrb VivBit[4][2] = {
       {{480, 128, 480 + 24, 128 + 24}, {504, 128, 504 + 24, 128 + 24}}, // wide
       {{480, 152, 480 + 24, 152 + 24},
        {504, 152, 504 + 24, 152 + 24}}, // homing
@@ -129,7 +129,7 @@ void Player::Draw() {
   const auto sy = ((y_ >> 6) - 24);
   const auto ox = ((opx_ >> 6) - 12);
   const auto oy = ((opy_ >> 6) - 12);
-  PIXEL_LTRB src;
+  PixelLtrb src;
 
   draw_flag = 1 - draw_flag;
   draw_flag2++;
@@ -139,8 +139,8 @@ void Player::Draw() {
   }
 
   if (!IsInvincible() || (draw_flag != 0U)) {
-    src = PIXEL_LTWH{(384 + (grp_id_ * 32)), 128, (16 * 2), (16 * 3)};
-    GrpSurface_Blit({sx, sy}, SURFACE_ID::SYSTEM, src);
+    src = PixelLtwh{(384 + (grp_id_ * 32)), 128, (16 * 2), (16 * 3)};
+    GraphicsSurfaceBlit({sx, sy}, SurfaceId::System, src);
   }
 
   DrawFocusHitbox();
@@ -149,8 +149,8 @@ void Player::Draw() {
     if (invincibility_time_ < kRespawnInvincibilityDuration) {
       const int opt_off = loadout_->OptionOffset(focused_);
       src = VivBit[loadout_->OptionSprite()][(draw_flag2 >> 2) & 1];
-      GrpSurface_Blit({(ox + opt_off), oy}, SURFACE_ID::SYSTEM, src);
-      GrpSurface_Blit({(ox - opt_off), oy}, SURFACE_ID::SYSTEM, src);
+      GraphicsSurfaceBlit({(ox + opt_off), oy}, SurfaceId::System, src);
+      GraphicsSurfaceBlit({(ox - opt_off), oy}, SurfaceId::System, src);
     }
   }
 
@@ -212,28 +212,28 @@ void Player::UpdateStatus() {
   }
 }
 
-INPUT_BITS Player::PrepareInput(INPUT_BITS input) {
+InputBits Player::PrepareInput(InputBits input) {
   if (std::exchange(auto_bomb_requested_, false)) {
-    input |= KEY_BOMB;
+    input |= KeyBomb;
   }
 
   if (focus_while_firing_) {
-    if ((input & KEY_TAMA) != 0) {
+    if ((input & KeyTama) != 0) {
       if (shift_counter_ < 8) {
         shift_counter_++;
       } else {
-        input |= KEY_SHIFT;
+        input |= KeyShift;
       }
     } else {
       shift_counter_ = 0;
     }
   }
 
-  focused_ = (input & KEY_SHIFT) != 0;
+  focused_ = (input & KeyShift) != 0;
   return input;
 }
 
-void Player::UpdateMovement(INPUT_BITS input) {
+void Player::UpdateMovement(InputBits input) {
   int vx = 0;
   int vy = 0;
   int v = 0;
@@ -241,16 +241,16 @@ void Player::UpdateMovement(INPUT_BITS input) {
   if (!IsMovementDisabled()) {
     vx = vy = 0;
     v = loadout_->MoveSpeed(focused_);
-    if ((input & KEY_UP) != 0) {
+    if ((input & KeyUp) != 0) {
       vy -= v;
     }
-    if ((input & KEY_DOWN) != 0) {
+    if ((input & KeyDown) != 0) {
       vy += v;
     }
-    if ((input & KEY_LEFT) != 0) {
+    if ((input & KeyLeft) != 0) {
       vx -= v;
     }
-    if ((input & KEY_RIGHT) != 0) {
+    if ((input & KeyRight) != 0) {
       vx += v;
     }
 
@@ -311,7 +311,7 @@ void Player::UpdateOptionPosition(int movement_x, int movement_y) {
   opy_ = y_ + option_lag_y_ + 6_px;
 }
 
-PlayerUpdateResult Player::Update(EnemyManager &enemies, INPUT_BITS input) {
+PlayerUpdateResult Player::Update(EnemyManager &enemies, InputBits input) {
   UpdateStatus();
   input = PrepareInput(input);
   UpdateMovement(input);

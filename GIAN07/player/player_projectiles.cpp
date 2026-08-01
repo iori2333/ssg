@@ -47,12 +47,12 @@ constexpr uint8_t ShotDamage(PlayerShotKind kind) {
 
 // --- Fire dispatch ---
 
-void Player::UpdateWeapons(EnemyManager &enemies, INPUT_BITS input) {
-  if (((input & KEY_TAMA) != 0) && toge_time_ == 0 && !IsMovementDisabled()) {
+void Player::UpdateWeapons(EnemyManager &enemies, InputBits input) {
+  if (((input & KeyTama) != 0) && toge_time_ == 0 && !IsMovementDisabled()) {
     toge_time_ = kShotCycleStart;
   }
 
-  if ((input & KEY_BOMB) != 0) {
+  if ((input & KeyBomb) != 0) {
     const auto trigger = life_state_ == LifeState::DeathbombWindow
                              ? BombTrigger::Deathbomb
                              : BombTrigger::Manual;
@@ -138,7 +138,7 @@ void Player::UpdateProjectiles(EnemyManager &enemies) {
   for (auto &t : maid_tama_) {
     if (t.kind_ == PlayerShotKind::HomingBombBlast) {
       enemies.ApplyPlayerAttack(PlayerAttack::Point(
-          WORLD_POINT::FromWorld(t.x_, t.y_), ShotDamage(t.kind_)));
+          WorldPoint::FromWorld(t.x_, t.y_), ShotDamage(t.kind_)));
       t.age_++;
       if (t.age_ >= 19) {
         t.pending_removal_ = true;
@@ -156,7 +156,7 @@ void Player::UpdateProjectiles(EnemyManager &enemies) {
     }
 
     if (enemies.ApplyPlayerAttack(PlayerAttack::Point(
-            WORLD_POINT::FromWorld(t.x_, t.y_), ShotDamage(t.kind_)))) {
+            WorldPoint::FromWorld(t.x_, t.y_), ShotDamage(t.kind_)))) {
       if (t.kind_ == PlayerShotKind::HomingBomb) {
         PlayerShotSpawnInfo si{
             .x = t.x_,
@@ -185,12 +185,12 @@ void Player::UpdateProjectiles(EnemyManager &enemies) {
 void Player::DrawProjectiles() const {
   int x = 0;
   int y = 0;
-  PIXEL_LTRB src;
-  static constexpr PIXEL_LTRB HomingBomb[5] = {{520, 104, 520 + 8, 104 + 8},
-                                               {528, 104, 528 + 16, 104 + 16},
-                                               {544, 104, 544 + 24, 104 + 24},
-                                               {568, 104, 568 + 32, 104 + 32},
-                                               {600, 104, 600 + 40, 104 + 40}};
+  PixelLtrb src;
+  static constexpr PixelLtrb HomingBomb[5] = {{520, 104, 520 + 8, 104 + 8},
+                                              {528, 104, 528 + 16, 104 + 16},
+                                              {544, 104, 544 + 24, 104 + 24},
+                                              {568, 104, 568 + 32, 104 + 32},
+                                              {600, 104, 600 + 40, 104 + 40}};
 
   for (const auto &t : maid_tama_) {
 
@@ -200,43 +200,43 @@ void Player::DrawProjectiles() const {
 
     switch (t.kind_) {
     case PlayerShotKind::WideMain:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 176, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 176, 16, 16};
       break;
     case PlayerShotKind::WideSub:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 192, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 192, 16, 16};
       break;
     case PlayerShotKind::HomingMain:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 208, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 208, 16, 16};
       break;
     case PlayerShotKind::HomingSub:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 224, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 224, 16, 16};
       break;
     case PlayerShotKind::HomingBomb:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 288, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 288, 16, 16};
       break;
     case PlayerShotKind::LaserSub:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 256, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 256, 16, 16};
       break;
     case PlayerShotKind::HomingBombBlast:
       src = HomingBomb[(static_cast<int>(t.age_) / 4) % 5];
       break;
     case PlayerShotKind::WideFocusMain:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 176, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 176, 16, 16};
       break;
     case PlayerShotKind::WideFocusSub:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 192, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 192, 16, 16};
       break;
     case PlayerShotKind::HomingFocusMain:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 208, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 208, 16, 16};
       break;
     case PlayerShotKind::HomingFocusSub:
-      src = PIXEL_LTWH{(384 + ((display_angle + 8) & 0xf0)), 224, 16, 16};
+      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 224, 16, 16};
       break;
     case PlayerShotKind::Count:
       continue;
     }
 
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, src);
+    GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
   }
 
   loadout_->DrawContinuousAttack(*this, focused_);

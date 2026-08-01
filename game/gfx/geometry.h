@@ -13,67 +13,67 @@ namespace geometry {
 
 // pbg's Direct3D backend approximated circles as 32-sided polygons. The first
 // point is duplicated at the end to simplify index buffer generation.
-constexpr size_t CIRCLE_POINTS = 33;
+constexpr size_t kCirclePointCount = 33;
 
-void ApproximateCircle(std::span<VERTEX_XY, CIRCLE_POINTS> ret,
-                       WINDOW_POINT center, PIXEL_COORD radius);
+void ApproximateCircle(std::span<VertexXy, kCirclePointCount> ret,
+                       WindowPoint center, PixelCoord radius);
 
-void ApproximateFatCircle(std::span<VERTEX_XY, (CIRCLE_POINTS * 2)> ret,
-                          WINDOW_POINT center, PIXEL_COORD r, PIXEL_COORD w);
+void ApproximateFatCircle(std::span<VertexXy, (kCirclePointCount * 2)> ret,
+                          WindowPoint center, PixelCoord r, PixelCoord w);
 // -----------------
 
 // Implementations
 // ---------------
 
-inline void DrawCircle(GraphicsGeometry &graphics, WINDOW_POINT center,
-                       PIXEL_COORD radius) {
-  std::array<VERTEX_XY, CIRCLE_POINTS> xys{};
+inline void DrawCircle(GraphicsGeometry &graphics, WindowPoint center,
+                       PixelCoord radius) {
+  std::array<VertexXy, kCirclePointCount> xys{};
   ApproximateCircle(xys, center, radius);
   graphics.DrawLineStrip(xys);
 }
 
-inline void DrawFilledCircle(GraphicsGeometry &graphics, WINDOW_POINT center,
-                             PIXEL_COORD radius, bool alpha) {
-  std::array<VERTEX_XY, (1 + CIRCLE_POINTS)> xys{};
-  xys[0].x = static_cast<VERTEX_COORD>(center.x);
-  xys[0].y = static_cast<VERTEX_COORD>(center.y);
-  ApproximateCircle(std::span(xys).template subspan<1, CIRCLE_POINTS>(), center,
-                    radius);
+inline void DrawFilledCircle(GraphicsGeometry &graphics, WindowPoint center,
+                             PixelCoord radius, bool alpha) {
+  std::array<VertexXy, (1 + kCirclePointCount)> xys{};
+  xys[0].x = static_cast<VertexCoord>(center.x);
+  xys[0].y = static_cast<VertexCoord>(center.y);
+  ApproximateCircle(std::span(xys).template subspan<1, kCirclePointCount>(),
+                    center, radius);
   if (alpha) {
-    graphics.DrawTrianglesA(TRIANGLE_PRIMITIVE::FAN, xys);
+    graphics.DrawTrianglesA(TrianglePrimitive::Fan, xys);
   } else {
-    graphics.DrawTriangles(TRIANGLE_PRIMITIVE::FAN, xys);
+    graphics.DrawTriangles(TrianglePrimitive::Fan, xys);
   }
 }
 
-inline void DrawAlphaFatCircle(GraphicsGeometry &graphics, WINDOW_POINT center,
-                               PIXEL_COORD r, PIXEL_COORD w) {
+inline void DrawAlphaFatCircle(GraphicsGeometry &graphics, WindowPoint center,
+                               PixelCoord r, PixelCoord w) {
   // When it becomes a regular circle
   if (w >= r) {
     geometry::DrawFilledCircle(graphics, center, (r + w), true);
   }
-  std::array<VERTEX_XY, (CIRCLE_POINTS * 2)> xys{};
+  std::array<VertexXy, (kCirclePointCount * 2)> xys{};
   ApproximateFatCircle(xys, center, r, w);
-  graphics.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, xys);
+  graphics.DrawTrianglesA(TrianglePrimitive::Strip, xys);
 }
 
 inline void DrawGradientRect(GraphicsGeometry &graphics,
-                             std::span<const VERTEX_XY, 4> p, RGBA col_edge,
+                             std::span<const VertexXy, 4> p, Rgba col_edge,
                              bool alpha) {
-  const RGBA col_center = {.r = 255, .g = 255, .b = 255, .a = col_edge.a};
+  const Rgba col_center = {.r = 255, .g = 255, .b = 255, .a = col_edge.a};
 
   // Use an explicit integer division for a pixel-perfect match of the
-  // original look, even if VERTEX_XY is a floating-point type.
-  const std::array<VERTEX_XY, 6> xys = {
+  // original look, even if VertexXy is a floating-point type.
+  const std::array<VertexXy, 6> xys = {
       p[3], p[2], (p[0] + p[3]).DivInt(2), (p[1] + p[2]).DivInt(2), p[0], p[1],
   };
-  const std::array<VERTEX_RGBA, 6> colors = {
+  const std::array<VertexRgba, 6> colors = {
       col_edge, col_edge, col_center, col_center, col_edge, col_edge,
   };
   if (alpha) {
-    graphics.DrawTrianglesA(TRIANGLE_PRIMITIVE::STRIP, xys, colors);
+    graphics.DrawTrianglesA(TrianglePrimitive::Strip, xys, colors);
   } else {
-    graphics.DrawTriangles(TRIANGLE_PRIMITIVE::STRIP, xys, colors);
+    graphics.DrawTriangles(TrianglePrimitive::Strip, xys, colors);
   }
 }
 // ---------------
@@ -84,26 +84,26 @@ inline void DrawGradientRect(GraphicsGeometry &graphics,
 // ----------
 
 // Circle outline
-void GeomCircle(WINDOW_POINT center, PIXEL_COORD radius);
+void GeomCircle(WindowPoint center, PixelCoord radius);
 
 // Filled circle
-void GeomCircleF(WINDOW_POINT center, PIXEL_COORD radius);
+void GeomCircleF(WindowPoint center, PixelCoord radius);
 
 // Alpha-blended fat circle
-inline void GeomFatCircleA(GraphicsGeometry &graphics, WINDOW_POINT center,
-                           PIXEL_COORD r, PIXEL_COORD w) {
+inline void GeomFatCircleA(GraphicsGeometry &graphics, WindowPoint center,
+                           PixelCoord r, PixelCoord w) {
   geometry::DrawAlphaFatCircle(graphics, center, r, w);
 }
 
 // Gradient rectangle (can be diagonal)
 inline void GeomGrdRect(GraphicsGeometry &graphics,
-                        std::span<const VERTEX_XY, 4> points, RGB col_edge) {
+                        std::span<const VertexXy, 4> points, Rgb col_edge) {
   geometry::DrawGradientRect(graphics, points, col_edge.WithAlpha(0xFF), false);
 }
 
 // Gradient rectangle (can be diagonal + alpha)
 inline void GeomGrdRectA(GraphicsGeometry &graphics,
-                         std::span<const VERTEX_XY, 4> points, RGBA col_edge) {
+                         std::span<const VertexXy, 4> points, Rgba col_edge) {
   geometry::DrawGradientRect(graphics, points, col_edge, true);
 }
 // ----------

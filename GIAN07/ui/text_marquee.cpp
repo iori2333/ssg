@@ -35,7 +35,7 @@ void RemoveFirstUtf8CodePoint(std::string &text) {
 
 } // namespace
 
-std::string MarqueeWindow(TEXTRENDER_SESSION &session, std::string_view text,
+std::string MarqueeWindow(TextRenderSession &session, std::string_view text,
                           int available_width, uint32_t frame) {
   if (available_width <= 0) {
     return {};

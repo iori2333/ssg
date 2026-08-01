@@ -119,32 +119,32 @@ void EffectManager::DrawFragments() const {
     const int y = fragment.y >> 6;
     switch (fragment.kind) {
     case FragmentKind::Graze:
-      GrpSurface_Blit(
-          {x - 4, y - 4}, SURFACE_ID::SYSTEM,
-          PIXEL_LTWH{592 + ((24 - fragment.remaining) >> 2) * 8, 8, 8, 8});
+      GraphicsSurfaceBlit(
+          {x - 4, y - 4}, SurfaceId::System,
+          PixelLtwh{592 + ((24 - fragment.remaining) >> 2) * 8, 8, 8, 8});
       break;
     case FragmentKind::Hit:
-      GrpSurface_Blit(
-          {x - 4, y - 4}, SURFACE_ID::SYSTEM,
-          PIXEL_LTWH{592 + ((24 - fragment.remaining) >> 2) * 8, 16, 8, 8});
+      GraphicsSurfaceBlit(
+          {x - 4, y - 4}, SurfaceId::System,
+          PixelLtwh{592 + ((24 - fragment.remaining) >> 2) * 8, 16, 8, 8});
       break;
     case FragmentKind::Smoke:
-      GrpSurface_Blit(
-          {x - 4, y - 4}, SURFACE_ID::SYSTEM,
-          PIXEL_LTWH{592 + ((24 - fragment.remaining) >> 2) * 8, 0, 8, 8});
+      GraphicsSurfaceBlit(
+          {x - 4, y - 4}, SurfaceId::System,
+          PixelLtwh{592 + ((24 - fragment.remaining) >> 2) * 8, 0, 8, 8});
       break;
     case FragmentKind::SmallStar:
-      GrpSurface_Blit({x - 8, y - 8}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{624, 432, 16, 16});
+      GraphicsSurfaceBlit({x - 8, y - 8}, SurfaceId::System,
+                          PixelLtwh{624, 432, 16, 16});
       break;
     case FragmentKind::LargeStar:
     case FragmentKind::RisingStar:
-      GrpSurface_Blit({x - 16, y - 16}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{608, 448, 32, 32});
+      GraphicsSurfaceBlit({x - 16, y - 16}, SurfaceId::System,
+                          PixelLtwh{608, 448, 32, 32});
       break;
     case FragmentKind::Heart:
-      GrpSurface_Blit({x - 16, y - 16}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{576, 448, 32, 32});
+      GraphicsSurfaceBlit({x - 16, y - 16}, SurfaceId::System,
+                          PixelLtwh{576, 448, 32, 32});
       break;
     case FragmentKind::ExpandingCircle:
       Geometry().SetColor({4, 0, 0});

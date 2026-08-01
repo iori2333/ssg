@@ -74,36 +74,36 @@ std::string StageList(const ReplayRecord &replay) {
   return result;
 }
 
-uint8_t DetailGradient(PIXEL_COORD y) {
+uint8_t DetailGradient(PixelCoord y) {
   if (y <= 3) {
     return 254;
   }
   return y <= 6 ? 220 : 180;
 }
 
-void RenderUiText(WINDOW_POINT position, TEXTRENDER_RECT_ID rect,
+void RenderUiText(WindowPoint position, TextRenderRectId rect,
                   std::string_view text, bool centered = false) {
   TextRenderer().Render(
-      position, rect, text, [text, centered](TEXTRENDER_SESSION &s) {
-        s.SetFont(FONT_ID::NORMAL);
+      position, rect, text, [text, centered](TextRenderSession &s) {
+        s.SetFont(FontId::Normal);
         const auto x = centered ? TextLayoutXCenter(s, text) : 0;
-        s.Put({x + 1, 1}, text, RGB{96, 96, 96});
-        s.Put({x, 0}, text, RGB{255, 255, 255});
+        s.Put({x + 1, 1}, text, Rgb{96, 96, 96});
+        s.Put({x, 0}, text, Rgb{255, 255, 255});
       });
 }
 } // namespace
 
-bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
+bool ReplayScene::EnterBrowser(InputBits initial_input) {
   ui_.ForceCloseMessageWindow();
-  GrpBackend_Clear();
-  Grp_Flip();
+  GraphicsBackendClear();
+  GraphicsFlip();
   if (!graphics_.LoadNameRegistration()) {
     logging::Error(logging::Channel::Ui,
                    "Failed to load Replay screen graphics");
     return false;
   }
 
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   TextRenderer().Clear();
   for (auto &text : stage_text_) {
     text = TextRenderer().Register({.w = 80, .h = 10});
@@ -120,16 +120,16 @@ bool ReplayScene::EnterBrowser(INPUT_BITS initial_input) {
   return true;
 }
 
-bool ReplayScene::BeginSave(bool extra_stage, INPUT_BITS initial_input) {
+bool ReplayScene::BeginSave(bool extra_stage, InputBits initial_input) {
   ui_.ForceCloseMessageWindow();
-  GrpBackend_Clear();
-  Grp_Flip();
+  GraphicsBackendClear();
+  GraphicsFlip();
   if (!graphics_.LoadNameRegistration()) {
     record_system_.CancelRecording();
     return false;
   }
 
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   TextRenderer().Clear();
   ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
   save_extra_stage_ = extra_stage;
@@ -139,7 +139,7 @@ bool ReplayScene::BeginSave(bool extra_stage, INPUT_BITS initial_input) {
   return true;
 }
 
-ReplaySceneResult ReplayScene::Update(INPUT_BITS input, bool should_draw) {
+ReplaySceneResult ReplayScene::Update(InputBits input, bool should_draw) {
   switch (mode_) {
   case Mode::Browser:
     return UpdateBrowser(input, should_draw);
@@ -151,13 +151,13 @@ ReplaySceneResult ReplayScene::Update(INPUT_BITS input, bool should_draw) {
   std::unreachable();
 }
 
-ReplaySceneResult ReplayScene::UpdateBrowser(INPUT_BITS input,
+ReplaySceneResult ReplayScene::UpdateBrowser(InputBits input,
                                              bool should_draw) {
   if (input == 0) {
     previous_input_ = 0;
   } else if (previous_input_ == 0) {
     previous_input_ = input;
-    if (input == KEY_ESC || input == KEY_BOMB) {
+    if (input == KeyEscape || input == KeyBomb) {
       PlaySfx(SfxId::Cancel);
       return {.type = ReplaySceneResult::Type::ExitRequested};
     }
@@ -165,28 +165,28 @@ ReplaySceneResult ReplayScene::UpdateBrowser(INPUT_BITS input,
       const auto page_count = (replays_.size() + kPageSize - 1) / kPageSize;
       const auto page = selected_ / kPageSize;
       const auto row = selected_ % kPageSize;
-      if (input == KEY_UP) {
+      if (input == KeyUp) {
         const auto page_start = page * kPageSize;
         const auto page_size =
             std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + page_size - 1) % page_size;
         PlaySfx(SfxId::Select);
-      } else if (input == KEY_DOWN) {
+      } else if (input == KeyDown) {
         const auto page_start = page * kPageSize;
         const auto page_size =
             std::min(kPageSize, replays_.size() - page_start);
         selected_ = page_start + (row + 1) % page_size;
         PlaySfx(SfxId::Select);
-      } else if (input == KEY_LEFT || input == KEY_RIGHT) {
+      } else if (input == KeyLeft || input == KeyRight) {
         if (page_count > 1 && !rows_.back().moving) {
-          const auto direction = input == KEY_LEFT ? page_count - 1 : 1;
+          const auto direction = input == KeyLeft ? page_count - 1 : 1;
           const auto next_page = (page + direction) % page_count;
           selected_ =
               std::min(next_page * kPageSize + row, replays_.size() - 1);
           ResetRows();
           PlaySfx(SfxId::Select);
         }
-      } else if (input == KEY_RETURN || input == KEY_TAMA) {
+      } else if (input == KeyReturn || input == KeyTama) {
         PlaySfx(SfxId::Select);
         OpenStageSelect();
       }
@@ -195,7 +195,7 @@ ReplaySceneResult ReplayScene::UpdateBrowser(INPUT_BITS input,
 
   if (should_draw) {
     DrawBrowser();
-    Grp_Flip();
+    GraphicsFlip();
   }
   return {};
 }
@@ -233,7 +233,7 @@ void ReplayScene::OpenStageSelect() {
   mode_ = Mode::StageSelect;
 }
 
-ReplaySceneResult ReplayScene::UpdateStageSelect(INPUT_BITS input,
+ReplaySceneResult ReplayScene::UpdateStageSelect(InputBits input,
                                                  bool should_draw) {
   stage_menu_.Tick(input);
   if (pending_stage_) {
@@ -254,12 +254,12 @@ ReplaySceneResult ReplayScene::UpdateStageSelect(INPUT_BITS input,
   if (should_draw) {
     DrawBrowser();
     stage_menu_.Draw();
-    Grp_Flip();
+    GraphicsFlip();
   }
   return {};
 }
 
-ReplaySceneResult ReplayScene::UpdateNameEntry(INPUT_BITS input,
+ReplaySceneResult ReplayScene::UpdateNameEntry(InputBits input,
                                                bool should_draw) {
   const auto result = name_entry_.Update(input);
   if (result == NameEntryResult::Confirmed) {
@@ -277,7 +277,7 @@ ReplaySceneResult ReplayScene::UpdateNameEntry(INPUT_BITS input,
 
   if (should_draw) {
     DrawNameEntry();
-    Grp_Flip();
+    GraphicsFlip();
   }
   return {};
 }
@@ -293,7 +293,7 @@ void ReplayScene::ResetRows() {
 }
 
 void ReplayScene::DrawBrowser() {
-  GrpBackend_Clear();
+  GraphicsBackendClear();
 
   const auto page = replays_.empty() ? 0 : selected_ / kPageSize;
   const auto first = page * kPageSize;
@@ -310,8 +310,8 @@ void ReplayScene::DrawBrowser() {
 
     const int x = display.x >> 6;
     const int y = display.y >> 6;
-    GrpSurface_Blit({x, y}, SURFACE_ID::NAMEREG,
-                    PIXEL_LTWH{0, 64 + static_cast<int>(row * 32), 400, 32});
+    GraphicsSurfaceBlit({x, y}, SurfaceId::NameRegistration,
+                        PixelLtwh{0, 64 + static_cast<int>(row * 32), 400, 32});
     const auto index = first + row;
     if (index >= last) {
       continue;
@@ -324,32 +324,32 @@ void ReplayScene::DrawBrowser() {
       Geometry().DrawBoxA(x, y, x + 400, y + 32);
     }
     const auto &replay = replays_[index];
-    GrpPut16c2(x + 88, y + 4, replay.name.c_str());
+    DrawFont16C2(x + 88, y + 4, replay.name.c_str());
 
     const auto difficulty = GameLevelName(replay.difficulty);
     const auto difficulty_x =
         x + 384 - static_cast<int>(difficulty.size() * 14);
-    GrpPut16(difficulty_x, y + 4, std::string(difficulty).c_str());
+    DrawFont16(difficulty_x, y + 4, std::string(difficulty).c_str());
 
     const auto date = std::format("{:%Y/%m/%d %H:%M}",
                                   std::chrono::system_clock::time_point{
                                       std::chrono::seconds{replay.created_at}});
     constexpr int detail_y = 25;
-    GrpPutScore(x + 88, y + detail_y, date.c_str());
+    DrawScore(x + 88, y + detail_y, date.c_str());
 
     const auto stages = StageList(replay);
     TextRenderer().Render({x + 224, y + detail_y - 2}, stage_text_[row], stages,
-                          [&stages](TEXTRENDER_SESSION &session) {
+                          [&stages](TextRenderSession &session) {
                             std::array<std::string_view, 1> text = {stages};
-                            DrawGrdFont(session, text, FONT_ID::TINY, false,
+                            DrawGrdFont(session, text, FontId::Tiny, false,
                                         DetailGradient);
                           });
 
     const auto player = PlayerName(localization_, replay.player_type);
     TextRenderer().Render({x + 304, y + detail_y - 2}, player_text_[row],
-                          player, [player](TEXTRENDER_SESSION &session) {
+                          player, [player](TextRenderSession &session) {
                             std::array<std::string_view, 1> text = {player};
-                            DrawGrdFont(session, text, FONT_ID::TINY, false,
+                            DrawGrdFont(session, text, FontId::Tiny, false,
                                         DetailGradient);
                           });
   }
@@ -367,18 +367,18 @@ void ReplayScene::DrawBrowser() {
 }
 
 void ReplayScene::DrawNameEntry() const {
-  GrpBackend_Clear();
+  GraphicsBackendClear();
   const int x = 120;
   const int y = 176;
   Geometry().SetColor({2, 0, 0});
   Geometry().DrawBox(x, y, x + 400, y + 32);
-  GrpSurface_Blit({x, y}, SURFACE_ID::NAMEREG, {0, 64, 400, 96});
+  GraphicsSurfaceBlit({x, y}, SurfaceId::NameRegistration, {0, 64, 400, 96});
   const auto title = Text(localization_, "ui.replay.name");
   RenderUiText({80, 118}, ui_text_, title, true);
   if (save_failed_) {
     const auto failed = Text(localization_, "ui.replay.save_failed");
     RenderUiText({80, 150}, ui_text_, failed, true);
   }
-  GrpPut16c2(x + 88, y + 4, std::string{name_entry_.Name()}.c_str());
+  DrawFont16C2(x + 88, y + 4, std::string{name_entry_.Name()}.c_str());
   name_entry_.Draw(x + 88, y + 4);
 }

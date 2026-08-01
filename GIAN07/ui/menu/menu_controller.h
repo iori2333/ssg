@@ -26,7 +26,7 @@ inline constexpr auto kMenuDepthMax = 10;
 inline constexpr auto kMenuKeyWait = 8;
 inline constexpr auto kMenuTitleValueGap = 4;
 
-constexpr FONT_ID kMenuFont = FONT_ID::SMALL;
+constexpr FontId kMenuFont = FontId::Small;
 
 enum class MenuColor {
   kActiveText,
@@ -47,17 +47,17 @@ public:
   MenuController() = default;
 
   void Init(int window_width);
-  void Open(WINDOW_POINT topleft, int select, INPUT_BITS initial_input);
+  void Open(WindowPoint topleft, int select, InputBits initial_input);
   void Navigate(IMenuNode &root_node, int initial_select = 0);
 
-  void Tick(INPUT_BITS key);
+  void Tick(InputBits key);
   void Draw();
 
   [[nodiscard]] bool Active() const { return !stack_.empty(); }
   [[nodiscard]] int Depth() const;
   [[nodiscard]] int Selection() const;
   [[nodiscard]] int ClosedSelection() const { return closed_selection_; }
-  [[nodiscard]] INPUT_BITS LastKey() const { return last_key_; }
+  [[nodiscard]] InputBits LastKey() const { return last_key_; }
   [[nodiscard]] std::string_view GetTitle() const;
   [[nodiscard]] std::string_view GetCurrentHelp() const;
   [[nodiscard]] int WindowY() const { return y_; }
@@ -66,7 +66,7 @@ public:
 
   void SetY(int new_y) { y_ = new_y; }
   void AdjustYForTallMenu(int baseline_y, int max_visible);
-  void SetLastKey(INPUT_BITS key) { last_key_ = key; }
+  void SetLastKey(InputBits key) { last_key_ = key; }
   void SetRootCancelEnabled(bool enabled) { root_cancel_enabled_ = enabled; }
   void SetExitText(MenuText title, MenuText help) {
     exit_title_ = std::move(title);
@@ -84,12 +84,12 @@ public:
 
 private:
   struct RenderSlot {
-    TEXTRENDER_RECT_ID trr;
+    TextRenderRectId trr;
     std::string cache_key;
   };
 
-  void ProcessInput(INPUT_BITS key);
-  void ProcessListInput(INPUT_BITS key);
+  void ProcessInput(InputBits key);
+  void ProcessListInput(InputBits key);
   void BuildPageFromEntry(EntryNode &entry);
   void ResetNavigation(int initial_select);
   void InvalidateAllSlots();
@@ -97,9 +97,9 @@ private:
   void RenderPage();
   void RenderList();
 
-  static void DrawTitle(TEXTRENDER_SESSION &s, std::string_view title,
+  static void DrawTitle(TextRenderSession &s, std::string_view title,
                         int rect_w, uint32_t marquee_frame);
-  static void DrawItem(TEXTRENDER_SESSION &s, std::string_view title,
+  static void DrawItem(TextRenderSession &s, std::string_view title,
                        std::string_view value, int window_w, bool selected,
                        bool enabled, bool highlighted, bool centered,
                        uint32_t marquee_frame);
@@ -116,7 +116,7 @@ private:
   int closed_selection_ = 0;
 
   uint32_t frame_count_ = 0;
-  INPUT_BITS last_key_ = 0;
+  InputBits last_key_ = 0;
   uint8_t key_wait_ = 0;
   uint8_t fast_repeat_wait_ = kMenuKeyWait;
   bool first_wait_ = false;

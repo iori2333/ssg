@@ -71,7 +71,7 @@ void GameplayState::InitializeGameplayView(bool interactive) {
   }
 
   if (mode_ != Mode::Demo) {
-    const auto flags = MsgWindowFlags::WITH_FACE;
+    const auto flags = MsgWindowFlags::WithFace;
     if (context.config.ui.message_window == MessageWindowMode::Upper) {
       context.ui.InitMessageWindow({128, 16, 640 - 128, 96}, flags);
     } else if (context.config.ui.message_window == MessageWindowMode::Lower) {
@@ -82,7 +82,7 @@ void GameplayState::InitializeGameplayView(bool interactive) {
       context.ui.InitGameOver();
     }
   }
-  GrpBackend_SetClip(playfield::kClip);
+  GraphicsBackendSetClip(playfield::kClip);
 }
 
 bool GameplayState::EnterLive() {
@@ -103,8 +103,8 @@ bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
     return false;
   }
 
-  GrpBackend_Clear();
-  Grp_Flip();
+  GraphicsBackendClear();
+  GraphicsFlip();
   mode_ = Mode::Replay;
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
@@ -124,8 +124,8 @@ bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
 bool GameplayState::EnterDemo() {
   auto &context = context_;
   previous_level_ = context.session.level;
-  GrpBackend_Clear();
-  Grp_Flip();
+  GraphicsBackendClear();
+  GraphicsFlip();
   mode_ = Mode::Demo;
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
@@ -227,7 +227,7 @@ GameplayState::HandleStageTransition(stage::StageTransition transition) {
   std::unreachable();
 }
 
-GameplayState::StepResult GameplayState::Step(INPUT_BITS &input) {
+GameplayState::StepResult GameplayState::Step(InputBits &input) {
   auto &context = context_;
   context.ui.TickMessageWindow();
   const auto transition = context.stage.Update(
@@ -303,12 +303,12 @@ FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
   auto &context = context_;
   auto input = frame.gameplay;
   if (context.config.debug.demo_recording &&
-      (frame.system & SYSKEY_DEMO_RECORD) != 0 &&
+      (frame.system & SystemKeyDemoRecord) != 0 &&
       !context.records.IsRecording()) {
     (void)context.records.MarkDemoStart();
   }
   context.records.Record(input);
-  if ((input & KEY_ESC) != 0) {
+  if ((input & KeyEscape) != 0) {
     context.ui.PrepareExitMenu(!context.config.debug.demo_recording &&
                                context.records.HasRecordedStages());
     context.ui.Exit().Open({230, 150}, 0, input);
@@ -338,10 +338,10 @@ FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
   if (frame.should_draw) {
     Draw();
     if (context.records.IsRecording()) {
-      constexpr PIXEL_LTRB rc = PIXEL_LTWH{288, 80, 24, 8};
-      GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, rc);
+      constexpr PixelLtrb rc = PixelLtwh{288, 80, 24, 8};
+      GraphicsSurfaceBlit({128, 470}, SurfaceId::System, rc);
     }
-    Grp_Flip();
+    GraphicsFlip();
   }
   return NoEvent{};
 }
@@ -351,20 +351,20 @@ FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
   context.ui.Exit().Tick(frame.gameplay);
   if (const auto action = context.ui.TakePauseAction()) {
     switch (*action) {
-    case UIManager::PauseAction::SaveReplayAndExit:
+    case UiManager::PauseAction::SaveReplayAndExit:
       if (context.config.debug.demo_recording) {
         return ExitDemoCapture();
       }
       return SaveReplayAndExit{.extra_stage =
                                    context.session.stage == StageId::Extra};
-    case UIManager::PauseAction::Exit:
+    case UiManager::PauseAction::Exit:
       if (context.config.debug.demo_recording) {
         return ExitDemoCapture();
       } else {
         context.records.CancelRecording();
       }
       return ReturnToTitle{.change_music = true};
-    case UIManager::PauseAction::Resume:
+    case UiManager::PauseAction::Resume:
       BgmResume();
       AudioBackendResumeAll();
       phase_ = Phase::Running;
@@ -374,10 +374,10 @@ FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
 
   if (frame.should_draw) {
     Draw();
-    GrpBackend_SetClip(GRP_RES_RECT);
+    GraphicsBackendSetClip(kGameResolutionRect);
     context.ui.Exit().Draw();
-    GrpBackend_SetClip(playfield::kClip);
-    Grp_Flip();
+    GraphicsBackendSetClip(playfield::kClip);
+    GraphicsFlip();
   }
   return NoEvent{};
 }
@@ -421,7 +421,7 @@ FlowEvent GameplayState::UpdateGameOverIntro(const FrameInput &frame) {
 
   if (frame.should_draw) {
     Draw();
-    Grp_Flip();
+    GraphicsFlip();
   }
   return NoEvent{};
 }
@@ -432,7 +432,7 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
   if (const auto action = context.ui.TakeGameOverAction()) {
     context.effects.ClearTextEffects();
     switch (*action) {
-    case UIManager::GameOverAction::Continue:
+    case UiManager::GameOverAction::Continue:
       if (context.player.Credits() == 0U) {
         return NoEvent{};
       }
@@ -445,7 +445,7 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
       }
       phase_ = Phase::Running;
       return NoEvent{};
-    case UIManager::GameOverAction::SaveReplayAndExit:
+    case UiManager::GameOverAction::SaveReplayAndExit:
       if (context.config.debug.demo_recording) {
         return ExitDemoCapture();
       }
@@ -454,7 +454,7 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
           .change_music = true,
           .save_replay = true,
       };
-    case UIManager::GameOverAction::Exit:
+    case UiManager::GameOverAction::Exit:
       if (context.config.debug.demo_recording) {
         return ExitDemoCapture();
       }
@@ -470,7 +470,7 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
   if (frame.should_draw) {
     Draw();
     context.ui.GameOver().Draw();
-    Grp_Flip();
+    GraphicsFlip();
   }
   return NoEvent{};
 }
@@ -487,19 +487,19 @@ void GameplayState::StopPlayback() {
 FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
   auto &context = context_;
   overlay_timer_ = (overlay_timer_ + 1) % 128;
-  if ((frame.gameplay & KEY_ESC) != 0) {
+  if ((frame.gameplay & KeyEscape) != 0) {
     StopPlayback();
     return ReturnToTitle{.change_music = true};
   }
 
-  const int speed = (frame.system & SYSKEY_SKIP) != 0 ? 6 : 1;
+  const int speed = (frame.system & SystemKeySkip) != 0 ? 6 : 1;
   for (int i = 0; i < speed; i++) {
     auto input = context.records.NextInput();
-    if ((input & KEY_ESC) != 0) {
+    if ((input & KeyEscape) != 0) {
       StopPlayback();
       return ReturnToTitle{.change_music = true};
     }
-    input &= ~KEY_DEMO_START;
+    input &= ~KeyDemoStart;
     const auto result = Step(input);
     if (result == StepResult::GameOver || result == StepResult::LoadFailed ||
         phase_ != Phase::Running || !context.records.IsPlaying()) {
@@ -510,16 +510,16 @@ FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
 
   if (frame.should_draw) {
     Draw();
-    constexpr PIXEL_LTWH replay_label = {312, 80, 32, 8};
-    GrpSurface_Blit({128, 470}, SURFACE_ID::SYSTEM, replay_label);
+    constexpr PixelLtwh replay_label = {312, 80, 32, 8};
+    GraphicsSurfaceBlit({128, 470}, SurfaceId::System, replay_label);
     if (overlay_timer_ < 96) {
       Geometry().SetAlphaNorm(128);
       Geometry().SetColor({0, 0, 0});
       Geometry().DrawBoxA(170, 473, 245, 478);
-      constexpr PIXEL_LTWH skip_label = {312, 88, 72, 8};
-      GrpSurface_Blit({173, 474}, SURFACE_ID::SYSTEM, skip_label);
+      constexpr PixelLtwh skip_label = {312, 88, 72, 8};
+      GraphicsSurfaceBlit({173, 474}, SurfaceId::System, skip_label);
     }
-    Grp_Flip();
+    GraphicsFlip();
   }
   return NoEvent{};
 }
@@ -530,10 +530,10 @@ FlowEvent GameplayState::UpdateDemo(const FrameInput &frame) {
   constexpr auto kPrerollStepsPerFrame = 240;
   const auto step_count = demo_visible_ ? 1 : kPrerollStepsPerFrame;
   for (int step = 0; step < step_count; ++step) {
-    auto input = frame.gameplay != 0U ? KEY_ESC : context.records.NextInput();
-    const bool demo_start = (input & KEY_DEMO_START) != 0;
-    input &= ~KEY_DEMO_START;
-    if ((input & KEY_ESC) != 0) {
+    auto input = frame.gameplay != 0U ? KeyEscape : context.records.NextInput();
+    const bool demo_start = (input & KeyDemoStart) != 0;
+    input &= ~KeyDemoStart;
+    if ((input & KeyEscape) != 0) {
       StopPlayback();
       return ReturnToTitle{.change_music = false};
     }
@@ -555,9 +555,9 @@ FlowEvent GameplayState::UpdateDemo(const FrameInput &frame) {
   if (frame.should_draw && demo_visible_) {
     Draw();
     if (overlay_timer_ < 64) {
-      GrpPut16(200, 200, "D E M O   P L A Y");
+      DrawFont16(200, 200, "D E M O   P L A Y");
     }
-    Grp_Flip();
+    GraphicsFlip();
   }
   return NoEvent{};
 }
@@ -581,7 +581,7 @@ void GameplayState::Draw() const {
       .practice_mode = context.player.Practice(),
   };
 
-  GrpBackend_Clear();
+  GraphicsBackendClear();
   context.stage.Draw();
   context.effects.DrawCircles();
   context.enemies.DrawBosses();
@@ -602,10 +602,10 @@ void GameplayState::Draw() const {
   context.ui.DrawBossHud(context.stage.Frame());
   context.effects.DrawScreenTransition();
   context.ui.DrawMessageWindow();
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   context.ui.DrawSidebarHud(hud_model);
-  GrpBackend_SetClip({playfield::kLeft, playfield::kTop, playfield::kRight + 1,
-                      playfield::kBottom + 1});
+  GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
+                          playfield::kRight + 1, playfield::kBottom + 1});
 }
 
 } // namespace gameflow

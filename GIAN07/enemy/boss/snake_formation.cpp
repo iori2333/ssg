@@ -32,7 +32,7 @@ void SnakeFormation::Spawn(BossActor &parent, uint32_t tail_script) {
     point = {.x = parent.x, .y = parent.y, .direction = parent.d};
   }
 
-  const WORLD_POINT position{&parent.x, &parent.y};
+  const WorldPoint position{&parent.x, &parent.y};
   for (auto &segment : snake->segments) {
     if (auto *actor = enemies_.SpawnRegular(position, tail_script)) {
       segment = actor;
@@ -111,7 +111,7 @@ void SnakeFormation::Destroy(Snake &snake) {
 
     if (segment->long_laser_count != 0U) {
       bullets_.ControlLongLaser(
-          segment, ECL_ALL_LONG_LASERS,
+          segment, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     segment->BeginExplosion();

@@ -40,7 +40,7 @@ int GetBulletEvadeRadius(uint8_t c) {
 }
 
 namespace {
-constexpr auto RCSET(int x, int y, int w) -> PIXEL_LTRB {
+constexpr auto MakeRect(int x, int y, int w) -> PixelLtrb {
   return {x, y, x + w, y + w};
 }
 
@@ -48,7 +48,7 @@ constexpr auto kRapidFlag = 0x04;
 constexpr auto kAimFlag = 0x08;
 
 int WorldToPixel(float value) {
-  return static_cast<int>(std::floor(value / WORLD_COORD_SCALE));
+  return static_cast<int>(std::floor(value / kWorldCoordScale));
 }
 
 BulletMotion DecodeMotion(uint8_t value) {
@@ -90,27 +90,29 @@ BulletEffect DecodeEffect(uint8_t value) {
 } // namespace
 
 void Bullet::DrawEffect() const {
-  static constexpr PIXEL_LTRB Data[6][5] = {
-      {RCSET(168, 344, 32), RCSET(232, 344, 28), RCSET(288, 344, 24),
-       RCSET(336, 344, 20), RCSET(328, 416, 16)},
-      {RCSET(168, 344 + 32, 32), RCSET(232, 344 + 28, 28),
-       RCSET(288, 344 + 24, 24), RCSET(336, 344 + 20, 20),
-       RCSET(328 + 16, 416, 16)},
-      {RCSET(168, 344 + (32 * 2), 32), RCSET(232, 344 + (28 * 2), 28),
-       RCSET(288, 344 + (24 * 2), 24), RCSET(336, 344 + (20 * 2), 20),
-       RCSET(328 + (16 * 2), 416, 16)},
-      {RCSET(168 + 32, 344, 32), RCSET(232 + 28, 344, 28),
-       RCSET(288 + 24, 344, 24), RCSET(336 + 20, 344, 20),
-       RCSET(328, 416 + 16, 16)},
-      {RCSET(168 + 32, 344 + 32, 32), RCSET(232 + 28, 344 + 28, 28),
-       RCSET(288 + 24, 344 + 24, 24), RCSET(336 + 20, 344 + 20, 20),
-       RCSET(328 + 16, 416 + 16, 16)},
-      {RCSET(168 + 32, 344 + (32 * 2), 32), RCSET(232 + 28, 344 + (28 * 2), 28),
-       RCSET(288 + 24, 344 + (24 * 2), 24), RCSET(336 + 20, 344 + (20 * 2), 20),
-       RCSET(328 + (16 * 2), 416 + 16, 16)},
+  static constexpr PixelLtrb Data[6][5] = {
+      {MakeRect(168, 344, 32), MakeRect(232, 344, 28), MakeRect(288, 344, 24),
+       MakeRect(336, 344, 20), MakeRect(328, 416, 16)},
+      {MakeRect(168, 344 + 32, 32), MakeRect(232, 344 + 28, 28),
+       MakeRect(288, 344 + 24, 24), MakeRect(336, 344 + 20, 20),
+       MakeRect(328 + 16, 416, 16)},
+      {MakeRect(168, 344 + (32 * 2), 32), MakeRect(232, 344 + (28 * 2), 28),
+       MakeRect(288, 344 + (24 * 2), 24), MakeRect(336, 344 + (20 * 2), 20),
+       MakeRect(328 + (16 * 2), 416, 16)},
+      {MakeRect(168 + 32, 344, 32), MakeRect(232 + 28, 344, 28),
+       MakeRect(288 + 24, 344, 24), MakeRect(336 + 20, 344, 20),
+       MakeRect(328, 416 + 16, 16)},
+      {MakeRect(168 + 32, 344 + 32, 32), MakeRect(232 + 28, 344 + 28, 28),
+       MakeRect(288 + 24, 344 + 24, 24), MakeRect(336 + 20, 344 + 20, 20),
+       MakeRect(328 + 16, 416 + 16, 16)},
+      {MakeRect(168 + 32, 344 + (32 * 2), 32),
+       MakeRect(232 + 28, 344 + (28 * 2), 28),
+       MakeRect(288 + 24, 344 + (24 * 2), 24),
+       MakeRect(336 + 20, 344 + (20 * 2), 20),
+       MakeRect(328 + (16 * 2), 416 + 16, 16)},
   };
   static int Width[5] = {32 / 2, 28 / 2, 24 / 2, 20 / 2, 16 / 2};
-  static constexpr std::span<const PIXEL_LTRB, 5> Target[16 * 3] = {
+  static constexpr std::span<const PixelLtrb, 5> Target[16 * 3] = {
       Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[0], Data[0],
       Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
       Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[0], Data[0],
@@ -121,13 +123,13 @@ void Bullet::DrawEffect() const {
   const int ptn = (static_cast<int>(count_) / 4 % 5);
   int x = WorldToPixel(x_) - Width[ptn];
   int y = WorldToPixel(y_) - Width[ptn];
-  PIXEL_LTRB temp;
+  PixelLtrb temp;
   if (c_ >= 16 * 3) {
     temp = Target[3][ptn];
   } else {
     temp = Target[c_][ptn];
   }
-  GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM, temp);
+  GraphicsSurfaceBlit({x, y}, SurfaceId::System, temp);
 }
 
 // ── Bullet spawn setup ───────────────────────────────────────────
@@ -598,10 +600,10 @@ void Bullet::MoveByEffect() {
 // ── Bullet: Render ───────────────────────────────────────────────
 
 void Bullet::Render() const {
-  static const PIXEL_LTRB rcExtraTama[4] = {{128, 384, 128 + 32, 384 + 32},
-                                            {128 + 32, 384, 128 + 56, 384 + 24},
-                                            {128 + 56, 384, 128 + 72, 384 + 16},
-                                            {128 + 72, 384, 128 + 80, 384 + 8}};
+  static const PixelLtrb rcExtraTama[4] = {{128, 384, 128 + 32, 384 + 32},
+                                           {128 + 32, 384, 128 + 56, 384 + 24},
+                                           {128 + 56, 384, 128 + 72, 384 + 16},
+                                           {128 + 72, 384, 128 + 80, 384 + 8}};
   static constexpr uint8_t sizeExtraTama[4] = {16, 12, 8, 4};
 
   const bool is_small = (c_ & kBulletVisualCategoryMask) == kSmallBulletVisual;
@@ -612,13 +614,13 @@ void Bullet::Render() const {
   switch (effect_) {
   case BulletEffect::Clearing:
     if (is_small) {
-      GrpSurface_Blit(
-          {x, y}, SURFACE_ID::SYSTEM,
-          PIXEL_LTWH{384 + ((static_cast<int>(count_) / 6) << 3), 120, 8, 8});
+      GraphicsSurfaceBlit(
+          {x, y}, SurfaceId::System,
+          PixelLtwh{384 + ((static_cast<int>(count_) / 6) << 3), 120, 8, 8});
     } else {
-      GrpSurface_Blit(
-          {x, y}, SURFACE_ID::SYSTEM,
-          PIXEL_LTWH{384 + ((static_cast<int>(count_) / 6) << 4), 104, 16, 16});
+      GraphicsSurfaceBlit(
+          {x, y}, SurfaceId::System,
+          PixelLtwh{384 + ((static_cast<int>(count_) / 6) << 4), 104, 16, 16});
     }
     return;
   case BulletEffect::Circle1:
@@ -630,46 +632,46 @@ void Bullet::Render() const {
 
   if (is_small) {
     if (c_ != 0x25) {
-      GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{(c_ << 3) + 384, 0, 8, 8});
+      GraphicsSurfaceBlit({x, y}, SurfaceId::System,
+                          PixelLtwh{(c_ << 3) + 384, 0, 8, 8});
     } else {
-      GrpSurface_Blit({x - 4, y - 4}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{((display_angle + 8) & 0xf0) + 384,
-                                 24 + ((c_ & 0x0f) << 4), 16, 16});
+      GraphicsSurfaceBlit({x - 4, y - 4}, SurfaceId::System,
+                          PixelLtwh{((display_angle + 8) & 0xf0) + 384,
+                                    24 + ((c_ & 0x0f) << 4), 16, 16});
     }
     return;
   }
 
   switch (c_ & 0xf0) {
   case kLargeBulletVisual:
-    GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
-                    PIXEL_LTWH{((c_ & 0x0f) << 4) + 384, 8, 16, 16});
+    GraphicsSurfaceBlit({x, y}, SurfaceId::System,
+                        PixelLtwh{((c_ & 0x0f) << 4) + 384, 8, 16, 16});
     break;
   case kExtraBulletVisual: {
     const uint8_t d = (c_ & 3);
-    PIXEL_LTRB src = rcExtraTama[d];
+    PixelLtrb src = rcExtraTama[d];
     int ex = WorldToPixel(x_) - sizeExtraTama[d];
     int ey = WorldToPixel(y_) - sizeExtraTama[d];
-    GrpSurface_Blit({ex, ey}, SURFACE_ID::ENEMY, src);
+    GraphicsSurfaceBlit({ex, ey}, SurfaceId::Enemy, src);
     break;
   }
   case kLargeExtraBulletVisual: {
     const auto d = static_cast<uint8_t>(display_angle + 4) / 8;
-    GrpSurface_Blit({x, y}, SURFACE_ID::ENEMY,
-                    PIXEL_LTWH{d * 16, 320 + ((c_ & 3) << 4), 16, 16});
+    GraphicsSurfaceBlit({x, y}, SurfaceId::Enemy,
+                        PixelLtwh{d * 16, 320 + ((c_ & 3) << 4), 16, 16});
     break;
   }
   case kDirectionalBulletVisual:
     if (c_ != 32 + 5) {
-      GrpSurface_Blit({x, y}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{((display_angle + 8) & 0xf0) + 384,
-                                 24 + ((c_ & 0x0f) << 4), 16, 16});
+      GraphicsSurfaceBlit({x, y}, SurfaceId::System,
+                          PixelLtwh{((display_angle + 8) & 0xf0) + 384,
+                                    24 + ((c_ & 0x0f) << 4), 16, 16});
     } else {
       const auto d = static_cast<uint8_t>(display_angle + 4) / 8;
       int dx = (d % 8) * 32;
       int dy = (d / 8) * 32;
-      GrpSurface_Blit({x - 8, y - 8}, SURFACE_ID::SYSTEM,
-                      PIXEL_LTWH{384 + dx, 304 + dy, 32, 32});
+      GraphicsSurfaceBlit({x - 8, y - 8}, SurfaceId::System,
+                          PixelLtwh{384 + dx, 304 + dy, 32, 32});
     }
     break;
   }

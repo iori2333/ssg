@@ -65,9 +65,9 @@ void EffectManager::DrawBombExplosion(const BombExplosion &effect) {
     if (particle.frame > 14) {
       continue;
     }
-    GrpSurface_Blit({(particle.x >> 6) - 24, (particle.y >> 6) - 24},
-                    SURFACE_ID::SYSTEM,
-                    PIXEL_LTWH{(particle.frame >> 1) * 48, 296, 48, 48});
+    GraphicsSurfaceBlit({(particle.x >> 6) - 24, (particle.y >> 6) - 24},
+                        SurfaceId::System,
+                        PixelLtwh{(particle.frame >> 1) * 48, 296, 48, 48});
   }
 }
 

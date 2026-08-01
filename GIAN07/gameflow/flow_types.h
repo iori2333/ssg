@@ -47,8 +47,8 @@ using FlowEvent =
                  FinishRun, SaveReplayAndExit>;
 
 struct FrameInput {
-  INPUT_BITS gameplay;
-  INPUT_BITS system;
+  InputBits gameplay;
+  InputBits system;
   bool should_draw;
 };
 

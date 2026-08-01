@@ -49,7 +49,7 @@ class StageSession;
 enum class PlayerReward : uint8_t { None, Bomb, Extend };
 
 struct PlayerUpdateResult {
-  INPUT_BITS effective_input;
+  InputBits effective_input;
   bool clear_bullets;
   bool game_over;
 };
@@ -100,7 +100,7 @@ public:
   void DrawDebugHitbox() const;
   void DrawProjectiles() const;
   [[nodiscard]] PlayerUpdateResult Update(EnemyManager &enemies,
-                                          INPUT_BITS input);
+                                          InputBits input);
   void Initialize(int player_stock, int bomb_stock);
   void PrepareNextStage();
   void OnHit();
@@ -178,11 +178,11 @@ private:
   void DrawFocusHitbox() const;
   [[nodiscard]] int HitRadiusPixels() const;
   void UpdateStatus();
-  INPUT_BITS PrepareInput(INPUT_BITS input);
-  void UpdateMovement(INPUT_BITS input);
+  InputBits PrepareInput(InputBits input);
+  void UpdateMovement(InputBits input);
   void UpdateOptionPosition(int movement_x, int movement_y);
   void UpdateProjectiles(EnemyManager &enemies);
-  void UpdateWeapons(EnemyManager &enemies, INPUT_BITS input);
+  void UpdateWeapons(EnemyManager &enemies, InputBits input);
   bool ActivateBomb(BombTrigger trigger);
   void EnterDeathbombWindow();
   void PlayHitFeedback() const;

@@ -35,10 +35,10 @@ bool PrepareWorkingDirectory() {
 
 void ApplyPadBindings(InputSystem &input, const InputConfig &config) {
   const std::array bindings = {
-      INPUT_PAD_BINDING{config.pad_tama, KEY_TAMA},
-      INPUT_PAD_BINDING{config.pad_bomb, KEY_BOMB},
-      INPUT_PAD_BINDING{config.pad_shift, KEY_SHIFT},
-      INPUT_PAD_BINDING{config.pad_cancel, KEY_ESC},
+      InputPadBinding{config.pad_tama, KeyTama},
+      InputPadBinding{config.pad_bomb, KeyBomb},
+      InputPadBinding{config.pad_shift, KeyShift},
+      InputPadBinding{config.pad_cancel, KeyEscape},
   };
   input.SetPadBindings(bindings);
 }
@@ -74,7 +74,7 @@ bool GameApplication::Initialize() {
     return false;
   }
   display_initialized_ = true;
-  Grp_ScreenshotSetPrefix("screenshots/");
+  GraphicsScreenshotSetPrefix("screenshots/");
 
   if (!context_.audio.Initialize(config.audio)) {
     logging::Warning(logging::Channel::Audio,
@@ -128,12 +128,12 @@ bool GameApplication::Initialize() {
 }
 
 int GameApplication::Run() {
-  return WndBackend_Run([this] { input_snapshot_ = input_.Poll(); },
-                        [this] { return Tick(); });
+  return WindowBackendRun([this] { input_snapshot_ = input_.Poll(); },
+                          [this] { return Tick(); });
 }
 
 bool GameApplication::Tick() {
-  Grp_RequestScreenshot((input_snapshot_.system & SYSKEY_SNAPSHOT) != 0);
+  GraphicsRequestScreenshot((input_snapshot_.system & SystemKeySnapshot) != 0);
   return flow_->Tick(input_snapshot_.game, input_snapshot_.system);
 }
 
@@ -148,8 +148,8 @@ void GameApplication::Shutdown() {
 
   context_.audio.Shutdown();
   if (display_initialized_) {
-    TextBackend_Cleanup();
-    GrpBackend_Cleanup();
+    TextBackendCleanup();
+    GraphicsBackendCleanup();
     display_initialized_ = false;
   }
 }

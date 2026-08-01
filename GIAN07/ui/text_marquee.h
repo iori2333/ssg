@@ -12,7 +12,7 @@ namespace ui {
 
 inline constexpr uint32_t kMarqueeStepFrames = 10;
 
-std::string MarqueeWindow(TEXTRENDER_SESSION &session, std::string_view text,
+std::string MarqueeWindow(TextRenderSession &session, std::string_view text,
                           int available_width, uint32_t frame);
 
 } // namespace ui

@@ -10,63 +10,63 @@
 #include <utility>
 
 // Current pressed/released state for all virtual KEY_* keys.
-using INPUT_BITS = uint16_t;
+using InputBits = uint16_t;
 
 // 0 = unmapped.
-using INPUT_PAD_BUTTON = uint8_t;
+using InputPadButton = uint8_t;
 
 // Keyboard constants
 // Braced initializers cause a compile error if the constants don't fit within
-// the INPUT_BITS type.
-constexpr INPUT_BITS KEY_UP = {0x0001};
-constexpr INPUT_BITS KEY_DOWN = {0x0002};
-constexpr INPUT_BITS KEY_LEFT = {0x0004};
-constexpr INPUT_BITS KEY_RIGHT = {0x0008};
-constexpr INPUT_BITS KEY_TAMA = {0x0010};
-constexpr INPUT_BITS KEY_BOMB = {0x0020};
-constexpr INPUT_BITS KEY_SHIFT = {0x0040};
-constexpr INPUT_BITS KEY_RETURN = {0x0080};
-constexpr INPUT_BITS KEY_ESC = {0x0100};
-constexpr INPUT_BITS KEY_STAGE1 = {0x0200};
-constexpr INPUT_BITS KEY_STAGE2 = {0x0400};
-constexpr INPUT_BITS KEY_STAGE3 = {0x0800};
-constexpr INPUT_BITS KEY_STAGE4 = {0x1000};
-constexpr INPUT_BITS KEY_STAGE5 = {0x2000};
-constexpr INPUT_BITS KEY_STAGE6 = {0x4000};
+// the InputBits type.
+constexpr InputBits KeyUp = {0x0001};
+constexpr InputBits KeyDown = {0x0002};
+constexpr InputBits KeyLeft = {0x0004};
+constexpr InputBits KeyRight = {0x0008};
+constexpr InputBits KeyTama = {0x0010};
+constexpr InputBits KeyBomb = {0x0020};
+constexpr InputBits KeyShift = {0x0040};
+constexpr InputBits KeyReturn = {0x0080};
+constexpr InputBits KeyEscape = {0x0100};
+constexpr InputBits KeyStage1 = {0x0200};
+constexpr InputBits KeyStage2 = {0x0400};
+constexpr InputBits KeyStage3 = {0x0800};
+constexpr InputBits KeyStage4 = {0x1000};
+constexpr InputBits KeyStage5 = {0x2000};
+constexpr InputBits KeyStage6 = {0x4000};
 // Stored in Demo Replay input streams as the visible playback start marker.
-constexpr INPUT_BITS KEY_DEMO_START = {0x8000};
+constexpr InputBits KeyDemoStart = {0x8000};
 
-constexpr INPUT_BITS KEY_ULEFT = (KEY_UP | KEY_LEFT);
-constexpr INPUT_BITS KEY_URIGHT = (KEY_UP | KEY_RIGHT);
-constexpr INPUT_BITS KEY_DLEFT = (KEY_DOWN | KEY_LEFT);
-constexpr INPUT_BITS KEY_DRIGHT = (KEY_DOWN | KEY_RIGHT);
+constexpr InputBits KeyUpLeft = (KeyUp | KeyLeft);
+constexpr InputBits KeyUpRight = (KeyUp | KeyRight);
+constexpr InputBits KeyDownLeft = (KeyDown | KeyLeft);
+constexpr InputBits KeyDownRight = (KeyDown | KeyRight);
 
 // Returns whether this key represents an "OK" action.
-bool Input_IsOK(INPUT_BITS key);
+bool InputIsOk(InputBits key);
 
 // Returns whether this key represents a "Cancel" action.
-bool Input_IsCancel(INPUT_BITS key);
+bool InputIsCancel(InputBits key);
 
 // Returns the delta that this key would apply to a numeric option value.
-int_fast8_t Input_OptionKeyDelta(INPUT_BITS key);
+int_fast8_t InputOptionKeyDelta(InputBits key);
 
 // Additional virtual keys for inputs that were read using GetAsyncKeyState()
 // in the original game. Treated separately to not complicate any existing
 // comparisons of the regular game input with 0.
-using INPUT_SYSTEM_BITS = uint16_t;
+using InputSystemBits = uint16_t;
 
-constexpr INPUT_SYSTEM_BITS SYSKEY_SNAPSHOT = {0x0001};
-constexpr INPUT_SYSTEM_BITS SYSKEY_SKIP = {0x0002};
-constexpr INPUT_SYSTEM_BITS SYSKEY_BGM_FADE = {0x0004};
-constexpr INPUT_SYSTEM_BITS SYSKEY_BGM_DEVICE = {0x0008};
-constexpr INPUT_SYSTEM_BITS SYSKEY_DEMO_RECORD = {0x0010};
+constexpr InputSystemBits SystemKeySnapshot = {0x0001};
+constexpr InputSystemBits SystemKeySkip = {0x0002};
+constexpr InputSystemBits SystemKeyBgmFade = {0x0004};
+constexpr InputSystemBits SystemKeyBgmDevice = {0x0008};
+constexpr InputSystemBits SystemKeyDemoRecord = {0x0010};
 
-using INPUT_PAD_BINDING = std::pair<INPUT_PAD_BUTTON, INPUT_BITS>;
+using InputPadBinding = std::pair<InputPadButton, InputBits>;
 
 struct InputSnapshot {
-  INPUT_BITS game = 0;
-  INPUT_BITS pad = 0;
-  INPUT_SYSTEM_BITS system = 0;
+  InputBits game = 0;
+  InputBits pad = 0;
+  InputSystemBits system = 0;
 };
 
 class InputSystem {
@@ -78,12 +78,12 @@ public:
   InputSystem &operator=(const InputSystem &) = delete;
   InputSystem &operator=(InputSystem &&) = delete;
 
-  void SetPadBindings(std::span<const INPUT_PAD_BINDING> bindings);
+  void SetPadBindings(std::span<const InputPadBinding> bindings);
   [[nodiscard]] InputSnapshot Poll();
   [[nodiscard]] const InputSnapshot &Current() const;
 
   // >= 1: one button; 0: multiple buttons; nullopt: no button.
-  [[nodiscard]] std::optional<INPUT_PAD_BUTTON> PadSingle() const;
+  [[nodiscard]] std::optional<InputPadButton> PadSingle() const;
 
 private:
   struct Impl;

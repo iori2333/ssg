@@ -11,11 +11,11 @@
 #include "util/enum_array.h"
 #include "util/guard.h"
 
-constexpr auto FORMAT = CAIRO_FORMAT_ARGB32;
+constexpr auto kCairoFormat = CAIRO_FORMAT_ARGB32;
 
 namespace {
 
-constinit const util::EnumArray<const char *, FONT_ID> kFontSpecs = {
+constinit const util::EnumArray<const char *, FontId> kFontSpecs = {
     "MS Gothic,IPAMonaGothic Regular 14px",
     "MS Gothic,IPAMonaGothic Regular 16px",
     "MS Gothic,IPAMonaGothic Medium 24px",
@@ -24,27 +24,27 @@ constinit const util::EnumArray<const char *, FONT_ID> kFontSpecs = {
 
 } // namespace
 
-struct PANGOCAIRO_FONT {
+struct PangoCairoFont {
   PangoFontDescription *desc = nullptr;
   cairo_hint_metrics_t hint_metrics = CAIRO_HINT_METRICS_DEFAULT;
 };
 
-struct PANGOCAIRO_STATE {
+struct PangoCairoState {
   cairo_surface_t *surf = nullptr;
   cairo_t *cr = nullptr;
   PangoLayout *layout = nullptr;
 
-  PANGOCAIRO_STATE() {}
-  PANGOCAIRO_STATE(cairo_surface_t *);
-  PANGOCAIRO_STATE(PANGOCAIRO_STATE &&) noexcept;
-  ~PANGOCAIRO_STATE();
+  PangoCairoState() {}
+  PangoCairoState(cairo_surface_t *);
+  PangoCairoState(PangoCairoState &&) noexcept;
+  ~PangoCairoState();
 
   explicit operator bool() const;
-  PANGOCAIRO_STATE &operator=(PANGOCAIRO_STATE &&) noexcept;
+  PangoCairoState &operator=(PangoCairoState &&) noexcept;
 
-  void SetFont(const PANGOCAIRO_FONT *);
+  void SetFont(const PangoCairoFont *);
   void SetText(std::string_view);
-  PIXEL_SIZE Extent(const PANGOCAIRO_FONT *, std::string_view);
+  PixelSize Extent(const PangoCairoFont *, std::string_view);
 };
 
 // Pango's hinting (which is, *of course*, controlled by a property in Cairo
@@ -109,16 +109,16 @@ bool MetricHintingNeededFor(PangoFontDescription *desc) {
 // State
 // -----
 
-TEXTRENDER &TextRenderer() {
-  static TEXTRENDER renderer;
+TextRender &TextRenderer() {
+  static TextRender renderer;
   return renderer;
 }
 
 class FontCache {
-  util::EnumArray<PANGOCAIRO_FONT, FONT_ID> arr;
+  util::EnumArray<PangoCairoFont, FontId> arr;
 
 public:
-  const PANGOCAIRO_FONT &ForID(FONT_ID font) {
+  const PangoCairoFont &ForID(FontId font) {
     if (!arr[font].desc) {
       arr[font].desc = pango_font_description_from_string(kFontSpecs[font]);
       arr[font].hint_metrics =
@@ -136,8 +136,8 @@ public:
   }
 };
 
-PANGOCAIRO_STATE &PangoState() {
-  static PANGOCAIRO_STATE state;
+PangoCairoState &PangoState() {
+  static PangoCairoState state;
   return state;
 }
 
@@ -147,7 +147,7 @@ FontCache &Fonts() {
 }
 // -----
 
-PANGOCAIRO_STATE::PANGOCAIRO_STATE(cairo_surface_t *surf) : surf(surf) {
+PangoCairoState::PangoCairoState(cairo_surface_t *surf) : surf(surf) {
   if (!surf) {
     return;
   }
@@ -156,11 +156,11 @@ PANGOCAIRO_STATE::PANGOCAIRO_STATE(cairo_surface_t *surf) : surf(surf) {
   layout = pango_cairo_create_layout(cr);
 }
 
-PANGOCAIRO_STATE::PANGOCAIRO_STATE(PANGOCAIRO_STATE &&other) noexcept {
+PangoCairoState::PangoCairoState(PangoCairoState &&other) noexcept {
   *this = std::move(other);
 }
 
-PANGOCAIRO_STATE::~PANGOCAIRO_STATE() {
+PangoCairoState::~PangoCairoState() {
   // Actually throws a warning if we pass a `nullptr`!
   if (layout) {
     g_object_unref(layout);
@@ -173,10 +173,9 @@ PANGOCAIRO_STATE::~PANGOCAIRO_STATE() {
   }
 }
 
-PANGOCAIRO_STATE::operator bool() const { return (cr && layout); }
+PangoCairoState::operator bool() const { return (cr && layout); }
 
-PANGOCAIRO_STATE &
-PANGOCAIRO_STATE::operator=(PANGOCAIRO_STATE &&other) noexcept {
+PangoCairoState &PangoCairoState::operator=(PangoCairoState &&other) noexcept {
   if (this == &other) {
     return *this;
   }
@@ -195,7 +194,7 @@ PANGOCAIRO_STATE::operator=(PANGOCAIRO_STATE &&other) noexcept {
   return *this;
 };
 
-void PANGOCAIRO_STATE::SetFont(const PANGOCAIRO_FONT *font) {
+void PangoCairoState::SetFont(const PangoCairoFont *font) {
   if (!font) {
     return;
   }
@@ -216,7 +215,7 @@ void PANGOCAIRO_STATE::SetFont(const PANGOCAIRO_FONT *font) {
   pango_layout_set_font_description(layout, font->desc);
 }
 
-void PANGOCAIRO_STATE::SetText(std::string_view str) {
+void PangoCairoState::SetText(std::string_view str) {
   const auto *in_buf = str.data();
   const auto in_size = str.size();
   if (g_utf8_validate_len(in_buf, in_size, nullptr)) {
@@ -232,74 +231,74 @@ void PANGOCAIRO_STATE::SetText(std::string_view str) {
   }
 }
 
-PIXEL_SIZE PANGOCAIRO_STATE::Extent(const PANGOCAIRO_FONT *font,
-                                    std::string_view str) {
-  PIXEL_SIZE ret = {0, 0};
+PixelSize PangoCairoState::Extent(const PangoCairoFont *font,
+                                  std::string_view str) {
+  PixelSize ret = {0, 0};
   SetFont(font);
   SetText(str);
   pango_layout_get_pixel_size(layout, &ret.w, &ret.h);
   return ret;
 }
 
-uint32_t &TEXTRENDER_SESSION::PIXELACCESS::PixelAt(const PIXEL_POINT &xy_rel) {
+uint32_t &TextRenderSession::PixelSession::PixelAt(const PixelPoint &xy_rel) {
   return (std::bit_cast<uint32_t *>(buf + (stride * xy_rel.y)))[xy_rel.x];
 }
 
-uint32_t TEXTRENDER_SESSION::PIXELACCESS::GetRaw(const PIXEL_POINT &xy_rel) {
+uint32_t TextRenderSession::PixelSession::GetRaw(const PixelPoint &xy_rel) {
   return PixelAt(xy_rel);
 }
 
-void TEXTRENDER_SESSION::PIXELACCESS::SetRaw(const PIXEL_POINT &xy_rel,
+void TextRenderSession::PixelSession::SetRaw(const PixelPoint &xy_rel,
                                              uint32_t color) {
   PixelAt(xy_rel) = color;
 }
 
-RGB TEXTRENDER_SESSION::PIXELACCESS::Get(const PIXEL_POINT &xy_rel) {
+Rgb TextRenderSession::PixelSession::Get(const PixelPoint &xy_rel) {
   const auto ret = GetRaw(xy_rel);
   const uint8_t b = (ret >> 0);
   const uint8_t g = (ret >> 8);
   const uint8_t r = (ret >> 16);
-  return RGB{.r = r, .g = g, .b = b};
+  return Rgb{.r = r, .g = g, .b = b};
 }
 
-void TEXTRENDER_SESSION::PIXELACCESS::Set(const PIXEL_POINT &xy_rel,
-                                          const RGB c) {
+void TextRenderSession::PixelSession::Set(const PixelPoint &xy_rel,
+                                          const Rgb c) {
   SetRaw(xy_rel, (0xFF000000u | (c.r << 16u) | (c.g << 8u) | c.b));
 }
 
-TEXTRENDER_SESSION::PIXELACCESS::PIXELACCESS() {
+TextRenderSession::PixelSession::PixelSession() {
   cairo_surface_flush(PangoState().surf);
   buf = cairo_image_surface_get_data(PangoState().surf);
   stride = cairo_image_surface_get_stride(PangoState().surf);
 }
 
-TEXTRENDER_SESSION::PIXELACCESS::~PIXELACCESS() {
+TextRenderSession::PixelSession::~PixelSession() {
   cairo_surface_mark_dirty(PangoState().surf);
 }
 
-TEXTRENDER_SESSION::TEXTRENDER_SESSION(const PIXEL_LTWH rect)
+TextRenderSession::TextRenderSession(const PixelLtwh rect)
     : tex_origin(rect.left, rect.top), size(rect.w, rect.h) {}
 
-TEXTRENDER_SESSION::~TEXTRENDER_SESSION() {
+TextRenderSession::~TextRenderSession() {
   cairo_surface_flush(PangoState().surf);
   const auto *buf = cairo_image_surface_get_data(PangoState().surf);
   const auto stride = cairo_image_surface_get_stride(PangoState().surf);
-  const PIXEL_LTWH subrect = {tex_origin.x, tex_origin.y, size.w, size.h};
-  const auto sid = SURFACE_ID::TEXT;
-  GrpSurface_Update(sid, &subrect,
-                    {std::bit_cast<const std::byte *>(buf), stride});
+  const PixelLtwh subrect = {tex_origin.x, tex_origin.y, size.w, size.h};
+  const auto sid = SurfaceId::Text;
+  GraphicsSurfaceUpdate(sid, &subrect,
+                        {std::bit_cast<const std::byte *>(buf), stride});
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::RectSize() const { return size; }
+PixelSize TextRenderSession::RectSize() const { return size; }
 
-void TEXTRENDER_SESSION::SetFont(FONT_ID font) {
+void TextRenderSession::SetFont(FontId font) {
   if (font_cur != font) {
     PangoState().SetFont(&Fonts().ForID(font));
     font_cur = font;
   }
 }
 
-void TEXTRENDER_SESSION::SetColor(const RGB &color) {
+void TextRenderSession::SetColor(const Rgb &color) {
   if (color_cur != color) {
     cairo_set_source_rgb(PangoState().cr, (color.r / 255.0), (color.g / 255.0),
                          (color.b / 255.0));
@@ -307,12 +306,12 @@ void TEXTRENDER_SESSION::SetColor(const RGB &color) {
   }
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::Extent(std::string_view str) {
+PixelSize TextRenderSession::Extent(std::string_view str) {
   return PangoState().Extent(nullptr, str);
 }
 
-void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
-                             std::string_view str, std::optional<RGB> color) {
+void TextRenderSession::Put(const PixelPoint &topleft_rel, std::string_view str,
+                            std::optional<Rgb> color) {
   if (color) {
     SetColor(color.value());
   }
@@ -321,12 +320,11 @@ void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
   pango_cairo_show_layout(PangoState().cr, PangoState().layout);
 }
 
-std::optional<TEXTRENDER_SESSION>
-TEXTRENDER::Session(TEXTRENDER_RECT_ID rect_id) {
+std::optional<TextRenderSession> TextRender::Session(TextRenderRectId rect_id) {
   assert(rect_id < rects.size());
   const auto &rect = rects[rect_id].rect;
 
-  PIXEL_SIZE surf_size = {0, 0};
+  PixelSize surf_size = {0, 0};
   if (PangoState().surf) {
     surf_size.w = cairo_image_surface_get_width(PangoState().surf);
     surf_size.h = cairo_image_surface_get_height(PangoState().surf);
@@ -336,7 +334,7 @@ TEXTRENDER::Session(TEXTRENDER_RECT_ID rect_id) {
     static_assert(std::same_as<decltype(bounds.h), int>);
     const auto w = std::max(surf_size.w, rect.w);
     const auto h = std::max(surf_size.h, rect.h);
-    PangoState() = {cairo_image_surface_create(FORMAT, w, h)};
+    PangoState() = {cairo_image_surface_create(kCairoFormat, w, h)};
   } else if (PangoState()) {
     cairo_save(PangoState().cr);
     cairo_set_operator(PangoState().cr, CAIRO_OPERATOR_CLEAR);
@@ -348,26 +346,26 @@ TEXTRENDER::Session(TEXTRENDER_RECT_ID rect_id) {
     return std::nullopt;
   }
 
-  if (GrpSurface_Size(SURFACE_ID::TEXT) != bounds) {
-    TEXTRENDER_PACKED::Wipe();
-    if (!GrpSurface_CreateUninitialized(SURFACE_ID::TEXT, bounds)) {
+  if (GraphicsSurfaceSize(SurfaceId::Text) != bounds) {
+    TextRenderPacked::Wipe();
+    if (!GraphicsSurfaceCreateUninitialized(SurfaceId::Text, bounds)) {
       return std::nullopt;
     }
   }
-  return std::make_optional<TEXTRENDER_SESSION>(rect);
+  return std::make_optional<TextRenderSession>(rect);
 }
 
-void TEXTRENDER::WipeBeforeNextRender() { TEXTRENDER_PACKED::Wipe(); }
+void TextRender::WipeBeforeNextRender() { TextRenderPacked::Wipe(); }
 
-PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
+PixelSize TextRender::TextExtent(FontId font, std::string_view str) {
   // Luckily, Pango calculates extents just fine on 0×0 surfaces.
   if (!PangoState()) {
-    PangoState() = {cairo_image_surface_create(FORMAT, 0, 0)};
+    PangoState() = {cairo_image_surface_create(kCairoFormat, 0, 0)};
   }
   return PangoState().Extent(&Fonts().ForID(font), str);
 }
 
-void TextBackend_Cleanup() {
+void TextBackendCleanup() {
   PangoState() = {};
   Fonts().Cleanup();
 }

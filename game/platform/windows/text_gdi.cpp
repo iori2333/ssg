@@ -13,8 +13,8 @@
 
 namespace {
 
-constinit const util::EnumArray<LOGFONTW, FONT_ID> kFontSpecs = [] {
-  util::EnumArray<LOGFONTW, FONT_ID> specs;
+constinit const util::EnumArray<LOGFONTW, FontId> kFontSpecs = [] {
+  util::EnumArray<LOGFONTW, FontId> specs;
 
   LOGFONTW font = {.lfEscapement = 0,
                    .lfOrientation = 0,
@@ -31,21 +31,21 @@ constinit const util::EnumArray<LOGFONTW, FONT_ID> kFontSpecs = [] {
   font.lfHeight = 14;
   font.lfWidth = 7;
   font.lfWeight = FW_NORMAL;
-  specs[FONT_ID::SMALL] = font;
+  specs[FontId::Small] = font;
 
   font.lfHeight = 16;
   font.lfWidth = 8;
-  specs[FONT_ID::NORMAL] = font;
+  specs[FontId::Normal] = font;
 
   font.lfHeight = 24;
   font.lfWidth = 12;
   font.lfWeight = FW_MEDIUM;
-  specs[FONT_ID::LARGE] = font;
+  specs[FontId::Large] = font;
 
   font.lfHeight = 10;
   font.lfWidth = 0;
   font.lfWeight = FW_NORMAL;
-  specs[FONT_ID::TINY] = font;
+  specs[FontId::Tiny] = font;
 
   return specs;
 }();
@@ -64,21 +64,21 @@ template <typename F> auto WithWideUTF8(std::string_view str, F &&func) {
   return func(std::wstring_view{buf.data(), buf.size()});
 }
 
-TEXTRENDER &TextRenderer() {
-  static TEXTRENDER renderer;
+TextRender &TextRenderer() {
+  static TextRender renderer;
   return renderer;
 }
 
 namespace {
 
 class FontCache {
-  util::EnumArray<HFONT, FONT_ID> arr;
+  util::EnumArray<HFONT, FontId> arr;
 
 public:
-  HFONT ForID(FONT_ID font) {
+  HFONT ForID(FontId font) {
     if (!arr[font]) {
       if (std::ranges::all_of(arr, [](auto h) { return !h; })) {
-        TextBackend_GDIInit();
+        TextBackendGDIInit();
       }
       arr[font] = CreateFontIndirectW(&kFontSpecs[font]);
     }
@@ -102,15 +102,15 @@ FontCache &Fonts() {
 
 } // namespace
 
-PIXEL_SIZE TextGDIExtent(std::optional<HFONT> font, std::string_view str) {
-  const auto hdc = GrpSurface_GDIText_Surface().dc;
+PixelSize TextGDIExtent(std::optional<HFONT> font, std::string_view str) {
+  const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
   const auto font_prev = (font ? SelectObject(hdc, font.value()) : nullptr);
   const auto ret = WithWideUTF8(str, [&](const std::wstring_view str_w) {
     SIZE ret = {0, 0};
     if (!GetTextExtentPoint32W(hdc, str_w.data(), str_w.size(), &ret)) {
-      return PIXEL_SIZE{0, 0};
+      return PixelSize{0, 0};
     }
-    return PIXEL_SIZE{ret.cx, ret.cy};
+    return PixelSize{ret.cx, ret.cy};
   });
   if (font && font_prev) {
     SelectObject(hdc, font_prev);
@@ -118,36 +118,36 @@ PIXEL_SIZE TextGDIExtent(std::optional<HFONT> font, std::string_view str) {
   return ret;
 }
 
-uint32_t TEXTRENDER_SESSION::PIXELACCESS::GetRaw(const PIXEL_POINT &xy_rel) {
-  const auto hdc = GrpSurface_GDIText_Surface().dc;
+uint32_t TextRenderSession::PixelSession::GetRaw(const PixelPoint &xy_rel) {
+  const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
   return GetPixel(hdc, (rect.left + xy_rel.x), (rect.top + xy_rel.y));
 }
 
-void TEXTRENDER_SESSION::PIXELACCESS::SetRaw(const PIXEL_POINT &xy_rel,
+void TextRenderSession::PixelSession::SetRaw(const PixelPoint &xy_rel,
                                              uint32_t color) {
-  const auto hdc = GrpSurface_GDIText_Surface().dc;
+  const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
   SetPixelV(hdc, (rect.left + xy_rel.x), (rect.top + xy_rel.y), color);
 }
 
-RGB TEXTRENDER_SESSION::PIXELACCESS::Get(const PIXEL_POINT &xy_rel) {
+Rgb TextRenderSession::PixelSession::Get(const PixelPoint &xy_rel) {
   const auto ret = GetRaw(xy_rel);
-  return RGB{.r = GetRValue(ret), .g = GetGValue(ret), .b = GetBValue(ret)};
+  return Rgb{.r = GetRValue(ret), .g = GetGValue(ret), .b = GetBValue(ret)};
 }
 
-void TEXTRENDER_SESSION::PIXELACCESS::Set(const PIXEL_POINT &xy_rel,
-                                          const RGB color) {
+void TextRenderSession::PixelSession::Set(const PixelPoint &xy_rel,
+                                          const Rgb color) {
   SetRaw(xy_rel, RGB(color.r, color.g, color.b));
 }
 
-TEXTRENDER_SESSION::TEXTRENDER_SESSION(const PIXEL_LTWH &rect) : rect(rect) {
-  const auto hdc = GrpSurface_GDIText_Surface().dc;
+TextRenderSession::TextRenderSession(const PixelLtwh &rect) : rect(rect) {
+  const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
 
   // Clear the rectangle, for two reasons:
   // • The caller is free to render multiple transparent strings on top
   //   of each other, so we can't rely on SetBkMode(hdc, OPAQUE).
   // • The next text might be shorter than the previous one in this
   //   rectangle.
-  const PIXEL_LTRB ltrb = rect;
+  const PixelLtrb ltrb = rect;
   const RECT r = {ltrb.left, ltrb.top, ltrb.right, ltrb.bottom};
   auto black = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
   const auto rect_filled_with_black = FillRect(hdc, &r, black);
@@ -156,19 +156,19 @@ TEXTRENDER_SESSION::TEXTRENDER_SESSION(const PIXEL_LTWH &rect) : rect(rect) {
   assert(background_mode_set_to_transparent);
 }
 
-TEXTRENDER_SESSION::~TEXTRENDER_SESSION() {
+TextRenderSession::~TextRenderSession() {
   if (font_initial) {
-    const auto hdc = GrpSurface_GDIText_Surface().dc;
+    const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
     SelectObject(hdc, font_initial.value());
   }
-  GrpSurface_GDIText_Update(rect);
+  GraphicsSurfaceGdiTextUpdate(rect);
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::RectSize() const { return {rect.w, rect.h}; }
+PixelSize TextRenderSession::RectSize() const { return {rect.w, rect.h}; }
 
-void TEXTRENDER_SESSION::SetFont(FONT_ID font) {
+void TextRenderSession::SetFont(FontId font) {
   if (font_cur != font) {
-    const auto hdc = GrpSurface_GDIText_Surface().dc;
+    const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
     auto font_prev = SelectObject(hdc, Fonts().ForID(font));
     if (!font_initial) {
       font_initial = font_prev;
@@ -177,23 +177,23 @@ void TEXTRENDER_SESSION::SetFont(FONT_ID font) {
   }
 }
 
-void TEXTRENDER_SESSION::SetColor(const RGB color) {
+void TextRenderSession::SetColor(const Rgb color) {
   const COLORREF color_gdi = RGB(color.r, color.g, color.b);
   if (color_cur != color_gdi) {
-    const auto hdc = GrpSurface_GDIText_Surface().dc;
+    const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
     SetTextColor(hdc, color_gdi);
     color_cur = color_gdi;
   }
 }
 
-PIXEL_SIZE TEXTRENDER_SESSION::Extent(std::string_view str) {
+PixelSize TextRenderSession::Extent(std::string_view str) {
   return TextGDIExtent(std::nullopt, str);
 }
 
-void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
-                             std::string_view str, std::optional<RGB> color) {
+void TextRenderSession::Put(const PixelPoint &topleft_rel, std::string_view str,
+                            std::optional<Rgb> color) {
   WithWideUTF8(str, [&](const std::wstring_view str_w) {
-    const auto hdc = GrpSurface_GDIText_Surface().dc;
+    const auto hdc = GraphicsSurfaceGdiTextSurface().dc;
     if (color) {
       SetColor(color.value());
     }
@@ -208,7 +208,7 @@ void TEXTRENDER_SESSION::Put(const PIXEL_POINT &topleft_rel,
   });
 }
 
-bool TEXTRENDER::Wipe() {
+bool TextRender::Wipe() {
   if (!bounds || (bounds.w > (std::numeric_limits<int32_t>::max)()) ||
       (bounds.h > (std::numeric_limits<int32_t>::max)())) {
     assert(!"Invalid size for blank surface");
@@ -216,33 +216,32 @@ bool TEXTRENDER::Wipe() {
   }
   const auto w = static_cast<int32_t>(bounds.w);
   const auto h = static_cast<int32_t>(bounds.h);
-  return (GrpSurface_GDIText_Create(w, h, {0x00, 0x00, 0x00}) &&
-          TEXTRENDER_PACKED::Wipe());
+  return (GraphicsSurfaceGdiTextCreate(w, h, {0x00, 0x00, 0x00}) &&
+          TextRenderPacked::Wipe());
 }
 
-std::optional<TEXTRENDER_SESSION>
-TEXTRENDER::Session(TEXTRENDER_RECT_ID rect_id) {
-  const auto &surf = GrpSurface_GDIText_Surface();
+std::optional<TextRenderSession> TextRender::Session(TextRenderRectId rect_id) {
+  const auto &surf = GraphicsSurfaceGdiTextSurface();
   if ((surf.size != bounds) && !Wipe()) {
     return std::nullopt;
   }
   assert(rect_id < rects.size());
-  return TEXTRENDER_SESSION{rects[rect_id].rect};
+  return TextRenderSession{rects[rect_id].rect};
 }
 
-void TEXTRENDER::WipeBeforeNextRender() {
-  TEXTRENDER_PACKED::Wipe();
+void TextRender::WipeBeforeNextRender() {
+  TextRenderPacked::Wipe();
 
   // This also skips the needless creation of an uninitialized surface
   // during DirectDraw's init function.
-  GrpSurface_GDIText_Surface().size = {0, 0};
+  GraphicsSurfaceGdiTextSurface().size = {0, 0};
 }
 
-PIXEL_SIZE TEXTRENDER::TextExtent(FONT_ID font, std::string_view str) {
+PixelSize TextRender::TextExtent(FontId font, std::string_view str) {
   return TextGDIExtent(Fonts().ForID(font), str);
 }
 
-void TextBackend_Cleanup() {
+void TextBackendCleanup() {
   Fonts().Cleanup();
-  TextBackend_GDICleanup();
+  TextBackendGDICleanup();
 }

@@ -62,7 +62,7 @@ public:
       : context_(context),
         scene_(context.graphics, context.music, context.session, context.ui) {}
 
-  [[nodiscard]] bool Enter(INPUT_BITS initial_input, bool change_music) {
+  [[nodiscard]] bool Enter(InputBits initial_input, bool change_music) {
     return scene_.Enter(initial_input, change_music);
   }
 
@@ -108,8 +108,8 @@ public:
   }
 
   void Enter(bool extra_stage) {
-    GrpBackend_Clear();
-    Grp_Flip();
+    GraphicsBackendClear();
+    GraphicsFlip();
     extra_stage_ = extra_stage;
     phase_ = Phase::WeaponSelect;
     context_.session.level = extra_stage ? GameLevel::Extra : GameLevel::Normal;
@@ -140,7 +140,7 @@ public:
       if (frame.should_draw) {
         scene_.DrawPreview();
         difficulty_menu_.Draw();
-        Grp_Flip();
+        GraphicsFlip();
       }
       return NoEvent{};
     }
@@ -192,8 +192,8 @@ private:
         "", std::move(items));
   }
 
-  void OpenDifficultyMenu(INPUT_BITS initial_input) {
-    constexpr WINDOW_POINT kTopLeft = {240, 192};
+  void OpenDifficultyMenu(InputBits initial_input) {
+    constexpr WindowPoint kTopLeft = {240, 192};
     constexpr int kWidth = 160;
     constexpr int kInitialSelection = std::to_underlying(GameLevel::Normal);
 
@@ -288,13 +288,13 @@ public:
                context.localization) {}
 
   [[nodiscard]] bool EnterBrowser(GameLevel difficulty,
-                                  INPUT_BITS initial_input) {
+                                  InputBits initial_input) {
     registration_ = false;
     return scene_.ShowLeaderboard(difficulty, initial_input);
   }
 
   [[nodiscard]] ScoreRegistrationStart
-  EnterRegistration(ScoreRecord record, INPUT_BITS initial_input,
+  EnterRegistration(ScoreRecord record, InputBits initial_input,
                     bool change_music, bool save_replay, bool extra_stage) {
     registration_ = true;
     save_replay_ = save_replay;
@@ -335,11 +335,11 @@ public:
       : context_(context), scene_(context.records, context.graphics, context.ui,
                                   context.localization) {}
 
-  [[nodiscard]] bool EnterBrowser(INPUT_BITS initial_input) {
+  [[nodiscard]] bool EnterBrowser(InputBits initial_input) {
     return scene_.EnterBrowser(initial_input);
   }
 
-  [[nodiscard]] bool EnterSave(bool extra_stage, INPUT_BITS initial_input) {
+  [[nodiscard]] bool EnterSave(bool extra_stage, InputBits initial_input) {
     return scene_.BeginSave(extra_stage, initial_input);
   }
 
@@ -390,7 +390,7 @@ struct GameFlow::Impl {
     return EnterTitle(true);
   }
 
-  [[nodiscard]] bool Tick(INPUT_BITS input, INPUT_BITS system_input) {
+  [[nodiscard]] bool Tick(InputBits input, InputBits system_input) {
     if (quit_) {
       return false;
     }
@@ -528,7 +528,7 @@ private:
 
   GameContext &context_;
   FlowState state_;
-  INPUT_BITS current_input_ = 0;
+  InputBits current_input_ = 0;
   uint32_t draw_count_ = 0;
   bool quit_ = false;
 };
@@ -540,7 +540,7 @@ GameFlow::~GameFlow() = default;
 
 bool GameFlow::Start() { return impl_->Start(); }
 
-bool GameFlow::Tick(INPUT_BITS input, INPUT_BITS system_input) {
+bool GameFlow::Tick(InputBits input, InputBits system_input) {
   return impl_->Tick(input, system_input);
 }
 

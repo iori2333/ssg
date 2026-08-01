@@ -64,7 +64,7 @@ private:
 
   struct Text {
     std::vector<std::string_view> Text;
-    TEXTRENDER_RECT_ID Rect = {};
+    TextRenderRectId Rect = {};
 
     // Contains all text from [Text], concatenated with '\n'.
     std::string TextStr;
@@ -74,7 +74,7 @@ private:
       TextStr.clear();
     }
 
-    void Render(WINDOW_POINT topleft);
+    void Render(WindowPoint topleft);
   };
 
   // === Data members ===
@@ -84,7 +84,7 @@ private:
   Text text;
   uint16_t flash_state = 0;
 
-  static constexpr std::array<PIXEL_LTRB, 7> staff_label = {{
+  static constexpr std::array<PixelLtrb, 7> staff_label = {{
       {0, 0, 160, 24},
       {0, 24, 104, 48},
       {0, 48, 160, 72},
@@ -94,7 +94,7 @@ private:
       {0, (480 - 32), (9 * 32), 480},
   }};
 
-  static constexpr std::array<PIXEL_LTRB, 7> staff_member = {{
+  static constexpr std::array<PixelLtrb, 7> staff_member = {{
       {0, 168, 72, 192},
       {96, 168, 168, 192},
       {192, 168, 264, 192},

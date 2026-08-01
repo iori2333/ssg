@@ -8,7 +8,7 @@
 #include <functional>
 #include <optional>
 #include <utility>
-struct GRAPHICS_PARAMS;
+struct GraphicsParams;
 
 // Initialization
 // --------------
@@ -18,19 +18,19 @@ struct GRAPHICS_PARAMS;
 typedef struct SDL_Window SDL_Window;
 
 // Returns the SDL handle of the current window.
-SDL_Window *WndBackend_SDL();
+SDL_Window *WindowBackendSDL();
 
 // Creates the game window and returns the actual configuration the backend is
 // running. Fails if the window already exists.
-std::optional<GRAPHICS_PARAMS> WndBackend_Create(GRAPHICS_PARAMS);
+std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams);
 
-void WndBackend_Cleanup();
+void WindowBackendCleanup();
 // --------------
 
 // Returns the current top-left position of the game window.
-std::optional<std::pair<int16_t, int16_t>> WndBackend_Topleft();
+std::optional<std::pair<int16_t, int16_t>> WindowBackendTopleft();
 
 // Runs the main loop each frame, calling [frame_func] for each iteration, and
 // returns the exit code after the game was quit.
-int WndBackend_Run(std::function<void()> input_func,
-                   std::function<bool()> frame_func);
+int WindowBackendRun(std::function<void()> input_func,
+                     std::function<bool()> frame_func);

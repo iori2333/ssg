@@ -10,7 +10,7 @@
 
 #include "enemy/boss/boss.h"
 
-inline constexpr std::size_t BOSS_HEALTH_GAUGE_HEIGHT = 24;
+inline constexpr std::size_t kBossHealthGaugeHeight = 24;
 
 class BossHealthGauge {
 public:
@@ -40,7 +40,7 @@ private:
   uint32_t max_hp_ = 0;
   uint32_t target_hp_ = 0;
   uint32_t phase_hp_ = 0;
-  std::array<int, BOSS_HEALTH_GAUGE_HEIGHT> row_x_{};
+  std::array<int, kBossHealthGaugeHeight> row_x_{};
   State state_ = State::Hidden;
   int32_t phase_threshold_hp_ = -1;
   int32_t timer_max_ = -1;

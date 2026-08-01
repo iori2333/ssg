@@ -59,9 +59,9 @@ bool BulletGalleryScene::Enter() {
   return true;
 }
 
-BulletGallerySceneResult BulletGalleryScene::Update(INPUT_BITS input,
+BulletGallerySceneResult BulletGalleryScene::Update(InputBits input,
                                                     bool should_draw) {
-  if ((input & KEY_ESC) != 0U) {
+  if ((input & KeyEscape) != 0U) {
     bullets_.Clear();
     return BulletGallerySceneResult::ExitRequested;
   }
@@ -70,7 +70,7 @@ BulletGallerySceneResult BulletGalleryScene::Update(INPUT_BITS input,
     return BulletGallerySceneResult::Running;
   }
 
-  GrpBackend_Clear();
+  GraphicsBackendClear();
   bullets_.Render();
   if (config_.debug.hitbox_display != 0) {
     bullets_.RenderDebugHitboxes(config_.debug.hitbox_display);
@@ -81,23 +81,23 @@ BulletGallerySceneResult BulletGalleryScene::Update(INPUT_BITS input,
       const auto type = kGalleryGrid[row][column];
       if (type != 0xFF) {
         const auto label = std::format("{:02X}", type);
-        GrpPut16(kGalleryX + column * kGalleryDx - 4,
-                 kGalleryY + row * kGalleryDy + 16, label.c_str());
+        DrawFont16(kGalleryX + column * kGalleryDx - 4,
+                   kGalleryY + row * kGalleryDy + 16, label.c_str());
       }
     }
   }
-  GrpBackend_SetClip(GRP_RES_RECT);
+  GraphicsBackendSetClip(kGameResolutionRect);
   const auto help =
       localization_.Text(i18n::TextIdFromKey("ui.bullet_gallery.exit_help"));
   TextRenderer().Render({80, 458}, help_text_, help,
-                        [help](TEXTRENDER_SESSION &s) {
-                          s.SetFont(FONT_ID::NORMAL);
+                        [help](TextRenderSession &s) {
+                          s.SetFont(FontId::Normal);
                           const auto x = TextLayoutXCenter(s, help);
-                          s.Put({x + 1, 1}, help, RGB{96, 96, 96});
-                          s.Put({x, 0}, help, RGB{255, 255, 255});
+                          s.Put({x + 1, 1}, help, Rgb{96, 96, 96});
+                          s.Put({x, 0}, help, Rgb{255, 255, 255});
                         });
-  GrpBackend_SetClip({playfield::kLeft, playfield::kTop, playfield::kRight + 1,
-                      playfield::kBottom + 1});
-  Grp_Flip();
+  GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
+                          playfield::kRight + 1, playfield::kBottom + 1});
+  GraphicsFlip();
   return BulletGallerySceneResult::Running;
 }

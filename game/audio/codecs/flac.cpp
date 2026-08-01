@@ -116,8 +116,8 @@ void FlacPcmPart::PartSeekToSample(size_t sample) {
 
 FlacPcmPart::~FlacPcmPart() { drflac_close(ff); }
 
-std::unique_ptr<PcmPart>
-FLAC_Open(std::istream &stream, std::optional<MetadataCallback> on_metadata) {
+std::unique_ptr<PcmPart> OpenFlac(std::istream &stream,
+                                  std::optional<MetadataCallback> on_metadata) {
   if (const auto &metadata_cb = on_metadata) {
     const std::streamoff initial_offset = stream.tellg();
     if (initial_offset < 0) {

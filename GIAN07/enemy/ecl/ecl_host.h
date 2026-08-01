@@ -33,9 +33,9 @@ public:
   [[nodiscard]] stage::StageSession &Stage() const { return stage_; }
   [[nodiscard]] const EnemyAnimationSet &Animations() const;
 
-  [[nodiscard]] EnemyActor *SpawnRegular(WORLD_POINT position,
+  [[nodiscard]] EnemyActor *SpawnRegular(WorldPoint position,
                                          uint32_t script_id) const;
-  void SpawnBoss(WORLD_POINT position, uint32_t script_id) const;
+  void SpawnBoss(WorldPoint position, uint32_t script_id) const;
   void KillBosses() const;
   void ClearRegular() const;
   void ClearBossProjectiles() const;

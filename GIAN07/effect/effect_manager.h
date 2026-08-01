@@ -113,8 +113,8 @@ private:
   };
 
   struct WarningLine {
-    PIXEL_POINT center{};
-    std::span<WORLD_POINT> points;
+    PixelPoint center{};
+    std::span<WorldPoint> points;
     uint8_t angle_x = 0;
     uint8_t angle_y = 0;
     uint8_t angle_z = 0;
@@ -136,7 +136,7 @@ private:
 
   void DrawStrings();
   void DrawBossWarning();
-  void RenderMusicTitle(WINDOW_POINT top_left, const PIXEL_LTWH &subrect);
+  void RenderMusicTitle(WindowPoint top_left, const PixelLtwh &subrect);
   static void DrawCircleFade(int x, int y, int radius);
   static void InitializeBombExplosion(BombExplosion &effect);
   static void UpdateBombExplosion(BombExplosion &effect);
@@ -154,17 +154,17 @@ private:
   std::size_t next_fragment_ = 0;
 
   ScreenEffect screen_{};
-  TEXTRENDER_RECT_ID music_title_rect_{};
+  TextRenderRectId music_title_rect_{};
   std::array<std::string_view, 2> music_title_text_{"\xE2\x99\xAA ", ""};
 
-  std::array<WORLD_POINT, 11> warning_w_{};
-  std::array<WORLD_POINT, 8> warning_a_outer_{};
-  std::array<WORLD_POINT, 4> warning_a_inner_{};
-  std::array<WORLD_POINT, 14> warning_r_{};
-  std::array<WORLD_POINT, 9> warning_n_left_{};
-  std::array<WORLD_POINT, 5> warning_i_{};
-  std::array<WORLD_POINT, 9> warning_n_right_{};
-  std::array<WORLD_POINT, 17> warning_g_{};
+  std::array<WorldPoint, 11> warning_w_{};
+  std::array<WorldPoint, 8> warning_a_outer_{};
+  std::array<WorldPoint, 4> warning_a_inner_{};
+  std::array<WorldPoint, 14> warning_r_{};
+  std::array<WorldPoint, 9> warning_n_left_{};
+  std::array<WorldPoint, 5> warning_i_{};
+  std::array<WorldPoint, 9> warning_n_right_{};
+  std::array<WorldPoint, 17> warning_g_{};
   std::array<WarningLine, 8> warning_lines_{};
   uint16_t warning_age_ = 0;
   mutable uint16_t warning_pulse_ = 0;

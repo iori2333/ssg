@@ -15,20 +15,20 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")
 
-SURFACE_GDI::SURFACE_GDI() noexcept : dc(CreateCompatibleDC(nullptr)) {}
+SurfaceGdi::SurfaceGdi() noexcept : dc(CreateCompatibleDC(nullptr)) {}
 
-SURFACE_GDI::~SURFACE_GDI() {
+SurfaceGdi::~SurfaceGdi() {
   Delete();
   DeleteDC(dc);
 }
 
-static_assert(sizeof(RGBQUAD) == sizeof(BGRA));
-static_assert(offsetof(RGBQUAD, rgbBlue) == offsetof(BGRA, b));
-static_assert(offsetof(RGBQUAD, rgbGreen) == offsetof(BGRA, g));
-static_assert(offsetof(RGBQUAD, rgbRed) == offsetof(BGRA, r));
-static_assert(offsetof(RGBQUAD, rgbReserved) == offsetof(BGRA, a));
+static_assert(sizeof(RGBQUAD) == sizeof(Bgra));
+static_assert(offsetof(RGBQUAD, rgbBlue) == offsetof(Bgra, b));
+static_assert(offsetof(RGBQUAD, rgbGreen) == offsetof(Bgra, g));
+static_assert(offsetof(RGBQUAD, rgbRed) == offsetof(Bgra, r));
+static_assert(offsetof(RGBQUAD, rgbReserved) == offsetof(Bgra, a));
 
-bool SURFACE_GDI::Save(SDL_IOStream *stream) const {
+bool SurfaceGdi::Save(SDL_IOStream *stream) const {
   if (!stream) {
     return false;
   }
@@ -44,7 +44,7 @@ bool SURFACE_GDI::Save(SDL_IOStream *stream) const {
   }
 
   const auto bpp = (dib.dsBm.bmPlanes * dib.dsBm.bmBitsPixel);
-  const auto palette_size = BMPPaletteSizeFromBPP(bpp);
+  const auto palette_size = BmpPaletteSizeFromBpp(bpp);
 
   if (!dib.dsBm.bmBits) {
     // This is a DDB, not a DIB, which means that the BITMAPINFOHEADER
@@ -52,15 +52,15 @@ bool SURFACE_GDI::Save(SDL_IOStream *stream) const {
     // Adapted from
     //
     // 	https://learn.microsoft.com/en-us/windows/win32/gdi/storing-an-image
-    const PIXEL_SIZE size = {dib.dsBm.bmWidth, dib.dsBm.bmHeight};
+    const PixelSize size = {dib.dsBm.bmWidth, dib.dsBm.bmHeight};
 
     // GetDIBits() will write the color table after the BITMAPINFOHEADER
     // structure.
     std::vector<std::byte> info_buf(sizeof(BITMAPINFOHEADER) +
                                     (sizeof(RGBQUAD) * palette_size));
 
-    auto *info = reinterpret_cast<BMP_INFOHEADER *>(info_buf.data());
-    const std::span<BGRA> palette = {reinterpret_cast<BGRA *>(&info[1]),
+    auto *info = reinterpret_cast<BmpInfoHeader *>(info_buf.data());
+    const std::span<Bgra> palette = {reinterpret_cast<Bgra *>(&info[1]),
                                      palette_size};
 
     // According to MSDN, we explicitly only need the first 6 members.
@@ -81,13 +81,13 @@ bool SURFACE_GDI::Save(SDL_IOStream *stream) const {
       assert(!"GetDIBits failed");
       return false;
     }
-    return BMPSave(stream, size, info->biPlanes, info->biBitCount, palette,
+    return BmpSave(stream, size, info->biPlanes, info->biBitCount, palette,
                    pixels);
   }
 
   // For DIBs, we get direct access to the pixel data.
-  std::array<BGRA, BMP_PALETTE_SIZE_MAX> bgra;
-  std::span<BGRA> palette = {};
+  std::array<Bgra, kBmpPaletteSizeMax> bgra;
+  std::span<Bgra> palette = {};
   const auto color_table_ret = GetDIBColorTable(
       dc, 0, palette_size, reinterpret_cast<RGBQUAD *>(bgra.data()));
   if (color_table_ret == palette_size) {
@@ -98,11 +98,11 @@ bool SURFACE_GDI::Save(SDL_IOStream *stream) const {
 
       // Negative values are checked above.
       static_cast<size_t>(dib.dsBm.bmWidthBytes * dib.dsBm.bmHeight)};
-  return BMPSave(stream, {dib.dsBmih.biWidth, dib.dsBmih.biHeight},
+  return BmpSave(stream, {dib.dsBmih.biWidth, dib.dsBmih.biHeight},
                  dib.dsBmih.biPlanes, dib.dsBmih.biBitCount, palette, pixels);
 }
 
-void SURFACE_GDI::Delete() noexcept {
+void SurfaceGdi::Delete() noexcept {
   if (img) {
     SelectObject(dc, stock_img);
     DeleteObject(img);

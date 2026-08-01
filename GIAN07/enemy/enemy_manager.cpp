@@ -95,8 +95,8 @@ void EnemyManager::ResetHomingTarget() {
 
 void EnemyManager::DrawBosses() { renderer_.DrawBosses(bosses_, bits_); }
 
-void EnemyManager::SpawnBoss(PIXEL_POINT position, uint32_t script_id) {
-  SpawnBossActor(WORLD_POINT{position}, script_id, true);
+void EnemyManager::SpawnBoss(PixelPoint position, uint32_t script_id) {
+  SpawnBossActor(WorldPoint{position}, script_id, true);
 }
 
 void EnemyManager::ConsiderHomingTarget(const EnemyActor &actor) {
@@ -180,7 +180,7 @@ void EnemyManager::UpdateRegular() {
         if (!e->HasFlag(EnemyActorFlags::KeepOutsidePlayfield)) {
           if (e->long_laser_count != 0U) {
             bullets_.ControlLongLaser(
-                e, ECL_ALL_LONG_LASERS,
+                e, kEclAllLongLasers,
                 LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
           }
           e->state = EnemyActorState::PendingRemoval;
@@ -210,7 +210,7 @@ void EnemyManager::ClearRegular() {
       e->BeginExplosion();
       if (e->long_laser_count != 0U) {
         bullets_.ControlLongLaser(
-            e, ECL_ALL_LONG_LASERS,
+            e, kEclAllLongLasers,
             LongLaserUpdateInfo{
                 LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
@@ -223,7 +223,7 @@ void EnemyManager::ClearRegular() {
       e->count = 0;
       if (e->long_laser_count != 0U) {
         bullets_.ControlLongLaser(
-            e, ECL_ALL_LONG_LASERS,
+            e, kEclAllLongLasers,
             LongLaserUpdateInfo{
                 LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
       }
@@ -249,7 +249,7 @@ void EnemyManager::RetireActor(EnemyActor &actor) {
   // Release every cross-frame observer before ObjectPool can reuse this slot.
   OnActorRetired(actor);
   bullets_.ControlLongLaser(
-      &actor, ECL_ALL_LONG_LASERS,
+      &actor, kEclAllLongLasers,
       LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
   actor.long_laser_count = 0;
 }
@@ -267,7 +267,7 @@ void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
     PlaySfx(SfxId::Bomb, actor.x);
     if (actor.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
-          &actor, ECL_ALL_LONG_LASERS,
+          &actor, kEclAllLongLasers,
           LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
     }
     player_.PowerUp(static_cast<uint8_t>(actor.hp));
@@ -306,7 +306,7 @@ bool EnemyManager::ApplyPlayerAttack(const PlayerAttack &attack) {
 // Diagonal laser hit detection
 // Directed beams use PlayerAttack::DirectedBeam through ApplyPlayerAttack().
 
-void EnemyManager::InitializeActor(EnemyActor &actor, WORLD_POINT position,
+void EnemyManager::InitializeActor(EnemyActor &actor, WorldPoint position,
                                    uint32_t script_id) {
   actor = {};
 
@@ -341,7 +341,7 @@ void EnemyManager::InitializeActor(EnemyActor &actor, WORLD_POINT position,
   actor.laser_command = {};
 }
 
-EnemyActor *EnemyManager::SpawnRegular(WORLD_POINT position,
+EnemyActor *EnemyManager::SpawnRegular(WorldPoint position,
                                        uint32_t script_id) {
   auto *actor = regular_enemies_.Alloc();
   if (actor == nullptr) {
@@ -352,7 +352,7 @@ EnemyActor *EnemyManager::SpawnRegular(WORLD_POINT position,
 }
 
 void EnemyManager::SpawnFromScene(int16_t x, int16_t y, uint8_t script_id) {
-  WORLD_POINT position;
+  WorldPoint position;
   position.x = x == kRandomCoordinate ? RandomWorldX() : PixelToWorld(x);
   position.y = y == kRandomCoordinate ? RandomWorldY() : PixelToWorld(y);
   SpawnRegular(position, script_id);

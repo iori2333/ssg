@@ -47,12 +47,12 @@ uint8_t FrameRateDivisor() { return State().frame_rate_divisor; }
 // Paletted graphics //
 // ----------------- //
 
-PALETTE PALETTE::Fade(uint8_t alpha, uint8_t first, uint8_t last) const {
-  PALETTE ret = *this;
+Palette Palette::Fade(uint8_t alpha, uint8_t first, uint8_t last) const {
+  Palette ret = *this;
   const uint16_t a16 = alpha;
   const auto src_end = (cbegin() + last + 1);
   for (auto src_it = (cbegin() + first); src_it < src_end; src_it++) {
-    ret[src_it - cbegin()] = RGBA{
+    ret[src_it - cbegin()] = Rgba{
         .r = static_cast<uint8_t>((src_it->r * a16) / 255),
         .g = static_cast<uint8_t>((src_it->g * a16) / 255),
         .b = static_cast<uint8_t>((src_it->b * a16) / 255),
@@ -92,13 +92,13 @@ static void ScreenshotFindLastFor(std::string_view ext) {
   }
 }
 
-void Grp_ScreenshotSetPrefix(std::string_view prefix) {
+void GraphicsScreenshotSetPrefix(std::string_view prefix) {
   State().screenshot_prefix = prefix;
 }
 
 // Increments the screenshot number to the next file with the given extension
 // that doesn't exist yet, then opens a write stream for that file.
-SDL_IOStream *Grp_NextScreenshotStream(std::string_view ext) {
+SDL_IOStream *GraphicsNextScreenshotStream(std::string_view ext) {
   auto &state = State();
   if (state.screenshot_prefix.empty()) {
     return nullptr;
@@ -130,9 +130,9 @@ SDL_IOStream *Grp_NextScreenshotStream(std::string_view ext) {
 }
 
 static bool ScreenshotSaveBMP(SDL_Surface *src) {
-  assert(src->w < std::numeric_limits<PIXEL_COORD>::max());
-  assert(src->h < std::numeric_limits<PIXEL_COORD>::max());
-  const auto stream = Grp_NextScreenshotStream(".BMP");
+  assert(src->w < std::numeric_limits<PixelCoord>::max());
+  assert(src->h < std::numeric_limits<PixelCoord>::max());
+  const auto stream = GraphicsNextScreenshotStream(".BMP");
   if (!stream) {
     return false;
   }
@@ -141,12 +141,12 @@ static bool ScreenshotSaveBMP(SDL_Surface *src) {
   // SDL_SaveBMP_IO() is very slow and unoptimized, especially on Windows
   // where SDL_IOStream still uses unbuffered writes as of SDL 3.2.24. For
   // now, we only use it if we absolutely have to.
-  if (!BMPSaveSupports(src->format)) {
+  if (!BmpSaveSupports(src->format)) {
     return SDL_SaveBMP_IO(src, stream, false);
   }
 
-  std::array<BGRA, BMP_PALETTE_SIZE_MAX> bgra_memory;
-  const auto palette = [src, &bgra_memory]() -> std::span<BGRA> {
+  std::array<Bgra, kBmpPaletteSizeMax> bgra_memory;
+  const auto palette = [src, &bgra_memory]() -> std::span<Bgra> {
     const auto *palette = SDL_GetSurfacePalette(src);
     if (!palette) {
       return {};
@@ -163,7 +163,7 @@ static bool ScreenshotSaveBMP(SDL_Surface *src) {
     return bgra_memory;
   }();
 
-  const PIXEL_SIZE bmp_size = {.w = src->w, .h = -src->h};
+  const PixelSize bmp_size = {.w = src->w, .h = -src->h};
 
   // SDL_BITSPERPIXEL() for `SDL_PIXELFORMAT_XRGB8888` would return 24, not
   // 32!
@@ -171,7 +171,7 @@ static bool ScreenshotSaveBMP(SDL_Surface *src) {
 
   const auto pixels =
       std::span(static_cast<std::byte *>(src->pixels), (src->h * src->pitch));
-  return BMPSave(stream, bmp_size, 1, bpp, palette, pixels);
+  return BmpSave(stream, bmp_size, 1, bpp, palette, pixels);
 }
 
 static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
@@ -195,7 +195,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   decltype(WebPPictureImportRGBX) *import_func_32bpp = nullptr;
   switch (src->format) {
   case SDL_PIXELFORMAT_ARGB8888:
-    // Yup, "argb" is little-endian and this is actually BGRA...
+    // Yup, "argb" is little-endian and this is actually Bgra...
     pic.argb = std::bit_cast<uint32_t *>(src->pixels);
     break;
   case SDL_PIXELFORMAT_XRGB8888:
@@ -267,7 +267,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   if (!ret) {
     return false;
   }
-  const auto stream = Grp_NextScreenshotStream(".webp");
+  const auto stream = GraphicsNextScreenshotStream(".webp");
   if (!stream) {
     return false;
   }
@@ -275,7 +275,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   return SDL_WriteIO(stream, wrt.mem, wrt.size) == wrt.size;
 }
 
-bool Grp_ScreenshotSave(SDL_Surface *src) {
+bool GraphicsScreenshotSave(SDL_Surface *src) {
   assert(src->w >= 0);
   assert(src->h >= 0);
   if (SDL_MUSTLOCK(src)) {
@@ -298,26 +298,26 @@ bool Grp_ScreenshotSave(SDL_Surface *src) {
   return ret;
 }
 
-void Grp_ScreenshotSetEffort(uint8_t effort) {
+void GraphicsScreenshotSetEffort(uint8_t effort) {
   State().screenshot_effort = std::min(effort, kScreenshotEffortMax);
 }
 // -----------
 
-GRAPHICS_FULLSCREEN_FLAGS GRAPHICS_PARAMS::FullscreenFlags() const {
-  using F = GRAPHICS_PARAM_FLAGS;
+GraphicsFullscreenFlags GraphicsParams::FullscreenFlags() const {
+  using F = GraphicsParamFlags;
   return {
-      .fullscreen = !!(flags & F::FULLSCREEN),
-      .exclusive = !!(flags & F::FULLSCREEN_EXCLUSIVE),
-      .fit = static_cast<GRAPHICS_FULLSCREEN_FIT>(
-          std::to_underlying(flags & F::FULLSCREEN_FIT) >> 2),
+      .fullscreen = !!(flags & F::Fullscreen),
+      .exclusive = !!(flags & F::FullscreenExclusive),
+      .fit = static_cast<GraphicsFullscreenFit>(
+          std::to_underlying(flags & F::FullscreenFit) >> 2),
   };
 }
 
-bool GRAPHICS_PARAMS::ScaleGeometry() const {
-  return !!(flags & GRAPHICS_PARAM_FLAGS::SCALE_GEOMETRY);
+bool GraphicsParams::ScaleGeometry() const {
+  return !!(flags & GraphicsParamFlags::ScaleGeometry);
 }
 
-uint8_t GRAPHICS_PARAMS::Scale4x() const {
+uint8_t GraphicsParams::Scale4x() const {
   const auto fs = FullscreenFlags();
   if (fs.fullscreen) {
     return (fs.exclusive ? 4 : 0);
@@ -325,67 +325,70 @@ uint8_t GRAPHICS_PARAMS::Scale4x() const {
   return window_scale_4x;
 }
 
-WINDOW_SIZE GRAPHICS_PARAMS::ScaledRes() const {
+WindowSize GraphicsParams::ScaledRes() const {
   const auto fs = FullscreenFlags();
   if (fs.fullscreen) {
     if (fs.exclusive) {
-      return GRP_RES;
+      return kGameResolution;
     }
-    const auto display_s = GrpBackend_DisplaySize(true);
+    const auto display_s = GraphicsBackendDisplaySize(true);
     switch (fs.fit) {
-    case GRAPHICS_FULLSCREEN_FIT::INTEGER: {
-      const auto factors = (display_s / GRP_RES);
-      return (GRP_RES * std::min(factors.w, factors.h));
+    case GraphicsFullscreenFit::Integer: {
+      const auto factors = (display_s / kGameResolution);
+      return (kGameResolution * std::min(factors.w, factors.h));
     }
-    case GRAPHICS_FULLSCREEN_FIT::ASPECT: {
-      const auto factor_w = (static_cast<float>(display_s.w) / GRP_RES.w);
-      const auto factor_h = (static_cast<float>(display_s.h) / GRP_RES.h);
+    case GraphicsFullscreenFit::Aspect: {
+      const auto factor_w =
+          (static_cast<float>(display_s.w) / kGameResolution.w);
+      const auto factor_h =
+          (static_cast<float>(display_s.h) / kGameResolution.h);
       const auto scale = std::min(factor_w, factor_h);
       return {
-          .w = static_cast<PIXEL_COORD>(GRP_RES.w * scale),
-          .h = static_cast<PIXEL_COORD>(GRP_RES.h * scale),
+          .w = static_cast<PixelCoord>(kGameResolution.w * scale),
+          .h = static_cast<PixelCoord>(kGameResolution.h * scale),
       };
     }
-    case GRAPHICS_FULLSCREEN_FIT::STRETCH:
+    case GraphicsFullscreenFit::Stretch:
       return display_s;
-    case GRAPHICS_FULLSCREEN_FIT::COUNT:
+    case GraphicsFullscreenFit::Count:
       std::unreachable();
     }
   }
   const auto scale =
-      ((window_scale_4x == 0) ? Grp_WindowScale4xMax() : window_scale_4x);
-  return ((GRP_RES * scale) / 4);
+      ((window_scale_4x == 0) ? GraphicsWindowScale4xMax() : window_scale_4x);
+  return ((kGameResolution * scale) / 4);
 }
 
-void GRAPHICS_PARAMS::SetFlag(
-    GRAPHICS_PARAM_FLAGS flag,
-    std::underlying_type_t<GRAPHICS_PARAM_FLAGS> value) {
+void GraphicsParams::SetFlag(GraphicsParamFlags flag,
+                             std::underlying_type_t<GraphicsParamFlags> value) {
   SetEnumFlag(flags, flag, value);
 }
 
-uint8_t Grp_WindowScale4xMax() {
-  const auto factors = ((GrpBackend_DisplaySize(false) * 4) / GRP_RES);
+uint8_t GraphicsWindowScale4xMax() {
+  const auto factors =
+      ((GraphicsBackendDisplaySize(false) * 4) / kGameResolution);
   return std::min(factors.w, factors.h);
 }
 
-std::optional<GRAPHICS_INIT_RESULT>
-Grp_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
-         GRAPHICS_PARAMS params) {
-  const auto api_count = GrpBackend_APICount();
+std::optional<GraphicsInitResult>
+GraphicsInit(std::optional<const GraphicsParams> maybe_prev,
+             GraphicsParams params) {
+  const auto api_count = GraphicsBackendAPICount();
   if ((api_count > 0) && (params.api >= api_count)) {
     params.api = -1;
   }
-  return GrpBackend_Init(maybe_prev, params);
+  return GraphicsBackendInit(maybe_prev, params);
 }
 
-std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
-  if (const auto ret = Grp_Init(std::nullopt, params)) {
+std::optional<GraphicsInitResult>
+GraphicsInitOrFallback(GraphicsParams params) {
+  if (const auto ret = GraphicsInit(std::nullopt, params)) {
     return ret;
   }
 
   // Start with the defaults and try looking for a different working
   // configuration
-  const auto api_count = GrpBackend_APICount();
+  const auto api_count = GraphicsBackendAPICount();
 
   const auto api_it =
       ((api_count > 0)
@@ -394,19 +397,19 @@ std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params) {
 
   for (const auto api : api_it) {
     params.api = api;
-    if (const auto ret = Grp_Init(std::nullopt, params)) {
+    if (const auto ret = GraphicsInit(std::nullopt, params)) {
       return ret;
     }
   }
   return std::nullopt;
 }
 
-void Grp_Flip() {
+void GraphicsFlip() {
   const auto &state = State();
-  GrpBackend_Flip(state.screenshot_requested &&
-                  !state.screenshot_prefix.empty());
+  GraphicsBackendFlip(state.screenshot_requested &&
+                      !state.screenshot_prefix.empty());
 }
 
-void Grp_RequestScreenshot(bool requested) {
+void GraphicsRequestScreenshot(bool requested) {
   State().screenshot_requested = requested;
 }

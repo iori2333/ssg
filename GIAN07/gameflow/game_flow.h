@@ -20,7 +20,7 @@ public:
   GameFlow &operator=(GameFlow &&) = delete;
 
   [[nodiscard]] bool Start();
-  [[nodiscard]] bool Tick(INPUT_BITS input, INPUT_BITS system_input);
+  [[nodiscard]] bool Tick(InputBits input, InputBits system_input);
 
 private:
   struct Impl;

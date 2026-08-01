@@ -17,13 +17,13 @@ enum class PlayerAttackShape : uint8_t {
 
 struct PlayerAttack {
   PlayerAttackShape shape = PlayerAttackShape::Point;
-  WORLD_POINT origin{};
+  WorldPoint origin{};
   uint8_t direction = 0;
   int regular_damage = 0;
   int boss_damage = 0;
   bool first_hit_only = false;
 
-  [[nodiscard]] static PlayerAttack Point(WORLD_POINT origin, int damage) {
+  [[nodiscard]] static PlayerAttack Point(WorldPoint origin, int damage) {
     return {.shape = PlayerAttackShape::Point,
             .origin = origin,
             .regular_damage = damage,
@@ -31,7 +31,7 @@ struct PlayerAttack {
             .first_hit_only = true};
   }
 
-  [[nodiscard]] static PlayerAttack VerticalBeam(WORLD_POINT origin,
+  [[nodiscard]] static PlayerAttack VerticalBeam(WorldPoint origin,
                                                  int damage) {
     return {.shape = PlayerAttackShape::VerticalBeam,
             .origin = origin,
@@ -39,7 +39,7 @@ struct PlayerAttack {
             .boss_damage = damage};
   }
 
-  [[nodiscard]] static PlayerAttack DirectedBeam(WORLD_POINT origin,
+  [[nodiscard]] static PlayerAttack DirectedBeam(WorldPoint origin,
                                                  uint8_t direction) {
     return {.shape = PlayerAttackShape::DirectedBeam,
             .origin = origin,

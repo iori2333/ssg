@@ -10,12 +10,12 @@ const EnemyAnimationSet &EclHost::Animations() const {
   return enemies_.animations_;
 }
 
-EnemyActor *EclHost::SpawnRegular(WORLD_POINT position,
+EnemyActor *EclHost::SpawnRegular(WorldPoint position,
                                   uint32_t script_id) const {
   return enemies_.SpawnRegular(position, script_id);
 }
 
-void EclHost::SpawnBoss(WORLD_POINT position, uint32_t script_id) const {
+void EclHost::SpawnBoss(WorldPoint position, uint32_t script_id) const {
   enemies_.SpawnBossFromEcl(position, script_id);
 }
 

@@ -49,5 +49,5 @@ struct GameContext {
   ItemSystem items{player, effects};
   BulletManager bullets{items, session, player, effects};
   EnemyManager enemies{bullets, items, session, player, stage, effects};
-  UIManager ui;
+  UiManager ui;
 };

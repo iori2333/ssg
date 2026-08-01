@@ -28,73 +28,73 @@ uint8_t FrameRateDivisor();
 // Paletted graphics //
 // ----------------- //
 
-struct RGB {
+struct Rgb {
   uint8_t r;
   uint8_t g;
   uint8_t b;
 
-  constexpr RGBA WithAlpha(uint8_t a) const {
-    return RGBA{.r = r, .g = g, .b = b, .a = a};
+  constexpr Rgba WithAlpha(uint8_t a) const {
+    return Rgba{.r = r, .g = g, .b = b, .a = a};
   }
 
-  constexpr bool operator==(const RGB &other) const = default;
+  constexpr bool operator==(const Rgb &other) const = default;
 };
-static_assert(sizeof(RGB) == 3);
+static_assert(sizeof(Rgb) == 3);
 
-struct PALETTE : public std::array<RGBA, 256> {
+struct Palette : public std::array<Rgba, 256> {
   // Builds a new palette with the given fade [alpha] value applied onto the
   // given inclusive (!) range of colors. Returns the rest of the palette
   // unchanged.
-  PALETTE Fade(uint8_t alpha, uint8_t first = 0, uint8_t last = 255) const;
+  Palette Fade(uint8_t alpha, uint8_t first = 0, uint8_t last = 255) const;
 };
 
 // (6 * 6 * 6) = 216 standard colors, available in both channeled and
 // palettized modes.
-struct RGB216 {
-  static constexpr uint8_t MAX = 5;
+struct Rgb216 {
+  static constexpr uint8_t Max = 5;
 
   const uint8_t r = 0;
   const uint8_t g = 0;
   const uint8_t b = 0;
 
-  consteval RGB216() = default;
-  consteval RGB216(uint8_t &&r, uint8_t &&g, uint8_t &&b) : r(r), g(g), b(b) {
-    if ((r > MAX) || (g > MAX) || (b > MAX)) {
+  consteval Rgb216() = default;
+  consteval Rgb216(uint8_t &&r, uint8_t &&g, uint8_t &&b) : r(r), g(g), b(b) {
+    if ((r > Max) || (g > Max) || (b > Max)) {
       throw "216-color component out of range";
     }
   }
 
-  RGB216(std::unsigned_integral auto r, std::unsigned_integral auto g,
+  Rgb216(std::unsigned_integral auto r, std::unsigned_integral auto g,
          std::unsigned_integral auto b)
       : r(r), g(g), b(b) {
-    assert(r <= MAX);
-    assert(g <= MAX);
-    assert(b <= MAX);
+    assert(r <= Max);
+    assert(g <= Max);
+    assert(b <= Max);
   }
 
-  static RGB216 Clamped(uint8_t r, uint8_t g, uint8_t b) {
-    return RGB216{(std::min)(r, MAX), (std::min)(g, MAX), (std::min)(b, MAX)};
+  static Rgb216 Clamped(uint8_t r, uint8_t g, uint8_t b) {
+    return Rgb216{(std::min)(r, Max), (std::min)(g, Max), (std::min)(b, Max)};
   }
 
   constexpr uint8_t PaletteIndex() const {
-    return (20 + r + (g * (MAX + 1)) + (b * ((MAX + 1) * (MAX + 1))));
+    return (20 + r + (g * (Max + 1)) + (b * ((Max + 1) * (Max + 1))));
   }
 
-  constexpr RGB ToRGB() const {
-    return RGB{
+  constexpr Rgb ToRgb() const {
+    return Rgb{
         .r = static_cast<uint8_t>(r * 50u),
         .g = static_cast<uint8_t>(g * 50u),
         .b = static_cast<uint8_t>(b * 50u),
     };
   }
 
-  static void ForEach(std::invocable<const RGB216 &> auto &&func) {
+  static void ForEach(std::invocable<const Rgb216 &> auto &&func) {
     constexpr uint8_t start = 0;
-    constexpr uint8_t end = (MAX + 1);
+    constexpr uint8_t end = (Max + 1);
     for (const auto r : std::views::iota(start, end)) {
       for (const auto g : std::views::iota(start, end)) {
         for (const auto b : std::views::iota(start, end)) {
-          func(RGB216{r, g, b});
+          func(Rgb216{r, g, b});
         }
       }
     }
@@ -109,107 +109,107 @@ struct RGB216 {
 // 0 = BMP, 10 = max-effort WebP.
 constexpr uint8_t kScreenshotEffortMax = 10;
 
-void Grp_ScreenshotSetEffort(uint8_t effort);
+void GraphicsScreenshotSetEffort(uint8_t effort);
 
 // Required to enable the screenshot feature as a whole.
-void Grp_ScreenshotSetPrefix(std::string_view prefix);
-void Grp_RequestScreenshot(bool requested);
+void GraphicsScreenshotSetPrefix(std::string_view prefix);
+void GraphicsRequestScreenshot(bool requested);
 
 struct SDL_Surface;
 
 // Saves the given surface to a file with the screenshot prefix. [t_start]
 // represents the very beginning of the backend's capturing process.
-bool Grp_ScreenshotSave(SDL_Surface *src);
+bool GraphicsScreenshotSave(SDL_Surface *src);
 // -----------
 
-enum class GRAPHICS_FULLSCREEN_FIT : uint8_t {
+enum class GraphicsFullscreenFit : uint8_t {
   // Scale to largest integer resolution
-  INTEGER,
+  Integer,
 
   // Scale to the largest resolution that fits the game's aspect ratio
-  ASPECT,
+  Aspect,
 
   // Stretch to entire screen, disregarding the aspect ratio
-  STRETCH,
+  Stretch,
 
-  COUNT,
+  Count,
 };
 
-enum class GRAPHICS_PARAM_FLAGS : uint8_t {
-  FULLSCREEN = 0x01,
-  FULLSCREEN_EXCLUSIVE = 0x02,
+enum class GraphicsParamFlags : uint8_t {
+  Fullscreen = 0x01,
+  FullscreenExclusive = 0x02,
 
-  // A GRAPHICS_FULLSCREEN_FIT value
-  FULLSCREEN_FIT = (std::to_underlying(GRAPHICS_FULLSCREEN_FIT::COUNT) << 2),
+  // A GraphicsFullscreenFit value
+  FullscreenFit = (std::to_underlying(GraphicsFullscreenFit::Count) << 2),
 
-  // Render at the window's resolution instead of at [GRP_RES]
-  SCALE_GEOMETRY = 0x10,
+  // Render at the window's resolution instead of at [kGameResolution]
+  ScaleGeometry = 0x10,
 
-  MASK = (FULLSCREEN | FULLSCREEN_EXCLUSIVE | FULLSCREEN_FIT | SCALE_GEOMETRY),
+  Mask = (Fullscreen | FullscreenExclusive | FullscreenFit | ScaleGeometry),
 };
 
 template <>
-inline constexpr bool util::EnableEnumFlags<GRAPHICS_PARAM_FLAGS> = true;
+inline constexpr bool util::EnableEnumFlags<GraphicsParamFlags> = true;
 
-struct GRAPHICS_FULLSCREEN_FLAGS {
+struct GraphicsFullscreenFlags {
   bool fullscreen;
   bool exclusive;
-  GRAPHICS_FULLSCREEN_FIT fit;
+  GraphicsFullscreenFit fit;
 
   std::strong_ordering
-  operator<=>(const GRAPHICS_FULLSCREEN_FLAGS &) const = default;
+  operator<=>(const GraphicsFullscreenFlags &) const = default;
 };
 
-constexpr auto GRAPHICS_TOPLEFT_UNDEFINED =
+constexpr auto kGraphicsTopleftUndefined =
     (std::numeric_limits<int16_t>::min)();
 
-struct GRAPHICS_PARAMS {
-  GRAPHICS_PARAM_FLAGS flags;
+struct GraphicsParams {
+  GraphicsParamFlags flags;
   int8_t api;              // Negative = "use default API"
   uint8_t window_scale_4x; // Scale factor in window mode ×4. 0 = fit display.
 
-  // Across all displays. Can be [GRAPHICS_TOPLEFT_UNDEFINED], in which case
+  // Across all displays. Can be [kGraphicsTopleftUndefined], in which case
   // the window backend should pick a reasonable default position.
   int16_t left;
   int16_t top;
 
-  std::strong_ordering operator<=>(const GRAPHICS_PARAMS &) const = default;
+  std::strong_ordering operator<=>(const GraphicsParams &) const = default;
 
-  GRAPHICS_FULLSCREEN_FLAGS FullscreenFlags() const;
+  GraphicsFullscreenFlags FullscreenFlags() const;
   bool ScaleGeometry() const;
   uint8_t Scale4x() const;
-  WINDOW_SIZE ScaledRes() const;
+  WindowSize ScaledRes() const;
 
-  void SetFlag(GRAPHICS_PARAM_FLAGS flag,
-               std::underlying_type_t<GRAPHICS_PARAM_FLAGS> value);
+  void SetFlag(GraphicsParamFlags flag,
+               std::underlying_type_t<GraphicsParamFlags> value);
 };
 
 // Returns the maximum 4× scaling factor for the game window on the current
 // display.
-uint8_t Grp_WindowScale4xMax();
+uint8_t GraphicsWindowScale4xMax();
 
-struct GRAPHICS_INIT_RESULT {
-  GRAPHICS_PARAMS live;
+struct GraphicsInitResult {
+  GraphicsParams live;
   bool reload_surfaces;
 
-  static std::optional<GRAPHICS_INIT_RESULT>
-  From(std::optional<GRAPHICS_PARAMS> &&o) {
+  static std::optional<GraphicsInitResult>
+  From(std::optional<GraphicsParams> &&o) {
     return o.transform([](auto &&o) {
-      return GRAPHICS_INIT_RESULT{.live = o, .reload_surfaces = false};
+      return GraphicsInitResult{.live = o, .reload_surfaces = false};
     });
   }
 };
 
 // Validates and clamps [params] to the supported ranges before passing them on
-// to GrpBackend_Init().
-std::optional<GRAPHICS_INIT_RESULT>
-Grp_Init(std::optional<const GRAPHICS_PARAMS> maybe_prev,
-         GRAPHICS_PARAMS params);
+// to GraphicsBackendInit().
+std::optional<GraphicsInitResult>
+GraphicsInit(std::optional<const GraphicsParams> maybe_prev,
+             GraphicsParams params);
 
-// Calls Grp_Init() with the given parameters and tries the remaining APIs on
-// failure. Returns the actual configuration the backend was initialized with,
-// or `std::nullopt` on failure.
-std::optional<GRAPHICS_INIT_RESULT> Grp_InitOrFallback(GRAPHICS_PARAMS params);
+// Calls GraphicsInit() with the given parameters and tries the remaining APIs
+// on failure. Returns the actual configuration the backend was initialized
+// with, or `std::nullopt` on failure.
+std::optional<GraphicsInitResult> GraphicsInitOrFallback(GraphicsParams params);
 
-// Wraps screenshot handling around GrpBackend_Flip().
-void Grp_Flip();
+// Wraps screenshot handling around GraphicsBackendFlip().
+void GraphicsFlip();

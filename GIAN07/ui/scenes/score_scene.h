@@ -13,7 +13,7 @@
 #include "ui/name_entry.h"
 
 class MusicPlayer;
-class UIManager;
+class UiManager;
 
 namespace i18n {
 class Localization;
@@ -34,19 +34,19 @@ enum class ScoreRegistrationStart : uint8_t { Active, Complete };
 class ScoreScene {
 public:
   ScoreScene(RecordSystem &records, data::GraphicsLoader &graphics,
-             MusicPlayer &music, UIManager &ui,
+             MusicPlayer &music, UiManager &ui,
              i18n::Localization &localization)
       : record_system_(records), graphics_(graphics), music_(music), ui_(ui),
         localization_(localization) {}
 
   [[nodiscard]] bool ShowLeaderboard(GameLevel initial_difficulty,
-                                     INPUT_BITS initial_input);
+                                     InputBits initial_input);
   [[nodiscard]] ScoreRegistrationStart
-  StartNameRegistration(ScoreRecord record, INPUT_BITS initial_input,
+  StartNameRegistration(ScoreRecord record, InputBits initial_input,
                         bool change_music = false);
-  [[nodiscard]] ScoreSceneResult UpdateLeaderboard(INPUT_BITS input,
+  [[nodiscard]] ScoreSceneResult UpdateLeaderboard(InputBits input,
                                                    bool should_draw);
-  [[nodiscard]] ScoreSceneResult UpdateNameRegistration(INPUT_BITS input,
+  [[nodiscard]] ScoreSceneResult UpdateNameRegistration(InputBits input,
                                                         bool should_draw);
 
 private:
@@ -73,10 +73,10 @@ private:
   bool input_locked_ = false;
   bool detail_open_ = false;
   bool save_failed_ = false;
-  TEXTRENDER_RECT_ID ui_text_ = 0;
+  TextRenderRectId ui_text_ = 0;
   NameEntry name_entry_;
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
-  UIManager &ui_;
+  UiManager &ui_;
   i18n::Localization &localization_;
 };

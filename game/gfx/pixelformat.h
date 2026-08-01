@@ -6,23 +6,23 @@
 #include <cstdint>
 
 // Same as the standard Win32 PALETTEENTRY structure.
-struct RGBA {
+struct Rgba {
   uint8_t r;
   uint8_t g;
   uint8_t b;
   uint8_t a;
 
-  constexpr bool operator==(const RGBA &other) const = default;
+  constexpr bool operator==(const Rgba &other) const = default;
 };
-static_assert(sizeof(RGBA) == 4);
+static_assert(sizeof(Rgba) == 4);
 
 // Same as the standard Win32 RGBQUAD structure.
-struct BGRA {
+struct Bgra {
   uint8_t b;
   uint8_t g;
   uint8_t r;
   uint8_t a;
 
-  constexpr bool operator==(const BGRA &other) const = default;
+  constexpr bool operator==(const Bgra &other) const = default;
 };
-static_assert(sizeof(BGRA) == 4);
+static_assert(sizeof(Bgra) == 4);

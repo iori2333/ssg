@@ -8,17 +8,17 @@
 
 #ifdef WIN32
 // GDI text rendering bridge to the graphics backend
-class SURFACE_GDI;
-SURFACE_GDI &GrpSurface_GDIText_Surface() noexcept;
-bool GrpSurface_GDIText_Create(int32_t w, int32_t h, RGB colorkey);
-bool GrpSurface_GDIText_Update(const PIXEL_LTWH &r) noexcept;
+class SurfaceGdi;
+SurfaceGdi &GraphicsSurfaceGdiTextSurface() noexcept;
+bool GraphicsSurfaceGdiTextCreate(int32_t w, int32_t h, Rgb colorkey);
+bool GraphicsSurfaceGdiTextUpdate(const PixelLtwh &r) noexcept;
 
 #include "platform/windows/text_gdi.h"
 #elif defined(LINUX)
 #include "platform/linux/pangocairo/text_pangocairo.h"
 #endif
 
-TEXTRENDER &TextRenderer();
+TextRender &TextRenderer();
 
 // Shuts down the backend, deleting all fonts.
-void TextBackend_Cleanup();
+void TextBackendCleanup();

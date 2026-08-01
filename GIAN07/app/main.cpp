@@ -27,10 +27,8 @@
 #include "util/guard.h"
 
 int main(int argc, char **args) {
-#ifndef APP_ID
-#define APP_ID "GIAN07"
-#endif
-  logging::Initialize(PathForData(), APP_ID, VERSION_TAG);
+  constexpr std::string_view kAppId = "GIAN07";
+  logging::Initialize(PathForData(), kAppId, kVersionTag);
   auto logging_guard = util::MakeGuard(logging::Shutdown);
 #ifdef PBG_DEBUG
   crash::Install();
@@ -39,7 +37,7 @@ int main(int argc, char **args) {
 
   // SDL 3 automatically pulls the Desktop Entry name from the new app
   // metadata, avoiding the need for the environment variable below.
-  SDL_SetAppMetadata(GAME_TITLE.data(), VERSION_TAG.data(), APP_ID);
+  SDL_SetAppMetadata(kGameTitle.data(), kVersionTag.data(), kAppId.data());
 
   if (!SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO)) {
     logging::SdlError(logging::Channel::Platform, "Error initializing SDL");

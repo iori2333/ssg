@@ -19,8 +19,8 @@ class Player;
 inline constexpr std::size_t kBitCapacity = 6;
 
 struct BitLink {
-  PIXEL_POINT from{};
-  PIXEL_POINT to{};
+  PixelPoint from{};
+  PixelPoint to{};
 };
 
 struct BitLinkGeometry {
