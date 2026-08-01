@@ -74,7 +74,7 @@ long CB_Vorbis_Tell(void *datasource) {
   return static_cast<long>(offset);
 }
 
-static const ov_callbacks VORBIS_CALLBACKS = {
+static const ov_callbacks kVorbisCallbacks = {
     CB_Vorbis_Read,
     CB_Vorbis_Seek,
     nullptr,
@@ -82,36 +82,36 @@ static const ov_callbacks VORBIS_CALLBACKS = {
 };
 // ---------
 
-struct PCM_PART_VORBIS : public bgm::PcmPart {
+struct VorbisPcmPart : public bgm::PcmPart {
   OggVorbis_File vf;
 
   size_t PartDecodeSingle(std::span<std::byte> buf) override;
   void PartSeekToSample(size_t sample) override;
 
-  PCM_PART_VORBIS(OggVorbis_File &&vf, const PcmFormat &pcmf)
+  VorbisPcmPart(OggVorbis_File &&vf, const PcmFormat &pcmf)
       : vf(vf), PcmPart(pcmf) {}
-  virtual ~PCM_PART_VORBIS();
+  virtual ~VorbisPcmPart();
 };
 
-size_t PCM_PART_VORBIS::PartDecodeSingle(std::span<std::byte> buf) {
+size_t VorbisPcmPart::PartDecodeSingle(std::span<std::byte> buf) {
   assert(pcmf.format == PcmSampleFormat::Int16);
   auto *buf_as_char = reinterpret_cast<char *>(buf.data());
   return ov_read(&vf, buf_as_char, buf.size_bytes(), 0, 2, 1, nullptr);
 }
 
-void PCM_PART_VORBIS::PartSeekToSample(size_t sample) {
+void VorbisPcmPart::PartSeekToSample(size_t sample) {
   const auto ret = ov_pcm_seek(&vf, sample);
   assert(ret == 0);
 }
 
-PCM_PART_VORBIS::~PCM_PART_VORBIS() { ov_clear(&vf); }
+VorbisPcmPart::~VorbisPcmPart() { ov_clear(&vf); }
 
 std::unique_ptr<bgm::PcmPart>
 Vorbis_Open(std::istream &stream,
             std::optional<bgm::MetadataCallback> on_metadata) {
   OggVorbis_File vf = {0};
   const auto ret =
-      ov_open_callbacks(&stream, &vf, nullptr, 0, VORBIS_CALLBACKS);
+      ov_open_callbacks(&stream, &vf, nullptr, 0, kVorbisCallbacks);
   if (ret || !vf.vi) {
     return nullptr;
   }
@@ -138,7 +138,7 @@ Vorbis_Open(std::istream &stream,
   const auto samplingrate = static_cast<uint32_t>(vf.vi->rate);
   const auto channels = static_cast<uint16_t>(vf.vi->channels);
   PcmFormat pcmf = {samplingrate, channels, PcmSampleFormat::Int16};
-  return std::make_unique<PCM_PART_VORBIS>(std::move(vf), pcmf);
+  return std::make_unique<VorbisPcmPart>(std::move(vf), pcmf);
 }
 
 } // namespace bgm

@@ -1,15 +1,7 @@
 ///
 /// MIDI management functions
 ///
-#ifndef PBGWIN_PBGMIDI_H
-#define PBGWIN_PBGMIDI_H "PBGMIDI : Version 0.31 : Update 2000/08/04"
-
-// Revision history
-// 2000/08/04 : Made Mid_Free() global.
-
-// 2000/03/22 : Changed fade-out function from master volume to CC volume
-//            : If there are MIDI backends that cannot keep up,
-//            : the message sending may need to be improved.
+#pragma once
 
 #include <array>
 #include <chrono>
@@ -115,5 +107,3 @@ std::string_view MidiTitle(void); // Returns the title of the current song
 void MidiProcess(MidiRealtime delta);
 
 void MidiResetTables(void); // Initializes various tables
-
-#endif

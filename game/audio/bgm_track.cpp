@@ -110,7 +110,7 @@ size_t PcmTrack::DecodeSingle(std::span<std::byte> buf) {
 // Codecs
 // ------
 
-struct CODEC_PCM {
+struct PcmCodec {
   std::string_view ext;
   PcmPartOpen &open;
 };
@@ -121,15 +121,15 @@ std::unique_ptr<PcmPart>
 Vorbis_Open(std::istream &stream, std::optional<MetadataCallback> on_metadata);
 
 // Sorted in order of preference.
-static constexpr const CODEC_PCM CODECS_PCM[] = {
+constexpr PcmCodec kPcmCodecs[] = {
     {".flac", FLAC_Open},
     {".ogg", Vorbis_Open},
 };
 // ------
 
-static constexpr std::string_view LOOP_INFIX = ".loop";
-static constexpr size_t EXT_CAP =
-    std::ranges::max_element(CODECS_PCM, [](const auto &a, const auto &b) {
+static constexpr std::string_view kLoopInfix = ".loop";
+static constexpr size_t kExtensionCapacity =
+    std::ranges::max_element(kPcmCodecs, [](const auto &a, const auto &b) {
       return (a.ext.size() < b.ext.size());
     })->ext.size();
 
@@ -142,13 +142,13 @@ static bool TagEquals(std::string_view a, std::string_view b) {
 
 std::unique_ptr<Track> OpenTrack(std::string_view base_fn) {
   const size_t base_len = base_fn.size();
-  const size_t fn_len = (LOOP_INFIX.size() + EXT_CAP);
+  const size_t fn_len = (kLoopInfix.size() + kExtensionCapacity);
   std::string fn;
   fn.resize_and_overwrite((base_len + fn_len), [&](char *buf, size_t len) {
     std::ranges::copy(base_fn, buf);
     return base_len;
   });
-  for (const auto &codec : CODECS_PCM) {
+  for (const auto &codec : kPcmCodecs) {
     fn.resize(base_len);
     fn += codec.ext;
     auto intro_stream = std::make_unique<std::ifstream>(fn, std::ios::binary);
@@ -202,7 +202,7 @@ std::unique_ptr<Track> OpenTrack(std::string_view base_fn) {
     }
 
     fn.resize(base_len);
-    fn += LOOP_INFIX;
+    fn += kLoopInfix;
     fn += codec.ext;
     auto loop_stream = std::make_unique<std::ifstream>(fn, std::ios::binary);
     if (*loop_stream) {
