@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -47,7 +48,7 @@ bool BgmLoadMidi(std::vector<uint8_t> buf);
 
 // Cached waveform title (from Vorbis comment metadata).
 // Empty if no waveform is loaded or if the waveform has no title tag.
-std::string_view BgmWaveformTitle();
+std::string BgmWaveformTitle();
 
 // Track number tracking — read/written by the track management layer.
 unsigned int BgmLoadedTrackNumber();

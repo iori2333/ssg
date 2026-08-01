@@ -312,6 +312,10 @@ bool MidiBackendSelectDevice(size_t index) {
     State().font_index = old_index;
     State().font_id = fluid_synth_sfload(
         State().synth, State().font_paths[State().font_index].c_str(), 1);
+    if (State().font_id == FLUID_FAILED) {
+      FsCleanupAudio();
+      return false;
+    }
   }
 
   State().audio_driver =
@@ -360,6 +364,10 @@ bool MidiBackendChangeDevice(int8_t direction) {
     State().font_index = old_index;
     State().font_id = fluid_synth_sfload(
         State().synth, State().font_paths[State().font_index].c_str(), 1);
+    if (State().font_id == FLUID_FAILED) {
+      FsCleanupAudio();
+      return false;
+    }
   }
 
   // Restart audio.

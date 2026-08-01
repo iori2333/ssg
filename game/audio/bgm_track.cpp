@@ -33,8 +33,7 @@ void ApplyVolumeError(std::span<std::byte>, uint16_t, TrackVolume &) {
 }
 
 void TrackVolume::SetVolumeLinear(float v) {
-  volume_linear = v;
-  volume_factor = LinearVolumeFactor(v);
+  ramp.Set(v);
 }
 
 template <typename BitDepth>
@@ -45,22 +44,11 @@ static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
                           (buf.size_bytes() / sizeof(BitDepth))};
   auto it = samples.begin();
 
-  // Slow path if we're fading
-  if (vol.fade_remaining > 0) {
-    while ((vol.fade_remaining > 0) && (it != samples.end())) {
-      for (decltype(channels) c = 0; c < channels; c++) {
-        *(it++) *= vol.FadeVolumeFactor();
-      }
-      vol.fade_remaining--;
-      vol.SetVolumeLinear(
-          vol.fade_end +
-          ((vol.fade_delta * vol.fade_remaining) / vol.fade_duration));
-    }
-  }
-
-  // Fast path for constant volume
   while (it != samples.end()) {
-    *(it++) *= vol.FadeVolumeFactor();
+    for (decltype(channels) c = 0; c < channels; c++) {
+      *(it++) *= vol.FadeVolumeFactor();
+    }
+    vol.NextFrame();
   }
 }
 
@@ -69,7 +57,7 @@ bool Track::Decode(std::span<std::byte> buf) {
   auto size_left = buf.size_bytes();
   while (size_left > 0) {
     const auto ret = DecodeSingle(buf.subspan(offset, size_left));
-    if (ret == static_cast<size_t>(-1)) {
+    if ((ret == static_cast<size_t>(-1)) || (ret > size_left)) {
       std::ranges::fill(buf, std::byte{0});
       return false;
     }
@@ -77,23 +65,17 @@ bool Track::Decode(std::span<std::byte> buf) {
     size_left -= ret;
   }
 
-  if (vol.FadeVolumeLinear() != 1.0f) {
-    const auto apply_volume =
-        ((pcmf.format == PcmSampleFormat::Int16)   ? ApplyVolume<int16_t>
-         : (pcmf.format == PcmSampleFormat::Int32) ? ApplyVolume<int32_t>
-                                                   : ApplyVolumeError);
-    apply_volume(buf, pcmf.channels, vol);
-  }
+  const auto apply_volume =
+      ((pcmf.format == PcmSampleFormat::Int16)   ? ApplyVolume<int16_t>
+       : (pcmf.format == PcmSampleFormat::Int32) ? ApplyVolume<int32_t>
+                                                 : ApplyVolumeError);
+  apply_volume(buf, pcmf.channels, vol);
   return true;
 }
 
 void Track::FadeOut(float volume_start, std::chrono::milliseconds duration) {
   const auto sample_count = ((duration.count() * pcmf.samplingrate) / 1000);
-  vol.SetVolumeLinear(volume_start);
-  vol.fade_delta = (volume_start - vol.fade_end);
-  vol.fade_end = 0.0f;
-  vol.fade_duration = sample_count;
-  vol.fade_remaining = sample_count;
+  vol.StartFade(volume_start, 0.0f, sample_count);
 }
 
 size_t PcmTrack::DecodeSingle(std::span<std::byte> buf) {

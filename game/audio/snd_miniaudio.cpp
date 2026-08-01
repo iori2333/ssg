@@ -37,11 +37,19 @@ struct BgmObject {
   ma_data_source_base data_source{};
   ma_sound sound{};
   std::shared_ptr<bgm::Track> track = nullptr;
+  bool data_source_initialized = false;
+  bool sound_initialized = false;
 
   bool Clear() {
     if (track) {
-      ma_sound_uninit(&sound);
-      ma_data_source_uninit(&data_source);
+      if (sound_initialized) {
+        ma_sound_uninit(&sound);
+        sound_initialized = false;
+      }
+      if (data_source_initialized) {
+        ma_data_source_uninit(&data_source);
+        data_source_initialized = false;
+      }
       track = nullptr;
     }
     return false;
@@ -164,14 +172,16 @@ bool AudioBackendLoadBgm(std::shared_ptr<bgm::Track> track) {
 
   result = ma_data_source_init(&config, &State().bgm.data_source);
   if (result != MA_SUCCESS) {
-    return result;
+    return State().bgm.Clear();
   }
+  State().bgm.data_source_initialized = true;
   result = ma_sound_init_from_data_source(
       &State().engine, &State().bgm.data_source,
       MA_SOUND_FLAG_NO_SPATIALIZATION, nullptr, &State().bgm.sound);
   if (result != MA_SUCCESS) {
     return State().bgm.Clear();
   }
+  State().bgm.sound_initialized = true;
   return true;
 }
 

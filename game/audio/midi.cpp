@@ -710,7 +710,7 @@ void MidiEvent::Send() const {
       // for other Roland synths that don't clamp.
       static constexpr uint8_t kSc88ReverbMacro[] = {0x41, 0x10, 0x42, 0x12,
                                                      0x40, 0x01, 0x30};
-      if (extra_data.size() >= std::size(kSc88ReverbMacro) &&
+      if (extra_data.size() >= (std::size(kSc88ReverbMacro) + 2) &&
           std::equal(std::begin(kSc88ReverbMacro), std::end(kSc88ReverbMacro),
                      extra_data.begin())) {
         const auto fix = std::min<uint8_t>(msg[8], 7);

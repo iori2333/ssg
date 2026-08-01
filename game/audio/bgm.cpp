@@ -32,7 +32,7 @@ struct BgmState {
   unsigned int loaded_number = 0;
   std::chrono::milliseconds midi_table_update_previous;
   std::shared_ptr<bgm::Track> waveform;
-  std::string_view waveform_title;
+  std::string waveform_title;
 };
 
 BgmState &State() {
@@ -97,21 +97,26 @@ bool BgmLoadWaveform(std::string_view path) {
     return true;
   }
   State().waveform = nullptr;
+  State().waveform_title.clear();
   return false;
 }
 
 bool BgmLoadMidi(std::vector<uint8_t> buf) {
   State().waveform = nullptr;
+  State().waveform_title.clear();
   return MidiLoad(std::move(buf));
 }
 
-std::string_view BgmWaveformTitle() { return State().waveform_title; }
+std::string BgmWaveformTitle() { return State().waveform_title; }
 
 unsigned int BgmLoadedTrackNumber() { return State().loaded_number; }
 
 void BgmSetLoadedTrackNumber(unsigned int n) { State().loaded_number = n; }
 
-void BgmClearWaveform() { State().waveform = nullptr; }
+void BgmClearWaveform() {
+  State().waveform = nullptr;
+  State().waveform_title.clear();
+}
 
 // --- Playback ---
 

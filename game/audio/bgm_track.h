@@ -15,6 +15,8 @@
 #include <string_view>
 #include <utility>
 
+#include "audio/core/volume_ramp.h"
+
 // PCM sample format
 // -----------------
 
@@ -63,22 +65,26 @@ void OnVorbisComment(MetadataCallback func, std::string_view comment);
 // ----------------------
 
 class TrackVolume {
-  float volume_linear = 1.0f;
-  float volume_factor = 1.0f;
+  audio::VolumeRamp ramp;
 
 public:
-  float fade_delta = 0.0f;
-  float fade_end = 0.0f;
-  SampleCount fade_remaining = 0;
-  SampleCount fade_duration = 0;
-
   // Value for a volume control with perceived linear loudness.
-  auto FadeVolumeLinear() const { return volume_linear; }
+  auto FadeVolumeLinear() const { return ramp.Current(); }
 
   // Multiplication factor for PCM samples.
-  auto FadeVolumeFactor() const { return volume_factor; }
+  auto FadeVolumeFactor() const {
+    const auto linear = ramp.Current();
+    return (linear * linear);
+  }
 
   void SetVolumeLinear(float v);
+
+  // Advances one PCM frame and returns the new linear volume.
+  float NextFrame() { return ramp.NextFrame(); }
+
+  void StartFade(float from, float to, SampleCount frames) {
+    ramp.StartFade(from, to, frames);
+  }
 };
 
 struct Track {
