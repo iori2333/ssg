@@ -8,6 +8,7 @@
 #include <SDL3/SDL_audio.h>
 #include <miniaudio.h>
 
+#include "bgm.h"
 #include "bgm_track.h"
 #include "snd_backend.h"
 
@@ -189,15 +190,15 @@ void SndBackend_BGMUpdateVolume(void) {
   if (!BGMObj.track) {
     return;
   }
-  ma_sound_set_volume(
-      &BGMObj.sound, (Snd_BGMGainFactor * VolumeFactorSquare(Snd_BGMVolume())));
+  ma_sound_set_volume(&BGMObj.sound,
+                      (BGM_GainFactor() * VolumeFactorSquare(Snd_BGMVolume())));
 }
 
 void SndBackend_BGMUpdateTempo(void) {
   if (!BGMObj.track) {
     return;
   }
-  const auto t = (static_cast<float>(Snd_BGMTempoNum) / Snd_BGMTempoDenom);
+  const auto t = BGM_TempoFactor();
   ma_sound_set_pitch(&BGMObj.sound, t);
 }
 

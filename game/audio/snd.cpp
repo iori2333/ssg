@@ -10,95 +10,107 @@
 #include "snd.h"
 #include "snd_backend.h"
 
-#include "util/enum_flags.h"
 #include "util/guard.h"
 
-float Snd_BGMGainFactor = 1.0f;
-static VOLUME BGMVolume = VOLUME_MAX;
-static VOLUME SEVolume = VOLUME_MAX;
+namespace {
 
-static enum class SND_SYS {
-  NOTHING = 0x0,
-  SYSTEM = 0x1,
-  BGM = 0x2,
-  SE = 0x4,
-} Initialized;
+struct SoundState {
+  VOLUME bgm_volume = VOLUME_MAX;
+  VOLUME se_volume = VOLUME_MAX;
+  bool system_initialized = false;
+  bool bgm_initialized = false;
+  bool se_initialized = false;
+};
 
-template <> inline constexpr bool util::EnableEnumFlags<SND_SYS> = true;
+SoundState &State() {
+  static SoundState state;
+  return state;
+}
 
-bool Snd_SystemInit(void) {
-  if (!!(Initialized & SND_SYS::SYSTEM)) {
+bool InitializeSystem() {
+  auto &state = State();
+  if (state.system_initialized) {
     return true;
   }
-  assert(Initialized == SND_SYS::NOTHING);
+  assert(!state.bgm_initialized && !state.se_initialized);
   if (!SndBackend_Init()) {
     return false;
   }
-  Initialized |= SND_SYS::SYSTEM;
+  state.system_initialized = true;
   return true;
 }
 
-bool Snd_SubsystemInit(SND_SYS sys, bool (&SubsystemInit)(void)) {
-  if (!!(Initialized & sys)) {
+bool InitializeSubsystem(bool &initialized, bool (*initialize)()) {
+  if (initialized) {
     return true;
-  } else if (!Snd_SystemInit() || !SubsystemInit()) {
+  }
+  if (!InitializeSystem() || !initialize()) {
     return false;
   }
-  Initialized |= sys;
+  initialized = true;
   Snd_UpdateVolumes();
   return true;
 }
 
-void Snd_Cleanup(SND_SYS sys) {
-  auto cleanup_sys = [](SND_SYS should, SND_SYS sys, void (&cleanup)(void)) {
-    if (!!(should & sys) && !!(Initialized & sys)) {
-      cleanup();
-      Initialized &= ~sys;
-    }
-  };
-
-  cleanup_sys(sys, SND_SYS::SE, SndBackend_SECleanup);
-  cleanup_sys(sys, SND_SYS::BGM, SndBackend_BGMCleanup);
-
-  // Silly double negation to work around C26813...
-  if (~Initialized == ~SND_SYS::SYSTEM) {
+void CleanupSystemIfUnused() {
+  auto &state = State();
+  if (state.system_initialized && !state.bgm_initialized &&
+      !state.se_initialized) {
     SndBackend_Cleanup();
-    Initialized = SND_SYS::NOTHING;
+    state.system_initialized = false;
   }
 }
 
-void Snd_Cleanup(void) { Snd_Cleanup(SND_SYS::BGM | SND_SYS::SE); }
+void CleanupSubsystem(bool &initialized, void (*cleanup)()) {
+  if (initialized) {
+    cleanup();
+    initialized = false;
+  }
+  CleanupSystemIfUnused();
+}
+
+} // namespace
+
+void Snd_Cleanup(void) {
+  auto &state = State();
+  CleanupSubsystem(state.se_initialized, SndBackend_SECleanup);
+  CleanupSubsystem(state.bgm_initialized, SndBackend_BGMCleanup);
+}
 
 void Snd_SetVolumes(VOLUME bgm, VOLUME se) {
-  BGMVolume = std::min(bgm, VOLUME_MAX);
-  SEVolume = std::min(se, VOLUME_MAX);
+  State().bgm_volume = std::min(bgm, VOLUME_MAX);
+  State().se_volume = std::min(se, VOLUME_MAX);
   Snd_UpdateVolumes();
 }
 
-VOLUME Snd_BGMVolume(void) { return BGMVolume; }
+VOLUME Snd_BGMVolume(void) { return State().bgm_volume; }
 
-VOLUME Snd_SEVolume(void) { return SEVolume; }
+VOLUME Snd_SEVolume(void) { return State().se_volume; }
 
 void Snd_UpdateVolumes(void) {
-  if (!!(Initialized & SND_SYS::BGM)) {
+  if (State().bgm_initialized) {
     SndBackend_BGMUpdateVolume();
   }
-  if (!!(Initialized & SND_SYS::SE)) {
+  if (State().se_initialized) {
     SndBackend_SEUpdateVolume();
   }
 }
 
 bool Snd_BGMInit(void) {
-  return Snd_SubsystemInit(SND_SYS::BGM, SndBackend_BGMInit);
+  return InitializeSubsystem(State().bgm_initialized, SndBackend_BGMInit);
 }
 
 bool Snd_SEInit(void) {
-  return Snd_SubsystemInit(SND_SYS::SE, SndBackend_SEInit);
+  return InitializeSubsystem(State().se_initialized, SndBackend_SEInit);
 }
 
-void Snd_BGMCleanup(void) { Snd_Cleanup(SND_SYS::BGM); }
+void Snd_BGMCleanup(void) {
+  CleanupSubsystem(State().bgm_initialized, SndBackend_BGMCleanup);
+}
 
-void Snd_SECleanup(void) { Snd_Cleanup(SND_SYS::SE); }
+void Snd_SECleanup(void) {
+  CleanupSubsystem(State().se_initialized, SndBackend_SECleanup);
+}
 
 bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
                 SND_INSTANCE_ID max) {

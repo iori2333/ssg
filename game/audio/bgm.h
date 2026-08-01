@@ -76,10 +76,12 @@ void BGM_FadeOut(uint8_t speed);
 // Tempo control
 // -------------
 
-static constexpr uint8_t BGM_TEMPO_DENOM = (1 << 7); // Default tempo
-static constexpr int8_t BGM_TEMPO_MIN = -100;
-static constexpr int8_t BGM_TEMPO_MAX = 100;
+inline constexpr uint8_t kBgmTempoDenominator = 1 << 7;
+inline constexpr int8_t kBgmTempoMin = -100;
+inline constexpr int8_t kBgmTempoMax = 100;
 
 int8_t BGM_GetTempo(void);
 void BGM_SetTempo(int8_t tempo); // Change tempo
+float BGM_TempoFactor();
+float BGM_GainFactor();
 // -------------

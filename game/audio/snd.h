@@ -8,15 +8,10 @@
 
 #include "volume.h"
 
-#include "util/enum_flags.h"
-
 // Constants & macros
 using SND_INSTANCE_ID = uint8_t;
 
 inline constexpr uint8_t SND_OBJ_MAX = 30;
-
-extern const uint8_t &Snd_BGMTempoNum;
-extern const uint8_t &Snd_BGMTempoDenom;
 
 void Snd_Cleanup(void);
 void Snd_SetVolumes(VOLUME bgm, VOLUME se);
@@ -26,8 +21,6 @@ void Snd_UpdateVolumes(void);
 
 // BGM
 // ---
-
-extern float Snd_BGMGainFactor;
 
 bool Snd_BGMInit(void);
 void Snd_BGMCleanup(void);
