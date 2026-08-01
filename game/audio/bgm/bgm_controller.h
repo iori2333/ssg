@@ -1,14 +1,15 @@
-/// Application-level BGM orchestration and playback state.
+/// Application-level BGM orchestration behind a single active Track.
 
 #pragma once
 
 #include <atomic>
 #include <chrono>
 #include <cstdint>
-#include <string>
-#include <string_view>
+#include <memory>
 
-#include "waveform_playback.h"
+struct ma_engine;
+
+#include "track.h"
 
 #include "audio/core/audio_types.h"
 #include "audio/midi/midi_parser.h"
@@ -16,7 +17,7 @@
 namespace audio::midi {
 class MidiSequencer;
 class MidiSynth;
-}
+} // namespace audio::midi
 
 namespace audio::bgm {
 
@@ -45,27 +46,19 @@ public:
   [[nodiscard]] bool IsLoaded() const;
 
 private:
-  void ApplyMidiVolume();
-  void UpdateWaveformVolume();
-  void StopIfFadeComplete();
+  void ApplyTrackSettings(Track &track);
 
-  WaveformPlayback waveform_;
+  ma_engine &engine_;
   midi::MidiSequencer &sequencer_;
   midi::MidiSynth &synth_;
-
-  BgmMode mode_ = BgmMode::None;
+  std::unique_ptr<Track> midi_;
+  std::unique_ptr<Track> waveform_;
+  Track *active_ = nullptr;
   PlaybackState state_ = PlaybackState::Idle;
   std::atomic<bool> playing_ = false;
-  bool midi_loaded_ = false;
   bool gain_applied_ = true;
   Volume volume_ = kMaxVolume;
   std::int8_t tempo_ = 0;
-  std::string title_;
-
-  std::chrono::milliseconds midi_fade_duration_{};
-  std::chrono::milliseconds midi_fade_remaining_{};
-  float midi_fade_start_ = 0.0f;
 };
 
 } // namespace audio::bgm
-

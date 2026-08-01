@@ -11,7 +11,7 @@
 #define OV_EXCLUDE_STATIC_CALLBACKS
 #include <vorbis/vorbisfile.h>
 
-#include "audio/bgm/bgm_track.h"
+#include "audio/bgm/pcm_source.h"
 
 namespace audio::bgm {
 
@@ -108,7 +108,7 @@ VorbisPcmPart::~VorbisPcmPart() { ov_clear(&vf); }
 
 std::unique_ptr<bgm::PcmPart>
 OpenVorbis(std::istream &stream,
-           std::optional<bgm::MetadataCallback> on_metadata) {
+           std::optional<bgm::PcmMetadataCallback> on_metadata) {
   OggVorbis_File vf = {0};
   const auto ret =
       ov_open_callbacks(&stream, &vf, nullptr, 0, kVorbisCallbacks);

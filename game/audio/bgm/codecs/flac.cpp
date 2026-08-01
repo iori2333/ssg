@@ -14,7 +14,7 @@
 // max_align_t'` if this appears after a module import.
 #include <dr_flac.h>
 
-#include "audio/bgm/bgm_track.h"
+#include "audio/bgm/pcm_source.h"
 
 namespace audio::bgm {
 
@@ -23,7 +23,7 @@ namespace audio::bgm {
 
 struct FlacCallbackData {
   std::istream &stream;
-  std::optional<MetadataCallback> on_metadata;
+  std::optional<PcmMetadataCallback> on_metadata;
 };
 
 size_t FlacRead(void *user_data, void *buf, size_t size) {
@@ -117,7 +117,7 @@ void FlacPcmPart::PartSeekToSample(size_t sample) {
 FlacPcmPart::~FlacPcmPart() { drflac_close(ff); }
 
 std::unique_ptr<PcmPart> OpenFlac(std::istream &stream,
-                                  std::optional<MetadataCallback> on_metadata) {
+                                  std::optional<PcmMetadataCallback> on_metadata) {
   if (const auto &metadata_cb = on_metadata) {
     const std::streamoff initial_offset = stream.tellg();
     if (initial_offset < 0) {

@@ -1,246 +1,177 @@
 #include "bgm_controller.h"
-#include "waveform_playback.h"
 
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <utility>
 
+#include "midi_track.h"
+#include "pcm_track.h"
+
 #include "audio/core/audio_types.h"
-#include "audio/midi/midi_parser.h"
 #include "audio/midi/midi_sequencer.h"
 #include "audio/midi/midi_synth.h"
 
 namespace audio::bgm {
-namespace {
 
-constexpr std::uint8_t kMidiChannelCount = 16;
-constexpr std::uint8_t kTempoDenominator = 128;
-
-float LinearVolume(Volume volume) {
-  return (static_cast<float>(volume) /
-          static_cast<float>(kMaxVolume));
-}
-
-} // namespace
-
-BgmController::BgmController(ma_engine &engine,
-                             midi::MidiSequencer &sequencer,
+BgmController::BgmController(ma_engine &engine, midi::MidiSequencer &sequencer,
                              midi::MidiSynth &synth)
-    : waveform_(engine), sequencer_(sequencer), synth_(synth) {}
+    : engine_(engine), sequencer_(sequencer), synth_(synth) {}
 
 AudioResult BgmController::LoadMidi(midi::SequenceData sequence) {
-  waveform_.Unload();
-  title_ = sequence.title;
-  sequencer_.Load(std::move(sequence));
-  sequencer_.Rewind();
-  midi_loaded_ = true;
-  mode_ = BgmMode::Midi;
+  if (active_) {
+    active_->Stop();
+  }
+  playing_.store(false);
+  waveform_.reset();
+  midi_.reset();
+
+  auto midi = std::make_unique<MidiTrack>(sequencer_, synth_);
+  midi->Load(std::move(sequence));
+  ApplyTrackSettings(*midi);
+  midi_ = std::move(midi);
+  active_ = midi_.get();
   state_ = PlaybackState::Ready;
-  midi_fade_remaining_ = {};
   return AudioResult::Ok();
 }
 
 AudioResult BgmController::LoadWaveform(std::string_view path) {
-  auto result = waveform_.Load(path);
+  auto track = std::make_unique<PcmTrack>(engine_);
+  auto result = track->Load(path);
   if (!result.success) {
     return result;
   }
-  title_ = std::string{waveform_.Title()};
-  mode_ = BgmMode::Waveform;
+
+  if (active_) {
+    active_->Stop();
+  }
+  playing_.store(false);
+  waveform_.reset();
+  ApplyTrackSettings(*track);
+  waveform_ = std::move(track);
+  active_ = waveform_.get();
   state_ = PlaybackState::Ready;
-  midi_fade_remaining_ = {};
-  UpdateWaveformVolume();
   return AudioResult::Ok();
 }
 
 void BgmController::ClearWaveform() {
-  waveform_.Unload();
-  midi_fade_remaining_ = {};
-  if (midi_loaded_) {
-    mode_ = BgmMode::Midi;
-    state_ = PlaybackState::Ready;
-  } else {
-    mode_ = BgmMode::None;
-    state_ = PlaybackState::Idle;
-    title_.clear();
+  if (active_) {
+    active_->Stop();
   }
+  playing_.store(false);
+  waveform_.reset();
+  active_ = midi_ ? midi_.get() : nullptr;
+  state_ = (active_ ? PlaybackState::Ready : PlaybackState::Idle);
 }
 
 void BgmController::Play() {
-  if (mode_ == BgmMode::None || state_ == PlaybackState::Faulted) {
+  if (!active_ || !active_->IsLoaded() || state_ == PlaybackState::Faulted) {
     return;
   }
-  state_ = PlaybackState::Starting;
-  if (mode_ == BgmMode::Waveform) {
-    waveform_.Play();
-    UpdateWaveformVolume();
-  } else if (midi_loaded_) {
-    synth_.Resume();
-    sequencer_.Rewind();
-    synth_.Panic();
-    ApplyMidiVolume();
-  }
-  playing_ = true;
+  active_->Play();
+  playing_.store(true);
   state_ = PlaybackState::Playing;
 }
 
 void BgmController::Stop() {
-  playing_ = false;
-  waveform_.Stop();
-  synth_.Resume();
-  synth_.Panic();
-  midi_fade_remaining_ = {};
-  state_ =
-      ((mode_ == BgmMode::None) ? PlaybackState::Idle
-                                : PlaybackState::Ready);
+  playing_.store(false);
+  if (active_) {
+    active_->Stop();
+  }
+  state_ = ((active_ && active_->IsLoaded()) ? PlaybackState::Ready
+                                             : PlaybackState::Idle);
 }
 
 void BgmController::Pause() {
-  if (!playing_) {
+  if (!playing_.load()) {
     return;
   }
-  playing_ = false;
-  waveform_.Pause();
-  if (mode_ == BgmMode::Midi && midi_loaded_) {
-    synth_.Pause();
+  if (active_) {
+    active_->Pause();
   }
+  playing_.store(false);
   state_ = PlaybackState::Paused;
 }
 
 void BgmController::Resume() {
-  if (playing_ || mode_ == BgmMode::None) {
+  if (playing_.load() || !active_ || !active_->IsLoaded()) {
     return;
   }
-  if (mode_ == BgmMode::Waveform) {
-    waveform_.Resume();
-  } else if (midi_loaded_) {
-    synth_.Resume();
-  }
-  playing_ = true;
+  active_->Resume();
+  playing_.store(true);
   state_ = PlaybackState::Playing;
 }
 
 void BgmController::FadeOut(float volume_start,
                             std::chrono::milliseconds duration) {
-  if (mode_ == BgmMode::Waveform) {
-    waveform_.FadeOut(volume_start, duration);
-  } else if (midi_loaded_) {
-    midi_fade_start_ = volume_start;
-    midi_fade_duration_ = duration;
-    midi_fade_remaining_ = duration;
+  if (active_) {
+    active_->FadeOut(volume_start, duration);
   }
 }
 
 void BgmController::SetVolume(Volume volume) {
   volume_ = std::min(volume, kMaxVolume);
-  if (mode_ == BgmMode::Waveform) {
-    UpdateWaveformVolume();
-  } else if (midi_loaded_) {
-    ApplyMidiVolume();
+  if (active_) {
+    active_->SetVolume(volume_);
+  }
+  if (midi_ && active_ != midi_.get()) {
+    midi_->SetVolume(volume_);
   }
 }
 
 void BgmController::SetTempo(std::int8_t tempo) {
   tempo_ = std::clamp(tempo, std::int8_t{-100}, std::int8_t{100});
-  const auto numerator =
-      static_cast<std::uint8_t>(kTempoDenominator + tempo_);
-  sequencer_.SetTempo(numerator, kTempoDenominator);
-  if (mode_ == BgmMode::Waveform) {
-    waveform_.SetPitch(static_cast<float>(numerator) /
-                       static_cast<float>(kTempoDenominator));
+  if (active_) {
+    active_->SetTempo(tempo_);
+  }
+  if (midi_ && active_ != midi_.get()) {
+    midi_->SetTempo(tempo_);
   }
 }
 
 void BgmController::SetGainApplied(bool enabled) {
   gain_applied_ = enabled;
-  UpdateWaveformVolume();
+  if (active_) {
+    active_->SetGainApplied(enabled);
+  }
 }
 
 void BgmController::Tick(std::chrono::milliseconds delta) {
-  if (!playing_) {
+  if (!playing_.load() || !active_) {
     return;
   }
-
-  if (mode_ == BgmMode::Waveform) {
-    if (waveform_.FadeVolumeLinear() <= 0.0f) {
-      Stop();
-      return;
-    }
-    sequencer_.Tick(delta, synth_, false);
-    return;
+  active_->Tick(delta);
+  if (active_->IsPlaying() && midi_ && active_ != midi_.get()) {
+    midi_->TickBackground(delta);
   }
-
-  if (mode_ == BgmMode::Midi && midi_loaded_) {
-    sequencer_.Tick(delta, synth_, true);
-    if (midi_fade_remaining_ > std::chrono::milliseconds::zero()) {
-      midi_fade_remaining_ =
-          std::max(midi_fade_remaining_ - delta,
-                   std::chrono::milliseconds::zero());
-      const auto progress = midi_fade_duration_.count();
-      const auto remaining = midi_fade_remaining_.count();
-      const auto linear =
-          (progress == 0)
-              ? 0.0f
-              : (midi_fade_start_ * static_cast<float>(remaining) /
-                 static_cast<float>(progress));
-      const auto volume = static_cast<Volume>(
-          std::clamp(static_cast<int>(linear * kMaxVolume + 0.5f), 0,
-                     static_cast<int>(kMaxVolume)));
-      volume_ = volume;
-      ApplyMidiVolume();
-    }
-    StopIfFadeComplete();
+  if (!active_->IsPlaying()) {
+    playing_.store(false);
+    state_ = (active_->IsLoaded() ? PlaybackState::Ready : PlaybackState::Idle);
   }
 }
 
 BgmSnapshot BgmController::Snapshot() const {
   BgmSnapshot snapshot;
-  snapshot.mode = mode_;
   snapshot.state = state_;
-  snapshot.title = title_;
   snapshot.tempo = tempo_;
   snapshot.gain_applied = gain_applied_;
-  if (mode_ == BgmMode::Waveform) {
-    snapshot.play_time = waveform_.PlayTime();
-  } else if (mode_ == BgmMode::Midi && midi_loaded_) {
-    snapshot.play_time = sequencer_.Realtime();
+  if (!active_) {
+    return snapshot;
   }
+  snapshot.mode = active_->Mode();
+  snapshot.title = std::string{active_->Title()};
+  snapshot.play_time = active_->PlayTime();
   return snapshot;
 }
 
-bool BgmController::IsLoaded() const {
-  return (mode_ != BgmMode::None);
-}
+bool BgmController::IsLoaded() const { return active_ && active_->IsLoaded(); }
 
-void BgmController::ApplyMidiVolume() {
-  for (std::uint8_t channel = 0; channel < kMidiChannelCount; channel++) {
-    synth_.Output(static_cast<std::uint8_t>(0xb0 | channel), 0x07,
-                  volume_);
-  }
-}
-
-void BgmController::UpdateWaveformVolume() {
-  if (!waveform_.IsLoaded()) {
-    return;
-  }
-  float gain = 1.0f;
-  if (gain_applied_) {
-    if (const auto gain_factor = waveform_.GainFactor(); gain_factor) {
-      gain = *gain_factor;
-    }
-  }
-  waveform_.SetVolume(LinearVolume(volume_) * gain);
-}
-
-void BgmController::StopIfFadeComplete() {
-  if (midi_fade_remaining_ == std::chrono::milliseconds::zero() &&
-      midi_fade_duration_ > std::chrono::milliseconds::zero()) {
-    midi_fade_duration_ = {};
-    Stop();
-  }
+void BgmController::ApplyTrackSettings(Track &track) {
+  track.SetVolume(volume_);
+  track.SetTempo(tempo_);
+  track.SetGainApplied(gain_applied_);
 }
 
 } // namespace audio::bgm
-

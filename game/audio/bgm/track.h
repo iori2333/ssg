@@ -1,0 +1,39 @@
+/// Unified playback interface for BGM sources.
+
+#pragma once
+
+#include <chrono>
+#include <cstdint>
+#include <string_view>
+
+#include "audio/core/audio_types.h"
+
+namespace audio::bgm {
+
+class Track {
+public:
+  virtual ~Track() = default;
+
+  virtual void Play() = 0;
+  virtual void Stop() = 0;
+  virtual void Pause() = 0;
+  virtual void Resume() = 0;
+  virtual void FadeOut(float volume_start,
+                       std::chrono::milliseconds duration) = 0;
+  virtual void SetVolume(Volume volume) = 0;
+  virtual void SetTempo(std::int8_t tempo) = 0;
+  virtual void SetGainApplied(bool enabled) = 0;
+  virtual void Tick(std::chrono::milliseconds delta) = 0;
+
+  // Advances background state while this track is not the active output.
+  virtual void TickBackground(std::chrono::milliseconds delta) {}
+
+  [[nodiscard]] virtual bool IsLoaded() const = 0;
+  [[nodiscard]] virtual bool IsPlaying() const = 0;
+  [[nodiscard]] virtual BgmMode Mode() const = 0;
+  [[nodiscard]] virtual std::string_view Title() const = 0;
+  [[nodiscard]] virtual std::chrono::milliseconds PlayTime() const = 0;
+  [[nodiscard]] virtual float FadeVolumeLinear() const = 0;
+};
+
+} // namespace audio::bgm

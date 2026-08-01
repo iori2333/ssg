@@ -1,7 +1,5 @@
-///
-/// BGM tracks rendered as PCM and output via the Snd subsystem (adapted from
-/// thcrap's bgmmod module)
-///
+/// Low-level PCM source decoding shared by BGM codecs and waveform playback
+/// (adapted from thcrap's bgmmod module).
 
 // GCC 15 throws `error: redefinition of 'void std::__terminate()'` if this
 // appears after a module import.
@@ -15,11 +13,11 @@
 #include <fstream>
 #include <version>
 
-#include "bgm_track.h"
+#include "pcm_source.h"
 
 namespace audio::bgm {
 
-void OnVorbisComment(MetadataCallback func, std::string_view comment) {
+void OnVorbisComment(PcmMetadataCallback func, std::string_view comment) {
   const auto eq_i = comment.find('=');
   if (eq_i == std::string_view::npos) {
     return;
@@ -27,17 +25,15 @@ void OnVorbisComment(MetadataCallback func, std::string_view comment) {
   func(comment.substr(0, eq_i), comment.substr(eq_i + 1));
 }
 
-void ApplyVolumeError(std::span<std::byte>, uint16_t, TrackVolume &) {
+void ApplyVolumeError(std::span<std::byte>, uint16_t, PcmVolume &) {
   assert(!"missing fade implementation");
 }
 
-void TrackVolume::SetVolumeLinear(float v) {
-  ramp.Set(v);
-}
+void PcmVolume::SetVolumeLinear(float v) { ramp.Set(v); }
 
 template <typename BitDepth>
 static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
-                        TrackVolume &vol) {
+                        PcmVolume &vol) {
   const auto samples =
       std::span<BitDepth>{reinterpret_cast<BitDepth *>(buf.data()),
                           (buf.size_bytes() / sizeof(BitDepth))};
@@ -51,7 +47,7 @@ static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
   }
 }
 
-bool Track::Decode(std::span<std::byte> buf) {
+bool PcmStream::Decode(std::span<std::byte> buf) {
   size_t offset = 0;
   auto size_left = buf.size_bytes();
   while (size_left > 0) {
@@ -72,12 +68,13 @@ bool Track::Decode(std::span<std::byte> buf) {
   return true;
 }
 
-void Track::FadeOut(float volume_start, std::chrono::milliseconds duration) {
+void PcmStream::FadeOut(float volume_start,
+                        std::chrono::milliseconds duration) {
   const auto sample_count = ((duration.count() * pcmf.samplingrate) / 1000);
   vol.StartFade(volume_start, 0.0f, sample_count);
 }
 
-size_t PcmTrack::DecodeSingle(std::span<std::byte> buf) {
+size_t PcmStream::DecodeSingle(std::span<std::byte> buf) {
   const auto ret = cur->PartDecodeSingle(buf);
   if (ret == 0) {
     if ((cur == intro_part.get()) && (loop_part.get() != nullptr)) {
@@ -96,10 +93,11 @@ struct PcmCodec {
   PcmPartOpen &open;
 };
 
-std::unique_ptr<PcmPart> OpenFlac(std::istream &stream,
-                                  std::optional<MetadataCallback> on_metadata);
 std::unique_ptr<PcmPart>
-OpenVorbis(std::istream &stream, std::optional<MetadataCallback> on_metadata);
+OpenFlac(std::istream &stream, std::optional<PcmMetadataCallback> on_metadata);
+std::unique_ptr<PcmPart>
+OpenVorbis(std::istream &stream,
+           std::optional<PcmMetadataCallback> on_metadata);
 
 // Sorted in order of preference.
 constexpr PcmCodec kPcmCodecs[] = {
@@ -121,7 +119,7 @@ static bool TagEquals(std::string_view a, std::string_view b) {
   });
 }
 
-std::unique_ptr<Track> OpenTrack(std::string_view base_fn) {
+std::unique_ptr<PcmStream> OpenPcmStream(std::string_view base_fn) {
   const size_t base_len = base_fn.size();
   const size_t fn_len = (kLoopInfix.size() + kExtensionCapacity);
   std::string fn;
@@ -139,7 +137,7 @@ std::unique_ptr<Track> OpenTrack(std::string_view base_fn) {
 
     std::unique_ptr<PcmPart> intro_part;
     std::unique_ptr<PcmPart> loop_part;
-    TrackMetadata meta;
+    PcmMetadata meta;
 
     intro_part = codec.open(*intro_stream, [&](auto tag, auto value) {
       if (meta.title.empty() && TagEquals(tag, "TITLE")) {
@@ -199,7 +197,7 @@ std::unique_ptr<Track> OpenTrack(std::string_view base_fn) {
     } else {
       loop_stream.reset();
     }
-    return std::make_unique<PcmTrack>(
+    return std::make_unique<PcmStream>(
         std::move(meta), std::move(intro_stream), std::move(loop_stream),
         std::move(intro_part), std::move(loop_part));
   }
