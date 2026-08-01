@@ -58,7 +58,7 @@ private:
   uint32_t title_marquee_frame_ = 0;
   std::array<uint16_t, 144> spectrum_peaks_{};
   uint8_t spectrum_decay_frame_ = 0;
-  MID_VISUALIZATION midi_visualization_{};
+  MidiVisualization midi_visualization_{};
 
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;

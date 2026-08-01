@@ -15,8 +15,8 @@
 namespace {
 
 struct SoundState {
-  VOLUME bgm_volume = VOLUME_MAX;
-  VOLUME se_volume = VOLUME_MAX;
+  AudioVolume bgm_volume = kMaxAudioVolume;
+  AudioVolume se_volume = kMaxAudioVolume;
   bool system_initialized = false;
   bool bgm_initialized = false;
   bool se_initialized = false;
@@ -33,7 +33,7 @@ bool InitializeSystem() {
     return true;
   }
   assert(!state.bgm_initialized && !state.se_initialized);
-  if (!SndBackend_Init()) {
+  if (!AudioBackendInitialize()) {
     return false;
   }
   state.system_initialized = true;
@@ -48,7 +48,7 @@ bool InitializeSubsystem(bool &initialized, bool (*initialize)()) {
     return false;
   }
   initialized = true;
-  Snd_UpdateVolumes();
+  AudioUpdateVolumes();
   return true;
 }
 
@@ -56,7 +56,7 @@ void CleanupSystemIfUnused() {
   auto &state = State();
   if (state.system_initialized && !state.bgm_initialized &&
       !state.se_initialized) {
-    SndBackend_Cleanup();
+    AudioBackendCleanup();
     state.system_initialized = false;
   }
 }
@@ -71,49 +71,51 @@ void CleanupSubsystem(bool &initialized, void (*cleanup)()) {
 
 } // namespace
 
-void Snd_Cleanup(void) {
+void AudioCleanup(void) {
   auto &state = State();
-  CleanupSubsystem(state.se_initialized, SndBackend_SECleanup);
-  CleanupSubsystem(state.bgm_initialized, SndBackend_BGMCleanup);
+  CleanupSubsystem(state.se_initialized, AudioBackendCleanupSoundEffects);
+  CleanupSubsystem(state.bgm_initialized, AudioBackendCleanupBgm);
 }
 
-void Snd_SetVolumes(VOLUME bgm, VOLUME se) {
-  State().bgm_volume = std::min(bgm, VOLUME_MAX);
-  State().se_volume = std::min(se, VOLUME_MAX);
-  Snd_UpdateVolumes();
+void AudioSetVolumes(AudioVolume bgm, AudioVolume se) {
+  State().bgm_volume = std::min(bgm, kMaxAudioVolume);
+  State().se_volume = std::min(se, kMaxAudioVolume);
+  AudioUpdateVolumes();
 }
 
-VOLUME Snd_BGMVolume(void) { return State().bgm_volume; }
+AudioVolume AudioBgmVolume(void) { return State().bgm_volume; }
 
-VOLUME Snd_SEVolume(void) { return State().se_volume; }
+AudioVolume AudioSoundEffectVolume(void) { return State().se_volume; }
 
-void Snd_UpdateVolumes(void) {
+void AudioUpdateVolumes(void) {
   if (State().bgm_initialized) {
-    SndBackend_BGMUpdateVolume();
+    AudioBackendUpdateBgmVolume();
   }
   if (State().se_initialized) {
-    SndBackend_SEUpdateVolume();
+    AudioBackendUpdateSoundEffectVolume();
   }
 }
 
-bool Snd_BGMInit(void) {
-  return InitializeSubsystem(State().bgm_initialized, SndBackend_BGMInit);
+bool AudioInitializeBgm(void) {
+  return InitializeSubsystem(State().bgm_initialized,
+                             AudioBackendInitializeBgm);
 }
 
-bool Snd_SEInit(void) {
-  return InitializeSubsystem(State().se_initialized, SndBackend_SEInit);
+bool AudioInitializeSoundEffects(void) {
+  return InitializeSubsystem(State().se_initialized,
+                             AudioBackendInitializeSoundEffects);
 }
 
-void Snd_BGMCleanup(void) {
-  CleanupSubsystem(State().bgm_initialized, SndBackend_BGMCleanup);
+void AudioCleanupBgm(void) {
+  CleanupSubsystem(State().bgm_initialized, AudioBackendCleanupBgm);
 }
 
-void Snd_SECleanup(void) {
-  CleanupSubsystem(State().se_initialized, SndBackend_SECleanup);
+void AudioCleanupSoundEffects(void) {
+  CleanupSubsystem(State().se_initialized, AudioBackendCleanupSoundEffects);
 }
 
-bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
-                SND_INSTANCE_ID max) {
+bool AudioLoadSoundEffect(std::span<const uint8_t> buffer, uint8_t id,
+                          SoundInstanceId max) {
   auto *io = SDL_IOFromConstMem(buffer.data(), buffer.size());
   if (!io) {
     return false;
@@ -126,17 +128,19 @@ bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
     return false;
   }
   auto pcm_guard = util::MakeGuard(pcm_buf, SDL_free);
-  return SndBackend_SELoad(id, max, spec, {pcm_buf, pcm_len});
+  return AudioBackendLoadSoundEffect(id, max, spec, {pcm_buf, pcm_len});
 }
 
-void Snd_SEPlay(uint8_t id, float pan, bool loop) {
-  return SndBackend_SEPlay(id, pan, loop);
+void AudioPlaySoundEffect(uint8_t id, float pan, bool loop) {
+  return AudioBackendPlaySoundEffect(id, pan, loop);
 }
 
-void Snd_SEStop(uint8_t id) { return SndBackend_SEStop(id); }
+void AudioStopSoundEffect(uint8_t id) {
+  return AudioBackendStopSoundEffect(id);
+}
 
-void Snd_SEStopAll(void) {
-  for (auto i = 0; i < SND_OBJ_MAX; i++) {
-    SndBackend_SEStop(i);
+void AudioStopAllSoundEffects(void) {
+  for (auto i = 0; i < kSoundObjectCount; i++) {
+    AudioBackendStopSoundEffect(i);
   }
 }

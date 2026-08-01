@@ -9,30 +9,30 @@
 #include "volume.h"
 
 // Constants & macros
-using SND_INSTANCE_ID = uint8_t;
+using SoundInstanceId = uint8_t;
 
-inline constexpr uint8_t SND_OBJ_MAX = 30;
+inline constexpr uint8_t kSoundObjectCount = 30;
 
-void Snd_Cleanup(void);
-void Snd_SetVolumes(VOLUME bgm, VOLUME se);
-[[nodiscard]] VOLUME Snd_BGMVolume(void);
-[[nodiscard]] VOLUME Snd_SEVolume(void);
-void Snd_UpdateVolumes(void);
+void AudioCleanup(void);
+void AudioSetVolumes(AudioVolume bgm, AudioVolume se);
+[[nodiscard]] AudioVolume AudioBgmVolume(void);
+[[nodiscard]] AudioVolume AudioSoundEffectVolume(void);
+void AudioUpdateVolumes(void);
 
 // BGM
 // ---
 
-bool Snd_BGMInit(void);
-void Snd_BGMCleanup(void);
+bool AudioInitializeBgm(void);
+void AudioCleanupBgm(void);
 // ---
 
-bool Snd_SEInit(void);
-void Snd_SECleanup(void);
+bool AudioInitializeSoundEffects(void);
+void AudioCleanupSoundEffects(void);
 
-bool Snd_SELoad(std::span<const uint8_t> buffer, uint8_t id,
-                SND_INSTANCE_ID max);
+bool AudioLoadSoundEffect(std::span<const uint8_t> buffer, uint8_t id,
+                          SoundInstanceId max);
 
 // Playback & stop
-void Snd_SEPlay(uint8_t id, float pan = 0.0f, bool loop = false);
-void Snd_SEStop(uint8_t id);
-void Snd_SEStopAll(void);
+void AudioPlaySoundEffect(uint8_t id, float pan = 0.0f, bool loop = false);
+void AudioStopSoundEffect(uint8_t id);
+void AudioStopAllSoundEffects(void);

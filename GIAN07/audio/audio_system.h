@@ -26,10 +26,9 @@ public:
   [[nodiscard]] bool Initialize(const AudioConfig &config);
   void Shutdown();
 
-  [[nodiscard]] bool EnableBgm(bool enabled,
-                               std::string_view soundfont = {});
+  [[nodiscard]] bool EnableBgm(bool enabled, std::string_view soundfont = {});
   [[nodiscard]] bool EnableSfx(bool enabled);
-  void SetVolumes(VOLUME bgm, VOLUME sfx);
+  void SetVolumes(AudioVolume bgm, AudioVolume sfx);
   void SetNormalization(bool enabled);
 
 private:

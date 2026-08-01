@@ -33,10 +33,10 @@ ma_format HelpFormatFrom(SDL_AudioFormat format) {
 }
 // -------
 
-struct BGM_OBJ {
+struct BgmObject {
   ma_data_source_base data_source{};
   ma_sound sound{};
-  std::shared_ptr<BGM::TRACK> track = nullptr;
+  std::shared_ptr<bgm::Track> track = nullptr;
 
   bool Clear() {
     if (track) {
@@ -49,23 +49,23 @@ struct BGM_OBJ {
 };
 
 static_assert(
-    (offsetof(BGM_OBJ, data_source) == 0),
+    (offsetof(BgmObject, data_source) == 0),
     "The `ma_data_source_base` object must come first in the structure");
 
-static ma_result BGM_GetDataFormat(ma_data_source *pDataSource,
-                                   ma_format *pFormat, ma_uint32 *pChannels,
-                                   ma_uint32 *pSampleRate,
-                                   ma_channel *pChannelMap,
-                                   size_t channelMapCap) {
-  const auto *bgm = static_cast<BGM_OBJ *>(pDataSource);
+static ma_result BgmGetDataFormat(ma_data_source *pDataSource,
+                                  ma_format *pFormat, ma_uint32 *pChannels,
+                                  ma_uint32 *pSampleRate,
+                                  ma_channel *pChannelMap,
+                                  size_t channelMapCap) {
+  const auto *bgm = static_cast<BgmObject *>(pDataSource);
   if (!bgm->track) {
     return MA_UNAVAILABLE;
   }
   switch (bgm->track->pcmf.format) {
-  case PCM_SAMPLE_FORMAT::S16:
+  case PcmSampleFormat::Int16:
     *pFormat = ma_format_s16;
     break;
-  case PCM_SAMPLE_FORMAT::S32:
+  case PcmSampleFormat::Int32:
     *pFormat = ma_format_s32;
     break;
   }
@@ -74,9 +74,9 @@ static ma_result BGM_GetDataFormat(ma_data_source *pDataSource,
   return MA_SUCCESS;
 }
 
-static ma_result BGM_Read(ma_data_source *pDataSource, void *pFramesOut,
-                          ma_uint64 frameCount, ma_uint64 *pFramesRead) {
-  const auto *bgm = static_cast<BGM_OBJ *>(pDataSource);
+static ma_result BgmRead(ma_data_source *pDataSource, void *pFramesOut,
+                         ma_uint64 frameCount, ma_uint64 *pFramesRead) {
+  const auto *bgm = static_cast<BgmObject *>(pDataSource);
   if (!bgm->track) {
     return MA_UNAVAILABLE;
   }
@@ -93,9 +93,9 @@ static ma_result BGM_Read(ma_data_source *pDataSource, void *pFramesOut,
   return MA_SUCCESS;
 }
 
-static const ma_data_source_vtable BGM_VTABLE = {
-    .onRead = BGM_Read,
-    .onGetDataFormat = BGM_GetDataFormat,
+static const ma_data_source_vtable kBgmVtable = {
+    .onRead = BgmRead,
+    .onGetDataFormat = BgmGetDataFormat,
 };
 
 struct RESAMPLED_INSTANCE {
@@ -129,100 +129,101 @@ struct SE {
 
 static ma_engine Engine;
 static ma_sound_group SEGroup;
-static BGM_OBJ BGMObj;
-static SE SndObj[SND_OBJ_MAX];
+static BgmObject BgmObjectState;
+static SE SndObj[kSoundObjectCount];
 
-bool SndBackend_Init(void) {
+bool AudioBackendInitialize(void) {
   return (ma_engine_init(nullptr, &Engine) == MA_SUCCESS);
 }
 
-void SndBackend_Cleanup(void) { ma_engine_uninit(&Engine); }
+void AudioBackendCleanup(void) { ma_engine_uninit(&Engine); }
 
-bool SndBackend_BGMInit(void) { return true; }
+bool AudioBackendInitializeBgm(void) { return true; }
 
-void SndBackend_BGMCleanup(void) { BGMObj.Clear(); }
+void AudioBackendCleanupBgm(void) { BgmObjectState.Clear(); }
 
-bool SndBackend_BGMLoad(std::shared_ptr<BGM::TRACK> track) {
+bool AudioBackendLoadBgm(std::shared_ptr<bgm::Track> track) {
   ma_result result = MA_SUCCESS;
 
-  BGMObj.Clear();
-  BGMObj.track = track;
+  BgmObjectState.Clear();
+  BgmObjectState.track = track;
 
   auto config = ma_data_source_config_init();
-  config.vtable = &BGM_VTABLE;
+  config.vtable = &kBgmVtable;
 
-  result = ma_data_source_init(&config, &BGMObj.data_source);
+  result = ma_data_source_init(&config, &BgmObjectState.data_source);
   if (result != MA_SUCCESS) {
     return result;
   }
-  result = ma_sound_init_from_data_source(&Engine, &BGMObj.data_source,
+  result = ma_sound_init_from_data_source(&Engine, &BgmObjectState.data_source,
                                           MA_SOUND_FLAG_NO_SPATIALIZATION,
-                                          nullptr, &BGMObj.sound);
+                                          nullptr, &BgmObjectState.sound);
   if (result != MA_SUCCESS) {
-    return BGMObj.Clear();
+    return BgmObjectState.Clear();
   }
   return true;
 }
 
-void SndBackend_BGMPlay(void) {
-  if (!BGMObj.track) {
+void AudioBackendPlayBgm(void) {
+  if (!BgmObjectState.track) {
     return;
   }
-  ma_sound_start(&BGMObj.sound);
+  ma_sound_start(&BgmObjectState.sound);
 }
 
-void SndBackend_BGMStop(void) {
-  if (!BGMObj.track) {
+void AudioBackendStopBgm(void) {
+  if (!BgmObjectState.track) {
     return;
   }
-  ma_sound_stop(&BGMObj.sound);
+  ma_sound_stop(&BgmObjectState.sound);
 }
 
-std::chrono::milliseconds SndBackend_BGMPlayTime(void) {
-  if (!BGMObj.track) {
+std::chrono::milliseconds AudioBackendBgmPlayTime(void) {
+  if (!BgmObjectState.track) {
     return std::chrono::milliseconds::zero();
   }
-  const auto ret = ma_sound_get_time_in_milliseconds(&BGMObj.sound);
+  const auto ret = ma_sound_get_time_in_milliseconds(&BgmObjectState.sound);
   return std::chrono::milliseconds{ret};
 }
 
-void SndBackend_BGMUpdateVolume(void) {
-  if (!BGMObj.track) {
+void AudioBackendUpdateBgmVolume(void) {
+  if (!BgmObjectState.track) {
     return;
   }
-  ma_sound_set_volume(&BGMObj.sound,
-                      (BGM_GainFactor() * VolumeFactorSquare(Snd_BGMVolume())));
+  ma_sound_set_volume(&BgmObjectState.sound,
+                      (BgmGainFactor() * LinearVolumeFactor(AudioBgmVolume())));
 }
 
-void SndBackend_BGMUpdateTempo(void) {
-  if (!BGMObj.track) {
+void AudioBackendUpdateBgmTempo(void) {
+  if (!BgmObjectState.track) {
     return;
   }
-  const auto t = BGM_TempoFactor();
-  ma_sound_set_pitch(&BGMObj.sound, t);
+  const auto t = BgmTempoFactor();
+  ma_sound_set_pitch(&BgmObjectState.sound, t);
 }
 
-bool SndBackend_SEInit(void) {
+bool AudioBackendInitializeSoundEffects(void) {
   const auto ret =
       ma_sound_group_init(&Engine, MA_SOUND_FLAG_NO_PITCH, nullptr, &SEGroup);
   return (ret == MA_SUCCESS);
 }
 
-void SndBackend_SECleanup(void) {
+void AudioBackendCleanupSoundEffects(void) {
   for (auto &se : SndObj) {
     se.Clear();
   }
   ma_sound_group_uninit(&SEGroup);
 }
 
-void SndBackend_SEUpdateVolume(void) {
-  ma_sound_group_set_volume(&SEGroup, VolumeFactorSquare(Snd_SEVolume()));
+void AudioBackendUpdateSoundEffectVolume(void) {
+  ma_sound_group_set_volume(&SEGroup,
+                            LinearVolumeFactor(AudioSoundEffectVolume()));
 }
 
-bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
-                       const SDL_AudioSpec &spec,
-                       std::span<const uint8_t> pcm) {
-  if (id >= SND_OBJ_MAX) {
+bool AudioBackendLoadSoundEffect(uint8_t id, SoundInstanceId max,
+                                 const SDL_AudioSpec &spec,
+                                 std::span<const uint8_t> pcm) {
+  if (id >= kSoundObjectCount) {
     return false;
   }
   auto &se = SndObj[id];
@@ -297,8 +298,8 @@ bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
   return true;
 }
 
-void SndBackend_SEPlay(uint8_t id, float pan, bool loop) {
-  if (id >= SND_OBJ_MAX) {
+void AudioBackendPlaySoundEffect(uint8_t id, float pan, bool loop) {
+  if (id >= kSoundObjectCount) {
     return;
   }
   auto &se = SndObj[id];
@@ -322,8 +323,8 @@ void SndBackend_SEPlay(uint8_t id, float pan, bool loop) {
   se.now = ((se.now + 1) % se.max);
 }
 
-void SndBackend_SEStop(uint8_t id) {
-  if (id >= SND_OBJ_MAX) {
+void AudioBackendStopSoundEffect(uint8_t id) {
+  if (id >= kSoundObjectCount) {
     return;
   }
   auto &se = SndObj[id];
@@ -333,6 +334,6 @@ void SndBackend_SEStop(uint8_t id) {
   }
 }
 
-void SndBackend_PauseAll(void) { ma_engine_stop(&Engine); }
+void AudioBackendPauseAll(void) { ma_engine_stop(&Engine); }
 
-void SndBackend_ResumeAll(void) { ma_engine_start(&Engine); }
+void AudioBackendResumeAll(void) { ma_engine_start(&Engine); }

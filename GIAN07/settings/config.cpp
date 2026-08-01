@@ -33,7 +33,9 @@ static constexpr bool ValidFPSDivisor(uint8_t v) { return v <= kMaxFpsDivisor; }
 static constexpr bool ValidScreenshotEffort(uint8_t v) {
   return v <= kScreenshotEffortMax;
 }
-static constexpr bool ValidVolume(VOLUME v) { return v <= VOLUME_MAX; }
+static constexpr bool ValidVolume(AudioVolume v) {
+  return v <= kMaxAudioVolume;
+}
 static constexpr bool ValidMidiVariant(MidiVariant v) {
   return v <= MidiVariant::Arranged;
 }

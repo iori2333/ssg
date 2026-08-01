@@ -18,9 +18,9 @@
 #include "bgm_track.h"
 #include "volume.h"
 
-namespace BGM {
+namespace bgm {
 
-void OnVorbisComment(METADATA_CALLBACK func, std::string_view comment) {
+void OnVorbisComment(MetadataCallback func, std::string_view comment) {
   const auto eq_i = comment.find('=');
   if (eq_i == std::string_view::npos) {
     return;
@@ -28,18 +28,18 @@ void OnVorbisComment(METADATA_CALLBACK func, std::string_view comment) {
   func(comment.substr(0, eq_i), comment.substr(eq_i + 1));
 }
 
-void ApplyVolumeError(std::span<std::byte>, uint16_t, TRACK_VOL &) {
+void ApplyVolumeError(std::span<std::byte>, uint16_t, TrackVolume &) {
   assert(!"missing fade implementation");
 }
 
-void TRACK_VOL::SetVolumeLinear(float v) {
+void TrackVolume::SetVolumeLinear(float v) {
   volume_linear = v;
-  volume_factor = VolumeFactorSquare(v);
+  volume_factor = LinearVolumeFactor(v);
 }
 
 template <typename BitDepth>
 static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
-                        TRACK_VOL &vol) {
+                        TrackVolume &vol) {
   const auto samples =
       std::span<BitDepth>{reinterpret_cast<BitDepth *>(buf.data()),
                           (buf.size_bytes() / sizeof(BitDepth))};
@@ -64,7 +64,7 @@ static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
   }
 }
 
-bool TRACK::Decode(std::span<std::byte> buf) {
+bool Track::Decode(std::span<std::byte> buf) {
   size_t offset = 0;
   auto size_left = buf.size_bytes();
   while (size_left > 0) {
@@ -79,15 +79,15 @@ bool TRACK::Decode(std::span<std::byte> buf) {
 
   if (vol.FadeVolumeLinear() != 1.0f) {
     const auto apply_volume =
-        ((pcmf.format == PCM_SAMPLE_FORMAT::S16)   ? ApplyVolume<int16_t>
-         : (pcmf.format == PCM_SAMPLE_FORMAT::S32) ? ApplyVolume<int32_t>
+        ((pcmf.format == PcmSampleFormat::Int16)   ? ApplyVolume<int16_t>
+         : (pcmf.format == PcmSampleFormat::Int32) ? ApplyVolume<int32_t>
                                                    : ApplyVolumeError);
     apply_volume(buf, pcmf.channels, vol);
   }
   return true;
 }
 
-void TRACK::FadeOut(float volume_start, std::chrono::milliseconds duration) {
+void Track::FadeOut(float volume_start, std::chrono::milliseconds duration) {
   const auto sample_count = ((duration.count() * pcmf.samplingrate) / 1000);
   vol.SetVolumeLinear(volume_start);
   vol.fade_delta = (volume_start - vol.fade_end);
@@ -96,7 +96,7 @@ void TRACK::FadeOut(float volume_start, std::chrono::milliseconds duration) {
   vol.fade_remaining = sample_count;
 }
 
-size_t TRACK_PCM::DecodeSingle(std::span<std::byte> buf) {
+size_t PcmTrack::DecodeSingle(std::span<std::byte> buf) {
   const auto ret = cur->PartDecodeSingle(buf);
   if (ret == 0) {
     if ((cur == intro_part.get()) && (loop_part.get() != nullptr)) {
@@ -112,13 +112,13 @@ size_t TRACK_PCM::DecodeSingle(std::span<std::byte> buf) {
 
 struct CODEC_PCM {
   std::string_view ext;
-  PCM_PART_OPEN &open;
+  PcmPartOpen &open;
 };
 
-std::unique_ptr<PCM_PART>
-FLAC_Open(std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata);
-std::unique_ptr<PCM_PART>
-Vorbis_Open(std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata);
+std::unique_ptr<PcmPart> FLAC_Open(std::istream &stream,
+                                   std::optional<MetadataCallback> on_metadata);
+std::unique_ptr<PcmPart>
+Vorbis_Open(std::istream &stream, std::optional<MetadataCallback> on_metadata);
 
 // Sorted in order of preference.
 static constexpr const CODEC_PCM CODECS_PCM[] = {
@@ -140,7 +140,7 @@ static bool TagEquals(std::string_view a, std::string_view b) {
   });
 }
 
-std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
+std::unique_ptr<Track> OpenTrack(std::string_view base_fn) {
   const size_t base_len = base_fn.size();
   const size_t fn_len = (LOOP_INFIX.size() + EXT_CAP);
   std::string fn;
@@ -156,9 +156,9 @@ std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
       continue;
     }
 
-    std::unique_ptr<PCM_PART> intro_part;
-    std::unique_ptr<PCM_PART> loop_part;
-    TRACK_METADATA meta;
+    std::unique_ptr<PcmPart> intro_part;
+    std::unique_ptr<PcmPart> loop_part;
+    TrackMetadata meta;
 
     intro_part = codec.open(*intro_stream, [&](auto tag, auto value) {
       if (meta.title.empty() && TagEquals(tag, "TITLE")) {
@@ -218,11 +218,11 @@ std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn) {
     } else {
       loop_stream.reset();
     }
-    return std::make_unique<TRACK_PCM>(
+    return std::make_unique<PcmTrack>(
         std::move(meta), std::move(intro_stream), std::move(loop_stream),
         std::move(intro_part), std::move(loop_part));
   }
   return nullptr;
 }
 
-} // namespace BGM
+} // namespace bgm

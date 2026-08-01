@@ -16,14 +16,14 @@
 
 #include "audio/bgm_track.h"
 
-namespace BGM {
+namespace bgm {
 
 // Callbacks
 // ---------
 
 struct FlacCallbackData {
   std::istream &stream;
-  std::optional<METADATA_CALLBACK> on_metadata;
+  std::optional<MetadataCallback> on_metadata;
 };
 
 size_t FlacRead(void *user_data, void *buf, size_t size) {
@@ -89,7 +89,7 @@ void FlacMetadata(void *user_data, drflac_metadata *metadata) {
 
 using FlacReadFunction = drflac_uint64(drflac *, drflac_uint64, void *);
 
-struct FlacPcmPart : public PCM_PART {
+struct FlacPcmPart : public PcmPart {
   std::unique_ptr<FlacCallbackData> callback_data;
   drflac *ff;
   FlacReadFunction &read_func;
@@ -98,8 +98,8 @@ struct FlacPcmPart : public PCM_PART {
   void PartSeekToSample(size_t sample) override;
 
   FlacPcmPart(std::unique_ptr<FlacCallbackData> callback_data, drflac *ff,
-              const PCM_FORMAT &pcmf, FlacReadFunction &read_func)
-      : PCM_PART(pcmf), callback_data(std::move(callback_data)), ff(ff),
+              const PcmFormat &pcmf, FlacReadFunction &read_func)
+      : PcmPart(pcmf), callback_data(std::move(callback_data)), ff(ff),
         read_func(read_func) {}
   ~FlacPcmPart() override;
 };
@@ -116,8 +116,8 @@ void FlacPcmPart::PartSeekToSample(size_t sample) {
 
 FlacPcmPart::~FlacPcmPart() { drflac_close(ff); }
 
-std::unique_ptr<PCM_PART>
-FLAC_Open(std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata) {
+std::unique_ptr<PcmPart>
+FLAC_Open(std::istream &stream, std::optional<MetadataCallback> on_metadata) {
   if (const auto &metadata_cb = on_metadata) {
     const std::streamoff initial_offset = stream.tellg();
     if (initial_offset < 0) {
@@ -142,15 +142,15 @@ FLAC_Open(std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata) {
     return nullptr;
   }
   const auto output_format =
-      ((ff->bitsPerSample <= 16) ? PCM_SAMPLE_FORMAT::S16
-                                 : PCM_SAMPLE_FORMAT::S32);
+      ((ff->bitsPerSample <= 16) ? PcmSampleFormat::Int16
+                                 : PcmSampleFormat::Int32);
   const auto read_func =
       ((ff->bitsPerSample <= 16)
            ? reinterpret_cast<FlacReadFunction &>(drflac_read_pcm_frames_s16)
            : reinterpret_cast<FlacReadFunction &>(drflac_read_pcm_frames_s32));
-  PCM_FORMAT pcmf = {ff->sampleRate, ff->channels, output_format};
+  PcmFormat pcmf = {ff->sampleRate, ff->channels, output_format};
   return std::make_unique<FlacPcmPart>(std::move(callback_data), ff, pcmf,
                                        *read_func);
 }
 
-} // namespace BGM
+} // namespace bgm

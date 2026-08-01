@@ -74,32 +74,32 @@ typedef struct {
 // MIDI device structure
 struct MID_DEVICE {
   // The following must not be modified or referenced externally
-  MID_REALTIME FadeProgress;
-  MID_REALTIME FadeDuration;
-  VOLUME FadeStartVolume;
-  VOLUME FadeEndVolume;
+  MidiRealtime FadeProgress;
+  MidiRealtime FadeDuration;
+  AudioVolume FadeStartVolume;
+  AudioVolume FadeEndVolume;
 
   // *Always* between 0 and 127.
-  VOLUME FadeNowVolume;
+  AudioVolume FadeNowVolume;
 
-  MID_BACKEND_STATE state; // Current state
+  MidiBackendState state; // Current state
 
-  VOLUME VolumeFor(decltype(MIDI_CHANNELS) ch) const;
+  AudioVolume VolumeFor(decltype(MIDI_CHANNELS) ch) const;
   void ApplyVolume(void) const;
-  void FadeIO(MID_REALTIME delta);
+  void FadeIO(MidiRealtime delta);
 };
 
 struct MID_TEMPO {
-  MID_REALTIME qn_duration;
+  MidiRealtime qn_duration;
   uint16_t ppqn;
 
-  MID_REALTIME RealtimeFromDelta(int32_t delta) const {
+  MidiRealtime RealtimeFromDelta(int32_t delta) const {
     // Let's round to average out any truncated nanoseconds...
     const auto qn_times_delta = (qn_duration * delta);
-    return ((delta > 0) ? ((qn_times_delta + MID_REALTIME(ppqn / 2)) / ppqn)
-                        : ((qn_times_delta - MID_REALTIME(ppqn / 2)) / ppqn));
+    return ((delta > 0) ? ((qn_times_delta + MidiRealtime(ppqn / 2)) / ppqn)
+                        : ((qn_times_delta - MidiRealtime(ppqn / 2)) / ppqn));
   }
-  int32_t DeltaFromRealtime(MID_REALTIME realtime) const {
+  int32_t DeltaFromRealtime(MidiRealtime realtime) const {
     return ((realtime * ppqn) / qn_duration);
   }
 };
@@ -158,27 +158,27 @@ public:
 struct MID_TRACK {
   std::span<const uint8_t> data;
   MID_TRACK_ITERATOR it;
-  MID_PULSE next_pulse = 0;
+  MidiPulse next_pulse = 0;
 
   // Time until the next MIDI event. The MIDI events add their delta time
   // converted into seconds according to the current tempo, and the play
   // callback subtracts its interval. If ≤0, the next event is processed.
-  MID_REALTIME next_time = 0s;
+  MidiRealtime next_time = 0s;
 
   // [it] and [next_pulse] for the first event after the loop start point.
   MID_TRACK_ITERATOR loop_it;
-  MID_PULSE loop_pulse = 0;
+  MidiPulse loop_pulse = 0;
 
   // Only necessary for resynchronizing [next_time] after a tempo change on
   // another track.
-  MID_PULSE prev_pulse = 0;
+  MidiPulse prev_pulse = 0;
   uint32_t next_delta = 0;
 
   bool play = true;
 
   // Reads a MIDI delta time from the iterator and updates [next_time] and
   // [next_pulse] accordingly.
-  void ConsumeDelta(const MID_TEMPO &tempo, const MID_LOOP &loop);
+  void ConsumeDelta(const MID_TEMPO &tempo, const MidiLoop &loop);
 };
 
 struct MID_SEQUENCE {
@@ -186,7 +186,7 @@ struct MID_SEQUENCE {
   std::unique_ptr<MID_TRACK[]> track_buf = nullptr;
   std::span<MID_TRACK> tracks;
   MID_TEMPO tempo = {.qn_duration = 1s /* 60 BPM */};
-  MID_LOOP loop;
+  MidiLoop loop;
 
   // Applies the event to the sequence state and consumes the following delta
   // time on the given track.
@@ -197,43 +197,43 @@ struct MID_SEQUENCE {
 
 // Global and namespace-local variables
 MID_DEVICE Mid_Dev;
-MID_FLAGS Mid_Flags = MID_FLAGS::NONE;
+MidiFlags Mid_Flags = MidiFlags::None;
 static MID_SEQUENCE Mid_Seq;
 static std::recursive_mutex Mid_Mutex;
-static MID_VISUALIZATION Mid_Visualization;
-static VOLUME Mid_Volume = VOLUME_MAX;
+static MidiVisualization Mid_Visualization;
+static AudioVolume Mid_Volume = kMaxAudioVolume;
 static uint8_t Mid_TempoNumerator = 1;
 static uint8_t Mid_TempoDenominator = 1;
 
-MID_FLAGS Mid_SetFlags(MID_FLAGS flags_new) {
-  using F = MID_FLAGS;
+MidiFlags MidiSetFlags(MidiFlags flags_new) {
+  using F = MidiFlags;
 
-  const auto new_sysex = !!(flags_new & F::FIX_SYSEX_BUGS);
+  const auto new_sysex = !!(flags_new & F::FixSysExBugs);
   bool restart = false;
   {
     const std::scoped_lock lock(Mid_Mutex);
-    if (!!(Mid_Flags & F::FIX_SYSEX_BUGS) == new_sysex) {
+    if (!!(Mid_Flags & F::FixSysExBugs) == new_sysex) {
       return Mid_Flags;
     }
-    SetEnumFlag(Mid_Flags, F::FIX_SYSEX_BUGS, new_sysex);
-    restart = (Mid_Dev.state == MID_BACKEND_STATE::PLAY);
+    SetEnumFlag(Mid_Flags, F::FixSysExBugs, new_sysex);
+    restart = (Mid_Dev.state == MidiBackendState::Playing);
   }
   if (restart) {
-    Mid_Stop();
-    Mid_Play();
+    MidiStop();
+    MidiPlay();
   }
   return Mid_Flags;
 }
 
-void Mid_Play(void) {
+void MidiPlay(void) {
   const std::scoped_lock lock(Mid_Mutex);
-  if (!MidBackend_DeviceName() || Mid_Seq.tracks.empty() ||
-      (Mid_Dev.state == MID_BACKEND_STATE::PLAY)) {
+  if (!MidiBackendDeviceName() || Mid_Seq.tracks.empty() ||
+      (Mid_Dev.state == MidiBackendState::Playing)) {
     return;
   }
 
   Mid_Dev.FadeDuration = 0s;
-  Mid_Dev.FadeNowVolume = VOLUME_MAX;
+  Mid_Dev.FadeNowVolume = kMaxAudioVolume;
 
   // Master Volume: F0 7F 7F 04 01 VolumeLowByte VolumeHighByte F7
   // Lower byte is apparently treated as 00 on the Roland SC-88ST Pro (per the
@@ -244,8 +244,8 @@ void Mid_Play(void) {
   // before the GM System On below has no effect because the latter also
   // resets the Master Volume. This might not necessarily be true on Roland
   // synths though, so let's better keep this relic from the original code.
-  uint8_t msg[8] = {0xf0, 0x7f, 0x7f, 0x04, 0x01, 0x00, VOLUME_MAX, 0xf7};
-  MidBackend_Out(msg);
+  uint8_t msg[8] = {0xf0, 0x7f, 0x7f, 0x04, 0x01, 0x00, kMaxAudioVolume, 0xf7};
+  MidiBackendOutput(msg);
 
   Mid_Seq.Rewind();
   for (auto &t : Mid_Seq.tracks) {
@@ -257,62 +257,62 @@ void Mid_Play(void) {
   //
   // 	https://github.com/nmlgc/ssg/issues/10#issuecomment-1938245315
   uint8_t msg_gm_system_on[6] = {0xf0, 0x7e, 0x7f, 0x09, 0x01, 0xf7};
-  MidBackend_Out(msg_gm_system_on);
+  MidiBackendOutput(msg_gm_system_on);
   std::this_thread::sleep_for(50ms); // Make sure to wait at least 50ms here!
 
-  MidBackend_StartTimer();
-  Mid_Dev.state = MID_BACKEND_STATE::PLAY;
+  MidiBackendStartTimer();
+  Mid_Dev.state = MidiBackendState::Playing;
 }
 
-void Mid_Stop(void) {
-  MidBackend_StopTimer();
+void MidiStop(void) {
+  MidiBackendStopTimer();
   const std::scoped_lock lock(Mid_Mutex);
-  if (Mid_Dev.state == MID_BACKEND_STATE::STOP) {
+  if (Mid_Dev.state == MidiBackendState::Stopped) {
     return;
   }
 
   Mid_Dev.FadeDuration = 0s;
 
-  MidBackend_Panic();
+  MidiBackendPanic();
 
-  Mid_TableInit();
+  MidiResetTables();
   for (auto i = 0; i < MIDI_CHANNELS; i++) {
-    MidBackend_Out((0xb0 + i), 0x7b, 0x00); // All Notes Off
-    MidBackend_Out((0xb0 + i), 0x78, 0x00); // All Sound Off
+    MidiBackendOutput((0xb0 + i), 0x7b, 0x00); // All Notes Off
+    MidiBackendOutput((0xb0 + i), 0x78, 0x00); // All Sound Off
   }
 
-  Mid_Dev.state = MID_BACKEND_STATE::STOP;
+  Mid_Dev.state = MidiBackendState::Stopped;
 }
 
-void Mid_Pause(void) {
-  MidBackend_StopTimer();
+void MidiPause(void) {
+  MidiBackendStopTimer();
   const std::scoped_lock lock(Mid_Mutex);
-  if (Mid_Dev.state != MID_BACKEND_STATE::PLAY) {
+  if (Mid_Dev.state != MidiBackendState::Playing) {
     return;
   }
-  Mid_Dev.state = MID_BACKEND_STATE::PAUSE;
+  Mid_Dev.state = MidiBackendState::Paused;
 
   // Set volume on all channels to 0 while leaving all notes playing.
   // Not perfect, as sustained notes will continue to be sampled and will
   // play at a different sample position once we resume, but it's better than
   // the alternative of cutting off any playing notes altogether.
   for (auto i = decltype(MIDI_CHANNELS){0}; i < MIDI_CHANNELS; i++) {
-    MidBackend_Out((0xb0 + i), 0x07, 0);
+    MidiBackendOutput((0xb0 + i), 0x07, 0);
   }
 }
 
-void Mid_Resume(void) {
+void MidiResume(void) {
   const std::scoped_lock lock(Mid_Mutex);
-  if (Mid_Dev.state != MID_BACKEND_STATE::PAUSE) {
+  if (Mid_Dev.state != MidiBackendState::Paused) {
     return;
   }
   Mid_Dev.ApplyVolume();
-  MidBackend_StartTimer();
-  Mid_Dev.state = MID_BACKEND_STATE::PLAY;
+  MidiBackendStartTimer();
+  Mid_Dev.state = MidiBackendState::Playing;
 }
 
 // Initialize various tables
-void Mid_TableInit(void) {
+void MidiResetTables(void) {
   const std::scoped_lock lock(Mid_Mutex);
   for (auto i = 0; i < MIDI_CHANNELS; i++) {
     for (auto j = 0; j < 128; j++) {
@@ -328,23 +328,23 @@ void Mid_TableInit(void) {
   }
 }
 
-VOLUME Mid_GetFadeVolume(void) {
+AudioVolume MidiFadeVolume(void) {
   const std::scoped_lock lock(Mid_Mutex);
   return Mid_Dev.FadeNowVolume;
 }
 
-void Mid_UpdateVolume(void) {
+void MidiUpdateVolume(void) {
   const std::scoped_lock lock(Mid_Mutex);
   Mid_Dev.ApplyVolume();
 }
 
-void Mid_SetVolume(VOLUME volume) {
+void MidiSetVolume(AudioVolume volume) {
   const std::scoped_lock lock(Mid_Mutex);
-  Mid_Volume = std::min(volume, VOLUME_MAX);
-  Mid_UpdateVolume();
+  Mid_Volume = std::min(volume, kMaxAudioVolume);
+  MidiUpdateVolume();
 }
 
-void Mid_FadeOut(VOLUME volume_start, std::chrono::milliseconds duration) {
+void MidiFadeOut(AudioVolume volume_start, std::chrono::milliseconds duration) {
   const std::scoped_lock lock(Mid_Mutex);
   Mid_Dev.FadeStartVolume = volume_start;
   Mid_Dev.FadeEndVolume = 0;
@@ -352,7 +352,7 @@ void Mid_FadeOut(VOLUME volume_start, std::chrono::milliseconds duration) {
   Mid_Dev.FadeDuration = duration;
 }
 
-bool Mid_Load(std::vector<uint8_t> buffer) {
+bool MidiLoad(std::vector<uint8_t> buffer) {
   const std::scoped_lock lock(Mid_Mutex);
   Mid_Seq = {};
   Mid_Seq.smf = std::move(buffer);
@@ -398,28 +398,28 @@ bool Mid_Load(std::vector<uint8_t> buffer) {
   return true;
 }
 
-void Mid_SetLoop(const MID_LOOP &loop) {
+void MidiSetLoop(const MidiLoop &loop) {
   const std::scoped_lock lock(Mid_Mutex);
   Mid_Seq.loop = loop;
 }
 
-void Mid_SetTempo(uint8_t numerator, uint8_t denominator) {
+void MidiSetTempo(uint8_t numerator, uint8_t denominator) {
   const std::scoped_lock lock(Mid_Mutex);
   Mid_TempoNumerator = numerator;
   Mid_TempoDenominator = denominator;
 }
 
-bool Mid_Loaded(void) {
+bool MidiIsLoaded(void) {
   const std::scoped_lock lock(Mid_Mutex);
   return !Mid_Seq.tracks.empty();
 }
 
-MID_PLAYTIME Mid_GetPlayTime(void) {
+MidiPlayTime MidiPlayTimePosition(void) {
   const std::scoped_lock lock(Mid_Mutex);
   return Mid_Visualization.play_time;
 }
 
-MID_VISUALIZATION Mid_GetVisualization(void) {
+MidiVisualization MidiVisualizationState(void) {
   const std::scoped_lock lock(Mid_Mutex);
   auto snapshot = Mid_Visualization;
   snapshot.loaded = !Mid_Seq.tracks.empty();
@@ -445,7 +445,7 @@ MID_VISUALIZATION Mid_GetVisualization(void) {
 
 void MID_SEQUENCE::Rewind(void) {
   // Mid_Fade = 0;
-  //  BGM_SetTempo(0);
+  //  BgmSetTempo(0);
 
   Mid_Visualization.play_time = {};
   for (auto &t : Mid_Seq.tracks) {
@@ -464,7 +464,7 @@ void MID_SEQUENCE::Rewind(void) {
 
 // Loops [track] from [cur_pulse] to the loop start point.
 static void TrackLoop(MID_TRACK &track, const MID_TEMPO &tempo,
-                      const MID_LOOP &loop, MID_PULSE cur_pulse) {
+                      const MidiLoop &loop, MidiPulse cur_pulse) {
   track.next_delta = ((loop.end - cur_pulse) + (track.loop_pulse - loop.start));
   track.it = track.loop_it;
   track.next_pulse = track.loop_pulse;
@@ -485,7 +485,7 @@ uint32_t MID_TRACK_ITERATOR::ConsumeVLQ(void) {
   return ret;
 }
 
-void MID_TRACK::ConsumeDelta(const MID_TEMPO &tempo, const MID_LOOP &loop) {
+void MID_TRACK::ConsumeDelta(const MID_TEMPO &tempo, const MidiLoop &loop) {
   prev_pulse = next_pulse;
   next_delta = it.ConsumeVLQ();
   if (next_delta == -1) {
@@ -558,18 +558,18 @@ std::optional<MID_EVENT> MID_TRACK_ITERATOR::ConsumeEvent(void) {
   return MID_EVENT{kind, status, meta, extra_data.value()};
 }
 
-VOLUME MID_DEVICE::VolumeFor(decltype(MIDI_CHANNELS) ch) const {
+AudioVolume MID_DEVICE::VolumeFor(decltype(MIDI_CHANNELS) ch) const {
   return ((Mid_Visualization.volume[ch] * FadeNowVolume * Mid_Volume) /
-          ((VOLUME_MAX + 1) * (VOLUME_MAX + 1)));
+          ((kMaxAudioVolume + 1) * (kMaxAudioVolume + 1)));
 }
 
 void MID_DEVICE::ApplyVolume(void) const {
   for (auto ch = decltype(MIDI_CHANNELS){0}; ch < MIDI_CHANNELS; ch++) {
-    MidBackend_Out((0xb0 + ch), 0x07, VolumeFor(ch));
+    MidiBackendOutput((0xb0 + ch), 0x07, VolumeFor(ch));
   }
 }
 
-void MID_DEVICE::FadeIO(MID_REALTIME delta) {
+void MID_DEVICE::FadeIO(MidiRealtime delta) {
   if (FadeDuration == 0s) {
     return;
   }
@@ -586,21 +586,21 @@ void MID_DEVICE::FadeIO(MID_REALTIME delta) {
     if (FadeNowVolume == FadeEndVolume) {
       FadeDuration = 0s;
       if (FadeNowVolume == 0) {
-        Mid_Stop();
+        MidiStop();
       }
     }
   }
 }
 
-void Mid_Proc(MID_REALTIME delta) {
+void MidiProcess(MidiRealtime delta) {
   const std::scoped_lock lock(Mid_Mutex);
-  if (!Mid_Loaded()) {
+  if (!MidiIsLoaded()) {
     return;
   }
 
   const auto interval = ((delta * Mid_TempoNumerator) / Mid_TempoDenominator);
   auto &time = Mid_Visualization.play_time;
-  MID_PULSE pulse_sync = 0;
+  MidiPulse pulse_sync = 0;
 
   // Advance the timer of all tracks first. Must be done before we process
   // anything because tempo events on other tracks will need to resynchronize
@@ -635,7 +635,7 @@ void Mid_Proc(MID_REALTIME delta) {
           time.realtime_since_last_event = -p.next_time;
         }
         Mid_Seq.Process(p, event);
-        if (Mid_Dev.state == MID_BACKEND_STATE::PLAY) {
+        if (Mid_Dev.state == MidiBackendState::Playing) {
           event.Send();
         }
       }
@@ -653,7 +653,7 @@ void Mid_Proc(MID_REALTIME delta) {
 
   // If the track doesn't loop, the timer should stop in place.
   if (!still_playing && (Mid_Seq.loop.end == -1)) {
-    Mid_Stop();
+    MidiStop();
     time.pulse_interpolated = time.pulse_of_last_event_processed;
     return;
   }
@@ -684,7 +684,7 @@ void MID_EVENT::Send(void) const {
     /// Patch broken SysEx commands, if requested
     /// -----------------------------------------
 
-    if (!!(Mid_Flags & MID_FLAGS::FIX_SYSEX_BUGS)) {
+    if (!!(Mid_Flags & MidiFlags::FixSysExBugs)) {
       // The SC-88 and SC-88Pro manuals don't define how invalid Reverb
       // Macro messages are processed. The observable behavior does in
       // fact differ across synths:
@@ -717,7 +717,7 @@ void MID_EVENT::Send(void) const {
     }
     /// -----------------------------------------
 
-    MidBackend_Out(std::span{msg, (extra_data.size() + 1)});
+    MidiBackendOutput(std::span{msg, (extra_data.size() + 1)});
     free(msg);
     break;
   }
@@ -725,9 +725,9 @@ void MID_EVENT::Send(void) const {
   // 3 bytes: Control Change or Note On or Aftertouch or Note Off
   case MID_EVENT_KIND::CONTROLLER:
     if (extra_data[0] == 0x07) {
-      MidBackend_Out(status, 0x07, Mid_Dev.VolumeFor(Channel()));
+      MidiBackendOutput(status, 0x07, Mid_Dev.VolumeFor(Channel()));
     } else {
-      MidBackend_Out(status, extra_data[0], extra_data[1]);
+      MidiBackendOutput(status, extra_data[0], extra_data[1]);
     }
     break;
 
@@ -735,13 +735,13 @@ void MID_EVENT::Send(void) const {
   case MID_EVENT_KIND::NOTE_AFTERTOUCH:
   case MID_EVENT_KIND::NOTE_OFF:
   case MID_EVENT_KIND::PITCH_BEND:
-    MidBackend_Out(status, extra_data[0], extra_data[1]);
+    MidiBackendOutput(status, extra_data[0], extra_data[1]);
     break;
 
   // 2 bytes
   case MID_EVENT_KIND::PROGRAM_CHANGE:
   case MID_EVENT_KIND::CHANNEL_AFTERTOUCH:
-    MidBackend_Out(status, extra_data[0]);
+    MidiBackendOutput(status, extra_data[0]);
     break;
   }
 }
@@ -765,7 +765,7 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
       for (const auto byte : event.extra_data) {
         tempo_new = ((tempo_new << 8) + byte);
       }
-      tempo.qn_duration = std::chrono::duration_cast<MID_REALTIME>(
+      tempo.qn_duration = std::chrono::duration_cast<MidiRealtime>(
           std::chrono::microseconds{tempo_new});
 
       // Recalculate the next tick on all tracks, preserving the amount
@@ -842,7 +842,7 @@ void MID_SEQUENCE::Process(MID_TRACK &track, const MID_EVENT &event) {
   track.ConsumeDelta(tempo, loop);
 }
 
-std::string_view Mid_GetTitle(void) {
+std::string_view MidiTitle(void) {
   const std::scoped_lock lock(Mid_Mutex);
   std::optional<MID_EVENT> maybe_ev;
 

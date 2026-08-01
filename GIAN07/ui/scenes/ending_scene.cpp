@@ -23,7 +23,7 @@ bool EndingScene::Enter() {
   if (!graphics_.LoadEnding() || !stage_loader_.LoadEnding(scene_)) {
     return false;
   }
-  BGM_Stop();
+  BgmStop();
 
   flash_state = 0;
 

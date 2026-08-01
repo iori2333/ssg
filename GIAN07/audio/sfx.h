@@ -37,17 +37,15 @@ inline constexpr int kSoundWorldUnitsPerDecibel = PixelToWorld(25);
 
 [[nodiscard]] inline float SoundPanForWorldX(int x) {
   const auto relative = x - kSoundFieldCenterX;
-  const auto power =
-      relative / (kSoundWorldUnitsPerDecibel * 20.0f);
+  const auto power = relative / (kSoundWorldUnitsPerDecibel * 20.0f);
   return relative < 0 ? (std::pow(10.0f, power) - 1.0f)
                       : (1.0f - std::pow(10.0f, -power));
 }
 
-inline void PlaySfx(SfxId id, int x = kSoundFieldCenterX,
-                    bool loop = false) {
-  Snd_SEPlay(std::to_underlying(id), SoundPanForWorldX(x), loop);
+inline void PlaySfx(SfxId id, int x = kSoundFieldCenterX, bool loop = false) {
+  AudioPlaySoundEffect(std::to_underlying(id), SoundPanForWorldX(x), loop);
 }
 
-inline void StopSfx(SfxId id) { Snd_SEStop(std::to_underlying(id)); }
+inline void StopSfx(SfxId id) { AudioStopSoundEffect(std::to_underlying(id)); }
 
-inline void StopAllSfx() { Snd_SEStopAll(); }
+inline void StopAllSfx() { AudioStopAllSoundEffects(); }

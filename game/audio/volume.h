@@ -8,22 +8,22 @@
 #include <cstdint>
 
 // Discrete volume values for MIDI and the UI.
-using VOLUME = uint8_t;
+using AudioVolume = uint8_t;
 
-static constexpr VOLUME VOLUME_MAX = 127;
+static constexpr AudioVolume kMaxAudioVolume = 127;
 
-constexpr float VolumeLinear(VOLUME discrete) {
-  return (discrete / float{VOLUME_MAX});
+constexpr float AudioVolumeToLinear(AudioVolume discrete) {
+  return (discrete / float{kMaxAudioVolume});
 }
 
-constexpr VOLUME VolumeDiscrete(float linear) {
+constexpr AudioVolume LinearToAudioVolume(float linear) {
   assert((linear >= 0.0f) && (linear <= 1.0f));
-  return static_cast<VOLUME>((linear * VOLUME_MAX) + 0.5f);
+  return static_cast<AudioVolume>((linear * kMaxAudioVolume) + 0.5f);
 }
 
 // Maps a linear volume value to decibels, using the simple x² curve used by
 // the MIDI standard.
-inline const float VolumeDBSquare(float linear) {
+inline const float LinearVolumeToDecibels(float linear) {
   // Yup, MIDI does *not* use logarithmic curves for volume or expression.
   // The "Volume, Expression & Master Volume Response" section of the spec
   // defines the dB level exactly as `40 × log₁₀(volume / 127)`.  A MIDI
@@ -34,7 +34,7 @@ inline const float VolumeDBSquare(float linear) {
 
 // Maps a linear volume value to a sample multiplication factor, using the
 // simple x² curve used by the MIDI standard.
-constexpr float VolumeFactorSquare(float linear) {
+constexpr float LinearVolumeFactor(float linear) {
   // The `40 × log₁₀(volume / 127)` curve corresponds to a simple (volume²)
   // when converted back to an amplitude, as outlined by
   //
@@ -45,6 +45,6 @@ constexpr float VolumeFactorSquare(float linear) {
   return (linear * linear);
 }
 
-constexpr float VolumeFactorSquare(VOLUME discrete) {
-  return VolumeFactorSquare(VolumeLinear(discrete));
+constexpr float LinearVolumeFactor(AudioVolume discrete) {
+  return LinearVolumeFactor(AudioVolumeToLinear(discrete));
 }

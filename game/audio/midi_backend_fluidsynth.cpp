@@ -24,7 +24,7 @@ static fluid_audio_driver_t *FsAudioDriver = nullptr;
 static int FsFontId = -1;
 
 static std::vector<std::string> FsFontPaths;
-static std::vector<MID_BACKEND_DEVICE_SOURCE> FsFontSources;
+static std::vector<MidiDeviceSource> FsFontSources;
 static size_t FsFontIndex = 0;
 
 static constexpr int SAMPLE_RATE = 44100;
@@ -40,8 +40,8 @@ static constexpr std::string_view FontExts[] = {".sf2", ".sf3", ".dls"};
 // Collects font files from [dir] into [paths] + [sources] with the given
 // [source] tag. Skips duplicates.
 static void ScanDir(const std::string &dir, std::vector<std::string> &paths,
-                    std::vector<MID_BACKEND_DEVICE_SOURCE> &sources,
-                    MID_BACKEND_DEVICE_SOURCE source) {
+                    std::vector<MidiDeviceSource> &sources,
+                    MidiDeviceSource source) {
   std::error_code ec;
   if (!std::filesystem::is_directory(dir, ec)) {
     return;
@@ -69,13 +69,13 @@ static void ScanSoundFonts(std::string_view data_path) {
   //    earlier in the device list).
 #ifdef WIN32
   ScanDir("C:/Windows/system32/drivers", FsFontPaths, FsFontSources,
-          MID_BACKEND_DEVICE_SOURCE::SYSTEM); // gm.dls
+          MidiDeviceSource::System); // gm.dls
 #else
   // Common Linux SoundFont locations
   ScanDir("/usr/share/sounds/sf2", FsFontPaths, FsFontSources,
-          MID_BACKEND_DEVICE_SOURCE::SYSTEM);
+          MidiDeviceSource::System);
   ScanDir("/usr/share/soundfonts", FsFontPaths, FsFontSources,
-          MID_BACKEND_DEVICE_SOURCE::SYSTEM);
+          MidiDeviceSource::System);
 #endif
   // Environment variable override (e.g. DEFAULT_SOUNDFONT=/path/to/font.sf2)
 #if defined(__clang__) && defined(_WIN32)
@@ -84,7 +84,7 @@ static void ScanSoundFonts(std::string_view data_path) {
 #endif
   if (const char *env = std::getenv("DEFAULT_SOUNDFONT")) {
     FsFontPaths.push_back(env);
-    FsFontSources.push_back(MID_BACKEND_DEVICE_SOURCE::ENV);
+    FsFontSources.push_back(MidiDeviceSource::Environment);
   }
 #if defined(__clang__) && defined(_WIN32)
 #pragma clang diagnostic pop
@@ -93,13 +93,13 @@ static void ScanSoundFonts(std::string_view data_path) {
   // 2. Local project soundfonts/ directory.
   const std::string sf_dir =
       std::string{data_path.data(), data_path.size()} + "soundfonts";
-  ScanDir(sf_dir, FsFontPaths, FsFontSources, MID_BACKEND_DEVICE_SOURCE::LOCAL);
+  ScanDir(sf_dir, FsFontPaths, FsFontSources, MidiDeviceSource::Local);
 
   // Deduplicate and sort. Must keep paths and sources in sync.
   {
     struct Indexed {
       const std::string *path;
-      MID_BACKEND_DEVICE_SOURCE source;
+      MidiDeviceSource source;
       size_t original_index;
     };
     std::vector<Indexed> indexed;
@@ -116,7 +116,7 @@ static void ScanSoundFonts(std::string_view data_path) {
     indexed.erase(first, last);
 
     std::vector<std::string> new_paths;
-    std::vector<MID_BACKEND_DEVICE_SOURCE> new_sources;
+    std::vector<MidiDeviceSource> new_sources;
     new_paths.reserve(indexed.size());
     new_sources.reserve(indexed.size());
     for (const auto &entry : indexed) {
@@ -196,10 +196,10 @@ static void FsCleanupAudio(void) {
 }
 
 static void FsSaveCurrent(void) {
-  // Config save is handled by the caller via MidBackend_CurrentSoundFont().
+  // Config save is handled by the caller via MidiBackendCurrentSoundFont().
 }
 
-bool MidBackend_Init(std::string_view preferred_soundfont) {
+bool MidiBackendInitialize(std::string_view preferred_soundfont) {
   if (FsSynth) {
     return true;
   }
@@ -235,9 +235,9 @@ bool MidBackend_Init(std::string_view preferred_soundfont) {
   return true;
 }
 
-void MidBackend_Cleanup(void) { FsCleanupAudio(); }
+void MidiBackendCleanup(void) { FsCleanupAudio(); }
 
-std::optional<std::string_view> MidBackend_CurrentSoundFont() {
+std::optional<std::string_view> MidiBackendCurrentSoundFont() {
   if (!FsSynth || FsFontIndex >= FsFontPaths.size()) {
     return std::nullopt;
   }
@@ -246,7 +246,7 @@ std::optional<std::string_view> MidBackend_CurrentSoundFont() {
   return cached;
 }
 
-std::optional<std::string_view> MidBackend_DeviceName(void) {
+std::optional<std::string_view> MidiBackendDeviceName(void) {
   if (!FsSynth || FsFontIndex >= FsFontPaths.size()) {
     return std::nullopt;
   }
@@ -256,9 +256,9 @@ std::optional<std::string_view> MidBackend_DeviceName(void) {
   return cached;
 }
 
-size_t MidBackend_DeviceCount(void) { return FsFontPaths.size(); }
+size_t MidiBackendDeviceCount(void) { return FsFontPaths.size(); }
 
-std::optional<std::string_view> MidBackend_DeviceNameAt(size_t index) {
+std::optional<std::string_view> MidiBackendDeviceNameAt(size_t index) {
   if (index >= FsFontPaths.size()) {
     return std::nullopt;
   }
@@ -268,14 +268,14 @@ std::optional<std::string_view> MidBackend_DeviceNameAt(size_t index) {
   return cached;
 }
 
-std::optional<MID_BACKEND_DEVICE_SOURCE> MidBackend_DeviceSource(size_t index) {
+std::optional<MidiDeviceSource> MidiBackendDeviceSource(size_t index) {
   if (index >= FsFontSources.size()) {
     return std::nullopt;
   }
   return FsFontSources[index];
 }
 
-bool MidBackend_DeviceSelect(size_t index) {
+bool MidiBackendSelectDevice(size_t index) {
   if (index >= FsFontPaths.size()) {
     return false;
   }
@@ -316,7 +316,7 @@ bool MidBackend_DeviceSelect(size_t index) {
   return true;
 }
 
-bool MidBackend_DeviceChange(int8_t direction) {
+bool MidiBackendChangeDevice(int8_t direction) {
   if (FsFontPaths.size() <= 1) {
     return true; // No other SoundFont to switch to, but don't stop playback
   }
@@ -366,7 +366,7 @@ bool MidBackend_DeviceChange(int8_t direction) {
 static constexpr auto TIMER_INTERVAL = std::chrono::milliseconds(10);
 static std::jthread FsTimer;
 
-void MidBackend_StartTimer(void) {
+void MidiBackendStartTimer(void) {
   if (FsTimer.joinable() && FsTimer.get_stop_token().stop_requested()) {
     FsTimer.join();
   }
@@ -378,14 +378,14 @@ void MidBackend_StartTimer(void) {
         next_tick += TIMER_INTERVAL;
         std::this_thread::sleep_until(next_tick);
         if (!stop.stop_requested()) {
-          Mid_Proc(std::chrono::duration_cast<MID_REALTIME>(TIMER_INTERVAL));
+          MidiProcess(std::chrono::duration_cast<MidiRealtime>(TIMER_INTERVAL));
         }
       }
     });
   }
 }
 
-void MidBackend_StopTimer(void) {
+void MidiBackendStopTimer(void) {
   if (FsTimer.joinable()) {
     FsTimer.request_stop();
     if (FsTimer.get_id() != std::this_thread::get_id()) {
@@ -394,7 +394,7 @@ void MidBackend_StopTimer(void) {
   }
 }
 
-void MidBackend_Out(uint8_t status, uint8_t a, uint8_t b) {
+void MidiBackendOutput(uint8_t status, uint8_t a, uint8_t b) {
   if (!FsSynth) {
     return;
   }
@@ -438,7 +438,7 @@ void MidBackend_Out(uint8_t status, uint8_t a, uint8_t b) {
   }
 }
 
-void MidBackend_Out(std::span<uint8_t> event) {
+void MidiBackendOutput(std::span<uint8_t> event) {
   if (event.size() < 1) {
     return;
   }
@@ -457,10 +457,10 @@ void MidBackend_Out(std::span<uint8_t> event) {
 
   uint8_t a = (event.size() >= 2) ? event[1] : 0;
   uint8_t b = (event.size() >= 3) ? event[2] : 0;
-  MidBackend_Out(event[0], a, b);
+  MidiBackendOutput(event[0], a, b);
 }
 
-void MidBackend_Panic(void) {
+void MidiBackendPanic(void) {
   if (!FsSynth) {
     return;
   }

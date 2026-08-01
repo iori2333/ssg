@@ -12,24 +12,24 @@
 #include "sys/log.h"
 #include "sys/path.h"
 
-static constexpr std::string_view BGM_ROOT = "bgm/";
+static constexpr std::string_view kBgmRoot = "bgm/";
 
 // ---------------------------------------------------------------------------
 // Track switching
 // ---------------------------------------------------------------------------
 
 bool MusicPlayer::Play(unsigned int id) {
-  if (!BGM_Enabled()) {
+  if (!BgmIsEnabled()) {
     return false;
   }
-  BGM_Stop();
-  BGM_ClearWaveform();
+  BgmStop();
+  BgmClearWaveform();
 
   // Always load MIDI for sequencer notes and fallback audio.
   auto midi = midi_variant_ == MidiVariant::Arranged
                   ? data_.ExtractArrangedMusicMidi(id)
                   : data_.ExtractMusicMidi(id);
-  if (midi.empty() || !Mid_Load(std::move(midi))) {
+  if (midi.empty() || !MidiLoad(std::move(midi))) {
     logging::Error(logging::Channel::Music,
                    "Failed to load MIDI for track {} variant={}", id,
                    std::to_underlying(midi_variant_));
@@ -39,16 +39,16 @@ bool MusicPlayer::Play(unsigned int id) {
   // Try to open a replacement waveform from the active BGM pack.
   if (!pack_path_.empty()) {
     auto path = std::format("{}{:02}", pack_path_, id + 1);
-    if (!BGM_LoadWaveform(path)) {
+    if (!BgmLoadWaveform(path)) {
       logging::Debug(logging::Channel::Music,
                      "No waveform replacement for track {}; using MIDI", id);
     }
   }
 
   loaded_num_ = id + 1;
-  BGM_SetLoadedNum(loaded_num_);
-  BGM_SetTempo(BGM_GetTempo());
-  BGM_Play();
+  BgmSetLoadedTrackNumber(loaded_num_);
+  BgmSetTempo(BgmTempo());
+  BgmPlay();
   logging::Debug(logging::Channel::Music, "Playing track {} variant={}", id,
                  std::to_underlying(midi_variant_));
   return true;
@@ -61,7 +61,7 @@ void MusicPlayer::SetMidiVariant(MidiVariant variant) {
     return;
   }
   midi_variant_ = variant;
-  if (loaded_num_ != 0 && BGM_Playing() != BGM_PLAYING::NONE) {
+  if (loaded_num_ != 0 && BgmPlayingSource() != BgmPlaybackSource::None) {
     Play(loaded_num_ - 1);
   }
 }
@@ -77,7 +77,7 @@ bool MusicPlayer::HasPacks(bool invalidate_cache) {
   std::error_code error;
   packs_available_ = false;
   for (const auto &entry :
-       std::filesystem::directory_iterator{BGM_ROOT, error}) {
+       std::filesystem::directory_iterator{kBgmRoot, error}) {
     if (error) {
       break;
     }
@@ -92,7 +92,7 @@ bool MusicPlayer::HasPacks(bool invalidate_cache) {
 void MusicPlayer::ForEachPack(std::function<void(std::string_view)> func) {
   std::error_code error;
   for (const auto &entry :
-       std::filesystem::directory_iterator{BGM_ROOT, error}) {
+       std::filesystem::directory_iterator{kBgmRoot, error}) {
     if (error) {
       break;
     }
@@ -107,13 +107,13 @@ bool MusicPlayer::SetPack(std::string_view pack) {
   std::string_view cur = pack_path_;
   if (!pack.empty()) {
     const auto path_data = PathForData();
-    const auto root_len = (path_data.size() + BGM_ROOT.size());
+    const auto root_len = (path_data.size() + kBgmRoot.size());
     if ((cur.size() > root_len) &&
         (cur.substr(root_len, pack.size()) == pack) &&
         (cur[root_len + pack.size()] == '/')) {
       return true;
     }
-    pack_path_ = std::format("{}{}{}/", path_data, BGM_ROOT, pack);
+    pack_path_ = std::format("{}{}{}/", path_data, kBgmRoot, pack);
 
     std::error_code error;
     if (!std::filesystem::is_directory(pack_path_, error)) {
@@ -129,7 +129,7 @@ bool MusicPlayer::SetPack(std::string_view pack) {
     pack_path_.clear();
   }
 
-  if ((loaded_num_ != 0) && (BGM_Playing() != BGM_PLAYING::NONE)) {
+  if ((loaded_num_ != 0) && (BgmPlayingSource() != BgmPlaybackSource::None)) {
     Play(loaded_num_ - 1);
   }
   return true;

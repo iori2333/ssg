@@ -44,7 +44,7 @@ void ResetGameplayRuntime(GameContext &context) {
   context.items.Reset();
   context.effects.Reset();
   context.effects.StartScreenTransition(ScreenTransition::CircleFadeIn);
-  BGM_SetTempo(0);
+  BgmSetTempo(0);
 }
 
 bool GameplayState::LoadCurrentStage() {
@@ -66,7 +66,7 @@ void GameplayState::InitializeGameplayView(bool interactive) {
   auto &context = context_;
   TextRenderer().Clear();
   if (mode_ != Mode::Demo) {
-    BGM_FadeOut(240);
+    BgmFadeOut(240);
     context.effects.InitializeTextRenderer();
   }
 
@@ -270,7 +270,7 @@ void GameplayState::BeginGameOver() {
   auto &context = context_;
   context.effects.SpawnGameOver();
   if (mode_ == Mode::Live) {
-    BGM_Pause();
+    BgmPause();
   }
   game_over_timer_ = 120;
   phase_ = Phase::GameOverIntro;
@@ -312,8 +312,8 @@ FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
     context.ui.PrepareExitMenu(!context.config.debug.demo_recording &&
                                context.records.HasRecordedStages());
     context.ui.Exit().Open({230, 150}, 0, input);
-    BGM_Pause();
-    SndBackend_PauseAll();
+    BgmPause();
+    AudioBackendPauseAll();
     phase_ = Phase::Paused;
     return NoEvent{};
   }
@@ -365,8 +365,8 @@ FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
       }
       return ReturnToTitle{.change_music = true};
     case UIManager::PauseAction::Resume:
-      BGM_Resume();
-      SndBackend_ResumeAll();
+      BgmResume();
+      AudioBackendResumeAll();
       phase_ = Phase::Running;
       return NoEvent{};
     }
@@ -410,7 +410,7 @@ FlowEvent GameplayState::UpdateGameOverIntro(const FrameInput &frame) {
     if (frame.gameplay != 0) {
       break;
     }
-    SndBackend_PauseAll();
+    AudioBackendPauseAll();
     context.ui.PrepareGameOverMenu(context.player.Credits() != 0U,
                                    !context.config.debug.demo_recording &&
                                        context.records.HasRecordedStages());
@@ -436,8 +436,8 @@ FlowEvent GameplayState::UpdateGameOverMenu(const FrameInput &frame) {
       if (context.player.Credits() == 0U) {
         return NoEvent{};
       }
-      BGM_Resume();
-      SndBackend_ResumeAll();
+      BgmResume();
+      AudioBackendResumeAll();
       context.records.CancelRecording();
       context.player.ResetForContinue(context.config.game.player_stock);
       if (context.player.Credits() != 0U) {

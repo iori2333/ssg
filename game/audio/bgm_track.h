@@ -18,17 +18,17 @@
 // PCM sample format
 // -----------------
 
-enum class PCM_SAMPLE_FORMAT : uint8_t {
-  S16 = 2,
-  S32 = 4,
+enum class PcmSampleFormat : uint8_t {
+  Int16 = 2,
+  Int32 = 4,
 };
 
-struct PCM_FORMAT {
+struct PcmFormat {
   const uint32_t samplingrate;
   const uint16_t channels;
-  const PCM_SAMPLE_FORMAT format;
+  const PcmSampleFormat format;
 
-  std::strong_ordering operator<=>(const PCM_FORMAT &other) const = default;
+  std::strong_ordering operator<=>(const PcmFormat &other) const = default;
 
   size_t SampleSize() const {
     const auto byte_depth = std::to_underlying(format);
@@ -37,14 +37,14 @@ struct PCM_FORMAT {
 };
 // -----------------
 
-namespace BGM {
+namespace bgm {
 
-using SAMPLE_COUNT = uint32_t;
+using SampleCount = uint32_t;
 
 // Metadata
 // --------
 
-struct TRACK_METADATA {
+struct TrackMetadata {
   std::string title;
 
   // Gain to apply to the track.
@@ -52,25 +52,25 @@ struct TRACK_METADATA {
 };
 
 // Vorbis comments are specified to use UTF-8.
-using METADATA_CALLBACK =
+using MetadataCallback =
     std::function<void(std::string_view tag, std::string_view value)>;
 
 // Calls [func] for the given Vorbis comment.
-void OnVorbisComment(METADATA_CALLBACK func, std::string_view comment);
+void OnVorbisComment(MetadataCallback func, std::string_view comment);
 // --------
 
 // Base class for a track
 // ----------------------
 
-class TRACK_VOL {
+class TrackVolume {
   float volume_linear = 1.0f;
   float volume_factor = 1.0f;
 
 public:
   float fade_delta = 0.0f;
   float fade_end = 0.0f;
-  SAMPLE_COUNT fade_remaining = 0;
-  SAMPLE_COUNT fade_duration = 0;
+  SampleCount fade_remaining = 0;
+  SampleCount fade_duration = 0;
 
   // Value for a volume control with perceived linear loudness.
   auto FadeVolumeLinear() const { return volume_linear; }
@@ -81,15 +81,15 @@ public:
   void SetVolumeLinear(float v);
 };
 
-struct TRACK {
+struct Track {
 protected:
-  TRACK_VOL vol;
+  TrackVolume vol;
 
 public:
-  const TRACK_METADATA metadata;
+  const TrackMetadata metadata;
 
   // Target format that this track is decoded to.
-  const PCM_FORMAT pcmf;
+  const PcmFormat pcmf;
 
   // Single decoding call that implicitly handles looping. Should return the
   // number of bytes actually decoded (which can be less than
@@ -106,10 +106,10 @@ public:
   // Starts a fade-out that takes the given number of milliseconds.
   void FadeOut(float volume_start, std::chrono::milliseconds duration);
 
-  TRACK(TRACK_METADATA &&metadata, const PCM_FORMAT &pcmf)
+  Track(TrackMetadata &&metadata, const PcmFormat &pcmf)
       : metadata(metadata), pcmf(pcmf) {}
 
-  virtual ~TRACK() {}
+  virtual ~Track() {}
 };
 // ----------------------
 
@@ -118,8 +118,8 @@ public:
 
 // Base class for an individual intro or loop file.
 // Should be derived for each supported codec.
-struct PCM_PART {
-  const PCM_FORMAT pcmf;
+struct PcmPart {
+  const PcmFormat pcmf;
 
   // Single decoding call. Should return the number of bytes actually decoded
   // (which can be less than [buf.size_bytes()]) or -1 if an error occurred.
@@ -129,40 +129,40 @@ struct PCM_PART {
   // the total number of samples in the stream.
   virtual void PartSeekToSample(size_t sample) = 0;
 
-  PCM_PART(const PCM_FORMAT &pcmf) : pcmf(pcmf) {}
-  virtual ~PCM_PART() {}
+  PcmPart(const PcmFormat &pcmf) : pcmf(pcmf) {}
+  virtual ~PcmPart() {}
 };
 
 // Generic implementation for PCM-based codecs, with separate intro and loop
 // files.
-struct TRACK_PCM : public TRACK {
+struct PcmTrack : public Track {
   std::unique_ptr<std::ifstream> intro_stream;
   std::unique_ptr<std::ifstream> loop_stream;
-  std::unique_ptr<PCM_PART> intro_part;
-  std::unique_ptr<PCM_PART> loop_part;
-  PCM_PART *cur;
+  std::unique_ptr<PcmPart> intro_part;
+  std::unique_ptr<PcmPart> loop_part;
+  PcmPart *cur;
 
   virtual size_t DecodeSingle(std::span<std::byte> buf) override;
 
-  TRACK_PCM(TRACK_METADATA &&metadata,
-            std::unique_ptr<std::ifstream> intro_stream,
-            std::unique_ptr<std::ifstream> loop_stream,
-            std::unique_ptr<PCM_PART> intro_part,
-            std::unique_ptr<PCM_PART> loop_part)
-      : TRACK(std::move(metadata), intro_part->pcmf),
+  PcmTrack(TrackMetadata &&metadata,
+           std::unique_ptr<std::ifstream> intro_stream,
+           std::unique_ptr<std::ifstream> loop_stream,
+           std::unique_ptr<PcmPart> intro_part,
+           std::unique_ptr<PcmPart> loop_part)
+      : Track(std::move(metadata), intro_part->pcmf),
         intro_stream(std::move(intro_stream)),
         loop_stream(std::move(loop_stream)), intro_part(std::move(intro_part)),
         loop_part(std::move(loop_part)), cur(this->intro_part.get()) {}
 };
 
 // Tries to opens [stream] as a part of a modded track, using a specific codec.
-// `TRACK_PCM` retains ownership of [stream].
-using PCM_PART_OPEN = std::unique_ptr<PCM_PART>(
-    std::istream &stream, std::optional<METADATA_CALLBACK> on_metadata);
+// `PcmTrack` retains ownership of [stream].
+using PcmPartOpen = std::unique_ptr<PcmPart>(
+    std::istream &stream, std::optional<MetadataCallback> on_metadata);
 // ----------------------------
 
 // Tries to open a waveform track whose name starts with [base_fn] and has one
 // of the supported codec extensions.
-std::unique_ptr<TRACK> TrackOpen(std::string_view base_fn);
+std::unique_ptr<Track> OpenTrack(std::string_view base_fn);
 
-} // namespace BGM
+} // namespace bgm

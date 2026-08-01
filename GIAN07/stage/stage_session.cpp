@@ -138,9 +138,9 @@ StageSession::RunScene(StageUpdateContext &context, INPUT_BITS input) {
 
     case SceneOpcode::Music:
       if (!context.session.is_demoplay) {
-        BGM_Stop();
+        BgmStop();
         if (context.music.Play(instruction->track_id)) {
-          BGM_Play();
+          BgmPlay();
           const auto title =
               context.localization.MusicTitle(instruction->track_id);
           if (!title.empty()) {
@@ -230,7 +230,7 @@ void StageSession::ExecuteEffect(SceneEffect effect,
     StopSfx(SfxId::Warning);
     break;
   case SceneEffect::FadeMusic:
-    BGM_FadeOut(120);
+    BgmFadeOut(120);
     break;
   case SceneEffect::Stage2Boss:
     background_.Command(BackgroundCommand::Stage2Boss, context.effects);

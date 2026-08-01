@@ -13,7 +13,7 @@
 
 #include "audio/bgm_track.h"
 
-namespace BGM {
+namespace bgm {
 
 // Callbacks
 // ---------
@@ -82,19 +82,19 @@ static const ov_callbacks VORBIS_CALLBACKS = {
 };
 // ---------
 
-struct PCM_PART_VORBIS : public BGM::PCM_PART {
+struct PCM_PART_VORBIS : public bgm::PcmPart {
   OggVorbis_File vf;
 
   size_t PartDecodeSingle(std::span<std::byte> buf) override;
   void PartSeekToSample(size_t sample) override;
 
-  PCM_PART_VORBIS(OggVorbis_File &&vf, const PCM_FORMAT &pcmf)
-      : vf(vf), PCM_PART(pcmf) {}
+  PCM_PART_VORBIS(OggVorbis_File &&vf, const PcmFormat &pcmf)
+      : vf(vf), PcmPart(pcmf) {}
   virtual ~PCM_PART_VORBIS();
 };
 
 size_t PCM_PART_VORBIS::PartDecodeSingle(std::span<std::byte> buf) {
-  assert(pcmf.format == PCM_SAMPLE_FORMAT::S16);
+  assert(pcmf.format == PcmSampleFormat::Int16);
   auto *buf_as_char = reinterpret_cast<char *>(buf.data());
   return ov_read(&vf, buf_as_char, buf.size_bytes(), 0, 2, 1, nullptr);
 }
@@ -106,9 +106,9 @@ void PCM_PART_VORBIS::PartSeekToSample(size_t sample) {
 
 PCM_PART_VORBIS::~PCM_PART_VORBIS() { ov_clear(&vf); }
 
-std::unique_ptr<BGM::PCM_PART>
+std::unique_ptr<bgm::PcmPart>
 Vorbis_Open(std::istream &stream,
-            std::optional<BGM::METADATA_CALLBACK> on_metadata) {
+            std::optional<bgm::MetadataCallback> on_metadata) {
   OggVorbis_File vf = {0};
   const auto ret =
       ov_open_callbacks(&stream, &vf, nullptr, 0, VORBIS_CALLBACKS);
@@ -127,7 +127,7 @@ Vorbis_Open(std::istream &stream,
         if (vc->comment_lengths[i] < 2) {
           continue;
         }
-        BGM::OnVorbisComment(*metadata_cb, {
+        bgm::OnVorbisComment(*metadata_cb, {
                                                vc->user_comments[i],
                                                static_cast<size_t>(len),
                                            });
@@ -137,8 +137,8 @@ Vorbis_Open(std::istream &stream,
 
   const auto samplingrate = static_cast<uint32_t>(vf.vi->rate);
   const auto channels = static_cast<uint16_t>(vf.vi->channels);
-  PCM_FORMAT pcmf = {samplingrate, channels, PCM_SAMPLE_FORMAT::S16};
+  PcmFormat pcmf = {samplingrate, channels, PcmSampleFormat::Int16};
   return std::make_unique<PCM_PART_VORBIS>(std::move(vf), pcmf);
 }
 
-} // namespace BGM
+} // namespace bgm

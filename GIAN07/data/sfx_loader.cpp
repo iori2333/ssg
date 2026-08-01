@@ -15,16 +15,16 @@ bool SfxLoader::Load() const {
       5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 1, 1, 1, 1, 5, 1, 5, 1,
   };
 
-  if (!Snd_SEInit()) {
+  if (!AudioInitializeSoundEffects()) {
     return false;
   }
   for (uint8_t id = 0; id < kMaxInstances.size(); ++id) {
-    if (!Snd_SELoad(data_->ExtractSound(id), id, kMaxInstances[id])) {
-      Snd_SECleanup();
+    if (!AudioLoadSoundEffect(data_->ExtractSound(id), id, kMaxInstances[id])) {
+      AudioCleanupSoundEffects();
       return false;
     }
   }
-  Snd_UpdateVolumes();
+  AudioUpdateVolumes();
   return true;
 }
 

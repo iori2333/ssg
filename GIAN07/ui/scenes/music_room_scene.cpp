@@ -44,7 +44,7 @@ void MusicRoomScene::Text::RenderVersion(WINDOW_POINT topleft,
 }
 
 void MusicRoomScene::Text::RenderMidDev(WINDOW_POINT topleft) const {
-  const auto maybe_dev_full = MidBackend_DeviceName();
+  const auto maybe_dev_full = MidiBackendDeviceName();
   if (!maybe_dev_full) {
     return;
   }
@@ -131,13 +131,13 @@ bool MusicRoomScene::Enter() {
   spectrum_peaks_.fill(0);
   spectrum_decay_frame_ = 0;
 
-  BGM_SetTempo(0);
+  BgmSetTempo(0);
 
   // Still necessary because the note arrays aren't actually processed
   // outside of the Music Room.
-  Mid_TableInit();
+  MidiResetTables();
 
-  // BGM_Stop();
+  // BgmStop();
   if (music_.TrackCount() == 0 || localization_.MusicComment(0).empty()) {
     logging::Error(logging::Channel::I18n,
                    "Music Room text catalog is invalid");
@@ -348,7 +348,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
   }
   auto &text = text_.value();
 
-  const auto playing = BGM_Playing();
+  const auto playing = BgmPlayingSource();
 
   if (input != previous_input_) {
     if (Input_IsCancel(input)) {
@@ -360,7 +360,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
       if (input == KEY_RIGHT) {
         track_id_ += 2;
       }
-      BGM_Stop();
+      BgmStop();
       const auto track_count = music_.TrackCount();
       track_id_ = ((track_id_ + track_count - 1) % track_count);
       music_.Play(track_id_);
@@ -371,26 +371,26 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
 
   switch (input) {
   case KEY_UP:
-    BGM_SetTempo(BGM_GetTempo() + 1);
+    BgmSetTempo(BgmTempo() + 1);
     break;
   case KEY_DOWN:
-    BGM_SetTempo(BGM_GetTempo() - 1);
+    BgmSetTempo(BgmTempo() - 1);
     break;
   case KEY_SHIFT:
-    BGM_SetTempo(0);
+    BgmSetTempo(0);
     break;
   }
 
   if ((system_input & SYSKEY_BGM_FADE) != 0) {
-    BGM_FadeOut(120);
+    BgmFadeOut(120);
   }
 
-  BGM_UpdateMIDITables();
+  BgmUpdateMidiTables();
 
-  if ((playing == BGM_PLAYING::MIDI) &&
+  if ((playing == BgmPlaybackSource::Midi) &&
       ((system_input & SYSKEY_BGM_DEVICE) != 0)) {
     if (!device_change_wait_) {
-      BGM_ChangeMIDIDevice(1);
+      BgmChangeMidiDevice(1);
       device_change_wait_ = true;
     }
   } else {
@@ -399,7 +399,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
   }
 
   if (should_draw) {
-    midi_visualization_ = Mid_GetVisualization();
+    midi_visualization_ = MidiVisualizationState();
     GrpBackend_Clear();
 
     auto BlitBG = [](const PIXEL_LTWH &rect) {
@@ -419,7 +419,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
     BlitLegend({0, 0, 176, 40});    // Left side
     BlitLegend({176, 11, 464, 29}); // Right side without device key
 
-    if (playing == BGM_PLAYING::MIDI) {
+    if (playing == BgmPlaybackSource::Midi) {
       BlitBG({504, 83, 136, 25});    // MIDI DEVICE
       BlitLegend({176, 0, 176, 11}); // Device change key
 
@@ -428,7 +428,7 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
       DrawNotes();
     }
 
-    const auto millis = BGM_PlayTime().count();
+    const auto millis = BgmPlayTime().count();
     const auto m = ((millis / 1000) / 60);
     const auto s = ((millis / 1000) % 60);
     GrpPut7B(560, 44, std::format("{:02} : {:02}", m, s).c_str());
@@ -443,11 +443,11 @@ bool MusicRoomScene::Update(INPUT_BITS input, INPUT_BITS system_input,
       // TextOut(hdc,561,64+2,buf,strlen(buf));
     }
 
-    GrpPut7B(560, 116, std::format("{:3}", BGM_GetTempo()).c_str());
+    GrpPut7B(560, 116, std::format("{:3}", BgmTempo()).c_str());
     // TextOut(hdc,561,112+2,buf,strlen(buf));
     // SetTextColor(hdc,RGB(255*5/5,255*2/5,255*1/5));
 
-    if (playing == BGM_PLAYING::MIDI) {
+    if (playing == BgmPlaybackSource::Midi) {
       text.RenderMidDev({(540 + 2), (96 - 3)});
     }
     text.RenderTitle({400, (144 + 2)}, track_id_,

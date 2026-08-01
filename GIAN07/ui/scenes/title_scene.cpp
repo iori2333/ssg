@@ -33,7 +33,7 @@ constexpr PIXEL_COORD kBuildTagGap = 4;
 } // namespace
 
 bool TitleScene::Enter(INPUT_BITS initial_input, bool change_music) {
-  SndBackend_ResumeAll();
+  AudioBackendResumeAll();
   GrpBackend_PixelAccessEnd();
   TextRenderer().Clear();
   GrpBackend_Clear();
@@ -93,7 +93,7 @@ void TitleScene::DrawVersion(PIXEL_COORD top) const {
 
 TitleSceneResult TitleScene::Update(INPUT_BITS input, bool should_draw) {
   constexpr PIXEL_LTRB source = {0, 0, 640, 396};
-  BGM_UpdateMIDITables();
+  BgmUpdateMidiTables();
 
   if (input == 0) {
     demo_timer_++;

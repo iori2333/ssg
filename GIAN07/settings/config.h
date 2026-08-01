@@ -73,8 +73,8 @@ struct AudioConfig {
   bool fix_sysex_bugs = true;
   MidiVariant midi_variant{};
   std::string soundfont;
-  VOLUME se_volume = ((VOLUME_MAX * 4) / 10);
-  VOLUME bgm_volume = ((VOLUME_MAX * 4) / 10);
+  AudioVolume se_volume = ((kMaxAudioVolume * 4) / 10);
+  AudioVolume bgm_volume = ((kMaxAudioVolume * 4) / 10);
   std::string bgm_pack;
 };
 

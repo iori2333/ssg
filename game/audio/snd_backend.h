@@ -10,44 +10,48 @@
 #include "snd.h"
 struct SDL_AudioSpec;
 
-bool SndBackend_Init(void);
-void SndBackend_Cleanup(void);
+bool AudioBackendInitialize(void);
+void AudioBackendCleanup(void);
 
-// The platform-independent layer always calls this after SndBackend_Init().
-bool SndBackend_BGMInit(void);
+// The platform-independent layer always calls this after
+// AudioBackendInitialize().
+bool AudioBackendInitializeBgm(void);
 
-// The platform-independent layer always calls this before SndBackend_Cleanup().
-void SndBackend_BGMCleanup(void);
+// The platform-independent layer always calls this before
+// AudioBackendCleanup().
+void AudioBackendCleanupBgm(void);
 
-void SndBackend_BGMUpdateVolume(void);
-
-namespace BGM {
-struct TRACK;
+namespace bgm {
+struct Track;
 }
-bool SndBackend_BGMLoad(std::shared_ptr<BGM::TRACK> track);
-void SndBackend_BGMPlay(void);
-void SndBackend_BGMStop(void);
+bool AudioBackendLoadBgm(std::shared_ptr<bgm::Track> track);
+void AudioBackendPlayBgm(void);
+void AudioBackendStopBgm(void);
 
 // Returns the amount of milliseconds that the subsystem has been playing the
 // BGM track for.
-std::chrono::milliseconds SndBackend_BGMPlayTime(void);
+std::chrono::milliseconds AudioBackendBgmPlayTime(void);
 
-void SndBackend_BGMUpdateVolume(void);
-void SndBackend_BGMUpdateTempo(void);
+void AudioBackendUpdateBgmVolume(void);
+void AudioBackendUpdateBgmTempo(void);
 
-// The platform-independent layer always calls this after SndBackend_Init().
-bool SndBackend_SEInit(void);
+// The platform-independent layer always calls this after
+// AudioBackendInitialize().
+bool AudioBackendInitializeSoundEffects(void);
 
-// The platform-independent layer always calls this before SndBackend_Cleanup().
-void SndBackend_SECleanup(void);
+// The platform-independent layer always calls this before
+// AudioBackendCleanup().
+void AudioBackendCleanupSoundEffects(void);
 
-void SndBackend_SEUpdateVolume(void);
+void AudioBackendUpdateSoundEffectVolume(void);
 
-bool SndBackend_SELoad(uint8_t id, SND_INSTANCE_ID max,
-                       const SDL_AudioSpec &spec, std::span<const uint8_t> pcm);
-void SndBackend_SEPlay(uint8_t id, float pan = 0.0f, bool loop = false);
-void SndBackend_SEStop(uint8_t id);
+bool AudioBackendLoadSoundEffect(uint8_t id, SoundInstanceId max,
+                                 const SDL_AudioSpec &spec,
+                                 std::span<const uint8_t> pcm);
+void AudioBackendPlaySoundEffect(uint8_t id, float pan = 0.0f,
+                                 bool loop = false);
+void AudioBackendStopSoundEffect(uint8_t id);
 
 // Pause or resume all playing sounds if the window loses focus
-void SndBackend_PauseAll();
-void SndBackend_ResumeAll();
+void AudioBackendPauseAll();
+void AudioBackendResumeAll();
