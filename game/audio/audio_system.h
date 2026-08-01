@@ -11,9 +11,9 @@
 
 #include "sfx.h"
 
+#include "audio/bgm/midi/midi_sequencer.h"
+#include "audio/bgm/midi/midi_synth.h"
 #include "audio/core/audio_types.h"
-#include "audio/midi/midi_sequencer.h"
-#include "audio/midi/midi_synth.h"
 
 namespace audio {
 
@@ -33,9 +33,8 @@ public:
 
   bool EnableBgm(bool enabled, std::string_view soundfont = {});
   void SetVolumes(Volume bgm, Volume sfx);
-  void SetNormalization(bool enabled);
 
-  AudioResult LoadBgmMidi(midi::SequenceData sequence);
+  AudioResult LoadBgmMidi(bgm::SequenceData sequence);
   AudioResult LoadBgmWaveform(std::string_view path);
   void ClearBgmWaveform();
   void PlayBgm();
@@ -46,23 +45,21 @@ public:
   void SetBgmVolume(Volume volume);
   void SetSfxVolume(Volume volume);
   void SetBgmTempo(std::int8_t tempo);
-  void SetBgmGainApplied(bool enabled);
 
   [[nodiscard]] BgmSnapshot BgmSnapshot() const;
-  [[nodiscard]] midi::Visualization MidiVisualization() const;
+  [[nodiscard]] bgm::Visualization MidiVisualization() const;
 
   [[nodiscard]] std::size_t MidiDeviceCount() const;
   [[nodiscard]] std::optional<std::string>
   MidiDeviceNameAt(std::size_t index) const;
-  [[nodiscard]] std::optional<midi::DeviceSource>
+  [[nodiscard]] std::optional<bgm::DeviceSource>
   MidiDeviceSourceAt(std::size_t index) const;
   [[nodiscard]] std::optional<std::string> MidiCurrentDeviceName() const;
   AudioResult SelectMidiDevice(std::size_t index);
   AudioResult ChangeMidiDevice(int direction);
   void SetMidiFixSysExBugs(bool enabled);
 
-  AudioResult LoadSfx(std::uint8_t id,
-                      std::span<const std::uint8_t> wav,
+  AudioResult LoadSfx(std::uint8_t id, std::span<const std::uint8_t> wav,
                       std::uint8_t max_instances);
   void PlaySfx(SfxId id, int x = kSoundFieldCenterX, bool loop = false);
   void PlaySfx(std::uint8_t id, float pan = 0.0f, bool loop = false);
@@ -78,4 +75,3 @@ private:
 };
 
 } // namespace audio
-

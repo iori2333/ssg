@@ -1,5 +1,5 @@
 ///
-/// MusicPlayer - track playback, metadata, and BGM pack selection
+/// MusicPlayer - track playback and BGM pack selection
 ///
 /// Orchestrates the loading pipeline: pick a track → load MIDI (always,
 /// for sequencer + fallback audio) → optionally try waveform from a BGM

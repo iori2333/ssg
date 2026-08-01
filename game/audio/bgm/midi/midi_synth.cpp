@@ -17,7 +17,7 @@
 #include "audio/core/audio_types.h"
 #include "sys/log.h"
 
-namespace audio::midi {
+namespace audio::bgm {
 namespace {
 
 constexpr std::string_view kFontExtensions[] = {".sf2", ".sf3", ".dls"};
@@ -25,16 +25,14 @@ constexpr int kSampleRate = 44100;
 
 std::string Basename(std::string_view path) {
   const auto separator = path.find_last_of("/\\");
-  const auto name = (separator == std::string_view::npos)
-                        ? path
-                        : path.substr(separator + 1);
+  const auto name =
+      (separator == std::string_view::npos) ? path : path.substr(separator + 1);
   return std::string{name};
 }
 
 void ScanDirectory(const std::string &directory,
                    std::vector<std::string> &paths,
-                   std::vector<DeviceSource> &sources,
-                   DeviceSource source) {
+                   std::vector<DeviceSource> &sources, DeviceSource source) {
   std::error_code error;
   if (!std::filesystem::is_directory(directory, error)) {
     return;
@@ -247,8 +245,7 @@ std::optional<std::string> MidiSynth::DeviceName(std::size_t index) const {
   return Basename(impl_->font_paths[index]);
 }
 
-std::optional<DeviceSource>
-MidiSynth::DeviceSourceAt(std::size_t index) const {
+std::optional<DeviceSource> MidiSynth::DeviceSourceAt(std::size_t index) const {
   std::scoped_lock lock(impl_->mutex);
   if (index >= impl_->font_sources.size()) {
     return std::nullopt;
@@ -298,8 +295,7 @@ AudioResult MidiSynth::SelectDevice(std::size_t index) {
       impl_->synth, impl_->font_paths[impl_->font_index].c_str(), 1);
   if (impl_->font_id == FLUID_FAILED) {
     impl_->font_index = old_index;
-    impl_->font_id =
-        fluid_synth_sfload(impl_->synth, old_font.c_str(), 1);
+    impl_->font_id = fluid_synth_sfload(impl_->synth, old_font.c_str(), 1);
     if (impl_->font_id == FLUID_FAILED) {
       impl_->CleanupAudio();
       return AudioResult::Fail(
@@ -308,8 +304,7 @@ AudioResult MidiSynth::SelectDevice(std::size_t index) {
     }
   }
 
-  impl_->audio_driver =
-      new_fluid_audio_driver(impl_->settings, impl_->synth);
+  impl_->audio_driver = new_fluid_audio_driver(impl_->settings, impl_->synth);
   if (!impl_->audio_driver) {
     impl_->CleanupAudio();
     impl_->font_index = old_index;
@@ -361,8 +356,7 @@ AudioResult MidiSynth::ChangeDevice(int direction) {
     }
   }
 
-  impl_->audio_driver =
-      new_fluid_audio_driver(impl_->settings, impl_->synth);
+  impl_->audio_driver = new_fluid_audio_driver(impl_->settings, impl_->synth);
   if (!impl_->audio_driver) {
     impl_->CleanupAudio();
     impl_->font_index = old_index;
@@ -378,8 +372,7 @@ AudioResult MidiSynth::ChangeDevice(int direction) {
   return AudioResult::Ok();
 }
 
-void MidiSynth::Output(std::uint8_t status, std::uint8_t a,
-                       std::uint8_t b) {
+void MidiSynth::Output(std::uint8_t status, std::uint8_t a, std::uint8_t b) {
   std::scoped_lock lock(impl_->mutex);
   if (!impl_->synth) {
     return;
@@ -422,11 +415,9 @@ void MidiSynth::OutputSysEx(std::span<const std::uint8_t> message) {
   if (!impl_->synth || message.empty()) {
     return;
   }
-  const auto *data =
-      reinterpret_cast<const char *>(message.data() + 1);
-  fluid_synth_sysex(impl_->synth, data,
-                    static_cast<int>(message.size() - 1), nullptr, nullptr,
-                    nullptr, 0);
+  const auto *data = reinterpret_cast<const char *>(message.data() + 1);
+  fluid_synth_sysex(impl_->synth, data, static_cast<int>(message.size() - 1),
+                    nullptr, nullptr, nullptr, 0);
 }
 
 void MidiSynth::Panic() {
@@ -449,13 +440,11 @@ void MidiSynth::Resume() {
   if (!impl_->synth || impl_->audio_driver) {
     return;
   }
-  impl_->audio_driver =
-      new_fluid_audio_driver(impl_->settings, impl_->synth);
+  impl_->audio_driver = new_fluid_audio_driver(impl_->settings, impl_->synth);
   if (!impl_->audio_driver) {
     logging::Error(logging::Channel::Audio,
                    "Failed to resume FluidSynth audio driver");
   }
 }
 
-} // namespace audio::midi
-
+} // namespace audio::bgm

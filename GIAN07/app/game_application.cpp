@@ -80,7 +80,6 @@ bool GameApplication::Initialize() {
       context_.audio.Initialize(PathForData(), config.audio.soundfont);
   context_.audio.SetMidiFixSysExBugs(config.audio.fix_sysex_bugs);
   context_.audio.SetVolumes(config.audio.bgm_volume, config.audio.se_volume);
-  context_.audio.SetNormalization(config.audio.bgm_vol_norm);
   if (!audio_result.success) {
     logging::Warning(logging::Channel::Audio,
                      "No background music backend is available");

@@ -23,7 +23,8 @@ namespace audio::bgm {
 
 struct FlacCallbackData {
   std::istream &stream;
-  std::optional<PcmMetadataCallback> on_metadata;
+
+  explicit FlacCallbackData(std::istream &stream) : stream(stream) {}
 };
 
 size_t FlacRead(void *user_data, void *buf, size_t size) {
@@ -64,27 +65,6 @@ drflac_bool32 FlacTell(void *user_data, drflac_int64 *cursor) {
   *cursor = offset;
   return DRFLAC_TRUE;
 }
-
-#pragma warning(suppress : 26461) // con.3
-void FlacMetadata(void *user_data, drflac_metadata *metadata) {
-  if (metadata->type != DRFLAC_METADATA_BLOCK_TYPE_VORBIS_COMMENT) {
-    return;
-  }
-  const auto &callback = *static_cast<FlacCallbackData *>(user_data);
-  if (!callback.on_metadata) {
-    return;
-  }
-
-  drflac_vorbis_comment_iterator it;
-  drflac_init_vorbis_comment_iterator(
-      &it, metadata->data.vorbis_comment.commentCount,
-      metadata->data.vorbis_comment.pComments);
-  const char *cmt_str = nullptr;
-  drflac_uint32 cmt_len = 0;
-  while ((cmt_str = drflac_next_vorbis_comment(&it, &cmt_len)) != nullptr) {
-    OnVorbisComment(*callback.on_metadata, {cmt_str, cmt_len});
-  }
-}
 // ---------
 
 using FlacReadFunction = drflac_uint64(drflac *, drflac_uint64, void *);
@@ -116,26 +96,8 @@ void FlacPcmPart::PartSeekToSample(size_t sample) {
 
 FlacPcmPart::~FlacPcmPart() { drflac_close(ff); }
 
-std::unique_ptr<PcmPart> OpenFlac(std::istream &stream,
-                                  std::optional<PcmMetadataCallback> on_metadata) {
-  if (const auto &metadata_cb = on_metadata) {
-    const std::streamoff initial_offset = stream.tellg();
-    if (initial_offset < 0) {
-      return nullptr;
-    }
-    FlacCallbackData data = {stream, *metadata_cb};
-    auto *ff = drflac_open_with_metadata(FlacRead, FlacSeek, FlacTell,
-                                         FlacMetadata, &data, nullptr);
-    if (ff) {
-      drflac_close(ff);
-    }
-    stream.clear();
-    stream.seekg(initial_offset);
-    if (!stream) {
-      return nullptr;
-    }
-  }
-  auto callback_data = std::make_unique<FlacCallbackData>(stream, std::nullopt);
+std::unique_ptr<PcmPart> OpenFlac(std::istream &stream) {
+  auto callback_data = std::make_unique<FlacCallbackData>(stream);
   auto *ff =
       drflac_open(FlacRead, FlacSeek, FlacTell, callback_data.get(), nullptr);
   if (!ff) {

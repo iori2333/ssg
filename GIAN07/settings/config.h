@@ -69,7 +69,6 @@ struct UiConfig {
 struct AudioConfig {
   bool bgm_enabled = true;
   bool se_enabled = true;
-  bool bgm_vol_norm = true;
   bool fix_sysex_bugs = true;
   MidiVariant midi_variant{};
   std::string soundfont;

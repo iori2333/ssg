@@ -82,7 +82,7 @@ static const ov_callbacks kVorbisCallbacks = {
 };
 // ---------
 
-struct VorbisPcmPart : public bgm::PcmPart {
+struct VorbisPcmPart : public PcmPart {
   OggVorbis_File vf;
 
   size_t PartDecodeSingle(std::span<std::byte> buf) override;
@@ -106,9 +106,7 @@ void VorbisPcmPart::PartSeekToSample(size_t sample) {
 
 VorbisPcmPart::~VorbisPcmPart() { ov_clear(&vf); }
 
-std::unique_ptr<bgm::PcmPart>
-OpenVorbis(std::istream &stream,
-           std::optional<bgm::PcmMetadataCallback> on_metadata) {
+std::unique_ptr<PcmPart> OpenVorbis(std::istream &stream) {
   OggVorbis_File vf = {0};
   const auto ret =
       ov_open_callbacks(&stream, &vf, nullptr, 0, kVorbisCallbacks);
@@ -117,23 +115,6 @@ OpenVorbis(std::istream &stream,
   }
   assert(vf.vi->rate >= 0);
   assert(vf.vi->channels >= 0);
-
-  if (const auto &metadata_cb = on_metadata) {
-    const auto *vc = ov_comment(&vf, -1);
-    if (vc) {
-      for (decltype(vc->comments) i = 0; i < vc->comments; i++) {
-        // Why signed!?
-        const auto len = vc->comment_lengths[i];
-        if (vc->comment_lengths[i] < 2) {
-          continue;
-        }
-        bgm::OnVorbisComment(*metadata_cb, {
-                                               vc->user_comments[i],
-                                               static_cast<size_t>(len),
-                                           });
-      }
-    }
-  }
 
   const auto samplingrate = static_cast<uint32_t>(vf.vi->rate);
   const auto channels = static_cast<uint16_t>(vf.vi->channels);

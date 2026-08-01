@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <utility>
 
+#include "audio/bgm/midi/midi_sequencer.h"
+#include "audio/bgm/midi/midi_synth.h"
 #include "audio/core/audio_types.h"
-#include "audio/midi/midi_sequencer.h"
-#include "audio/midi/midi_synth.h"
 
 namespace audio::bgm {
 namespace {
@@ -27,11 +27,10 @@ Volume LinearToVolume(float linear) {
 
 } // namespace
 
-MidiTrack::MidiTrack(midi::MidiSequencer &sequencer, midi::MidiSynth &synth)
+MidiTrack::MidiTrack(MidiSequencer &sequencer, MidiSynth &synth)
     : sequencer_(sequencer), synth_(synth) {}
 
-void MidiTrack::Load(midi::SequenceData sequence) {
-  title_ = sequence.title;
+void MidiTrack::Load(SequenceData sequence) {
   sequencer_.Load(std::move(sequence));
   sequencer_.Rewind();
   fade_duration_ms_.store(0);
@@ -43,7 +42,6 @@ void MidiTrack::Load(midi::SequenceData sequence) {
 void MidiTrack::Clear() {
   loaded_.store(false);
   playing_.store(false);
-  title_.clear();
   fade_duration_ms_.store(0);
   fade_remaining_ms_.store(0);
 }
@@ -105,8 +103,6 @@ void MidiTrack::SetTempo(std::int8_t tempo) {
   sequencer_.SetTempo(numerator, kTempoDenominator);
 }
 
-void MidiTrack::SetGainApplied(bool) {}
-
 void MidiTrack::Tick(std::chrono::milliseconds delta) {
   if (!playing_.load() || !loaded_.load()) {
     return;
@@ -144,8 +140,6 @@ bool MidiTrack::IsLoaded() const { return loaded_.load(); }
 bool MidiTrack::IsPlaying() const { return playing_.load(); }
 
 BgmMode MidiTrack::Mode() const { return BgmMode::Midi; }
-
-std::string_view MidiTrack::Title() const { return title_; }
 
 std::chrono::milliseconds MidiTrack::PlayTime() const {
   return sequencer_.Realtime();

@@ -141,7 +141,6 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
   if (auto *sec = tbl["sound"].as_table()) {
     LoadToml(*sec, "bgm_enabled", cfg.audio.bgm_enabled);
     LoadToml(*sec, "se_enabled", cfg.audio.se_enabled);
-    LoadToml(*sec, "bgm_volume_normalized", cfg.audio.bgm_vol_norm);
     LoadToml(*sec, "se_volume", cfg.audio.se_volume, ValidVolume);
     LoadToml(*sec, "bgm_volume", cfg.audio.bgm_volume, ValidVolume);
     LoadToml(*sec, "bgm_pack", cfg.audio.bgm_pack);
@@ -224,7 +223,6 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
     toml::table sec;
     sec.emplace("bgm_enabled", cfg.audio.bgm_enabled);
     sec.emplace("se_enabled", cfg.audio.se_enabled);
-    sec.emplace("bgm_volume_normalized", cfg.audio.bgm_vol_norm);
     sec.emplace("se_volume", cfg.audio.se_volume);
     sec.emplace("bgm_volume", cfg.audio.bgm_volume);
     sec.emplace("bgm_pack", cfg.audio.bgm_pack);

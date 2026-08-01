@@ -1,29 +1,13 @@
-/// Low-level PCM source decoding shared by BGM codecs and waveform playback
+/// Low-level PCM source decoding shared by BGM codecs and PCM track playback
 /// (adapted from thcrap's bgmmod module).
-
-// GCC 15 throws `error: redefinition of 'void std::__terminate()'` if this
-// appears after a module import.
-#if (__cpp_lib_to_chars < 201611L)
-#include <cstdlib>
-#endif
 
 #include <algorithm>
 #include <cassert>
-#include <cctype>
 #include <fstream>
-#include <version>
 
 #include "pcm_source.h"
 
 namespace audio::bgm {
-
-void OnVorbisComment(PcmMetadataCallback func, std::string_view comment) {
-  const auto eq_i = comment.find('=');
-  if (eq_i == std::string_view::npos) {
-    return;
-  }
-  func(comment.substr(0, eq_i), comment.substr(eq_i + 1));
-}
 
 void ApplyVolumeError(std::span<std::byte>, uint16_t, PcmVolume &) {
   assert(!"missing fade implementation");
@@ -93,11 +77,8 @@ struct PcmCodec {
   PcmPartOpen &open;
 };
 
-std::unique_ptr<PcmPart>
-OpenFlac(std::istream &stream, std::optional<PcmMetadataCallback> on_metadata);
-std::unique_ptr<PcmPart>
-OpenVorbis(std::istream &stream,
-           std::optional<PcmMetadataCallback> on_metadata);
+std::unique_ptr<PcmPart> OpenFlac(std::istream &stream);
+std::unique_ptr<PcmPart> OpenVorbis(std::istream &stream);
 
 // Sorted in order of preference.
 constexpr PcmCodec kPcmCodecs[] = {
@@ -111,13 +92,6 @@ static constexpr size_t kExtensionCapacity =
     std::ranges::max_element(kPcmCodecs, [](const auto &a, const auto &b) {
       return (a.ext.size() < b.ext.size());
     })->ext.size();
-
-static bool TagEquals(std::string_view a, std::string_view b) {
-  return std::ranges::equal(a, b, [](char left, char right) {
-    return std::tolower(static_cast<unsigned char>(left)) ==
-           std::tolower(static_cast<unsigned char>(right));
-  });
-}
 
 std::unique_ptr<PcmStream> OpenPcmStream(std::string_view base_fn) {
   const size_t base_len = base_fn.size();
@@ -137,45 +111,8 @@ std::unique_ptr<PcmStream> OpenPcmStream(std::string_view base_fn) {
 
     std::unique_ptr<PcmPart> intro_part;
     std::unique_ptr<PcmPart> loop_part;
-    PcmMetadata meta;
 
-    intro_part = codec.open(*intro_stream, [&](auto tag, auto value) {
-      if (meta.title.empty() && TagEquals(tag, "TITLE")) {
-        meta.title = value;
-        return;
-      }
-      if (!meta.gain_factor && TagEquals(tag, "GAIN FACTOR")) {
-        const auto first = value.data();
-        const auto last = (first + value.size());
-
-#if (__cpp_lib_to_chars >= 201611L)
-        float parsed = 0;
-        const auto r = std::from_chars(first, last, parsed);
-        const auto success = (r.ptr == last);
-#else
-				// Locale braindeath time!
-				// (https://github.com/mpv-player/mpv/commit/1e70e82baa)
-				static locale_t locale_c = nullptr;
-				if(!locale_c) {
-					locale_c = newlocale(LC_NUMERIC_MASK, "C", nullptr);
-					if(locale_c) {
-						atexit([] {
-							freelocale(locale_c);
-							locale_c = nullptr;
-						});
-					}
-				}
-
-				char *parsed_last = nullptr;
-				float parsed = strtof_l(first, &parsed_last, locale_c);
-				const auto success = (parsed_last == last);
-#endif
-        if (success) {
-          meta.gain_factor = parsed;
-        }
-        return;
-      }
-    });
+    intro_part = codec.open(*intro_stream);
     if (!intro_part) {
       continue;
     }
@@ -185,7 +122,7 @@ std::unique_ptr<PcmStream> OpenPcmStream(std::string_view base_fn) {
     fn += codec.ext;
     auto loop_stream = std::make_unique<std::ifstream>(fn, std::ios::binary);
     if (*loop_stream) {
-      loop_part = codec.open(*loop_stream, std::nullopt);
+      loop_part = codec.open(*loop_stream);
       if (!loop_part) {
         continue;
       }
@@ -198,8 +135,8 @@ std::unique_ptr<PcmStream> OpenPcmStream(std::string_view base_fn) {
       loop_stream.reset();
     }
     return std::make_unique<PcmStream>(
-        std::move(meta), std::move(intro_stream), std::move(loop_stream),
-        std::move(intro_part), std::move(loop_part));
+        std::move(intro_stream), std::move(loop_stream), std::move(intro_part),
+        std::move(loop_part));
   }
   return nullptr;
 }

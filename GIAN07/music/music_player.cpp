@@ -1,5 +1,5 @@
 ///
-/// MusicPlayer - track playback, metadata, and BGM pack selection
+/// MusicPlayer - track playback and BGM pack selection
 ///
 #include <filesystem>
 #include <format>
@@ -7,9 +7,9 @@
 
 #include "music_player.h"
 
-#include "audio/core/audio_types.h"
-#include "audio/midi/midi_parser.h"
 #include "audio/audio_system.h"
+#include "audio/bgm/midi/midi_parser.h"
+#include "audio/core/audio_types.h"
 #include "sys/log.h"
 #include "sys/path.h"
 
@@ -36,7 +36,7 @@ bool MusicPlayer::Play(unsigned int id) {
                    std::to_underlying(midi_variant_));
     return false;
   }
-  auto sequence = audio::midi::ParseMidi(midi);
+  auto sequence = audio::bgm::ParseMidi(midi);
   if (!sequence || !audio_.LoadBgmMidi(std::move(*sequence)).success) {
     logging::Error(logging::Channel::Music,
                    "Failed to load MIDI for track {} variant={}", id,
@@ -68,8 +68,7 @@ void MusicPlayer::SetMidiVariant(MidiVariant variant) {
     return;
   }
   midi_variant_ = variant;
-  if (loaded_num_ != 0 &&
-      audio_.BgmSnapshot().mode != audio::BgmMode::None) {
+  if (loaded_num_ != 0 && audio_.BgmSnapshot().mode != audio::BgmMode::None) {
     Play(loaded_num_ - 1);
   }
 }

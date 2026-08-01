@@ -14,9 +14,9 @@
 #include <miniaudio.h>
 
 #include "audio/bgm/bgm_controller.h"
+#include "audio/bgm/midi/midi_sequencer.h"
+#include "audio/bgm/midi/midi_synth.h"
 #include "audio/core/audio_types.h"
-#include "audio/midi/midi_sequencer.h"
-#include "audio/midi/midi_synth.h"
 #include "audio/sfx/sfx_bank.h"
 #include "util/guard.h"
 
@@ -26,8 +26,7 @@ namespace {
 using namespace std::chrono_literals;
 
 float LinearVolume(Volume volume) {
-  return (static_cast<float>(volume) /
-          static_cast<float>(kMaxVolume));
+  return (static_cast<float>(volume) / static_cast<float>(kMaxVolume));
 }
 
 } // namespace
@@ -35,8 +34,8 @@ float LinearVolume(Volume volume) {
 struct AudioSystem::Impl {
   ma_engine engine{};
   sfx::SfxBank sfx{engine};
-  midi::MidiSequencer sequencer;
-  midi::MidiSynth synth;
+  bgm::MidiSequencer sequencer;
+  bgm::MidiSynth synth;
   bgm::BgmController bgm{engine, sequencer, synth};
   std::jthread timer;
   std::string data_path;
@@ -141,11 +140,7 @@ void AudioSystem::SetVolumes(Volume bgm, Volume sfx) {
   SetSfxVolume(sfx);
 }
 
-void AudioSystem::SetNormalization(bool enabled) {
-  SetBgmGainApplied(enabled);
-}
-
-AudioResult AudioSystem::LoadBgmMidi(midi::SequenceData sequence) {
+AudioResult AudioSystem::LoadBgmMidi(bgm::SequenceData sequence) {
   if (!impl_->initialized) {
     return AudioResult::Fail(AudioError::NotInitialized,
                              "Audio system is not initialized");
@@ -198,8 +193,7 @@ void AudioSystem::FadeOutBgm(std::uint8_t speed) {
   const auto volume_start =
       (impl_->bgm_volume == 0) ? 0 : static_cast<Volume>(impl_->bgm_volume - 1);
   const auto duration =
-      (10ms * kMaxVolume *
-       ((((256 - speed) * 4) / (kMaxVolume + 1)) + 1));
+      (10ms * kMaxVolume * ((((256 - speed) * 4) / (kMaxVolume + 1)) + 1));
   impl_->bgm.FadeOut(LinearVolume(volume_start), duration);
 }
 
@@ -223,17 +217,9 @@ void AudioSystem::SetBgmTempo(std::int8_t tempo) {
   }
 }
 
-void AudioSystem::SetBgmGainApplied(bool enabled) {
-  if (impl_->initialized) {
-    impl_->bgm.SetGainApplied(enabled);
-  }
-}
+BgmSnapshot AudioSystem::BgmSnapshot() const { return impl_->bgm.Snapshot(); }
 
-BgmSnapshot AudioSystem::BgmSnapshot() const {
-  return impl_->bgm.Snapshot();
-}
-
-midi::Visualization AudioSystem::MidiVisualization() const {
+bgm::Visualization AudioSystem::MidiVisualization() const {
   return impl_->sequencer.Snapshot();
 }
 
@@ -246,7 +232,7 @@ AudioSystem::MidiDeviceNameAt(std::size_t index) const {
   return impl_->midi_available ? impl_->synth.DeviceName(index) : std::nullopt;
 }
 
-std::optional<midi::DeviceSource>
+std::optional<bgm::DeviceSource>
 AudioSystem::MidiDeviceSourceAt(std::size_t index) const {
   return impl_->midi_available ? impl_->synth.DeviceSourceAt(index)
                                : std::nullopt;
@@ -259,14 +245,14 @@ std::optional<std::string> AudioSystem::MidiCurrentDeviceName() const {
 
 AudioResult AudioSystem::SelectMidiDevice(std::size_t index) {
   return impl_->midi_available ? impl_->synth.SelectDevice(index)
-                         : AudioResult::Fail(AudioError::NotEnabled,
-                                             "MIDI is not available");
+                               : AudioResult::Fail(AudioError::NotEnabled,
+                                                   "MIDI is not available");
 }
 
 AudioResult AudioSystem::ChangeMidiDevice(int direction) {
   return impl_->midi_available ? impl_->synth.ChangeDevice(direction)
-                         : AudioResult::Fail(AudioError::NotEnabled,
-                                             "MIDI is not available");
+                               : AudioResult::Fail(AudioError::NotEnabled,
+                                                   "MIDI is not available");
 }
 
 void AudioSystem::SetMidiFixSysExBugs(bool enabled) {

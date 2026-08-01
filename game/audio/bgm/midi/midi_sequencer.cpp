@@ -13,7 +13,7 @@
 
 #include "util/byte_io.h"
 
-namespace audio::midi {
+namespace audio::bgm {
 namespace {
 
 using namespace std::chrono_literals;
@@ -41,9 +41,7 @@ struct MidiEvent {
   std::uint8_t meta;
   std::span<const std::uint8_t> extra_data;
 
-  [[nodiscard]] std::uint8_t Channel() const {
-    return (status & 0x0f);
-  }
+  [[nodiscard]] std::uint8_t Channel() const { return (status & 0x0f); }
 
   [[nodiscard]] bool IsNoteOff() const {
     return ((kind == EventKind::NoteOff) ||
@@ -58,11 +56,10 @@ struct MidiTempo {
   [[nodiscard]] std::chrono::nanoseconds
   RealtimeFromDelta(std::int32_t delta) const {
     const auto qn_times_delta = (qn_duration * delta);
-    return ((delta > 0)
-                ? ((qn_times_delta + std::chrono::nanoseconds(ppqn / 2)) /
-                   ppqn)
-                : ((qn_times_delta - std::chrono::nanoseconds(ppqn / 2)) /
-                   ppqn));
+    return (
+        (delta > 0)
+            ? ((qn_times_delta + std::chrono::nanoseconds(ppqn / 2)) / ppqn)
+            : ((qn_times_delta - std::chrono::nanoseconds(ppqn / 2)) / ppqn));
   }
 
   [[nodiscard]] std::int32_t
@@ -137,8 +134,7 @@ public:
         return std::nullopt;
       }
       meta = *meta_byte;
-      extra_data =
-          cursor_.ReadBytes(static_cast<std::size_t>(length));
+      extra_data = cursor_.ReadBytes(static_cast<std::size_t>(length));
       break;
     }
     default:
@@ -188,8 +184,7 @@ struct MidiTrack {
           loop_pulse = next_pulse;
         }
       } else if (next_pulse > loop.end) {
-        next_delta = ((loop.end - prev_pulse) +
-                      (loop_pulse - loop.start));
+        next_delta = ((loop.end - prev_pulse) + (loop_pulse - loop.start));
         it = loop_it;
         next_pulse = loop_pulse;
         next_time += tempo.RealtimeFromDelta(next_delta);
@@ -211,8 +206,7 @@ void SendEvent(const MidiEvent &event, MidiSink &sink, bool fix_sysex) {
       static constexpr std::uint8_t kSc88ReverbMacro[] = {
           0x41, 0x10, 0x42, 0x12, 0x40, 0x01, 0x30,
       };
-      if (std::equal(std::begin(kSc88ReverbMacro),
-                     std::end(kSc88ReverbMacro),
+      if (std::equal(std::begin(kSc88ReverbMacro), std::end(kSc88ReverbMacro),
                      event.extra_data.begin())) {
         const auto fix = std::min<std::uint8_t>(message[8], 7);
         if (fix != message[8]) {
@@ -276,12 +270,10 @@ struct MidiSequencer::Impl {
       if (event.meta == 0x2f) {
         if (track.loop_it) {
           track.next_delta =
-              ((loop.end - track.next_pulse) +
-               (track.loop_pulse - loop.start));
+              ((loop.end - track.next_pulse) + (track.loop_pulse - loop.start));
           track.it = track.loop_it;
           track.next_pulse = track.loop_pulse;
-          track.next_time +=
-              tempo.RealtimeFromDelta(track.next_delta);
+          track.next_time += tempo.RealtimeFromDelta(track.next_delta);
         } else {
           track.play = false;
         }
@@ -292,8 +284,9 @@ struct MidiSequencer::Impl {
         for (const auto byte : event.extra_data) {
           tempo_new = ((tempo_new << 8) + byte);
         }
-        tempo.qn_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::microseconds{tempo_new});
+        tempo.qn_duration =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::microseconds{tempo_new});
         for (auto &other : tracks) {
           const auto other_unlooped_next_pulse =
               (other.prev_pulse + other.next_delta);
@@ -301,8 +294,7 @@ struct MidiSequencer::Impl {
               ((track.next_pulse >= other.prev_pulse)
                    ? (other_unlooped_next_pulse - track.next_pulse)
                    : (other.next_pulse - track.next_pulse));
-          other.next_time =
-              (track.next_time + tempo.RealtimeFromDelta(delta));
+          other.next_time = (track.next_time + tempo.RealtimeFromDelta(delta));
         }
       }
       track.ConsumeDelta(tempo, loop);
@@ -359,8 +351,7 @@ void MidiSequencer::Load(SequenceData sequence) {
   impl_->tracks.clear();
   impl_->tracks.reserve(impl_->sequence.tracks.size());
   for (std::size_t i = 0; i < impl_->sequence.tracks.size(); i++) {
-    impl_->tracks.push_back(
-        MidiTrack{.data = impl_->sequence.Track(i)});
+    impl_->tracks.push_back(MidiTrack{.data = impl_->sequence.Track(i)});
   }
   impl_->tempo.ppqn = impl_->sequence.ppqn;
   impl_->tempo.qn_duration = 1s;
@@ -381,8 +372,7 @@ void MidiSequencer::SetLoop(const Loop &loop) {
   impl_->loop = loop;
 }
 
-void MidiSequencer::SetTempo(std::uint8_t numerator,
-                             std::uint8_t denominator) {
+void MidiSequencer::SetTempo(std::uint8_t numerator, std::uint8_t denominator) {
   std::scoped_lock lock(impl_->mutex);
   impl_->tempo_numerator = numerator;
   impl_->tempo_denominator = denominator;
@@ -426,8 +416,8 @@ void MidiSequencer::Tick(std::chrono::nanoseconds delta, MidiSink &sink,
         continue;
       }
 
-      if (impl_->loop.enabled &&
-          (track.next_pulse == impl_->loop.end) && !event->IsNoteOff()) {
+      if (impl_->loop.enabled && (track.next_pulse == impl_->loop.end) &&
+          !event->IsNoteOff()) {
         track.ConsumeDelta(impl_->tempo, impl_->loop);
         continue;
       }
@@ -443,10 +433,8 @@ void MidiSequencer::Tick(std::chrono::nanoseconds delta, MidiSink &sink,
     }
   }
 
-  const bool still_playing =
-      std::ranges::any_of(impl_->tracks, [](const auto &track) {
-        return track.play;
-      });
+  const bool still_playing = std::ranges::any_of(
+      impl_->tracks, [](const auto &track) { return track.play; });
   if (pulse_sync != 0) {
     time.pulse_of_last_event_processed = pulse_sync;
   }
@@ -481,14 +469,11 @@ Visualization MidiSequencer::Snapshot() const {
       }
       auto &level = impl_->visualization.levels[channel][note];
       if (level != 0) {
-        const auto decay =
-            (std::max)(static_cast<int>(level / 50), 1);
-        level = ((level >= decay)
-                     ? static_cast<std::uint8_t>(level - decay)
-                     : 0);
+        const auto decay = (std::max)(static_cast<int>(level / 50), 1);
+        level =
+            ((level >= decay) ? static_cast<std::uint8_t>(level - decay) : 0);
       }
-      auto &highlight =
-          impl_->visualization.note_highlights[channel][note];
+      auto &highlight = impl_->visualization.note_highlights[channel][note];
       if (highlight != 0) {
         highlight--;
       }
@@ -512,4 +497,4 @@ std::chrono::milliseconds MidiSequencer::Realtime() const {
   return impl_->visualization.play_time.realtime;
 }
 
-} // namespace audio::midi
+} // namespace audio::bgm

@@ -3,24 +3,23 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
-#include <string>
 #include <string_view>
 #include <utility>
 
 #include "midi_track.h"
 #include "pcm_track.h"
 
+#include "audio/bgm/midi/midi_sequencer.h"
+#include "audio/bgm/midi/midi_synth.h"
 #include "audio/core/audio_types.h"
-#include "audio/midi/midi_sequencer.h"
-#include "audio/midi/midi_synth.h"
 
 namespace audio::bgm {
 
-BgmController::BgmController(ma_engine &engine, midi::MidiSequencer &sequencer,
-                             midi::MidiSynth &synth)
+BgmController::BgmController(ma_engine &engine, MidiSequencer &sequencer,
+                             MidiSynth &synth)
     : engine_(engine), sequencer_(sequencer), synth_(synth) {}
 
-AudioResult BgmController::LoadMidi(midi::SequenceData sequence) {
+AudioResult BgmController::LoadMidi(SequenceData sequence) {
   if (active_) {
     active_->Stop();
   }
@@ -131,13 +130,6 @@ void BgmController::SetTempo(std::int8_t tempo) {
   }
 }
 
-void BgmController::SetGainApplied(bool enabled) {
-  gain_applied_ = enabled;
-  if (active_) {
-    active_->SetGainApplied(enabled);
-  }
-}
-
 void BgmController::Tick(std::chrono::milliseconds delta) {
   if (!playing_.load() || !active_) {
     return;
@@ -156,12 +148,10 @@ BgmSnapshot BgmController::Snapshot() const {
   BgmSnapshot snapshot;
   snapshot.state = state_;
   snapshot.tempo = tempo_;
-  snapshot.gain_applied = gain_applied_;
   if (!active_) {
     return snapshot;
   }
   snapshot.mode = active_->Mode();
-  snapshot.title = std::string{active_->Title()};
   snapshot.play_time = active_->PlayTime();
   return snapshot;
 }
@@ -171,7 +161,6 @@ bool BgmController::IsLoaded() const { return active_ && active_->IsLoaded(); }
 void BgmController::ApplyTrackSettings(Track &track) {
   track.SetVolume(volume_);
   track.SetTempo(tempo_);
-  track.SetGainApplied(gain_applied_);
 }
 
 } // namespace audio::bgm

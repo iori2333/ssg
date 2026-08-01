@@ -58,7 +58,7 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 | `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
 | `game/sys/` | System wrappers – bit streams, buffer, file, path, thread, log, input |
 | `game/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |
-| `game/audio/` | Audio layer – sound effects, MIDI, BGM, codecs, volume, audio backends |
+| `game/audio/` | Audio layer – sound effects, BGM/MIDI, codecs, volume, audio backends |
 | `game/util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
 | `game/platform/` | Platform-specific backends with no cross-platform equivalent |
 | `tools/` | Build tools: pack_tool (PBG extract/pack), script_tool (ECL/SCL disasm/asm) |

@@ -8,14 +8,16 @@
 #include <optional>
 #include <string_view>
 
-#include "audio/midi/midi_sequencer.h"
+#include "audio/bgm/midi/midi_sequencer.h"
 #include "gfx/coords.h"
 #include "platform/text_backend.h"
 #include "sys/input.h"
 
 class MusicPlayer;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 namespace i18n {
 class Localization;
@@ -61,7 +63,7 @@ private:
   uint32_t title_marquee_frame_ = 0;
   std::array<uint16_t, 144> spectrum_peaks_{};
   uint8_t spectrum_decay_frame_ = 0;
-  audio::midi::Visualization midi_visualization_{};
+  audio::bgm::Visualization midi_visualization_{};
 
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;

@@ -5,6 +5,6 @@ Core game functionality and all cross-platform backend code.
 | `main.cpp` | SDL entry point |
 | `sys/` | System wrappers – buffer, file, path, thread, log, input |
 | `gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |
-| `audio/` | Audio layer – sound, MIDI, BGM, codecs, volume, audio backends |
+| `audio/` | Audio layer – sound, BGM/MIDI, codecs, volume, audio backends |
 | `util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
 

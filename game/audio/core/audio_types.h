@@ -59,7 +59,6 @@ struct BgmSnapshot {
   std::string title;
   std::chrono::milliseconds play_time{};
   int8_t tempo = 0;
-  bool gain_applied = false;
 };
 
 using Volume = uint8_t;
@@ -69,4 +68,3 @@ inline constexpr Volume kMaxVolume = 127;
 [[nodiscard]] std::string_view ToString(BgmMode mode);
 
 } // namespace audio
-

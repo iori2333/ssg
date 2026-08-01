@@ -33,13 +33,11 @@ public:
   void FadeOut(float volume_start, std::chrono::milliseconds duration) override;
   void SetVolume(Volume volume) override;
   void SetTempo(std::int8_t tempo) override;
-  void SetGainApplied(bool enabled) override;
   void Tick(std::chrono::milliseconds delta) override;
 
   [[nodiscard]] bool IsLoaded() const override;
   [[nodiscard]] bool IsPlaying() const override;
   [[nodiscard]] BgmMode Mode() const override;
-  [[nodiscard]] std::string_view Title() const override;
   [[nodiscard]] std::chrono::milliseconds PlayTime() const override;
   [[nodiscard]] float FadeVolumeLinear() const override;
 
@@ -52,7 +50,6 @@ private:
   bool sound_initialized_ = false;
   std::atomic<bool> playing_ = false;
   Volume volume_ = kMaxVolume;
-  bool gain_applied_ = true;
   std::int8_t tempo_ = 0;
 };
 

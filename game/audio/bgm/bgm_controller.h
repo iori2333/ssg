@@ -6,27 +6,25 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <string_view>
 
 struct ma_engine;
 
 #include "track.h"
 
+#include "audio/bgm/midi/midi_parser.h"
 #include "audio/core/audio_types.h"
-#include "audio/midi/midi_parser.h"
-
-namespace audio::midi {
-class MidiSequencer;
-class MidiSynth;
-} // namespace audio::midi
 
 namespace audio::bgm {
 
+class MidiSequencer;
+class MidiSynth;
+
 class BgmController {
 public:
-  BgmController(ma_engine &engine, midi::MidiSequencer &sequencer,
-                midi::MidiSynth &synth);
+  BgmController(ma_engine &engine, MidiSequencer &sequencer, MidiSynth &synth);
 
-  AudioResult LoadMidi(midi::SequenceData sequence);
+  AudioResult LoadMidi(SequenceData sequence);
   AudioResult LoadWaveform(std::string_view path);
   void ClearWaveform();
 
@@ -38,7 +36,6 @@ public:
 
   void SetVolume(Volume volume);
   void SetTempo(std::int8_t tempo);
-  void SetGainApplied(bool enabled);
 
   void Tick(std::chrono::milliseconds delta);
 
@@ -49,14 +46,13 @@ private:
   void ApplyTrackSettings(Track &track);
 
   ma_engine &engine_;
-  midi::MidiSequencer &sequencer_;
-  midi::MidiSynth &synth_;
+  MidiSequencer &sequencer_;
+  MidiSynth &synth_;
   std::unique_ptr<Track> midi_;
   std::unique_ptr<Track> waveform_;
   Track *active_ = nullptr;
   PlaybackState state_ = PlaybackState::Idle;
   std::atomic<bool> playing_ = false;
-  bool gain_applied_ = true;
   Volume volume_ = kMaxVolume;
   std::int8_t tempo_ = 0;
 };

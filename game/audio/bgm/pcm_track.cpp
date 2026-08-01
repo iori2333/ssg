@@ -5,9 +5,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <span>
-#include <string>
 #include <string_view>
 
 #include <miniaudio.h>
@@ -39,9 +37,7 @@ public:
 
   void FadeOut(float from, std::chrono::milliseconds duration);
   [[nodiscard]] bool IsLoaded() const;
-  [[nodiscard]] std::string_view Title() const;
   [[nodiscard]] float FadeVolumeLinear() const;
-  [[nodiscard]] std::optional<float> GainFactor() const;
   [[nodiscard]] ma_data_source *DataSource();
 
   static ma_result GetDataFormat(ma_data_source *data_source, ma_format *format,
@@ -54,7 +50,6 @@ public:
 private:
   ma_data_source_base data_source_{};
   std::unique_ptr<bgm::PcmStream> source_;
-  std::string title_;
   bool initialized_ = false;
 };
 
@@ -76,13 +71,11 @@ AudioResult PcmTrack::Source::Load(std::string_view path) {
     return AudioResult::Fail(AudioError::TrackOpenFailed,
                              "Failed to open waveform track");
   }
-  title_ = source_->metadata.title;
 
   ma_data_source_config config = ma_data_source_config_init();
   config.vtable = &kWaveformVtable;
   if (ma_data_source_init(&config, &data_source_) != MA_SUCCESS) {
     source_.reset();
-    title_.clear();
     return AudioResult::Fail(AudioError::BackendFailed,
                              "Failed to initialize waveform data source");
   }
@@ -96,7 +89,6 @@ void PcmTrack::Source::Unload() {
     initialized_ = false;
   }
   source_.reset();
-  title_.clear();
 }
 
 void PcmTrack::Source::FadeOut(float from, std::chrono::milliseconds duration) {
@@ -109,17 +101,8 @@ bool PcmTrack::Source::IsLoaded() const {
   return initialized_ && source_ != nullptr;
 }
 
-std::string_view PcmTrack::Source::Title() const { return title_; }
-
 float PcmTrack::Source::FadeVolumeLinear() const {
   return source_ ? source_->FadeVolumeLinear() : 0.0f;
-}
-
-std::optional<float> PcmTrack::Source::GainFactor() const {
-  if (!source_ || !source_->metadata.gain_factor) {
-    return std::nullopt;
-  }
-  return source_->metadata.gain_factor;
 }
 
 ma_data_source *PcmTrack::Source::DataSource() {
@@ -247,11 +230,6 @@ void PcmTrack::SetTempo(std::int8_t tempo) {
                                   static_cast<float>(kTempoDenominator));
 }
 
-void PcmTrack::SetGainApplied(bool enabled) {
-  gain_applied_ = enabled;
-  ApplyVolume();
-}
-
 void PcmTrack::FadeOut(float volume_start, std::chrono::milliseconds duration) {
   if (IsLoaded()) {
     source_->FadeOut(volume_start, duration);
@@ -275,10 +253,6 @@ bool PcmTrack::IsPlaying() const { return playing_.load(); }
 
 BgmMode PcmTrack::Mode() const { return BgmMode::Waveform; }
 
-std::string_view PcmTrack::Title() const {
-  return source_ ? source_->Title() : std::string_view{};
-}
-
 std::chrono::milliseconds PcmTrack::PlayTime() const {
   if (!IsLoaded()) {
     return std::chrono::milliseconds::zero();
@@ -294,13 +268,7 @@ void PcmTrack::ApplyVolume() {
   if (!IsLoaded()) {
     return;
   }
-  float gain = 1.0f;
-  if (gain_applied_) {
-    if (const auto gain_factor = source_->GainFactor(); gain_factor) {
-      gain = *gain_factor;
-    }
-  }
-  ma_sound_set_volume(&sound_, LinearVolume(volume_) * gain);
+  ma_sound_set_volume(&sound_, LinearVolume(volume_));
 }
 
 } // namespace audio::bgm

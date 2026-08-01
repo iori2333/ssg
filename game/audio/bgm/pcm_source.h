@@ -1,15 +1,13 @@
-/// Low-level PCM source decoding shared by BGM codecs and waveform playback.
+/// Low-level PCM source decoding shared by BGM codecs and PCM track playback.
+
 #pragma once
 
 #include <chrono>
 #include <compare>
 #include <cstdint>
 #include <fstream>
-#include <functional>
 #include <memory>
-#include <optional>
 #include <span>
-#include <string>
 #include <string_view>
 #include <utility>
 
@@ -40,24 +38,6 @@ struct PcmFormat {
 namespace audio::bgm {
 
 using SampleCount = uint32_t;
-
-// Metadata
-// --------
-
-struct PcmMetadata {
-  std::string title;
-
-  // Gain to apply to the track.
-  std::optional<float> gain_factor;
-};
-
-// Vorbis comments are specified to use UTF-8.
-using PcmMetadataCallback =
-    std::function<void(std::string_view tag, std::string_view value)>;
-
-// Calls [func] for the given Vorbis comment.
-void OnVorbisComment(PcmMetadataCallback func, std::string_view comment);
-// --------
 
 class PcmVolume {
   audio::VolumeRamp ramp;
@@ -105,7 +85,6 @@ struct PcmPart {
 
 // Generic implementation for PCM codecs with separate intro and loop files.
 struct PcmStream {
-  const PcmMetadata metadata;
   const PcmFormat pcmf;
   PcmVolume vol;
   std::unique_ptr<std::ifstream> intro_stream;
@@ -126,20 +105,18 @@ struct PcmStream {
   // Starts a fade-out that takes the given number of milliseconds.
   void FadeOut(float volume_start, std::chrono::milliseconds duration);
 
-  PcmStream(PcmMetadata &&metadata, std::unique_ptr<std::ifstream> intro_stream,
+  PcmStream(std::unique_ptr<std::ifstream> intro_stream,
             std::unique_ptr<std::ifstream> loop_stream,
             std::unique_ptr<PcmPart> intro_part,
             std::unique_ptr<PcmPart> loop_part)
-      : metadata(std::move(metadata)), pcmf(intro_part->pcmf),
-        intro_stream(std::move(intro_stream)),
+      : pcmf(intro_part->pcmf), intro_stream(std::move(intro_stream)),
         loop_stream(std::move(loop_stream)), intro_part(std::move(intro_part)),
         loop_part(std::move(loop_part)), cur(this->intro_part.get()) {}
 };
 
 // Tries to opens [stream] as a part of a modded track, using a specific codec.
 // `PcmStream` retains ownership of [stream].
-using PcmPartOpen = std::unique_ptr<PcmPart>(
-    std::istream &stream, std::optional<PcmMetadataCallback> on_metadata);
+using PcmPartOpen = std::unique_ptr<PcmPart>(std::istream &stream);
 // ----------------------------
 
 // Tries to open a waveform track whose name starts with [base_fn] and has one

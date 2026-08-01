@@ -5,25 +5,21 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
-#include <string>
-#include <string_view>
 
 #include "track.h"
 
-#include "audio/midi/midi_parser.h"
-
-namespace audio::midi {
-class MidiSequencer;
-class MidiSynth;
-} // namespace audio::midi
+#include "audio/bgm/midi/midi_parser.h"
 
 namespace audio::bgm {
 
+class MidiSequencer;
+class MidiSynth;
+
 class MidiTrack final : public Track {
 public:
-  MidiTrack(midi::MidiSequencer &sequencer, midi::MidiSynth &synth);
+  MidiTrack(MidiSequencer &sequencer, MidiSynth &synth);
 
-  void Load(midi::SequenceData sequence);
+  void Load(SequenceData sequence);
   void Clear();
 
   void Play() override;
@@ -33,23 +29,20 @@ public:
   void FadeOut(float volume_start, std::chrono::milliseconds duration) override;
   void SetVolume(Volume volume) override;
   void SetTempo(std::int8_t tempo) override;
-  void SetGainApplied(bool enabled) override;
   void Tick(std::chrono::milliseconds delta) override;
   void TickBackground(std::chrono::milliseconds delta) override;
 
   [[nodiscard]] bool IsLoaded() const override;
   [[nodiscard]] bool IsPlaying() const override;
   [[nodiscard]] BgmMode Mode() const override;
-  [[nodiscard]] std::string_view Title() const override;
   [[nodiscard]] std::chrono::milliseconds PlayTime() const override;
   [[nodiscard]] float FadeVolumeLinear() const override;
 
 private:
   void ApplyVolume();
 
-  midi::MidiSequencer &sequencer_;
-  midi::MidiSynth &synth_;
-  std::string title_;
+  MidiSequencer &sequencer_;
+  MidiSynth &synth_;
   std::atomic<bool> loaded_ = false;
   std::atomic<bool> playing_ = false;
   std::atomic<Volume> volume_ = kMaxVolume;

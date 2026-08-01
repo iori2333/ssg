@@ -338,13 +338,13 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
         const char *label = "?";
         if (src) {
           switch (src.value()) {
-          case audio::midi::DeviceSource::Local:
+          case audio::bgm::DeviceSource::Local:
             label = "local";
             break;
-          case audio::midi::DeviceSource::System:
+          case audio::bgm::DeviceSource::System:
             label = "system";
             break;
-          case audio::midi::DeviceSource::Environment:
+          case audio::bgm::DeviceSource::Environment:
             label = "env";
             break;
           }
@@ -356,9 +356,8 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
       },
       [&audio_cfg, system](size_t i) -> bool {
         const auto snapshot = system->BgmSnapshot();
-        const bool was_midi =
-            (snapshot.mode == audio::BgmMode::Midi &&
-             snapshot.state == audio::PlaybackState::Playing);
+        const bool was_midi = (snapshot.mode == audio::BgmMode::Midi &&
+                               snapshot.state == audio::PlaybackState::Playing);
         system->StopBgm();
         (void)system->SelectMidiDevice(i);
         if (auto sf = system->MidiCurrentDeviceName()) {
@@ -464,14 +463,6 @@ BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
           audio.SetVolumes(audio_cfg.bgm_volume, audio_cfg.se_volume);
         }));
   }
-
-  auto normalize = std::make_unique<ToggleNode>(
-      Localized(localization, "ui.menu.bgm_normalize.title"),
-      Localized(localization, "ui.menu.bgm_normalize.help"),
-      std::ref(audio_cfg.bgm_vol_norm),
-      [&audio](bool on) { audio.SetNormalization(on); });
-  LocalizeToggleValues(*normalize, localization);
-  ch.push_back(std::move(normalize));
 
   {
     auto packs = std::make_shared<std::vector<std::string>>();
@@ -689,9 +680,9 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
   config->AddChild(BuildLanguageMenu(cfg.ui, services.localization));
   config->AddChild(
       BuildGraphicsMenu(cfg.graphics, cfg.ui, services.display, localization));
-  config->AddChild(
-      BuildSoundMenu(cfg.audio, services.audio, services.sound_effects,
-                     services.music, localization));
+  config->AddChild(BuildSoundMenu(cfg.audio, services.audio,
+                                  services.sound_effects, services.music,
+                                  localization));
   config->AddChild(BuildInputMenu(cfg.input, services.input, localization));
   ch.push_back(std::move(config));
 
@@ -711,9 +702,7 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
         return true;
       });
   music->BindEnabled(
-      [audio = &services.audio] {
-        return audio->IsMidiAvailable();
-      });
+      [audio = &services.audio] { return audio->IsMidiAvailable(); });
   ch.push_back(std::move(music));
 
   ch.push_back(BuildDebugMenu(cfg.debug, localization, on_action));

@@ -12,7 +12,7 @@
 
 #include "midi_parser.h"
 
-namespace audio::midi {
+namespace audio::bgm {
 
 struct Loop {
   std::int64_t start = 0;
@@ -43,8 +43,7 @@ class MidiSink {
 public:
   virtual ~MidiSink() = default;
 
-  virtual void Output(std::uint8_t status, std::uint8_t a,
-                      std::uint8_t b) = 0;
+  virtual void Output(std::uint8_t status, std::uint8_t a, std::uint8_t b) = 0;
   virtual void OutputSysEx(std::span<const std::uint8_t> message) = 0;
 };
 
@@ -78,4 +77,4 @@ private:
   std::unique_ptr<Impl> impl_;
 };
 
-} // namespace audio::midi
+} // namespace audio::bgm

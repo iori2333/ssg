@@ -12,7 +12,7 @@
 #include "audio/core/audio_types.h"
 #include "midi_sequencer.h"
 
-namespace audio::midi {
+namespace audio::bgm {
 
 enum class DeviceSource : std::uint8_t {
   System,
@@ -41,8 +41,7 @@ public:
   AudioResult SelectDevice(std::size_t index);
   AudioResult ChangeDevice(int direction);
 
-  void Output(std::uint8_t status, std::uint8_t a,
-              std::uint8_t b) override;
+  void Output(std::uint8_t status, std::uint8_t a, std::uint8_t b) override;
   void OutputSysEx(std::span<const std::uint8_t> message) override;
   void Panic();
   void Pause();
@@ -53,5 +52,4 @@ private:
   std::unique_ptr<Impl> impl_;
 };
 
-} // namespace audio::midi
-
+} // namespace audio::bgm
