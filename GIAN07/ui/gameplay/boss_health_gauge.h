@@ -10,7 +10,9 @@
 
 #include "enemy/boss/boss.h"
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 inline constexpr std::size_t kBossHealthGaugeHeight = 24;
 

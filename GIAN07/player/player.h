@@ -42,7 +42,9 @@ class EnemyManager;
 class EffectManager;
 struct GameSession;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 namespace stage {
 class StageSession;

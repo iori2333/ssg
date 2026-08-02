@@ -16,7 +16,9 @@ class EnemyManager;
 struct GameSession;
 class MusicPlayer;
 class UiManager;
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 namespace i18n {
 class Localization;

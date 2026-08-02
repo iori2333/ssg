@@ -37,4 +37,3 @@ std::string_view ToString(BgmMode mode) {
 }
 
 } // namespace audio
-

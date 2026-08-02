@@ -12,7 +12,9 @@
 class EffectManager;
 class Player;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 inline constexpr std::size_t kItemCapacity = 100;
 
@@ -39,8 +41,7 @@ struct ItemData {
 
 class ItemSystem {
 public:
-  ItemSystem(Player &player, EffectManager &effects,
-             audio::AudioSystem &audio)
+  ItemSystem(Player &player, EffectManager &effects, audio::AudioSystem &audio)
       : player_(player), effects_(effects), audio_(audio) {}
 
   void Reset();

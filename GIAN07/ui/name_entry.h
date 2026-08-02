@@ -9,7 +9,9 @@
 
 #include "sys/input.h"
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 enum class NameEntryResult : uint8_t { Editing, Confirmed, Cancelled };
 inline constexpr std::size_t kNameEntryLength = 8;

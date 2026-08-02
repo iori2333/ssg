@@ -22,4 +22,3 @@ enum class MidiSynthState : uint8_t {
 };
 
 } // namespace audio
-

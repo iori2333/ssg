@@ -19,7 +19,9 @@
 
 struct ConfigData;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 class UiManager {
 public:

@@ -15,7 +15,9 @@
 #include "gfx/coords.h"
 #include "gfx/text.h"
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 class EffectManager {
 public:

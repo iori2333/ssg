@@ -20,7 +20,9 @@ class ItemSystem;
 struct GameSession;
 class Player;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 class BulletManager {
 public:

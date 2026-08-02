@@ -25,7 +25,9 @@ class ItemSystem;
 struct PlayerAttack;
 class Player;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 namespace stage {
 class StageSession;

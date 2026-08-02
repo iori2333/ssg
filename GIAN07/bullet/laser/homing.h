@@ -8,7 +8,9 @@
 
 #include "bullet/bullet_common.h"
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 enum class HomingType : uint8_t {
   None,

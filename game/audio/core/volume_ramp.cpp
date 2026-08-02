@@ -45,4 +45,3 @@ float VolumeRamp::NextFrame() noexcept {
 }
 
 } // namespace audio
-

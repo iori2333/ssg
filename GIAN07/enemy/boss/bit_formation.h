@@ -16,7 +16,9 @@ struct BulletManager;
 class EnemyManager;
 class Player;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 inline constexpr std::size_t kBitCapacity = 6;
 

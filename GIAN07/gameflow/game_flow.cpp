@@ -59,9 +59,8 @@ private:
 class TitleFlowState {
 public:
   explicit TitleFlowState(GameContext &context)
-      : context_(context),
-        scene_(context.graphics, context.music, context.session, context.ui,
-               context.audio) {}
+      : context_(context), scene_(context.graphics, context.music,
+                                  context.session, context.ui, context.audio) {}
 
   [[nodiscard]] bool Enter(InputBits initial_input, bool change_music) {
     return scene_.Enter(initial_input, change_music);
@@ -104,8 +103,8 @@ class WeaponSelectFlowState {
 public:
   explicit WeaponSelectFlowState(GameContext &context)
       : context_(context),
-        scene_(context.config, context.enemies, context.session,
-               context.player, context.audio),
+        scene_(context.config, context.enemies, context.session, context.player,
+               context.audio),
         difficulty_menu_(context.audio) {
     BuildDifficultyMenu();
   }

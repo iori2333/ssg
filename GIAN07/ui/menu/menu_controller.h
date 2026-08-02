@@ -18,7 +18,9 @@
 #include "gfx/text.h"
 #include "sys/input.h"
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 namespace menu {
 

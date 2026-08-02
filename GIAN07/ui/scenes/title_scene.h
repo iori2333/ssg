@@ -12,7 +12,9 @@ class GameSession;
 class MusicPlayer;
 class UiManager;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 namespace data {
 class GraphicsLoader;

@@ -341,9 +341,8 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
 
   auto &audio = audio_;
   const auto snapshot = audio.BgmSnapshot();
-  const bool midi_playing =
-      (snapshot.mode == audio::BgmMode::Midi &&
-       snapshot.state == audio::PlaybackState::Playing);
+  const bool midi_playing = (snapshot.mode == audio::BgmMode::Midi &&
+                             snapshot.state == audio::PlaybackState::Playing);
 
   if (input != previous_input_) {
     if (InputIsCancel(input)) {
@@ -380,8 +379,7 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
     audio.FadeOutBgm(120);
   }
 
-  if (midi_playing &&
-      ((system_input & SystemKeyBgmDevice) != 0)) {
+  if (midi_playing && ((system_input & SystemKeyBgmDevice) != 0)) {
     if (!device_change_wait_) {
       audio.ChangeMidiDevice(1);
       device_change_wait_ = true;

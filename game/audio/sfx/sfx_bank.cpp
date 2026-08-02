@@ -53,8 +53,8 @@ AudioResult SfxBank::Initialize() {
   if (group_initialized_) {
     return AudioResult::Ok();
   }
-  if (ma_sound_group_init(&engine_, MA_SOUND_FLAG_NO_PITCH, nullptr,
-                          &group_) != MA_SUCCESS) {
+  if (ma_sound_group_init(&engine_, MA_SOUND_FLAG_NO_PITCH, nullptr, &group_) !=
+      MA_SUCCESS) {
     return AudioResult::Fail(AudioError::BackendFailed,
                              "Failed to initialize sound effect group");
   }
@@ -86,8 +86,7 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
 
   auto &effect = effects_[id];
   effect.Clear();
-  effect.instances =
-      std::unique_ptr<Instance[]>(new Instance[max_instances]);
+  effect.instances = std::unique_ptr<Instance[]>(new Instance[max_instances]);
   if (!effect.instances) {
     return AudioResult::Fail(AudioError::BackendFailed,
                              "Failed to allocate sound effect instances");
@@ -119,9 +118,8 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
                              "Failed to calculate SFX output size");
   }
 
-  effect.resampled_buffer =
-      std::unique_ptr<std::byte[]>(
-          new std::byte[output_frame_size * output_frames]);
+  effect.resampled_buffer = std::unique_ptr<std::byte[]>(
+      new std::byte[output_frame_size * output_frames]);
   if (!effect.resampled_buffer) {
     ma_data_converter_uninit(&converter, nullptr);
     effect.Clear();
@@ -129,8 +127,8 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
                              "Failed to allocate resampled SFX buffer");
   }
   if (ma_data_converter_process_pcm_frames(
-          &converter, pcm.data(), &input_frames,
-          effect.resampled_buffer.get(), &output_frames) != MA_SUCCESS) {
+          &converter, pcm.data(), &input_frames, effect.resampled_buffer.get(),
+          &output_frames) != MA_SUCCESS) {
     ma_data_converter_uninit(&converter, nullptr);
     effect.Clear();
     return AudioResult::Fail(AudioError::DecodeFailed,
@@ -140,18 +138,17 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
 
   for (std::uint8_t i = 0; i < max_instances; i++) {
     auto &instance = effect.instances[i];
-    if (ma_audio_buffer_ref_init(
-            config.formatOut, config.channelsOut,
-            effect.resampled_buffer.get(), output_frames,
-            &instance.data_source) != MA_SUCCESS) {
+    if (ma_audio_buffer_ref_init(config.formatOut, config.channelsOut,
+                                 effect.resampled_buffer.get(), output_frames,
+                                 &instance.data_source) != MA_SUCCESS) {
       effect.Clear();
       return AudioResult::Fail(AudioError::BackendFailed,
                                "Failed to initialize SFX buffer");
     }
     if (ma_sound_init_from_data_source(
             &engine_, &instance.data_source,
-            (MA_SOUND_FLAG_NO_PITCH | MA_SOUND_FLAG_NO_SPATIALIZATION),
-            &group_, &instance.sound) != MA_SUCCESS) {
+            (MA_SOUND_FLAG_NO_PITCH | MA_SOUND_FLAG_NO_SPATIALIZATION), &group_,
+            &instance.sound) != MA_SUCCESS) {
       effect.Clear();
       return AudioResult::Fail(AudioError::BackendFailed,
                                "Failed to initialize SFX sound");
@@ -200,4 +197,3 @@ bool SfxBank::IsLoaded(std::uint8_t id) const {
 }
 
 } // namespace audio::sfx
-

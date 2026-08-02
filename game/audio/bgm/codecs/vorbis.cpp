@@ -61,9 +61,8 @@ size_t VorbisPcmPart::PartDecodeSingle(std::span<std::byte> buf) {
   const auto sample_size = pcmf.SampleSize();
   const auto frames = (buf.size_bytes() / sample_size);
   ma_uint64 frames_read = 0;
-  const auto result =
-      ma_decoder_read_pcm_frames(decoder.get(), buf.data(), frames,
-                                 &frames_read);
+  const auto result = ma_decoder_read_pcm_frames(decoder.get(), buf.data(),
+                                                 frames, &frames_read);
   if ((result != MA_SUCCESS) && (result != MA_AT_END)) {
     return static_cast<size_t>(-1);
   }

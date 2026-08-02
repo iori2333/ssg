@@ -11,7 +11,9 @@ class GameSession;
 class Player;
 struct ConfigData;
 
-namespace audio { class AudioSystem; }
+namespace audio {
+class AudioSystem;
+}
 
 enum class WeaponSelectSceneResult : uint8_t {
   Running,
@@ -25,8 +27,7 @@ public:
                     GameSession &session, Player &player,
                     audio::AudioSystem &audio)
       : config_(config), enemies_(enemies), session_(session), player_(player),
-        audio_(audio) {
-  }
+        audio_(audio) {}
 
   void Enter();
   [[nodiscard]] WeaponSelectSceneResult Update(InputBits input,

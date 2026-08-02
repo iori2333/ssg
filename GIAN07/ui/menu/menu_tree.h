@@ -158,8 +158,8 @@ public:
   ChoiceNode(MenuText title, MenuText help, T &value,
              std::type_identity_t<T> min, std::type_identity_t<T> max,
              ChoiceLabels labels, ChangeFn on_change = {})
-      : IMenuNode(std::move(title), std::move(help)), labels_(std::move(labels)),
-        on_change_(std::move(on_change)) {
+      : IMenuNode(std::move(title), std::move(help)),
+        labels_(std::move(labels)), on_change_(std::move(on_change)) {
     const auto as_integer = [](T choice) -> int64_t {
       if constexpr (std::is_enum_v<T>) {
         return static_cast<int64_t>(std::to_underlying(choice));
