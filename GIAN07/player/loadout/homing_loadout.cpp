@@ -6,10 +6,10 @@
 #include <cstdint>
 
 #include "homing_loadout.h"
+#include "player_loadout.h"
 
 #include "enemy/enemy_manager.h"
 #include "gfx/coords.h"
-#include "player/loadout/player_loadout.h"
 #include "player/player.h"
 #include "player/player_shot.h"
 #include "util/math_utils.h"

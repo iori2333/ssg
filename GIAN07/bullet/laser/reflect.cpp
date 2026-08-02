@@ -7,7 +7,6 @@
 #include <span>
 #include <utility>
 
-#include "gfx/graphics.h"
 #include "long.h"
 #include "reflect.h"
 
@@ -15,6 +14,7 @@
 #include "gameplay/playfield.h"
 #include "gfx/coords.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
 

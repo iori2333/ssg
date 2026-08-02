@@ -1,6 +1,7 @@
 ///
 /// StageMap - validated, decoded stage tile map
 ///
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>

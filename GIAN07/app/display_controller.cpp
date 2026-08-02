@@ -1,5 +1,8 @@
 /// Runtime display configuration and graphics resource recovery.
 
+#include <cstdint>
+#include <utility>
+
 #include "display_controller.h"
 
 #include "data/graphics_loader.h"
@@ -10,8 +13,6 @@
 #include "platform/text_backend.h"
 #include "settings/config.h"
 #include "util/enum_flags.h"
-#include <cstdint>
-#include <utility>
 
 bool DisplayController::Initialize(GraphicsConfig &config) {
   if (!GraphicsBackendEnum()) {

@@ -1,5 +1,3 @@
-#include "pcm_track.h"
-
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -8,11 +6,12 @@
 #include <memory>
 #include <span>
 #include <string_view>
-
-#include <miniaudio.h>
 #include <utility>
 
+#include <miniaudio.h>
+
 #include "pcm_source.h"
+#include "pcm_track.h"
 
 #include "audio/core/audio_types.h"
 

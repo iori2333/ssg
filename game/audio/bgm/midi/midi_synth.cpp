@@ -1,5 +1,3 @@
-#include "midi_synth.h"
-
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -18,13 +16,15 @@
 
 // NOLINTNEXTLINE(misc-include-cleaner) - required before fluidsynth/*.h.
 #include <fluidsynth.h>
+#include <fluidsynth/audio.h>
+#include <fluidsynth/misc.h>
+#include <fluidsynth/settings.h>
+#include <fluidsynth/synth.h>
+#include <fluidsynth/types.h>
+
+#include "midi_synth.h"
 
 #include "audio/core/audio_types.h"
-#include "fluidsynth/audio.h"
-#include "fluidsynth/misc.h"
-#include "fluidsynth/settings.h"
-#include "fluidsynth/synth.h"
-#include "fluidsynth/types.h"
 #include "sys/log.h"
 
 namespace audio::bgm {

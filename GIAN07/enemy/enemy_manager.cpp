@@ -9,6 +9,9 @@
 #include <limits>
 #include <utility>
 
+#include "actor/enemy_actor.h"
+#include "ecl/ecl.h"
+#include "ecl/ecl_program.h"
 #include "enemy_manager.h"
 
 #include "audio/audio_system.h"
@@ -17,9 +20,6 @@
 #include "bullet/bullet_common.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
-#include "enemy/actor/enemy_actor.h"
-#include "enemy/ecl/ecl.h"
-#include "enemy/ecl/ecl_program.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
 #include "gfx/coords.h"

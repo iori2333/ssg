@@ -9,15 +9,15 @@
 #include <utility>
 #include <vector>
 
-#include "gfx/constants.h"
-#include "gfx/coords.h"
 #include "menu/menu_builder.h"
+#include "menu/menu_tree.h"
+#include "msg_window/msg_window.h"
 #include "ui_manager.h"
 
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "i18n/localization.h"
 #include "settings/config.h"
-#include "ui/menu/menu_tree.h"
-#include "ui/msg_window/msg_window.h"
 
 namespace {
 

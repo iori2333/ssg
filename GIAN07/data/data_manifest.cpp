@@ -1,6 +1,7 @@
 ///
 /// DataManifest - versioned section map for the unified DATA.PAK archive
 ///
+
 #include <algorithm>
 #include <array>
 #include <cstdint>

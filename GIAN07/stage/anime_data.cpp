@@ -1,7 +1,9 @@
 ///
 /// anime_data — per-stage enemy animation sprite sheet configuration
 ///
+
 #include "anime_data.h"
+
 #include "enemy/actor/enemy_actor.h"
 #include "gameplay/game_rules.h"
 

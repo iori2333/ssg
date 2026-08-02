@@ -1,6 +1,5 @@
 /// Application-wide structured logging.
 
-#include "SDL3/SDL_stdinc.h"
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -20,6 +19,7 @@
 
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_log.h>
+#include <SDL3/SDL_stdinc.h>
 
 #include "log.h"
 

@@ -10,13 +10,13 @@
 #include <utility>
 
 #include "bit_formation.h"
+#include "boss.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
 #include "enemy/actor/enemy_actor.h"
-#include "enemy/boss/boss.h"
 #include "enemy/ecl/ecl.h"
 #include "enemy/enemy_manager.h"
 #include "gfx/coords.h"

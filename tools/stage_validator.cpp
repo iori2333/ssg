@@ -1,6 +1,7 @@
 ///
 /// stage_validator - validates embedded SCL and optional extracted stage maps
 ///
+
 #include <array>
 #include <cstddef>
 #include <cstdint>

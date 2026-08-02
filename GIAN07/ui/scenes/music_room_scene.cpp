@@ -2,6 +2,7 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
+
 #include <algorithm>
 #include <array>
 #include <cassert>

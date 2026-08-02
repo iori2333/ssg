@@ -16,21 +16,22 @@
 #include <vector>
 
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_joystick.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_scancode.h>
+#include <SDL3/SDL_stdinc.h>
 
 #include "input.h"
 
-#include "SDL3/SDL_gamepad.h"
-#include "SDL3/SDL_keyboard.h"
-#include "SDL3/SDL_keycode.h"
-#include "SDL3/SDL_scancode.h"
-#include "SDL3/SDL_stdinc.h"
 #include "util/enum_flags.h"
 #include "util/guard.h"
 
 // MSVC's static analyzer suggests to make the functions below `constexpr`,
 // which won't work because they are used in other translation units and this
 // is not a header.
+
 #pragma warning(suppress : 26497) // f.4
 bool InputIsOk(InputBits key) {
   return ((key == KeyReturn) || (key == KeyTama));

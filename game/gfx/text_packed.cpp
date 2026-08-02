@@ -8,10 +8,10 @@
 #include <limits>
 #include <optional>
 
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/text.h"
+#include "constants.h"
+#include "coords.h"
 #include "graphics_backend.h"
+#include "text.h"
 #include "text_packed.h"
 
 namespace {

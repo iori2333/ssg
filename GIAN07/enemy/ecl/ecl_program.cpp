@@ -12,10 +12,10 @@
 #include <utility>
 #include <vector>
 
+#include "ecl.h"
 #include "ecl_program.h"
 
 #include "effect/effect_types.h"
-#include "enemy/ecl/ecl.h"
 #include "stage/stage_visuals.h"
 #include "util/byte_io.h"
 

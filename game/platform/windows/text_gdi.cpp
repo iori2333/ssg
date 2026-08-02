@@ -2,7 +2,6 @@
 /// Text rendering via GDI
 ///
 
-#include "platform/windows/text_gdi.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -18,13 +17,14 @@
 #endif
 #include <windows.h>
 
+#include "surface_gdi.h"
+#include "text_gdi.h"
+
 #include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "gfx/text.h"
 #include "gfx/text_packed.h"
-#include "surface_gdi.h"
-
 #include "platform/text_backend.h"
 #include "util/enum_array.h"
 

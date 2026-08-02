@@ -1,5 +1,6 @@
-#include "audio_types.h"
 #include <string_view>
+
+#include "audio_types.h"
 
 namespace audio {
 

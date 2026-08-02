@@ -9,6 +9,7 @@
 #include "coords.h"
 
 // The game's native resolution.
+
 constexpr WindowSize kGameResolution = {.w = 640, .h = 480};
 inline constexpr WindowLtrb kGameResolutionRect = {{.x = 0, .y = 0},
                                                    kGameResolution};

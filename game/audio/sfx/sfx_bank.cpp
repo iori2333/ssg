@@ -1,5 +1,3 @@
-#include "sfx_bank.h"
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -8,6 +6,8 @@
 
 #include <SDL3/SDL_audio.h>
 #include <miniaudio.h>
+
+#include "sfx_bank.h"
 
 #include "audio/core/audio_types.h"
 

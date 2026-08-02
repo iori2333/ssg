@@ -14,6 +14,7 @@
 #include "util/enum_flags.h"
 
 // Message window flags
+
 enum class MsgWindowFlags : uint8_t {
   None = 0x0,
   WithFace = 0x1, // Pads all text to leave room for a face portrait.

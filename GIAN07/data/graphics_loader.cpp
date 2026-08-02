@@ -1,19 +1,20 @@
 ///
 /// GraphicsLoader - installs game image assets into graphics surfaces
 ///
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
 
+#include "graphics_assets.h"
 #include "graphics_loader.h"
 
 #include "gameplay/game_rules.h"
 #include "gfx/constants.h"
 #include "gfx/format_bmp.h"
 #include "gfx/graphics_backend.h"
-#include "graphics_assets.h"
 
 namespace data {
 

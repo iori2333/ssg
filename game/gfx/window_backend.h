@@ -8,6 +8,7 @@
 #include <functional>
 #include <optional>
 #include <utility>
+
 struct GraphicsParams;
 
 // Initialization

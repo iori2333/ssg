@@ -5,16 +5,15 @@
 #pragma once
 
 #include <windows.h>
+// Only required for the HBITMAP type, which is basically void*.
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 #include "gfx/coords.h"
 
 struct Surface {
   PixelSize size = {.w = 0, .h = 0};
 };
-
-// Only required for the HBITMAP type, which is basically void*.
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 struct BmpOwned;
 struct SDL_IOStream;

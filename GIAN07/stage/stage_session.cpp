@@ -1,11 +1,14 @@
 ///
 /// StageSession - owns the active stage timeline and background
 ///
+
 #include <cstddef>
 #include <cstdint>
 #include <span>
 #include <utility>
 
+#include "scene_program.h"
+#include "stage_background.h"
 #include "stage_session.h"
 
 #include "audio/audio_system.h"
@@ -18,8 +21,6 @@
 #include "gameplay/playfield.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
-#include "stage/scene_program.h"
-#include "stage/stage_background.h"
 #include "sys/input.h"
 #include "ui/ui_manager.h"
 

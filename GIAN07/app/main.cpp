@@ -2,10 +2,13 @@
 /// SDL entry point — application assembly layer
 ///
 
-#include "SDL3/SDL_hints.h"
-#include "SDL3/SDL_init.h"
-#include "SDL3/SDL_log.h"
 #include <string_view>
+
+#include <SDL3/SDL_hints.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_log.h>
+#include <SDL3/SDL_main.h>
+
 #ifdef WIN32
 // Enable visual styles for nice-looking SDL message boxes. Taken from the
 // comment in `SDL_windowsmessagebox.c`, which was in turn taken from
@@ -18,8 +21,6 @@
                         " publicKeyToken='6595b64144ccf1df'"                   \
                         " language='*'\"")
 #endif
-
-#include <SDL3/SDL_main.h>
 
 #include "game_application.h"
 

@@ -19,7 +19,6 @@
 #include "gfx/coords.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
-#include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
 #include "platform/windows/text_gdi.h"
 #include "util/math_utils.h"

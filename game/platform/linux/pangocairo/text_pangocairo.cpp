@@ -4,6 +4,7 @@
 
 // GCC 15 throws `error: redefinition of 'struct timespec'` if this appears
 // after a module import.
+
 #include <fontconfig/fontconfig.h>
 #include <pango/pangocairo.h>
 

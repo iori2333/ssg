@@ -6,13 +6,13 @@
 #include <string_view>
 #include <utility>
 
-#include "effect/effect_types.h"
 #include "flow_types.h"
 #include "gameplay_state.h"
 
 #include "app/game_context.h"
 #include "audio/audio_system.h"
 #include "effect/effect_manager.h"
+#include "effect/effect_types.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/playfield.h"
 #include "gfx/constants.h"

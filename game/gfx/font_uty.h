@@ -9,9 +9,10 @@
 // 2000/07/22 : Partial rewrite for font additions
 // 2000/02/19 : Began development of font handling
 
-#include "gfx/text.h"
+#include "text.h"
 
 // [Functions]
+
 void DrawFont16(int x, int y,
                 const char *s); // Draw string in 16x16 transparent font (fast)
 void DrawFont16C2(int x, int y,

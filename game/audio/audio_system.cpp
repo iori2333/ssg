@@ -1,5 +1,3 @@
-#include "audio_system.h"
-
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -14,17 +12,19 @@
 #include <utility>
 
 #include <SDL3/SDL_audio.h>
+#include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL_stdinc.h>
 #include <miniaudio.h>
 
-#include "SDL3/SDL_iostream.h"
-#include "SDL3/SDL_stdinc.h"
-#include "audio/bgm/bgm_controller.h"
-#include "audio/bgm/midi/midi_parser.h"
-#include "audio/bgm/midi/midi_sequencer.h"
-#include "audio/bgm/midi/midi_synth.h"
-#include "audio/core/audio_types.h"
-#include "audio/sfx.h"
-#include "audio/sfx/sfx_bank.h"
+#include "audio_system.h"
+#include "bgm/bgm_controller.h"
+#include "bgm/midi/midi_parser.h"
+#include "bgm/midi/midi_sequencer.h"
+#include "bgm/midi/midi_synth.h"
+#include "core/audio_types.h"
+#include "sfx.h"
+#include "sfx/sfx_bank.h"
+
 #include "util/guard.h"
 
 namespace audio {

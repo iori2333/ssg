@@ -8,8 +8,8 @@
 #include <utility>
 
 #include "bullet.h"
-#include "bullet/fire_state.h"
 #include "bullet_common.h"
+#include "fire_state.h"
 
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"

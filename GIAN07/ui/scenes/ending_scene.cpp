@@ -22,6 +22,7 @@
 #include "stage/stage_loader.h"
 
 // Ending initialization
+
 bool EndingScene::Enter() {
   GraphicsBackendSetClip(kGameResolutionRect);
   GraphicsBackendClear();

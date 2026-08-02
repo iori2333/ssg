@@ -1,5 +1,3 @@
-#include "midi_sequencer.h"
-
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -13,8 +11,10 @@
 #include <utility>
 #include <vector>
 
-#include "audio/bgm/midi/midi_parser.h"
+#include "midi_parser.h"
+#include "midi_sequencer.h"
 #include "midi_synth.h"
+
 #include "util/byte_io.h"
 
 namespace audio::bgm {

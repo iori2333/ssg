@@ -1,6 +1,7 @@
 ///
 /// GameData - owns the validated unified game data archive
 ///
+
 #include <algorithm>
 #include <array>
 #include <charconv>
@@ -16,10 +17,10 @@
 #include <utility>
 #include <vector>
 
+#include "data_manifest.h"
 #include "game_data.h"
+#include "pbg_archive.h"
 
-#include "data/data_manifest.h"
-#include "data/pbg_archive.h"
 #include "sys/file.h"
 #include "sys/log.h"
 

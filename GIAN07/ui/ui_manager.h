@@ -9,13 +9,12 @@
 #include <optional>
 #include <string_view>
 
+#include "gameplay/boss_health_gauge.h"
+#include "gameplay/gameplay_hud.h"
 #include "menu/menu_builder.h"
 #include "menu/menu_controller.h"
 #include "menu/menu_tree.h"
 #include "msg_window/msg_window.h"
-
-#include "gameplay/boss_health_gauge.h"
-#include "gameplay/gameplay_hud.h"
 
 struct ConfigData;
 

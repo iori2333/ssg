@@ -2,22 +2,10 @@
 /// Graphics via SDL_Renderer
 ///
 
-#include "SDL3/SDL_blendmode.h"
-#include "SDL3/SDL_error.h"
-#include "SDL3/SDL_iostream.h"
-#include "SDL3/SDL_pixels.h"
-#include "SDL3/SDL_properties.h"
-#include "SDL3/SDL_rect.h"
-#include "SDL3/SDL_surface.h"
-#include "SDL3/SDL_video.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
-#include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/pixelformat.h"
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -25,27 +13,39 @@
 #include <optional>
 #include <ranges>
 #include <span>
-
-#include <SDL3/SDL_gpu.h>
-#include <SDL3/SDL_mouse.h>
-#include <SDL3/SDL_render.h>
-#include <cmath>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
-using SdlColor = SDL_FColor;
+#include <SDL3/SDL_blendmode.h>
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL_mouse.h>
+#include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_properties.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
+#include <SDL3/SDL_video.h>
 
+#include "constants.h"
+#include "coords.h"
 #include "format_bmp.h"
+#include "geometry.h"
+#include "graphics.h"
+#include "graphics_backend.h"
+#include "pixelformat.h"
 #include "window_backend.h"
 #include "window_sdl.h"
 
-#include "gfx/constants.h"
 #include "platform/text_backend.h"
 #include "sys/log.h"
 #include "util/enum_array.h"
 #include "util/guard.h"
+
+using SdlColor = SDL_FColor;
 
 constexpr auto kLogCat = logging::Channel::Graphics;
 

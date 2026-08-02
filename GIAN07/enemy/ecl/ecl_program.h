@@ -17,6 +17,7 @@
 
 #include "effect/effect_types.h"
 #include "stage/stage_visuals.h"
+
 struct EclNoArguments {};
 
 struct EclSetupArguments {

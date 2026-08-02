@@ -2,9 +2,9 @@
 
 #include <string_view>
 
+#include "coords.h"
 #include "text.h"
 
-#include "gfx/coords.h"
 // NOLINTNEXTLINE(misc-include-cleaner) - required for TextRenderSession.
 #include "platform/text_backend.h"
 

@@ -10,7 +10,8 @@
 #include <ranges>
 #include <span>
 
-#include "gfx/graphics_backend.h"
+#include "graphics_backend.h"
+
 #include "util/math_utils.h"
 
 namespace geometry {

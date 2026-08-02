@@ -1,6 +1,7 @@
 ///
 /// StageBackground - validated tile map scrolling and stage background modes
 ///
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -10,6 +11,8 @@
 #include <utility>
 
 #include "stage_background.h"
+#include "stage_map.h"
+#include "stage_visuals.h"
 
 #include "effect/effect_manager.h"
 #include "effect/effect_types.h"
@@ -17,8 +20,6 @@
 #include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
-#include "stage/stage_map.h"
-#include "stage/stage_visuals.h"
 #include "util/math_utils.h"
 
 namespace stage {

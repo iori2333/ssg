@@ -4,11 +4,16 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
+
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cctype>
+#include <charconv>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
+#include <format>
 #include <limits>
 #include <optional>
 #include <ranges>
@@ -18,23 +23,18 @@
 #include <system_error>
 #include <type_traits>
 #include <utility>
-#include <webp/encode.h>
 
 #include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_surface.h>
+#include <webp/encode.h>
 
-#include <cctype>
-#include <charconv>
-#include <filesystem>
-#include <format>
-
-#include "SDL3/SDL_pixels.h"
+#include "constants.h"
+#include "coords.h"
 #include "format_bmp.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/pixelformat.h"
 #include "graphics.h"
 #include "graphics_backend.h"
+#include "pixelformat.h"
 
 #include "util/enum_flags.h"
 #include "util/guard.h"

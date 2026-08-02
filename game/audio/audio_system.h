@@ -9,11 +9,10 @@
 #include <span>
 #include <string_view>
 
+#include "bgm/midi/midi_sequencer.h"
+#include "bgm/midi/midi_synth.h"
+#include "core/audio_types.h"
 #include "sfx.h"
-
-#include "audio/bgm/midi/midi_sequencer.h"
-#include "audio/bgm/midi/midi_synth.h"
-#include "audio/core/audio_types.h"
 
 namespace audio {
 

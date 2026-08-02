@@ -11,18 +11,17 @@
 #include <utility>
 
 #include "menu_controller.h"
+#include "menu_tree.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
 #include "gfx/text.h"
 #include "platform/text_backend.h"
 #include "platform/windows/text_gdi.h"
 #include "sys/input.h"
-#include "ui/menu/menu_tree.h"
 #include "ui/text_marquee.h"
 
 namespace menu {

@@ -18,22 +18,22 @@
 
 #include <SDL3/SDL_misc.h>
 
-#include "audio/bgm/midi/midi_synth.h"
-#include "audio/core/audio_types.h"
-#include "gfx/graphics.h"
 #include "menu_builder.h"
 #include "menu_controller.h"
+#include "menu_tree.h"
 
 #include "app/display_controller.h"
 #include "audio/audio_system.h"
+#include "audio/bgm/midi/midi_synth.h"
+#include "audio/core/audio_types.h"
 #include "data/sfx_loader.h"
 #include "gameplay/game_rules.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
 #include "settings/config.h"
 #include "sys/input.h"
-#include "ui/menu/menu_tree.h"
 
 namespace menu {
 

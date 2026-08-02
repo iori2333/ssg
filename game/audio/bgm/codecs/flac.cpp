@@ -8,10 +8,10 @@
 #include <istream>
 #include <limits>
 #include <memory>
-
-#include <miniaudio.h>
 #include <span>
 #include <utility>
+
+#include <miniaudio.h>
 
 #include "audio/bgm/pcm_source.h"
 

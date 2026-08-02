@@ -3,9 +3,6 @@
 ///
 
 #include <cassert>
-
-#include <SDL3/SDL_iostream.h>
-#include <SDL3/SDL_pixels.h>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -13,10 +10,13 @@
 #include <utility>
 #include <vector>
 
-#include "format_bmp.h"
+#include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL_pixels.h>
 
-#include "gfx/coords.h"
-#include "gfx/pixelformat.h"
+#include "coords.h"
+#include "format_bmp.h"
+#include "pixelformat.h"
+
 #include "util/byte_io.h"
 
 namespace {

@@ -6,6 +6,7 @@
 #include <cstdint>
 
 // Same as the standard Win32 PALETTEENTRY structure.
+
 struct Rgba {
   uint8_t r;
   uint8_t g;

@@ -1,6 +1,7 @@
 ///
 /// SceneProgram - validated SCL instructions and runtime cursor
 ///
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>

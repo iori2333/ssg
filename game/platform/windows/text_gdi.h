@@ -9,6 +9,7 @@
 
 // Loads any required fonts from the game directory, and cleans them up at
 // process termination.
+
 void TextBackendGDIInit();
 void TextBackendGDICleanup();
 

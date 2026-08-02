@@ -10,11 +10,11 @@
 #include <utility>
 
 #include "bullet.h"
-#include "bullet/laser/homing.h"
-#include "bullet/laser/long.h"
-#include "bullet/laser/reflect.h"
 #include "bullet_common.h"
 #include "bullet_manager.h"
+#include "laser/homing.h"
+#include "laser/long.h"
+#include "laser/reflect.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
@@ -26,7 +26,6 @@
 #include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
 #include "item/item_system.h"
 #include "player/player.h"
 #include "util/math_utils.h"

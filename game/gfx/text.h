@@ -5,10 +5,9 @@
 
 #include <string_view>
 
+#include "constants.h"
 #include "coords.h"
 #include "graphics.h"
-
-#include "gfx/constants.h"
 
 using TextRenderRectId = unsigned int;
 

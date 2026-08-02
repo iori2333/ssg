@@ -8,11 +8,10 @@
 // Pixel-space coordinates
 // -----------------------
 // The unscaled output space in the game's native resolution.
-
 // X or Y value in unscaled pixel space. Relative to any origin.
+// X/Y coordinate in unscaled pixel space. Relative to any origin.
 using PixelCoord = int;
 
-// X/Y coordinate in unscaled pixel space. Relative to any origin.
 template <typename Coord> struct PixelPointBase {
   Coord x;
   Coord y;

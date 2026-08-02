@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 
+#include "player_loadout.h"
 #include "wide_loadout.h"
 
 #include "effect/effect_manager.h"
@@ -16,7 +17,6 @@
 #include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
-#include "player/loadout/player_loadout.h"
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "player/player_shot.h"

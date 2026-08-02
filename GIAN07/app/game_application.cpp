@@ -5,9 +5,9 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 #include <SDL3/SDL_messagebox.h>
-#include <system_error>
 
 #include "game_application.h"
 

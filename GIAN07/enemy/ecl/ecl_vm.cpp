@@ -8,21 +8,21 @@
 #include <cstdlib>
 #include <utility>
 
-#include "bullet/bullet.h"
-#include "bullet/laser/homing.h"
-#include "bullet/laser/long.h"
-#include "bullet/laser/reflect.h"
+#include "ecl.h"
 #include "ecl_host.h"
 #include "ecl_program.h"
 #include "ecl_vm.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
+#include "bullet/bullet.h"
 #include "bullet/bullet_common.h"
 #include "bullet/bullet_manager.h"
+#include "bullet/laser/homing.h"
+#include "bullet/laser/long.h"
+#include "bullet/laser/reflect.h"
 #include "effect/effect_manager.h"
 #include "enemy/actor/enemy_actor.h"
-#include "enemy/ecl/ecl.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"

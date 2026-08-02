@@ -2,10 +2,7 @@
 /// MenuTree — Unified tree-based menu item implementations
 ///
 
-#include "menu_tree.h"
-
 #include <algorithm>
-
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -14,6 +11,8 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+
+#include "menu_tree.h"
 
 namespace menu {
 

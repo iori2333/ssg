@@ -10,17 +10,17 @@
 #include <cstdint>
 #include <utility>
 
-#include "effect/effect_types.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
 #include "loadout/player_loadout.h"
 #include "player.h"
 #include "player_attack.h"
 #include "player_shot.h"
 
 #include "effect/effect_manager.h"
+#include "effect/effect_types.h"
 #include "enemy/enemy_manager.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"

@@ -22,6 +22,7 @@
 #include "util/enum_flags.h"
 
 // Setting the divisor to 0 disables frame rate limiting.
+
 void SetFrameRateDivisor(uint8_t divisor);
 uint8_t FrameRateDivisor();
 

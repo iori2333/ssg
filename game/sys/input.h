@@ -10,14 +10,13 @@
 #include <utility>
 
 // Current pressed/released state for all virtual KEY_* keys.
-using InputBits = uint16_t;
-
 // 0 = unmapped.
-using InputPadButton = uint8_t;
-
 // Keyboard constants
 // Braced initializers cause a compile error if the constants don't fit within
 // the InputBits type.
+using InputBits = uint16_t;
+using InputPadButton = uint8_t;
+
 constexpr InputBits KeyUp = {0x0001};
 constexpr InputBits KeyDown = {0x0002};
 constexpr InputBits KeyLeft = {0x0004};

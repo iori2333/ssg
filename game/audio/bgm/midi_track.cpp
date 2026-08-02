@@ -1,14 +1,14 @@
-#include "midi_track.h"
-
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <utility>
 
-#include "audio/bgm/midi/midi_parser.h"
-#include "audio/bgm/midi/midi_sequencer.h"
-#include "audio/bgm/midi/midi_synth.h"
+#include "midi/midi_parser.h"
+#include "midi/midi_sequencer.h"
+#include "midi/midi_synth.h"
+#include "midi_track.h"
+
 #include "audio/core/audio_types.h"
 
 namespace audio::bgm {

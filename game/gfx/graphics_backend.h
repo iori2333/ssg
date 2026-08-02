@@ -6,14 +6,13 @@
 
 #include <string_view>
 
+#include "constants.h"
 #include "graphics.h"
-
-#include "gfx/constants.h"
 
 /// Enumeration and pre-initialization queries
 /// ------------------------------------------
-
 // Should initialize everything needed for device and API queries.
+
 bool GraphicsBackendEnum();
 
 // Rendering APIs.

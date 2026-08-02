@@ -9,6 +9,7 @@
 #include "graphics.h"
 
 // Saves the windowed position before entering fullscreen mode.
+
 void WindowBackendRememberTopleft(std::pair<int16_t, int16_t> position);
 
 // Falls back to the primary display if the window doesn't exist yet.

@@ -6,11 +6,11 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "boss.h"
 #include "snake_formation.h"
 
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
-#include "enemy/boss/boss.h"
 #include "enemy/ecl/ecl.h"
 #include "enemy/enemy_manager.h"
 #include "gfx/coords.h"

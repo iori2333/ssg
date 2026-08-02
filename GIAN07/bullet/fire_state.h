@@ -4,6 +4,7 @@
 
 // Raw ECL accumulators. Convert these values to typed spawn data before
 // creating a bullet or laser.
+
 struct EclBulletState {
   int x{};
   int y{};

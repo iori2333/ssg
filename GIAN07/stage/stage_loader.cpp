@@ -1,20 +1,21 @@
 ///
 /// StageLoader - installs validated stage assets into a game session
 ///
+
 #include <cstddef>
 #include <cstdint>
 #include <span>
 #include <utility>
 
 #include "anime_data.h"
-#include "enemy/actor/enemy_actor.h"
-#include "enemy/ecl/ecl_program.h"
-#include "gameplay/game_rules.h"
 #include "scene_program.h"
 #include "stage_loader.h"
 #include "stage_session.h"
 
+#include "enemy/actor/enemy_actor.h"
+#include "enemy/ecl/ecl_program.h"
 #include "enemy/enemy_manager.h"
+#include "gameplay/game_rules.h"
 #include "scripts_data.h"
 #include "sys/log.h"
 

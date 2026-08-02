@@ -1,6 +1,7 @@
-#include "volume_ramp.h"
 #include <atomic>
 #include <cstdint>
+
+#include "volume_ramp.h"
 
 namespace audio {
 

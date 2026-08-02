@@ -8,17 +8,17 @@
 #include <format>
 #include <utility>
 
-#include "bullet/laser/long.h"
-#include "effect/effect_types.h"
-#include "enemy/actor/enemy_actor.h"
-#include "enemy/boss/boss.h"
-#include "enemy/ecl/ecl.h"
+#include "actor/enemy_actor.h"
+#include "boss/boss.h"
+#include "ecl/ecl.h"
 #include "enemy_manager.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
+#include "bullet/laser/long.h"
 #include "effect/effect_manager.h"
+#include "effect/effect_types.h"
 #include "gfx/coords.h"
 #include "item/item_system.h"
 #include "player/player.h"

@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "laser_loadout.h"
+#include "player_loadout.h"
 
 #include "enemy/enemy_manager.h"
 #include "gfx/constants.h"
@@ -14,7 +15,6 @@
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "gfx/pixelformat.h"
-#include "player/loadout/player_loadout.h"
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "player/player_shot.h"

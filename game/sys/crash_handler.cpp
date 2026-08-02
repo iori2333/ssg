@@ -7,8 +7,7 @@
 #include <string>
 
 #include "crash_handler.h"
-
-#include "sys/log.h"
+#include "log.h"
 
 namespace crash {
 namespace {

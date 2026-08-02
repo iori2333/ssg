@@ -2,11 +2,6 @@
 /// SDL window creation
 ///
 
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_hints.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_timer.h>
-#include <SDL3/SDL_video.h>
 #include <cassert>
 #include <cstdint>
 #include <functional>
@@ -14,14 +9,20 @@
 #include <type_traits>
 #include <utility>
 
-#include "SDL3/SDL_properties.h"
-#include "SDL3/SDL_stdinc.h"
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_hints.h>
+#include <SDL3/SDL_properties.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_video.h>
+
+#include "constants.h"
 #include "graphics.h"
 #include "graphics_backend.h"
 #include "window_backend.h"
 #include "window_sdl.h"
 
-#include "gfx/constants.h"
 #include "sys/log.h"
 
 constexpr auto kLogCat = logging::Channel::Graphics;

@@ -10,8 +10,8 @@
 #include <ranges>
 
 #include "effect_manager.h"
+#include "effect_types.h"
 
-#include "effect/effect_types.h"
 #include "gameplay/playfield.h"
 #include "gfx/constants.h"
 #include "gfx/coords.h"

@@ -6,9 +6,8 @@
 #include <chrono>
 #include <cstdint>
 
+#include "midi/midi_parser.h"
 #include "track.h"
-
-#include "audio/bgm/midi/midi_parser.h"
 
 namespace audio::bgm {
 
