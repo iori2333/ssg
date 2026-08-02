@@ -237,15 +237,12 @@ void Write(Level level, Channel channel, std::string_view message) noexcept {
     const auto local = util::LocalTime();
 #ifdef PBG_DEBUG
     const auto prefix = std::format(
-        "{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} [{}][{}][thread={}] ",
-        local.year, local.month, local.day, local.hour, local.minute,
-        local.second, millis, LevelName(level), ChannelName(channel),
-        std::this_thread::get_id());
+        "{:%Y-%m-%d %H:%M:%S}.{:03} [{}][{}][thread={}] ", local, millis,
+        LevelName(level), ChannelName(channel), std::this_thread::get_id());
 #else
-    const auto prefix = std::format(
-        "{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} [{}][{}] ", local.year,
-        local.month, local.day, local.hour, local.minute, local.second, millis,
-        LevelName(level), ChannelName(channel));
+    const auto prefix =
+        std::format("{:%Y-%m-%d %H:%M:%S}.{:03} [{}][{}] ", local, millis,
+                    LevelName(level), ChannelName(channel));
 #endif
     const bool flush = level >= Level::Warning;
 

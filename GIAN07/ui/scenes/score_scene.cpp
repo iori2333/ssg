@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -33,6 +32,7 @@
 #include "sys/log.h"
 #include "ui/name_entry.h"
 #include "ui/ui_manager.h"
+#include "util/time_api.h"
 
 namespace {
 constexpr auto kDefaultScoreName = "Vivit!";
@@ -73,8 +73,8 @@ std::string_view PlayerName(const i18n::Localization &localization,
 }
 
 std::string RecordDate(int64_t timestamp) {
-  return std::format("{:%Y-%m-%d %H%M}", std::chrono::system_clock::time_point{
-                                             std::chrono::seconds{timestamp}});
+  return std::format("{:%Y-%m-%d %H%M}",
+                     util::LocalTime(util::UtcTime(timestamp)));
 }
 
 void RenderUiText(WindowPoint position, TextRenderRectId rect,
@@ -165,8 +165,7 @@ ScoreSceneResult ScoreScene::UpdateLeaderboard(InputBits input,
                !rows_.back().moving) {
       const auto level_count = kGameLevelNames.size();
       const auto direction = input == KeyLeft ? level_count - 1 : 1;
-      current_difficulty_ =
-          (current_difficulty_ + direction) % level_count;
+      current_difficulty_ = (current_difficulty_ + direction) % level_count;
       LoadLeaderboard(static_cast<GameLevel>(current_difficulty_));
       audio_.PlaySfx(SfxId::Select);
     } else if (InputIsOk(input) && !scores_.empty()) {

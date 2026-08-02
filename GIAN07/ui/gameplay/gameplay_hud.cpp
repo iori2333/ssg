@@ -85,15 +85,9 @@ void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
 
   const auto local_time = util::LocalTime();
   DrawFont16(right_column, 0, "Date");
-  DrawFont16(right_column, 20,
-             std::format("{:02}/{:02}/{:02}", local_time.month, local_time.day,
-                         local_time.year % 100)
-                 .c_str());
+  DrawFont16(right_column, 20, std::format("{:%m/%d/%y}", local_time).c_str());
   DrawFont16(right_column, 50, "Time");
-  DrawFont16(right_column, 70,
-             std::format("{:02}:{:02}:{:02}", local_time.hour,
-                         local_time.minute, local_time.second)
-                 .c_str());
+  DrawFont16(right_column, 70, std::format("{:%H:%M:%S}", local_time).c_str());
 
 #ifdef PBG_DEBUG
   DrawFont16(right_column, 360, "Debug  ON");

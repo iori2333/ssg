@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -35,6 +34,7 @@
 #include "ui/menu/menu_tree.h"
 #include "ui/name_entry.h"
 #include "ui/ui_manager.h"
+#include "util/time_api.h"
 
 namespace {
 std::string_view Text(const i18n::Localization &localization,
@@ -334,9 +334,8 @@ void ReplayScene::DrawBrowser() {
         x + 384 - static_cast<int>(difficulty.size() * 14);
     DrawFont16(difficulty_x, y + 4, std::string(difficulty).c_str());
 
-    const auto date = std::format("{:%Y/%m/%d %H:%M}",
-                                  std::chrono::system_clock::time_point{
-                                      std::chrono::seconds{replay.created_at}});
+    const auto date = std::format(
+        "{:%Y/%m/%d %H:%M}", util::LocalTime(util::UtcTime(replay.created_at)));
     constexpr int detail_y = 25;
     DrawScore(x + 88, y + detail_y, date.c_str());
 

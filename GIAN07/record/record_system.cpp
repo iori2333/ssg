@@ -35,6 +35,7 @@
 #include "util/byte_io.h"
 #include "util/endian.h"
 #include "util/math_utils.h"
+#include "util/time_api.h"
 
 namespace {
 
@@ -118,18 +119,13 @@ bool ReadPlayerProgress(util::ByteReader &reader, PlayerProgress &progress) {
       !ReadValue(reader, progress.pending_graze_score) ||
       !ReadValue(reader, progress.star_counter) ||
       !ReadValue(reader, progress.star_threshold) ||
-      !ReadValue(reader, graze_count) ||
-      !ReadValue(reader, graze_wait) ||
-      !ReadValue(reader, power_progress) ||
-      !ReadValue(reader, miss_count) ||
-      !ReadValue(reader, bomb_used) ||
-      !ReadValue(reader, deathbomb_count) ||
+      !ReadValue(reader, graze_count) || !ReadValue(reader, graze_wait) ||
+      !ReadValue(reader, power_progress) || !ReadValue(reader, miss_count) ||
+      !ReadValue(reader, bomb_used) || !ReadValue(reader, deathbomb_count) ||
       !ReadValue(reader, player_type) ||
       player_type > std::to_underlying(PlayerType::Laser) ||
-      !ReadValue(reader, power) ||
-      !ReadValue(reader, bombs) ||
-      !ReadValue(reader, lives) ||
-      !ReadValue(reader, credits) ||
+      !ReadValue(reader, power) || !ReadValue(reader, bombs) ||
+      !ReadValue(reader, lives) || !ReadValue(reader, credits) ||
       !ReadValue(reader, star_extend_count) ||
       !ReadValue(reader, initial_bomb_stock)) {
     return false;
@@ -150,15 +146,13 @@ bool ReadPlayerProgress(util::ByteReader &reader, PlayerProgress &progress) {
   return true;
 }
 
-std::string ReplayFilename(bool extra_stage,
-                           std::chrono::system_clock::time_point now) {
+std::string ReplayFilename(bool extra_stage, util::UtcTimePoint now) {
   const auto *prefix = extra_stage ? "replay_ex" : "replay";
-  return std::format("{}_{:%Y%m%d_%H%M%S}.dat", prefix,
-                     std::chrono::floor<std::chrono::seconds>(now));
+  return std::format("{}_{:%Y%m%d_%H%M%S}.dat", prefix, now);
 }
 
-std::optional<std::filesystem::path>
-UniqueReplayPath(bool extra_stage, std::chrono::system_clock::time_point now) {
+std::optional<std::filesystem::path> UniqueReplayPath(bool extra_stage,
+                                                      util::UtcTimePoint now) {
   std::error_code error;
   const auto filename = ReplayFilename(extra_stage, now);
   const auto stem = std::filesystem::path{filename}.stem().string();
@@ -227,12 +221,10 @@ std::optional<ScoreRecord> LoadScoreRecord(const std::filesystem::path &path) {
 
 ScoreRecord RecordSystem::CaptureScore(const Player &player,
                                        const GameSession &session) {
-  const auto now = std::chrono::system_clock::now();
+  const auto now = util::UtcTime();
   return ScoreRecord{
       .name = "",
-      .created_at = std::chrono::duration_cast<std::chrono::seconds>(
-                        now.time_since_epoch())
-                        .count(),
+      .created_at = now.time_since_epoch().count(),
       .score = player.Score(),
       .graze = player.GrazeSum(),
       .miss_count = player.MissCount(),
@@ -356,9 +348,8 @@ void RecordSystem::BeginCapture(const Player &player,
                   (config.input.z_msg_skip_enabled
                        ? ReplayInputFlags::MessageSkip
                        : ReplayInputFlags::None) |
-                  (config.input.z_spd_down_enabled
-                       ? ReplayInputFlags::SpeedDown
-                       : ReplayInputFlags::None),
+                  (config.input.z_spd_down_enabled ? ReplayInputFlags::SpeedDown
+                                                   : ReplayInputFlags::None),
           },
       .demo_capture = demo_capture,
   });
@@ -471,10 +462,8 @@ RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
     replay_name = "Vivit!";
   }
 
-  const auto now = std::chrono::system_clock::now();
-  const auto created_at =
-      std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch())
-          .count();
+  const auto now = util::UtcTime();
+  const auto created_at = now.time_since_epoch().count();
 
   std::error_code error;
   std::filesystem::create_directories(kReplayDirectory, error);
@@ -501,10 +490,8 @@ RecordSaveResult RecordSystem::SaveDemo(StageId stage) {
     return RecordSaveResult::NoData;
   }
 
-  const auto now = std::chrono::system_clock::now();
-  const auto created_at =
-      std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch())
-          .count();
+  const auto now = util::UtcTime();
+  const auto created_at = now.time_since_epoch().count();
   std::error_code error;
   std::filesystem::create_directories(kDemoDirectory, error);
   if (error) {
