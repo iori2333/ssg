@@ -2,7 +2,8 @@
 
 ## Build system
 
-- **Source of truth:** CMake + Ninja (`CMakeLists.txt`, `build_windows.bat`, `build_linux.sh`).
+- **Source of truth:** CMake + Ninja (`CMakeLists.txt`, subdirectory
+  `CMakeLists.txt` files, `build_windows.bat`, `build_linux.sh`).
 - The root `README.md` still says Tup and `bin/` output — that is stale.
 - Generated output is `build/bin/GIAN07` (Linux) or `build/bin/GIAN07.exe` (Windows).
 
@@ -25,7 +26,9 @@ build_windows.bat
 
 - Supports GCC ≥15 and Clang ≥18.
 - Build script honors `CC`/`CXX` if set; otherwise falls back to system `cc`.
-- Requires `pkg-config`, `pangocairo`, and `fontconfig`.
+- FreeType and HarfBuzz are built from the vendored SDL_ttf submodule.
+- Requires a system-installed Noto Sans CJK font collection. `SSG_CJK_FONT`
+  overrides its path when it is outside the standard distribution locations.
 
 ## Submodules
 
@@ -41,26 +44,26 @@ Build scripts run `git submodule update --init --recursive`. Do not hand-edit ve
 
 | Directory | Purpose |
 | --- | --- |
-| `GIAN07/` | Original pbg game code (late-90s/early-2000s style) |
-| `GIAN07/app/` | Application entry point, composition root, subsystem initialization, and live display settings |
-| `GIAN07/data/` | Validated PBG/PAK ownership, music catalog data, and graphics/SFX loading adapters |
-| `GIAN07/gameflow/` | Variant-based screen routing and live/replay/demo gameplay flow |
-| `GIAN07/gameplay/` | Shared gameplay rules, session state, rank policy, and playfield geometry |
-| `GIAN07/item/` | Collectible item entities, movement, pickup rules, and rendering |
-| `GIAN07/music/` | Music playback, track metadata, and replacement BGM pack selection |
-| `GIAN07/record/` | Score and Replay persistence, input recording, and Replay playback |
-| `GIAN07/settings/` | Persistent application configuration models and TOML serialization |
-| `GIAN07/stage/` | Validated SCL/MAP parsing, stage asset installation, timeline execution, and background scrolling |
-| `GIAN07/ui/` | Application-wide UI ownership: scenes, menus, HUD, and message windows |
-| `game/` | Cross-platform layer: game logic, SDL3/miniaudio/TSF backends, and I/O utilities |
-| `game/sys/` | System wrappers – bit streams, buffer, file, path, thread, log, input |
-| `game/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |
-| `game/audio/` | Audio layer – sound effects, BGM/MIDI, codecs, volume, audio backends |
-| `game/util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
-| `game/platform/` | Platform-specific backends with no cross-platform equivalent |
-| `tools/` | Build tools: pack_tool (PBG extract/pack), script_tool (ECL/SCL disasm/asm) |
+| `ssg/` | Game executable source (late-90s/early-2000s pbg code and modern application composition) |
+| `ssg/app/` | Application entry point, composition root, subsystem initialization, and live display settings |
+| `ssg/data/` | Validated PBG/PAK ownership, music catalog data, and graphics/SFX loading adapters |
+| `ssg/gameflow/` | Variant-based screen routing and live/replay/demo gameplay flow |
+| `ssg/gameplay/` | Shared gameplay rules, session state, rank policy, and playfield geometry |
+| `ssg/item/` | Collectible item entities, movement, pickup rules, and rendering |
+| `ssg/music/` | Music playback, track metadata, and replacement BGM pack selection |
+| `ssg/record/` | Score and Replay persistence, input recording, and Replay playback |
+| `ssg/settings/` | Persistent application configuration models and TOML serialization |
+| `ssg/stage/` | Validated SCL/MAP parsing, stage asset installation, timeline execution, and background scrolling |
+| `ssg/ui/` | Application-wide UI ownership: scenes, menus, HUD, and message windows |
+| `ssg-runtime/` | Cross-platform static runtime: SDL3/miniaudio backends and I/O utilities |
+| `ssg-runtime/sys/` | System wrappers – bit streams, buffer, file, path, thread, log, input |
+| `ssg-runtime/gfx/` | Graphics layer – coordinates, surfaces, text, BMP, GPU/window backends |
+| `ssg-runtime/audio/` | Audio layer – sound effects, BGM/MIDI, codecs, volume, audio backends |
+| `ssg-runtime/util/` | General utilities – cast, endian, enum helpers, hash, guard, math, time, debug |
+| `ssg-scripts/` | ECL/SCL and i18n sources, conversion tool, generators, and generated-data static library |
+| `tools/` | Developer tools: pack_tool and stage_validator |
 
-Entry point: `GIAN07/app/main.cpp`.
+Entry point: `ssg/app/main.cpp`.
 
 ### Game data format
 

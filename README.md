@@ -25,7 +25,9 @@ The script initializes submodules, configures CMake, and builds a Release binary
 
 ### Linux
 
-Requirements: GCC ≥15 or Clang ≥18, CMake ≥3.21, Ninja, Git, `pkg-config`, `pangocairo`, `fontconfig`.
+Requirements: GCC ≥15 or Clang ≥18, CMake ≥3.21, Ninja, Git, and Noto Sans
+CJK. Set `SSG_CJK_FONT` if its font collection is installed in a non-standard
+location.
 
 ```sh
 ./build_linux.sh
@@ -46,17 +48,13 @@ cmake --build build --config Debug
 
 | Directory | Purpose |
 | --- | --- |
-| `GIAN07/` | Original pbg game code |
-| `game/` | Modern platform-independent layer (graphics, audio, input abstractions) |
-| `platform/` | Platform backend interfaces |
-| `platform/sdl/` | SDL3 backend (Windows and Linux) |
-| `platform/windows/` | Win32-native backends (GDI text, WinMM MIDI, file I/O) |
-| `platform/c/` | Standard-library fallback implementations |
-| `platform/miniaudio/` | Audio backend |
-| `platform/linux/` | Linux text rendering |
-| `libs/` | Vendored Git submodules (SDL3, miniaudio, libwebp) |
+| `ssg/` | Game executable source |
+| `ssg-runtime/` | Cross-platform graphics, audio, input, and system static library |
+| `ssg-scripts/` | Script sources, conversion tools, and generated-data static library |
+| `tools/` | Archive and stage validation tools |
+| `libs/` | Vendored third-party dependencies |
 
-Entry point: `platform/sdl/main.cpp`.
+Entry point: `ssg/app/main.cpp`.
 
 ## Tooling
 
@@ -66,7 +64,8 @@ Entry point: `platform/sdl/main.cpp`.
 
 ## Resources
 
-This repository contains source code only. Image, music, sound effect, and script resources are not included.
+Original runtime image, music, and sound effect resources are not included.
+Embedded ECL/SCL sources and localized text catalogs live in `ssg-scripts/`.
 
 ## License
 

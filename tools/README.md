@@ -54,7 +54,7 @@ When all six section directories are present, `pack` writes a versioned
 manifest as archive entry 0 and appends the sections in manifest order. Music
 entries in both variants must be raw SMF files beginning with `MThd`; titles
 and Music Room comments are compiled from
-`scripts/i18n/<language>/music.txt` instead.
+`ssg-scripts/i18n/<language>/music.txt` instead.
 
 ```sh
 pack_tool extract bin/data.pak work/data
@@ -92,43 +92,3 @@ build\bin\pack_tool.exe extract bin\data.pak build\data_work
 Copy-Item bin\demos\*.dat build\data_work\demos\
 build\bin\pack_tool.exe pack build\data_work bin\data.pak
 ```
-
-## script_tool
-
-`script_tool` assembles and disassembles ECL/SCL programs and compiles i18n
-text catalogs. Build output is `build/bin/script_tool(.exe)`.
-
-```sh
-script_tool disasm-scl <in_binary> <out_text>
-script_tool asm-scl <in_text> <out_binary>
-script_tool disasm-ecl <in_binary> <out_text>
-script_tool asm-ecl <in_text> <out_binary>
-script_tool asm-text <in_text> <out_binary>
-```
-
-SCL uses `MSGREF id=@key` for localized messages. The corresponding catalogs
-are stored separately under `scripts/i18n/<language>/`:
-
-```text
-messages.txt  story dialogue
-ui.txt        menus and dialogs
-music.txt     Music Room titles and comments
-```
-
-All catalogs share the same key/value syntax. Single-line values use quoted
-strings. Multi-line values use triple quotes on their own lines:
-
-```text
-ui.menu.game_start.title = "Game Start"
-
-music.track_00.comment = """
-First line
-
-Third line
-"""
-```
-
-Supported escapes are `\xNN`, `\\`, `\"`, `\n`, `\r`, and `\t`. The text
-assembler rejects invalid syntax, duplicate keys, and 32-bit text ID
-collisions. The build validates that every supported language has the same key
-set.
