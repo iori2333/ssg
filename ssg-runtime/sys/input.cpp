@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -230,10 +229,8 @@ GetPadAxisIds(int device_index) {
 std::vector<Joypad>::iterator FindPad(std::vector<Joypad> &pads,
                                       SDL_JoystickID id) {
   auto *joystick = SDL_GetJoystickFromID(id);
-  const auto it = std::ranges::find_if(
+  return std::ranges::find_if(
       pads, [joystick](const auto &pad) { return (pad.joystick == joystick); });
-  assert(it != pads.end());
-  return it;
 }
 
 } // namespace
@@ -257,7 +254,11 @@ InputSnapshot InputSystem::Poll() {
                         SDL_EVENT_JOYSTICK_REMOVED) == 1) {
     switch (event.type) {
     case SDL_EVENT_JOYSTICK_AXIS_MOTION: {
-      auto &pad = *FindPad(state.pads, event.jaxis.which);
+      const auto found = FindPad(state.pads, event.jaxis.which);
+      if (found == state.pads.end()) {
+        break;
+      }
+      auto &pad = *found;
 
       // The original WinMM backend did this without even taking the
       // range reported by joyGetDevCaps() into account. However, that
@@ -289,6 +290,11 @@ InputSnapshot InputSystem::Poll() {
 
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
     case SDL_EVENT_JOYSTICK_BUTTON_UP: {
+      const auto found = FindPad(state.pads, event.jbutton.which);
+      if (found == state.pads.end()) {
+        break;
+      }
+
       // SDL's numbering starts at 0.
       const InputPadButton id = (event.jbutton.button + 1);
       for (const auto &binding : state.pad_bindings) {
@@ -297,7 +303,7 @@ InputSnapshot InputSystem::Poll() {
         }
       }
 
-      auto &pad = *FindPad(state.pads, event.jbutton.which);
+      auto &pad = *found;
       using Held = std::numeric_limits<decltype(pad.button_pressed_last)>;
       if (event.jbutton.down) {
         if (pad.buttons_held < Held::max()) {
@@ -336,6 +342,9 @@ InputSnapshot InputSystem::Poll() {
 
     case SDL_EVENT_JOYSTICK_REMOVED: {
       const auto pad = FindPad(state.pads, event.jdevice.which);
+      if (pad == state.pads.end()) {
+        break;
+      }
       SDL_CloseJoystick(pad->joystick);
       if (pad != (state.pads.end() - 1)) {
         *pad = state.pads.back();

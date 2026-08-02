@@ -4,10 +4,10 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -521,10 +521,19 @@ TextRenderSession::PixelSession::PixelAt(const PixelPoint &xy_rel) const {
 
 TextRenderSession::PixelSession::PixelSession() {
   auto *surface = State().Scratch();
-  assert(surface != nullptr);
+  if (surface == nullptr) {
+    logging::Critical(logging::Channel::Graphics,
+                      "Text pixel editing requires a scratch surface");
+    std::abort();
+  }
   if (SDL_MUSTLOCK(surface)) {
     locked_ = SDL_LockSurface(surface);
-    assert(locked_);
+    if (!locked_) {
+      logging::Critical(logging::Channel::Graphics,
+                        "Failed to lock the text scratch surface: {}",
+                        SDL_GetError());
+      std::abort();
+    }
   }
   pixels_ = static_cast<uint8_t *>(surface->pixels);
   pitch_ = surface->pitch;
@@ -565,7 +574,11 @@ TextRenderSession::TextRenderSession(const PixelLtwh rect)
     : texture_origin_{.x = rect.left, .y = rect.top},
       size_{.w = rect.w, .h = rect.h} {
   auto *surface = State().Scratch();
-  assert(surface != nullptr);
+  if (surface == nullptr) {
+    logging::Critical(logging::Channel::Graphics,
+                      "Text rendering requires a scratch surface");
+    std::abort();
+  }
   const SDL_Rect clip = {.x = 0, .y = 0, .w = rect.w, .h = rect.h};
   (void)SDL_SetSurfaceClipRect(surface, &clip);
   (void)SDL_FillSurfaceRect(surface, &clip, 0);
@@ -605,7 +618,11 @@ void TextRenderSession::Put(const PixelPoint &topleft_rel,
 }
 
 std::optional<TextRenderSession> TextRender::Session(TextRenderRectId rect_id) {
-  assert(rect_id < rects.size());
+  if (rect_id >= rects.size()) {
+    logging::Critical(logging::Channel::Graphics,
+                      "Invalid text rectangle ID: {}", rect_id);
+    return std::nullopt;
+  }
   if (!State().Initialized()) {
     return std::nullopt;
   }

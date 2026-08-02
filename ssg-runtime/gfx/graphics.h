@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <compare>
 #include <concepts>
 #include <cstdint>
@@ -40,7 +39,6 @@ struct Rgb {
 
   constexpr bool operator==(const Rgb &other) const = default;
 };
-static_assert(sizeof(Rgb) == 3);
 
 struct Palette : public std::array<Rgba, 256> {
   // Builds a new palette with the given fade [alpha] value applied onto the

@@ -11,6 +11,8 @@
 
 #include "text.h"
 
+#include "sys/log.h"
+
 class TextRenderPacked {
 protected:
   struct RectAndContents {
@@ -48,10 +50,14 @@ public:
 
   template <typename Self>
   bool Render(this Self &self, WindowPoint dst, TextRenderRectId rect_id,
-              std::string_view contents,
-              std::invocable<TextRenderSession &> auto func,
-              std::optional<PixelLtwh> subrect = std::nullopt) {
-    assert(rect_id < self.rects.size());
+               std::string_view contents,
+               std::invocable<TextRenderSession &> auto func,
+               std::optional<PixelLtwh> subrect = std::nullopt) {
+    if (rect_id >= self.rects.size()) {
+      logging::Critical(logging::Channel::Graphics,
+                        "Invalid text rectangle ID: {}", rect_id);
+      return false;
+    }
     auto &rect = self.rects[rect_id];
     if (rect.contents != contents) {
       auto maybe_session = self.Session(rect_id);

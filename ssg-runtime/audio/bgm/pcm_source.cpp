@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -17,16 +16,9 @@
 
 #include "pcm_source.h"
 
+#include "sys/log.h"
+
 namespace audio::bgm {
-
-namespace {
-
-void ApplyVolumeError(std::span<uint8_t> /*unused*/, uint16_t /*unused*/,
-                      PcmVolume & /*unused*/) {
-  assert(!"missing fade implementation");
-}
-
-} // namespace
 
 void PcmVolume::SetVolumeLinear(float v) { ramp.Set(v); }
 
@@ -66,13 +58,17 @@ bool PcmStream::Decode(std::span<uint8_t> buf) {
     size_left -= ret;
   }
 
-  auto apply_volume = ApplyVolumeError;
   if (pcmf.format == PcmSampleFormat::Int16) {
-    apply_volume = ApplyVolume<int16_t>;
+    ApplyVolume<int16_t>(buf, pcmf.channels, vol);
   } else if (pcmf.format == PcmSampleFormat::Int32) {
-    apply_volume = ApplyVolume<int32_t>;
+    ApplyVolume<int32_t>(buf, pcmf.channels, vol);
+  } else {
+    logging::Critical(logging::Channel::Audio,
+                      "Unsupported PCM sample format: {}",
+                      std::to_underlying(pcmf.format));
+    std::ranges::fill(buf, uint8_t{0});
+    return false;
   }
-  apply_volume(buf, pcmf.channels, vol);
   return true;
 }
 
@@ -152,7 +148,9 @@ std::unique_ptr<PcmStream> OpenPcmStream(std::string_view base_fn) {
         continue;
       }
       if (intro_part->pcmf != loop_part->pcmf) {
-        assert(!"PCM format mismatch between intro and loop parts!");
+        logging::Error(logging::Channel::Audio,
+                       "PCM format mismatch between intro and loop files: {}",
+                       fn);
         loop_part.reset();
         continue;
       }

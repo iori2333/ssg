@@ -2,7 +2,6 @@
 /// MsgWindow - Message window processing
 ///
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -17,6 +16,7 @@
 #include "gfx/graphics_backend.h"
 #include "gfx/text.h"
 #include "gfx/text_ttf.h"
+#include "sys/log.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -310,7 +310,12 @@ void MsgWindow::SetFace(std::size_t face_id) {
     return; // Impossible number
   }
 
-  assert(text_topleft.x == kFaceWidth);
+  if (text_topleft.x != kFaceWidth) {
+    logging::Critical(logging::Channel::Ui,
+                      "Cannot set a face on a message window without face "
+                      "layout");
+    return;
+  }
 
   if (face_state == FaceState::None) {
     face_state = FaceState::Open;

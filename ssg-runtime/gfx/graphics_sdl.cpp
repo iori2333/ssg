@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +14,6 @@
 #include <span>
 #include <string_view>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 #include <SDL3/SDL_blendmode.h>
@@ -186,24 +184,6 @@ template <typename Rect> Rect HelpRectTo(const PixelLtrb &o) {
       .w = static_cast<decltype(Rect::w)>(o.right - o.left),
       .h = static_cast<decltype(Rect::h)>(o.bottom - o.top),
   };
-}
-
-std::span<const SDL_FPoint> HelpFPointsFrom(VertexXySpan<> sp) {
-  using GT = decltype(sp)::value_type;
-  static_assert(sizeof(SDL_FPoint) == sizeof(GT));
-  static_assert(std::is_same_v<decltype(SDL_FPoint::x), decltype(GT::x)>);
-  static_assert(std::is_same_v<decltype(SDL_FPoint::y), decltype(GT::y)>);
-  return {reinterpret_cast<const SDL_FPoint *>(sp.data()), sp.size()};
-}
-
-std::span<const SdlColor> HelpColorsFrom(VertexRgbaSpan<> sp) {
-  using GT = decltype(sp)::value_type;
-  static_assert(sizeof(SdlColor) == sizeof(GT));
-  static_assert(std::is_same_v<decltype(SdlColor::r), decltype(GT::r)>);
-  static_assert(std::is_same_v<decltype(SdlColor::g), decltype(GT::g)>);
-  static_assert(std::is_same_v<decltype(SdlColor::b), decltype(GT::b)>);
-  static_assert(std::is_same_v<decltype(SdlColor::a), decltype(GT::a)>);
-  return {reinterpret_cast<const SdlColor *>(sp.data()), sp.size()};
 }
 
 SDL_Texture *TexturePostInit(SDL_Texture &tex, SDL_Renderer * /*renderer*/) {
@@ -442,8 +422,6 @@ bool PrimarySetScale(bool geometry, const WindowSize &scaled_res) {
     return geometry; // Don't unset the user's choice on 1× scaling!
   }
 
-  assert(!geometry);
-
   // Prepare the primary renderer for blitting the primary texture:
   // • Ensure the correct logical size
   // • Stop clipping on the primary renderer!!! Its clipping region is going
@@ -455,7 +433,13 @@ bool PrimarySetScale(bool geometry, const WindowSize &scaled_res) {
                                    SDL_LOGICAL_PRESENTATION_DISABLED);
 
   if (RenderState().primary_texture == nullptr) {
-    assert(RenderState().software_surface);
+    if (RenderState().software_surface == nullptr) {
+      logging::Critical(
+          kLogCat,
+          "Cannot create the native resolution texture without a software "
+          "surface");
+      return set_geometry();
+    }
     const auto format = RenderState().software_surface->format;
     const auto &res = kGameResolution;
     RenderState().primary_texture =
@@ -747,9 +731,15 @@ void GraphicsBackendSetClip(const WindowLtrb &rect) {
 std::string_view GraphicsBackendAPIString() {
   // More efficient than the hash table insertion done by
   // SDL_GetRendererName().
-  assert(RenderState().primary_renderer);
+  if (RenderState().primary_renderer == nullptr) {
+    logging::Critical(kLogCat,
+                      "Cannot query the graphics API before initialization");
+    return {};
+  }
   const auto props = SDL_GetRendererProperties(RenderState().primary_renderer);
-  return SDL_GetStringProperty(props, SDL_PROP_RENDERER_NAME_STRING, nullptr);
+  const auto *name =
+      SDL_GetStringProperty(props, SDL_PROP_RENDERER_NAME_STRING, nullptr);
+  return name != nullptr ? std::string_view{name} : std::string_view{};
 }
 
 namespace {
@@ -958,14 +948,33 @@ void DrawGeometry(TrianglePrimitive tp, VertexXySpan<> xys,
                   VertexRgbaSpan<> colors) {
 #pragma warning(suppress : 26494) // type.5
   std::array<SDL_FPoint, kMaxTriangles> sdl_vertices{};
+  std::array<SdlColor, kMaxTriangles> sdl_colors{};
 
   const auto vertex_count = xys.size();
-  const auto sdl_colors = HelpColorsFrom(colors);
+  if (vertex_count < 3 || vertex_count > std::size(sdl_vertices)) {
+    logging::Critical(kLogCat,
+                      "Invalid vertex count for a triangle primitive: {}",
+                      vertex_count);
+    return;
+  }
   const auto indices = kTriangleIndices[tp];
   const auto index_count = TriangleIndexCount(vertex_count);
-  assert(vertex_count <= std::size(sdl_vertices));
-  assert(index_count <= indices.size());
-  assert((colors.size() == 1) || (colors.size() == vertex_count));
+  if (index_count > indices.size()) {
+    logging::Critical(kLogCat,
+                      "Invalid index count for a triangle primitive: {}",
+                      index_count);
+    return;
+  }
+
+  if (colors.size() != 1 && colors.size() != vertex_count) {
+    logging::Critical(kLogCat,
+                      "Triangle color count {} does not match vertex count {}",
+                      colors.size(), vertex_count);
+    return;
+  }
+  std::ranges::transform(colors, sdl_colors.begin(), [](const auto &color) {
+    return SdlColor{.r = color.r, .g = color.g, .b = color.b, .a = color.a};
+  });
 
   // Work around SDL's weird -0.5f offset...
   float offset_x = NAN;
@@ -980,7 +989,7 @@ void DrawGeometry(TrianglePrimitive tp, VertexXySpan<> xys,
 
   SDL_RenderGeometryRaw(
       *RenderState().renderer, nullptr, &sdl_vertices[0].x, sizeof(SDL_FPoint),
-      sdl_colors.data(), ((sdl_colors.size() == 1) ? 0 : sizeof(SdlColor)),
+      sdl_colors.data(), ((colors.size() == 1) ? 0 : sizeof(SdlColor)),
       nullptr, 0, vertex_count, indices.data(), index_count, sizeof(IndexType));
 }
 
@@ -1035,8 +1044,16 @@ void geometry::DrawBoxA(int x1, int y1, int x2, int y2) {
 }
 
 void geometry::DrawLineStrip(VertexXySpan<> xys) {
-  const auto points = HelpFPointsFrom(xys);
-  SDL_RenderLines(*RenderState().renderer, points.data(), points.size());
+  if (xys.size() > kMaxTriangles) {
+    logging::Critical(kLogCat, "Too many points for a line strip: {}",
+                      xys.size());
+    return;
+  }
+  std::array<SDL_FPoint, kMaxTriangles> points{};
+  std::ranges::transform(xys, points.begin(), [](const auto &point) {
+    return SDL_FPoint{.x = point.x, .y = point.y};
+  });
+  SDL_RenderLines(*RenderState().renderer, points.data(), xys.size());
 }
 
 void geometry::DrawTriangles(TrianglePrimitive tp, VertexXySpan<> xys,

@@ -2,9 +2,9 @@
 /// .BMP file format
 ///
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <span>
 #include <utility>
@@ -28,7 +28,7 @@ bool WriteExact(SDL_IOStream *stream, const void *data, size_t size) {
 } // namespace
 
 uint16_t BmpPaletteSizeFromBpp(uint8_t bpp) {
-  const auto ret = [bpp]() -> uint16_t {
+  return [bpp]() -> uint16_t {
     if (bpp <= 4) {
       return (1 << 4);
     }
@@ -37,8 +37,6 @@ uint16_t BmpPaletteSizeFromBpp(uint8_t bpp) {
     }
     return 0;
   }();
-  assert(ret <= kBmpPaletteSizeMax);
-  return ret;
 }
 
 std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer) {
@@ -56,20 +54,14 @@ std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer) {
     return std::nullopt;
   }
 
-  // It makes sense to run this function on non-.BMP files when doing
-  // automatic file type detection, which should have failed in the two
-  // checks above. But if we got here, we expect this to be a valid .BMP,
-  // and therefore assert() that it is.
   const auto header_info = reader.ReadObject<BmpInfoHeader>();
   if (!header_info) {
-    assert(!"Not a .BMP file?");
     return std::nullopt;
   }
 
   const auto palette_size =
       BmpPaletteSizeFromBpp(header_info->biPlanes * header_info->biBitCount);
   if (!reader.ReadBytes(palette_size * sizeof(Bgra))) {
-    assert(!"Needs a palette, but doesn't contain a full one?");
     return std::nullopt;
   }
 
@@ -82,7 +74,6 @@ std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer) {
   const size_t size =
       (static_cast<size_t>(header_info->Stride()) * header_info->biHeight);
   if (!reader.Seek(header_file->bfOffBits) || !reader.ReadBytes(size)) {
-    assert(!"Does not contain all pixels?");
     return std::nullopt;
   }
 
@@ -107,8 +98,10 @@ bool BmpSaveSupports(SDL_PixelFormat format) {
 bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
              uint16_t bpp, std::span<Bgra> palette,
              std::span<const uint8_t> pixels) {
-  assert(pixels.size() <= std::numeric_limits<uint32_t>::max());
-  assert(palette.size() <= std::numeric_limits<uint32_t>::max());
+  if (pixels.size() > std::numeric_limits<uint32_t>::max() ||
+      palette.size() > std::numeric_limits<uint32_t>::max()) {
+    return false;
+  }
   const BmpInfoHeader header_info = {
       .biSize = sizeof(BmpInfoHeader),
       .biWidth = size.w,

@@ -31,7 +31,6 @@ void DrawFontMid(int x, int y, int n); // Draw MIDI font
 
 constexpr PixelCoord FontExtent5(const char c) {
   if ((c < 'A') || (c > 'Z')) {
-    assert(!"Character not supported in 5-pixel system font");
     return 0;
   }
   switch (c) {

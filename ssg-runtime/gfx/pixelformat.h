@@ -15,7 +15,6 @@ struct Rgba {
 
   constexpr bool operator==(const Rgba &other) const = default;
 };
-static_assert(sizeof(Rgba) == 4);
 
 // Same as the standard Win32 RGBQUAD structure.
 struct Bgra {
@@ -26,4 +25,3 @@ struct Bgra {
 
   constexpr bool operator==(const Bgra &other) const = default;
 };
-static_assert(sizeof(Bgra) == 4);

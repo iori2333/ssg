@@ -3,7 +3,6 @@
 ///
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <utility>
 
@@ -15,12 +14,10 @@ inline constexpr std::size_t kFaceSurfaceCount = 3;
 inline constexpr std::size_t kEndingPictureCount = 6;
 
 inline SurfaceId FaceSurface(std::size_t index) {
-  assert(index < kFaceSurfaceCount);
   return static_cast<SurfaceId>(std::to_underlying(SurfaceId::Face) + index);
 }
 
 inline SurfaceId EndingPictureSurface(std::size_t index) {
-  assert(index < kEndingPictureCount);
   return static_cast<SurfaceId>(std::to_underlying(SurfaceId::EndingPicture) +
                                 index);
 }

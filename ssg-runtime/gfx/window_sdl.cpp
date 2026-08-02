@@ -2,7 +2,6 @@
 /// SDL window creation
 ///
 
-#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -157,9 +156,15 @@ int WindowBackendValidateRenderDriver(std::string_view hint) {
 }
 
 std::string_view WindowBackendSDLRendererName(int id) {
-  assert(id < SDL_GetNumRenderDrivers());
-  if (id >= 0) {
+  const auto driver_count = SDL_GetNumRenderDrivers();
+  if (id >= 0 && id < driver_count) {
     return GraphicsBackendAPIString(id);
+  }
+  if (id >= 0) {
+    logging::Warning(kLogCat,
+                     "Renderer index {} is out of range; using the default",
+                     id);
+    id = -1;
   }
 
   const auto *hint = SDL_GetHint(SDL_HINT_RENDER_DRIVER);
@@ -183,7 +188,11 @@ std::string_view WindowBackendSDLRendererName(int id) {
 SDL_Window *WindowBackendSDL() { return State().window; }
 
 std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
-  assert(State().window == nullptr);
+  if (State().window != nullptr) {
+    logging::Critical(kLogCat,
+                      "Cannot create an SDL window while one already exists");
+    return std::nullopt;
+  }
 
   // The driver/API parameter takes precedence over the environment variable,
   // which is a bad idea in case the user is stuck on an API that might

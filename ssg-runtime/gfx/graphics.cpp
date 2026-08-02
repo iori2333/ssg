@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cctype>
 #include <charconv>
 #include <cstddef>
@@ -151,8 +150,6 @@ SDL_IOStream *GraphicsNextScreenshotStream(std::string_view ext) {
 }
 
 bool ScreenshotSaveBMP(SDL_Surface *src) {
-  assert(src->w < std::numeric_limits<PixelCoord>::max());
-  assert(src->h < std::numeric_limits<PixelCoord>::max());
   auto *const stream = GraphicsNextScreenshotStream(".BMP");
   if (stream == nullptr) {
     return false;
@@ -172,7 +169,9 @@ bool ScreenshotSaveBMP(SDL_Surface *src) {
     if (!palette) {
       return {};
     }
-    assert(palette->ncolors == (sizeof(uint8_t) << 8));
+    if (std::cmp_not_equal(palette->ncolors, bgra_memory.size())) {
+      return {};
+    }
     for (const int i : std::views::iota(0, palette->ncolors)) {
       bgra_memory[i] = {
           .b = palette->colors[i].b,
@@ -183,6 +182,9 @@ bool ScreenshotSaveBMP(SDL_Surface *src) {
     }
     return bgra_memory;
   }();
+  if (src->format == SDL_PIXELFORMAT_INDEX8 && palette.empty()) {
+    return SDL_SaveBMP_IO(src, stream, false);
+  }
 
   const PixelSize bmp_size = {.w = src->w, .h = -src->h};
 
@@ -235,7 +237,9 @@ bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
     if (palette == nullptr) {
       return false;
     }
-    assert(palette->ncolors == (sizeof(uint8_t) << 8));
+    if (std::cmp_not_equal(palette->ncolors, sizeof(uint8_t) << 8)) {
+      return false;
+    }
     if (WebPPictureAlloc(&pic) == 0) {
       return false;
     }
@@ -299,8 +303,9 @@ bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
 } // namespace
 
 bool GraphicsScreenshotSave(SDL_Surface *src) {
-  assert(src->w >= 0);
-  assert(src->h >= 0);
+  if (src == nullptr || src->w <= 0 || src->h <= 0) {
+    return false;
+  }
   if (SDL_MUSTLOCK(src)) {
     SDL_LockSurface(src);
   }

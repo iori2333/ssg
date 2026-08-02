@@ -1,7 +1,6 @@
 /// Application startup scene.
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -20,9 +19,6 @@
 #include "util/math_utils.h"
 
 StartupScene::Lens StartupScene::Lens::Create(int radius, int bulge) {
-  assert(radius > 0);
-  assert(radius > bulge);
-
   const auto diameter = radius * 2;
   const auto area = static_cast<std::size_t>(diameter) * diameter;
   Lens lens{

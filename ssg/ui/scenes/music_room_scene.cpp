@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -348,8 +347,9 @@ void MusicRoomScene::DrawNotes() {
 bool MusicRoomScene::Update(InputBits input, InputBits system_input,
                             bool should_draw) {
   if (!text_) {
-    assert(!"Music Room not initialized?");
-    std::unreachable();
+    logging::Critical(logging::Channel::Ui,
+                      "Cannot update the Music Room before initialization");
+    return true;
   }
   auto &text = text_.value();
 

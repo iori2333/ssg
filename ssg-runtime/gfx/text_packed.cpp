@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <limits>
 #include <optional>
 
@@ -13,6 +12,8 @@
 #include "graphics_backend.h"
 #include "text.h"
 #include "text_packed.h"
+
+#include "sys/log.h"
 
 namespace {
 
@@ -98,10 +99,16 @@ created_splits insert_and_split(const PixelSize &nw, const PixelLtwh &sp) {
 } // namespace
 
 PixelLtwh TextRenderPacked::Insert(const PixelSize &subrect_size) {
+  if (!subrect_size) {
+    logging::Critical(logging::Channel::Graphics,
+                      "Cannot pack a text rectangle with size {}x{}",
+                      subrect_size.w, subrect_size.h);
+    return {};
+  }
+
   while (true) {
     PixelLtwh *closest = nullptr;
 
-    assert(subrect_size);
     for (int i = static_cast<int>(spaces.size()) - 1; i >= 0; --i) {
       const PixelLtwh candidate = spaces[i];
 
@@ -139,11 +146,19 @@ PixelLtwh TextRenderPacked::Insert(const PixelSize &subrect_size) {
       constexpr auto coord_max = std::numeric_limits<PixelCoord>::max();
 
       if (bounds.w <= bounds.h) {
-        assert(subrect_size.w <= (coord_max - bounds.w));
+        if (subrect_size.w > (coord_max - bounds.w)) {
+          logging::Critical(logging::Channel::Graphics,
+                            "Text rectangle packing exceeded coordinate range");
+          return {};
+        }
         SpaceAdd(PixelLtwh{bounds.w, 0, subrect_size.w,
                            std::max(bounds.h, subrect_size.h)});
       } else {
-        assert(subrect_size.h <= (coord_max - bounds.h));
+        if (subrect_size.h > (coord_max - bounds.h)) {
+          logging::Critical(logging::Channel::Graphics,
+                            "Text rectangle packing exceeded coordinate range");
+          return {};
+        }
         SpaceAdd(PixelLtwh{0, bounds.h, std::max(bounds.w, subrect_size.w),
                            subrect_size.h});
       }
@@ -153,7 +168,11 @@ PixelLtwh TextRenderPacked::Insert(const PixelSize &subrect_size) {
 
 PixelLtwh TextRenderPacked::Subrect(TextRenderRectId rect_id,
                                     std::optional<PixelLtwh> maybe_subrect) {
-  assert(rect_id < rects.size());
+  if (rect_id >= rects.size()) {
+    logging::Critical(logging::Channel::Graphics,
+                      "Invalid text rectangle ID: {}", rect_id);
+    return {};
+  }
   auto ret = rects[rect_id].rect;
   if (maybe_subrect) {
     const auto &subrect = maybe_subrect.value();
@@ -185,6 +204,11 @@ void TextRenderPacked::Clear() {
 
 bool TextRenderPacked::Blit(WindowPoint dst, TextRenderRectId rect_id,
                             std::optional<PixelLtwh> subrect) {
+  if (rect_id >= rects.size()) {
+    logging::Critical(logging::Channel::Graphics,
+                      "Invalid text rectangle ID: {}", rect_id);
+    return false;
+  }
   const PixelLtrb rect = Subrect(rect_id, subrect);
   return GraphicsSurfaceBlit(dst, SurfaceId::Text, rect);
 }
