@@ -82,7 +82,7 @@ file(GLOB PLATFORM_WINDOWS_SRC CONFIGURE_DEPENDS
 
 # --- Linux-specific backends ---
 file(GLOB PLATFORM_LINUX_SRC CONFIGURE_DEPENDS
-    "game/platform/linux/*/*.cpp"
+    "game/platform/linux/*.cpp"
 )
 
 set(GAME_VERSION "v${PROJECT_VERSION}")

@@ -15,7 +15,7 @@ bool GraphicsSurfaceGdiTextUpdate(const PixelLtwh &r) noexcept;
 
 #include "platform/windows/text_gdi.h"
 #elifdef LINUX
-#include "platform/linux/pangocairo/text_pangocairo.h"
+#include "platform/linux/text_pangocairo.h"
 #endif
 
 TextRender &TextRenderer();

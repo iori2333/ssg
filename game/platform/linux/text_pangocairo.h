@@ -37,7 +37,7 @@ public:
   PixelSize RectSize() const;
   void SetFont(FontId font);
   void SetColor(const Rgb &color);
-  PixelSize Extent(std::string_view str);
+  static PixelSize Extent(std::string_view str);
   void Put(const PixelPoint &topleft_rel, std::string_view str,
            std::optional<Rgb> color = std::nullopt);
   auto EditPixels(std::invocable<PixelSession &> auto f) {
@@ -56,5 +56,5 @@ class TextRender : public TextRenderPacked {
 
 public:
   void WipeBeforeNextRender();
-  PixelSize TextExtent(FontId font, std::string_view str);
+  static PixelSize TextExtent(FontId font, std::string_view str);
 };

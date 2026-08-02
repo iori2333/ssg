@@ -53,7 +53,7 @@ cmake --build build --config Debug
 | `platform/windows/` | Win32-native backends (GDI text, WinMM MIDI, file I/O) |
 | `platform/c/` | Standard-library fallback implementations |
 | `platform/miniaudio/` | Audio backend |
-| `platform/pangocairo/` | Linux text rendering |
+| `platform/linux/` | Linux text rendering |
 | `libs/` | Vendored Git submodules (SDL3, miniaudio, libwebp) |
 
 Entry point: `platform/sdl/main.cpp`.
