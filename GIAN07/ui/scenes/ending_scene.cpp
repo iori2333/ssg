@@ -1,6 +1,8 @@
 /// Ending cinematic UI scene.
 
-#include <utility>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 
 #include "ending_scene.h"
 
@@ -8,9 +10,15 @@
 #include "data/graphics_assets.h"
 #include "data/graphics_loader.h"
 #include "gfx/constants.h"
+#include "gfx/coords.h"
+#include "gfx/geometry.h"
+#include "gfx/graphics.h"
+#include "gfx/graphics_backend.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
 #include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
+#include "stage/scene_program.h"
 #include "stage/stage_loader.h"
 
 // Ending initialization
@@ -20,7 +28,7 @@ bool EndingScene::Enter() {
   GraphicsFlip();
   GraphicsBackendClear();
 
-  if (!graphics_.LoadEnding() || !stage_loader_.LoadEnding(scene_)) {
+  if (!graphics_.LoadEnding() || !stage::StageLoader::LoadEnding(scene_)) {
     return false;
   }
   audio_.StopBgm();
@@ -150,8 +158,8 @@ void EndingScene::Text::Render(WindowPoint topleft) {
     int max_px = 0;
 
     s.SetFont(FontId::Normal);
-    for (size_t i = 0; i < Text.size(); i++) {
-      max_px = (std::max)(max_px, s.Extent(Text[i]).w);
+    for (auto i : Text) {
+      max_px = (std::max)(max_px, TextRenderSession::Extent(i).w);
     }
 
     const auto dx = std::max(0, (s.RectSize().w - max_px) / 2);
@@ -174,29 +182,29 @@ void EndingScene::Text::Render(WindowPoint topleft) {
 }
 
 // Apply fade I/O info
-void EndingScene::DrawFadeInfo() {
+void EndingScene::DrawFadeInfo() const {
 
   if (grp_info.bWantDisp) {
-    Geometry().SetAlphaNorm(255 - grp_info.alpha);
-    Geometry().SetColor({0, 0, 0});
-    Geometry().DrawBoxA(grp_info.x, grp_info.y, (grp_info.x + 320),
-                        (grp_info.y + 240));
+    geometry::SetAlphaNorm(255 - grp_info.alpha);
+    geometry::SetColor({0, 0, 0});
+    geometry::DrawBoxA(grp_info.x, grp_info.y, (grp_info.x + 320),
+                       (grp_info.y + 240));
   }
   if (stf_task.bWantDisp) {
-    Geometry().SetAlphaNorm(255 - stf_task.alpha);
-    Geometry().SetColor({0, 0, 0});
+    geometry::SetAlphaNorm(255 - stf_task.alpha);
+    geometry::SetColor({0, 0, 0});
     if (stf_task.ox == 320) {
-      Geometry().DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
+      geometry::DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
     } else if (stf_task.ox > 320) {
-      Geometry().DrawBoxA(320, 0, kGameResolution.w, 300);
+      geometry::DrawBoxA(320, 0, kGameResolution.w, 300);
     } else {
-      Geometry().DrawBoxA(0, 0, (320 - 50), 300);
+      geometry::DrawBoxA(0, 0, (320 - 50), 300);
     }
   }
   if (flash_state != 0U) {
-    Geometry().SetAlphaNorm(255 - flash_state);
-    Geometry().SetColor({5, 5, 5});
-    Geometry().DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
+    geometry::SetAlphaNorm(255 - flash_state);
+    geometry::SetColor({5, 5, 5});
+    geometry::DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
   }
 }
 
@@ -297,6 +305,8 @@ bool EndingScene::SCLDecode() {
           stf_task.ox = 320;
           stf_task.oy = 80 + 80;
           break;
+        default:
+          break;
         }
         stf_task.alpha = 0;
         stf_task.timer = 0;
@@ -338,8 +348,6 @@ bool EndingScene::SCLDecode() {
 
     case stage::SceneOpcode::StageClear:
     case stage::SceneOpcode::GameClear:
-      return false;
-
     default:
       return false;
     }

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
+#include <memory>
 #include <span>
 
 #include <SDL3/SDL_audio.h>
@@ -39,11 +39,11 @@ SfxBank::Instance::~Instance() {
 void SfxBank::Effect::Clear() {
   max = 0;
   now = 0;
-  instances = nullptr;
-  resampled_buffer = nullptr;
+  instances.clear();
+  resampled_buffer.clear();
 }
 
-bool SfxBank::Effect::Loaded() const { return instances != nullptr; }
+bool SfxBank::Effect::Loaded() const { return !instances.empty(); }
 
 SfxBank::SfxBank(ma_engine &engine) : engine_(engine) {}
 
@@ -86,11 +86,7 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
 
   auto &effect = effects_[id];
   effect.Clear();
-  effect.instances = std::unique_ptr<Instance[]>(new Instance[max_instances]);
-  if (!effect.instances) {
-    return AudioResult::Fail(AudioError::BackendFailed,
-                             "Failed to allocate sound effect instances");
-  }
+  effect.instances.resize(max_instances);
   effect.max = max_instances;
   effect.now = 0;
 
@@ -105,7 +101,9 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
                              "Failed to initialize SFX resampler");
   }
 
-  const std::size_t input_frame_size = SDL_AUDIO_FRAMESIZE(spec);
+  const std::size_t input_frame_size =
+      static_cast<std::size_t>(SDL_AUDIO_BYTESIZE(spec.format)) *
+      static_cast<std::size_t>(spec.channels);
   const std::size_t output_frame_size =
       ma_get_bytes_per_frame(config.formatOut, config.channelsOut);
   ma_uint64 input_frames = (pcm.size() / input_frame_size);
@@ -118,16 +116,10 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
                              "Failed to calculate SFX output size");
   }
 
-  effect.resampled_buffer = std::unique_ptr<std::byte[]>(
-      new std::byte[output_frame_size * output_frames]);
-  if (!effect.resampled_buffer) {
-    ma_data_converter_uninit(&converter, nullptr);
-    effect.Clear();
-    return AudioResult::Fail(AudioError::BackendFailed,
-                             "Failed to allocate resampled SFX buffer");
-  }
+  effect.resampled_buffer.resize(output_frame_size * output_frames);
   if (ma_data_converter_process_pcm_frames(
-          &converter, pcm.data(), &input_frames, effect.resampled_buffer.get(),
+          &converter, pcm.data(), &input_frames,
+          effect.resampled_buffer.data(),
           &output_frames) != MA_SUCCESS) {
     ma_data_converter_uninit(&converter, nullptr);
     effect.Clear();
@@ -137,9 +129,12 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
   ma_data_converter_uninit(&converter, nullptr);
 
   for (std::uint8_t i = 0; i < max_instances; i++) {
-    auto &instance = effect.instances[i];
+    if (!effect.instances[i]) {
+      effect.instances[i] = std::make_unique<Instance>();
+    }
+    auto &instance = *effect.instances[i];
     if (ma_audio_buffer_ref_init(config.formatOut, config.channelsOut,
-                                 effect.resampled_buffer.get(), output_frames,
+                                 effect.resampled_buffer.data(), output_frames,
                                  &instance.data_source) != MA_SUCCESS) {
       effect.Clear();
       return AudioResult::Fail(AudioError::BackendFailed,
@@ -162,10 +157,10 @@ void SfxBank::Play(std::uint8_t id, float pan, bool loop) {
     return;
   }
   auto &effect = effects_[id];
-  auto &instance = effect.instances[effect.now];
+  auto &instance = *effect.instances[effect.now];
   ma_sound_stop(&instance.sound);
-  ma_sound_set_looping(&instance.sound, loop);
-  ma_sound_set_pan(&instance.sound, std::clamp(pan, -1.0f, 1.0f));
+  ma_sound_set_looping(&instance.sound, static_cast<ma_bool32>(loop));
+  ma_sound_set_pan(&instance.sound, std::clamp(pan, -1.0F, 1.0F));
   ma_sound_seek_to_pcm_frame(&instance.sound, 0);
   ma_sound_start(&instance.sound);
   effect.now = ((effect.now + 1) % effect.max);
@@ -176,7 +171,7 @@ void SfxBank::Stop(std::uint8_t id) {
     return;
   }
   for (std::uint32_t i = 0; i < effects_[id].max; i++) {
-    ma_sound_stop(&effects_[id].instances[i].sound);
+    ma_sound_stop(&effects_[id].instances[i]->sound);
   }
 }
 

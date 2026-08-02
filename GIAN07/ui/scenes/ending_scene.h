@@ -59,7 +59,7 @@ private:
     uint32_t timer = 0;
     uint32_t fadein = 0;
     uint32_t fadeout = 0;
-    uint8_t StfID[10] = {};
+    std::array<uint8_t, 10> StfID{};
     uint8_t TitleID = 0;
     short NumStf = 0;
     short alpha = 0;
@@ -90,23 +90,23 @@ private:
   uint16_t flash_state = 0;
 
   static constexpr std::array<PixelLtrb, 7> staff_label = {{
-      {0, 0, 160, 24},
-      {0, 24, 104, 48},
-      {0, 48, 160, 72},
-      {0, 72, 232, 96},
-      {0, 96, 168, 120},
-      {0, 144, 104, 168},
-      {0, (480 - 32), (9 * 32), 480},
+      PixelLtrb{0, 0, 160, 24},
+      PixelLtrb{0, 24, 104, 48},
+      PixelLtrb{0, 48, 160, 72},
+      PixelLtrb{0, 72, 232, 96},
+      PixelLtrb{0, 96, 168, 120},
+      PixelLtrb{0, 144, 104, 168},
+      PixelLtrb{0, (480 - 32), (9 * 32), 480},
   }};
 
   static constexpr std::array<PixelLtrb, 7> staff_member = {{
-      {0, 168, 72, 192},
-      {96, 168, 168, 192},
-      {192, 168, 264, 192},
-      {288, 168, 360, 192},
-      {0, 192, 144, 216},
-      {168, 192, 320, 216},
-      {0, 216, 336, 264},
+      PixelLtrb{0, 168, 72, 192},
+      PixelLtrb{96, 168, 168, 192},
+      PixelLtrb{192, 168, 264, 192},
+      PixelLtrb{288, 168, 360, 192},
+      PixelLtrb{0, 192, 144, 216},
+      PixelLtrb{168, 192, 320, 216},
+      PixelLtrb{0, 216, 336, 264},
   }};
 
   void Draw();
@@ -117,7 +117,7 @@ private:
   void UpdateStfInfo();
   void DrawGrpInfo();
   void DrawStfInfo();
-  void DrawFadeInfo();
+  void DrawFadeInfo() const;
   [[nodiscard]] bool SCLDecode();
 
   data::GraphicsLoader &graphics_;

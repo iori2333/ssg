@@ -70,15 +70,15 @@ public:
   IMenuNode &operator=(IMenuNode &&) = default;
 
   [[nodiscard]] std::string_view Title() const { return title_.Get(); }
-  virtual std::string Value() const = 0;
+  [[nodiscard]] virtual std::string Value() const = 0;
   [[nodiscard]] std::string_view Help() const { return help_.Get(); }
 
-  virtual bool Enabled() const {
+  [[nodiscard]] virtual bool Enabled() const {
     return enabled_ && (!enabled_fn_ || enabled_fn_());
   }
-  virtual bool Highlighted() const { return false; }
-  virtual bool FastRepeat() const { return false; }
-  virtual bool Centered() const { return false; }
+  [[nodiscard]] virtual bool Highlighted() const { return false; }
+  [[nodiscard]] virtual bool FastRepeat() const { return false; }
+  [[nodiscard]] virtual bool Centered() const { return false; }
 
   void SetEnabled(bool e) { enabled_ = e; }
   void BindEnabled(EnabledFn fn) { enabled_fn_ = std::move(fn); }
@@ -86,7 +86,9 @@ public:
   virtual bool OnAction(MenuController &ctrl);
   virtual void OnAdjust(MenuController &ctrl, int delta);
 
-  virtual std::span<IMenuNode *const> Children() const { return {}; }
+  [[nodiscard]] virtual std::span<IMenuNode *const> Children() const {
+    return {};
+  }
 
   virtual void OnPageEnter() {}
 
@@ -129,7 +131,7 @@ public:
   ToggleNode(MenuText title, MenuText help, std::reference_wrapper<bool> ref,
              ChangeFn on_change = {});
 
-  std::string Value() const override;
+  [[nodiscard]] std::string Value() const override;
 
   void SetValueText(MenuText on, MenuText off) {
     on_ = std::move(on);
@@ -183,10 +185,10 @@ public:
     };
   }
 
-  std::string Value() const override;
+  [[nodiscard]] std::string Value() const override;
 
   void OnAdjust(MenuController &ctrl, int delta) override;
-  bool FastRepeat() const override { return true; }
+  [[nodiscard]] bool FastRepeat() const override { return true; }
 
 private:
   using IndexFn = std::function<size_t()>;
@@ -210,7 +212,7 @@ public:
   ActionNode(MenuText title, MenuText help, ActionFn action,
              AdjustFn adjust_fn = {});
 
-  std::string Value() const override {
+  [[nodiscard]] std::string Value() const override {
     return value_fn_ ? value_fn_() : std::string{};
   }
 
@@ -232,8 +234,8 @@ class SeparatorNode : public IMenuNode {
 public:
   explicit SeparatorNode(std::string_view label = "-------------------");
 
-  std::string Value() const override { return {}; }
-  bool Enabled() const override { return false; }
+  [[nodiscard]] std::string Value() const override { return {}; }
+  [[nodiscard]] bool Enabled() const override { return false; }
 };
 
 // ---------------------------------------------------------------------------
@@ -272,7 +274,7 @@ public:
   ListNode(MenuText title, MenuText help, SizeFn size_fn, GenFn gen_fn,
            HandleFn handle_fn, int init_sel = -1, bool disable_value = false);
 
-  std::string Value() const override;
+  [[nodiscard]] std::string Value() const override;
 
   bool OnAction(MenuController &ctrl) override;
 

@@ -9,6 +9,9 @@
 #include "gfx/window_backend.h"
 #include "platform/text_backend.h"
 #include "settings/config.h"
+#include "util/enum_flags.h"
+#include <cstdint>
+#include <utility>
 
 bool DisplayController::Initialize(GraphicsConfig &config) {
   if (!GraphicsBackendEnum()) {
@@ -28,7 +31,7 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
               std::to_underlying(config.fullscreen_fit));
   const GraphicsParams requested{
       .flags = flags,
-      .api = GraphicsBackendAPIID(config.graphics_api),
+      .api = static_cast<int8_t>(GraphicsBackendAPIID(config.graphics_api)),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,
       .top = config.window_top,
@@ -97,7 +100,7 @@ bool DisplayController::ApplyConfig(const GraphicsConfig &config) {
               std::to_underlying(config.fullscreen_fit));
   return Apply({
       .flags = flags,
-      .api = GraphicsBackendAPIID(config.graphics_api),
+      .api = static_cast<int8_t>(GraphicsBackendAPIID(config.graphics_api)),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,
       .top = config.window_top,

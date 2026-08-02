@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <memory>
 #include <span>
+#include <vector>
 
 #include <miniaudio.h>
 
@@ -24,6 +25,8 @@ public:
   ~SfxBank();
   SfxBank(const SfxBank &) = delete;
   SfxBank &operator=(const SfxBank &) = delete;
+  SfxBank(SfxBank &&) = delete;
+  SfxBank &operator=(SfxBank &&) = delete;
 
   AudioResult Initialize();
   void Shutdown();
@@ -31,7 +34,7 @@ public:
   AudioResult Load(std::uint8_t id, const SDL_AudioSpec &spec,
                    std::span<const std::uint8_t> pcm,
                    std::uint8_t max_instances);
-  void Play(std::uint8_t id, float pan = 0.0f, bool loop = false);
+  void Play(std::uint8_t id, float pan = 0.0F, bool loop = false);
   void Stop(std::uint8_t id);
   void StopAll();
   void SetVolume(float linear);
@@ -43,12 +46,17 @@ private:
     ma_audio_buffer_ref data_source{};
     ma_sound sound{};
 
+    Instance() = default;
     ~Instance();
+    Instance(const Instance &) = delete;
+    Instance &operator=(const Instance &) = delete;
+    Instance(Instance &&) = delete;
+    Instance &operator=(Instance &&) = delete;
   };
 
   struct Effect {
-    std::unique_ptr<std::byte[]> resampled_buffer;
-    std::unique_ptr<Instance[]> instances;
+    std::vector<std::byte> resampled_buffer;
+    std::vector<std::unique_ptr<Instance>> instances;
     std::uint32_t max = 0;
     std::uint32_t now = 0;
 

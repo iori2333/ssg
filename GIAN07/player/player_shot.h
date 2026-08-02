@@ -48,13 +48,13 @@ struct PlayerShot {
 };
 
 struct PlayerShotSpawnInfo {
-  int x, y;
-  uint8_t direction;
-  uint8_t direction_step;
-  uint8_t count;
-  int speed;
-  int8_t acceleration;
-  PlayerShotKind kind;
+  int x{}, y{};
+  uint8_t direction{};
+  uint8_t direction_step{};
+  uint8_t count{};
+  int speed{};
+  int8_t acceleration{};
+  PlayerShotKind kind{};
   PlayerShotMotion motion = PlayerShotMotion::Straight;
   int8_t turn_rate = 0;
 };

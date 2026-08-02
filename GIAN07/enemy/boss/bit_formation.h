@@ -53,7 +53,11 @@ public:
   }
 
 private:
-  enum class MotionState : uint8_t { Orbit, MoveTowardPlayer, Disabled = 0xff };
+  enum class MotionState : uint8_t {
+    Orbit = 0,
+    MoveTowardPlayer = 1,
+    Disabled = 0xff
+  };
   enum class LaserPattern : uint8_t {
     Fixed = 3,
     Bidirectional = 4,

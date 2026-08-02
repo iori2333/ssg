@@ -19,7 +19,7 @@ public:
 
   [[nodiscard]] bool Load(StageId stage, EnemyManager &enemies,
                           StageSession &session) const;
-  [[nodiscard]] bool LoadEnding(SceneRunner &scene) const;
+  [[nodiscard]] static bool LoadEnding(SceneRunner &scene);
 
 private:
   const data::GameData *data_;

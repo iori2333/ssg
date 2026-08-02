@@ -1,14 +1,21 @@
 /// Enemy bullet entity behavior.
 
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <span>
 #include <utility>
 
 #include "bullet.h"
+#include "bullet/fire_state.h"
 #include "bullet_common.h"
 
+#include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
@@ -24,8 +31,9 @@ int GetBulletHitRadius(uint8_t c) {
     return c == kSpecialDirectionalBulletVisual ? kMediumBulletHitRadius
                                                 : kSmallBulletHitRadius;
   case kExtraBulletVisual: {
-    constexpr int radii[4] = {kExtraLargeBulletHitRadius, kLargeBulletHitRadius,
-                              kMediumBulletHitRadius, kSmallBulletHitRadius};
+    constexpr std::array<int, 4> radii = {
+        kExtraLargeBulletHitRadius, kLargeBulletHitRadius,
+        kMediumBulletHitRadius, kSmallBulletHitRadius};
     return radii[c & 3];
   }
   default:
@@ -90,7 +98,7 @@ BulletEffect DecodeEffect(uint8_t value) {
 } // namespace
 
 void Bullet::DrawEffect() const {
-  static constexpr PixelLtrb Data[6][5] = {
+  static constexpr std::array<std::array<PixelLtrb, 5>, 6> Data = {{
       {MakeRect(168, 344, 32), MakeRect(232, 344, 28), MakeRect(288, 344, 24),
        MakeRect(336, 344, 20), MakeRect(328, 416, 16)},
       {MakeRect(168, 344 + 32, 32), MakeRect(232, 344 + 28, 28),
@@ -110,19 +118,23 @@ void Bullet::DrawEffect() const {
        MakeRect(288 + 24, 344 + (24 * 2), 24),
        MakeRect(336 + 20, 344 + (20 * 2), 20),
        MakeRect(328 + (16 * 2), 416 + 16, 16)},
-  };
-  static int Width[5] = {32 / 2, 28 / 2, 24 / 2, 20 / 2, 16 / 2};
-  static constexpr std::span<const PixelLtrb, 5> Target[16 * 3] = {
-      Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[0], Data[0],
-      Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
-      Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[0], Data[0],
-      Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
-      Data[0], Data[1], Data[5], Data[3], Data[4], Data[5], Data[0], Data[0],
-      Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
-  };
+  }};
+  static constexpr std::array<int, 5> Width = {32 / 2, 28 / 2, 24 / 2, 20 / 2,
+                                               16 / 2};
+  static constexpr std::array<std::span<const PixelLtrb, 5>,
+                              static_cast<size_t>(16 * 3)>
+      Target = {{
+          Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[0],
+          Data[0], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
+          Data[0], Data[0], Data[0], Data[1], Data[2], Data[3], Data[4],
+          Data[5], Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
+          Data[0], Data[0], Data[0], Data[0], Data[0], Data[1], Data[5],
+          Data[3], Data[4], Data[5], Data[0], Data[0], Data[0], Data[0],
+          Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
+      }};
   const int ptn = (static_cast<int>(count_) / 4 % 5);
-  int x = WorldToPixel(x_) - Width[ptn];
-  int y = WorldToPixel(y_) - Width[ptn];
+  int const x = WorldToPixel(x_) - Width[ptn];
+  int const y = WorldToPixel(y_) - Width[ptn];
   PixelLtrb temp;
   if (c_ >= 16 * 3) {
     temp = Target[3][ptn];
@@ -244,7 +256,7 @@ void Bullet::RevertToNormal() {
 
 void Bullet::MoveByType(const BulletUpdateInfo &info,
                         BulletUpdateInfo::UpdateResult &result) {
-  float angle_delta = 0.0f;
+  float angle_delta = 0.0F;
   switch (motion_) {
   case BulletMotion::Normal:
     tx_ += vx_;
@@ -285,7 +297,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       const auto target = math::AngleTo(static_cast<float>(info.player_x) - x_,
                                         static_cast<float>(info.player_y) - y_);
       angle_delta = math::ShortestAngleDelta(target, angle_);
-      angle_ += angle_delta * static_cast<float>(vd_) / 255.0f;
+      angle_ += angle_delta * static_cast<float>(vd_) / 255.0F;
     }
     v_ += a_;
     {
@@ -337,7 +349,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       ty_ += velocity.y;
     }
     if (a_ < 0 && v_ <= 0) {
-      angle_ += math::kFullAngle / 2.0f;
+      angle_ += math::kFullAngle / 2.0F;
       a_ = -a_;
     }
     if (a_ > 0 && v_ >= v0_) {
@@ -374,13 +386,13 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
                         static_cast<float>(info.enemy_homing_y) - y_);
       angle_delta = math::ShortestAngleDelta(target, angle_);
     } else if (count_ < 130 - 60) {
-      const auto target = math::AngleTo(0.0f, static_cast<float>(-20_px) - y_);
+      const auto target = math::AngleTo(0.0F, static_cast<float>(-20_px) - y_);
       angle_delta = math::ShortestAngleDelta(target, angle_);
     } else {
       flags_ = Flags::None;
-      angle_delta = 0.0f;
+      angle_delta = 0.0F;
     }
-    if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5f) {
+    if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5F) {
       if (vd_ != 0) {
         vd_--;
       }
@@ -392,7 +404,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       v_ -= a_;
     }
     angle_ +=
-        angle_delta * static_cast<float>(static_cast<uint8_t>(vd_)) / 255.0f;
+        angle_delta * static_cast<float>(static_cast<uint8_t>(vd_)) / 255.0F;
     {
       const auto velocity = math::PolarVector(angle_, v_);
       vx_ = velocity.x;
@@ -408,7 +420,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
 }
 
 void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
-  float op_temp = 0.0f;
+  float op_temp = 0.0F;
   switch (option_) {
   case BulletOptionKind::None:
     x_ = tx_;
@@ -437,7 +449,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     return;
   case BulletOptionKind::ReflectX:
     if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
-      angle_ = (math::kFullAngle / 2.0f) - angle_;
+      angle_ = (math::kFullAngle / 2.0F) - angle_;
       vx_ = -vx_;
       const auto velocity = math::PolarVector(angle_, v_);
       x_ = tx_ + velocity.x;
@@ -471,7 +483,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     return;
   case BulletOptionKind::ReflectXY:
     if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
-      angle_ = (math::kFullAngle / 2.0f) - angle_;
+      angle_ = (math::kFullAngle / 2.0F) - angle_;
       vx_ = -vx_;
       const auto velocity = math::PolarVector(angle_, v_);
       x_ = tx_ + velocity.x;
@@ -500,22 +512,23 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
   case BulletOptionKind::Divide: {
     x_ = tx_;
     y_ = ty_;
-    float new_angle = 0.0f;
+    float new_angle = 0.0F;
     if (tx_ < playfield::kWorldLeft || tx_ > playfield::kWorldRight) {
-      op_temp = 1.0f;
-      new_angle = (math::kFullAngle / 2.0f) - angle_;
+      op_temp = 1.0F;
+      new_angle = (math::kFullAngle / 2.0F) - angle_;
     } else if (ty_ < playfield::kWorldTop) {
-      op_temp = 1.0f;
+      op_temp = 1.0F;
       new_angle = -angle_;
     }
-    if (op_temp == 1.0f) {
+    if (op_temp == 1.0F) {
       SetFlag(Flags::PendingRemoval, true);
       const auto velocity = math::PolarVector(new_angle, v_);
       const int cx = static_cast<int>(std::lround(tx_ + velocity.x));
       const int cy = static_cast<int>(std::lround(ty_ + velocity.y));
       constexpr uint8_t kCircleEffect = 0x50;
       const uint8_t ecmd = option_count_ | kCircleEffect;
-      uint8_t n = 0, dw = 0;
+      uint8_t n = 0;
+      uint8_t dw = 0;
       int sv = 0;
       switch (bullet_common::DecodePattern(ecmd)) {
       case BulletPattern::Spread:
@@ -539,7 +552,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
         break;
       }
       if ((ecmd & kAimFlag) != 0) {
-        new_angle = 0.0f;
+        new_angle = 0.0F;
         dw -= 6;
       }
       result.division_requested = true;
@@ -572,15 +585,14 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
 void Bullet::MoveByEffect() {
   switch (effect_) {
   case BulletEffect::None:
-    return;
   case BulletEffect::Roll1:
   case BulletEffect::Roll2:
   case BulletEffect::Warning:
   case BulletEffect::Rock:
     return;
   case BulletEffect::Circle1:
-    x_ = (tx_ += vx_ * 0.5f);
-    y_ = (ty_ += vy_ * 0.5f);
+    x_ = (tx_ += vx_ * 0.5F);
+    y_ = (ty_ += vy_ * 0.5F);
     if (count_ >= 5 * 4 - 1) {
       effect_ = BulletEffect::None;
     }
@@ -588,8 +600,8 @@ void Bullet::MoveByEffect() {
   case BulletEffect::Circle2:
     return;
   case BulletEffect::Clearing:
-    x_ += vx_ * 0.5f;
-    y_ += vy_ * 0.5f;
+    x_ += vx_ * 0.5F;
+    y_ += vy_ * 0.5F;
     if (count_ >= 47) {
       SetFlag(Flags::PendingRemoval, true);
     }
@@ -600,15 +612,16 @@ void Bullet::MoveByEffect() {
 // ── Bullet: Render ───────────────────────────────────────────────
 
 void Bullet::Render() const {
-  static const PixelLtrb rcExtraTama[4] = {{128, 384, 128 + 32, 384 + 32},
-                                           {128 + 32, 384, 128 + 56, 384 + 24},
-                                           {128 + 56, 384, 128 + 72, 384 + 16},
-                                           {128 + 72, 384, 128 + 80, 384 + 8}};
-  static constexpr uint8_t sizeExtraTama[4] = {16, 12, 8, 4};
+  static const std::array<PixelLtrb, 4> rcExtraTama = {
+      PixelLtrb{128, 384, 128 + 32, 384 + 32},
+      PixelLtrb{128 + 32, 384, 128 + 56, 384 + 24},
+      PixelLtrb{128 + 56, 384, 128 + 72, 384 + 16},
+      PixelLtrb{128 + 72, 384, 128 + 80, 384 + 8}};
+  static constexpr std::array<uint8_t, 4> sizeExtraTama = {16, 12, 8, 4};
 
   const bool is_small = (c_ & kBulletVisualCategoryMask) == kSmallBulletVisual;
-  int x = WorldToPixel(x_) - (is_small ? 4 : 8);
-  int y = WorldToPixel(y_) - (is_small ? 4 : 8);
+  int const x = WorldToPixel(x_) - (is_small ? 4 : 8);
+  int const y = WorldToPixel(y_) - (is_small ? 4 : 8);
   const auto display_angle = DisplayAngle();
 
   switch (effect_) {
@@ -649,9 +662,9 @@ void Bullet::Render() const {
     break;
   case kExtraBulletVisual: {
     const uint8_t d = (c_ & 3);
-    PixelLtrb src = rcExtraTama[d];
-    int ex = WorldToPixel(x_) - sizeExtraTama[d];
-    int ey = WorldToPixel(y_) - sizeExtraTama[d];
+    PixelLtrb const src = rcExtraTama[d];
+    int const ex = WorldToPixel(x_) - sizeExtraTama[d];
+    int const ey = WorldToPixel(y_) - sizeExtraTama[d];
     GraphicsSurfaceBlit({ex, ey}, SurfaceId::Enemy, src);
     break;
   }
@@ -668,11 +681,13 @@ void Bullet::Render() const {
                                     24 + ((c_ & 0x0f) << 4), 16, 16});
     } else {
       const auto d = static_cast<uint8_t>(display_angle + 4) / 8;
-      int dx = (d % 8) * 32;
-      int dy = (d / 8) * 32;
+      int const dx = (d % 8) * 32;
+      int const dy = (d / 8) * 32;
       GraphicsSurfaceBlit({x - 8, y - 8}, SurfaceId::System,
                           PixelLtwh{384 + dx, 304 + dy, 32, 32});
     }
+    break;
+  default:
     break;
   }
 }
@@ -707,7 +722,7 @@ void Bullet::UpdateDisplayAngle() {
   const auto category = c_ & kBulletVisualCategoryMask;
   if (category == kDirectionalBulletVisual ||
       category == kLargeExtraBulletVisual) {
-    angle_ += 4.0f * math::kLegacyAngleStep;
+    angle_ += 4.0F * math::kLegacyAngleStep;
   }
 }
 
@@ -715,7 +730,7 @@ void Bullet::Kill() {
   if (effect_ != BulletEffect::Clearing) {
     effect_ = BulletEffect::Clearing;
     count_ = 0;
-    angle_ = 0.0f;
+    angle_ = 0.0F;
   }
 }
 
@@ -727,7 +742,7 @@ HitResult Bullet::CheckHit(int player_x, int player_y,
   const int hit_radius = GetBulletHitRadius(c_);
   const float dx = x_ - static_cast<float>(player_x);
   const float dy = y_ - static_cast<float>(player_y);
-  float combined = static_cast<float>(hit_radius + player_radius);
+  auto combined = static_cast<float>(hit_radius + player_radius);
   if (dx * dx + dy * dy <= combined * combined) {
     return HitResult::Hit;
   }
@@ -750,11 +765,11 @@ void Bullet::RenderDebugHitbox(int mode) const {
 
   if (mode >= 2) {
     const int ev_r = GetBulletEvadeRadius(c_) >> 6;
-    geometry::DrawFilledCircle(Geometry(), {cx, cy}, ev_r, true);
+    geometry::DrawFilledCircle({cx, cy}, ev_r, true);
   }
 
   const int r_px = GetBulletHitRadius(c_) >> 6;
   if (r_px > 0) {
-    geometry::DrawFilledCircle(Geometry(), {cx, cy}, r_px, true);
+    geometry::DrawFilledCircle({cx, cy}, r_px, true);
   }
 }

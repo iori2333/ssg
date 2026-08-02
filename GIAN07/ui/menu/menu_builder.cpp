@@ -3,18 +3,24 @@
 ///
 
 #include <algorithm>
-#include <chrono>
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <format>
 #include <functional>
-#include <iterator>
+#include <initializer_list>
 #include <memory>
 #include <ranges>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include <SDL3/SDL_misc.h>
 
+#include "audio/bgm/midi/midi_synth.h"
+#include "audio/core/audio_types.h"
+#include "gfx/graphics.h"
 #include "menu_builder.h"
 #include "menu_controller.h"
 
@@ -27,42 +33,40 @@
 #include "music/music_player.h"
 #include "settings/config.h"
 #include "sys/input.h"
+#include "ui/menu/menu_tree.h"
 
 namespace menu {
 
 namespace {
 
-static std::string PadButtonLabel(InputPadButton v) {
+std::string PadButtonLabel(InputPadButton v) {
   if (v > 0) {
     return std::format("Button{}", static_cast<int>(v));
   }
   return "--------";
 }
 
-static MenuText Localized(i18n::Localization &localization,
-                          std::string_view key) {
+MenuText Localized(i18n::Localization &localization, std::string_view key) {
   const auto id = i18n::TextIdFromKey(key);
-  return MenuText([&localization, id] { return localization.Text(id); });
+  return {[&localization, id] { return localization.Text(id); }};
 }
 
-static ChoiceLabels
-LocalizedLabels(i18n::Localization &localization,
-                std::initializer_list<std::string_view> keys) {
+ChoiceLabels LocalizedLabels(i18n::Localization &localization,
+                             std::initializer_list<std::string_view> keys) {
   std::vector<MenuText> labels;
   labels.reserve(keys.size());
   for (const auto key : keys) {
     labels.push_back(Localized(localization, key));
   }
-  return ChoiceLabels(std::move(labels));
+  return {std::move(labels)};
 }
 
-static void LocalizeToggleValues(ToggleNode &node,
-                                 i18n::Localization &localization) {
+void LocalizeToggleValues(ToggleNode &node, i18n::Localization &localization) {
   node.SetValueText(Localized(localization, "ui.common.on"),
                     Localized(localization, "ui.common.off"));
 }
 
-static std::string LanguageLabel(std::string_view language) {
+std::string LanguageLabel(std::string_view language) {
   if (language == "ja") {
     return "日本語";
   }
@@ -75,8 +79,8 @@ static std::string LanguageLabel(std::string_view language) {
   return std::string(language);
 }
 
-static std::unique_ptr<ListNode>
-BuildLanguageMenu(UiConfig &ui_cfg, i18n::Localization &localization) {
+std::unique_ptr<ListNode> BuildLanguageMenu(UiConfig &ui_cfg,
+                                            i18n::Localization &localization) {
   auto node = std::make_unique<ListNode>(
       Localized(localization, "ui.menu.language.title"),
       Localized(localization, "ui.menu.language.help"),
@@ -102,7 +106,7 @@ BuildLanguageMenu(UiConfig &ui_cfg, i18n::Localization &localization) {
 // Difficulty
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode>
+std::unique_ptr<EntryNode>
 BuildDifficultyMenu(GameConfig &game_cfg, i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(4);
@@ -142,7 +146,7 @@ BuildDifficultyMenu(GameConfig &game_cfg, i18n::Localization &localization) {
 // Screenshot
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode>
+std::unique_ptr<EntryNode>
 BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
                     i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
@@ -150,7 +154,7 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
 
   std::vector<std::string> labels;
   labels.reserve(kScreenshotEffortMax + 1);
-  labels.push_back("BMP");
+  labels.emplace_back("BMP");
   for (auto i : std::views::iota(1U, kScreenshotEffortMax + 1U)) {
     labels.push_back(std::format("WebP z{}", i - 1));
   }
@@ -159,7 +163,7 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
       Localized(localization, "ui.menu.screenshot_format.help"),
       gfx_cfg.screenshot_effort, 0, kScreenshotEffortMax, std::move(labels),
       [&gfx_cfg, &display] {
-        display.SetScreenshotEffort(gfx_cfg.screenshot_effort);
+        DisplayController::SetScreenshotEffort(gfx_cfg.screenshot_effort);
       }));
 
   ch.push_back(std::make_unique<SeparatorNode>());
@@ -173,10 +177,10 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
 // Graphics API (dynamic)
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<ListNode>
-BuildApiMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
-             i18n::Localization &localization) {
-  auto init_sel = static_cast<int>(GraphicsBackendAPIID(gfx_cfg.graphics_api));
+std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
+                                       DisplayController &display,
+                                       i18n::Localization &localization) {
+  auto init_sel = GraphicsBackendAPIID(gfx_cfg.graphics_api);
   auto node = std::make_unique<ListNode>(
       Localized(localization, "ui.menu.api.title"),
       Localized(localization, "ui.menu.api.help"),
@@ -200,10 +204,10 @@ BuildApiMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
 // Graphics
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode>
-BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
-                  DisplayController &display,
-                  i18n::Localization &localization) {
+std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg,
+                                             UiConfig &ui_cfg,
+                                             DisplayController &display,
+                                             i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(10);
 
@@ -285,7 +289,9 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
       0, kMaxFpsDivisor,
       LocalizedLabels(localization, {"ui.value.bonus", "ui.value.60fps",
                                      "ui.value.30fps", "ui.value.20fps"}),
-      [&gfx_cfg, &display] { display.SetFrameRate(gfx_cfg.fps_divisor); }));
+      [&gfx_cfg, &display] {
+        DisplayController::SetFrameRate(gfx_cfg.fps_divisor);
+      }));
 
   ch.push_back(BuildScreenshotMenu(gfx_cfg, display, localization));
 
@@ -314,9 +320,10 @@ BuildGraphicsMenu(GraphicsConfig &gfx_cfg, UiConfig &ui_cfg,
 // MIDI
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode>
-BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
-              i18n::Localization &localization, audio::AudioSystem &audio) {
+std::unique_ptr<EntryNode> BuildMidiMenu(AudioConfig &audio_cfg,
+                                         MusicPlayer &music,
+                                         i18n::Localization &localization,
+                                         audio::AudioSystem &audio) {
   auto *system = &audio;
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(3);
@@ -370,13 +377,15 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
       },
       [system] {
         auto cur_name = system->MidiCurrentDeviceName();
-        if (!cur_name.has_value())
+        if (!cur_name.has_value()) {
           return 0;
+        }
         auto count = system->MidiDeviceCount();
         for (size_t i = 0; i < count; i++) {
           if (auto name = system->MidiDeviceNameAt(i);
-              name && name.value() == cur_name.value())
+              name && name.value() == cur_name.value()) {
             return static_cast<int>(i);
+          }
         }
         return 0;
       }());
@@ -399,10 +408,11 @@ BuildMidiMenu(AudioConfig &audio_cfg, MusicPlayer &music,
 // Sound / Music
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode>
-BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
-               data::SfxLoader &sound_effects, MusicPlayer &music,
-               i18n::Localization &localization) {
+std::unique_ptr<EntryNode> BuildSoundMenu(AudioConfig &audio_cfg,
+                                          audio::AudioSystem &audio,
+                                          data::SfxLoader &sound_effects,
+                                          MusicPlayer &music,
+                                          i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(7);
 
@@ -437,7 +447,7 @@ BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
   {
     std::vector<std::string> vol_labels;
     vol_labels.reserve(audio::kMaxVolume + 1);
-    for (int i = 0; i <= audio::kMaxVolume; i++) {
+    for (int i = 0; std::cmp_less_equal(i, audio::kMaxVolume); i++) {
       vol_labels.push_back(std::format("{}", i));
     }
     ch.push_back(std::make_unique<ChoiceNode>(
@@ -452,7 +462,7 @@ BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
   {
     std::vector<std::string> vol_labels;
     vol_labels.reserve(audio::kMaxVolume + 1);
-    for (int i = 0; i <= audio::kMaxVolume; i++) {
+    for (int i = 0; std::cmp_less_equal(i, audio::kMaxVolume); i++) {
       vol_labels.push_back(std::format("{}", i));
     }
     ch.push_back(std::make_unique<ChoiceNode>(
@@ -467,7 +477,8 @@ BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
   {
     auto packs = std::make_shared<std::vector<std::string>>();
     if (music.HasPacks()) {
-      music.ForEachPack([&](std::string_view p) { packs->emplace_back(p); });
+      MusicPlayer::ForEachPack(
+          [&](std::string_view p) { packs->emplace_back(p); });
       std::ranges::sort(*packs);
     }
     auto bgm_pack = std::make_unique<ListNode>(
@@ -504,7 +515,7 @@ BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
       }
       const auto selected =
           std::ranges::find(*packs, audio_cfg.bgm_pack) - packs->begin();
-      return selected < static_cast<std::ptrdiff_t>(packs->size())
+      return std::cmp_less(selected, packs->size())
                  ? static_cast<int>(selected + 1)
                  : 0;
     });
@@ -522,7 +533,7 @@ BuildSoundMenu(AudioConfig &audio_cfg, audio::AudioSystem &audio,
 // JoyPad
 // ---------------------------------------------------------------------------
 
-static void ApplyPadBindings(InputSystem &input, const InputConfig &input_cfg) {
+void ApplyPadBindings(InputSystem &input, const InputConfig &input_cfg) {
   const std::array bindings = {
       InputPadBinding{input_cfg.pad_tama, KeyTama},
       InputPadBinding{input_cfg.pad_bomb, KeyBomb},
@@ -532,9 +543,9 @@ static void ApplyPadBindings(InputSystem &input, const InputConfig &input_cfg) {
   input.SetPadBindings(bindings);
 }
 
-static std::unique_ptr<EntryNode>
-BuildPadMenu(InputConfig &input_cfg, InputSystem &input,
-             i18n::Localization &localization) {
+std::unique_ptr<EntryNode> BuildPadMenu(InputConfig &input_cfg,
+                                        InputSystem &input,
+                                        i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(4);
 
@@ -570,9 +581,9 @@ BuildPadMenu(InputConfig &input_cfg, InputSystem &input,
 // Input
 // ---------------------------------------------------------------------------
 
-static std::unique_ptr<EntryNode>
-BuildInputMenu(InputConfig &input_cfg, InputSystem &input,
-               i18n::Localization &localization) {
+std::unique_ptr<EntryNode> BuildInputMenu(InputConfig &input_cfg,
+                                          InputSystem &input,
+                                          i18n::Localization &localization) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(3);
 
@@ -600,9 +611,9 @@ BuildInputMenu(InputConfig &input_cfg, InputSystem &input,
 // ---------------------------------------------------------------------------
 // Debug (PBG_DEBUG only)
 // ---------------------------------------------------------------------------
-static std::unique_ptr<EntryNode>
+std::unique_ptr<EntryNode>
 BuildDebugMenu(DebugConfig &debug_cfg, i18n::Localization &localization,
-               std::function<void(MainMenuAction)> on_action) {
+               const std::function<void(MainMenuAction)> &on_action) {
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(3);
 
@@ -640,7 +651,7 @@ BuildDebugMenu(DebugConfig &debug_cfg, i18n::Localization &localization,
 
 std::unique_ptr<IMenuNode>
 BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
-                  std::function<void(MainMenuAction)> on_action) {
+                  const std::function<void(MainMenuAction)> &on_action) {
   auto &localization = services.localization;
   std::vector<std::unique_ptr<IMenuNode>> ch;
   ch.reserve(9);

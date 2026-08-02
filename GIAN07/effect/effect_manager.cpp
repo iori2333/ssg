@@ -6,12 +6,17 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <ranges>
 
 #include "effect_manager.h"
 
+#include "effect/effect_types.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
 
@@ -215,52 +220,65 @@ void EffectManager::DrawBossWarning() {
   constexpr std::array radius_steps = {4, 4, 6, 6, 8};
   for (std::size_t index = 0; index < colors.size(); ++index) {
     radius -= radius_steps[index];
-    Geometry().SetColor(colors[index]);
-    GeomCircle({320, 100}, radius);
+    geometry::SetColor(colors[index]);
+    geometry::DrawCircle({320, 100}, radius);
   }
 }
 
 void EffectManager::InitializeWarningText() {
-  warning_w_ = {PixelPoint{0, 15},  PixelPoint{15, 66}, PixelPoint{32, 47},
-                PixelPoint{48, 66}, PixelPoint{63, 14}, PixelPoint{52, 11},
-                PixelPoint{42, 38}, PixelPoint{32, 26}, PixelPoint{21, 38},
-                PixelPoint{11, 10}, PixelPoint{0, 15}};
-  warning_a_outer_ = {PixelPoint{96, 12},  PixelPoint{66, 61},
-                      PixelPoint{75, 67},  PixelPoint{83, 56},
-                      PixelPoint{107, 56}, PixelPoint{115, 67},
-                      PixelPoint{125, 61}, PixelPoint{96, 12}};
-  warning_a_inner_ = {PixelPoint{96, 34}, PixelPoint{90, 44},
-                      PixelPoint{101, 44}, PixelPoint{96, 34}};
-  warning_r_ = {PixelPoint{132, 14}, PixelPoint{132, 64}, PixelPoint{145, 64},
-                PixelPoint{145, 27}, PixelPoint{164, 27}, PixelPoint{150, 42},
-                PixelPoint{171, 66}, PixelPoint{173, 66}, PixelPoint{181, 57},
-                PixelPoint{167, 43}, PixelPoint{180, 29}, PixelPoint{180, 27},
-                PixelPoint{170, 14}, PixelPoint{132, 14}};
+  warning_w_ = {PixelPoint{.x = 0, .y = 15},  PixelPoint{.x = 15, .y = 66},
+                PixelPoint{.x = 32, .y = 47}, PixelPoint{.x = 48, .y = 66},
+                PixelPoint{.x = 63, .y = 14}, PixelPoint{.x = 52, .y = 11},
+                PixelPoint{.x = 42, .y = 38}, PixelPoint{.x = 32, .y = 26},
+                PixelPoint{.x = 21, .y = 38}, PixelPoint{.x = 11, .y = 10},
+                PixelPoint{.x = 0, .y = 15}};
+  warning_a_outer_ = {
+      PixelPoint{.x = 96, .y = 12},  PixelPoint{.x = 66, .y = 61},
+      PixelPoint{.x = 75, .y = 67},  PixelPoint{.x = 83, .y = 56},
+      PixelPoint{.x = 107, .y = 56}, PixelPoint{.x = 115, .y = 67},
+      PixelPoint{.x = 125, .y = 61}, PixelPoint{.x = 96, .y = 12}};
+  warning_a_inner_ = {
+      PixelPoint{.x = 96, .y = 34}, PixelPoint{.x = 90, .y = 44},
+      PixelPoint{.x = 101, .y = 44}, PixelPoint{.x = 96, .y = 34}};
+  warning_r_ = {PixelPoint{.x = 132, .y = 14}, PixelPoint{.x = 132, .y = 64},
+                PixelPoint{.x = 145, .y = 64}, PixelPoint{.x = 145, .y = 27},
+                PixelPoint{.x = 164, .y = 27}, PixelPoint{.x = 150, .y = 42},
+                PixelPoint{.x = 171, .y = 66}, PixelPoint{.x = 173, .y = 66},
+                PixelPoint{.x = 181, .y = 57}, PixelPoint{.x = 167, .y = 43},
+                PixelPoint{.x = 180, .y = 29}, PixelPoint{.x = 180, .y = 27},
+                PixelPoint{.x = 170, .y = 14}, PixelPoint{.x = 132, .y = 14}};
   const std::array n_points = {
-      PixelPoint{189, 12}, PixelPoint{189, 64}, PixelPoint{201, 64},
-      PixelPoint{201, 40}, PixelPoint{239, 66}, PixelPoint{239, 14},
-      PixelPoint{227, 14}, PixelPoint{227, 38}, PixelPoint{189, 12}};
+      PixelPoint{.x = 189, .y = 12}, PixelPoint{.x = 189, .y = 64},
+      PixelPoint{.x = 201, .y = 64}, PixelPoint{.x = 201, .y = 40},
+      PixelPoint{.x = 239, .y = 66}, PixelPoint{.x = 239, .y = 14},
+      PixelPoint{.x = 227, .y = 14}, PixelPoint{.x = 227, .y = 38},
+      PixelPoint{.x = 189, .y = 12}};
   std::ranges::transform(n_points, warning_n_left_.begin(),
                          [](PixelPoint point) { return WorldPoint{point}; });
   warning_n_right_ = warning_n_left_;
-  warning_i_ = {PixelPoint{248, 14}, PixelPoint{248, 64}, PixelPoint{262, 64},
-                PixelPoint{262, 14}, PixelPoint{248, 14}};
-  warning_g_ = {PixelPoint{354, 11}, PixelPoint{328, 22}, PixelPoint{328, 57},
-                PixelPoint{354, 68}, PixelPoint{380, 59}, PixelPoint{380, 34},
-                PixelPoint{355, 34}, PixelPoint{354, 45}, PixelPoint{367, 46},
-                PixelPoint{367, 51}, PixelPoint{355, 55}, PixelPoint{342, 50},
-                PixelPoint{342, 29}, PixelPoint{354, 24}, PixelPoint{372, 30},
-                PixelPoint{377, 19}, PixelPoint{354, 11}};
+  warning_i_ = {PixelPoint{.x = 248, .y = 14}, PixelPoint{.x = 248, .y = 64},
+                PixelPoint{.x = 262, .y = 64}, PixelPoint{.x = 262, .y = 14},
+                PixelPoint{.x = 248, .y = 14}};
+  warning_g_ = {PixelPoint{.x = 354, .y = 11}, PixelPoint{.x = 328, .y = 22},
+                PixelPoint{.x = 328, .y = 57}, PixelPoint{.x = 354, .y = 68},
+                PixelPoint{.x = 380, .y = 59}, PixelPoint{.x = 380, .y = 34},
+                PixelPoint{.x = 355, .y = 34}, PixelPoint{.x = 354, .y = 45},
+                PixelPoint{.x = 367, .y = 46}, PixelPoint{.x = 367, .y = 51},
+                PixelPoint{.x = 355, .y = 55}, PixelPoint{.x = 342, .y = 50},
+                PixelPoint{.x = 342, .y = 29}, PixelPoint{.x = 354, .y = 24},
+                PixelPoint{.x = 372, .y = 30}, PixelPoint{.x = 377, .y = 19},
+                PixelPoint{.x = 354, .y = 11}};
 
   warning_lines_ = {
-      WarningLine{{192, 39}, warning_w_},
-      WarningLine{{192, 39}, warning_a_outer_},
-      WarningLine{{192, 39}, warning_a_inner_},
-      WarningLine{{192, 39}, warning_r_},
-      WarningLine{{192, 39}, warning_n_left_},
-      WarningLine{{192, 39}, warning_i_},
-      WarningLine{{192 - (296 - 215), 39}, warning_n_right_},
-      WarningLine{{192, 39}, warning_g_},
+      WarningLine{.center = {.x = 192, .y = 39}, .points = warning_w_},
+      WarningLine{.center = {.x = 192, .y = 39}, .points = warning_a_outer_},
+      WarningLine{.center = {.x = 192, .y = 39}, .points = warning_a_inner_},
+      WarningLine{.center = {.x = 192, .y = 39}, .points = warning_r_},
+      WarningLine{.center = {.x = 192, .y = 39}, .points = warning_n_left_},
+      WarningLine{.center = {.x = 192, .y = 39}, .points = warning_i_},
+      WarningLine{.center = {.x = 192 - (296 - 215), .y = 39},
+                  .points = warning_n_right_},
+      WarningLine{.center = {.x = 192, .y = 39}, .points = warning_g_},
   };
   for (auto &line : warning_lines_) {
     const WorldPoint center{line.center};
@@ -293,11 +311,11 @@ void EffectManager::DrawWarningText() {
   warning_pulse_ += 8;
   if (warning_lines_[0].angle_x == 0) {
     const auto pulse = math::RoundedPolarVector(
-        static_cast<float>(warning_pulse_) * math::kLegacyAngleStep, 48.0f);
-    Geometry().SetAlphaNorm(static_cast<uint8_t>(128 + pulse.y));
-    Geometry().SetColor({5, 0, 0});
-    Geometry().DrawBoxA(129, 46, 512, 66);
-    Geometry().DrawBoxA(129, 136, 512, 156);
+        static_cast<float>(warning_pulse_) * math::kLegacyAngleStep, 48.0F);
+    geometry::SetAlphaNorm(static_cast<uint8_t>(128 + pulse.y));
+    geometry::SetColor({5, 0, 0});
+    geometry::DrawBoxA(129, 46, 512, 66);
+    geometry::DrawBoxA(129, 136, 512, 156);
     GraphicsSurfaceBlit({129, 61}, SurfaceId::System,
                         PixelLtrb{0, 168, 384, 248});
     return;
@@ -316,16 +334,16 @@ void EffectManager::DrawWarningText() {
   const auto draw_lines = [this] {
     for (const auto &line : warning_lines_) {
       const auto rotate = [&line](const WorldPoint &point) {
-        Point3D transformed{point.x, point.y, 0};
+        Point3D transformed{.x = point.x, .y = point.y, .z = 0};
         RotatePoint(transformed, line.angle_x, line.angle_y, line.angle_z);
         return WorldPoint::FromWorld(transformed.x, transformed.y);
       };
       auto previous = rotate(line.points.front());
       for (const auto &point : line.points | std::views::drop(1)) {
         const auto current = rotate(point);
-        const auto p1 = PixelPoint{320, 100} + previous.ToPixel();
-        const auto p2 = PixelPoint{320, 100} + current.ToPixel();
-        Geometry().DrawLine(p1.x, p1.y, p2.x, p2.y);
+        const auto p1 = PixelPoint{.x = 320, .y = 100} + previous.ToPixel();
+        const auto p2 = PixelPoint{.x = 320, .y = 100} + current.ToPixel();
+        geometry::DrawLine(p1.x, p1.y, p2.x, p2.y);
         previous = current;
       }
     }
@@ -335,7 +353,7 @@ void EffectManager::DrawWarningText() {
                              Rgb216{4, 4, 5}, Rgb216{5, 5, 5}};
   RotateWarningText(start_rotation);
   for (std::size_t index = 0; index < colors.size(); ++index) {
-    Geometry().SetColor(colors[index]);
+    geometry::SetColor(colors[index]);
     draw_lines();
     if (index + 1 < colors.size()) {
       RotateWarningText(rotation_step);

@@ -1,7 +1,9 @@
 #include "midi_parser.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 
 #include "util/byte_io.h"
 #include "util/endian.h"

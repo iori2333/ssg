@@ -3,24 +3,34 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <functional>
+#include <ios>
 #include <limits>
 #include <optional>
-#include <ranges>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <utility>
+#include <variant>
+#include <vector>
 
 #include "record_system.h"
 
 #include "data/game_data.h"
 #include "data/pbg_archive.h"
+#include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
+#include "player/loadout/player_loadout.h"
+#include "player/player.h"
 #include "settings/config.h"
+#include "sys/input.h"
 #include "sys/log.h"
 #include "util/byte_io.h"
 #include "util/endian.h"
@@ -189,7 +199,7 @@ std::optional<ScoreRecord> LoadScoreRecord(const std::filesystem::path &path) {
 } // namespace
 
 ScoreRecord RecordSystem::CaptureScore(const Player &player,
-                                       const GameSession &session) const {
+                                       const GameSession &session) {
   const auto now = std::chrono::system_clock::now();
   return ScoreRecord{
       .name = "",
@@ -209,7 +219,7 @@ ScoreRecord RecordSystem::CaptureScore(const Player &player,
 }
 
 std::vector<ScoreRecord> RecordSystem::ListScores(GameLevel difficulty,
-                                                  std::size_t limit) const {
+                                                  std::size_t limit) {
   std::vector<ScoreRecord> records;
   std::error_code error;
   for (const auto &entry :
@@ -237,7 +247,7 @@ std::vector<ScoreRecord> RecordSystem::ListScores(GameLevel difficulty,
   return records;
 }
 
-RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) const {
+RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) {
   std::error_code error;
   std::filesystem::create_directories(kScoreDirectory, error);
   if (error) {
@@ -526,7 +536,7 @@ RecordSaveResult RecordSystem::SaveRecording(std::string_view replay_name,
   return RecordSaveResult::Saved;
 }
 
-std::vector<ReplayRecord> RecordSystem::ListReplays() const {
+std::vector<ReplayRecord> RecordSystem::ListReplays() {
   std::vector<ReplayRecord> replays;
   std::error_code error;
   for (const auto &entry :
@@ -551,7 +561,7 @@ std::vector<ReplayRecord> RecordSystem::ListReplays() const {
 bool RecordSystem::LoadArchive(std::string_view path,
                                std::optional<ReplayRecord> *record,
                                ReplaySettings *settings,
-                               std::vector<ReplayStage> *stages) const {
+                               std::vector<ReplayStage> *stages) {
   const auto archive = data::PbgArchive::Open(path);
   if (!archive) {
     return false;
@@ -568,7 +578,7 @@ bool RecordSystem::LoadArchive(std::string_view path,
 bool RecordSystem::LoadArchive(const data::PbgArchive &archive,
                                std::optional<ReplayRecord> *record,
                                ReplaySettings *settings,
-                               std::vector<ReplayStage> *stages) const {
+                               std::vector<ReplayStage> *stages) {
   const auto manifest_data = archive.Extract(0);
   if (manifest_data.empty()) {
     return false;
@@ -691,6 +701,11 @@ bool RecordSystem::LoadReplay(std::string_view path, StageId start_stage) {
   if (!LoadArchive(path, &record, &settings, &stages)) {
     logging::Error(logging::Channel::Record,
                    "Failed to load replay archive: {}", path);
+    return false;
+  }
+  if (!record) {
+    logging::Error(logging::Channel::Record,
+                   "Replay archive did not contain a record: {}", path);
     return false;
   }
   const auto selected = std::ranges::find(record->stages, start_stage);
@@ -817,7 +832,7 @@ bool RecordSystem::LoadStageDemo(StageId stage, Player &player,
 
 bool RecordSystem::LoadDemoArchive(const data::PbgArchive &archive,
                                    StageId stage, ReplaySettings &settings,
-                                   std::vector<ReplayStage> &stages) const {
+                                   std::vector<ReplayStage> &stages) {
   stages.clear();
   return archive && LoadArchive(archive, nullptr, &settings, &stages) &&
          stages.size() == 1 && stages.front().checkpoint.stage == stage &&

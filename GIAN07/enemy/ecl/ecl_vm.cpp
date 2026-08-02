@@ -2,11 +2,16 @@
 /// ECL runtime - typed instruction dispatch and per-frame execution
 ///
 
-#include <algorithm>
 #include <bit>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <utility>
-#include <variant>
 
+#include "bullet/bullet.h"
+#include "bullet/laser/homing.h"
+#include "bullet/laser/long.h"
+#include "bullet/laser/reflect.h"
 #include "ecl_host.h"
 #include "ecl_program.h"
 #include "ecl_vm.h"
@@ -17,11 +22,14 @@
 #include "bullet/bullet_manager.h"
 #include "effect/effect_manager.h"
 #include "enemy/actor/enemy_actor.h"
+#include "enemy/ecl/ecl.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
+#include "gfx/coords.h"
 #include "item/item_system.h"
 #include "player/player.h"
+#include "stage/stage_background.h"
 #include "stage/stage_session.h"
 #include "util/math_utils.h"
 
@@ -133,7 +141,8 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
     if (actor.long_laser_count != 0U) {
       host_.Bullets().ControlLongLaser(
           &actor, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+          LongLaserUpdateInfo{.command =
+                                  LongLaserUpdateInfo::Command::ForceClose});
     }
     actor.state = EnemyActorState::PendingRemoval;
     return Step::Halt;
@@ -218,7 +227,7 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
                       static_cast<float>(host_.GetPlayer().Y() - actor.y));
     const auto difference = std::abs(
         math::ShortestAngleDelta(target, math::AngleFromLegacy(actor.d)));
-    if (difference < 4.0f * math::kLegacyAngleStep) {
+    if (difference < 4.0F * math::kLegacyAngleStep) {
       actor.script.position = Args<EclJumpArguments>(instruction).target;
       return Step::Jump;
     }
@@ -811,12 +820,13 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
   case EclOpcode::OpenLongLaser:
     host_.Bullets().ControlLongLaser(
         &actor, Args<EclLongLaserArguments>(instruction).id,
-        LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
+        LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::Open});
     break;
   case EclOpcode::CloseLongLaser: {
     const auto id = Args<EclLongLaserArguments>(instruction).id;
     host_.Bullets().ControlLongLaser(
-        &actor, id, LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
+        &actor, id,
+        LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::Close});
     if (id == kEclAllLongLasers) {
       actor.long_laser_count = 0;
     } else {
@@ -827,15 +837,18 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
   case EclOpcode::CloseLongLaserToLine:
     host_.Bullets().ControlLongLaser(
         &actor, Args<EclLongLaserArguments>(instruction).id,
-        LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
+        LongLaserUpdateInfo{.command =
+                                LongLaserUpdateInfo::Command::CloseToLine});
     break;
   case EclOpcode::AddLongLaserAngle: {
     const auto &args = Args<EclLongLaserArguments>(instruction);
     host_.Bullets().ControlLongLaser(
         &actor, args.id,
-        LongLaserUpdateInfo{LongLaserUpdateInfo::Command::AdjustAngle, 0.0f,
-                            static_cast<float>(args.angle_delta) *
-                                math::kLegacyAngleStep});
+        LongLaserUpdateInfo{.command =
+                                LongLaserUpdateInfo::Command::AdjustAngle,
+                            .angle = 0.0F,
+                            .delta = static_cast<float>(args.angle_delta) *
+                                     math::kLegacyAngleStep});
     break;
   }
   case EclOpcode::FireHomingLaser:
@@ -1110,7 +1123,8 @@ void EclVm::CheckInterrupts(EnemyActor &actor) {
       }
       break;
     case EclInterrupt::BitCount:
-      should_trigger = host_.BitCount(actor) <= interrupt.threshold;
+      should_trigger =
+          std::cmp_less_equal(host_.BitCount(actor), interrupt.threshold);
       break;
     }
 

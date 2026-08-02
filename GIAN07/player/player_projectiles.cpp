@@ -7,8 +7,12 @@
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <utility>
 
+#include "effect/effect_types.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "loadout/player_loadout.h"
 #include "player.h"
 #include "player_attack.h"
@@ -16,7 +20,6 @@
 
 #include "effect/effect_manager.h"
 #include "enemy/enemy_manager.h"
-#include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
 #include "gfx/graphics_backend.h"
 #include "stage/stage_session.h"
@@ -80,7 +83,7 @@ void Player::UpdateWeapons(EnemyManager &enemies, InputBits input) {
 // --- Movement helpers ---
 
 bool PlayerShot::Move(const EnemyHomingTarget &target) {
-  float angle_delta = 0.0f;
+  float angle_delta = 0.0F;
 
   switch (motion_) {
   case PlayerShotMotion::Straight:
@@ -101,12 +104,12 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
       angle_delta = math::ShortestAngleDelta(target_angle, direction_);
     } else if (age_ < 70) {
       const auto target_angle =
-          math::AngleTo(0.0f, static_cast<float>(-20_px - previous_y));
+          math::AngleTo(0.0F, static_cast<float>(-20_px - previous_y));
       angle_delta = math::ShortestAngleDelta(target_angle, direction_);
     } else {
-      angle_delta = 0.0f;
+      angle_delta = 0.0F;
     }
-    if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5f) {
+    if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5F) {
       if (turn_rate_ != 0) {
         turn_rate_--;
       }
@@ -118,7 +121,7 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
       speed_ -= acceleration_;
     }
     direction_ += angle_delta *
-                  static_cast<float>(static_cast<uint8_t>(turn_rate_)) / 255.0f;
+                  static_cast<float>(static_cast<uint8_t>(turn_rate_)) / 255.0F;
     const auto velocity = math::RoundedPolarVector(direction_, speed_);
     velocity_x_ = velocity.x;
     velocity_y_ = velocity.y;
@@ -157,7 +160,7 @@ void Player::UpdateProjectiles(EnemyManager &enemies) {
     if (enemies.ApplyPlayerAttack(PlayerAttack::Point(
             WorldPoint::FromWorld(t.x_, t.y_), ShotDamage(t.kind_)))) {
       if (t.kind_ == PlayerShotKind::HomingBomb) {
-        PlayerShotSpawnInfo si{
+        PlayerShotSpawnInfo const si{
             .x = t.x_,
             .y = t.y_,
             .direction = 192,
@@ -185,11 +188,12 @@ void Player::DrawProjectiles() const {
   int x = 0;
   int y = 0;
   PixelLtrb src;
-  static constexpr PixelLtrb HomingBomb[5] = {{520, 104, 520 + 8, 104 + 8},
-                                              {528, 104, 528 + 16, 104 + 16},
-                                              {544, 104, 544 + 24, 104 + 24},
-                                              {568, 104, 568 + 32, 104 + 32},
-                                              {600, 104, 600 + 40, 104 + 40}};
+  static constexpr std::array<PixelLtrb, 5> HomingBomb = {
+      PixelLtrb{520, 104, 520 + 8, 104 + 8},
+      PixelLtrb{528, 104, 528 + 16, 104 + 16},
+      PixelLtrb{544, 104, 544 + 24, 104 + 24},
+      PixelLtrb{568, 104, 568 + 32, 104 + 32},
+      PixelLtrb{600, 104, 600 + 40, 104 + 40}};
 
   for (const auto &t : maid_tama_) {
 

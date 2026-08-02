@@ -4,6 +4,20 @@
 
 // GCC 15 throws `error: conflicting declaration 'typedef struct max_align_t
 // max_align_t'` if this appears after a module import.
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <ranges>
+#include <span>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <type_traits>
+#include <utility>
 #include <webp/encode.h>
 
 #include <SDL3/SDL_iostream.h>
@@ -14,11 +28,15 @@
 #include <filesystem>
 #include <format>
 
+#include "SDL3/SDL_pixels.h"
 #include "format_bmp.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
+#include "gfx/pixelformat.h"
 #include "graphics.h"
 #include "graphics_backend.h"
 
-#include "sys/path.h"
+#include "util/enum_flags.h"
 #include "util/guard.h"
 
 namespace {
@@ -65,7 +83,8 @@ Palette Palette::Fade(uint8_t alpha, uint8_t first, uint8_t last) const {
 // Screenshots
 // -----------
 
-static void ScreenshotFindLastFor(std::string_view ext) {
+namespace {
+void ScreenshotFindLastFor(std::string_view ext) {
   auto &state = State();
   const auto extension_matches = [ext](std::string_view candidate) {
     return std::ranges::equal(candidate, ext, [](char left, char right) {
@@ -86,11 +105,12 @@ static void ScreenshotFindLastFor(std::string_view ext) {
     const auto [end, result] =
         std::from_chars(stem.data(), stem.data() + stem.size(), number);
     if (result == std::errc{} && end == stem.data() + stem.size() &&
-        number < (std::numeric_limits<unsigned int>::max)()) {
+        number < std::numeric_limits<unsigned int>::max()) {
       state.screenshot_number = (std::max)(state.screenshot_number, number + 1);
     }
   }
 }
+} // namespace
 
 void GraphicsScreenshotSetPrefix(std::string_view prefix) {
   State().screenshot_prefix = prefix;
@@ -98,6 +118,7 @@ void GraphicsScreenshotSetPrefix(std::string_view prefix) {
 
 // Increments the screenshot number to the next file with the given extension
 // that doesn't exist yet, then opens a write stream for that file.
+namespace {
 SDL_IOStream *GraphicsNextScreenshotStream(std::string_view ext) {
   auto &state = State();
   if (state.screenshot_prefix.empty()) {
@@ -113,13 +134,13 @@ SDL_IOStream *GraphicsNextScreenshotStream(std::string_view ext) {
   }
 
   // Prevent the theoretical infinite loop...
-  while (state.screenshot_number < (std::numeric_limits<unsigned int>::max)()) {
+  while (state.screenshot_number < std::numeric_limits<unsigned int>::max()) {
     const auto prefix_len = state.screenshot_prefix.size();
     state.screenshot_prefix += std::format("{:04}", state.screenshot_number++);
     state.screenshot_prefix += ext;
     auto *ret = SDL_IOFromFile(state.screenshot_prefix.c_str(), "wxb");
     state.screenshot_prefix.resize(prefix_len);
-    if (ret) {
+    if (ret != nullptr) {
       return ret;
     }
     if (state.screenshot_number == 1) {
@@ -129,11 +150,11 @@ SDL_IOStream *GraphicsNextScreenshotStream(std::string_view ext) {
   return nullptr;
 }
 
-static bool ScreenshotSaveBMP(SDL_Surface *src) {
+bool ScreenshotSaveBMP(SDL_Surface *src) {
   assert(src->w < std::numeric_limits<PixelCoord>::max());
   assert(src->h < std::numeric_limits<PixelCoord>::max());
-  const auto stream = GraphicsNextScreenshotStream(".BMP");
-  if (!stream) {
+  auto *const stream = GraphicsNextScreenshotStream(".BMP");
+  if (stream == nullptr) {
     return false;
   }
   auto stream_guard = util::MakeGuard(stream, SDL_CloseIO);
@@ -145,7 +166,7 @@ static bool ScreenshotSaveBMP(SDL_Surface *src) {
     return SDL_SaveBMP_IO(src, stream, false);
   }
 
-  std::array<Bgra, kBmpPaletteSizeMax> bgra_memory;
+  std::array<Bgra, kBmpPaletteSizeMax> bgra_memory{};
   const auto palette = [src, &bgra_memory]() -> std::span<Bgra> {
     const auto *palette = SDL_GetSurfacePalette(src);
     if (!palette) {
@@ -170,17 +191,18 @@ static bool ScreenshotSaveBMP(SDL_Surface *src) {
   const auto bpp = (SDL_BYTESPERPIXEL(src->format) * 8);
 
   const auto pixels =
-      std::span(static_cast<std::byte *>(src->pixels), (src->h * src->pitch));
+      std::span(static_cast<std::byte *>(src->pixels),
+                (static_cast<size_t>(src->h) * static_cast<size_t>(src->pitch)));
   return BmpSave(stream, bmp_size, 1, bpp, palette, pixels);
 }
 
-static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
+bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   if ((src->w > WEBP_MAX_DIMENSION) || (src->h > WEBP_MAX_DIMENSION)) {
     return false;
   }
 
   WebPPicture pic;
-  if (!WebPPictureInit(&pic)) {
+  if (WebPPictureInit(&pic) == 0) {
     return false;
   }
   auto pic_guard = util::MakeGuard(&pic, WebPPictureFree);
@@ -190,13 +212,13 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   pic.argb_stride = src->w;
 
   // Must also be set to opt into lossless import!
-  pic.use_argb = true;
+  pic.use_argb = 1;
 
   decltype(WebPPictureImportRGBX) *import_func_32bpp = nullptr;
   switch (src->format) {
   case SDL_PIXELFORMAT_ARGB8888:
     // Yup, "argb" is little-endian and this is actually Bgra...
-    pic.argb = std::bit_cast<uint32_t *>(src->pixels);
+    pic.argb = static_cast<uint32_t *>(src->pixels);
     break;
   case SDL_PIXELFORMAT_XRGB8888:
     // … but these are big-endian!
@@ -210,14 +232,14 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
     // but Linux distributions typically don't package the `extras` module
     // this function belongs to.
     const auto *palette = SDL_GetSurfacePalette(src);
-    if (!palette) {
+    if (palette == nullptr) {
       return false;
     }
     assert(palette->ncolors == (sizeof(uint8_t) << 8));
-    if (!WebPPictureAlloc(&pic)) {
+    if (WebPPictureAlloc(&pic) == 0) {
       return false;
     }
-    auto *src_p = std::bit_cast<uint8_t *>(src->pixels);
+    auto *src_p = static_cast<uint8_t *>(src->pixels);
     auto *dst_p = pic.argb;
     for (const auto y : std::views::iota(0, pic.height)) {
       for (const auto x : std::views::iota(0, pic.width)) {
@@ -232,7 +254,7 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   default:
     // Note how SDL_ConvertPixels() doesn't take a palette parameter and
     // therefore can't cover the 8-bit case.
-    if (!WebPPictureAlloc(&pic) ||
+    if ((WebPPictureAlloc(&pic) == 0) ||
         !SDL_ConvertPixels(
             src->w, src->h, src->format, src->pixels, src->pitch,
             SDL_PIXELFORMAT_ARGB8888, pic.argb,
@@ -241,18 +263,18 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
     }
     break;
   }
-  if (import_func_32bpp) {
-    const auto *bytes = std::bit_cast<uint8_t *>(src->pixels);
-    if (!import_func_32bpp(&pic, bytes, (src->w * sizeof(uint32_t)))) {
+  if (import_func_32bpp != nullptr) {
+    const auto *bytes = static_cast<const uint8_t *>(src->pixels);
+    if (import_func_32bpp(&pic, bytes, (src->w * sizeof(uint32_t))) == 0) {
       return false;
     }
   }
 
   WebPConfig config;
-  if (!WebPConfigInit(&config)) {
+  if (WebPConfigInit(&config) == 0) {
     return false;
   }
-  if (!WebPConfigLosslessPreset(&config, z)) {
+  if (WebPConfigLosslessPreset(&config, z) == 0) {
     return false;
   }
   config.thread_level = 1;
@@ -264,16 +286,17 @@ static bool ScreenshotSaveWebP(SDL_Surface *src, int z) {
   pic.custom_ptr = &wrt;
 
   const auto ret = WebPEncode(&config, &pic);
-  if (!ret) {
+  if (ret == 0) {
     return false;
   }
-  const auto stream = GraphicsNextScreenshotStream(".webp");
-  if (!stream) {
+  auto *const stream = GraphicsNextScreenshotStream(".webp");
+  if (stream == nullptr) {
     return false;
   }
   auto stream_guard2 = util::MakeGuard(stream, SDL_CloseIO);
   return SDL_WriteIO(stream, wrt.mem, wrt.size) == wrt.size;
 }
+} // namespace
 
 bool GraphicsScreenshotSave(SDL_Surface *src) {
   assert(src->w >= 0);

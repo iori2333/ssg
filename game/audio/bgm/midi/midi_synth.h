@@ -25,6 +25,8 @@ public:
   ~MidiSynth();
   MidiSynth(const MidiSynth &) = delete;
   MidiSynth &operator=(const MidiSynth &) = delete;
+  MidiSynth(MidiSynth &&) = delete;
+  MidiSynth &operator=(MidiSynth &&) = delete;
 
   AudioResult Initialize(std::string_view data_path,
                          std::string_view preferred_soundfont);

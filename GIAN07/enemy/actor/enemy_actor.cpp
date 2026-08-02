@@ -8,6 +8,7 @@
 #include "enemy_actor.h"
 
 #include "gameplay/playfield.h"
+#include "gfx/coords.h"
 #include "player/player_attack.h"
 #include "util/math_utils.h"
 

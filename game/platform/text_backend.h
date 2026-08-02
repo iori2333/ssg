@@ -14,7 +14,7 @@ bool GraphicsSurfaceGdiTextCreate(int32_t w, int32_t h, Rgb colorkey);
 bool GraphicsSurfaceGdiTextUpdate(const PixelLtwh &r) noexcept;
 
 #include "platform/windows/text_gdi.h"
-#elif defined(LINUX)
+#elifdef LINUX
 #include "platform/linux/pangocairo/text_pangocairo.h"
 #endif
 

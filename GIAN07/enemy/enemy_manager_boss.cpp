@@ -4,20 +4,27 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <utility>
 
+#include "bullet/laser/long.h"
+#include "effect/effect_types.h"
+#include "enemy/actor/enemy_actor.h"
+#include "enemy/boss/boss.h"
+#include "enemy/ecl/ecl.h"
 #include "enemy_manager.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
 #include "effect/effect_manager.h"
+#include "gfx/coords.h"
 #include "item/item_system.h"
 #include "player/player.h"
 #include "player/player_attack.h"
+#include "stage/stage_background.h"
 #include "stage/stage_session.h"
-#include "util/math_utils.h"
 
 void EnemyManager::ResetBosses() {
   snakes_.Reset();
@@ -127,7 +134,8 @@ void EnemyManager::KillBosses() {
     if (boss.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           &boss, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+          LongLaserUpdateInfo{.command =
+                                  LongLaserUpdateInfo::Command::ForceClose});
     }
     boss.BeginExplosion();
     RetireActor(boss);
@@ -152,7 +160,8 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
     if (actor.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           &actor, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+          LongLaserUpdateInfo{.command =
+                                  LongLaserUpdateInfo::Command::ForceClose});
     }
     player_.PowerUp(static_cast<uint8_t>(actor.hp));
     actor.BeginExplosion();
@@ -161,8 +170,7 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
     if (std::ranges::all_of(
             bosses_, [](const auto &boss) { return boss.IsDefeated(); })) {
       const auto temp = bullets_.ConvertBulletsToScore();
-      effects_.SpawnString(180, 60,
-                           std::format("  Bonus    {:7}Pts", temp).c_str());
+      effects_.SpawnString(180, 60, std::format("  Bonus    {:7}Pts", temp));
       player_.AddScore(temp);
     }
 
@@ -181,7 +189,8 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
 bool EnemyManager::ApplyPlayerAttackToBosses(const PlayerAttack &attack) {
   bool hit = false;
   for (auto &boss : bosses_) {
-    if (boss.mode != BossMode::Normal && player_.IsBombActive() != 0U) {
+    if (boss.mode != BossMode::Normal &&
+        static_cast<unsigned int>(player_.IsBombActive()) != 0U) {
       continue;
     }
 

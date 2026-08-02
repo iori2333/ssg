@@ -10,6 +10,8 @@
 #include <span>
 #include <vector>
 
+#include <SDL3/SDL_pixels.h>
+
 #include "coords.h"
 #include "pixelformat.h"
 
@@ -47,8 +49,8 @@ struct BmpInfoHeader {
   util::LittleEndian<uint32_t> biClrUsed;
   util::LittleEndian<uint32_t> biClrImportant;
 
-  uint32_t Stride() const {
-    return ((((biWidth * biBitCount) + 31u) & ~31) / 8u);
+  [[nodiscard]] uint32_t Stride() const {
+    return ((((biWidth * biBitCount) + 31U) & ~31) / 8U);
   }
 };
 
@@ -75,10 +77,6 @@ constexpr uint16_t kBmpPaletteSizeMax = 256;
 uint16_t BmpPaletteSizeFromBpp(uint8_t bpp);
 
 std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer);
-
-#ifndef SDL_pixels_h_
-enum SDL_PixelFormat : uint32_t;
-#endif
 
 // Returns `true` if BmpSave() supports the given [format].
 bool BmpSaveSupports(SDL_PixelFormat format);

@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <exception>
 #include <stacktrace>
+#include <string>
 
 #include "crash_handler.h"
 
@@ -29,7 +30,7 @@ bool Installed = false;
     Report("Unhandled non-standard C++ exception", 1);
   }
 
-  if (PreviousTerminate && PreviousTerminate != Terminate) {
+  if ((PreviousTerminate != nullptr) && PreviousTerminate != Terminate) {
     PreviousTerminate();
   }
   std::abort();

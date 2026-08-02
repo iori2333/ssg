@@ -41,7 +41,7 @@ struct EnemyHomingTarget {
 
 class EnemyManager {
 public:
-  EnemyManager(BulletManager &bullets, ItemSystem &items, GameSession &game,
+  EnemyManager(BulletManager &bullets, ItemSystem &items, GameSession &session,
                Player &player, stage::StageSession &stage,
                EffectManager &effects, audio::AudioSystem &audio);
 

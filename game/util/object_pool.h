@@ -67,10 +67,10 @@ template <typename T, std::size_t N> struct ObjectPool {
   constexpr iterator end() noexcept {
     return {data_.data(), indices_.data(), count_};
   }
-  constexpr const_iterator begin() const noexcept {
+  [[nodiscard]] constexpr const_iterator begin() const noexcept {
     return {data_.data(), indices_.data(), 0};
   }
-  constexpr const_iterator end() const noexcept {
+  [[nodiscard]] constexpr const_iterator end() const noexcept {
     return {data_.data(), indices_.data(), count_};
   }
 

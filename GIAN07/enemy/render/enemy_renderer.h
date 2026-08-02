@@ -26,9 +26,9 @@ public:
 
 private:
   void DrawActor(const EnemyActor &actor) const;
-  void DrawExplosion(const EnemyActor &actor) const;
-  void DrawBossLinks(const BitFormation &formation) const;
-  bool DrawBossSpecialState(const BossActor &boss) const;
+  static void DrawExplosion(const EnemyActor &actor);
+  static void DrawBossLinks(const BitFormation &formation);
+  [[nodiscard]] bool DrawBossSpecialState(const BossActor &boss) const;
 
   const EnemyAnimationSet &animations_;
   const Player &player_;

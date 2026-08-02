@@ -4,9 +4,33 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <ranges>
+#include <span>
+
 #include "gfx/graphics_backend.h"
+#include "util/math_utils.h"
 
 namespace geometry {
+
+// Draw state and primitive entry points
+// ------------------------------------
+
+void SetColor(Rgb216 col);
+void SetAlphaNorm(uint8_t a);
+void SetAlphaOne();
+void DrawLine(int x1, int y1, int x2, int y2);
+void DrawBox(int x1, int y1, int x2, int y2);
+void DrawBoxA(int x1, int y1, int x2, int y2);
+void DrawLineStrip(VertexXySpan<> xys);
+void DrawTriangles(TrianglePrimitive tp, VertexXySpan<> xys,
+                   VertexRgbaSpan<> colors = {});
+void DrawTrianglesA(TrianglePrimitive tp, VertexXySpan<> xys,
+                    VertexRgbaSpan<> colors = {});
+void DrawGrdLineEx(int x, int y1, Rgb c1, int y2, Rgb c2);
+// ------------------------------------
 
 // Vertex generators
 // -----------------
@@ -15,50 +39,77 @@ namespace geometry {
 // point is duplicated at the end to simplify index buffer generation.
 constexpr size_t kCirclePointCount = 33;
 
-void ApproximateCircle(std::span<VertexXy, kCirclePointCount> ret,
-                       WindowPoint center, PixelCoord radius);
+constexpr uint8_t kCircleStep = (0x100 / (kCirclePointCount - 1));
 
-void ApproximateFatCircle(std::span<VertexXy, (kCirclePointCount * 2)> ret,
-                          WindowPoint center, PixelCoord r, PixelCoord w);
+inline void ApproximateCircle(std::span<VertexXy, kCirclePointCount> ret,
+                              WindowPoint center, PixelCoord radius) {
+  auto i = 0;
+  for (auto &v : ret) {
+    const uint8_t angle = (i++ * kCircleStep);
+    const auto offset =
+        math::RoundedPolarVector(math::AngleFromLegacy(angle), radius);
+    v.x = static_cast<VertexCoord>(center.x + offset.x);
+    v.y = static_cast<VertexCoord>(center.y + offset.y);
+  }
+}
+
+inline void
+ApproximateFatCircle(std::span<VertexXy, (kCirclePointCount * 2)> ret,
+                     WindowPoint center, PixelCoord r, PixelCoord w) {
+  auto v = ret.begin();
+  for (const auto i : std::views::iota(0U, kCirclePointCount)) {
+    const uint8_t angle = (i * kCircleStep);
+    const auto [lx, ly] =
+        math::RoundedPolarVector(math::AngleFromLegacy(angle), r);
+    const auto [wx, wy] =
+        math::RoundedPolarVector(math::AngleFromLegacy(angle), w);
+    v[0] = {
+        static_cast<VertexCoord>(center.x + lx - wx),
+        static_cast<VertexCoord>(center.y + ly - wy),
+    };
+    v[1] = {
+        static_cast<VertexCoord>(center.x + lx + wx),
+        static_cast<VertexCoord>(center.y + ly + wy),
+    };
+    v += 2;
+  }
+}
 // -----------------
 
 // Implementations
 // ---------------
 
-inline void DrawCircle(GraphicsGeometry &graphics, WindowPoint center,
-                       PixelCoord radius) {
+inline void DrawCircle(WindowPoint center, PixelCoord radius) {
   std::array<VertexXy, kCirclePointCount> xys{};
   ApproximateCircle(xys, center, radius);
-  graphics.DrawLineStrip(xys);
+  geometry::DrawLineStrip(xys);
 }
 
-inline void DrawFilledCircle(GraphicsGeometry &graphics, WindowPoint center,
-                             PixelCoord radius, bool alpha) {
+inline void DrawFilledCircle(WindowPoint center, PixelCoord radius,
+                             bool alpha) {
   std::array<VertexXy, (1 + kCirclePointCount)> xys{};
   xys[0].x = static_cast<VertexCoord>(center.x);
   xys[0].y = static_cast<VertexCoord>(center.y);
   ApproximateCircle(std::span(xys).template subspan<1, kCirclePointCount>(),
                     center, radius);
   if (alpha) {
-    graphics.DrawTrianglesA(TrianglePrimitive::Fan, xys);
+    geometry::DrawTrianglesA(TrianglePrimitive::Fan, xys);
   } else {
-    graphics.DrawTriangles(TrianglePrimitive::Fan, xys);
+    geometry::DrawTriangles(TrianglePrimitive::Fan, xys);
   }
 }
 
-inline void DrawAlphaFatCircle(GraphicsGeometry &graphics, WindowPoint center,
-                               PixelCoord r, PixelCoord w) {
+inline void DrawAlphaFatCircle(WindowPoint center, PixelCoord r, PixelCoord w) {
   // When it becomes a regular circle
   if (w >= r) {
-    geometry::DrawFilledCircle(graphics, center, (r + w), true);
+    geometry::DrawFilledCircle(center, (r + w), true);
   }
   std::array<VertexXy, (kCirclePointCount * 2)> xys{};
   ApproximateFatCircle(xys, center, r, w);
-  graphics.DrawTrianglesA(TrianglePrimitive::Strip, xys);
+  geometry::DrawTrianglesA(TrianglePrimitive::Strip, xys);
 }
 
-inline void DrawGradientRect(GraphicsGeometry &graphics,
-                             std::span<const VertexXy, 4> p, Rgba col_edge,
+inline void DrawGradientRect(std::span<const VertexXy, 4> p, Rgba col_edge,
                              bool alpha) {
   const Rgba col_center = {.r = 255, .g = 255, .b = 255, .a = col_edge.a};
 
@@ -71,39 +122,11 @@ inline void DrawGradientRect(GraphicsGeometry &graphics,
       col_edge, col_edge, col_center, col_center, col_edge, col_edge,
   };
   if (alpha) {
-    graphics.DrawTrianglesA(TrianglePrimitive::Strip, xys, colors);
+    geometry::DrawTrianglesA(TrianglePrimitive::Strip, xys, colors);
   } else {
-    graphics.DrawTriangles(TrianglePrimitive::Strip, xys, colors);
+    geometry::DrawTriangles(TrianglePrimitive::Strip, xys, colors);
   }
 }
 // ---------------
 
 } // namespace geometry
-
-// Draw calls
-// ----------
-
-// Circle outline
-void GeomCircle(WindowPoint center, PixelCoord radius);
-
-// Filled circle
-void GeomCircleF(WindowPoint center, PixelCoord radius);
-
-// Alpha-blended fat circle
-inline void GeomFatCircleA(GraphicsGeometry &graphics, WindowPoint center,
-                           PixelCoord r, PixelCoord w) {
-  geometry::DrawAlphaFatCircle(graphics, center, r, w);
-}
-
-// Gradient rectangle (can be diagonal)
-inline void GeomGrdRect(GraphicsGeometry &graphics,
-                        std::span<const VertexXy, 4> points, Rgb col_edge) {
-  geometry::DrawGradientRect(graphics, points, col_edge.WithAlpha(0xFF), false);
-}
-
-// Gradient rectangle (can be diagonal + alpha)
-inline void GeomGrdRectA(GraphicsGeometry &graphics,
-                         std::span<const VertexXy, 4> points, Rgba col_edge) {
-  geometry::DrawGradientRect(graphics, points, col_edge, true);
-}
-// ----------

@@ -4,6 +4,8 @@
 
 #include "bit_stream.h"
 #include "file.h"
+#include <cstddef>
+#include <cstdint>
 
 bool BitReader::CanRead(std::size_t bit_count) const {
   if (byte_cursor_ >= buffer_.size()) {

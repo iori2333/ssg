@@ -11,6 +11,11 @@ namespace audio::bgm {
 
 class Track {
 public:
+  Track() = default;
+  Track(const Track &) = delete;
+  Track &operator=(const Track &) = delete;
+  Track(Track &&) = delete;
+  Track &operator=(Track &&) = delete;
   virtual ~Track() = default;
 
   virtual void Play() = 0;

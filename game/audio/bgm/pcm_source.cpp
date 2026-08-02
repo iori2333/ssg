@@ -2,22 +2,38 @@
 /// (adapted from thcrap's bgmmod module).
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
+#include <ios>
+#include <memory>
+#include <span>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "pcm_source.h"
 
 namespace audio::bgm {
 
-void ApplyVolumeError(std::span<std::byte>, uint16_t, PcmVolume &) {
+namespace {
+
+void ApplyVolumeError(std::span<std::byte> /*unused*/, uint16_t /*unused*/,
+                      PcmVolume & /*unused*/) {
   assert(!"missing fade implementation");
 }
 
+} // namespace
+
 void PcmVolume::SetVolumeLinear(float v) { ramp.Set(v); }
 
+namespace {
+
 template <typename BitDepth>
-static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
-                        PcmVolume &vol) {
+void ApplyVolume(std::span<std::byte> buf, uint16_t channels, PcmVolume &vol) {
   const auto samples =
       std::span<BitDepth>{reinterpret_cast<BitDepth *>(buf.data()),
                           (buf.size_bytes() / sizeof(BitDepth))};
@@ -31,12 +47,18 @@ static void ApplyVolume(std::span<std::byte> buf, uint16_t channels,
   }
 }
 
+} // namespace
+
 bool PcmStream::Decode(std::span<std::byte> buf) {
   size_t offset = 0;
   auto size_left = buf.size_bytes();
   while (size_left > 0) {
     const auto ret = DecodeSingle(buf.subspan(offset, size_left));
-    if ((ret == static_cast<size_t>(-1)) || (ret > size_left)) {
+    if (ret == 0) {
+      std::ranges::fill(buf.subspan(offset, size_left), std::byte{0});
+      return true;
+    }
+    if ((std::cmp_equal(ret, -1)) || (ret > size_left)) {
       std::ranges::fill(buf, std::byte{0});
       return false;
     }
@@ -44,10 +66,12 @@ bool PcmStream::Decode(std::span<std::byte> buf) {
     size_left -= ret;
   }
 
-  const auto apply_volume =
-      ((pcmf.format == PcmSampleFormat::Int16)   ? ApplyVolume<int16_t>
-       : (pcmf.format == PcmSampleFormat::Int32) ? ApplyVolume<int32_t>
-                                                 : ApplyVolumeError);
+  auto apply_volume = ApplyVolumeError;
+  if (pcmf.format == PcmSampleFormat::Int16) {
+    apply_volume = ApplyVolume<int16_t>;
+  } else if (pcmf.format == PcmSampleFormat::Int32) {
+    apply_volume = ApplyVolume<int32_t>;
+  }
   apply_volume(buf, pcmf.channels, vol);
   return true;
 }
@@ -55,13 +79,13 @@ bool PcmStream::Decode(std::span<std::byte> buf) {
 void PcmStream::FadeOut(float volume_start,
                         std::chrono::milliseconds duration) {
   const auto sample_count = ((duration.count() * pcmf.samplingrate) / 1000);
-  vol.StartFade(volume_start, 0.0f, sample_count);
+  vol.StartFade(volume_start, 0.0F, sample_count);
 }
 
 size_t PcmStream::DecodeSingle(std::span<std::byte> buf) {
   const auto ret = cur->PartDecodeSingle(buf);
   if (ret == 0) {
-    if ((cur == intro_part.get()) && (loop_part.get() != nullptr)) {
+    if ((cur == intro_part.get()) && (loop_part != nullptr)) {
       cur = loop_part.get();
     }
     cur->PartSeekToSample(0);
@@ -72,32 +96,33 @@ size_t PcmStream::DecodeSingle(std::span<std::byte> buf) {
 // Codecs
 // ------
 
+namespace {
+
 struct PcmCodec {
   std::string_view ext;
   PcmPartOpen &open;
 };
 
-std::unique_ptr<PcmPart> OpenFlac(std::istream &stream);
-std::unique_ptr<PcmPart> OpenVorbis(std::istream &stream);
-
 // Sorted in order of preference.
-constexpr PcmCodec kPcmCodecs[] = {
-    {".flac", OpenFlac},
-    {".ogg", OpenVorbis},
+constexpr std::array<PcmCodec, 2> kPcmCodecs = {
+    PcmCodec{.ext = ".flac", .open = OpenFlac},
+    PcmCodec{.ext = ".ogg", .open = OpenVorbis},
 };
 // ------
 
-static constexpr std::string_view kLoopInfix = ".loop";
-static constexpr size_t kExtensionCapacity =
+constexpr std::string_view kLoopInfix = ".loop";
+constexpr size_t kExtensionCapacity =
     std::ranges::max_element(kPcmCodecs, [](const auto &a, const auto &b) {
       return (a.ext.size() < b.ext.size());
     })->ext.size();
+
+} // namespace
 
 std::unique_ptr<PcmStream> OpenPcmStream(std::string_view base_fn) {
   const size_t base_len = base_fn.size();
   const size_t fn_len = (kLoopInfix.size() + kExtensionCapacity);
   std::string fn;
-  fn.resize_and_overwrite((base_len + fn_len), [&](char *buf, size_t len) {
+  fn.resize_and_overwrite((base_len + fn_len), [&](char *buf, size_t /*len*/) {
     std::ranges::copy(base_fn, buf);
     return base_len;
   });

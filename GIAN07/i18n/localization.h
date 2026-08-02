@@ -6,6 +6,7 @@
 #include <span>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "util/text_id.h"
@@ -40,6 +41,28 @@ private:
   };
 
   struct Catalog {
+    Catalog() = default;
+    explicit Catalog(std::string_view language) : language(language) {}
+    Catalog(const Catalog &) = default;
+    Catalog &operator=(const Catalog &) = default;
+    Catalog(Catalog &&other) noexcept : language(other.language) {
+      try {
+        messages = std::move(other.messages);
+      } catch (...) {
+        messages.clear();
+      }
+    }
+    Catalog &operator=(Catalog &&other) noexcept {
+      try {
+        messages = std::move(other.messages);
+      } catch (...) {
+        messages.clear();
+      }
+      language = other.language;
+      return *this;
+    }
+    ~Catalog() noexcept = default;
+
     std::string_view language;
     std::unordered_map<TextId, TextEntry> messages;
   };

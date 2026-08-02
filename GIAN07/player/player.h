@@ -178,7 +178,7 @@ private:
   EffectManager &effects_;
   audio::AudioSystem &audio_;
 
-  [[nodiscard]] bool IsMainShotFrame(uint16_t time) const;
+  [[nodiscard]] static bool IsMainShotFrame(uint16_t time);
   [[nodiscard]] bool IsSubShotFrame(uint16_t time) const;
   void DrawFocusHitbox() const;
   [[nodiscard]] int HitRadiusPixels() const;
@@ -247,5 +247,5 @@ private:
   uint8_t initial_bomb_stock_ = 0;
 
   // --- Shot pool ---
-  util::ObjectPool<PlayerShot, kPlayerShotCapacity> maid_tama_{};
+  util::ObjectPool<PlayerShot, kPlayerShotCapacity> maid_tama_;
 };

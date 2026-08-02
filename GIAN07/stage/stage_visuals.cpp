@@ -9,7 +9,9 @@
 #include "stage_visuals.h"
 
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
 #include "gfx/coords.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
 
@@ -69,7 +71,7 @@ void StageVisuals::UpdateCubes() {
   const int angle_offset =
       math::RoundedPolarVector(static_cast<float>(cube_phase_ >> 8) *
                                    math::kLegacyAngleStep,
-                               512.0f / static_cast<float>(cube_count))
+                               512.0F / static_cast<float>(cube_count))
           .y;
   const int radius =
       math::RoundedPolarVector(
@@ -82,8 +84,8 @@ void StageVisuals::UpdateCubes() {
     cube.rotation.x += 4;
     cube.rotation.y -= 4;
     const auto position = math::RoundedPolarVector(
-        static_cast<float>(static_cast<int>(index) * 500 / cube_count +
-                           angle_offset) *
+        (static_cast<float>(static_cast<int>(index) * 500 / cube_count) +
+         static_cast<float>(angle_offset)) *
             math::kLegacyAngleStep,
         radius);
     cube.position.x = position.x;
@@ -123,28 +125,34 @@ void StageVisuals::DrawCube(const Cube &cube) {
   };
   const int length = cube.half_size;
 
-  Geometry().SetColor({1, 1, 3});
+  geometry::SetColor({1, 1, 3});
   for (int x = -1; x <= 1; ++x) {
     for (int y = -1; y <= 1; ++y) {
-      const auto front = project({x * length, y * length, -length});
-      const auto back = project({x * length, y * length, length});
-      Geometry().DrawLine(front.x, front.y, back.x, back.y);
+      const auto front =
+          project({.x = x * length, .y = y * length, .z = -length});
+      const auto back =
+          project({.x = x * length, .y = y * length, .z = length});
+      geometry::DrawLine(front.x, front.y, back.x, back.y);
     }
   }
-  Geometry().SetColor({0, 0, 3});
+  geometry::SetColor({0, 0, 3});
   for (int y = -1; y <= 1; ++y) {
     for (int z = -1; z <= 1; ++z) {
-      const auto left = project({-length, y * length, z * length});
-      const auto right = project({length, y * length, z * length});
-      Geometry().DrawLine(left.x, left.y, right.x, right.y);
+      const auto left =
+          project({.x = -length, .y = y * length, .z = z * length});
+      const auto right =
+          project({.x = length, .y = y * length, .z = z * length});
+      geometry::DrawLine(left.x, left.y, right.x, right.y);
     }
   }
-  Geometry().SetColor({1, 1, 4});
+  geometry::SetColor({1, 1, 4});
   for (int x = -1; x <= 1; ++x) {
     for (int z = -1; z <= 1; ++z) {
-      const auto top = project({x * length, -length, z * length});
-      const auto bottom = project({x * length, length, z * length});
-      Geometry().DrawLine(top.x, top.y, bottom.x, bottom.y);
+      const auto top =
+          project({.x = x * length, .y = -length, .z = z * length});
+      const auto bottom =
+          project({.x = x * length, .y = length, .z = z * length});
+      geometry::DrawLine(top.x, top.y, bottom.x, bottom.y);
     }
   }
 }
@@ -187,19 +195,19 @@ void StageVisuals::UpdateFakeEcl() {
 }
 
 void StageVisuals::DrawFakeEcl() const {
-  Geometry().SetColor({0, 2, 0});
+  geometry::SetColor({0, 2, 0});
   for (int x = 128 - grid_offset_x_ / 2; x < 512; x += 32) {
-    Geometry().DrawLine(x, 0, x, 480);
+    geometry::DrawLine(x, 0, x, 480);
   }
   for (int y = grid_offset_y_ / 2; y < 480; y += 32) {
-    Geometry().DrawLine(128, y, 512, y);
+    geometry::DrawLine(128, y, 512, y);
   }
-  Geometry().SetColor({0, 3, 0});
+  geometry::SetColor({0, 3, 0});
   for (int x = 128 - grid_offset_x_; x < 512; x += 64) {
-    Geometry().DrawLine(x, 0, x, 480);
+    geometry::DrawLine(x, 0, x, 480);
   }
   for (int y = -grid_offset_y_; y < 480; y += 64) {
-    Geometry().DrawLine(128, y, 512, y);
+    geometry::DrawLine(128, y, 512, y);
   }
 
   for (const auto &line : fake_ecl_) {

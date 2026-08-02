@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <span>
 
@@ -68,8 +69,7 @@ struct LaserReflect {
   [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const ReflectSpawnInfo &info);
-  [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
-                                   int player_radius) const;
+  [[nodiscard]] HitResult CheckHit(int px, int py, int player_radius) const;
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
@@ -94,7 +94,7 @@ private:
   float ly_{};
   float wx_{};
   float wy_{};
-  VertexXy p_[4]{};
+  std::array<VertexXy, 4> p_{};
 
   float w_{};
   float wmax_{};

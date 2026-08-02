@@ -40,7 +40,7 @@ public:
 
   // BGM pack management
   bool HasPacks(bool invalidate_cache = false);
-  void ForEachPack(std::function<void(std::string_view)> func);
+  static void ForEachPack(const std::function<void(std::string_view)> &func);
   bool SetPack(std::string_view pack);
 
 private:
@@ -49,5 +49,5 @@ private:
   unsigned int loaded_num_ = 0; // 0 = nothing loaded
   MidiVariant midi_variant_ = MidiVariant::Original;
   std::string pack_path_;
-  std::optional<bool> packs_available_{};
+  std::optional<bool> packs_available_;
 };

@@ -9,7 +9,7 @@
 #include "gfx/coords.h"
 
 struct Surface {
-  PixelSize size = {0, 0};
+  PixelSize size = {.w = 0, .h = 0};
 };
 
 // Only required for the HBITMAP type, which is basically void*.
@@ -34,13 +34,15 @@ public:
   SurfaceGdi() noexcept;
   SurfaceGdi(const SurfaceGdi &) = delete;
   SurfaceGdi &operator=(const SurfaceGdi &) = delete;
+  SurfaceGdi(SurfaceGdi &&) = delete;
+  SurfaceGdi &operator=(SurfaceGdi &&) = delete;
   ~SurfaceGdi();
 
   // Calls Delete() and reinitializes [img].
   bool Load(const BmpOwned &bmp);
 
   // Saves [img] as a .BMP file to the given stream.
-  bool Save(SDL_IOStream *) const;
+  bool Save(SDL_IOStream * /*stream*/) const;
 
   void Delete() noexcept;
 };

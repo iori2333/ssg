@@ -43,7 +43,7 @@ public:
   [[nodiscard]] bool IsLoaded() const;
 
 private:
-  void ApplyTrackSettings(Track &track);
+  void ApplyTrackSettings(Track &track) const;
 
   ma_engine &engine_;
   MidiSequencer &sequencer_;

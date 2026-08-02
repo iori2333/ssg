@@ -3,16 +3,23 @@
 ///
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <format>
+#include <utility>
 
 #include "boss_health_gauge.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
+#include "enemy/boss/boss.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 
 static constexpr auto kBossHealthGaugeWidth = 256;
@@ -161,7 +168,7 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
   switch (state_) {
   case State::OpeningFrame:
   case State::Closing:
-    for (i = 0; i < kBossHealthGaugeHeight; i++) {
+    for (i = 0; std::cmp_less(i, kBossHealthGaugeHeight); i++) {
       src = {0, (104 + i), kBossHealthGaugeWidth, (104 + i + 1)};
       GraphicsSurfaceBlit({row_x_[i], (16 + i)}, SurfaceId::System, src);
     }
@@ -178,21 +185,23 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
     constexpr uint8_t alpha = (128 + 64);
     constexpr Rgb216 col = {0, 1, 5};
 
-    Geometry().SetAlphaNorm(alpha);
-    VertexXy src_vertices[4] = {
-        {0, top},
-        {left, top},
-        {left, bottom},
-        {0, bottom},
+    geometry::SetAlphaNorm(alpha);
+    std::array<VertexXy, 4> src_vertices = {
+        VertexXy{0, top},
+        VertexXy{left, top},
+        VertexXy{left, bottom},
+        VertexXy{0, bottom},
     };
     if (x1 < x2) {
       src_vertices[0].x = src_vertices[3].x = x1;
-      GeomGrdRectA(Geometry(), src_vertices, col.ToRgb().WithAlpha(alpha));
-      Geometry().SetColor({5, 0, 0});
-      Geometry().DrawBoxA(x1, top, x2, bottom);
+      geometry::DrawGradientRect(src_vertices, col.ToRgb().WithAlpha(alpha),
+                                 true);
+      geometry::SetColor({5, 0, 0});
+      geometry::DrawBoxA(x1, top, x2, bottom);
     } else {
       src_vertices[0].x = src_vertices[3].x = x2;
-      GeomGrdRectA(Geometry(), src_vertices, col.ToRgb().WithAlpha(alpha));
+      geometry::DrawGradientRect(src_vertices, col.ToRgb().WithAlpha(alpha),
+                                 true);
     }
 
     src = {0, 104, kBossHealthGaugeWidth, 128};
@@ -204,9 +213,9 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
           static_cast<int32_t>(
               (static_cast<uint64_t>(phase_threshold_hp_) * 30 * 8) / max_hp_);
       if (separator_x > left && separator_x < (left + 30 * 8)) {
-        Geometry().SetAlphaNorm(224);
-        Geometry().SetColor({5, 5, 5});
-        Geometry().DrawBoxA(separator_x, top, (separator_x + 3), bottom);
+        geometry::SetAlphaNorm(224);
+        geometry::SetColor({5, 5, 5});
+        geometry::DrawBoxA(separator_x, top, (separator_x + 3), bottom);
       }
     }
 

@@ -2,7 +2,9 @@
 /// Config - Config data
 ///
 
+#include <cstdint>
 #include <fstream>
+#include <ios>
 #include <type_traits>
 #include <utility>
 
@@ -10,37 +12,43 @@
 
 #include "config.h"
 
-#include "gfx/graphics_backend.h"
+#include "audio/core/audio_types.h"
+#include "gameplay/game_rules.h"
+#include "gfx/graphics.h"
 #include "music/music_player.h"
+#include "sys/input.h"
+#include "util/enum_flags.h"
 
-static constexpr auto kConfigFileName = "SSG.TOML";
-static constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
-static constexpr auto kMaxLoadedBombStock = kMaxBombStock + 1;
-static constexpr uint8_t kExtraStageFlagMask = 0x07;
+namespace {
+
+constexpr auto kConfigFileName = "SSG.TOML";
+constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
+constexpr auto kMaxLoadedBombStock = kMaxBombStock + 1;
+constexpr uint8_t kExtraStageFlagMask = 0x07;
 
 // Validation helpers
 
-static constexpr bool ValidPlayerStock(uint8_t v) {
+constexpr bool ValidPlayerStock(uint8_t v) {
   return v <= kMaxLoadedPlayerStock;
 }
-static constexpr bool ValidBombStock(uint8_t v) {
+constexpr bool ValidBombStock(uint8_t v) {
   return v <= kMaxLoadedBombStock;
 }
-static constexpr bool ValidPracticeMode(PracticeMode v) {
+constexpr bool ValidPracticeMode(PracticeMode v) {
   return std::to_underlying(v) <= std::to_underlying(PracticeMode::Invincible);
 }
-static constexpr bool ValidFPSDivisor(uint8_t v) { return v <= kMaxFpsDivisor; }
-static constexpr bool ValidScreenshotEffort(uint8_t v) {
+constexpr bool ValidFPSDivisor(uint8_t v) { return v <= kMaxFpsDivisor; }
+constexpr bool ValidScreenshotEffort(uint8_t v) {
   return v <= kScreenshotEffortMax;
 }
-static constexpr bool ValidVolume(audio::Volume v) {
+constexpr bool ValidVolume(audio::Volume v) {
   return v <= audio::kMaxVolume;
 }
-static constexpr bool ValidMidiVariant(MidiVariant v) {
+constexpr bool ValidMidiVariant(MidiVariant v) {
   return v <= MidiVariant::Arranged;
 }
-static constexpr bool ValidWinMMPad(InputPadButton v) { return v <= 32; }
-static constexpr bool ValidExtraStageFlags(uint8_t v) {
+constexpr bool ValidWinMMPad(InputPadButton v) { return v <= 32; }
+constexpr bool ValidExtraStageFlags(uint8_t v) {
   return (v & ~kExtraStageFlagMask) == 0;
 }
 
@@ -53,20 +61,22 @@ void LoadToml(const toml::table &tbl, const char *key, T &dest,
     using U = std::underlying_type_t<T>;
     if (auto val = tbl[key].template value<U>()) {
       auto v = static_cast<T>(*val);
-      if (validate(v))
+      if (std::forward<V>(validate)(v)) {
         dest = v;
+      }
     }
   } else {
     if (auto val = tbl[key].template value<T>()) {
-      if (validate(*val))
+      if (std::forward<V>(validate)(*val)) {
         dest = *val;
+      }
     }
   }
 }
 
 } // namespace
 
-static void TOMLLoad(const char *fn, ConfigData &cfg) {
+void TOMLLoad(const char *fn, ConfigData &cfg) {
   std::ifstream file(fn, std::ios::binary);
   if (!file) {
     return;
@@ -120,10 +130,13 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     bool legacy_disabled = cfg.ui.message_window == MessageWindowMode::Hidden;
     LoadToml(*sec, "window_upper", legacy_upper);
     LoadToml(*sec, "msg_disable", legacy_disabled);
-    cfg.ui.message_window = legacy_disabled
-                                ? MessageWindowMode::Hidden
-                                : (legacy_upper ? MessageWindowMode::Upper
-                                                : MessageWindowMode::Lower);
+    auto mode = MessageWindowMode::Lower;
+    if (legacy_disabled) {
+      mode = MessageWindowMode::Hidden;
+    } else if (legacy_upper) {
+      mode = MessageWindowMode::Upper;
+    }
+    cfg.ui.message_window = mode;
   }
 
   if (auto *sec = tbl["ui"].as_table()) {
@@ -131,9 +144,13 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
     bool disabled = cfg.ui.message_window == MessageWindowMode::Hidden;
     LoadToml(*sec, "message_window_upper", upper);
     LoadToml(*sec, "messages_disabled", disabled);
-    cfg.ui.message_window = disabled ? MessageWindowMode::Hidden
-                                     : (upper ? MessageWindowMode::Upper
-                                              : MessageWindowMode::Lower);
+    auto mode = MessageWindowMode::Lower;
+    if (disabled) {
+      mode = MessageWindowMode::Hidden;
+    } else if (upper) {
+      mode = MessageWindowMode::Upper;
+    }
+    cfg.ui.message_window = mode;
     LoadToml(*sec, "language", cfg.ui.language);
   }
 
@@ -169,7 +186,7 @@ static void TOMLLoad(const char *fn, ConfigData &cfg) {
   }
 }
 
-static void TOMLSave(const char *fn, const ConfigData &cfg) {
+void TOMLSave(const char *fn, const ConfigData &cfg) {
   toml::table tbl;
 
   // [difficulty]
@@ -258,6 +275,8 @@ static void TOMLSave(const char *fn, const ConfigData &cfg) {
   }
   file << tbl;
 }
+
+} // namespace
 
 ConfigData LoadConfig() {
   ConfigData config;

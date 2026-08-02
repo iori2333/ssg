@@ -8,27 +8,30 @@
 
 #include "gameplay_hud.h"
 
+#include "gameplay/game_rules.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
-#include "util/time.h"
+#include "util/time_api.h"
 
-void GameplayHud::DrawTop(const GameplayHudModel &model) const {
+void GameplayHud::DrawTop(const GameplayHudModel &model) {
   constexpr PixelLtrb graze_frame = {0, 80, 128, 104};
 
-  Geometry().SetColor({0, 0, 0});
-  Geometry().SetAlphaNorm(128);
-  Geometry().DrawBoxA(playfield::kLeft, playfield::kTop, playfield::kRight + 1,
-                      40);
+  geometry::SetColor({0, 0, 0});
+  geometry::SetAlphaNorm(128);
+  geometry::DrawBoxA(playfield::kLeft, playfield::kTop, playfield::kRight + 1,
+                     40);
 
   if (model.graze_wait_time != 0U) {
-    Geometry().SetColor({5, 1, 0});
-    Geometry().SetAlphaOne();
+    geometry::SetColor({5, 1, 0});
+    geometry::SetAlphaOne();
     for (int i = 0; i <= 10; i++) {
       const int right = 128 + 9 + (model.graze_wait_time >> 2) + (5 - i);
       if (right > 128 + 8) {
-        Geometry().DrawBoxA(128 + 8, 16 + 3 + i, right, 16 + 3 + i + 1);
+        geometry::DrawBoxA(128 + 8, 16 + 3 + i, right, 16 + 3 + i + 1);
       }
     }
   }

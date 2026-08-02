@@ -3,15 +3,21 @@
 ///
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 
 #include "laser_loadout.h"
 
 #include "enemy/enemy_manager.h"
+#include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/pixelformat.h"
+#include "player/loadout/player_loadout.h"
 #include "player/player.h"
 #include "player/player_attack.h"
+#include "player/player_shot.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -32,15 +38,26 @@ LaserLoadout::LaserLoadout() : PlayerLoadout(kLaserTraits) {}
 void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   switch (tier) {
   case 0: {
-    player.SpawnShot({player.X(), player.Y(), 192, 0, 1, 13.5_px, 0,
-                      PlayerShotKind::LaserSub});
+    player.SpawnShot({.x = player.X(),
+                      .y = player.Y(),
+                      .direction = 192,
+                      .direction_step = 0,
+                      .count = 1,
+                      .speed = 13.5_px,
+                      .acceleration = 0,
+                      .kind = PlayerShotKind::LaserSub});
     break;
   }
   case 1:
   case 2: {
-    PlayerShotSpawnInfo shot{
-        player.X() - 6_px,       player.Y(), 192, 0, 1, 13.5_px, 0,
-        PlayerShotKind::LaserSub};
+    PlayerShotSpawnInfo shot{.x = player.X() - 6_px,
+                             .y = player.Y(),
+                             .direction = 192,
+                             .direction_step = 0,
+                             .count = 1,
+                             .speed = 13.5_px,
+                             .acceleration = 0,
+                             .kind = PlayerShotKind::LaserSub};
     player.SpawnShot(shot);
     shot.x += 12_px;
     player.SpawnShot(shot);
@@ -49,22 +66,28 @@ void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   }
   case 3:
   case 4:
-    player.SpawnShot({player.X(), player.Y(), 192,
-                      static_cast<uint8_t>(focused ? 2 : 6), 3, 13.5_px, 0,
-                      PlayerShotKind::LaserSub});
+    player.SpawnShot({.x = player.X(),
+                      .y = player.Y(),
+                      .direction = 192,
+                      .direction_step = static_cast<uint8_t>(focused ? 2 : 6),
+                      .count = 3,
+                      .speed = 13.5_px,
+                      .acceleration = 0,
+                      .kind = PlayerShotKind::LaserSub});
     StartBeam(player, 64 + 100);
     break;
   case 5:
   case 6:
   case 7: {
-    PlayerShotSpawnInfo shot{player.X() - 6_px,
-                             player.Y(),
-                             static_cast<uint8_t>(focused ? 190 : 187),
-                             static_cast<uint8_t>(focused ? 4 : 10),
-                             2,
-                             13.5_px,
-                             0,
-                             PlayerShotKind::LaserSub};
+    PlayerShotSpawnInfo shot{
+        .x = player.X() - 6_px,
+        .y = player.Y(),
+        .direction = static_cast<uint8_t>(focused ? 190 : 187),
+        .direction_step = static_cast<uint8_t>(focused ? 4 : 10),
+        .count = 2,
+        .speed = 13.5_px,
+        .acceleration = 0,
+        .kind = PlayerShotKind::LaserSub};
     player.SpawnShot(shot);
     shot.x += 12_px;
     shot.direction = static_cast<uint8_t>(focused ? 194 : 197);
@@ -73,10 +96,14 @@ void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
     break;
   }
   default:
-    player.SpawnShot({player.X(), player.Y(), 192,
-                      static_cast<uint8_t>(focused ? 2 : 6),
-                      static_cast<uint8_t>(focused ? 4 : 5), 13.5_px, 0,
-                      PlayerShotKind::LaserSub});
+    player.SpawnShot({.x = player.X(),
+                      .y = player.Y(),
+                      .direction = 192,
+                      .direction_step = static_cast<uint8_t>(focused ? 2 : 6),
+                      .count = static_cast<uint8_t>(focused ? 4 : 5),
+                      .speed = 13.5_px,
+                      .acceleration = 0,
+                      .kind = PlayerShotKind::LaserSub});
     StartBeam(player, 64 + 200);
     break;
   }
@@ -173,7 +200,7 @@ void LaserLoadout::DrawBombForeground(const Player &player,
 
   constexpr Rgba color = Rgb216{0, 0, 5}.ToRgb().WithAlpha(0xFF);
   const auto angle = BombAngle(remaining);
-  VertexXy points[4];
+  std::array<VertexXy, 4> points{};
   const auto set_points = [&](int origin_x, int origin_y, int length_x,
                               int length_y, int width_x, int width_y) {
     points[0].x = origin_x + width_x;
@@ -187,20 +214,20 @@ void LaserLoadout::DrawBombForeground(const Player &player,
   };
 
   const auto draw = [&](int width) {
-    Geometry().SetAlphaOne();
+    geometry::SetAlphaOne();
     for (const int side : {1, -1}) {
       for (int i = -3; i <= 3; i++) {
         const auto direction =
             side > 0 ? RightAngle(angle, i) : LeftAngle(angle, i);
         const auto length =
-            math::RoundedPolarVector(math::AngleFromLegacy(direction), 850.0f);
+            math::RoundedPolarVector(math::AngleFromLegacy(direction), 850.0F);
         const auto beam_width = math::RoundedPolarVector(
             math::AngleFromLegacy(static_cast<uint8_t>(direction + 64)), width);
         const int origin_x = (player.OpX() >> 6) + side * OptionOffset(false);
         const int origin_y = player.OpY() >> 6;
         set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
                    beam_width.y);
-        GeomGrdRectA(Geometry(), points, color);
+        geometry::DrawGradientRect(points, color, true);
       }
     }
   };

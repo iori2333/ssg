@@ -13,7 +13,7 @@
 
 namespace data {
 
-enum class DataSectionId : uint32_t {
+enum class DataSectionId : uint8_t {
   Maps,
   Images,
   Music,

@@ -2,10 +2,14 @@
 /// Vorbis streaming support using miniaudio's built-in decoder backend.
 ///
 
+#include <cstddef>
 #include <cstdint>
+#include <ios>
 #include <istream>
 #include <limits>
 #include <memory>
+#include <span>
+#include <utility>
 
 #define STB_VORBIS_INCLUDE_STB_VORBIS_H
 #include <miniaudio.h>
@@ -13,6 +17,8 @@
 #include "audio/bgm/pcm_source.h"
 
 namespace audio::bgm {
+
+namespace {
 
 ma_result VorbisRead(ma_decoder *decoder, void *buf, size_t size,
                      size_t *bytes_read) {
@@ -23,13 +29,19 @@ ma_result VorbisRead(ma_decoder *decoder, void *buf, size_t size,
   auto &stream = *static_cast<std::istream *>(decoder->pUserData);
   stream.read(static_cast<char *>(buf), static_cast<std::streamsize>(size));
   *bytes_read = static_cast<size_t>(stream.gcount());
+  if (stream.eof()) {
+    return MA_AT_END;
+  }
+  if (*bytes_read < size) {
+    return MA_IO_ERROR;
+  }
   return MA_SUCCESS;
 }
 
 ma_result VorbisSeek(ma_decoder *decoder, ma_int64 offset,
                      ma_seek_origin origin) {
   auto &stream = *static_cast<std::istream *>(decoder->pUserData);
-  std::ios_base::seekdir whence;
+  std::ios_base::seekdir whence = 0;
   switch (origin) {
   case ma_seek_origin_start:
     whence = std::ios::beg;
@@ -54,6 +66,10 @@ struct VorbisPcmPart : public PcmPart {
 
   VorbisPcmPart(std::unique_ptr<ma_decoder> decoder, const PcmFormat &pcmf)
       : PcmPart(pcmf), decoder(std::move(decoder)) {}
+  VorbisPcmPart(const VorbisPcmPart &) = delete;
+  VorbisPcmPart &operator=(const VorbisPcmPart &) = delete;
+  VorbisPcmPart(VorbisPcmPart &&) = delete;
+  VorbisPcmPart &operator=(VorbisPcmPart &&) = delete;
   ~VorbisPcmPart() override;
 };
 
@@ -74,6 +90,8 @@ void VorbisPcmPart::PartSeekToSample(size_t sample) {
 }
 
 VorbisPcmPart::~VorbisPcmPart() { ma_decoder_uninit(decoder.get()); }
+
+} // namespace
 
 std::unique_ptr<PcmPart> OpenVorbis(std::istream &stream) {
   auto decoder = std::make_unique<ma_decoder>();
@@ -96,8 +114,9 @@ std::unique_ptr<PcmPart> OpenVorbis(std::istream &stream) {
     return nullptr;
   }
 
-  PcmFormat pcmf = {sample_rate, static_cast<uint16_t>(channels),
-                    PcmSampleFormat::Int16};
+  PcmFormat const pcmf = {.samplingrate = sample_rate,
+                          .channels = static_cast<uint16_t>(channels),
+                          .format = PcmSampleFormat::Int16};
   return std::make_unique<VorbisPcmPart>(std::move(decoder), pcmf);
 }
 

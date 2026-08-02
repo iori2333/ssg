@@ -17,7 +17,7 @@ enum class PlayerAttackShape : uint8_t {
 
 struct PlayerAttack {
   PlayerAttackShape shape = PlayerAttackShape::Point;
-  WorldPoint origin{};
+  WorldPoint origin;
   uint8_t direction = 0;
   int regular_damage = 0;
   int boss_damage = 0;

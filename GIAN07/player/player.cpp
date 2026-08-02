@@ -3,9 +3,15 @@
 ///
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 #include <format>
+#include <memory>
 #include <utility>
 
+#include "effect/effect_types.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "loadout/homing_loadout.h"
 #include "loadout/laser_loadout.h"
 #include "loadout/wide_loadout.h"
@@ -19,6 +25,8 @@
 #include "gameplay/playfield.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
+#include "player/loadout/player_loadout.h"
+#include "player/player_shot.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
 #include "util/math_utils.h"
@@ -41,7 +49,7 @@ Player::Player(EffectManager &effects, GameSession &session,
     : loadout_(std::make_unique<WideLoadout>()), effects_(effects),
       audio_(audio), session_(session), stage_(stage) {}
 
-bool Player::IsMainShotFrame(uint16_t t) const {
+bool Player::IsMainShotFrame(uint16_t t) {
   return (t == kMainShotFrame || t == kMainShotFrame * 2 ||
           t == kMainShotFrame * 3);
 }
@@ -53,13 +61,13 @@ bool Player::IsSubShotFrame(uint16_t t) const {
 void Player::SpawnShot(const PlayerShotSpawnInfo &si) {
   for (uint8_t i = 0; i < si.count; i++) {
     auto *t = maid_tama_.Alloc();
-    if (!t) {
+    if (t == nullptr) {
       return;
     }
 
     uint8_t di = i % si.count;
     di++;
-    uint8_t d;
+    uint8_t d = 0;
     if ((si.count & 1) != 0) {
       d = si.direction +
           ((di >> 1) * si.direction_step * (1 - ((di & 1) << 1)));
@@ -101,27 +109,30 @@ void Player::DrawFocusHitbox() const {
 
   const WindowPoint center{x_ >> kWorldCoordBits, y_ >> kWorldCoordBits};
 
-  Geometry().SetColor({5, 5, 5});
-  GeomCircleF(center, HitRadiusPixels());
-  Geometry().SetColor({5, 2, 2});
-  GeomCircleF(center, 1);
+  geometry::SetColor({5, 5, 5});
+  geometry::DrawFilledCircle(center, HitRadiusPixels(), false);
+  geometry::SetColor({5, 2, 2});
+  geometry::DrawFilledCircle(center, 1, false);
 }
 
 void Player::DrawDebugHitbox() const {
   const WindowPoint center{x_ >> kWorldCoordBits, y_ >> kWorldCoordBits};
-  Geometry().SetColor({0, 0, 0});
-  Geometry().SetAlphaNorm(204);
-  geometry::DrawFilledCircle(Geometry(), center, HitRadiusPixels(), true);
+  geometry::SetColor({0, 0, 0});
+  geometry::SetAlphaNorm(204);
+  geometry::DrawFilledCircle(center, HitRadiusPixels(), true);
 }
 
 void Player::Draw() {
-  static PixelLtrb VivBit[4][2] = {
-      {{480, 128, 480 + 24, 128 + 24}, {504, 128, 504 + 24, 128 + 24}}, // wide
-      {{480, 152, 480 + 24, 152 + 24},
-       {504, 152, 504 + 24, 152 + 24}}, // homing
-      {{528, 152, 528 + 24, 152 + 24}, {552, 152, 552 + 24, 152 + 24}}, // laser
-      {{480, 152, 480 + 24, 152 + 24}, {504, 152, 504 + 24, 152 + 24}}, // temp
-  };
+  static const std::array<std::array<PixelLtrb, 2>, 4> VivBit = {{
+      {PixelLtrb{480, 128, 480 + 24, 128 + 24},
+       PixelLtrb{504, 128, 504 + 24, 128 + 24}}, // wide
+      {PixelLtrb{480, 152, 480 + 24, 152 + 24},
+       PixelLtrb{504, 152, 504 + 24, 152 + 24}}, // homing
+      {PixelLtrb{528, 152, 528 + 24, 152 + 24},
+       PixelLtrb{552, 152, 552 + 24, 152 + 24}}, // laser
+      {PixelLtrb{480, 152, 480 + 24, 152 + 24},
+       PixelLtrb{504, 152, 504 + 24, 152 + 24}}, // temp
+  }};
 
   static uint8_t draw_flag = 0;
   static uint8_t draw_flag2 = 0;
@@ -170,8 +181,7 @@ void Player::UpdateStatus() {
     if (evade_c_ == 0) {
       if (evade_ > 100) {
         effects_.SpawnString(
-            180, 40,
-            std::format("{:3} Evade  {:7} Pts", evade_, evadesc_).c_str());
+            180, 40, std::format("{:3} Evade  {:7} Pts", evade_, evadesc_));
       }
 
       AddScore(evadesc_);

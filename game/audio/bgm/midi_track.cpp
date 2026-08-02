@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <utility>
 
+#include "audio/bgm/midi/midi_parser.h"
 #include "audio/bgm/midi/midi_sequencer.h"
 #include "audio/bgm/midi/midi_synth.h"
 #include "audio/core/audio_types.h"
@@ -21,8 +23,8 @@ float LinearVolume(Volume volume) {
 
 Volume LinearToVolume(float linear) {
   return static_cast<Volume>(
-      std::clamp(static_cast<int>(linear * kMaxVolume + 0.5f), 0,
-                 static_cast<int>(kMaxVolume)));
+      std::clamp(std::lround(linear * static_cast<float>(kMaxVolume)), 0L,
+                 static_cast<long>(kMaxVolume)));
 }
 
 } // namespace

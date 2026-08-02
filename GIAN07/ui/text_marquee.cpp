@@ -1,10 +1,14 @@
 /// Shared UTF-8 text marquee helpers.
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
 
 #include "text_marquee.h"
 
-#include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 
 namespace ui {
 namespace {
@@ -35,21 +39,21 @@ void RemoveFirstUtf8CodePoint(std::string &text) {
 
 } // namespace
 
-std::string MarqueeWindow(TextRenderSession &session, std::string_view text,
+std::string MarqueeWindow(TextRenderSession & /*unused*/, std::string_view text,
                           int available_width, uint32_t frame) {
   if (available_width <= 0) {
     return {};
   }
 
   std::string suffix(text);
-  if (session.Extent(suffix).w <= available_width) {
+  if (TextRenderSession::Extent(suffix).w <= available_width) {
     return suffix;
   }
 
   std::string final_suffix = suffix;
   uint32_t shift_count = 0;
   while (!final_suffix.empty() &&
-         session.Extent(final_suffix).w > available_width) {
+         TextRenderSession::Extent(final_suffix).w > available_width) {
     RemoveFirstUtf8CodePoint(final_suffix);
     shift_count++;
   }
@@ -69,7 +73,7 @@ std::string MarqueeWindow(TextRenderSession &session, std::string_view text,
     RemoveFirstUtf8CodePoint(suffix);
   }
 
-  while (!suffix.empty() && session.Extent(suffix).w > available_width) {
+  while (!suffix.empty() && TextRenderSession::Extent(suffix).w > available_width) {
     RemoveLastUtf8CodePoint(suffix);
   }
   return suffix;

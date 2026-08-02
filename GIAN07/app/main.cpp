@@ -2,6 +2,10 @@
 /// SDL entry point — application assembly layer
 ///
 
+#include "SDL3/SDL_hints.h"
+#include "SDL3/SDL_init.h"
+#include "SDL3/SDL_log.h"
+#include <string_view>
 #ifdef WIN32
 // Enable visual styles for nice-looking SDL message boxes. Taken from the
 // comment in `SDL_windowsmessagebox.c`, which was in turn taken from
@@ -15,18 +19,16 @@
                         " language='*'\"")
 #endif
 
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
 #include "game_application.h"
 
 #include "gfx/constants.h"
-#include "sys/crash_handler.h"
 #include "sys/log.h"
 #include "sys/path.h"
 #include "util/guard.h"
 
-int main(int argc, char **args) {
+int main(int /*argc*/, char ** /*args*/) {
   constexpr std::string_view kAppId = "GIAN07";
   logging::Initialize(PathForData(), kAppId, kVersionTag);
   auto logging_guard = util::MakeGuard(logging::Shutdown);
@@ -37,7 +39,9 @@ int main(int argc, char **args) {
 
   // SDL 3 automatically pulls the Desktop Entry name from the new app
   // metadata, avoiding the need for the environment variable below.
-  SDL_SetAppMetadata(kGameTitle.data(), kVersionTag.data(), kAppId.data());
+  SDL_SetAppMetadata(std::string(kGameTitle).c_str(),
+                     std::string(kVersionTag).c_str(),
+                     std::string(kAppId).c_str());
 
   if (!SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO)) {
     logging::SdlError(logging::Channel::Platform, "Error initializing SDL");

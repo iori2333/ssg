@@ -35,7 +35,7 @@ inline constexpr int kSoundWorldUnitsPerDecibel = PixelToWorld(25);
 
 [[nodiscard]] inline float SoundPanForWorldX(int x) {
   const auto relative = x - kSoundFieldCenterX;
-  const auto power = relative / (kSoundWorldUnitsPerDecibel * 20.0f);
-  return relative < 0 ? (std::pow(10.0f, power) - 1.0f)
-                      : (1.0f - std::pow(10.0f, -power));
+  const auto power = relative / (kSoundWorldUnitsPerDecibel * 20.0F);
+  return relative < 0 ? (std::pow(10.0F, power) - 1.0F)
+                      : (1.0F - std::pow(10.0F, -power));
 }

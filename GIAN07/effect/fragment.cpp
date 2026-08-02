@@ -2,11 +2,10 @@
 /// Short-lived particle fragments.
 ///
 
-#include <cstdint>
-
 #include "effect_manager.h"
 #include "effect_types.h"
 
+#include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
@@ -23,7 +22,7 @@ void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
   auto &fragment = fragments_[next_fragment_];
   fragment = {.x = x, .y = y, .kind = kind};
 
-  float angle = 0.0f;
+  float angle = 0.0F;
   int speed = 0;
   switch (kind) {
   case FragmentKind::Hit:
@@ -147,9 +146,9 @@ void EffectManager::DrawFragments() const {
                           PixelLtwh{576, 448, 32, 32});
       break;
     case FragmentKind::ExpandingCircle:
-      Geometry().SetColor({4, 0, 0});
-      Geometry().SetAlphaOne();
-      GeomFatCircleA(Geometry(), {x, y}, (60 - fragment.remaining) * 6, 5);
+      geometry::SetColor({4, 0, 0});
+      geometry::SetAlphaOne();
+      geometry::DrawAlphaFatCircle({x, y}, (60 - fragment.remaining) * 6, 5);
       break;
     }
   }

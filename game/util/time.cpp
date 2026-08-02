@@ -4,9 +4,10 @@
 
 #include <cassert>
 #include <chrono>
+#include <cstdint>
 #include <ctime>
 
-#include "time.h"
+#include "time_api.h"
 
 namespace util {
 
@@ -19,9 +20,15 @@ TimeOfDay LocalTime() {
   const auto ctime = std::time(nullptr);
   std::tm tm{};
 #ifdef _MSC_VER
-  localtime_s(&tm, &ctime);
+  if (localtime_s(&tm, &ctime) != 0) {
+    return {};
+  }
 #else
-  tm = *std::localtime(&ctime);
+  const auto *local = std::localtime(&ctime);
+  if (local == nullptr) {
+    return {};
+  }
+  tm = *local;
 #endif
 
   assert(tm.tm_year >= 0);

@@ -27,8 +27,8 @@ class UiManager {
 public:
   explicit UiManager(audio::AudioSystem &audio);
 
-  enum class PauseAction { SaveReplayAndExit, Exit, Resume };
-  enum class GameOverAction { Continue, SaveReplayAndExit, Exit };
+  enum class PauseAction : uint8_t { SaveReplayAndExit, Exit, Resume };
+  enum class GameOverAction : uint8_t { Continue, SaveReplayAndExit, Exit };
 
   // --- Message window ---
   void InitMessageWindow(const WindowLtrb &rect,
@@ -44,8 +44,8 @@ public:
   void NewMessagePage();
 
   // --- Gameplay HUD ---
-  void DrawTopHud(const GameplayHudModel &model) {
-    gameplay_hud_.DrawTop(model);
+  static void DrawTopHud(const GameplayHudModel &model) {
+    GameplayHud::DrawTop(model);
   }
   void DrawSidebarHud(const GameplayHudModel &model) {
     gameplay_hud_.DrawSidebars(model);

@@ -2,21 +2,29 @@
 /// UiManager - UI manager
 ///
 
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "menu/menu_builder.h"
 #include "ui_manager.h"
 
 #include "i18n/localization.h"
 #include "settings/config.h"
+#include "ui/menu/menu_tree.h"
+#include "ui/msg_window/msg_window.h"
 
 namespace {
 
 menu::MenuText Localized(i18n::Localization &localization,
                          std::string_view key) {
   const auto id = i18n::TextIdFromKey(key);
-  return menu::MenuText([&localization, id] { return localization.Text(id); });
+  return {[&localization, id] { return localization.Text(id); }};
 }
 
 } // namespace

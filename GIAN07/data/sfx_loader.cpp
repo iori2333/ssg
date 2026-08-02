@@ -2,6 +2,7 @@
 /// SfxLoader - installs the game's sound-effect bank into the audio backend
 ///
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 #include "sfx_loader.h"
@@ -15,12 +16,13 @@ bool SfxLoader::Load() const {
       5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 1, 1, 1, 1, 5, 1, 5, 1,
   };
 
-  if (!audio_ || !audio_->IsEnabled()) {
+  if ((audio_ == nullptr) || !audio_->IsEnabled()) {
     return false;
   }
-  for (uint8_t id = 0; id < kMaxInstances.size(); ++id) {
+  for (std::size_t id = 0; id < kMaxInstances.size(); ++id) {
     const auto buffer = data_->ExtractSound(id);
-    if (!audio_->LoadSfx(id, buffer, kMaxInstances[id]).success) {
+    if (!audio_->LoadSfx(static_cast<uint8_t>(id), buffer, kMaxInstances[id])
+             .success) {
       return false;
     }
   }

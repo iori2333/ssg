@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -9,6 +10,7 @@
 #include <string_view>
 
 #include <miniaudio.h>
+#include <utility>
 
 #include "pcm_source.h"
 
@@ -31,6 +33,8 @@ public:
   ~Source();
   Source(const Source &) = delete;
   Source &operator=(const Source &) = delete;
+  Source(Source &&) = delete;
+  Source &operator=(Source &&) = delete;
 
   AudioResult Load(std::string_view path);
   void Unload();
@@ -42,8 +46,8 @@ public:
 
   static ma_result GetDataFormat(ma_data_source *data_source, ma_format *format,
                                  ma_uint32 *channels, ma_uint32 *sample_rate,
-                                 ma_channel *channel_map,
-                                 size_t channel_map_cap);
+                                 ma_channel * /*channel_map*/,
+                                 size_t /*channel_map_cap*/);
   static ma_result Read(ma_data_source *data_source, void *frames_out,
                         ma_uint64 frame_count, ma_uint64 *frames_read);
 
@@ -102,7 +106,7 @@ bool PcmTrack::Source::IsLoaded() const {
 }
 
 float PcmTrack::Source::FadeVolumeLinear() const {
-  return source_ ? source_->FadeVolumeLinear() : 0.0f;
+  return source_ ? source_->FadeVolumeLinear() : 0.0F;
 }
 
 ma_data_source *PcmTrack::Source::DataSource() {
@@ -111,7 +115,8 @@ ma_data_source *PcmTrack::Source::DataSource() {
 
 ma_result PcmTrack::Source::GetDataFormat(
     ma_data_source *data_source, ma_format *format, ma_uint32 *channels,
-    ma_uint32 *sample_rate, ma_channel *channel_map, size_t channel_map_cap) {
+    ma_uint32 *sample_rate,
+    ma_channel * /*channel_map*/, size_t /*channel_map_cap*/) {
   auto *self = reinterpret_cast<PcmTrack::Source *>(data_source);
   if (!self->source_) {
     return MA_UNAVAILABLE;
@@ -126,8 +131,6 @@ ma_result PcmTrack::Source::GetDataFormat(
   }
   *channels = self->source_->pcmf.channels;
   *sample_rate = self->source_->pcmf.samplingrate;
-  (void)channel_map;
-  (void)channel_map_cap;
   return MA_SUCCESS;
 }
 
@@ -236,11 +239,11 @@ void PcmTrack::FadeOut(float volume_start, std::chrono::milliseconds duration) {
   }
 }
 
-void PcmTrack::Tick(std::chrono::milliseconds) {
+void PcmTrack::Tick(std::chrono::milliseconds /*delta*/) {
   if (!IsPlaying() || !IsLoaded()) {
     return;
   }
-  if (FadeVolumeLinear() <= 0.0f) {
+  if (FadeVolumeLinear() <= 0.0F) {
     Stop();
   }
 }
@@ -261,7 +264,7 @@ std::chrono::milliseconds PcmTrack::PlayTime() const {
 }
 
 float PcmTrack::FadeVolumeLinear() const {
-  return source_ ? source_->FadeVolumeLinear() : 0.0f;
+  return source_ ? source_->FadeVolumeLinear() : 0.0F;
 }
 
 void PcmTrack::ApplyVolume() {

@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -11,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "audio/bgm/midi/midi_parser.h"
 #include "midi_synth.h"
 #include "util/byte_io.h"
 
@@ -145,7 +148,10 @@ public:
     if (!extra_data) {
       return std::nullopt;
     }
-    return MidiEvent{kind, status_, meta, *extra_data};
+    return MidiEvent{.kind = kind,
+                     .status = status_,
+                     .meta = meta,
+                     .extra_data = *extra_data};
   }
 
 private:
@@ -204,7 +210,7 @@ void SendEvent(const MidiEvent &event, MidiSynth &sink, bool fix_sysex) {
     std::ranges::copy(event.extra_data, message.begin() + 1);
 
     if (fix_sysex && message.size() >= 10) {
-      static constexpr std::uint8_t kSc88ReverbMacro[] = {
+      static constexpr std::array<std::uint8_t, 7> kSc88ReverbMacro = {
           0x41, 0x10, 0x42, 0x12, 0x40, 0x01, 0x30,
       };
       if (std::equal(std::begin(kSc88ReverbMacro), std::end(kSc88ReverbMacro),
@@ -331,7 +337,7 @@ struct MidiSequencer::Impl {
         visualization.levels[channel][note] = velocity;
       }
       visualization.notes[channel][note] = velocity;
-      if (visualization.notes[channel][note]) {
+      if (visualization.notes[channel][note] != 0U) {
         visualization.note_highlights[channel][note] = 5;
       }
       break;
@@ -347,7 +353,7 @@ MidiSequencer::MidiSequencer() : impl_(std::make_unique<Impl>()) {}
 MidiSequencer::~MidiSequencer() = default;
 
 void MidiSequencer::Load(SequenceData sequence) {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   impl_->sequence = std::move(sequence);
   impl_->tracks.clear();
   impl_->tracks.reserve(impl_->sequence.tracks.size());
@@ -361,7 +367,7 @@ void MidiSequencer::Load(SequenceData sequence) {
 }
 
 void MidiSequencer::Clear() {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   impl_->sequence = {};
   impl_->tracks.clear();
   impl_->visualization = {};
@@ -369,29 +375,29 @@ void MidiSequencer::Clear() {
 }
 
 void MidiSequencer::SetLoop(const Loop &loop) {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   impl_->loop = loop;
 }
 
 void MidiSequencer::SetTempo(std::uint8_t numerator, std::uint8_t denominator) {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   impl_->tempo_numerator = numerator;
   impl_->tempo_denominator = denominator;
 }
 
 void MidiSequencer::SetFixSysExBugs(bool enabled) {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   impl_->fix_sysex = enabled;
 }
 
 void MidiSequencer::Rewind() {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   impl_->Rewind();
 }
 
 void MidiSequencer::Tick(std::chrono::nanoseconds delta, MidiSynth &sink,
                          bool output_enabled) {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   if (impl_->sequence.tracks.empty()) {
     return;
   }
@@ -458,7 +464,7 @@ void MidiSequencer::Tick(std::chrono::nanoseconds delta, MidiSynth &sink,
 }
 
 Visualization MidiSequencer::Snapshot() const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   auto snapshot = impl_->visualization;
   snapshot.loaded = !impl_->sequence.tracks.empty();
 
@@ -471,8 +477,9 @@ Visualization MidiSequencer::Snapshot() const {
       auto &level = impl_->visualization.levels[channel][note];
       if (level != 0) {
         const auto decay = (std::max)(static_cast<int>(level / 50), 1);
-        level =
-            ((level >= decay) ? static_cast<std::uint8_t>(level - decay) : 0);
+        level = ((std::cmp_greater_equal(level, decay))
+                     ? static_cast<std::uint8_t>(level - decay)
+                     : 0);
       }
       auto &highlight = impl_->visualization.note_highlights[channel][note];
       if (highlight != 0) {
@@ -484,17 +491,17 @@ Visualization MidiSequencer::Snapshot() const {
 }
 
 bool MidiSequencer::IsLoaded() const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   return !impl_->sequence.tracks.empty();
 }
 
 bool MidiSequencer::IsFinished() const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   return impl_->finished;
 }
 
 std::chrono::milliseconds MidiSequencer::Realtime() const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   return impl_->visualization.play_time.realtime;
 }
 

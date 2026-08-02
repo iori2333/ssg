@@ -46,7 +46,7 @@ private:
   std::atomic<bool> loaded_ = false;
   std::atomic<bool> playing_ = false;
   std::atomic<Volume> volume_ = kMaxVolume;
-  std::atomic<float> fade_start_ = 0.0f;
+  std::atomic<float> fade_start_ = 0.0F;
   std::atomic<std::int64_t> fade_duration_ms_ = 0;
   std::atomic<std::int64_t> fade_remaining_ms_ = 0;
 };

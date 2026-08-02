@@ -1,26 +1,37 @@
 #include "midi_synth.h"
 
 #include <algorithm>
-#include <chrono>
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
+#include <memory>
 #include <mutex>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
+// NOLINTNEXTLINE(misc-include-cleaner) - required before fluidsynth/*.h.
 #include <fluidsynth.h>
 
 #include "audio/core/audio_types.h"
+#include "fluidsynth/audio.h"
+#include "fluidsynth/misc.h"
+#include "fluidsynth/settings.h"
+#include "fluidsynth/synth.h"
+#include "fluidsynth/types.h"
 #include "sys/log.h"
 
 namespace audio::bgm {
 namespace {
 
-constexpr std::string_view kFontExtensions[] = {".sf2", ".sf3", ".dls"};
+constexpr std::array<std::string_view, 3> kFontExtensions = {
+    ".sf2", ".sf3", ".dls"};
 constexpr int kSampleRate = 44100;
 
 std::string Basename(std::string_view path) {
@@ -65,7 +76,7 @@ struct MidiSynth::Impl {
 
   bool InitAudio() {
     settings = new_fluid_settings();
-    if (!settings) {
+    if (settings == nullptr) {
       return false;
     }
     fluid_settings_setnum(settings, "synth.sample-rate", kSampleRate);
@@ -73,19 +84,19 @@ struct MidiSynth::Impl {
     fluid_settings_setnum(settings, "synth.gain", 1.0);
 
     synth = new_fluid_synth(settings);
-    if (!synth) {
+    if (synth == nullptr) {
       CleanupAudio();
       return false;
     }
 
     audio_driver = new_fluid_audio_driver(settings, synth);
-#if !defined(WIN32)
+#ifndef WIN32
     if (!audio_driver) {
       fluid_settings_setstr(settings, "audio.driver", "pulseaudio");
       audio_driver = new_fluid_audio_driver(settings, synth);
     }
 #endif
-    if (!audio_driver) {
+    if (audio_driver == nullptr) {
       CleanupAudio();
       return false;
     }
@@ -93,11 +104,11 @@ struct MidiSynth::Impl {
   }
 
   void CleanupAudio() {
-    if (audio_driver) {
+    if (audio_driver != nullptr) {
       delete_fluid_audio_driver(audio_driver);
       audio_driver = nullptr;
     }
-    if (synth) {
+    if (synth != nullptr) {
       if (font_id >= 0) {
         fluid_synth_sfunload(synth, font_id, 1);
         font_id = -1;
@@ -105,7 +116,7 @@ struct MidiSynth::Impl {
       delete_fluid_synth(synth);
       synth = nullptr;
     }
-    if (settings) {
+    if (settings != nullptr) {
       delete_fluid_settings(settings);
       settings = nullptr;
     }
@@ -147,7 +158,7 @@ struct MidiSynth::Impl {
     std::vector<IndexedFont> indexed;
     indexed.reserve(font_paths.size());
     for (std::size_t i = 0; i < font_paths.size(); i++) {
-      indexed.push_back({&font_paths[i], font_sources[i]});
+      indexed.push_back({.path = &font_paths[i], .source = font_sources[i]});
     }
     std::ranges::sort(indexed, [](const auto &a, const auto &b) {
       return *a.path < *b.path;
@@ -188,8 +199,8 @@ MidiSynth::~MidiSynth() { Shutdown(); }
 
 AudioResult MidiSynth::Initialize(std::string_view data_path,
                                   std::string_view preferred_soundfont) {
-  std::scoped_lock lock(impl_->mutex);
-  if (impl_->synth) {
+  std::scoped_lock const lock(impl_->mutex);
+  if (impl_->synth != nullptr) {
     return AudioResult::Fail(AudioError::AlreadyInitialized,
                              "MIDI synth is already initialized");
   }
@@ -225,7 +236,7 @@ AudioResult MidiSynth::Initialize(std::string_view data_path,
 }
 
 void MidiSynth::Shutdown() {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   impl_->CleanupAudio();
   impl_->font_paths.clear();
   impl_->font_sources.clear();
@@ -233,12 +244,12 @@ void MidiSynth::Shutdown() {
 }
 
 std::size_t MidiSynth::DeviceCount() const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   return impl_->font_paths.size();
 }
 
 std::optional<std::string> MidiSynth::DeviceName(std::size_t index) const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   if (index >= impl_->font_paths.size()) {
     return std::nullopt;
   }
@@ -246,7 +257,7 @@ std::optional<std::string> MidiSynth::DeviceName(std::size_t index) const {
 }
 
 std::optional<DeviceSource> MidiSynth::DeviceSourceAt(std::size_t index) const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   if (index >= impl_->font_sources.size()) {
     return std::nullopt;
   }
@@ -254,21 +265,22 @@ std::optional<DeviceSource> MidiSynth::DeviceSourceAt(std::size_t index) const {
 }
 
 std::optional<std::string> MidiSynth::CurrentDeviceName() const {
-  std::scoped_lock lock(impl_->mutex);
-  if (!impl_->synth || impl_->font_index >= impl_->font_paths.size()) {
+  std::scoped_lock const lock(impl_->mutex);
+  if ((impl_->synth == nullptr) ||
+      impl_->font_index >= impl_->font_paths.size()) {
     return std::nullopt;
   }
   return Basename(impl_->font_paths[impl_->font_index]);
 }
 
 bool MidiSynth::IsInitialized() const {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   return impl_->synth != nullptr;
 }
 
 AudioResult MidiSynth::SelectDevice(std::size_t index) {
-  std::scoped_lock lock(impl_->mutex);
-  if (!impl_->synth) {
+  std::scoped_lock const lock(impl_->mutex);
+  if (impl_->synth == nullptr) {
     return AudioResult::Fail(AudioError::NotInitialized,
                              "MIDI synth is not initialized");
   }
@@ -284,7 +296,7 @@ AudioResult MidiSynth::SelectDevice(std::size_t index) {
   const auto old_font = impl_->font_paths[old_index];
   impl_->font_index = index;
 
-  if (impl_->audio_driver) {
+  if (impl_->audio_driver != nullptr) {
     delete_fluid_audio_driver(impl_->audio_driver);
     impl_->audio_driver = nullptr;
   }
@@ -305,7 +317,7 @@ AudioResult MidiSynth::SelectDevice(std::size_t index) {
   }
 
   impl_->audio_driver = new_fluid_audio_driver(impl_->settings, impl_->synth);
-  if (!impl_->audio_driver) {
+  if (impl_->audio_driver == nullptr) {
     impl_->CleanupAudio();
     impl_->font_index = old_index;
     if (impl_->InitAudio()) {
@@ -321,7 +333,7 @@ AudioResult MidiSynth::SelectDevice(std::size_t index) {
 }
 
 AudioResult MidiSynth::ChangeDevice(int direction) {
-  std::scoped_lock lock(impl_->mutex);
+  std::scoped_lock const lock(impl_->mutex);
   if (impl_->font_paths.size() <= 1) {
     return AudioResult::Ok();
   }
@@ -335,7 +347,7 @@ AudioResult MidiSynth::ChangeDevice(int direction) {
   }
   impl_->font_index = new_index;
 
-  if (impl_->audio_driver) {
+  if (impl_->audio_driver != nullptr) {
     delete_fluid_audio_driver(impl_->audio_driver);
     impl_->audio_driver = nullptr;
   }
@@ -357,7 +369,7 @@ AudioResult MidiSynth::ChangeDevice(int direction) {
   }
 
   impl_->audio_driver = new_fluid_audio_driver(impl_->settings, impl_->synth);
-  if (!impl_->audio_driver) {
+  if (impl_->audio_driver == nullptr) {
     impl_->CleanupAudio();
     impl_->font_index = old_index;
     if (impl_->InitAudio()) {
@@ -373,8 +385,8 @@ AudioResult MidiSynth::ChangeDevice(int direction) {
 }
 
 void MidiSynth::Output(std::uint8_t status, std::uint8_t a, std::uint8_t b) {
-  std::scoped_lock lock(impl_->mutex);
-  if (!impl_->synth) {
+  std::scoped_lock const lock(impl_->mutex);
+  if (impl_->synth == nullptr) {
     return;
   }
 
@@ -411,8 +423,8 @@ void MidiSynth::Output(std::uint8_t status, std::uint8_t a, std::uint8_t b) {
 }
 
 void MidiSynth::OutputSysEx(std::span<const std::uint8_t> message) {
-  std::scoped_lock lock(impl_->mutex);
-  if (!impl_->synth || message.empty()) {
+  std::scoped_lock const lock(impl_->mutex);
+  if ((impl_->synth == nullptr) || message.empty()) {
     return;
   }
   const auto *data = reinterpret_cast<const char *>(message.data() + 1);
@@ -421,27 +433,27 @@ void MidiSynth::OutputSysEx(std::span<const std::uint8_t> message) {
 }
 
 void MidiSynth::Panic() {
-  std::scoped_lock lock(impl_->mutex);
-  if (impl_->synth) {
+  std::scoped_lock const lock(impl_->mutex);
+  if (impl_->synth != nullptr) {
     fluid_synth_all_sounds_off(impl_->synth, -1);
   }
 }
 
 void MidiSynth::Pause() {
-  std::scoped_lock lock(impl_->mutex);
-  if (impl_->audio_driver) {
+  std::scoped_lock const lock(impl_->mutex);
+  if (impl_->audio_driver != nullptr) {
     delete_fluid_audio_driver(impl_->audio_driver);
     impl_->audio_driver = nullptr;
   }
 }
 
 void MidiSynth::Resume() {
-  std::scoped_lock lock(impl_->mutex);
-  if (!impl_->synth || impl_->audio_driver) {
+  std::scoped_lock const lock(impl_->mutex);
+  if ((impl_->synth == nullptr) || (impl_->audio_driver != nullptr)) {
     return;
   }
   impl_->audio_driver = new_fluid_audio_driver(impl_->settings, impl_->synth);
-  if (!impl_->audio_driver) {
+  if (impl_->audio_driver == nullptr) {
     logging::Error(logging::Channel::Audio,
                    "Failed to resume FluidSynth audio driver");
   }

@@ -1,7 +1,9 @@
 ///
 /// StageSession - owns the active stage timeline and background
 ///
+#include <cstddef>
 #include <cstdint>
+#include <span>
 #include <utility>
 
 #include "stage_session.h"
@@ -10,11 +12,15 @@
 #include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "effect/effect_manager.h"
+#include "effect/effect_types.h"
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
+#include "stage/scene_program.h"
+#include "stage/stage_background.h"
+#include "sys/input.h"
 #include "ui/ui_manager.h"
 
 namespace stage {
@@ -71,7 +77,7 @@ StageSession::RunScene(StageUpdateContext &context, InputBits input) {
       break;
 
     case SceneOpcode::Boss:
-      context.enemies.SpawnBoss({instruction->x, instruction->y},
+      context.enemies.SpawnBoss({.x = instruction->x, .y = instruction->y},
                                 instruction->script_id);
       scene_.Advance();
       if (const auto timeout = FindBossTimeout(); timeout > 0) {
@@ -166,8 +172,7 @@ StageSession::RunScene(StageUpdateContext &context, InputBits input) {
           return {};
         }
       } else if (instruction->wait_condition == SceneWaitCondition::BossCount) {
-        if (context.enemies.BossCount() >
-            static_cast<uint32_t>(instruction->value)) {
+        if (std::cmp_greater(context.enemies.BossCount(), instruction->value)) {
           return {};
         }
       }

@@ -4,13 +4,19 @@
 
 #include <bit>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <optional>
+#include <span>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
 #include "ecl_program.h"
 
+#include "effect/effect_types.h"
+#include "enemy/ecl/ecl.h"
+#include "stage/stage_visuals.h"
 #include "util/byte_io.h"
 
 class EclInstructionFactory {
@@ -29,16 +35,24 @@ class EclReader {
 public:
   explicit EclReader(std::span<const uint8_t> bytes) : reader_(bytes) {}
 
-  uint8_t U8() { return reader_.Read<uint8_t>().value(); }
+  template <typename T> T ReadRequired() {
+    auto value = reader_.Read<T>();
+    if (!value) {
+      throw std::runtime_error("Unexpected end of ECL program");
+    }
+    return *value;
+  }
+
+  uint8_t U8() { return ReadRequired<uint8_t>(); }
   int8_t I8() { return std::bit_cast<int8_t>(U8()); }
 
-  uint16_t U16() { return reader_.Read<uint16_t>().value(); }
+  uint16_t U16() { return ReadRequired<uint16_t>(); }
 
-  int16_t I16() { return reader_.Read<int16_t>().value(); }
+  int16_t I16() { return ReadRequired<int16_t>(); }
 
-  uint32_t U32() { return reader_.Read<uint32_t>().value(); }
+  uint32_t U32() { return ReadRequired<uint32_t>(); }
 
-  int32_t I32() { return reader_.Read<int32_t>().value(); }
+  int32_t I32() { return ReadRequired<int32_t>(); }
 
 private:
   util::ByteReader reader_;
@@ -318,7 +332,7 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
   }
 
   case EclOpcode::JumpDifficulty: {
-    EclDifficultyJumpArguments arguments;
+    EclDifficultyJumpArguments arguments{};
     for (auto &position : arguments.targets) {
       const auto decoded = target();
       if (!decoded) {
@@ -718,7 +732,7 @@ std::optional<EclProgram> EclProgram::Parse(std::span<const uint8_t> bytes) {
     if (!instruction) {
       return std::nullopt;
     }
-    program.instructions_.push_back(std::move(*instruction));
+    program.instructions_.push_back(*instruction);
   }
   return program;
 }

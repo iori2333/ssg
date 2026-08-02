@@ -18,10 +18,10 @@ template <typename Coord> struct PixelPointBase {
   Coord y;
 
   // Explicit integer division.
-  PixelPointBase DivInt(int scalar) const {
+  [[nodiscard]] PixelPointBase DivInt(int scalar) const {
     return {
-        .x = static_cast<Coord>(static_cast<int>(x) / scalar),
-        .y = static_cast<Coord>(static_cast<int>(y) / scalar),
+        .x = static_cast<Coord>(static_cast<float>(static_cast<int>(x) / scalar)),
+        .y = static_cast<Coord>(static_cast<float>(static_cast<int>(y) / scalar)),
     };
   }
 
@@ -116,6 +116,7 @@ template <typename Coord> struct PixelLtwhBase {
   constexpr PixelLtwhBase &operator=(PixelLtwhBase &&) = default;
   constexpr PixelLtwhBase(Coord left, Coord top, Coord w, Coord h)
       : left(left), top(top), w(w), h(h) {}
+  constexpr ~PixelLtwhBase() = default;
 
   constexpr PixelLtwhBase operator+(const PixelPointBase<Coord> &other) const {
     return {(left + other.x), (top + other.y), w, h};
@@ -135,6 +136,7 @@ template <typename Coord> struct PixelLtrbBase {
   PixelLtrbBase(PixelLtrbBase &&) = default;
   PixelLtrbBase &operator=(const PixelLtrbBase &) = default;
   PixelLtrbBase &operator=(PixelLtrbBase &&) = default;
+  ~PixelLtrbBase() = default;
   constexpr PixelLtrbBase(decltype(left) left, decltype(top) top,
                           decltype(right) right, decltype(bottom) bottom)
       : left(left), top(top), right(right), bottom(bottom) {}
@@ -146,7 +148,9 @@ template <typename Coord> struct PixelLtrbBase {
   constexpr PixelLtrbBase(const PixelLtwhBase<Coord> &o)
       : left(o.left), top(o.top), right(o.left + o.w), bottom(o.top + o.h) {}
 
-  PixelSizeBase<Coord> Size() const { return {(right - left), (bottom - top)}; }
+  [[nodiscard]] PixelSizeBase<Coord> Size() const {
+    return {(right - left), (bottom - top)};
+  }
 };
 
 using WindowCoord = PixelCoord;
@@ -203,9 +207,7 @@ using WorldCoord = int;
 
 inline constexpr WorldCoord kWorldCoordScale = 1 << kWorldCoordBits;
 
-inline constexpr WorldCoord PixelToWorld(PixelCoord v) {
-  return v * kWorldCoordScale;
-}
+constexpr WorldCoord PixelToWorld(PixelCoord v) { return v * kWorldCoordScale; }
 
 // Pixel literals expressed in world units, e.g. 1.5_px == 96.
 consteval WorldCoord operator""_px(unsigned long long pixels) {
@@ -252,7 +254,8 @@ struct WorldPoint {
 
   // Assumes this to be a centered coordinate, and calculates the
   // corresponding top-left coordinate based on the given size.
-  PixelPoint ToPixel(PixelSize size_if_centered = {0, 0}) const {
+  [[nodiscard]] PixelPoint ToPixel(PixelSize size_if_centered = {
+                                       .w = 0, .h = 0}) const {
     return {
         .x = ((x >> kWorldCoordBits) - (size_if_centered.w >> 1)),
         .y = ((y >> kWorldCoordBits) - (size_if_centered.h >> 1)),

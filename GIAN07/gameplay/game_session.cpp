@@ -3,6 +3,7 @@
 ///
 
 #include <algorithm>
+#include <cstdint>
 #include <utility>
 
 #include "game_rules.h"

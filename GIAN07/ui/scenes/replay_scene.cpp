@@ -8,6 +8,7 @@
 #include <format>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -20,6 +21,7 @@
 #include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/font_uty.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "gfx/text.h"
@@ -88,8 +90,8 @@ void RenderUiText(WindowPoint position, TextRenderRectId rect,
       position, rect, text, [text, centered](TextRenderSession &s) {
         s.SetFont(FontId::Normal);
         const auto x = centered ? TextLayoutXCenter(s, text) : 0;
-        s.Put({x + 1, 1}, text, Rgb{96, 96, 96});
-        s.Put({x, 0}, text, Rgb{255, 255, 255});
+        s.Put({.x = x + 1, .y = 1}, text, Rgb{.r = 96, .g = 96, .b = 96});
+        s.Put({.x = x, .y = 0}, text, Rgb{.r = 255, .g = 255, .b = 255});
       });
 }
 } // namespace
@@ -113,7 +115,7 @@ bool ReplayScene::EnterBrowser(InputBits initial_input) {
     text = TextRenderer().Register({.w = 80, .h = 10});
   }
   ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
-  replays_ = record_system_.ListReplays();
+  replays_ = RecordSystem::ListReplays();
   selected_ = 0;
   previous_input_ = initial_input;
   ResetRows();
@@ -317,12 +319,12 @@ void ReplayScene::DrawBrowser() {
     if (index >= last) {
       continue;
     }
-    Geometry().SetColor({0, 0, 0});
-    Geometry().DrawBox(x + 88, y + 27, x + 114, y + 32);
+    geometry::SetColor({0, 0, 0});
+    geometry::DrawBox(x + 88, y + 27, x + 114, y + 32);
     if (index == selected_) {
-      Geometry().SetAlphaNorm(96);
-      Geometry().SetColor({4, 0, 0});
-      Geometry().DrawBoxA(x, y, x + 400, y + 32);
+      geometry::SetAlphaNorm(96);
+      geometry::SetColor({4, 0, 0});
+      geometry::DrawBoxA(x, y, x + 400, y + 32);
     }
     const auto &replay = replays_[index];
     DrawFont16C2(x + 88, y + 4, replay.name.c_str());
@@ -371,8 +373,8 @@ void ReplayScene::DrawNameEntry() const {
   GraphicsBackendClear();
   const int x = 120;
   const int y = 176;
-  Geometry().SetColor({2, 0, 0});
-  Geometry().DrawBox(x, y, x + 400, y + 32);
+  geometry::SetColor({2, 0, 0});
+  geometry::DrawBox(x, y, x + 400, y + 32);
   GraphicsSurfaceBlit({x, y}, SurfaceId::NameRegistration, {0, 64, 400, 96});
   const auto title = Text(localization_, "ui.replay.name");
   RenderUiText({80, 118}, ui_text_, title, true);

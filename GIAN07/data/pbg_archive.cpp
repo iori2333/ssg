@@ -3,10 +3,15 @@
 ///
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
+#include <ios>
 #include <limits>
 #include <numeric>
 #include <optional>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -15,6 +20,7 @@
 #include "sys/bit_stream.h"
 #include "sys/file.h"
 #include "util/byte_io.h"
+#include "util/endian.h"
 
 namespace data {
 
@@ -33,8 +39,6 @@ struct PbgHeader {
   util::LittleEndian<uint32_t> sum = 0;
   util::LittleEndian<uint32_t> n = 0;
 };
-
-} // namespace
 
 // ---- LZSS -----------------------------------------------------------
 
@@ -65,8 +69,8 @@ CompressedEntry(std::span<const uint8_t> packfile,
   return packfile.subspan(start, end - start);
 }
 
-static std::vector<uint8_t> Decompress(std::span<const uint8_t> compressed,
-                                       uint32_t size_uncompressed) {
+std::vector<uint8_t> Decompress(std::span<const uint8_t> compressed,
+                                uint32_t size_uncompressed) {
   std::vector<uint8_t> uncompressed(size_uncompressed);
 
   std::array<uint8_t, (1 << kLzssDictBits)> dict{};
@@ -157,6 +161,8 @@ std::vector<uint8_t> Compress(std::span<const uint8_t> buffer) {
   device.WriteBits(0, kLzssDictBits);
   return device.Buffer();
 }
+
+} // namespace
 
 // ---- PbgArchive -------------------------------------------------------
 
@@ -272,11 +278,13 @@ bool PbgArchiveWriter::Write(const std::filesystem::path &path) const {
     for (size_t i = 0; i < files_.size(); i++) {
       auto compressed = Compress(files_[i]);
       const auto offset = stream.tellp();
-      if (offset < 0 || static_cast<uintmax_t>(offset) >
-                            std::numeric_limits<uint32_t>::max()) {
+      const auto offset_value = static_cast<std::streamoff>(offset);
+      if (offset_value < 0 ||
+          std::cmp_greater(offset_value,
+                           std::numeric_limits<uint32_t>::max())) {
         return false;
       }
-      info[i].offset = static_cast<uint32_t>(offset);
+      info[i].offset = static_cast<uint32_t>(offset_value);
       info[i].size_uncompressed = static_cast<uint32_t>(files_[i].size());
       info[i].checksum_compressed = AccumulateEntryChecksum(
           sum, info[i].offset, info[i].size_uncompressed, compressed);

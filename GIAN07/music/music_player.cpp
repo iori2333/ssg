@@ -1,8 +1,12 @@
 ///
 /// MusicPlayer - track playback and BGM pack selection
 ///
+#include <cstddef>
 #include <filesystem>
 #include <format>
+#include <functional>
+#include <string_view>
+#include <system_error>
 #include <utility>
 
 #include "music_player.h"
@@ -96,7 +100,8 @@ bool MusicPlayer::HasPacks(bool invalidate_cache) {
   return packs_available_.value();
 }
 
-void MusicPlayer::ForEachPack(std::function<void(std::string_view)> func) {
+void MusicPlayer::ForEachPack(
+    const std::function<void(std::string_view)> &func) {
   std::error_code error;
   for (const auto &entry :
        std::filesystem::directory_iterator{kBgmRoot, error}) {
@@ -111,7 +116,7 @@ void MusicPlayer::ForEachPack(std::function<void(std::string_view)> func) {
 }
 
 bool MusicPlayer::SetPack(std::string_view pack) {
-  std::string_view cur = pack_path_;
+  std::string_view const cur = pack_path_;
   if (!pack.empty()) {
     const auto path_data = PathForData();
     const auto root_len = (path_data.size() + kBgmRoot.size());

@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <utility>
 
 #include "bit_formation.h"
@@ -13,7 +15,11 @@
 #include "audio/sfx.h"
 #include "bullet/bullet_manager.h"
 #include "bullet/laser/long.h"
+#include "enemy/actor/enemy_actor.h"
+#include "enemy/boss/boss.h"
+#include "enemy/ecl/ecl.h"
 #include "enemy/enemy_manager.h"
+#include "gfx/coords.h"
 #include "player/player.h"
 #include "util/math_utils.h"
 
@@ -172,7 +178,8 @@ void BitFormation::Update() {
       if (e->long_laser_count != 0U) {
         bullets_.ControlLongLaser(
             e, kEclAllLongLasers,
-            LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+            LongLaserUpdateInfo{.command =
+                                    LongLaserUpdateInfo::Command::ForceClose});
       }
       e->BeginExplosion();
 
@@ -362,14 +369,14 @@ void BitFormation::UpdateRotation() {
       LaserDeg = 64 + (256 / count_);
       bullets_.ControlLongLaser(
           e, 0,
-          LongLaserUpdateInfo{
-              LongLaserUpdateInfo::Command::SetAngle,
-              math::AngleFromLegacy(static_cast<uint8_t>(e->d + LaserDeg))});
+          LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::SetAngle,
+                              .angle = math::AngleFromLegacy(
+                                  static_cast<uint8_t>(e->d + LaserDeg))});
       bullets_.ControlLongLaser(
           e, 1,
-          LongLaserUpdateInfo{
-              LongLaserUpdateInfo::Command::SetAngle,
-              math::AngleFromLegacy(static_cast<uint8_t>(e->d - LaserDeg))});
+          LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::SetAngle,
+                              .angle = math::AngleFromLegacy(
+                                  static_cast<uint8_t>(e->d - LaserDeg))});
       break;
     case LaserPattern::Disabled:
       break;
@@ -396,7 +403,8 @@ void BitFormation::Destroy() {
     if (e->long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           e, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+          LongLaserUpdateInfo{.command =
+                                  LongLaserUpdateInfo::Command::ForceClose});
     }
     e->BeginExplosion();
 
@@ -488,14 +496,14 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
       break;
 
     case EclBitLaserCommand::Bidirectional:
-      info.angle += math::kFullAngle / 4.0f;
+      info.angle += math::kFullAngle / 4.0F;
       info.c = 1;
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
       }
 
-      info.angle += math::kFullAngle / 2.0f;
+      info.angle += math::kFullAngle / 2.0F;
       info.enemy_id = e->long_laser_count;
       if (bullets_.SpawnLongLaser(info)) {
         e->long_laser_count++;
@@ -522,13 +530,13 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
     case EclBitLaserCommand::Open:
       bullets_.ControlLongLaser(
           e, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Open});
+          LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::Open});
       continue;
 
     case EclBitLaserCommand::Close:
       bullets_.ControlLongLaser(
           e, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::Close});
+          LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::Close});
       e->long_laser_count = 0;
       laser_active_ = false;
       continue;
@@ -536,7 +544,8 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
     case EclBitLaserCommand::CloseToLine:
       bullets_.ControlLongLaser(
           e, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::CloseToLine});
+          LongLaserUpdateInfo{.command =
+                                  LongLaserUpdateInfo::Command::CloseToLine});
       continue;
     }
 
@@ -549,20 +558,10 @@ void BitFormation::Command(EclBitCommand command, int param) {
   switch (command) {
   case EclBitCommand::ChangeSpeed:
     // Change speed in the same direction
-    if (param > 0) {
-      if (rotation_speed_ > 0) {
-        rotation_speed_ = static_cast<int8_t>(param);
-      } else {
-        rotation_speed_ = static_cast<int8_t>(-param);
-      }
-    }
-    // Reverse rotation direction and change speed
-    else {
-      if (rotation_speed_ > 0) {
-        rotation_speed_ = static_cast<int8_t>(param);
-      } else {
-        rotation_speed_ = static_cast<int8_t>(-param);
-      }
+    if (rotation_speed_ > 0) {
+      rotation_speed_ = static_cast<int8_t>(param);
+    } else {
+      rotation_speed_ = static_cast<int8_t>(-param);
     }
     break;
 

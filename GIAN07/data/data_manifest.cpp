@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <optional>
+#include <span>
+#include <utility>
 #include <vector>
 
 #include "data_manifest.h"

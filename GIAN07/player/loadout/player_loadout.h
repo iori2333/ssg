@@ -36,6 +36,10 @@ struct PlayerTraits {
 
 class PlayerLoadout {
 public:
+  PlayerLoadout(const PlayerLoadout &) = delete;
+  PlayerLoadout &operator=(const PlayerLoadout &) = delete;
+  PlayerLoadout(PlayerLoadout &&) = delete;
+  PlayerLoadout &operator=(PlayerLoadout &&) = delete;
   virtual ~PlayerLoadout() = default;
 
   [[nodiscard]] PlayerType Type() const { return traits_.type; }
@@ -71,5 +75,5 @@ protected:
   explicit PlayerLoadout(PlayerTraits traits) : traits_(traits) {}
 
 private:
-  const PlayerTraits traits_;
+  PlayerTraits traits_;
 };

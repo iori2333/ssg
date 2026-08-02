@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <format>
 
+// NOLINTBEGIN(misc-include-cleaner) - Windows SDK headers require windows.h.
 #include <windows.h>
 
 #include "sys/crash_handler.h"
@@ -16,7 +17,7 @@ LONG WINAPI HandleUnhandledException(EXCEPTION_POINTERS *exception) noexcept {
   try {
     const auto code =
         static_cast<uint32_t>(exception->ExceptionRecord->ExceptionCode);
-    const auto address = exception->ExceptionRecord->ExceptionAddress;
+    auto *const address = exception->ExceptionRecord->ExceptionAddress;
     Report(std::format("Unhandled Windows exception 0x{:08X} at {}", code,
                        static_cast<const void *>(address)),
            1);
@@ -35,3 +36,4 @@ void Install() {
 void Uninstall() { SetUnhandledExceptionFilter(PreviousFilter); }
 
 } // namespace crash::platform
+// NOLINTEND(misc-include-cleaner)

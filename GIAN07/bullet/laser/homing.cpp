@@ -10,8 +10,11 @@
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
+#include "bullet/bullet_common.h"
 #include "gameplay/playfield.h"
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
 
@@ -28,8 +31,7 @@ constexpr int GetNext(int current) {
          (kHomingTrailLength * kHomingSection);
 }
 
-void DrawCircleA16(GraphicsGeometry &geometry, float x, float y, float r,
-                   float angle) {
+void DrawCircleA16(float x, float y, float r, float angle) {
   std::array<VertexXy, 10> src{};
   for (int j = 0, i = -64; j <= 8; j++) {
     const auto offset = math::PolarVector(
@@ -39,11 +41,11 @@ void DrawCircleA16(GraphicsGeometry &geometry, float x, float y, float r,
     i += 16;
   }
   src[9] = src[0];
-  geometry.DrawTrianglesA(TrianglePrimitive::Fan, src);
+  geometry::DrawTrianglesA(TrianglePrimitive::Fan, src);
 }
 
 void DrawTriangleFanAlpha(std::span<const VertexXy, 4> src) {
-  Geometry().DrawTrianglesA(TrianglePrimitive::Fan, src);
+  geometry::DrawTrianglesA(TrianglePrimitive::Fan, src);
 }
 
 } // namespace
@@ -73,8 +75,8 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
 // ── State machine ──────────────────────────────────────────────────
 
 void LaserHoming::Update(audio::AudioSystem &audio, const UpdateInfo &info) {
-  float prev_x = p_[current_].x;
-  float prev_y = p_[current_].y;
+  float const prev_x = p_[current_].x;
+  float const prev_y = p_[current_].y;
   float prev_angle = p_[current_].angle;
 
   count_++;
@@ -87,7 +89,7 @@ void LaserHoming::Update(audio::AudioSystem &audio, const UpdateInfo &info) {
                       static_cast<float>(info.player_y) - prev_y);
     const auto angle_delta = math::ShortestAngleDelta(target, prev_angle);
 
-    if (std::abs(angle_delta) < 8.0f * math::kLegacyAngleStep) {
+    if (std::abs(angle_delta) < 8.0F * math::kLegacyAngleStep) {
       subtype_ = HomingType::None;
       audio.PlaySfx(SfxId::Hlaser,
                     static_cast<int>(std::lround(p_[current_].x)));
@@ -96,7 +98,7 @@ void LaserHoming::Update(audio::AudioSystem &audio, const UpdateInfo &info) {
         v_ -= a_;
       }
       const auto turn =
-          angle_delta * static_cast<float>(1 + (count_ / 32)) / 32.0f;
+          angle_delta * (1 + static_cast<float>(count_ / 32)) / 32.0F;
       prev_angle +=
           std::abs(turn) >= math::kLegacyAngleStep ? turn : angle_delta;
     }
@@ -123,7 +125,7 @@ void LaserHoming::Update(audio::AudioSystem &audio, const UpdateInfo &info) {
     break;
   }
 
-  int tail_i = GetNext(current_);
+  int const tail_i = GetNext(current_);
   const float tx = p_[tail_i].x;
   const float ty = p_[tail_i].y;
   if (tx < playfield::kWorldLeft - 4_px || tx > playfield::kWorldRight + 4_px ||
@@ -139,27 +141,27 @@ void LaserHoming::Render() const {
   constexpr Rgb216 kInnerColor{3, 4, 5};
 
   // Pass 1: wide outer ribbon
-  Geometry().SetColor(kOuterColor);
-  Geometry().SetAlphaOne();
+  geometry::SetColor(kOuterColor);
+  geometry::SetAlphaOne();
 
   int w = kHomingWidth;
   int cur = current_;
   const auto *pt = &p_[cur];
   const auto edge = [](const TrailPoint &point, float width) {
     const auto offset =
-        math::PolarVector(point.angle - (math::kFullAngle / 4.0f), width);
+        math::PolarVector(point.angle - (math::kFullAngle / 4.0F), width);
     return std::array{VertexXy{(point.x + offset.x) / kWorldCoordScale,
                                (point.y + offset.y) / kWorldCoordScale},
                       VertexXy{(point.x - offset.x) / kWorldCoordScale,
                                (point.y - offset.y) / kWorldCoordScale}};
   };
 
-  VertexXy src[4];
+  std::array<VertexXy, 4> src{};
   const auto first_edge = edge(*pt, static_cast<float>(w));
   src[0] = first_edge[0];
   src[1] = first_edge[1];
 
-  DrawCircleA16(Geometry(), pt->x, pt->y, static_cast<float>(w), pt->angle);
+  DrawCircleA16(pt->x, pt->y, static_cast<float>(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
@@ -179,7 +181,7 @@ void LaserHoming::Render() const {
   }
 
   // Pass 2: narrow inner highlight
-  Geometry().SetColor(kInnerColor);
+  geometry::SetColor(kInnerColor);
 
   w = kHomingWidth / 2;
   cur = current_;
@@ -189,7 +191,7 @@ void LaserHoming::Render() const {
   src[0] = highlight_edge[0];
   src[1] = highlight_edge[1];
 
-  DrawCircleA16(Geometry(), pt->x, pt->y, static_cast<float>(w), pt->angle);
+  DrawCircleA16(pt->x, pt->y, static_cast<float>(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
@@ -227,9 +229,9 @@ HitResult LaserHoming::CheckHit(int px, int py, int player_radius) const {
     if (std::abs(j.x - static_cast<float>(px)) < kHomingWidth + 15_px &&
         std::abs(j.y - static_cast<float>(py)) < kHomingWidth + 15_px) {
       if (std::abs(j.x - static_cast<float>(px)) <
-              kHomingWidth * 2 / 3 + player_radius &&
+              static_cast<float>(kHomingWidth * 2 / 3) + player_radius &&
           std::abs(j.y - static_cast<float>(py)) <
-              kHomingWidth * 2 / 3 + player_radius) {
+              static_cast<float>(kHomingWidth * 2 / 3) + player_radius) {
         return HitResult::Hit;
       }
       grazed = true;
@@ -254,9 +256,9 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
     const int cy = static_cast<int>(pt.y / kWorldCoordScale);
 
     if (mode >= 2) {
-      geometry::DrawFilledCircle(Geometry(), {cx, cy}, evade_r, true);
+      geometry::DrawFilledCircle({cx, cy}, evade_r, true);
     }
-    geometry::DrawFilledCircle(Geometry(), {cx, cy}, hit_r, true);
+    geometry::DrawFilledCircle({cx, cy}, hit_r, true);
     current = GetPrev(current, kHomingSection);
   }
 }

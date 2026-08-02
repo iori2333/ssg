@@ -3,13 +3,14 @@
 ///
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <type_traits>
 
 namespace util {
 
 template <typename T, bool BigEndian> class EndianValue {
-  std::byte v[sizeof(T)]{};
+  std::array<std::byte, sizeof(T)> v{};
 
   using Unsigned = std::make_unsigned_t<T>;
   static constexpr Unsigned ShiftOffset(std::size_t byte) {

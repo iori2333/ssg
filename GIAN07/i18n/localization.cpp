@@ -2,8 +2,12 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <optional>
+#include <span>
 #include <utility>
+#include <vector>
 
 #include "localization.h"
 
@@ -140,7 +144,7 @@ bool Localization::Initialize(std::string_view requested_language) {
   catalogs.reserve(embedded_message_catalog_count);
   for (size_t i = 0; i < embedded_message_catalog_count; ++i) {
     const auto &embedded = embedded_message_catalogs[i];
-    Catalog catalog{.language = embedded.language};
+    Catalog catalog(embedded.language);
     if (!ParseCatalog({embedded.message_data, embedded.message_size},
                       catalog) ||
         !ParseCatalog({embedded.ui_data, embedded.ui_size}, catalog)) {

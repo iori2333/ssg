@@ -47,7 +47,7 @@ public:
             std::optional<PixelLtwh> subrect = std::nullopt);
 
   template <typename Self>
-  bool Render(this Self &&self, WindowPoint dst, TextRenderRectId rect_id,
+  bool Render(this Self &self, WindowPoint dst, TextRenderRectId rect_id,
               std::string_view contents,
               std::invocable<TextRenderSession &> auto func,
               std::optional<PixelLtwh> subrect = std::nullopt) {

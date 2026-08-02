@@ -7,12 +7,14 @@
 #include <cstdint>
 #include <span>
 #include <utility>
+#include <vector>
 
 #include "startup_scene.h"
 
 #include "data/graphics_loader.h"
 #include "gfx/constants.h"
 #include "gfx/coords.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
@@ -127,9 +129,9 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
   GraphicsSurfaceBlit({logo.left, logo.top}, SurfaceId::Project, source);
 
   const auto fade = [logo](uint8_t black_alpha) {
-    Geometry().SetAlphaNorm(black_alpha);
-    Geometry().SetColor({0, 0, 0});
-    Geometry().DrawBoxA(logo.left, logo.top, logo.right, logo.bottom);
+    geometry::SetAlphaNorm(black_alpha);
+    geometry::SetColor({0, 0, 0});
+    geometry::DrawBoxA(logo.left, logo.top, logo.right, logo.bottom);
   };
 
   if (timer_ < 64) {
@@ -140,11 +142,11 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
     const uint8_t offset = timer_ - 64;
     const int x =
         math::RoundedPolarVector(
-            static_cast<float>(offset - 64) * math::kLegacyAngleStep, 240.0f)
+            static_cast<float>(offset - 64) * math::kLegacyAngleStep, 240.0F)
             .y;
     const int y =
         math::RoundedPolarVector(
-            static_cast<float>(offset * 2) * math::kLegacyAngleStep, 20.0f)
+            static_cast<float>(offset * 2) * math::kLegacyAngleStep, 20.0F)
             .y;
     lens_->Draw({320 + x, 295 + y});
   }

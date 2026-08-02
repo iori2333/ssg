@@ -66,7 +66,7 @@ struct EnemyAnimation {
   EnemyAnimationMode mode = EnemyAnimationMode::Loop;
   uint8_t n = 0;
   PixelSize size{};
-  PixelLtrb ptn[kEnemyAnimationFrameCapacity]{};
+  std::array<PixelLtrb, kEnemyAnimationFrameCapacity> ptn{};
 
   void SetSheet(PixelPoint topleft, uint8_t frame_count, PixelSize frame_size,
                 EnemyAnimationMode animation_mode) {

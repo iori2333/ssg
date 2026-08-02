@@ -33,7 +33,7 @@ struct Rgb {
   uint8_t g;
   uint8_t b;
 
-  constexpr Rgba WithAlpha(uint8_t a) const {
+  [[nodiscard]] constexpr Rgba WithAlpha(uint8_t a) const {
     return Rgba{.r = r, .g = g, .b = b, .a = a};
   }
 
@@ -45,7 +45,8 @@ struct Palette : public std::array<Rgba, 256> {
   // Builds a new palette with the given fade [alpha] value applied onto the
   // given inclusive (!) range of colors. Returns the rest of the palette
   // unchanged.
-  Palette Fade(uint8_t alpha, uint8_t first = 0, uint8_t last = 255) const;
+  [[nodiscard]] Palette Fade(uint8_t alpha, uint8_t first = 0,
+                             uint8_t last = 255) const;
 };
 
 // (6 * 6 * 6) = 216 standard colors, available in both channeled and
@@ -53,38 +54,30 @@ struct Palette : public std::array<Rgba, 256> {
 struct Rgb216 {
   static constexpr uint8_t Max = 5;
 
-  const uint8_t r = 0;
-  const uint8_t g = 0;
-  const uint8_t b = 0;
+  uint8_t r = 0;
+  uint8_t g = 0;
+  uint8_t b = 0;
 
-  consteval Rgb216() = default;
-  consteval Rgb216(uint8_t &&r, uint8_t &&g, uint8_t &&b) : r(r), g(g), b(b) {
+  constexpr Rgb216() = default;
+  constexpr Rgb216(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {
     if ((r > Max) || (g > Max) || (b > Max)) {
       throw "216-color component out of range";
     }
   }
 
-  Rgb216(std::unsigned_integral auto r, std::unsigned_integral auto g,
-         std::unsigned_integral auto b)
-      : r(r), g(g), b(b) {
-    assert(r <= Max);
-    assert(g <= Max);
-    assert(b <= Max);
-  }
-
   static Rgb216 Clamped(uint8_t r, uint8_t g, uint8_t b) {
-    return Rgb216{(std::min)(r, Max), (std::min)(g, Max), (std::min)(b, Max)};
+    return Rgb216{std::min(r, Max), std::min(g, Max), std::min(b, Max)};
   }
 
-  constexpr uint8_t PaletteIndex() const {
+  [[nodiscard]] constexpr uint8_t PaletteIndex() const {
     return (20 + r + (g * (Max + 1)) + (b * ((Max + 1) * (Max + 1))));
   }
 
-  constexpr Rgb ToRgb() const {
+  [[nodiscard]] constexpr Rgb ToRgb() const {
     return Rgb{
-        .r = static_cast<uint8_t>(r * 50u),
-        .g = static_cast<uint8_t>(g * 50u),
-        .b = static_cast<uint8_t>(b * 50u),
+        .r = static_cast<uint8_t>(r * 50U),
+        .g = static_cast<uint8_t>(g * 50U),
+        .b = static_cast<uint8_t>(b * 50U),
     };
   }
 
@@ -136,6 +129,7 @@ enum class GraphicsFullscreenFit : uint8_t {
 };
 
 enum class GraphicsParamFlags : uint8_t {
+  None = 0x00,
   Fullscreen = 0x01,
   FullscreenExclusive = 0x02,
 
@@ -160,8 +154,7 @@ struct GraphicsFullscreenFlags {
   operator<=>(const GraphicsFullscreenFlags &) const = default;
 };
 
-constexpr auto kGraphicsTopleftUndefined =
-    (std::numeric_limits<int16_t>::min)();
+constexpr auto kGraphicsTopleftUndefined = std::numeric_limits<int16_t>::min();
 
 struct GraphicsParams {
   GraphicsParamFlags flags;
@@ -175,10 +168,10 @@ struct GraphicsParams {
 
   std::strong_ordering operator<=>(const GraphicsParams &) const = default;
 
-  GraphicsFullscreenFlags FullscreenFlags() const;
-  bool ScaleGeometry() const;
-  uint8_t Scale4x() const;
-  WindowSize ScaledRes() const;
+  [[nodiscard]] GraphicsFullscreenFlags FullscreenFlags() const;
+  [[nodiscard]] bool ScaleGeometry() const;
+  [[nodiscard]] uint8_t Scale4x() const;
+  [[nodiscard]] WindowSize ScaledRes() const;
 
   void SetFlag(GraphicsParamFlags flag,
                std::underlying_type_t<GraphicsParamFlags> value);
@@ -193,8 +186,8 @@ struct GraphicsInitResult {
   bool reload_surfaces;
 
   static std::optional<GraphicsInitResult>
-  From(std::optional<GraphicsParams> &&o) {
-    return o.transform([](auto &&o) {
+  From(std::optional<GraphicsParams> o) {
+    return std::move(o).transform([](auto &&o) {
       return GraphicsInitResult{.live = o, .reload_surfaces = false};
     });
   }

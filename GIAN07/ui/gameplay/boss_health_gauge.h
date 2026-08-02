@@ -23,8 +23,8 @@ public:
   void Reset();
   void Sync(const BossHudModel &model);
   void Open(uint32_t max_hp);
-  void AddPhase(uint32_t hp);
-  void Update(uint32_t hp);
+  void AddPhase(uint32_t next);
+  void Update(uint32_t now);
   void Draw(uint32_t stage_frame);
   void SetCombatState(int32_t phase_threshold_hp, int32_t timer_max,
                       int32_t timer_now);

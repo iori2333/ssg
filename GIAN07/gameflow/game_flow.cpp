@@ -15,6 +15,7 @@
 
 #include "app/game_context.h"
 #include "gameplay/game_rules.h"
+#include "gfx/coords.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "i18n/localization.h"
@@ -36,6 +37,7 @@
 namespace gameflow {
 namespace {
 
+// NOLINTNEXTLINE(misc-multiple-inheritance) - intentional overload pattern.
 template <typename... Ts> struct Overload : Ts... {
   using Ts::operator()...;
 };
@@ -164,7 +166,7 @@ public:
   }
 
 private:
-  enum class Phase {
+  enum class Phase : uint8_t {
     WeaponSelect,
     DifficultySelect,
   };
@@ -441,7 +443,7 @@ private:
 
   void EnterScoreRegistration(const FinishRun &finish) {
     auto score =
-        context_.records.CaptureScore(context_.player, context_.session);
+        RecordSystem::CaptureScore(context_.player, context_.session);
     auto &state = state_.emplace<ScoreFlowState>(context_);
     const auto start = state.EnterRegistration(
         std::move(score), current_input_, finish.change_music,

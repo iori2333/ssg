@@ -2,10 +2,19 @@
 /// Rectangle packing for text rendering (adapted from rectpack2D)
 ///
 
+#include <algorithm>
+#include <array>
 #include <cassert>
+#include <limits>
+#include <optional>
 
+#include "gfx/constants.h"
+#include "gfx/coords.h"
+#include "gfx/text.h"
 #include "graphics_backend.h"
 #include "text_packed.h"
+
+namespace {
 
 struct created_splits {
   int count = 0;
@@ -40,7 +49,7 @@ created_splits insert_and_split(const PixelSize &nw, const PixelLtwh &sp) {
     // If the image dimensions equal the dimensions of the candidate empty
     // space (image fits exactly), we will just delete the space and create
     // no splits.
-    return created_splits::none();
+    return {};
   }
 
   // If the image fits into the candidate empty space, but exactly one of the
@@ -51,13 +60,13 @@ created_splits insert_and_split(const PixelSize &nw, const PixelLtwh &sp) {
     auto r = sp;
     r.left += nw.w;
     r.w -= nw.w;
-    return created_splits(r);
+    return {r};
   }
   if ((free_w == 0) && (free_h > 0)) {
     auto r = sp;
     r.top += nw.h;
     r.h -= nw.h;
-    return created_splits(r);
+    return {r};
   }
 
   // Every other option has been exhausted, so at this point the image must
@@ -83,60 +92,63 @@ created_splits insert_and_split(const PixelSize &nw, const PixelLtwh &sp) {
     bigger_split = {sp.left, (sp.top + nw.h), sp.w, free_h};
     lesser_split = {(sp.left + nw.w), sp.top, free_w, nw.h};
   }
-  return created_splits(bigger_split, lesser_split);
+  return {bigger_split, lesser_split};
 }
 
+} // namespace
+
 PixelLtwh TextRenderPacked::Insert(const PixelSize &subrect_size) {
-  PixelLtwh *closest = nullptr;
+  while (true) {
+    PixelLtwh *closest = nullptr;
 
-  assert(subrect_size);
-  for (int i = static_cast<int>(spaces.size()) - 1; i >= 0; --i) {
-    const PixelLtwh candidate = spaces[i];
+    assert(subrect_size);
+    for (int i = static_cast<int>(spaces.size()) - 1; i >= 0; --i) {
+      const PixelLtwh candidate = spaces[i];
 
-    if (!closest || ((candidate.w * candidate.h) < (closest->w * closest->h))) {
-      closest = &spaces[i];
-    }
-
-    const auto splits = insert_and_split(subrect_size, candidate);
-    if (splits) {
-      spaces[i] = spaces.back();
-      spaces.pop_back();
-
-      for (int s = 0; s < splits.count; ++s) {
-        SpaceAdd(splits.spaces[s]);
+      if ((closest == nullptr) ||
+          ((candidate.w * candidate.h) < (closest->w * closest->h))) {
+        closest = &spaces[i];
       }
 
-      const PixelLtwh ret = {candidate.left, candidate.top, subrect_size.w,
-                             subrect_size.h};
-      bounds.w = std::max(bounds.w, (ret.left + ret.w));
-      bounds.h = std::max(bounds.h, (ret.top + ret.h));
-      return ret;
+      const auto splits = insert_and_split(subrect_size, candidate);
+      if (splits) {
+        spaces[i] = spaces.back();
+        spaces.pop_back();
+
+        for (int s = 0; s < splits.count; ++s) {
+          SpaceAdd(splits.spaces[s]);
+        }
+
+        const PixelLtwh ret = {candidate.left, candidate.top, subrect_size.w,
+                               subrect_size.h};
+        bounds.w = std::max(bounds.w, (ret.left + ret.w));
+        bounds.h = std::max(bounds.h, (ret.top + ret.h));
+        return ret;
+      }
     }
-  }
 
-  // Expand the closest space in-place, but only if this would add fewer
-  // pixels than starting a new row or column. The bounds are resized
-  // accordingly during the actual insertion.
-  if (closest && ((subrect_size.w - closest->w) < subrect_size.h) &&
-      ((subrect_size.h - closest->h) < subrect_size.w)) {
-    closest->w = subrect_size.w;
-    closest->h = subrect_size.h;
-  } else {
-    constexpr auto coord_max = std::numeric_limits<PixelCoord>::max();
-
-    if (bounds.w <= bounds.h) {
-      assert(subrect_size.w <= (coord_max - bounds.w));
-      SpaceAdd(PixelLtwh{bounds.w, 0, subrect_size.w,
-                         std::max(bounds.h, subrect_size.h)});
+    // Expand the closest space in-place, but only if this would add fewer
+    // pixels than starting a new row or column. The bounds are resized
+    // accordingly during the actual insertion.
+    if ((closest != nullptr) &&
+        ((subrect_size.w - closest->w) < subrect_size.h) &&
+        ((subrect_size.h - closest->h) < subrect_size.w)) {
+      closest->w = subrect_size.w;
+      closest->h = subrect_size.h;
     } else {
-      assert(subrect_size.h <= (coord_max - bounds.h));
-      SpaceAdd(PixelLtwh{0, bounds.h, std::max(bounds.w, subrect_size.w),
-                         subrect_size.h});
+      constexpr auto coord_max = std::numeric_limits<PixelCoord>::max();
+
+      if (bounds.w <= bounds.h) {
+        assert(subrect_size.w <= (coord_max - bounds.w));
+        SpaceAdd(PixelLtwh{bounds.w, 0, subrect_size.w,
+                           std::max(bounds.h, subrect_size.h)});
+      } else {
+        assert(subrect_size.h <= (coord_max - bounds.h));
+        SpaceAdd(PixelLtwh{0, bounds.h, std::max(bounds.w, subrect_size.w),
+                           subrect_size.h});
+      }
     }
   }
-  // Might as well recurse for the assignment of the resulting rectangle to
-  // simplify the code.
-  return Insert(subrect_size);
 }
 
 PixelLtwh TextRenderPacked::Subrect(TextRenderRectId rect_id,

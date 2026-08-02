@@ -23,6 +23,8 @@ public:
   ~AudioSystem();
   AudioSystem(const AudioSystem &) = delete;
   AudioSystem &operator=(const AudioSystem &) = delete;
+  AudioSystem(AudioSystem &&) = delete;
+  AudioSystem &operator=(AudioSystem &&) = delete;
 
   AudioResult Initialize(std::string_view data_path,
                          std::string_view preferred_soundfont = {});
@@ -62,7 +64,7 @@ public:
   AudioResult LoadSfx(std::uint8_t id, std::span<const std::uint8_t> wav,
                       std::uint8_t max_instances);
   void PlaySfx(SfxId id, int x = kSoundFieldCenterX, bool loop = false);
-  void PlaySfx(std::uint8_t id, float pan = 0.0f, bool loop = false);
+  void PlaySfx(std::uint8_t id, float pan = 0.0F, bool loop = false);
   void StopSfx(SfxId id);
   void StopAllSfx();
 

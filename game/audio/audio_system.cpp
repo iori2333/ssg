@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <span>
+#include <stop_token>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -13,10 +16,14 @@
 #include <SDL3/SDL_audio.h>
 #include <miniaudio.h>
 
+#include "SDL3/SDL_iostream.h"
+#include "SDL3/SDL_stdinc.h"
 #include "audio/bgm/bgm_controller.h"
+#include "audio/bgm/midi/midi_parser.h"
 #include "audio/bgm/midi/midi_sequencer.h"
 #include "audio/bgm/midi/midi_synth.h"
 #include "audio/core/audio_types.h"
+#include "audio/sfx.h"
 #include "audio/sfx/sfx_bank.h"
 #include "util/guard.h"
 
@@ -51,7 +58,7 @@ struct AudioSystem::Impl {
     if (timer.joinable()) {
       return;
     }
-    timer = std::jthread([this](std::stop_token stop) {
+    timer = std::jthread([this](const std::stop_token &stop) {
       auto next_tick = std::chrono::steady_clock::now();
       while (!stop.stop_requested()) {
         next_tick += 10ms;
@@ -272,7 +279,7 @@ AudioResult AudioSystem::LoadSfx(std::uint8_t id,
   }
 
   auto *io = SDL_IOFromConstMem(wav.data(), wav.size());
-  if (!io) {
+  if (io == nullptr) {
     return AudioResult::Fail(AudioError::DecodeFailed,
                              "Failed to open sound effect data");
   }
@@ -313,13 +320,13 @@ void AudioSystem::StopAllSfx() {
 void AudioSystem::PauseAll() {
   if (impl_->initialized) {
     impl_->bgm.Pause();
-    ma_engine_stop(&impl_->engine);
+    // Keep the engine running so menu SFX stay audible during paused states.
+    impl_->sfx.StopAll();
   }
 }
 
 void AudioSystem::ResumeAll() {
   if (impl_->initialized) {
-    ma_engine_start(&impl_->engine);
     impl_->bgm.Resume();
   }
 }

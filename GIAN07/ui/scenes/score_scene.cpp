@@ -20,6 +20,7 @@
 #include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/font_uty.h"
+#include "gfx/geometry.h"
 #include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "gfx/text.h"
@@ -82,8 +83,8 @@ void RenderUiText(WindowPoint position, TextRenderRectId rect,
       position, rect, text, [text, centered](TextRenderSession &s) {
         s.SetFont(FontId::Normal);
         const auto x = centered ? TextLayoutXCenter(s, text) : 0;
-        s.Put({x + 1, 1}, text, Rgb{96, 96, 96});
-        s.Put({x, 0}, text, Rgb{255, 255, 255});
+        s.Put({.x = x + 1, .y = 1}, text, Rgb{.r = 96, .g = 96, .b = 96});
+        s.Put({.x = x, .y = 0}, text, Rgb{.r = 255, .g = 255, .b = 255});
       });
 }
 
@@ -95,24 +96,25 @@ void RenderDetailRow(WindowPoint position, TextRenderRectId rect,
         constexpr int label_right = 132;
         constexpr int separator_x = 144;
         constexpr int value_x = 168;
-        constexpr Rgb shadow{64, 64, 80};
-        constexpr Rgb label_color{128, 180, 255};
-        constexpr Rgb value_color{255, 255, 255};
+        constexpr Rgb shadow{.r = 64, .g = 64, .b = 80};
+        constexpr Rgb label_color{.r = 128, .g = 180, .b = 255};
+        constexpr Rgb value_color{.r = 255, .g = 255, .b = 255};
 
         s.SetFont(FontId::Normal);
-        const auto label_x = std::max(0, label_right - s.Extent(label).w);
-        s.Put({label_x + 1, 1}, label, shadow);
-        s.Put({label_x, 0}, label, label_color);
-        s.Put({separator_x + 1, 1}, ":", shadow);
-        s.Put({separator_x, 0}, ":", label_color);
-        s.Put({value_x + 1, 1}, value, shadow);
-        s.Put({value_x, 0}, value, value_color);
+        const auto label_x =
+            std::max(0, label_right - TextRenderSession::Extent(label).w);
+        s.Put({.x = label_x + 1, .y = 1}, label, shadow);
+        s.Put({.x = label_x, .y = 0}, label, label_color);
+        s.Put({.x = separator_x + 1, .y = 1}, ":", shadow);
+        s.Put({.x = separator_x, .y = 0}, ":", label_color);
+        s.Put({.x = value_x + 1, .y = 1}, value, shadow);
+        s.Put({.x = value_x, .y = 0}, value, value_color);
       });
 }
 } // namespace
 
 void ScoreScene::LoadLeaderboard(GameLevel difficulty) {
-  scores_ = record_system_.ListScores(difficulty, kRowCount);
+  scores_ = RecordSystem::ListScores(difficulty, kRowCount);
   selected_ = 0;
   detail_open_ = false;
   ResetRows();
@@ -187,7 +189,7 @@ ScoreRegistrationStart
 ScoreScene::StartNameRegistration(ScoreRecord record, InputBits initial_input,
                                   bool change_music) {
   current_record_.emplace(std::move(record));
-  scores_ = record_system_.ListScores(current_record_->difficulty, kRowCount);
+  scores_ = RecordSystem::ListScores(current_record_->difficulty, kRowCount);
   const auto position =
       std::ranges::find_if(scores_, [this](const ScoreRecord &record) {
         return current_record_->score > record.score;
@@ -195,7 +197,7 @@ ScoreScene::StartNameRegistration(ScoreRecord record, InputBits initial_input,
   pending_rank_ = static_cast<std::size_t>(position - scores_.begin());
   if (pending_rank_ >= kRowCount) {
     current_record_->name = kDefaultScoreName;
-    if (record_system_.SaveScore(*current_record_) != RecordSaveResult::Saved) {
+    if (RecordSystem::SaveScore(*current_record_) != RecordSaveResult::Saved) {
       logging::Error(logging::Channel::Record, "Score could not be saved");
     }
     current_record_.reset();
@@ -237,8 +239,11 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(InputBits input,
   const auto result = name_entry_.Update(input);
   scores_[pending_rank_].name = name_entry_.Name();
   if (result == NameEntryResult::Confirmed) {
+    if (!current_record_) {
+      return ScoreSceneResult::RegistrationComplete;
+    }
     current_record_->name = name_entry_.Name();
-    if (record_system_.SaveScore(*current_record_) == RecordSaveResult::Saved) {
+    if (RecordSystem::SaveScore(*current_record_) == RecordSaveResult::Saved) {
       current_record_.reset();
       return ScoreSceneResult::RegistrationComplete;
     }
@@ -293,9 +298,9 @@ void ScoreScene::DrawLeaderboard(bool show_selection) {
       continue;
     }
     if (show_selection && i == selected_) {
-      Geometry().SetAlphaNorm(96);
-      Geometry().SetColor({4, 0, 0});
-      Geometry().DrawBoxA(x, y, x + 400, y + 32);
+      geometry::SetAlphaNorm(96);
+      geometry::SetColor({4, 0, 0});
+      geometry::DrawBoxA(x, y, x + 400, y + 32);
     }
 
     const auto &record = scores_[i];
@@ -327,15 +332,15 @@ void ScoreScene::DrawDetail() const {
   constexpr int y = 92;
   constexpr int width = 480;
   constexpr int height = 268;
-  Geometry().SetAlphaNorm(224);
-  Geometry().SetColor({0, 0, 1});
-  Geometry().DrawBoxA(x, y, x + width, y + height);
-  Geometry().SetAlphaNorm(255);
-  Geometry().SetColor({4, 4, 5});
-  Geometry().DrawBox(x, y, x + width, y + 1);
-  Geometry().DrawBox(x, y + height - 1, x + width, y + height);
-  Geometry().DrawBox(x, y, x + 1, y + height);
-  Geometry().DrawBox(x + width - 1, y, x + width, y + height);
+  geometry::SetAlphaNorm(224);
+  geometry::SetColor({0, 0, 1});
+  geometry::DrawBoxA(x, y, x + width, y + height);
+  geometry::SetAlphaNorm(255);
+  geometry::SetColor({4, 4, 5});
+  geometry::DrawBox(x, y, x + width, y + 1);
+  geometry::DrawBox(x, y + height - 1, x + width, y + height);
+  geometry::DrawBox(x, y, x + 1, y + height);
+  geometry::DrawBox(x + width - 1, y, x + width, y + height);
 
   constexpr int text_x = x + 20;
   int text_y = y + 12;

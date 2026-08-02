@@ -21,9 +21,9 @@ public:
   [[nodiscard]] float NextFrame() noexcept;
 
 private:
-  std::atomic<float> current_{1.0f};
-  std::atomic<float> step_{0.0f};
-  std::atomic<float> end_{0.0f};
+  std::atomic<float> current_{1.0F};
+  std::atomic<float> step_{0.0F};
+  std::atomic<float> end_{0.0F};
   std::atomic<uint64_t> frames_remaining_{0};
 };
 

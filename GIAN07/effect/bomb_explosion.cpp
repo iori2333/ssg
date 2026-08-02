@@ -9,6 +9,7 @@
 
 #include "effect_manager.h"
 
+#include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
@@ -74,7 +75,7 @@ void EffectManager::DrawBombExplosion(const BombExplosion &effect) {
 void EffectManager::UpdateBombExplosion(BombExplosion &effect) {
   const int speed =
       static_cast<int>(
-          std::lround(std::sin((static_cast<float>(effect.age) / 2.0f - 64.0f) *
+          std::lround(std::sin((static_cast<float>(effect.age) / 2.0F - 64.0F) *
                                math::kLegacyAngleStep) *
                       200_px)) +
       200_px;

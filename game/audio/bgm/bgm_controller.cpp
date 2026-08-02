@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string_view>
 #include <utility>
 
+#include "audio/bgm/midi/midi_parser.h"
 #include "midi_track.h"
 #include "pcm_track.h"
 
@@ -20,7 +22,7 @@ BgmController::BgmController(ma_engine &engine, MidiSequencer &sequencer,
     : engine_(engine), sequencer_(sequencer), synth_(synth) {}
 
 AudioResult BgmController::LoadMidi(SequenceData sequence) {
-  if (active_) {
+  if (active_ != nullptr) {
     active_->Stop();
   }
   playing_.store(false);
@@ -43,7 +45,7 @@ AudioResult BgmController::LoadWaveform(std::string_view path) {
     return result;
   }
 
-  if (active_) {
+  if (active_ != nullptr) {
     active_->Stop();
   }
   playing_.store(false);
@@ -56,17 +58,18 @@ AudioResult BgmController::LoadWaveform(std::string_view path) {
 }
 
 void BgmController::ClearWaveform() {
-  if (active_) {
+  if (active_ != nullptr) {
     active_->Stop();
   }
   playing_.store(false);
   waveform_.reset();
   active_ = midi_ ? midi_.get() : nullptr;
-  state_ = (active_ ? PlaybackState::Ready : PlaybackState::Idle);
+  state_ = ((active_ != nullptr) ? PlaybackState::Ready : PlaybackState::Idle);
 }
 
 void BgmController::Play() {
-  if (!active_ || !active_->IsLoaded() || state_ == PlaybackState::Faulted) {
+  if ((active_ == nullptr) || !active_->IsLoaded() ||
+      state_ == PlaybackState::Faulted) {
     return;
   }
   active_->Play();
@@ -76,18 +79,19 @@ void BgmController::Play() {
 
 void BgmController::Stop() {
   playing_.store(false);
-  if (active_) {
+  if (active_ != nullptr) {
     active_->Stop();
   }
-  state_ = ((active_ && active_->IsLoaded()) ? PlaybackState::Ready
-                                             : PlaybackState::Idle);
+  state_ =
+      (((active_ != nullptr) && active_->IsLoaded()) ? PlaybackState::Ready
+                                                     : PlaybackState::Idle);
 }
 
 void BgmController::Pause() {
   if (!playing_.load()) {
     return;
   }
-  if (active_) {
+  if (active_ != nullptr) {
     active_->Pause();
   }
   playing_.store(false);
@@ -95,7 +99,7 @@ void BgmController::Pause() {
 }
 
 void BgmController::Resume() {
-  if (playing_.load() || !active_ || !active_->IsLoaded()) {
+  if (playing_.load() || (active_ == nullptr) || !active_->IsLoaded()) {
     return;
   }
   active_->Resume();
@@ -105,14 +109,14 @@ void BgmController::Resume() {
 
 void BgmController::FadeOut(float volume_start,
                             std::chrono::milliseconds duration) {
-  if (active_) {
+  if (active_ != nullptr) {
     active_->FadeOut(volume_start, duration);
   }
 }
 
 void BgmController::SetVolume(Volume volume) {
   volume_ = std::min(volume, kMaxVolume);
-  if (active_) {
+  if (active_ != nullptr) {
     active_->SetVolume(volume_);
   }
   if (midi_ && active_ != midi_.get()) {
@@ -122,7 +126,7 @@ void BgmController::SetVolume(Volume volume) {
 
 void BgmController::SetTempo(std::int8_t tempo) {
   tempo_ = std::clamp(tempo, std::int8_t{-100}, std::int8_t{100});
-  if (active_) {
+  if (active_ != nullptr) {
     active_->SetTempo(tempo_);
   }
   if (midi_ && active_ != midi_.get()) {
@@ -131,7 +135,7 @@ void BgmController::SetTempo(std::int8_t tempo) {
 }
 
 void BgmController::Tick(std::chrono::milliseconds delta) {
-  if (!playing_.load() || !active_) {
+  if (!playing_.load() || (active_ == nullptr)) {
     return;
   }
   active_->Tick(delta);
@@ -148,7 +152,7 @@ BgmSnapshot BgmController::Snapshot() const {
   BgmSnapshot snapshot;
   snapshot.state = state_;
   snapshot.tempo = tempo_;
-  if (!active_) {
+  if (active_ == nullptr) {
     return snapshot;
   }
   snapshot.mode = active_->Mode();
@@ -156,9 +160,11 @@ BgmSnapshot BgmController::Snapshot() const {
   return snapshot;
 }
 
-bool BgmController::IsLoaded() const { return active_ && active_->IsLoaded(); }
+bool BgmController::IsLoaded() const {
+  return (active_ != nullptr) && active_->IsLoaded();
+}
 
-void BgmController::ApplyTrackSettings(Track &track) {
+void BgmController::ApplyTrackSettings(Track &track) const {
   track.SetVolume(volume_);
   track.SetTempo(tempo_);
 }

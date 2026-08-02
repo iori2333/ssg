@@ -89,13 +89,13 @@ BulletGallerySceneResult BulletGalleryScene::Update(InputBits input,
   GraphicsBackendSetClip(kGameResolutionRect);
   const auto help =
       localization_.Text(i18n::TextIdFromKey("ui.bullet_gallery.exit_help"));
-  TextRenderer().Render({80, 458}, help_text_, help,
-                        [help](TextRenderSession &s) {
-                          s.SetFont(FontId::Normal);
-                          const auto x = TextLayoutXCenter(s, help);
-                          s.Put({x + 1, 1}, help, Rgb{96, 96, 96});
-                          s.Put({x, 0}, help, Rgb{255, 255, 255});
-                        });
+  TextRenderer().Render(
+      {80, 458}, help_text_, help, [help](TextRenderSession &s) {
+        s.SetFont(FontId::Normal);
+        const auto x = TextLayoutXCenter(s, help);
+        s.Put({.x = x + 1, .y = 1}, help, Rgb{.r = 96, .g = 96, .b = 96});
+        s.Put({.x = x, .y = 0}, help, Rgb{.r = 255, .g = 255, .b = 255});
+      });
   GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
                           playfield::kRight + 1, playfield::kBottom + 1});
   GraphicsFlip();

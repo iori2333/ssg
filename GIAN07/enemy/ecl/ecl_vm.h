@@ -30,7 +30,7 @@ public:
   void CheckInterrupts(EnemyActor &actor);
 
 private:
-  enum class Step { Advance, Jump, Yield, Repeat, Halt };
+  enum class Step : uint8_t { Advance, Jump, Yield, Repeat, Halt };
 
   Step ExecuteInstruction(EnemyActor &actor, const EclInstruction &instruction,
                           int &comparison);
@@ -44,9 +44,9 @@ private:
                                const EclInstruction &instruction);
   Step ExecuteActorInstruction(EnemyActor &actor,
                                const EclInstruction &instruction);
-  Step ExecuteRegisterInstruction(EnemyActor &actor,
-                                  const EclInstruction &instruction,
-                                  int &comparison);
+  static Step ExecuteRegisterInstruction(EnemyActor &actor,
+                                         const EclInstruction &instruction,
+                                         int &comparison);
 
   [[nodiscard]] static uint32_t ReadValue(const EnemyActor &actor,
                                           EclValue value);

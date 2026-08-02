@@ -2,11 +2,17 @@
 /// Cross-platform input
 ///
 
+#include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstdint>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <SDL3/SDL_events.h>
@@ -14,6 +20,11 @@
 
 #include "input.h"
 
+#include "SDL3/SDL_gamepad.h"
+#include "SDL3/SDL_keyboard.h"
+#include "SDL3/SDL_keycode.h"
+#include "SDL3/SDL_scancode.h"
+#include "SDL3/SDL_stdinc.h"
 #include "util/enum_flags.h"
 #include "util/guard.h"
 
@@ -31,9 +42,13 @@ bool InputIsCancel(InputBits key) {
 }
 
 int_fast8_t InputOptionKeyDelta(InputBits key) {
-  return ((InputIsOk(key) || (key == KeyRight)) ? 1
-          : (key == KeyLeft)                    ? -1
-                                                : 0);
+  if (InputIsOk(key) || (key == KeyRight)) {
+    return 1;
+  }
+  if (key == KeyLeft) {
+    return -1;
+  }
+  return 0;
 }
 
 ///
@@ -44,12 +59,20 @@ int_fast8_t InputOptionKeyDelta(InputBits key) {
 static_assert(SDL_SCANCODE_COUNT <= std::numeric_limits<uint16_t>::max());
 static_assert(SDL_KMOD_SCROLL <= std::numeric_limits<uint16_t>::max());
 
+namespace {
+
 enum class KeyMod : uint8_t {
   None = 0x00,
   LeftAlt = 0x01,
 };
 
-template <> inline constexpr bool util::EnableEnumFlags<KeyMod> = true;
+} // namespace
+
+namespace util {
+template <> inline constexpr bool EnableEnumFlags<KeyMod> = true;
+} // namespace util
+
+namespace {
 
 // In-game scancode, received from SDL.
 struct KeyScancode {
@@ -73,13 +96,13 @@ struct KeyBind {
                     KeyMod mod_filter = KeyMod::None)
       : scancode(scancode), mod_must(mod_must), mod_filter(mod_filter) {}
 
-  bool Matches(const KeyScancode &sc) const {
+  [[nodiscard]] bool Matches(const KeyScancode &sc) const {
     return ((scancode == sc.scancode) && !(sc.mod & mod_filter) &&
             ((mod_must & sc.mod) == mod_must));
   }
 };
 
-static constexpr std::pair<KeyBind, InputBits> KeyBindings[] = {
+constexpr std::array<std::pair<KeyBind, InputBits>, 23> KeyBindings = {{
     {SDL_SCANCODE_UP, KeyUp},
     {SDL_SCANCODE_DOWN, KeyDown},
     {SDL_SCANCODE_LEFT, KeyLeft},
@@ -102,14 +125,17 @@ static constexpr std::pair<KeyBind, InputBits> KeyBindings[] = {
     {SDL_SCANCODE_4, KeyStage4},
     {SDL_SCANCODE_5, KeyStage5},
     {SDL_SCANCODE_6, KeyStage6},
-
     {{SDL_SCANCODE_RETURN, KeyMod::None, KeyMod::LeftAlt}, KeyReturn},
-};
-static constexpr std::pair<KeyBind, InputSystemBits> SystemKeyBindings[] = {
-    {SDL_SCANCODE_P, SystemKeySnapshot},  {SDL_SCANCODE_LCTRL, SystemKeySkip},
-    {SDL_SCANCODE_RCTRL, SystemKeySkip},  {SDL_SCANCODE_F, SystemKeyBgmFade},
-    {SDL_SCANCODE_D, SystemKeyBgmDevice}, {SDL_SCANCODE_R, SystemKeyDemoRecord},
-};
+}};
+constexpr std::array<std::pair<KeyBind, InputSystemBits>, 6>
+    SystemKeyBindings = {{
+        {SDL_SCANCODE_P, SystemKeySnapshot},
+        {SDL_SCANCODE_LCTRL, SystemKeySkip},
+        {SDL_SCANCODE_RCTRL, SystemKeySkip},
+        {SDL_SCANCODE_F, SystemKeyBgmFade},
+        {SDL_SCANCODE_D, SystemKeyBgmDevice},
+        {SDL_SCANCODE_R, SystemKeyDemoRecord},
+    }};
 
 template <typename Bits>
 void FlipKey(Bits &key_data, const auto &key_or_jbutton, Bits bits) {
@@ -127,6 +153,8 @@ struct Joypad {
   InputPadButton button_pressed_last = 0;
   uint8_t buttons_held = 0;
 };
+
+} // namespace
 
 struct InputSystem::Impl {
   InputSnapshot current;
@@ -156,6 +184,8 @@ struct InputSystem::Impl {
 // (= the "bind") for the standard X and Y axes:
 //
 // 	https://discourse.libsdl.org/t/difference-between-joysticks-and-game-controllers/24028/2
+namespace {
+
 std::tuple<decltype(Joypad::axis_x), decltype(Joypad::axis_y)>
 GetPadAxisIds(int device_index) {
   decltype(Joypad::axis_x) axis_x = 0;
@@ -165,18 +195,22 @@ GetPadAxisIds(int device_index) {
     return {axis_x, axis_y};
   }
   auto *gamepad = SDL_OpenGamepad(device_index);
-  if (!gamepad) {
+  if (gamepad == nullptr) {
     return {axis_x, axis_y};
   }
   auto gamepad_guard = util::MakeGuard(gamepad, SDL_CloseGamepad);
 
   int binding_count = 0;
-  auto **bindings = SDL_GetGamepadBindings(gamepad, &binding_count);
-  if (!bindings) {
+  const std::unique_ptr<void, decltype(&SDL_free)> bindings_guard(
+      static_cast<void *>(SDL_GetGamepadBindings(gamepad, &binding_count)),
+      SDL_free);
+  if (!bindings_guard) {
     return {axis_x, axis_y};
   }
-  auto bindings_guard = util::MakeGuard(bindings, SDL_free);
+  auto *const *bindings =
+      static_cast<SDL_GamepadBinding **>(bindings_guard.get());
 
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access) - SDL public API.
   for (const auto i : std::views::iota(0, binding_count)) {
     const auto *binding = bindings[i];
     if ((binding->input_type == SDL_GAMEPAD_BINDTYPE_AXIS) &&
@@ -188,6 +222,7 @@ GetPadAxisIds(int device_index) {
       }
     }
   }
+  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
   return {axis_x, axis_y};
 }
 
@@ -199,6 +234,8 @@ std::vector<Joypad>::iterator FindPad(std::vector<Joypad> &pads,
   assert(it != pads.end());
   return it;
 }
+
+} // namespace
 
 InputSystem::InputSystem() : impl_(std::make_unique<Impl>()) {}
 
@@ -229,10 +266,22 @@ InputSnapshot InputSystem::Poll() {
       const auto v = (event.jaxis.value >> 11);
       if (event.jaxis.axis == pad.axis_x) {
         state.current.pad &= ~(KeyLeft | KeyRight);
-        state.current.pad |= ((v <= -4) ? KeyLeft : ((v >= 4) ? KeyRight : 0));
+        InputBits axis_pad = 0;
+        if (v <= -4) {
+          axis_pad = KeyLeft;
+        } else if (v >= 4) {
+          axis_pad = KeyRight;
+        }
+        state.current.pad |= axis_pad;
       } else if (event.jaxis.axis == pad.axis_y) {
         state.current.pad &= ~(KeyUp | KeyDown);
-        state.current.pad |= ((v <= -4) ? KeyUp : ((v >= 4) ? KeyDown : 0));
+        InputBits axis_pad = 0;
+        if (v <= -4) {
+          axis_pad = KeyUp;
+        } else if (v >= 4) {
+          axis_pad = KeyDown;
+        }
+        state.current.pad |= axis_pad;
       }
       break;
     }
@@ -268,7 +317,8 @@ InputSnapshot InputSystem::Poll() {
 
       const KeyScancode scancode = {
           .scancode = static_cast<uint16_t>(event.key.scancode),
-          .mod = ((mod & SDL_KMOD_LALT) ? KeyMod::LeftAlt : KeyMod::None),
+          .mod =
+              (((mod & SDL_KMOD_LALT) != 0U) ? KeyMod::LeftAlt : KeyMod::None),
       };
       for (const auto &binding : KeyBindings) {
         if (binding.first.Matches(scancode)) {
@@ -295,7 +345,7 @@ InputSnapshot InputSystem::Poll() {
 
     case SDL_EVENT_JOYSTICK_ADDED: {
       auto *joystick = SDL_OpenJoystick(event.jdevice.which);
-      if (!joystick) {
+      if (joystick == nullptr) {
         break;
       }
       const auto [axis_x, axis_y] = GetPadAxisIds(event.jdevice.which);
@@ -321,7 +371,8 @@ std::optional<InputPadButton> InputSystem::PadSingle() const {
   for (const auto &pad : impl_->pads) {
     if (pad.buttons_held > 1) {
       return 0;
-    } else if (pad.buttons_held == 1) {
+    }
+    if (pad.buttons_held == 1) {
       return pad.button_pressed_last;
     }
   }

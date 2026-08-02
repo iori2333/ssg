@@ -4,6 +4,17 @@
 
 #include "menu_tree.h"
 
+#include <algorithm>
+
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <span>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
 namespace menu {
 
 // ---------------------------------------------------------------------------
@@ -33,7 +44,7 @@ std::span<IMenuNode *const> EntryNode::Children() const {
   if (child_ptrs_.size() != children_.size()) {
     child_ptrs_.clear();
     child_ptrs_.reserve(children_.size());
-    for (auto &c : children_) {
+    for (const auto &c : children_) {
       child_ptrs_.push_back(c.get());
     }
   }
@@ -127,9 +138,7 @@ void ListView::MoveUp() {
     selected = total;
   }
   selected--;
-  if (selected < scroll) {
-    scroll = selected;
-  }
+  scroll = std::min(selected, scroll);
 }
 
 void ListView::MoveDown() {
@@ -153,11 +162,11 @@ ListNode::ListNode(MenuText title, MenuText help, SizeFn size_fn, GenFn gen_fn,
       disable_value_(disable_value), handle_fn_(std::move(handle_fn)),
       size_fn_(std::move(size_fn)), gen_fn_(std::move(gen_fn)) {
   const auto n = size_fn_();
-  if (current_idx_ < 0 || static_cast<size_t>(current_idx_) >= n) {
+  if (current_idx_ < 0 || std::cmp_greater_equal(current_idx_, n)) {
     current_idx_ = 0;
   }
   list_view_.on_confirm = [this](size_t i) {
-    bool stay = handle_fn_(i);
+    bool const stay = handle_fn_(i);
     if (!stay) {
       current_idx_ = static_cast<int>(i);
     }

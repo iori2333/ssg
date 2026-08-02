@@ -2,14 +2,23 @@
 /// FontUty - Font utility functions
 ///
 
+#include <cstdint>
 #include <format>
+#include <optional>
+#include <span>
+#include <string_view>
 
 #include "font_uty.h"
 
+#include "gfx/constants.h"
+#include "gfx/coords.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
-#include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 
 #ifdef WIN32
+
+// NOLINTBEGIN(misc-include-cleaner) - Windows SDK headers require windows.h.
 #include <windows.h>
 
 static constexpr auto kModernFont = L"msgothic.ttc";
@@ -21,9 +30,11 @@ void TextBackendGDIInit() {
 void TextBackendGDICleanup() {
   RemoveFontResourceExW(kModernFont, FR_PRIVATE, nullptr);
 }
+// NOLINTEND(misc-include-cleaner)
 #endif
 
 // Glyph selection inside the 16x16 font
+namespace {
 std::optional<PixelLtrb> Glyph16(char c) {
   PixelLtwh src;
   src.w = 16;
@@ -91,6 +102,7 @@ std::optional<PixelLtrb> Glyph16(char c) {
   }
   return src;
 }
+} // namespace
 
 // 16x16 transparent font string output (fast)
 void DrawFont16(int x, int y, const char *s) {
@@ -265,7 +277,7 @@ PixelSize DrawGrdFont(TextRenderSession &s, std::span<std::string_view> strs,
     } else {
       s.Put({.x = extent.w, .y = 0}, str, Rgb{.r = 255, .g = 255, .b = 255});
     }
-    extent += s.Extent(str);
+    extent += TextRenderSession::Extent(str);
   }
 
   s.EditPixels([&](TextRenderSession::PixelSession &p) {

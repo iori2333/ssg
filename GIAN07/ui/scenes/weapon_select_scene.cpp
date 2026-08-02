@@ -156,13 +156,13 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
     const int direction =
         (-i + PlayerTypeIndex(player_.Type())) * 85 + angle_ - 64;
     const auto angle = math::AngleFromLegacy(direction);
-    const int x = 120 + math::RoundedPolarVector(angle, 90.0f).x - 56 / 2;
-    const int y = 260 + math::RoundedPolarVector(angle, 110.0f).y - 48 / 2;
+    const int x = 120 + math::RoundedPolarVector(angle, 90.0F).x - 56 / 2;
+    const int y = 260 + math::RoundedPolarVector(angle, 110.0F).y - 48 / 2;
     GraphicsSurfaceBlit({x, y}, SurfaceId::System, sprites[i]);
   }
 
-  Geometry().SetColor({0, 0, 1});
-  Geometry().SetAlphaNorm(128);
+  geometry::SetColor({0, 0, 1});
+  geometry::SetAlphaNorm(128);
   for (int i = 0; i < 3; i++) {
     if (session_.stage != StageId::Extra ||
         ((1U << i) & config_.progress.extra_stg_flags) != 0) {
@@ -171,9 +171,9 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
     const int direction =
         (-i + PlayerTypeIndex(player_.Type())) * 85 + angle_ - 64;
     const auto angle = math::AngleFromLegacy(direction);
-    const int x = 120 + math::RoundedPolarVector(angle, 90.0f).x - 56 / 2;
-    const int y = 260 + math::RoundedPolarVector(angle, 110.0f).y - 48 / 2;
-    Geometry().DrawBoxA(x, y, x + 56, y + 48);
+    const int x = 120 + math::RoundedPolarVector(angle, 90.0F).x - 56 / 2;
+    const int y = 260 + math::RoundedPolarVector(angle, 110.0F).y - 48 / 2;
+    geometry::DrawBoxA(x, y, x + 56, y + 48);
   }
 
   player_.SetPower(static_cast<uint8_t>(std::min(count_, 255)));
@@ -184,11 +184,11 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
   player_.ClearInvincibility();
   const int player_x =
       math::RoundedPolarVector(
-          static_cast<float>((count_ / 3) * 6) * math::kLegacyAngleStep, 60_px)
+          static_cast<float>(count_ / 3) * 6 * math::kLegacyAngleStep, 60_px)
           .y;
   const int player_y =
       math::RoundedPolarVector(
-          static_cast<float>((count_ / 3) * 4) * math::kLegacyAngleStep, 30_px)
+          static_cast<float>(count_ / 3) * 4 * math::kLegacyAngleStep, 30_px)
           .y;
   player_.SetPosition(400_px + player_x, 350_px + player_y);
   // The preview only needs the update's visual side effects.
@@ -210,16 +210,16 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
                 .c_str());
 
   GraphicsBackendSetClip(kGameResolutionRect);
-  Geometry().SetColor({0, 0, 4});
-  Geometry().DrawLine(290, 100, 510, 100);
-  Geometry().DrawLine(290, 410, 510, 410);
-  Geometry().DrawLine(290, 100, 290, 410);
-  Geometry().DrawLine(510, 100, 510, 410);
+  geometry::SetColor({0, 0, 4});
+  geometry::DrawLine(290, 100, 510, 100);
+  geometry::DrawLine(290, 410, 510, 410);
+  geometry::DrawLine(290, 100, 290, 410);
+  geometry::DrawLine(510, 100, 510, 410);
   if (std::abs(angle_) <= 25) {
-    Geometry().SetColor({2, 2, 5});
-    GeomCircle({120, 150}, 49 - 2 * std::abs(angle_));
-    Geometry().SetColor({4, 4, 5});
-    GeomCircle({120, 150}, 51 - 2 * std::abs(angle_));
+    geometry::SetColor({2, 2, 5});
+    geometry::DrawCircle({120, 150}, 49 - 2 * std::abs(angle_));
+    geometry::SetColor({4, 4, 5});
+    geometry::DrawCircle({120, 150}, 51 - 2 * std::abs(angle_));
   }
 }
 

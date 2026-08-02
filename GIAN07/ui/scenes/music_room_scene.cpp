@@ -3,15 +3,28 @@
 // GCC 15 throws `error: conflicting declaration 'typedef struct imaxdiv_t
 // imaxdiv_t'` if this appears after a module import.
 #include <algorithm>
-#include <cinttypes>
+#include <array>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <format>
+#include <iterator>
+#include <optional>
+#include <ranges>
+#include <string_view>
+#include <utility>
 
 #include "music_room_scene.h"
 
 #include "audio/audio_system.h"
+#include "audio/core/audio_types.h"
 #include "data/graphics_loader.h"
 #include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/font_uty.h"
+#include "gfx/geometry.h"
+#include "gfx/graphics.h"
+#include "gfx/graphics_backend.h"
 #include "gfx/text.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
@@ -46,7 +59,7 @@ void MusicRoomScene::Text::RenderMidDev(WindowPoint topleft,
   if (value.empty()) {
     return;
   }
-  std::string_view dev = {value.data(), std::min(value.size(), 13UZ)};
+  std::string_view dev = value.substr(0, std::min(value.size(), 13UZ));
   TextRenderer().Render(topleft, mid_dev, dev, [&dev](TextRenderSession &s) {
     s.SetFont(FontId::Small);
     s.SetColor(ColorDefault);
@@ -71,7 +84,7 @@ void MusicRoomScene::Text::RenderTitle(WindowPoint topleft,
       [&num, track_title, marquee_frame](TextRenderSession &s) {
         s.SetFont(FontId::Normal);
         // GDI would calculate a trailing space as 4 pixels wide, not 8.
-        const auto title_left = (s.Extent(num).w + 8);
+        const auto title_left = (TextRenderSession::Extent(num).w + 8);
 
         const auto display_title = ui::MarqueeWindow(
             s, track_title, s.RectSize().w - title_left - 1, marquee_frame);
@@ -148,8 +161,8 @@ bool MusicRoomScene::Enter() {
 
 // Spectrum analyzer drawing
 void MusicRoomScene::DrawSpectrum(int x, int y) {
-  uint16_t ftable[128 + 8 + 8];
-  uint16_t ftable2[128];
+  std::array<uint16_t, 128 + 8 + 8> ftable{};
+  std::array<uint16_t, 128> ftable2{};
 
   constexpr PixelLtrb src = {(16 * 16), 0, ((16 * 16) + (8 * 21)), 8}; // ,,,8*4
 
@@ -170,7 +183,7 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
 
   const auto attenuation = [](int angle) {
     return 256 - math::RoundedPolarVector(
-                     static_cast<float>(angle) * math::kLegacyAngleStep, 256.0f)
+                     static_cast<float>(angle) * math::kLegacyAngleStep, 256.0F)
                      .y;
   };
   for (int i = 0; i < std::size(ftable); i++) {
@@ -225,7 +238,7 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
   for (int i = 0; i < std::size(ftable); i++) {
     constexpr Rgb c1 = {.r = 200, .g = 0, .b = 0};
     constexpr Rgb c2 = {.r = 250, .g = 250, .b = 0};
-    Geometry().DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
+    geometry::DrawGrdLineEx((i + x), (y - (ftable[i] * 2)), c1, y, c2);
   }
 }
 
@@ -235,47 +248,47 @@ void MusicRoomScene::DrawNotes() {
   // o#o#oo#o#o#o
   // o o oo o o o
 
-  constexpr const PixelLtrb src[12] = {
-      {0, 464, 3, 474}, // white
-      {0, 456, 3, 461}, // black
+  constexpr std::array<PixelLtrb, 12> src = {
+      PixelLtrb{0, 464, 3, 474}, // white
+      PixelLtrb{0, 456, 3, 461}, // black
 
-      {4, 464, 7, 474}, // white
-      {0, 456, 3, 461}, // black
+      PixelLtrb{4, 464, 7, 474}, // white
+      PixelLtrb{0, 456, 3, 461}, // black
 
-      {8, 464, 11, 474},  // white
-      {12, 464, 15, 474}, // white
+      PixelLtrb{8, 464, 11, 474},  // white
+      PixelLtrb{12, 464, 15, 474}, // white
 
-      {0, 456, 3, 461},   // black
-      {16, 464, 19, 474}, // white
+      PixelLtrb{0, 456, 3, 461},   // black
+      PixelLtrb{16, 464, 19, 474}, // white
 
-      {0, 456, 3, 461},   // black
-      {20, 464, 23, 474}, // white
+      PixelLtrb{0, 456, 3, 461},   // black
+      PixelLtrb{20, 464, 23, 474}, // white
 
-      {0, 456, 3, 461},   // black
-      {24, 464, 27, 474}, // white
+      PixelLtrb{0, 456, 3, 461},   // black
+      PixelLtrb{24, 464, 27, 474}, // white
   };
 
-  constexpr const PixelLtrb src2[12] = {
-      {0, (464 - 24), 3, (474 - 24)}, // white
-      {0, (456 - 24), 3, (461 - 24)}, // black
+  constexpr std::array<PixelLtrb, 12> src2 = {
+      PixelLtrb{0, (464 - 24), 3, (474 - 24)}, // white
+      PixelLtrb{0, (456 - 24), 3, (461 - 24)}, // black
 
-      {4, (464 - 24), 7, (474 - 24)}, // white
-      {0, (456 - 24), 3, (461 - 24)}, // black
+      PixelLtrb{4, (464 - 24), 7, (474 - 24)}, // white
+      PixelLtrb{0, (456 - 24), 3, (461 - 24)}, // black
 
-      {8, (464 - 24), 11, (474 - 24)},  // white
-      {12, (464 - 24), 15, (474 - 24)}, // white
+      PixelLtrb{8, (464 - 24), 11, (474 - 24)},  // white
+      PixelLtrb{12, (464 - 24), 15, (474 - 24)}, // white
 
-      {0, (456 - 24), 3, (461 - 24)},   // black
-      {16, (464 - 24), 19, (474 - 24)}, // white
+      PixelLtrb{0, (456 - 24), 3, (461 - 24)},   // black
+      PixelLtrb{16, (464 - 24), 19, (474 - 24)}, // white
 
-      {0, (456 - 24), 3, (461 - 24)},   // black
-      {20, (464 - 24), 23, (474 - 24)}, // white
+      PixelLtrb{0, (456 - 24), 3, (461 - 24)},   // black
+      PixelLtrb{20, (464 - 24), 23, (474 - 24)}, // white
 
-      {0, (456 - 24), 3, (461 - 24)},   // black
-      {24, (464 - 24), 27, (474 - 24)}, // white
+      PixelLtrb{0, (456 - 24), 3, (461 - 24)},   // black
+      PixelLtrb{24, (464 - 24), 27, (474 - 24)}, // white
   };
 
-  constexpr const PixelCoord destX[12] = {
+  constexpr std::array<PixelCoord, 12> destX = {
       0, // white
       2, // black
 
@@ -372,6 +385,8 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
     break;
   case KeyShift:
     audio.SetBgmTempo(0);
+    break;
+  default:
     break;
   }
 

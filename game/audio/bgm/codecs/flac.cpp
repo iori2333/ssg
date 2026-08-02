@@ -2,16 +2,22 @@
 /// FLAC streaming support using miniaudio's decoder backend.
 ///
 
+#include <cstddef>
 #include <cstdint>
+#include <ios>
 #include <istream>
 #include <limits>
 #include <memory>
 
 #include <miniaudio.h>
+#include <span>
+#include <utility>
 
 #include "audio/bgm/pcm_source.h"
 
 namespace audio::bgm {
+
+namespace {
 
 ma_result FlacRead(ma_decoder *decoder, void *buf, size_t size,
                    size_t *bytes_read) {
@@ -28,7 +34,7 @@ ma_result FlacRead(ma_decoder *decoder, void *buf, size_t size,
 ma_result FlacSeek(ma_decoder *decoder, ma_int64 offset,
                    ma_seek_origin origin) {
   auto &stream = *static_cast<std::istream *>(decoder->pUserData);
-  std::ios_base::seekdir whence;
+  std::ios_base::seekdir whence = 0;
   switch (origin) {
   case ma_seek_origin_start:
     whence = std::ios::beg;
@@ -53,6 +59,10 @@ struct FlacPcmPart : public PcmPart {
 
   FlacPcmPart(std::unique_ptr<ma_decoder> decoder, const PcmFormat &pcmf)
       : PcmPart(pcmf), decoder(std::move(decoder)) {}
+  FlacPcmPart(const FlacPcmPart &) = delete;
+  FlacPcmPart &operator=(const FlacPcmPart &) = delete;
+  FlacPcmPart(FlacPcmPart &&) = delete;
+  FlacPcmPart &operator=(FlacPcmPart &&) = delete;
   ~FlacPcmPart() override;
 };
 
@@ -74,6 +84,8 @@ void FlacPcmPart::PartSeekToSample(size_t sample) {
 
 FlacPcmPart::~FlacPcmPart() { ma_decoder_uninit(decoder.get()); }
 
+} // namespace
+
 std::unique_ptr<PcmPart> OpenFlac(std::istream &stream) {
   auto decoder = std::make_unique<ma_decoder>();
   const auto config = ma_decoder_config_init_default();
@@ -91,7 +103,7 @@ std::unique_ptr<PcmPart> OpenFlac(std::istream &stream) {
     return nullptr;
   }
 
-  PcmSampleFormat sample_format;
+  PcmSampleFormat sample_format = PcmSampleFormat::Int16;
   switch (format) {
   case ma_format_s16:
     sample_format = PcmSampleFormat::Int16;
@@ -104,8 +116,9 @@ std::unique_ptr<PcmPart> OpenFlac(std::istream &stream) {
     return nullptr;
   }
 
-  PcmFormat pcmf = {sample_rate, static_cast<uint16_t>(channels),
-                    sample_format};
+  PcmFormat const pcmf = {.samplingrate = sample_rate,
+                          .channels = static_cast<uint16_t>(channels),
+                          .format = sample_format};
   return std::make_unique<FlacPcmPart>(std::move(decoder), pcmf);
 }
 

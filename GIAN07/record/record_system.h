@@ -59,11 +59,11 @@ class RecordSystem {
 public:
   explicit RecordSystem(const data::GameData &data) : data_(data) {}
 
-  [[nodiscard]] ScoreRecord CaptureScore(const Player &player,
-                                         const GameSession &session) const;
-  [[nodiscard]] std::vector<ScoreRecord> ListScores(GameLevel difficulty,
-                                                    std::size_t limit) const;
-  [[nodiscard]] RecordSaveResult SaveScore(const ScoreRecord &record) const;
+  [[nodiscard]] static ScoreRecord CaptureScore(const Player &player,
+                                                const GameSession &session);
+  [[nodiscard]] static std::vector<ScoreRecord> ListScores(GameLevel difficulty,
+                                                           std::size_t limit);
+  [[nodiscard]] static RecordSaveResult SaveScore(const ScoreRecord &record);
 
   void BeginRecording(const Player &player, const GameSession &session,
                       const ConfigData &config);
@@ -80,7 +80,7 @@ public:
                                             bool extra_stage);
   [[nodiscard]] RecordSaveResult SaveDemo(StageId stage);
 
-  [[nodiscard]] std::vector<ReplayRecord> ListReplays() const;
+  [[nodiscard]] static std::vector<ReplayRecord> ListReplays();
   [[nodiscard]] bool LoadReplay(std::string_view path, StageId start_stage);
   [[nodiscard]] bool ConfigurePlayback(Player &player, GameSession &session);
   void RestorePlaybackStage(Player &player, GameSession &session);
@@ -140,17 +140,18 @@ private:
     bool multi_stage = false;
   };
 
-  [[nodiscard]] bool LoadArchive(std::string_view path,
-                                 std::optional<ReplayRecord> *record,
-                                 ReplaySettings *settings,
-                                 std::vector<ReplayStage> *stages) const;
-  [[nodiscard]] bool LoadArchive(const data::PbgArchive &archive,
-                                 std::optional<ReplayRecord> *record,
-                                 ReplaySettings *settings,
-                                 std::vector<ReplayStage> *stages) const;
-  [[nodiscard]] bool LoadDemoArchive(const data::PbgArchive &archive,
-                                     StageId stage, ReplaySettings &settings,
-                                     std::vector<ReplayStage> &stages) const;
+  [[nodiscard]] static bool LoadArchive(std::string_view path,
+                                        std::optional<ReplayRecord> *record,
+                                        ReplaySettings *settings,
+                                        std::vector<ReplayStage> *stages);
+  [[nodiscard]] static bool LoadArchive(const data::PbgArchive &archive,
+                                        std::optional<ReplayRecord> *record,
+                                        ReplaySettings *settings,
+                                        std::vector<ReplayStage> *stages);
+  [[nodiscard]] static bool LoadDemoArchive(const data::PbgArchive &archive,
+                                            StageId stage,
+                                            ReplaySettings &settings,
+                                            std::vector<ReplayStage> &stages);
   void BeginCapture(const Player &player, const GameSession &session,
                     const ConfigData &config, bool demo_capture);
   [[nodiscard]] RecordSaveResult SaveRecording(std::string_view name,

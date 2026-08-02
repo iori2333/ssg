@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include "bullet/bullet_common.h"
@@ -59,8 +60,8 @@ struct LongLaserUpdateInfo {
     AdjustAngle,
   };
   Command command = Command::Tick;
-  float angle = 0.0f;
-  float delta = 0.0f;
+  float angle = 0.0F;
+  float delta = 0.0F;
 };
 
 // ── LaserLong ────────────────────────────────────────────────────
@@ -74,8 +75,7 @@ struct LaserLong {
   [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const LongLaserSpawnInfo &info);
-  [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
-                                   int player_radius) const;
+  [[nodiscard]] HitResult CheckHit(int px, int py, int player_radius) const;
   void Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
@@ -106,7 +106,7 @@ private:
   float wy_{};
   float w_{};
   float wmax_{};
-  VertexXy p_[4]{};
+  std::array<VertexXy, 4> p_{};
   uint8_t enemy_id_{};
 
   LongLaserType subtype_{LongLaserType::Long};

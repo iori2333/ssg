@@ -8,9 +8,11 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <string>
 #include <string_view>
 #include <vector>
 
+#include "enemy/ecl/ecl.h"
 #include "enemy/ecl/ecl_program.h"
 #include "i18n/localization.h"
 #include "scripts_data.h"
@@ -40,9 +42,9 @@ bool ValidateScenes() {
     return false;
   }
   const auto sample_id = i18n::TextIdFromKey("stage1_msg_000");
-  for (const auto language : languages) {
+  for (const auto *const language : languages) {
     if (!localization.SetLanguage(language) ||
-        localization.Text(sample_id).find('\n') == std::string_view::npos ||
+        !localization.Text(sample_id).contains('\n') ||
         localization.Lines(sample_id).size() != 4 ||
         localization.Lines(sample_id).front() != "[VIVIT]") {
       std::cerr << "invalid multiline message text for " << language << '\n';
@@ -118,7 +120,7 @@ bool ValidateMusicCatalogs() {
   for (size_t language = 0; language < languages.size(); ++language) {
     if (!localization.SetLanguage(languages[language]) ||
         localization.MusicTitle(1) != track_one_titles[language] ||
-        localization.MusicComment(0).find('\n') == std::string_view::npos) {
+        !localization.MusicComment(0).contains('\n')) {
       std::cerr << "invalid Music Room text catalog for " << languages[language]
                 << '\n';
       return false;
@@ -258,7 +260,8 @@ bool ValidateMaps(const std::filesystem::path &directory) {
 
 } // namespace
 
-int main(int argc, char **argv) {
+namespace {
+int MainImpl(int argc, char **argv) {
   if (!ValidateEnemies()) {
     return 1;
   }
@@ -288,4 +291,13 @@ int main(int argc, char **argv) {
     return 1;
   }
   return 0;
+}
+} // namespace
+
+int main(int argc, char **argv) {
+  try {
+    return MainImpl(argc, argv);
+  } catch (...) {
+    return 1;
+  }
 }

@@ -3,12 +3,15 @@
 ///
 
 #include <cmath>
+#include <cstdint>
 
 #include "homing_loadout.h"
 
 #include "enemy/enemy_manager.h"
 #include "gfx/coords.h"
+#include "player/loadout/player_loadout.h"
 #include "player/player.h"
+#include "player/player_shot.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -48,17 +51,27 @@ void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
     shot_phase_ += 32;
     const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
-        4.0f)));
-    PlayerShotSpawnInfo si{
-        player_.X(), player_.Y(), static_cast<uint8_t>(-64 + dd), 0, 1,
-        13.5_px,     0,           PlayerShotKind::HomingMain};
+        4.0F)));
+    PlayerShotSpawnInfo const si{.x = player_.X(),
+                                 .y = player_.Y(),
+                                 .direction = static_cast<uint8_t>(-64 + dd),
+                                 .direction_step = 0,
+                                 .count = 1,
+                                 .speed = 13.5_px,
+                                 .acceleration = 0,
+                                 .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
   }
   case 1: {
-    PlayerShotSpawnInfo si{
-        player_.X() - 6_px,        player_.Y(), 192, 0, 1, 13.5_px, 0,
-        PlayerShotKind::HomingMain};
+    PlayerShotSpawnInfo si{.x = player_.X() - 6_px,
+                           .y = player_.Y(),
+                           .direction = 192,
+                           .direction_step = 0,
+                           .count = 1,
+                           .speed = 13.5_px,
+                           .acceleration = 0,
+                           .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     si.x += 12_px;
     player_.SpawnShot(si);
@@ -66,16 +79,26 @@ void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   case 2:
   case 3: {
-    PlayerShotSpawnInfo si{
-        player_.X(), player_.Y(), 192, 7,
-        3,           13.5_px,     0,   PlayerShotKind::HomingMain};
+    PlayerShotSpawnInfo const si{.x = player_.X(),
+                                 .y = player_.Y(),
+                                 .direction = 192,
+                                 .direction_step = 7,
+                                 .count = 3,
+                                 .speed = 13.5_px,
+                                 .acceleration = 0,
+                                 .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
   }
   default: {
-    PlayerShotSpawnInfo si{
-        player_.X(), player_.Y(), 192, 7,
-        5,           13.5_px,     0,   PlayerShotKind::HomingMain};
+    PlayerShotSpawnInfo const si{.x = player_.X(),
+                                 .y = player_.Y(),
+                                 .direction = 192,
+                                 .direction_step = 7,
+                                 .count = 5,
+                                 .speed = 13.5_px,
+                                 .acceleration = 0,
+                                 .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
   }
@@ -122,7 +145,7 @@ void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
                                EffectManager & /*effects*/,
                                uint16_t remaining) {
   if (remaining % 30 == 1) {
-    PlayerShotSpawnInfo si{
+    PlayerShotSpawnInfo const si{
         .x = player_.X(),
         .y = player_.Y(),
         .direction = 64,
@@ -139,12 +162,24 @@ void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
 }
 
 void HomingLoadout::FireMainFocused(Player &player_, uint8_t tier) {
-  const int count = (tier <= 0) ? 1 : (tier <= 2) ? 2 : (tier <= 4) ? 3 : 4;
+  int count = 1;
+  if (tier > 0 && tier <= 2) {
+    count = 2;
+  } else if (tier > 2 && tier <= 4) {
+    count = 3;
+  } else if (tier > 4) {
+    count = 4;
+  }
   const int spread = (count - 1) * 12_px;
 
-  PlayerShotSpawnInfo si{
-      player_.X() - spread / 2,       player_.Y(), 192, 0, 1, 13.5_px, 0,
-      PlayerShotKind::HomingFocusMain};
+  PlayerShotSpawnInfo si{.x = player_.X() - spread / 2,
+                         .y = player_.Y(),
+                         .direction = 192,
+                         .direction_step = 0,
+                         .count = 1,
+                         .speed = 13.5_px,
+                         .acceleration = 0,
+                         .kind = PlayerShotKind::HomingFocusMain};
   for (int i = 0; i < count; i++) {
     player_.SpawnShot(si);
     si.x += 12_px;
@@ -156,14 +191,14 @@ void HomingLoadout::FireSubFocused(Player &player_, uint8_t tier) {
     return;
   }
 
-  PlayerShotSpawnInfo si{player_.OpX() + PixelToWorld(OptionOffset(false)),
-                         player_.OpY(),
-                         192,
-                         0,
-                         1,
-                         13.5_px,
-                         0,
-                         PlayerShotKind::HomingFocusSub};
+  PlayerShotSpawnInfo si{.x = player_.OpX() + PixelToWorld(OptionOffset(false)),
+                         .y = player_.OpY(),
+                         .direction = 192,
+                         .direction_step = 0,
+                         .count = 1,
+                         .speed = 13.5_px,
+                         .acceleration = 0,
+                         .kind = PlayerShotKind::HomingFocusSub};
   player_.SpawnShot(si);
 
   si.x = player_.OpX() - PixelToWorld(OptionOffset(false));

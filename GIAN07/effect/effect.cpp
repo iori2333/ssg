@@ -15,11 +15,13 @@
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
 #include "gfx/coords.h"
 #include "gfx/font_uty.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 #include "util/math_utils.h"
 
 void EffectManager::ResetCircles() {
@@ -99,7 +101,8 @@ void EffectManager::DrawCircles() const {
         if (radius < 0) {
           continue;
         }
-        Geometry().SetColor({5U, layer + 2U, layer + 2U});
+        geometry::SetColor({5U, static_cast<uint8_t>(layer + 2U),
+                            static_cast<uint8_t>(layer + 2U)});
         for (int point = 0; point < 5; ++point) {
           const int angle =
               effect.angle + kAngleSpeeds[layer] * age / 10 + point * 256 / 5;
@@ -109,8 +112,8 @@ void EffectManager::DrawCircles() const {
               static_cast<float>(angle) * math::kLegacyAngleStep, radius);
           const auto end = math::RoundedPolarVector(
               static_cast<float>(next_angle) * math::kLegacyAngleStep, radius);
-          Geometry().DrawLine(effect.x + start.x, effect.y + start.y,
-                              effect.x + end.x, effect.y + end.y);
+          geometry::DrawLine(effect.x + start.x, effect.y + start.y,
+                             effect.x + end.x, effect.y + end.y);
         }
       }
       break;
@@ -125,8 +128,9 @@ void EffectManager::DrawCircles() const {
         if (radius < 0) {
           continue;
         }
-        Geometry().SetColor({5U, layer + 2U, layer + 2U});
-        GeomCircle({effect.x, effect.y}, radius);
+        geometry::SetColor({5U, static_cast<uint8_t>(layer + 2U),
+                            static_cast<uint8_t>(layer + 2U)});
+        geometry::DrawCircle({effect.x, effect.y}, radius);
       }
       break;
     }
@@ -200,7 +204,7 @@ void EffectManager::SetMusicTitle(int y, std::string_view title) {
   music_title_text_[1] = title;
   PixelSize extent{};
   for (const auto text : music_title_text_) {
-    const auto text_extent = TextRenderer().TextExtent(FontId::Normal, text);
+    const auto text_extent = TextRender::TextExtent(FontId::Normal, text);
     extent.w += text_extent.w;
     extent.h = text_extent.h;
   }
@@ -226,8 +230,7 @@ void EffectManager::UpdateStrings() {
       break;
     case StringEffectState::CharacterPaused:
       if (effect.time == 0) {
-        const uint8_t angle =
-            static_cast<uint8_t>(128 + math::RandomInt() % 128);
+        const auto angle = static_cast<uint8_t>(128 + math::RandomInt() % 128);
         effect.state = StringEffectState::CharacterScattering;
         effect.time = 64;
         const auto velocity =
@@ -330,10 +333,10 @@ void EffectManager::DrawStrings() {
       const int center_x = (effect.x >> 6) + 8;
       const int center_y = (effect.y >> 6) + 8;
       const int half_height = (35 - remaining) / 2;
-      Geometry().SetColor({0, 0, 0});
-      Geometry().SetAlphaNorm(static_cast<uint8_t>((35 - remaining) * 3));
-      Geometry().DrawBoxA(center_x - 170, center_y - half_height,
-                          center_x + 170, center_y + half_height);
+      geometry::SetColor({0, 0, 0});
+      geometry::SetAlphaNorm(static_cast<uint8_t>((35 - remaining) * 3));
+      geometry::DrawBoxA(center_x - 170, center_y - half_height, center_x + 170,
+                         center_y + half_height);
       for (int index = 0; index < 9; ++index) {
         DrawGlyph((effect.x >> 6) + (index - 4) * (35 - remaining),
                   effect.y >> 6, kGameOver[index]);
@@ -357,36 +360,36 @@ void EffectManager::DrawStrings() {
                                             phase)
                                             .y;
         for (int duplicate = 0; duplicate < 2; ++duplicate) {
-          const int x =
-              (effect.x >> 6) +
-              math::RoundedPolarVector(static_cast<float>(phase + column / 2) *
-                                           math::kLegacyAngleStep,
-                                       wave)
-                  .y +
-              column + duplicate;
+          const int x = (effect.x >> 6) +
+                        math::RoundedPolarVector(
+                            static_cast<float>(phase + (column / 2)) *
+                                math::kLegacyAngleStep,
+                            wave)
+                            .y +
+                        column + duplicate;
           RenderMusicTitle({x, y}, source);
         }
       }
       break;
     }
     case StringEffectState::MusicTitleHolding: {
-      Geometry().SetColor({0, 0, 0});
+      geometry::SetColor({0, 0, 0});
       const auto alpha =
           math::RoundedPolarVector(static_cast<float>(effect.time - 32) *
                                        math::kLegacyAngleStep,
-                                   80.0f)
+                                   80.0F)
               .y +
           80;
-      Geometry().SetAlphaNorm(alpha);
+      geometry::SetAlphaNorm(alpha);
       for (int row = 0; row < 16; ++row) {
         const int inset =
             math::RoundedPolarVector(static_cast<float>(128 + row * 16) *
                                          math::kLegacyAngleStep,
-                                     16.0f)
+                                     16.0F)
                 .y;
-        Geometry().DrawBoxA((effect.x >> 6) + inset - 16, (effect.y >> 6) + row,
-                            playfield::kRight - 16 - inset,
-                            (effect.y >> 6) + row + 1);
+        geometry::DrawBoxA((effect.x >> 6) + inset - 16, (effect.y >> 6) + row,
+                           playfield::kRight - 16 - inset,
+                           (effect.y >> 6) + row + 1);
       }
       RenderMusicTitle({effect.x >> 6, effect.y >> 6},
                        {0, 0, effect.velocity_x, effect.velocity_y});

@@ -3,6 +3,9 @@
 ///
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <span>
 #include <utility>
 
 #include "stage_map.h"

@@ -21,7 +21,7 @@ int8_t GraphicsBackendAPICount();
 std::string_view GraphicsBackendAPILabel(std::string_view api);
 
 // Maps an API string back to its ID. Returns -1 for an unavailable API.
-int8_t GraphicsBackendAPIID(std::string_view api);
+int GraphicsBackendAPIID(std::string_view api);
 
 // Maps an API ID to its string representation. Returns the empty string for
 // -1.
@@ -57,7 +57,7 @@ void GraphicsBackendCleanup();
 // depending on the mode.
 void GraphicsBackendClear(
     uint8_t col_palettized = Rgb216{0, 0, 0}.PaletteIndex(),
-    Rgb col_channeled = Rgb{0, 0, 0});
+    Rgb col_channeled = Rgb{.r = 0, .g = 0, .b = 0});
 
 // Sets the clipping rectangle.
 void GraphicsBackendSetClip(const WindowLtrb &rect);
@@ -79,7 +79,7 @@ bool GraphicsSurfaceCreateUninitialized(SurfaceId sid, const PixelSize &size);
 
 // Consumes the given .BMP file and sets the given surface to its contents,
 // re-creating it in the correct size if necessary.
-bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned &&bmp);
+bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp);
 
 // Uploads [pixels] (consisting of a pointer and a row pitch) to a [subrect] of
 // [sid]. [subrect] can be a `nullptr` to overwrite the entire texture. The
@@ -124,9 +124,9 @@ struct VertexRgba {
 
   VertexRgba() = default;
   VertexRgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-      : r(r / 255.0f), g(g / 255.0f), b(b / 255.0f), a(a / 255.0f) {}
+      : r(r / 255.0F), g(g / 255.0F), b(b / 255.0F), a(a / 255.0F) {}
   VertexRgba(const Rgba &o)
-      : r(o.r / 255.0f), g(o.g / 255.0f), b(o.b / 255.0f), a(o.a / 255.0f) {}
+      : r(o.r / 255.0F), g(o.g / 255.0F), b(o.b / 255.0F), a(o.a / 255.0F) {}
 };
 
 template <size_t N = std::dynamic_extent>
@@ -137,9 +137,6 @@ using VertexRgbaSpan = std::span<const VertexRgba, N>;
 enum class TrianglePrimitive : uint8_t { Fan, Strip, Count };
 // ------------
 
-class GraphicsGeometry;
-
-GraphicsGeometry &Geometry();
 /// --------
 
 /// Software rendering with pixel access
@@ -177,5 +174,3 @@ void GraphicsBackendPixelAccessEdit(auto func) {
   GraphicsBackendPixelAccessUnlock();
 }
 /// ------------------------------------
-
-#include "graphics_sdl.h"

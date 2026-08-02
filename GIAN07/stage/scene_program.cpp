@@ -2,7 +2,12 @@
 /// SceneProgram - validated SCL instructions and runtime cursor
 ///
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <optional>
+#include <span>
+#include <string_view>
 #include <utility>
 
 #include "scene_program.h"

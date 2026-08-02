@@ -6,9 +6,17 @@
 
 #include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_pixels.h>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <span>
+#include <utility>
+#include <vector>
 
 #include "format_bmp.h"
 
+#include "gfx/coords.h"
+#include "gfx/pixelformat.h"
 #include "util/byte_io.h"
 
 namespace {
@@ -23,7 +31,8 @@ uint16_t BmpPaletteSizeFromBpp(uint8_t bpp) {
   const auto ret = [bpp]() -> uint16_t {
     if (bpp <= 4) {
       return (1 << 4);
-    } else if (bpp <= 8) {
+    }
+    if (bpp <= 8) {
       return (1 << 8);
     }
     return 0;
@@ -70,14 +79,17 @@ std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer) {
   // buffer because nothing prevents the file from being larger than what
   // CreateDIBSection() allocated. This actually happens with File 22 in
   // GRAPH.DAT (Reimu's faceset).
-  const size_t size = (header_info->Stride() * header_info->biHeight);
+  const size_t size =
+      (static_cast<size_t>(header_info->Stride()) * header_info->biHeight);
   if (!reader.Seek(header_file->bfOffBits) || !reader.ReadBytes(size)) {
     assert(!"Does not contain all pixels?");
     return std::nullopt;
   }
 
-  return BmpOwned{std::move(buffer), *header_info, header_file->bfOffBits,
-                  size};
+  return BmpOwned{.buffer = std::move(buffer),
+                  .info = *header_info,
+                  .pixel_offset = header_file->bfOffBits,
+                  .pixel_size = size};
 }
 
 bool BmpSaveSupports(SDL_PixelFormat format) {
@@ -116,7 +128,8 @@ bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
       .bfReserved2 = 0,
       .bfOffBits = pixel_offset,
   };
-  return (stream && WriteExact(stream, &header_file, sizeof(header_file)) &&
+  return ((stream != nullptr) &&
+          WriteExact(stream, &header_file, sizeof(header_file)) &&
           WriteExact(stream, &header_info, sizeof(header_info)) &&
           WriteExact(stream, palette.data(), palette.size_bytes()) &&
           WriteExact(stream, pixels.data(), pixels.size_bytes()));

@@ -3,6 +3,7 @@
 ///
 
 #include <algorithm>
+#include <cstdint>
 
 #include "bullet_common.h"
 
@@ -110,7 +111,7 @@ void ApplyHardRapid(uint8_t &ns) { ns++; }
 void ApplyLunaticRapid(uint8_t &ns) { ns += 2; }
 
 float ScaleVelocityByRank(float v, int rank) {
-  return (v * 0.5f * static_cast<float>(rank) / 8192.0f) + (v * 0.5f);
+  return (v * 0.5F * static_cast<float>(rank) / 8192.0F) + (v * 0.5F);
 }
 
 } // namespace bullet_common

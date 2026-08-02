@@ -7,6 +7,7 @@
 #include "title_scene.h"
 
 #include "audio/audio_system.h"
+#include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
@@ -60,8 +61,7 @@ bool TitleScene::Enter(InputBits initial_input, bool change_music) {
 }
 
 void TitleScene::InitVersion() {
-  const auto build_width =
-      TextRenderer().TextExtent(FontId::Tiny, kVersionTag).w;
+  const auto build_width = TextRender::TextExtent(FontId::Tiny, kVersionTag).w;
   version_rect_ = TextRenderer().Register({.w = 136, .h = 10});
   version_left_ = kGameResolution.w - build_width;
 }

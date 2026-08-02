@@ -22,6 +22,8 @@ public:
   ~PcmTrack() override;
   PcmTrack(const PcmTrack &) = delete;
   PcmTrack &operator=(const PcmTrack &) = delete;
+  PcmTrack(PcmTrack &&) = delete;
+  PcmTrack &operator=(PcmTrack &&) = delete;
 
   AudioResult Load(std::string_view path);
   void Unload();

@@ -2,8 +2,15 @@
 /// File I/O
 ///
 
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
+#include <ios>
 #include <limits>
+#include <span>
+#include <utility>
+#include <vector>
 
 #include "file.h"
 

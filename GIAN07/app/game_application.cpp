@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include <SDL3/SDL_messagebox.h>
+#include <system_error>
 
 #include "game_application.h"
 
@@ -17,6 +18,7 @@
 #include "gfx/window_backend.h"
 #include "i18n/localization.h"
 #include "platform/text_backend.h"
+#include "settings/config.h"
 #include "sys/input.h"
 #include "sys/log.h"
 #include "sys/path.h"
@@ -27,10 +29,7 @@ bool PrepareWorkingDirectory() {
   const auto data_path = PathForData();
   std::error_code error;
   std::filesystem::current_path(data_path, error);
-  if (error) {
-    return false;
-  }
-  return true;
+  return !static_cast<bool>(error);
 }
 
 void ApplyPadBindings(InputSystem &input, const InputConfig &config) {
@@ -88,10 +87,10 @@ bool GameApplication::Initialize() {
   const auto data_errors = context_.data.Load(PathForData());
   if (!data_errors.empty()) {
     for (const auto &error : data_errors) {
-      const auto source = error.source == data::DataSourceKind::Directory
-                              ? "directory"
-                              : "archive";
-      const auto reason =
+      const auto *const source = error.source == data::DataSourceKind::Directory
+                                     ? "directory"
+                                     : "archive";
+      const auto *const reason =
           error.kind == data::LoadErrorKind::Missing ? "missing" : "invalid";
       logging::Error(logging::Channel::Data,
                      "Failed to load game data: source={} reason={}", source,

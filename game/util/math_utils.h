@@ -28,7 +28,7 @@ public:
   }
 
   [[nodiscard]] RandomState CaptureState() const {
-    return {seed_, draw_count_};
+    return {.seed = seed_, .draw_count = draw_count_};
   }
 
   void RestoreState(RandomState state) {
@@ -66,8 +66,8 @@ struct Vector2I {
   int y;
 };
 
-inline constexpr float kFullAngle = std::numbers::pi_v<float> * 2.0f;
-inline constexpr float kLegacyAngleStep = kFullAngle / 256.0f;
+inline constexpr float kFullAngle = std::numbers::pi_v<float> * 2.0F;
+inline constexpr float kLegacyAngleStep = kFullAngle / 256.0F;
 
 [[nodiscard]] inline float AngleFromLegacy(uint8_t angle) {
   return static_cast<float>(angle) * kLegacyAngleStep;
@@ -75,7 +75,7 @@ inline constexpr float kLegacyAngleStep = kFullAngle / 256.0f;
 
 [[nodiscard]] inline float NormalizeAngle(float angle) {
   angle = std::fmod(angle, kFullAngle);
-  return angle < 0.0f ? angle + kFullAngle : angle;
+  return angle < 0.0F ? angle + kFullAngle : angle;
 }
 
 [[nodiscard]] inline uint8_t AngleToLegacy(float angle) {
@@ -130,7 +130,7 @@ inline void RestoreRandomState(RandomState state) {
 [[nodiscard]] inline int RandomInt() { return detail::GlobalRng().Next(); }
 
 [[nodiscard]] inline float RandomAngle() {
-  constexpr float kRandomRange = 2147483648.0f;
+  constexpr float kRandomRange = 2147483648.0F;
   return static_cast<float>(RandomInt()) * (kFullAngle / kRandomRange);
 }
 

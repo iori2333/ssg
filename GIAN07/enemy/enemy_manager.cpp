@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <utility>
@@ -12,10 +13,16 @@
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
+#include "bullet/bullet.h"
+#include "bullet/bullet_common.h"
 #include "bullet/bullet_manager.h"
-#include "gameplay/game_rules.h"
+#include "bullet/laser/long.h"
+#include "enemy/actor/enemy_actor.h"
+#include "enemy/ecl/ecl.h"
+#include "enemy/ecl/ecl_program.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
+#include "gfx/coords.h"
 #include "item/item_system.h"
 #include "player/player.h"
 #include "player/player_attack.h"
@@ -74,7 +81,7 @@ bool EnemyManager::InstallStageAssets(EclProgram program,
   }
 
   ecl_.Install(std::move(program));
-  animations_ = std::move(animations);
+  animations_ = animations;
   return true;
 }
 
@@ -183,7 +190,8 @@ void EnemyManager::UpdateRegular() {
           if (e->long_laser_count != 0U) {
             bullets_.ControlLongLaser(
                 e, kEclAllLongLasers,
-                LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+                LongLaserUpdateInfo{
+                    .command = LongLaserUpdateInfo::Command::ForceClose});
           }
           e->state = EnemyActorState::PendingRemoval;
         }
@@ -214,7 +222,9 @@ void EnemyManager::ClearRegular() {
         bullets_.ControlLongLaser(
             e, kEclAllLongLasers,
             LongLaserUpdateInfo{
-                LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+                .command =
+                    LongLaserUpdateInfo::Command::ForceClose}); // Force close
+                                                                // laser
       }
       audio_.PlaySfx(SfxId::Bomb, e->x);
     } else {
@@ -227,7 +237,9 @@ void EnemyManager::ClearRegular() {
         bullets_.ControlLongLaser(
             e, kEclAllLongLasers,
             LongLaserUpdateInfo{
-                LongLaserUpdateInfo::Command::ForceClose}); // Force close laser
+                .command =
+                    LongLaserUpdateInfo::Command::ForceClose}); // Force close
+                                                                // laser
       }
       // Do not play explosion sound
     }
@@ -252,7 +264,7 @@ void EnemyManager::RetireActor(EnemyActor &actor) {
   OnActorRetired(actor);
   bullets_.ControlLongLaser(
       &actor, kEclAllLongLasers,
-      LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+      LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::ForceClose});
   actor.long_laser_count = 0;
 }
 
@@ -270,7 +282,8 @@ void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
     if (actor.long_laser_count != 0U) {
       bullets_.ControlLongLaser(
           &actor, kEclAllLongLasers,
-          LongLaserUpdateInfo{LongLaserUpdateInfo::Command::ForceClose});
+          LongLaserUpdateInfo{.command =
+                                  LongLaserUpdateInfo::Command::ForceClose});
     }
     player_.PowerUp(static_cast<uint8_t>(actor.hp));
     actor.BeginExplosion();

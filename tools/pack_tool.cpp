@@ -9,15 +9,20 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <ios>
+#include <iterator>
 #include <optional>
 #include <print>
 #include <span>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -396,7 +401,8 @@ int PackArchive(const fs::path &input, const fs::path &packfile) {
 
 } // namespace
 
-int main(int argc, char **argv) {
+namespace {
+int MainImpl(int argc, char **argv) {
   if (argc != 4) {
     PrintUsage();
     return 1;
@@ -410,4 +416,13 @@ int main(int argc, char **argv) {
   }
   PrintUsage();
   return 1;
+}
+} // namespace
+
+int main(int argc, char **argv) {
+  try {
+    return MainImpl(argc, argv);
+  } catch (...) {
+    return 1;
+  }
 }

@@ -8,13 +8,16 @@
 
 #include "path.h"
 
-static std::string_view PathDataView;
+namespace {
+std::string_view PathDataView;
+} // namespace
 
 std::string_view PathForData() {
   if (PathDataView.data() != nullptr) {
     return PathDataView;
   }
   const auto *path = SDL_GetBasePath();
-  PathDataView = path ? std::string_view(path) : std::string_view{};
+  PathDataView =
+      (path != nullptr) ? std::string_view(path) : std::string_view{};
   return PathDataView;
 }

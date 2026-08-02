@@ -28,7 +28,7 @@ struct GameplayHudModel {
 
 class GameplayHud {
 public:
-  void DrawTop(const GameplayHudModel &model) const;
+  static void DrawTop(const GameplayHudModel &model);
   void DrawSidebars(const GameplayHudModel &model);
 
 private:

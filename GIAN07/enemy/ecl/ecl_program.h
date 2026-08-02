@@ -242,7 +242,7 @@ private:
   friend class EclInstructionFactory;
 
   EclInstruction(EclOpcode opcode, EclArguments arguments)
-      : opcode_(opcode), arguments_(std::move(arguments)) {}
+      : opcode_(opcode), arguments_(arguments) {}
 
   EclOpcode opcode_;
   EclArguments arguments_;

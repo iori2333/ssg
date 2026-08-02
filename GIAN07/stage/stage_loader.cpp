@@ -2,9 +2,14 @@
 /// StageLoader - installs validated stage assets into a game session
 ///
 #include <cstddef>
+#include <cstdint>
+#include <span>
 #include <utility>
 
 #include "anime_data.h"
+#include "enemy/actor/enemy_actor.h"
+#include "enemy/ecl/ecl_program.h"
+#include "gameplay/game_rules.h"
 #include "scene_program.h"
 #include "stage_loader.h"
 #include "stage_session.h"
@@ -72,8 +77,7 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
     return false;
   }
 
-  if (!enemies.InstallStageAssets(std::move(*enemy_program),
-                                  std::move(animations))) {
+  if (!enemies.InstallStageAssets(std::move(*enemy_program), animations)) {
     logging::Error(logging::Channel::Stage,
                    "Failed to install enemy assets for stage {}",
                    stage_index + 1);
@@ -83,7 +87,7 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
   return true;
 }
 
-bool StageLoader::LoadEnding(SceneRunner &scene) const {
+bool StageLoader::LoadEnding(SceneRunner &scene) {
   auto scl = LoadEmbeddedScript(47);
   if (scl.empty() || !scene.Load(scl)) {
     logging::Error(logging::Channel::Stage, "Failed to load ending SCL 47");

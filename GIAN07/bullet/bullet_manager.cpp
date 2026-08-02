@@ -4,20 +4,28 @@
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <span>
+#include <utility>
 
 #include "bullet.h"
+#include "bullet/laser/homing.h"
+#include "bullet/laser/long.h"
+#include "bullet/laser/reflect.h"
 #include "bullet_common.h"
 #include "bullet_manager.h"
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "effect/effect_manager.h"
+#include "effect/effect_types.h"
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "item/item_system.h"
 #include "player/player.h"
@@ -56,7 +64,7 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
   auto base_angle = si.aimed
                         ? math::AngleTo(static_cast<float>(player_.X() - si.x),
                                         static_cast<float>(player_.Y() - si.y))
-                        : 0.0f;
+                        : 0.0F;
   base_angle += si.angle;
 
   for (uint16_t i = 0; i < setmax; i++) {
@@ -68,7 +76,7 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
     si2.angle = bullet_common::CalcSpreadAngle(i % n, si.pattern, n, base_angle,
                                                si.spread);
 
-    float temp = 0.0f;
+    float temp = 0.0F;
     switch (si.speed_variance) {
     case BulletSpeedVariance::None:
       break;
@@ -84,7 +92,7 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
     }
     si2.speed = si.speed + temp;
     if (si.rapid) {
-      si2.speed += (si.speed * 0.125f) * (i / n);
+      si2.speed += (si.speed * 0.125F) * static_cast<float>(i / n);
     }
     t->Spawn(si2);
   }
@@ -92,7 +100,7 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
 
 void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
   const auto n = si.count;
-  uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
+  uint16_t const setmax = n * (si.rapid ? si.rapid_count : 1U);
 
   for (uint16_t i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
@@ -107,7 +115,7 @@ void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
     const auto relative_angle = math::ShortestAngleDelta(si2.angle, si.angle);
     float v_ret = si.speed / std::cos(relative_angle);
     if (si.rapid) {
-      v_ret += (v_ret * 0.125f) * (i_mod - 1);
+      v_ret += (v_ret * 0.125F) * (i_mod - 1);
     }
     si2.speed = v_ret;
 
@@ -128,7 +136,7 @@ void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
     si2.angle = bullet_common::CalcSpreadAngle(i % n, si.pattern, n, si.angle,
                                                si.spread);
 
-    float temp = 0.0f;
+    float temp = 0.0F;
     switch (si.speed_variance) {
     case BulletSpeedVariance::None:
       break;
@@ -179,7 +187,7 @@ void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
   auto base_angle = cmd.aimed
                         ? math::AngleTo(static_cast<float>(player_.X() - cmd.x),
                                         static_cast<float>(player_.Y() - cmd.y))
-                        : 0.0f;
+                        : 0.0F;
   base_angle += cmd.angle;
 
   for (uint8_t i = 0; i < cmd.n; i++) {
@@ -210,7 +218,7 @@ bool BulletManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
 }
 
 void BulletManager::SpawnHoming(const HomingSpawnInfo &info) {
-  for (int i = 0; i < static_cast<int>(info.n); i++) {
+  for (int i = 0; std::cmp_less(i, info.n); i++) {
     auto *p = homing_lasers_.Alloc();
     if (p == nullptr) {
       return;
@@ -233,8 +241,11 @@ void BulletManager::Update(const EnemyHomingTarget &target) {
 }
 
 void BulletManager::UpdateBullet(const EnemyHomingTarget &target) {
-  const BulletUpdateInfo info{player_.X(), player_.Y(), target.active, target.x,
-                              target.y};
+  const BulletUpdateInfo info{.player_x = player_.X(),
+                              .player_y = player_.Y(),
+                              .enemy_homing_valid = target.active,
+                              .enemy_homing_x = target.x,
+                              .enemy_homing_y = target.y};
 
   for (auto &b : bullets_) {
     auto r = b.Update(info);
@@ -257,7 +268,7 @@ void BulletManager::UpdateReflect() {
   for (const auto &ll : long_lasers_) {
     active_longs[long_count++] = &ll;
   }
-  std::span<const LaserLong *> long_span(active_longs.data(), long_count);
+  std::span<const LaserLong *> const long_span(active_longs.data(), long_count);
 
   for (auto &r : reflect_lasers_) {
     auto result = r.Update(ReflectUpdateInfo{long_span});
@@ -276,7 +287,8 @@ void BulletManager::UpdateLong() {
 }
 
 void BulletManager::UpdateHoming() {
-  const auto pi = HomingUpdateInfo{player_.X(), player_.Y()};
+  const auto pi =
+      HomingUpdateInfo{.player_x = player_.X(), .player_y = player_.Y()};
   for (auto &h : homing_lasers_) {
     h.Update(audio_, pi);
   }
@@ -477,8 +489,8 @@ void BulletManager::RotateDisplayAngles() {
 void BulletManager::RenderDebugHitboxes(int mode) const {
   const Rgb216 kBlack{0, 0, 0};
   constexpr uint8_t kAlpha = 204;
-  Geometry().SetColor(kBlack);
-  Geometry().SetAlphaNorm(kAlpha);
+  geometry::SetColor(kBlack);
+  geometry::SetAlphaNorm(kAlpha);
 
   for (const auto &b : bullets_) {
     b.RenderDebugHitbox(mode);

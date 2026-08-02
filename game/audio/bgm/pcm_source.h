@@ -22,15 +22,15 @@ enum class PcmSampleFormat : uint8_t {
 };
 
 struct PcmFormat {
-  const uint32_t samplingrate;
-  const uint16_t channels;
-  const PcmSampleFormat format;
+  uint32_t samplingrate;
+  uint16_t channels;
+  PcmSampleFormat format;
 
   std::strong_ordering operator<=>(const PcmFormat &other) const = default;
 
-  size_t SampleSize() const {
+  [[nodiscard]] size_t SampleSize() const {
     const auto byte_depth = std::to_underlying(format);
-    return (channels * byte_depth);
+    return (static_cast<size_t>(channels) * byte_depth);
   }
 };
 // -----------------
@@ -69,7 +69,7 @@ public:
 // Base class for an individual intro or loop file.
 // Should be derived for each supported codec.
 struct PcmPart {
-  const PcmFormat pcmf;
+  PcmFormat pcmf;
 
   // Single decoding call. Should return the number of bytes actually decoded
   // (which can be less than [buf.size_bytes()]) or -1 if an error occurred.
@@ -80,12 +80,16 @@ struct PcmPart {
   virtual void PartSeekToSample(size_t sample) = 0;
 
   PcmPart(const PcmFormat &pcmf) : pcmf(pcmf) {}
-  virtual ~PcmPart() {}
+  PcmPart(const PcmPart &) = delete;
+  PcmPart &operator=(const PcmPart &) = delete;
+  PcmPart(PcmPart &&) = delete;
+  PcmPart &operator=(PcmPart &&) = delete;
+  virtual ~PcmPart() = default;
 };
 
 // Generic implementation for PCM codecs with separate intro and loop files.
 struct PcmStream {
-  const PcmFormat pcmf;
+  PcmFormat pcmf;
   PcmVolume vol;
   std::unique_ptr<std::ifstream> intro_stream;
   std::unique_ptr<std::ifstream> loop_stream;
@@ -118,6 +122,9 @@ struct PcmStream {
 // `PcmStream` retains ownership of [stream].
 using PcmPartOpen = std::unique_ptr<PcmPart>(std::istream &stream);
 // ----------------------------
+
+std::unique_ptr<PcmPart> OpenFlac(std::istream &stream);
+std::unique_ptr<PcmPart> OpenVorbis(std::istream &stream);
 
 // Tries to open a waveform track whose name starts with [base_fn] and has one
 // of the supported codec extensions.

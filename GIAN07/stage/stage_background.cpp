@@ -2,14 +2,23 @@
 /// StageBackground - validated tile map scrolling and stage background modes
 ///
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <span>
 #include <utility>
 
 #include "stage_background.h"
 
 #include "effect/effect_manager.h"
+#include "effect/effect_types.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
+#include "stage/stage_map.h"
+#include "stage/stage_visuals.h"
 #include "util/math_utils.h"
 
 namespace stage {
@@ -271,14 +280,30 @@ void StageBackground::UpdateStage2Boss() {
     int speed;
   };
   static constexpr std::array kSpeedChanges = {
-      SpeedChange{0, 1512},    SpeedChange{20, 1200},   SpeedChange{40, 900},
-      SpeedChange{60, 600},    SpeedChange{80, 300},    SpeedChange{100, 150},
-      SpeedChange{140, -150},  SpeedChange{160, -300},  SpeedChange{180, -600},
-      SpeedChange{200, -900},  SpeedChange{220, -1200}, SpeedChange{240, -1512},
-      SpeedChange{440, -1512}, SpeedChange{460, -1200}, SpeedChange{480, -900},
-      SpeedChange{500, -600},  SpeedChange{520, -300},  SpeedChange{540, -150},
-      SpeedChange{580, 150},   SpeedChange{600, 300},   SpeedChange{620, 600},
-      SpeedChange{640, 900},   SpeedChange{660, 1200},  SpeedChange{680, 1512},
+      SpeedChange{.frame = 0, .speed = 1512},
+      SpeedChange{.frame = 20, .speed = 1200},
+      SpeedChange{.frame = 40, .speed = 900},
+      SpeedChange{.frame = 60, .speed = 600},
+      SpeedChange{.frame = 80, .speed = 300},
+      SpeedChange{.frame = 100, .speed = 150},
+      SpeedChange{.frame = 140, .speed = -150},
+      SpeedChange{.frame = 160, .speed = -300},
+      SpeedChange{.frame = 180, .speed = -600},
+      SpeedChange{.frame = 200, .speed = -900},
+      SpeedChange{.frame = 220, .speed = -1200},
+      SpeedChange{.frame = 240, .speed = -1512},
+      SpeedChange{.frame = 440, .speed = -1512},
+      SpeedChange{.frame = 460, .speed = -1200},
+      SpeedChange{.frame = 480, .speed = -900},
+      SpeedChange{.frame = 500, .speed = -600},
+      SpeedChange{.frame = 520, .speed = -300},
+      SpeedChange{.frame = 540, .speed = -150},
+      SpeedChange{.frame = 580, .speed = 150},
+      SpeedChange{.frame = 600, .speed = 300},
+      SpeedChange{.frame = 620, .speed = 600},
+      SpeedChange{.frame = 640, .speed = 900},
+      SpeedChange{.frame = 660, .speed = 1200},
+      SpeedChange{.frame = 680, .speed = 1512},
   };
   const auto found =
       std::ranges::find(kSpeedChanges, effect_count_, &SpeedChange::frame);

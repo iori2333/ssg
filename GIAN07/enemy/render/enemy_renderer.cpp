@@ -3,14 +3,24 @@
 ///
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 
 #include "enemy_renderer.h"
 
+#include "enemy/actor/enemy_actor.h"
+#include "enemy/boss/bit_formation.h"
+#include "enemy/boss/boss.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/math_utils.h"
+#include "util/object_pool.h"
 
 void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
   if (actor.animation >= animations_.size()) {
@@ -25,7 +35,7 @@ void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
   const auto frame = animation.mode == EnemyAnimationMode::Directional
                          ? static_cast<uint8_t>(actor.d - 64 + 8) >> 4
                          : actor.animation_frame;
-  if (frame >= kEnemyAnimationFrameCapacity ||
+  if (std::cmp_greater_equal(frame, kEnemyAnimationFrameCapacity) ||
       !GraphicsSurfaceBlit({topleft.x, topleft.y}, surface,
                            animation.ptn[frame])) {
     return;
@@ -53,7 +63,7 @@ void EnemyRenderer::DrawRegular(
   }
 }
 
-void EnemyRenderer::DrawExplosion(const EnemyActor &actor) const {
+void EnemyRenderer::DrawExplosion(const EnemyActor &actor) {
   const auto frame = actor.count / kEnemyExplosionSpeed;
   const PixelLtrb source = {static_cast<PixelCoord>(frame * 48), 296,
                             static_cast<PixelCoord>((frame + 1) * 48), 344};
@@ -79,16 +89,16 @@ void EnemyRenderer::DrawBosses(
   }
 }
 
-void EnemyRenderer::DrawBossLinks(const BitFormation &formation) const {
-  const auto geometry = formation.LinkGeometry();
-  if (geometry.count == 0) {
+void EnemyRenderer::DrawBossLinks(const BitFormation &formation) {
+  const auto link_geometry = formation.LinkGeometry();
+  if (link_geometry.count == 0) {
     return;
   }
 
-  Geometry().SetColor({4, 4, 5});
-  for (std::size_t index = 0; index < geometry.count; ++index) {
-    const auto &link = geometry.links[index];
-    Geometry().DrawLine(link.from.x, link.from.y, link.to.x, link.to.y);
+  geometry::SetColor({4, 4, 5});
+  for (std::size_t index = 0; index < link_geometry.count; ++index) {
+    const auto &link = link_geometry.links[index];
+    geometry::DrawLine(link.from.x, link.from.y, link.to.x, link.to.y);
   }
 }
 
@@ -96,7 +106,8 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
   constexpr auto surface = SurfaceId::Enemy;
   const auto center = WorldPoint::FromWorld(boss.x, boss.y).ToPixel();
 
-  if (boss.mode == BossMode::BombSpirit && player_.IsBombActive() != 0U &&
+  if (boss.mode == BossMode::BombSpirit &&
+      static_cast<unsigned int>(player_.IsBombActive()) != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
     const PixelLtrb spirit = PixelLtwh{
         160 + (static_cast<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
@@ -107,16 +118,19 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
     return true;
   }
 
-  if (boss.mode == BossMode::BombShield && player_.IsBombActive() != 0U &&
+  if (boss.mode == BossMode::BombShield &&
+      static_cast<unsigned int>(player_.IsBombActive()) != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
     for (uint8_t layer = 0; layer <= 5; ++layer) {
-      Geometry().SetColor({5U - layer, 5U - layer, 5U});
-      GeomCircle({center.x, center.y},
-                 math::RoundedPolarVector(static_cast<float>(boss.count * 4) *
-                                              math::kLegacyAngleStep,
-                                          static_cast<float>(30 + layer * 4))
-                         .y +
-                     80);
+      geometry::SetColor({static_cast<uint8_t>(5U - layer),
+                          static_cast<uint8_t>(5U - layer), 5U});
+      geometry::DrawCircle(
+          {center.x, center.y},
+          math::RoundedPolarVector(static_cast<float>(boss.count * 4) *
+                                       math::kLegacyAngleStep,
+                                   static_cast<float>(30 + layer * 4))
+                  .y +
+              80);
     }
   }
 

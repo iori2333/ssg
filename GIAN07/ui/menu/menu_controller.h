@@ -32,7 +32,7 @@ inline constexpr auto kMenuTitleValueGap = 4;
 
 constexpr FontId kMenuFont = FontId::Small;
 
-enum class MenuColor {
+enum class MenuColor : uint8_t {
   kActiveText,
   kActiveHighlight,
   kDisabledText,

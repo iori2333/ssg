@@ -28,7 +28,7 @@ class Localization;
 
 namespace menu {
 
-enum class MainMenuAction {
+enum class MainMenuAction : uint8_t {
   StartGame,
   StartExtra,
   OpenReplay,
@@ -48,6 +48,6 @@ struct MainMenuServices {
 
 std::unique_ptr<IMenuNode>
 BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
-                  std::function<void(MainMenuAction)> on_action);
+                  const std::function<void(MainMenuAction)> &on_action);
 
 } // namespace menu

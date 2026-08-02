@@ -39,7 +39,7 @@ private:
   std::vector<uint8_t> data_;
   std::vector<PbgEntryHeader> entries_;
 
-  static PbgArchive FromBuffer(std::vector<uint8_t> data);
+  static PbgArchive FromBuffer(std::vector<uint8_t> packfile);
 };
 
 // Builder for writing PBG packfiles. Add() copies each entry so the builder

@@ -4,14 +4,22 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <format>
 #include <optional>
 #include <span>
+#include <string>
+#include <string_view>
+#include <system_error>
 #include <utility>
+#include <vector>
 
 #include "game_data.h"
 
+#include "data/data_manifest.h"
+#include "data/pbg_archive.h"
 #include "sys/file.h"
 #include "sys/log.h"
 
@@ -117,14 +125,16 @@ LoadErrors GameData::LoadDirectory(const std::filesystem::path &path) {
                                              kDataSectionExtensions[section]);
     if (!count || *count < kMinimumEntries[section] ||
         (section == std::to_underlying(DataSectionId::Demos) && *count > 6)) {
-      return {{LoadErrorKind::Invalid, DataSourceKind::Directory}};
+      return {{.kind = LoadErrorKind::Invalid,
+               .source = DataSourceKind::Directory}};
     }
     manifest.sections[section].entry_count = *count;
   }
   if (manifest.sections[std::to_underlying(DataSectionId::Music)].entry_count !=
       manifest.sections[std::to_underlying(DataSectionId::MusicArranged)]
           .entry_count) {
-    return {{LoadErrorKind::Invalid, DataSourceKind::Directory}};
+    return {
+        {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Directory}};
   }
 
   directory_ = path;
@@ -134,7 +144,8 @@ LoadErrors GameData::LoadDirectory(const std::filesystem::path &path) {
     directory_.clear();
     manifest_ = {};
     loaded_ = false;
-    return {{LoadErrorKind::Invalid, DataSourceKind::Directory}};
+    return {
+        {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Directory}};
   }
   logging::Info(logging::Channel::Data, "Validated unpacked game data");
   return {};
@@ -143,33 +154,39 @@ LoadErrors GameData::LoadDirectory(const std::filesystem::path &path) {
 LoadErrors GameData::LoadArchive(const std::filesystem::path &path) {
   std::error_code error;
   if (!std::filesystem::is_regular_file(path, error)) {
-    return {{LoadErrorKind::Missing, DataSourceKind::Archive}};
+    return {
+        {.kind = LoadErrorKind::Missing, .source = DataSourceKind::Archive}};
   }
 
   auto archive = PbgArchive::Open(path);
   if (!archive || archive.EntryCount() == 0) {
-    return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
+    return {
+        {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Archive}};
   }
 
   const auto manifest =
       ParseDataManifest(archive.Extract(0), archive.EntryCount());
   if (!manifest) {
-    return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
+    return {
+        {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Archive}};
   }
   for (size_t i = 0; i < kMinimumEntries.size(); ++i) {
     if (manifest->sections[i].entry_count < kMinimumEntries[i]) {
-      return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
+      return {
+          {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Archive}};
     }
   }
   if (manifest->sections[std::to_underlying(DataSectionId::Demos)].entry_count >
       6) {
-    return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
+    return {
+        {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Archive}};
   }
   if (manifest->sections[std::to_underlying(DataSectionId::Music)]
           .entry_count !=
       manifest->sections[std::to_underlying(DataSectionId::MusicArranged)]
           .entry_count) {
-    return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
+    return {
+        {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Archive}};
   }
 
   archive_ = std::move(archive);
@@ -179,7 +196,8 @@ LoadErrors GameData::LoadArchive(const std::filesystem::path &path) {
     archive_ = {};
     manifest_ = {};
     loaded_ = false;
-    return {{LoadErrorKind::Invalid, DataSourceKind::Archive}};
+    return {
+        {.kind = LoadErrorKind::Invalid, .source = DataSourceKind::Archive}};
   }
   logging::Info(logging::Channel::Data, "Validated game data archive");
   return {};

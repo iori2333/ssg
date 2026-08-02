@@ -28,7 +28,7 @@ public:
   };
 
   [[nodiscard]] static std::optional<StageMap>
-  Parse(std::span<const uint8_t> data);
+  Parse(std::span<const uint8_t> bytes);
 
   [[nodiscard]] const std::vector<Layer> &Layers() const { return layers_; }
 

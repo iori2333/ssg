@@ -1,11 +1,13 @@
 #include "volume_ramp.h"
+#include <atomic>
+#include <cstdint>
 
 namespace audio {
 
 void VolumeRamp::Set(float linear) noexcept {
   current_.store(linear, std::memory_order_relaxed);
   end_.store(linear, std::memory_order_relaxed);
-  step_.store(0.0f, std::memory_order_relaxed);
+  step_.store(0.0F, std::memory_order_relaxed);
   frames_remaining_.store(0, std::memory_order_relaxed);
 }
 
@@ -13,7 +15,7 @@ void VolumeRamp::StartFade(float from, float to, uint64_t frames) noexcept {
   current_.store(from, std::memory_order_relaxed);
   end_.store(to, std::memory_order_relaxed);
   if (frames == 0) {
-    step_.store(0.0f, std::memory_order_relaxed);
+    step_.store(0.0F, std::memory_order_relaxed);
     frames_remaining_.store(0, std::memory_order_relaxed);
     current_.store(to, std::memory_order_relaxed);
     return;

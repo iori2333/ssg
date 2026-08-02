@@ -10,7 +10,10 @@
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
 #include "effect/effect_manager.h"
+#include "effect/effect_types.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/graphics_backend.h"
 #include "player/player.h"
 #include "util/math_utils.h"
@@ -30,11 +33,11 @@ void ItemSystem::Spawn(int x, int y, ItemKind kind) {
     return;
   }
   auto *ip = pool_.Alloc();
-  if (!ip) {
+  if (ip == nullptr) {
     return;
   }
 
-  constexpr auto angle = -math::kFullAngle / 4.0f;
+  constexpr auto angle = -math::kFullAngle / 4.0F;
   ip->x = x;
   ip->y = y;
   ip->kind = kind;
@@ -190,9 +193,9 @@ void ItemSystem::Draw() const {
       for (j = 0; j < 8; j++) {
         src = PixelLtwh{(384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16};
         const auto offset = math::RoundedPolarVector(
-            static_cast<float>(ip.count + (j * 256 / 8)) *
+            static_cast<float>(ip.count + static_cast<float>(j * 256 / 8)) *
                 math::kLegacyAngleStep,
-            12.0f);
+            12.0F);
         x = (ip.x >> 6) - 8 + offset.x;
         y = (ip.y >> 6) - 8 + offset.y;
         GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
@@ -204,9 +207,10 @@ void ItemSystem::Draw() const {
       for (j = 0; j < 8; j++) {
         src = PixelLtwh{(384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16};
         const auto offset = math::RoundedPolarVector(
-            static_cast<float>((-2 * ip.count) + (j * 256 / 8)) *
+            static_cast<float>((-2 * ip.count) +
+                               static_cast<float>(j * 256 / 8)) *
                 math::kLegacyAngleStep,
-            12.0f);
+            12.0F);
         x = (ip.x >> 6) - 8 + offset.x;
         y = (ip.y >> 6) - 8 + offset.y;
         GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);

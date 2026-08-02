@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include "bullet/bullet_common.h"
@@ -53,8 +54,7 @@ struct LaserHoming {
   [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const HomingSpawnInfo &info);
-  [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
-                                   int player_radius) const;
+  [[nodiscard]] HitResult CheckHit(int px, int py, int player_radius) const;
   void Update(audio::AudioSystem &audio, const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
@@ -72,7 +72,9 @@ private:
   int current_{};
   float a_{};
   uint8_t left_{};
-  TrailPoint p_[kHomingTrailLength * kHomingSection]{};
+  std::array<TrailPoint,
+             static_cast<size_t>(kHomingTrailLength * kHomingSection)>
+      p_{};
 
   HomingType subtype_{HomingType::None};
   HomingState state_{HomingState::Normal};

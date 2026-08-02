@@ -1,10 +1,12 @@
 /// Active gameplay flow: live runs, replays, demos, pause, and game over.
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string_view>
 #include <utility>
 
+#include "effect/effect_types.h"
 #include "flow_types.h"
 #include "gameplay_state.h"
 
@@ -13,15 +15,23 @@
 #include "effect/effect_manager.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/playfield.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
 #include "gfx/font_uty.h"
+#include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
 #include "platform/text_backend.h"
 #include "player/loadout/player_loadout.h"
+#include "record/record_system.h"
 #include "settings/config.h"
+#include "stage/stage_session.h"
 #include "sys/input.h"
 #include "sys/log.h"
+#include "ui/gameplay/gameplay_hud.h"
+#include "ui/msg_window/msg_window.h"
 #include "util/math_utils.h"
-#include "util/time.h"
+#include "util/time_api.h"
 
 namespace gameflow {
 namespace {
@@ -513,9 +523,9 @@ FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
     constexpr PixelLtwh replay_label = {312, 80, 32, 8};
     GraphicsSurfaceBlit({128, 470}, SurfaceId::System, replay_label);
     if (overlay_timer_ < 96) {
-      Geometry().SetAlphaNorm(128);
-      Geometry().SetColor({0, 0, 0});
-      Geometry().DrawBoxA(170, 473, 245, 478);
+      geometry::SetAlphaNorm(128);
+      geometry::SetColor({0, 0, 0});
+      geometry::DrawBoxA(170, 473, 245, 478);
       constexpr PixelLtwh skip_label = {312, 88, 72, 8};
       GraphicsSurfaceBlit({173, 474}, SurfaceId::System, skip_label);
     }
@@ -598,7 +608,7 @@ void GameplayState::Draw() const {
     context.player.DrawDebugHitbox();
   }
   context.effects.DrawForeground();
-  context.ui.DrawTopHud(hud_model);
+  UiManager::DrawTopHud(hud_model);
   context.ui.DrawBossHud(context.stage.Frame());
   context.effects.DrawScreenTransition();
   context.ui.DrawMessageWindow();

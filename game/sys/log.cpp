@@ -1,15 +1,19 @@
 /// Application-wide structured logging.
 
+#include "SDL3/SDL_stdinc.h"
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <optional>
-#include <string>
+#include <string_view>
+#include <system_error>
 #ifdef PBG_DEBUG
 #include <thread>
 #endif
@@ -19,19 +23,15 @@
 
 #include "log.h"
 
-#include "util/time.h"
+#include "util/time_api.h"
 
 namespace logging {
 namespace {
 
 std::mutex LogMutex;
-std::ofstream LogFile;
 constexpr auto ChannelCount = static_cast<size_t>(Channel::Sdl) + 1;
-std::array<Level, ChannelCount> ChannelThresholds = [] {
-  std::array<Level, ChannelCount> thresholds;
-  thresholds.fill(Level::Info);
-  return thresholds;
-}();
+std::array<Level, ChannelCount> ChannelThresholds{};
+std::unique_ptr<std::ofstream> LogFile;
 bool ConsoleEnabled = false;
 bool Initialized = false;
 SDL_LogOutputFunction PreviousSdlOutput;
@@ -196,10 +196,10 @@ Channel ChannelFromSdl(int category) {
 }
 
 void WriteLine(std::string_view line, bool flush) {
-  if (LogFile) {
-    LogFile << line << '\n';
+  if (LogFile != nullptr && *LogFile) {
+    *LogFile << line << '\n';
     if (flush) {
-      LogFile.flush();
+      LogFile->flush();
     }
   }
   if (ConsoleEnabled) {
@@ -210,8 +210,8 @@ void WriteLine(std::string_view line, bool flush) {
   }
 }
 
-void SDLCALL SdlOutput(void *, int category, SDL_LogPriority priority,
-                       const char *message) {
+void SDLCALL SdlOutput(void * /*unused*/, int category,
+                       SDL_LogPriority priority, const char *message) {
   Write(LevelFromSdl(priority), ChannelFromSdl(category), message);
 }
 
@@ -249,7 +249,7 @@ void Write(Level level, Channel channel, std::string_view message) noexcept {
 #endif
     const bool flush = level >= Level::Warning;
 
-    std::scoped_lock lock(LogMutex);
+    std::scoped_lock const lock(LogMutex);
     size_t offset = 0;
     while (offset <= message.size()) {
       const auto end = message.find('\n', offset);
@@ -262,6 +262,7 @@ void Write(Level level, Channel channel, std::string_view message) noexcept {
       offset = end + 1;
     }
   } catch (...) {
+    return;
   }
 }
 
@@ -294,7 +295,7 @@ void Initialize(std::string_view base_directory, std::string_view application,
   ChannelThresholds.fill(threshold);
   ChannelThresholds[static_cast<size_t>(Channel::Sdl)] =
       std::max(threshold, Level::Info);
-  if (channel_config) {
+  if (channel_config != nullptr) {
     ApplyChannelOverrides(channel_config);
   }
 
@@ -315,9 +316,10 @@ void Initialize(std::string_view base_directory, std::string_view application,
       std::filesystem::rename(current, previous, error);
     }
     error.clear();
-    LogFile.open(current, std::ios::binary | std::ios::trunc);
+    LogFile = std::make_unique<std::ofstream>();
+    LogFile->open(current, std::ios::binary | std::ios::trunc);
   }
-  if (!LogFile) {
+  if (LogFile == nullptr || !*LogFile) {
     ConsoleEnabled = true;
   }
 
@@ -330,14 +332,15 @@ void Initialize(std::string_view base_directory, std::string_view application,
 
 void Flush() noexcept {
   try {
-    std::scoped_lock lock(LogMutex);
-    if (LogFile) {
-      LogFile.flush();
+    std::scoped_lock const lock(LogMutex);
+    if (LogFile != nullptr && *LogFile) {
+      LogFile->flush();
     }
     if (ConsoleEnabled) {
       std::clog.flush();
     }
   } catch (...) {
+    return;
   }
 }
 
@@ -349,8 +352,11 @@ void Shutdown() {
   SDL_SetLogOutputFunction(PreviousSdlOutput, PreviousSdlUserdata);
   Flush();
   {
-    std::scoped_lock lock(LogMutex);
-    LogFile.close();
+    std::scoped_lock const lock(LogMutex);
+    if (LogFile != nullptr) {
+      LogFile->close();
+      LogFile.reset();
+    }
   }
   Initialized = false;
 }

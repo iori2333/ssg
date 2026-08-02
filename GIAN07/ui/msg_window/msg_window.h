@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -56,7 +57,7 @@ private:
   uint8_t face_state{}; // Face state
   uint8_t face_time{};  // Face display counter
 
-  std::string_view msg[kMessageLines]{}; // Pointers to displayed messages
+  std::array<std::string_view, kMessageLines> msg{}; // Displayed messages
 
   // Contains all text from [msg], concatenated with '\n'.
   std::string text;

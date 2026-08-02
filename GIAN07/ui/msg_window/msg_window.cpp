@@ -2,12 +2,21 @@
 /// MsgWindow - Message window processing
 ///
 
+#include <cassert>
+#include <cstdint>
 #include <utility>
 
 #include "msg_window.h"
 
 #include "data/graphics_assets.h"
+#include "gfx/constants.h"
+#include "gfx/coords.h"
+#include "gfx/geometry.h"
+#include "gfx/graphics.h"
+#include "gfx/graphics_backend.h"
+#include "gfx/text.h"
 #include "platform/text_backend.h"
+#include "platform/windows/text_gdi.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -152,6 +161,7 @@ void MsgWindow::Tick() {
 
   case kMsgWindowDead:
   case kMsgWindowFree:
+  default:
     break;
   }
 }
@@ -174,9 +184,9 @@ void MsgWindow::Draw() {
   }
 
   // Draw translucent part
-  Geometry().SetAlphaNorm(110);
-  Geometry().SetColor({0, 0, 3});
-  Geometry().DrawBoxA((x + 4), (y + 4), (x + w - 4), (y + h - 4));
+  geometry::SetAlphaNorm(110);
+  geometry::SetColor({0, 0, 3});
+  geometry::DrawBoxA((x + 4), (y + 4), (x + w - 4), (y + h - 4));
 
   // Display text only when window is [FREE]
   // -> Otherwise a Surface for text would have to be created...
@@ -226,7 +236,7 @@ void MsgWindow::Draw() {
     for (auto i = 0; i < kFaceHeight; i++) {
       len = math::RoundedPolarVector(static_cast<float>(time + (i * 153)) *
                                          math::kLegacyAngleStep,
-                                     static_cast<float>(64 - time) / 2.0f)
+                                     static_cast<float>(64 - time) / 2.0F)
                 .x;
       src =
           PixelLtwh{((face_id % kFaceColumns) * kFaceWidth), i, kFaceWidth, 1};
@@ -240,7 +250,7 @@ void MsgWindow::Draw() {
     for (auto i = 0; i < kFaceHeight; i++) {
       len = math::RoundedPolarVector(static_cast<float>(time + (i * 153)) *
                                          math::kLegacyAngleStep,
-                                     static_cast<float>(64 - time) / 2.0f)
+                                     static_cast<float>(64 - time) / 2.0F)
                 .x;
       src =
           PixelLtwh{((face_id % kFaceColumns) * kFaceWidth), i, kFaceWidth, 1};
@@ -264,6 +274,8 @@ void MsgWindow::Draw() {
         GraphicsSurfaceBlit({(x + len + 2), (oy + i)}, sid, src);
       }
     }
+    break;
+  default:
     break;
   }
 }

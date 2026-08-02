@@ -4,22 +4,29 @@
 
 #include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <ranges>
 
 #include "long.h"
 
+#include "bullet/bullet_common.h"
 #include "enemy/actor/enemy_actor.h"
 #include "enemy/ecl/ecl.h"
+#include "gfx/coords.h"
 #include "gfx/geometry.h"
+#include "gfx/graphics.h"
 #include "gfx/graphics_backend.h"
+#include "gfx/pixelformat.h"
 #include "util/math_utils.h"
 
 namespace {
 
 // ── Color tables ────────────────────────────────────────────────────
 // clang-format off
-inline constexpr Rgb216 kTable16Bit[16] = {
-    {3, 0, 3}, {0, 2, 0}, {0, 0, 4}, {4, 2, 0}, {0, 0, 1},
+inline constexpr std::array<Rgb216, 16> kTable16Bit = {
+    Rgb216{3, 0, 3}, Rgb216{0, 2, 0}, Rgb216{0, 0, 4},
+    Rgb216{4, 2, 0}, Rgb216{0, 0, 1},
 };
 // clang-format on
 
@@ -70,7 +77,7 @@ void LaserLong::Spawn(const LongLaserSpawnInfo &info) {
 // ── Geometry ──────────────────────────────────────────────────────
 
 void LaserLong::RecalcGeometry() {
-  auto *pp = p_;
+  auto *pp = p_.data();
 
   pp[1].x = pp[0].x = (x_ / kWorldCoordScale) + wx_ + lx_;
   pp[1].y = pp[0].y = (y_ / kWorldCoordScale) + wy_ + ly_;
@@ -134,8 +141,6 @@ void LaserLong::TickUpdate() {
 
   case LongState::Active:
   case LongState::Line:
-    break;
-
   default:
     break;
   }
@@ -192,12 +197,15 @@ HitResult LaserLong::CheckHit(int px, int py, int player_radius) const {
   const float len = angle_cos * tx + angle_sin * ty;
   const float dist = std::abs(-angle_sin * tx + angle_cos * ty);
 
-  if (len <= 0)
+  if (len <= 0) {
     return HitResult::Miss;
-  if (dist <= w_ + player_radius)
+  }
+  if (dist <= w_ + player_radius) {
     return HitResult::Hit;
-  if (dist <= w_ + kLongLaserEvadeWidth)
+  }
+  if (dist <= w_ + kLongLaserEvadeWidth) {
     return HitResult::Graze;
+  }
   return HitResult::Miss;
 }
 
@@ -243,8 +251,8 @@ void LaserLong::DrawBeam() const {
   }
 
   const Rgba col = kTable16Bit[cval].ToRgb().WithAlpha(0xFF);
-  Geometry().SetAlphaOne();
-  GeomGrdRectA(Geometry(), p_, col);
+  geometry::SetAlphaOne();
+  geometry::DrawGradientRect(p_, col, true);
 
   std::array<VertexRgba, kBeamVertexCount> vcs{};
   vcs[0] = {255, 255, 255, 0xFF};
@@ -257,19 +265,19 @@ void LaserLong::DrawBeam() const {
   points[1] = p_[0];
   points[kBeamVertexCount - 1] = p_[3];
   for (auto n = 2; n < (kBeamVertexCount - 1); n++) {
-    const auto cap_angle = angle_ + (math::kFullAngle / 4.0f) +
-                           (math::kFullAngle / 2.0f) * (n - 1) / 32.0f;
+    const auto cap_angle = angle_ + (math::kFullAngle / 4.0F) +
+                           (math::kFullAngle / 2.0F) * (n - 1) / 32.0F;
     const auto offset = math::PolarVector(cap_angle, len);
     points[n] = {points[0].x + offset.x, points[0].y + offset.y};
   }
-  Geometry().DrawTrianglesA(TrianglePrimitive::Fan, points, vcs);
+  geometry::DrawTrianglesA(TrianglePrimitive::Fan, points, vcs);
 }
 
 void LaserLong::DrawPreviewLine() const {
   const auto px = x_ / kWorldCoordScale;
   const auto py = y_ / kWorldCoordScale;
-  Geometry().SetColor({4, 4, 4});
-  Geometry().DrawLine(px, py, (px + infx_), (py + infy_));
+  geometry::SetColor({4, 4, 4});
+  geometry::DrawLine(px, py, (px + infx_), (py + infy_));
 }
 
 // ── Command dispatch ─────────────────────────────────────────────────
@@ -338,7 +346,7 @@ void LaserLong::RenderDebugHitbox(int mode) const {
     return;
   }
   const std::array<VertexXy, 4> strip = {p_[0], p_[3], p_[1], p_[2]};
-  Geometry().DrawTrianglesA(TrianglePrimitive::Strip, strip);
+  geometry::DrawTrianglesA(TrianglePrimitive::Strip, strip);
 
   if (mode >= 2 && w_ > 0) {
     const float bx = x_ / kWorldCoordScale;
@@ -348,7 +356,7 @@ void LaserLong::RenderDebugHitbox(int mode) const {
     const float wy2 = wy_ * scale / w_;
     const float lx2 = lx_ * scale / w_;
     const float ly2 = ly_ * scale / w_;
-    VertexXy ep[4];
+    std::array<VertexXy, 4> ep{};
     ep[1].x = ep[0].x = static_cast<float>(bx + wx2 + lx2);
     ep[1].y = ep[0].y = static_cast<float>(by + wy2 + ly2);
     ep[2].x = ep[3].x = static_cast<float>(bx - wx2 + lx2);
@@ -358,6 +366,6 @@ void LaserLong::RenderDebugHitbox(int mode) const {
     ep[2].x += static_cast<float>(infx_);
     ep[2].y += static_cast<float>(infy_);
     const std::array<VertexXy, 4> estrip = {ep[0], ep[3], ep[1], ep[2]};
-    Geometry().DrawTrianglesA(TrianglePrimitive::Strip, estrip);
+    geometry::DrawTrianglesA(TrianglePrimitive::Strip, estrip);
   }
 }
