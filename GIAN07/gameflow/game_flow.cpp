@@ -118,7 +118,6 @@ public:
     phase_ = Phase::WeaponSelect;
     context_.session.level = extra_stage ? GameLevel::Extra : GameLevel::Normal;
     ResetGameplayRuntime(context_);
-    context_.session.ResetRank();
     context_.player.SelectType(PlayerType::Wide);
     context_.player.Initialize(context_.config.game.player_stock,
                                context_.config.game.bomb_stock);
@@ -133,7 +132,6 @@ public:
       difficulty_menu_.Tick(frame.gameplay);
       if (selected_difficulty_) {
         context_.session.level = *selected_difficulty_;
-        context_.session.ResetRank();
         return BeginGame();
       }
       if (!difficulty_menu_.Active()) {

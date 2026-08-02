@@ -35,9 +35,6 @@ inline constexpr auto kStarExtendLoop = 3;
 inline constexpr auto kStarCollectLine = 120_px;
 inline constexpr auto kStarCollectGrazeWait = 128;
 
-inline constexpr auto kBombRankDecrease = 25;
-inline constexpr auto kDeathRankDecrease = 100;
-
 class EnemyManager;
 class EffectManager;
 struct GameSession;

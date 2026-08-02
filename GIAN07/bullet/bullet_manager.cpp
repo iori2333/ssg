@@ -162,7 +162,7 @@ void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
 void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
   auto cmd = info;
   if (!cmd.no_scaling) {
-    switch (session_.EffectiveLevel()) {
+    switch (session_.level) {
     case GameLevel::Easy:
       bullet_common::ApplyEasyCountSpread(cmd.pattern, cmd.n, cmd.dw);
       cmd.l = bullet_common::ScaleLengthEasy(cmd.l);
@@ -180,7 +180,7 @@ void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
     default:
       break;
     }
-    cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, session_.rank);
+    cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, session_.Rank());
   }
 
   auto base_angle = cmd.aimed

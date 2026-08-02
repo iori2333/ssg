@@ -269,7 +269,6 @@ GameplayState::StepResult GameplayState::Step(InputBits &input) {
   if (player_result.game_over) {
     BeginGameOver();
   }
-  context.session.UpdateRank(context.stage.Frame());
   if (player_result.game_over) {
     return StepResult::GameOver;
   }
@@ -586,7 +585,7 @@ void GameplayState::Draw() const {
       .deathbomb_count = context.player.DeathbombCount(),
       .star_counter = context.player.StarCounter(),
       .star_threshold = context.player.StarThreshold(),
-      .rank = context.session.rank,
+      .rank = context.session.Rank(),
       .level_name = GameLevelName(context.session.level),
       .practice_mode = context.player.Practice(),
   };

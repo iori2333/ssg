@@ -470,7 +470,6 @@ bool Player::ActivateBomb(BombTrigger trigger) {
   }
   deathbomb_time_ = 0;
   life_state_ = LifeState::Active;
-  session_.AddRank(-kBombRankDecrease);
   clear_bullets_requested_ = true;
   return true;
 }
@@ -491,8 +490,6 @@ void Player::CommitDeath() {
   deathbomb_time_ = 0;
   invincibility_time_ = kRespawnInvincibilityDuration;
   life_state_ = LifeState::Respawning;
-
-  session_.AddRank(-kDeathRankDecrease); // death decreases rank
 
   if (left_ != 0U) {
     left_ -= 1;

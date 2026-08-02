@@ -356,7 +356,7 @@ void RecordSystem::BeginStage(const Player &player,
       .frame_count = 0,
       .rng = math::CaptureRandomState(),
       .player = player.CaptureProgress(),
-      .rank = session.rank,
+      .rank = session.Rank(),
   };
   recording->has_current_checkpoint = true;
   recording->current_inputs.clear();
@@ -750,7 +750,6 @@ void RecordSystem::RestorePlaybackStage(Player &player, GameSession &session) {
   auto &playback = std::get<PlaybackState>(state_);
   const auto &checkpoint = playback.stages[playback.stage_index].checkpoint;
   session.stage = checkpoint.stage;
-  session.rank = checkpoint.rank;
   player.RestoreProgress(checkpoint.player);
   math::RestoreRandomState(checkpoint.rng);
   playback.frame_cursor = 0;

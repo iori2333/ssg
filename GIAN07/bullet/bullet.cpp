@@ -147,7 +147,7 @@ void Bullet::DrawEffect() const {
 // ── Bullet spawn setup ───────────────────────────────────────────
 
 void ScaleBulletSpawnInfo(BulletSpawnInfo &info, const GameSession &game) {
-  switch (game.EffectiveLevel()) {
+  switch (game.level) {
   case GameLevel::Easy:
     bullet_common::ApplyEasyCountSpread(info.pattern, info.count, info.spread);
     bullet_common::ApplyEasyRapid(info.rapid_count);
@@ -168,7 +168,7 @@ void ScaleBulletSpawnInfo(BulletSpawnInfo &info, const GameSession &game) {
   }
 
   if (info.motion == BulletMotion::Normal) {
-    info.speed = bullet_common::ScaleVelocityByRank(info.speed, game.rank);
+    info.speed = bullet_common::ScaleVelocityByRank(info.speed, game.Rank());
   }
 }
 

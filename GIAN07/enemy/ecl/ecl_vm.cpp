@@ -203,7 +203,7 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
 
   case EclOpcode::JumpDifficulty: {
     const auto &targets = Args<EclDifficultyJumpArguments>(instruction).targets;
-    switch (host_.Session().EffectiveLevel()) {
+    switch (host_.Session().level) {
     case GameLevel::Easy:
       actor.script.position = targets[0];
       break;
@@ -212,6 +212,7 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
       actor.script.position = targets[1];
       break;
     case GameLevel::Hard:
+    case GameLevel::Extra:
       actor.script.position = targets[2];
       break;
     case GameLevel::Lunatic:
