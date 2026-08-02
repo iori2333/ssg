@@ -34,7 +34,7 @@ struct ItemData {
   int y = 0;
   int vx = 0;
   int vy = 0;
-  uint32_t count = 0;
+  int count = 0;
   ItemKind kind = ItemKind::None;
   bool auto_collect = false;
 };

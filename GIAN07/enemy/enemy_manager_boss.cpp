@@ -86,20 +86,20 @@ void EnemyManager::UpdateBosses() {
     FinishActorFrame(boss, true);
   }
 
-  int32_t phase_threshold_hp = -1;
-  int32_t timer_max = -1;
-  int32_t timer_now = 0;
+  int phase_threshold_hp = -1;
+  int timer_max = -1;
+  int timer_now = 0;
   for (const auto &boss : bosses_) {
     const auto &hp_interrupt =
         boss.script.interrupts[static_cast<size_t>(EclInterrupt::Hp)];
     const auto &timer_interrupt =
         boss.script.interrupts[static_cast<size_t>(EclInterrupt::Timer)];
     if (phase_threshold_hp < 0 && hp_interrupt.target) {
-      phase_threshold_hp = static_cast<int32_t>(hp_interrupt.threshold);
+      phase_threshold_hp = hp_interrupt.threshold;
     }
     if (timer_max < 0 && timer_interrupt.target) {
-      timer_max = static_cast<int32_t>(timer_interrupt.threshold);
-      timer_now = static_cast<int32_t>(boss.script.interrupt_timer);
+      timer_max = timer_interrupt.threshold;
+      timer_now = boss.script.interrupt_timer;
     }
   }
 
@@ -163,7 +163,7 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
           LongLaserUpdateInfo{.command =
                                   LongLaserUpdateInfo::Command::ForceClose});
     }
-    player_.PowerUp(static_cast<uint8_t>(actor.hp));
+    player_.PowerUp(static_cast<int>(actor.hp));
     actor.BeginExplosion();
 
     // If it was the last one //
@@ -297,7 +297,7 @@ void EnemyManager::ControlBits(EnemyActor &actor, EclBitCommand command,
   }
 }
 
-void EnemyManager::SetBossTimeout(int32_t timeout_end) {
+void EnemyManager::SetBossTimeout(int timeout_end) {
   boss_hud_.stage_timeout_end = timeout_end;
 }
 

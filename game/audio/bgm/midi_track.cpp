@@ -99,8 +99,8 @@ void MidiTrack::SetVolume(Volume volume) {
   ApplyVolume();
 }
 
-void MidiTrack::SetTempo(std::int8_t tempo) {
-  const auto clamped = std::clamp(tempo, std::int8_t{-100}, std::int8_t{100});
+void MidiTrack::SetTempo(int tempo) {
+  const auto clamped = std::clamp(tempo, -100, 100);
   const auto numerator = static_cast<std::uint8_t>(kTempoDenominator + clamped);
   sequencer_.SetTempo(numerator, kTempoDenominator);
 }

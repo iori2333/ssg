@@ -166,7 +166,7 @@ ScoreSceneResult ScoreScene::UpdateLeaderboard(InputBits input,
       const auto level_count = kGameLevelNames.size();
       const auto direction = input == KeyLeft ? level_count - 1 : 1;
       current_difficulty_ =
-          static_cast<uint8_t>((current_difficulty_ + direction) % level_count);
+          (current_difficulty_ + direction) % level_count;
       LoadLeaderboard(static_cast<GameLevel>(current_difficulty_));
       audio_.PlaySfx(SfxId::Select);
     } else if (InputIsOk(input) && !scores_.empty()) {

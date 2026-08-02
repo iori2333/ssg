@@ -7,6 +7,7 @@
 ///
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -31,7 +32,7 @@ public:
 
   // Track switching. Loads the MIDI track from game data, then tries to
   // open a replacement waveform from the active BGM pack. Plays on success.
-  bool Play(unsigned int id);
+  bool Play(std::size_t id);
 
   void SetMidiVariant(MidiVariant variant);
 
@@ -46,7 +47,7 @@ public:
 private:
   const data::GameData &data_;
   audio::AudioSystem &audio_;
-  unsigned int loaded_num_ = 0; // 0 = nothing loaded
+  std::size_t loaded_num_ = 0; // 0 = nothing loaded
   MidiVariant midi_variant_ = MidiVariant::Original;
   std::string pack_path_;
   std::optional<bool> packs_available_;

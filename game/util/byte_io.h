@@ -9,6 +9,7 @@
 #include <cstring>
 #include <optional>
 #include <span>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -27,6 +28,10 @@ public:
 
   void WriteBytes(std::span<const uint8_t> bytes) {
     bytes_.insert(bytes_.end(), bytes.begin(), bytes.end());
+  }
+
+  void WriteString(std::string_view text) {
+    WriteBytes({reinterpret_cast<const uint8_t *>(text.data()), text.size()});
   }
 
   [[nodiscard]] const std::vector<uint8_t> &Bytes() const { return bytes_; }

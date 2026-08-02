@@ -334,7 +334,7 @@ void LaserLong::FixAngleGeometry() {
   RecalcGeometry();
 }
 
-bool LaserLong::BelongsTo(const EnemyActor *e, uint8_t id) const {
+bool LaserLong::BelongsTo(const EnemyActor *e, std::size_t id) const {
   return e_ == e && e != nullptr &&
          (enemy_id_ == id || id == kEclAllLongLasers);
 }

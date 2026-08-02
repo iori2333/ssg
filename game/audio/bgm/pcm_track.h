@@ -34,7 +34,7 @@ public:
   void Resume() override;
   void FadeOut(float volume_start, std::chrono::milliseconds duration) override;
   void SetVolume(Volume volume) override;
-  void SetTempo(std::int8_t tempo) override;
+  void SetTempo(int tempo) override;
   void Tick(std::chrono::milliseconds delta) override;
 
   [[nodiscard]] bool IsLoaded() const override;
@@ -52,7 +52,7 @@ private:
   bool sound_initialized_ = false;
   std::atomic<bool> playing_ = false;
   Volume volume_ = kMaxVolume;
-  std::int8_t tempo_ = 0;
+  int tempo_ = 0;
 };
 
 } // namespace audio::bgm

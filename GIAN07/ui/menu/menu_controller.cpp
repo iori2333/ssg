@@ -604,7 +604,7 @@ void MenuController::RenderList() {
 }
 
 void MenuController::DrawTitle(TextRenderSession &s, std::string_view title,
-                               int rect_w, uint32_t marquee_frame) {
+                               int rect_w, int marquee_frame) {
   if (title.empty()) {
     return;
   }
@@ -625,7 +625,7 @@ void MenuController::DrawTitle(TextRenderSession &s, std::string_view title,
 void MenuController::DrawItem(TextRenderSession &s, std::string_view title,
                               std::string_view value, int window_w,
                               bool /*selected*/, bool enabled, bool highlighted,
-                              bool centered, uint32_t marquee_frame) {
+                              bool centered, int marquee_frame) {
   s.SetFont(kMenuFont);
 
   const Rgb shadow = enabled ? Rgb{.r = 128, .g = 128, .b = 128}

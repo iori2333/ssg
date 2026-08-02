@@ -86,15 +86,15 @@ struct BulletSpawnInfo {
   float speed{};
   float acceleration{};
   float angle{};
-  uint8_t spread{};
-  uint8_t count{};
-  uint8_t rapid_count{};
+  int spread{};
+  int count{};
+  int rapid_count{};
   uint8_t visual{};
   BulletSpeedVariance speed_variance{BulletSpeedVariance::None};
   BulletOptionKind option{BulletOptionKind::None};
-  uint8_t option_count{};
+  int option_count{};
   BulletMotion motion{BulletMotion::Normal};
-  uint8_t repeat{};
+  int repeat{};
   int8_t angular_velocity{};
   BulletEffect effect{BulletEffect::None};
   BulletPattern pattern{BulletPattern::Spread};
@@ -164,7 +164,7 @@ private:
   float v_{};
   float angle_{};
   uint8_t c_{};
-  uint32_t count_{};
+  int count_{};
 
   float tx_{};
   float ty_{};
@@ -173,10 +173,10 @@ private:
   float v0_{};
   float a_{};
   int8_t vd_{};
-  uint8_t rep_{};
+  int rep_{};
   BulletMotion motion_{BulletMotion::Normal};
   BulletOptionKind option_{BulletOptionKind::None};
-  uint8_t option_count_{};
+  int option_count_{};
   BulletEffect effect_{BulletEffect::None};
   Flags flags_ = Flags::None;
 

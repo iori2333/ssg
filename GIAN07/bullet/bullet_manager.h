@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include "bullet.h"
@@ -49,12 +50,12 @@ public:
   void Render() const;
 
   // --- Laser control ---
-  void ControlLongLaser(const EnemyActor *e, uint8_t id,
+  void ControlLongLaser(const EnemyActor *e, std::size_t id,
                         const LongLaserUpdateInfo &info);
 
   // --- Bullet items / scoring ---
-  uint32_t ConvertBulletsToScore();
-  void ConvertBulletsToItems(uint8_t frequency);
+  int ConvertBulletsToScore();
+  void ConvertBulletsToItems(int frequency);
 
   // --- Debug ---
   void RenderDebugHitboxes(int mode) const;

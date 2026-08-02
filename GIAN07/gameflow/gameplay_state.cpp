@@ -36,7 +36,7 @@
 namespace gameflow {
 namespace {
 
-constexpr uint8_t PlayerTypeIndex(PlayerType type) {
+constexpr int PlayerTypeIndex(PlayerType type) {
   return std::to_underlying(type);
 }
 
@@ -138,10 +138,10 @@ bool GameplayState::EnterDemo() {
   mode_ = Mode::Demo;
   phase_ = Phase::Running;
   ResetGameplayRuntime(context);
-  math::SeedRandom(util::SteadyTicksMs());
+  math::SeedRandom(static_cast<uint32_t>(util::SteadyTicksMs()));
   std::array<StageId, kRegularStageCount> available{};
   size_t available_count = 0;
-  for (uint8_t index = 0; index < kRegularStageCount; ++index) {
+  for (int index = 0; index < kRegularStageCount; ++index) {
     const auto stage = static_cast<StageId>(index);
     if (context.records.HasStageDemo(stage)) {
       available[available_count++] = stage;
@@ -214,9 +214,9 @@ GameplayState::HandleStageTransition(stage::StageTransition transition) {
     if (context.session.level != GameLevel::Easy) {
       auto &flags = context.config.progress.extra_stg_flags;
       const auto unlocked =
-          static_cast<uint8_t>(1U << PlayerTypeIndex(context.player.Type()));
-      if ((flags & unlocked) == 0) {
-        flags |= unlocked;
+          ExtraStageFlagForIndex(PlayerTypeIndex(context.player.Type()));
+      if (!HasExtraStageFlag(flags, unlocked)) {
+        SetExtraStageFlag(flags, unlocked);
         context.save_config();
       }
     }

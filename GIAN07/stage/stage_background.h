@@ -37,7 +37,7 @@ class TileMapScroller {
 public:
   [[nodiscard]] bool Load(std::span<const uint8_t> data);
   void Update();
-  void Draw(const std::array<int8_t, kVisibleMapRows> &raster_dx,
+  void Draw(const std::array<int, kVisibleMapRows> &raster_dx,
             int quake_dx) const;
   void SetSpeed(int speed) { speed_ = speed; }
   [[nodiscard]] bool Loaded() const { return map_.has_value(); }
@@ -46,7 +46,7 @@ private:
   struct LayerPosition {
     size_t row = 0;
     int64_t count = 0;
-    uint8_t dy = 0;
+    int dy = 0;
   };
 
   std::optional<StageMap> map_;
@@ -86,10 +86,10 @@ private:
 
   TileMapScroller map_;
   Mode mode_ = Mode::TileMap;
-  std::array<int8_t, kVisibleMapRows> raster_dx_{};
-  uint32_t effect_count_ = 0;
-  uint8_t quake_ = 0;
-  uint8_t raster_width_ = 0;
+  std::array<int, kVisibleMapRows> raster_dx_{};
+  int effect_count_ = 0;
+  int quake_ = 0;
+  int raster_width_ = 0;
   uint8_t raster_angle_ = 0;
   StageVisuals visuals_;
 };

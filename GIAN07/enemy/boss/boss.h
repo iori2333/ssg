@@ -44,10 +44,10 @@ struct BossActor : EnemyActor {
   }
 
   BossMode mode = BossMode::Normal;
-  uint32_t mode_frame = 0;
+  int mode_frame = 0;
 
 private:
-  static constexpr uint32_t kButterflyTransitionFrames = 88;
+  static constexpr int kButterflyTransitionFrames = 88;
 };
 
 struct BossHudModel {
@@ -57,10 +57,10 @@ struct BossHudModel {
   uint32_t max_hp = 0;
   uint32_t phase_hp = 0;
   uint32_t current_hp = 0;
-  int32_t phase_threshold_hp = -1;
-  int32_t timer_max = -1;
-  int32_t timer_now = 0;
-  int32_t stage_timeout_end = -1;
+  int phase_threshold_hp = -1;
+  int timer_max = -1;
+  int timer_now = 0;
+  int stage_timeout_end = -1;
 };
 
 inline constexpr size_t kBossCapacity = 4;

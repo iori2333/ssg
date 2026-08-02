@@ -25,10 +25,9 @@ public:
   void Open(uint32_t max_hp);
   void AddPhase(uint32_t next);
   void Update(uint32_t now);
-  void Draw(uint32_t stage_frame);
-  void SetCombatState(int32_t phase_threshold_hp, int32_t timer_max,
-                      int32_t timer_now);
-  void SetStageTimeout(int32_t timeout_end);
+  void Draw(int stage_frame);
+  void SetCombatState(int phase_threshold_hp, int timer_max, int timer_now);
+  void SetStageTimeout(int timeout_end);
 
 private:
   audio::AudioSystem &audio_;
@@ -50,11 +49,11 @@ private:
   uint32_t phase_hp_ = 0;
   std::array<int, kBossHealthGaugeHeight> row_x_{};
   State state_ = State::Hidden;
-  int32_t phase_threshold_hp_ = -1;
-  int32_t timer_max_ = -1;
-  int32_t timer_now_ = 0;
-  int32_t previous_timer_seconds_ = -1;
-  int32_t stage_timeout_end_ = -1;
+  int phase_threshold_hp_ = -1;
+  int timer_max_ = -1;
+  int timer_now_ = 0;
+  int previous_timer_seconds_ = -1;
+  int stage_timeout_end_ = -1;
   uint64_t encounter_revision_ = 0;
   uint64_t phase_revision_ = 0;
 };

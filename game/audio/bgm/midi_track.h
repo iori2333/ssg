@@ -27,7 +27,7 @@ public:
   void Resume() override;
   void FadeOut(float volume_start, std::chrono::milliseconds duration) override;
   void SetVolume(Volume volume) override;
-  void SetTempo(std::int8_t tempo) override;
+  void SetTempo(int tempo) override;
   void Tick(std::chrono::milliseconds delta) override;
   void TickBackground(std::chrono::milliseconds delta) override;
 

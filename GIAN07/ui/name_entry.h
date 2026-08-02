@@ -35,9 +35,9 @@ private:
   std::array<char, kNameEntryLength + 1> name_{};
   int cursor_x_ = 0;
   int cursor_y_ = 0;
-  int8_t key_repeat_ = 0;
-  uint8_t cursor_frame_ = 0;
-  uint8_t elapsed_ = 0;
+  int key_repeat_ = 0;
+  int cursor_frame_ = 0;
+  int elapsed_ = 0;
   bool input_locked_ = false;
   bool allow_cancel_ = false;
   bool awaiting_release_ = false;

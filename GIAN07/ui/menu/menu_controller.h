@@ -104,11 +104,11 @@ private:
   void RenderList();
 
   static void DrawTitle(TextRenderSession &s, std::string_view title,
-                        int rect_w, uint32_t marquee_frame);
+                        int rect_w, int marquee_frame);
   static void DrawItem(TextRenderSession &s, std::string_view title,
                        std::string_view value, int window_w, bool selected,
                        bool enabled, bool highlighted, bool centered,
-                       uint32_t marquee_frame);
+                       int marquee_frame);
 
   std::vector<MenuPage> stack_;
   std::vector<std::unique_ptr<IMenuNode>> exit_nodes_;
@@ -121,10 +121,10 @@ private:
   int w_ = 0;
   int closed_selection_ = 0;
 
-  uint32_t frame_count_ = 0;
+  int frame_count_ = 0;
   InputBits last_key_ = 0;
-  uint8_t key_wait_ = 0;
-  uint8_t fast_repeat_wait_ = kMenuKeyWait;
+  int key_wait_ = 0;
+  int fast_repeat_wait_ = kMenuKeyWait;
   bool first_wait_ = false;
   bool root_cancel_enabled_ = true;
   MenuText exit_title_ = "Exit";

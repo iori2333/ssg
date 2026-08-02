@@ -59,7 +59,7 @@ void TileMapScroller::Update() {
     if (speed_ > 0) {
       while (position.count >= wait) {
         position.count -= wait;
-        position.dy = static_cast<uint8_t>((position.dy + 1) % 16);
+        position.dy = (position.dy + 1) % 16;
         if (position.dy == 0 &&
             position.row + kVisibleMapRows < layers[i].rows.size()) {
           ++position.row;
@@ -71,13 +71,13 @@ void TileMapScroller::Update() {
           --position.row;
         }
         position.count += wait;
-        position.dy = static_cast<uint8_t>((position.dy + 15) % 16);
+        position.dy = (position.dy + 15) % 16;
       }
     }
   }
 }
 
-void TileMapScroller::Draw(const std::array<int8_t, kVisibleMapRows> &raster_dx,
+void TileMapScroller::Draw(const std::array<int, kVisibleMapRows> &raster_dx,
                            int quake_dx) const {
   if (!map_) {
     return;
@@ -170,7 +170,7 @@ void StageBackground::Update(EffectManager &effects) {
   }
 
   if (quake_ != 0) {
-    quake_ = static_cast<uint8_t>(quake_ + 2);
+    quake_ = (quake_ + 2) % 256;
   }
   map_.Update();
 }
@@ -277,7 +277,7 @@ void StageBackground::CommandRocks(Stage4RockCommand command) {
 
 void StageBackground::UpdateStage2Boss() {
   struct SpeedChange {
-    uint32_t frame;
+    int frame;
     int speed;
   };
   static constexpr std::array kSpeedChanges = {
@@ -321,7 +321,7 @@ void StageBackground::UpdateRaster(bool opening) {
         static_cast<float>(raster_angle_ + static_cast<int>(i) * angle_step) *
             math::kLegacyAngleStep,
         static_cast<float>(raster_width_));
-    raster_dx_[i] = static_cast<int8_t>(offset.y);
+    raster_dx_[i] = offset.y;
   }
   raster_angle_ = static_cast<uint8_t>(raster_angle_ + (opening ? 2 : 8));
   if (opening) {
@@ -339,7 +339,7 @@ void StageBackground::UpdateRaster(bool opening) {
 }
 
 void StageBackground::DrawStage3Boss() const {
-  for (int y = playfield::kTop - static_cast<int>(effect_count_);
+  for (int y = playfield::kTop - effect_count_;
        y < playfield::kBottom; y += 208) {
     constexpr PixelLtrb source = {0, 272, (640 - 256), (272 + 208)};
     GraphicsSurfaceBlit({playfield::kLeft, y}, SurfaceId::MapChip, source);

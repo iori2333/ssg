@@ -42,7 +42,7 @@ constexpr std::array<uint8_t, std::to_underlying(PlayerShotKind::Count)>
         7, // HomingFocusSub
     };
 
-constexpr uint8_t ShotDamage(PlayerShotKind kind) {
+constexpr int ShotDamage(PlayerShotKind kind) {
   return kShotDamage[std::to_underlying(kind)];
 }
 } // namespace
@@ -67,7 +67,7 @@ void Player::UpdateWeapons(EnemyManager &enemies, InputBits input) {
   }
 
   if (toge_time_ != 0U) {
-    const uint8_t tier = (exp_ + 1) >> 5;
+    const int tier = (exp_ + 1) >> 5;
     if (IsMainShotFrame(toge_time_)) {
       loadout_->FireMain(*this, tier, focused_);
     }
@@ -115,13 +115,13 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
       }
       speed_ += acceleration_;
     } else {
-      if (turn_rate_ < INT8_MAX) {
+      if (turn_rate_ < 127) {
         turn_rate_++;
       }
       speed_ -= acceleration_;
     }
     direction_ += angle_delta *
-                  static_cast<float>(static_cast<uint8_t>(turn_rate_)) / 255.0F;
+                  static_cast<float>(turn_rate_) / 255.0F;
     const auto velocity = math::RoundedPolarVector(direction_, speed_);
     velocity_x_ = velocity.x;
     velocity_y_ = velocity.y;

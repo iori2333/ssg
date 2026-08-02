@@ -94,8 +94,8 @@ void EffectManager::DrawCircles() const {
     case CircleEffectKind::None:
       break;
     case CircleEffectKind::Star: {
-      const int age = static_cast<int>(effect.age);
-      for (uint8_t layer = 0; layer < 4; ++layer) {
+      const int age = effect.age;
+      for (int layer = 0; layer < 4; ++layer) {
         const int radius = effect.radius - layer * 7;
         if (radius < 0) {
           continue;
@@ -119,7 +119,7 @@ void EffectManager::DrawCircles() const {
     }
     case CircleEffectKind::Converging:
     case CircleEffectKind::Diverging:
-      for (uint8_t layer = 0; layer < 4; ++layer) {
+      for (int layer = 0; layer < 4; ++layer) {
         const int divisor =
             effect.kind == CircleEffectKind::Converging ? 8 : 12;
         const int radius =
@@ -168,7 +168,7 @@ void EffectManager::SpawnString(int x, int y, std::string_view text) {
   }
 }
 
-void EffectManager::SpawnPointValue(int x, int y, uint32_t points) {
+void EffectManager::SpawnPointValue(int x, int y, int points) {
   const auto found = std::ranges::find(strings_, StringEffectState::Inactive,
                                        &StringEffect::state);
   if (found == strings_.end()) {
@@ -316,7 +316,7 @@ void EffectManager::DrawStrings() {
       break;
     }
     case StringEffectState::GameOverEntering: {
-      const int remaining = static_cast<int>(effect.time);
+      const int remaining = effect.time;
       for (int index = 0; index < 9; ++index) {
         const auto angle = static_cast<uint8_t>(effect.time * 3 + index * 26);
         const auto offset = math::RoundedPolarVector(
@@ -328,7 +328,7 @@ void EffectManager::DrawStrings() {
       break;
     }
     case StringEffectState::GameOverHolding: {
-      const int remaining = static_cast<int>(effect.time);
+      const int remaining = effect.time;
       const int center_x = (effect.x >> 6) + 8;
       const int center_y = (effect.y >> 6) + 8;
       const int half_height = (35 - remaining) / 2;

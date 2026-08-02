@@ -25,7 +25,7 @@ public:
   virtual void FadeOut(float volume_start,
                        std::chrono::milliseconds duration) = 0;
   virtual void SetVolume(Volume volume) = 0;
-  virtual void SetTempo(std::int8_t tempo) = 0;
+  virtual void SetTempo(int tempo) = 0;
   virtual void Tick(std::chrono::milliseconds delta) = 0;
 
   // Advances background state while this track is not the active output.

@@ -120,7 +120,7 @@ void UiManager::ShowMessage(std::string_view message) {
   msg_window_.AppendMessage(message);
 }
 
-void UiManager::SetMessageFace(uint8_t face_id) {
+void UiManager::SetMessageFace(std::size_t face_id) {
   msg_window_.SetFace(face_id);
 }
 

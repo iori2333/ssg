@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "audio/core/audio_types.h"
 #include "gameplay/game_rules.h"
@@ -22,8 +24,8 @@ constexpr auto kRegularStageCount = 6;
 
 struct GameConfig {
   PracticeMode practice_mode = PracticeMode::Off;
-  uint8_t player_stock = 2;
-  uint8_t bomb_stock = 2;
+  int player_stock = 2;
+  int bomb_stock = 2;
   bool show_focus_hitbox = true;
 };
 
@@ -48,11 +50,11 @@ struct GraphicsConfig {
   FullscreenMode fullscreen_mode = FullscreenMode::Borderless;
   GraphicsFullscreenFit fullscreen_fit = GraphicsFullscreenFit::Integer;
   ScalingMode scaling_mode = ScalingMode::Framebuffer;
-  uint8_t window_scale_4x = 0;
-  int16_t window_left = kGraphicsTopleftUndefined;
-  int16_t window_top = kGraphicsTopleftUndefined;
-  uint8_t fps_divisor = 1;
-  uint8_t screenshot_effort = 0;
+  int window_scale_4x = 0;
+  int window_left = kGraphicsTopleftUndefined;
+  int window_top = kGraphicsTopleftUndefined;
+  int fps_divisor = 1;
+  int screenshot_effort = 0;
 };
 
 enum class MessageWindowMode : uint8_t {
@@ -88,12 +90,36 @@ struct InputConfig {
 };
 
 struct DebugConfig {
-  int32_t hitbox_display = 0;
+  int hitbox_display = 0;
   bool demo_recording = false;
 };
 
+enum class ExtraStageFlag : uint8_t {
+  None = 0,
+  Wide = 1 << 0,
+  Homing = 1 << 1,
+  Laser = 1 << 2,
+  Mask = 0x07,
+};
+
+[[nodiscard]] constexpr ExtraStageFlag
+ExtraStageFlagForIndex(std::size_t index) {
+  return static_cast<ExtraStageFlag>(1U << index);
+}
+
+[[nodiscard]] constexpr bool HasExtraStageFlag(ExtraStageFlag flags,
+                                               ExtraStageFlag flag) {
+  return (std::to_underlying(flags) & std::to_underlying(flag)) != 0;
+}
+
+inline constexpr void SetExtraStageFlag(ExtraStageFlag &flags,
+                                        ExtraStageFlag flag) {
+  flags = static_cast<ExtraStageFlag>(std::to_underlying(flags) |
+                                      std::to_underlying(flag));
+}
+
 struct ProgressConfig {
-  uint8_t extra_stg_flags = 0;
+  ExtraStageFlag extra_stg_flags = ExtraStageFlag::None;
 };
 
 struct ConfigData {

@@ -23,8 +23,8 @@
 
 // Setting the divisor to 0 disables frame rate limiting.
 
-void SetFrameRateDivisor(uint8_t divisor);
-uint8_t FrameRateDivisor();
+void SetFrameRateDivisor(int divisor);
+int FrameRateDivisor();
 
 // Paletted graphics //
 // ----------------- //
@@ -101,9 +101,9 @@ struct Rgb216 {
 // -----------
 
 // 0 = BMP, 10 = max-effort WebP.
-constexpr uint8_t kScreenshotEffortMax = 10;
+constexpr int kScreenshotEffortMax = 10;
 
-void GraphicsScreenshotSetEffort(uint8_t effort);
+void GraphicsScreenshotSetEffort(int effort);
 
 // Required to enable the screenshot feature as a whole.
 void GraphicsScreenshotSetPrefix(std::string_view prefix);
@@ -155,23 +155,23 @@ struct GraphicsFullscreenFlags {
   operator<=>(const GraphicsFullscreenFlags &) const = default;
 };
 
-constexpr auto kGraphicsTopleftUndefined = std::numeric_limits<int16_t>::min();
+constexpr auto kGraphicsTopleftUndefined = std::numeric_limits<int>::min();
 
 struct GraphicsParams {
   GraphicsParamFlags flags;
-  int8_t api;              // Negative = "use default API"
-  uint8_t window_scale_4x; // Scale factor in window mode ×4. 0 = fit display.
+  int api;                  // Negative = "use default API"
+  int window_scale_4x;      // Scale factor in window mode ×4. 0 = fit display.
 
   // Across all displays. Can be [kGraphicsTopleftUndefined], in which case
   // the window backend should pick a reasonable default position.
-  int16_t left;
-  int16_t top;
+  int left;
+  int top;
 
   std::strong_ordering operator<=>(const GraphicsParams &) const = default;
 
   [[nodiscard]] GraphicsFullscreenFlags FullscreenFlags() const;
   [[nodiscard]] bool ScaleGeometry() const;
-  [[nodiscard]] uint8_t Scale4x() const;
+  [[nodiscard]] int Scale4x() const;
   [[nodiscard]] WindowSize ScaledRes() const;
 
   void SetFlag(GraphicsParamFlags flag,
@@ -180,7 +180,7 @@ struct GraphicsParams {
 
 // Returns the maximum 4× scaling factor for the game window on the current
 // display.
-uint8_t GraphicsWindowScale4xMax();
+int GraphicsWindowScale4xMax();
 
 struct GraphicsInitResult {
   GraphicsParams live;

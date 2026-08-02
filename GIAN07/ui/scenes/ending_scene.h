@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -46,23 +47,23 @@ public:
 
 private:
   struct GrpInfo {
-    uint32_t timer = 0;
-    uint32_t fadein = 0;
-    uint32_t fadeout = 0;
-    uint8_t picture_id = 0;
-    short alpha = 0;
+    int timer = 0;
+    int fadein = 0;
+    int fadeout = 0;
+    std::size_t picture_id = 0;
+    int alpha = 0;
     int x = 0, y = 0;
     bool bWantDisp = false;
   };
 
   struct StTask {
-    uint32_t timer = 0;
-    uint32_t fadein = 0;
-    uint32_t fadeout = 0;
-    std::array<uint8_t, 10> StfID{};
-    uint8_t TitleID = 0;
-    short NumStf = 0;
-    short alpha = 0;
+    int timer = 0;
+    int fadein = 0;
+    int fadeout = 0;
+    std::array<std::size_t, 10> StfID{};
+    std::size_t TitleID = 0;
+    std::size_t NumStf = 0;
+    int alpha = 0;
     int ox = 0, oy = 0;
     bool bWantDisp = false;
   };
@@ -87,7 +88,7 @@ private:
   GrpInfo grp_info;
   StTask stf_task;
   Text text;
-  uint16_t flash_state = 0;
+  int flash_state = 0;
 
   static constexpr std::array<PixelLtrb, 7> staff_label = {{
       PixelLtrb{0, 0, 160, 24},

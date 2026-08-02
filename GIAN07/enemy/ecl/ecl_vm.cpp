@@ -69,9 +69,9 @@ bool EclVm::Jump(EnemyActor &actor, uint32_t script_id) const {
 }
 
 void EclVm::Execute(EnemyActor &actor) {
-  constexpr uint32_t instruction_budget = 4096;
+  constexpr int instruction_budget = 4096;
   int comparison = 0;
-  for (uint32_t executed = 0; executed < instruction_budget; ++executed) {
+  for (int executed = 0; executed < instruction_budget; ++executed) {
     const auto *instruction = program_.InstructionAt(actor.script.position);
     if (instruction == nullptr) {
       actor.state = EnemyActorState::PendingRemoval;
@@ -180,16 +180,16 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
     bool take_branch = false;
     switch (instruction.Opcode()) {
     case EclOpcode::JumpHpGreater:
-      take_branch = actor.hp > args.value;
+      take_branch = std::cmp_greater(actor.hp, args.value);
       break;
     case EclOpcode::JumpHpLess:
-      take_branch = actor.hp < args.value;
+      take_branch = std::cmp_less(actor.hp, args.value);
       break;
     case EclOpcode::JumpFrameGreater:
-      take_branch = actor.count > args.value;
+      take_branch = std::cmp_greater(actor.count, args.value);
       break;
     case EclOpcode::JumpFrameLess:
-      take_branch = actor.count < args.value;
+      take_branch = std::cmp_less(actor.count, args.value);
       break;
     default:
       break;
@@ -261,7 +261,7 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
 EclVm::Step
 EclVm::ExecuteMovementInstruction(EnemyActor &actor,
                                   const EclInstruction &instruction) {
-  const auto absolute_angle = [&actor](uint8_t angle) -> uint8_t {
+  const auto absolute_angle = [&actor](int angle) -> int {
     return actor.HasFlag(EnemyActorFlags::HorizontalMirror) ? (128 - angle)
                                                             : angle;
   };
@@ -269,12 +269,12 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     return actor.HasFlag(EnemyActorFlags::HorizontalMirror) ? -velocity
                                                             : velocity;
   };
-  const auto relative_angle = [&actor](int8_t angle) -> int8_t {
+  const auto relative_angle = [&actor](int angle) -> int {
     return actor.HasFlag(EnemyActorFlags::HorizontalMirror)
-               ? static_cast<int8_t>(-angle)
+               ? -angle
                : angle;
   };
-  const auto continue_duration = [&actor](uint16_t frames) {
+  const auto continue_duration = [&actor](int frames) {
     if (actor.script.wait_counter == 0) {
       actor.script.wait_counter = frames + 1;
     }
@@ -489,10 +489,12 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
   }
 
   case EclOpcode::SetAngle:
-    actor.d = absolute_angle(Args<EclByteArguments>(instruction).value);
+    actor.d = static_cast<uint8_t>(
+        absolute_angle(Args<EclByteArguments>(instruction).value));
     return Step::Advance;
   case EclOpcode::AddAngle:
-    actor.d += relative_angle(Args<EclSignedByteArguments>(instruction).value);
+    actor.d = static_cast<uint8_t>(
+        actor.d + relative_angle(Args<EclSignedByteArguments>(instruction).value));
     return Step::Advance;
   case EclOpcode::RandomAngle:
     actor.d = math::RandomInt() & 0xff;
@@ -527,7 +529,7 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     actor.d = math::RandomInt() & 0x7f;
     return Step::Advance;
   case EclOpcode::SetSequenceAngle:
-    actor.d = sequence_angle_;
+    actor.d = static_cast<uint8_t>(sequence_angle_);
     sequence_angle_ += sequence_angle_delta_;
     return Step::Advance;
   case EclOpcode::MoveToPlayerPosition:
@@ -544,8 +546,8 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
         playfield::kWorldCenterY -
             ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3) -
             40_px};
-    uint16_t base = 0;
-    constexpr uint16_t range = 32;
+    int base = 0;
+    constexpr int range = 32;
     if (actor.y < bounds.top) {
       if (actor.x < bounds.left) {
         base = 16;
@@ -556,21 +558,20 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       }
     } else if (actor.y > bounds.bottom) {
       if (actor.x < bounds.left) {
-        base = static_cast<uint16_t>(-48);
+        base = -48;
       } else if (actor.x > bounds.right) {
         base = 144;
       } else {
         base = 176;
       }
     } else if (actor.x < bounds.left) {
-      base = static_cast<uint16_t>(-16);
+      base = -16;
     } else if (actor.x > bounds.right) {
       base = 112;
     } else {
-      base = ((math::RandomInt() >> 1) & 1) != 0 ? static_cast<uint16_t>(-16)
-                                                 : 112;
+      base = ((math::RandomInt() >> 1) & 1) != 0 ? -16 : 112;
     }
-    actor.d = base + ((math::RandomInt() >> 1) % range);
+    actor.d = static_cast<uint8_t>(base + ((math::RandomInt() >> 1) % range));
     return Step::Advance;
   }
 
@@ -638,18 +639,21 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::SetBulletCommand:
-    actor.bullet_command.cmd = Args<EclByteArguments>(instruction).value;
+    actor.bullet_command.cmd =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetBulletAngle: {
     const auto &args = Args<EclBytePairArguments>(instruction);
-    actor.bullet_command.d = args.first;
-    actor.bullet_command.dw = args.second;
+    actor.bullet_command.d = static_cast<uint8_t>(args.first);
+    actor.bullet_command.dw = static_cast<uint8_t>(args.second);
     break;
   }
   case EclOpcode::AddBulletAngle: {
     const auto &args = Args<EclSignedBytePairArguments>(instruction);
-    actor.bullet_command.d += args.first;
-    actor.bullet_command.dw += args.second;
+    actor.bullet_command.d =
+        static_cast<uint8_t>(actor.bullet_command.d + args.first);
+    actor.bullet_command.dw =
+        static_cast<uint8_t>(actor.bullet_command.dw + args.second);
     break;
   }
   case EclOpcode::AimBulletAtPlayer:
@@ -662,44 +666,53 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
     break;
   case EclOpcode::SetBulletCount: {
     const auto &args = Args<EclBytePairArguments>(instruction);
-    actor.bullet_command.n = args.first;
-    actor.bullet_command.ns = args.second;
+    actor.bullet_command.n = static_cast<uint8_t>(args.first);
+    actor.bullet_command.ns = static_cast<uint8_t>(args.second);
     break;
   }
   case EclOpcode::AddBulletCount: {
     const auto &args = Args<EclSignedBytePairArguments>(instruction);
-    actor.bullet_command.n += args.first;
-    actor.bullet_command.ns += args.second;
+    actor.bullet_command.n =
+        static_cast<uint8_t>(actor.bullet_command.n + args.first);
+    actor.bullet_command.ns =
+        static_cast<uint8_t>(actor.bullet_command.ns + args.second);
     break;
   }
   case EclOpcode::SetBulletSpeed: {
     const auto &args = Args<EclByteSignedByteArguments>(instruction);
-    actor.bullet_command.v = args.first;
-    actor.bullet_command.a = args.second;
+    actor.bullet_command.v = static_cast<uint8_t>(args.first);
+    actor.bullet_command.a = static_cast<int8_t>(args.second);
     break;
   }
   case EclOpcode::AddBulletSpeed: {
     const auto &args = Args<EclSignedBytePairArguments>(instruction);
     const auto previous = actor.bullet_command.v;
-    actor.bullet_command.v = ((previous & 0x3f) + args.first) & 0x3f;
-    actor.bullet_command.v |= previous & 0xc0;
-    actor.bullet_command.a += args.second;
+    actor.bullet_command.v = static_cast<uint8_t>(
+        ((previous & 0x3f) + args.first) & 0x3f);
+    actor.bullet_command.v |= static_cast<uint8_t>(previous & 0xc0);
+    actor.bullet_command.a =
+        static_cast<int8_t>(actor.bullet_command.a + args.second);
     break;
   }
   case EclOpcode::SetBulletOption:
-    actor.bullet_command.option = Args<EclByteArguments>(instruction).value;
+    actor.bullet_command.option =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetBulletType:
-    actor.bullet_command.type = Args<EclByteArguments>(instruction).value;
+    actor.bullet_command.type =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetBulletColor:
-    actor.bullet_command.c = Args<EclByteArguments>(instruction).value;
+    actor.bullet_command.c =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetBulletAngularVelocity:
-    actor.bullet_command.vd = Args<EclSignedByteArguments>(instruction).value;
+    actor.bullet_command.vd =
+        static_cast<int8_t>(Args<EclSignedByteArguments>(instruction).value);
     break;
   case EclOpcode::SetBulletRepeat:
-    actor.bullet_command.rep = Args<EclByteArguments>(instruction).value;
+    actor.bullet_command.rep =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::ClearBullets:
     host_.ClearBossProjectiles();
@@ -746,7 +759,8 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     fire_reflect(true);
     break;
   case EclOpcode::SetLaserCommand:
-    actor.laser_command.cmd = Args<EclByteArguments>(instruction).value;
+    actor.laser_command.cmd =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserLength:
     actor.laser_command.l = Args<EclSignedDwordArguments>(instruction).value;
@@ -759,14 +773,16 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     break;
   case EclOpcode::SetLaserAngle: {
     const auto &args = Args<EclBytePairArguments>(instruction);
-    actor.laser_command.d = args.first;
-    actor.laser_command.dw = args.second;
+    actor.laser_command.d = static_cast<uint8_t>(args.first);
+    actor.laser_command.dw = static_cast<uint8_t>(args.second);
     break;
   }
   case EclOpcode::AddLaserAngle: {
     const auto &args = Args<EclSignedBytePairArguments>(instruction);
-    actor.laser_command.d += args.first;
-    actor.laser_command.dw += args.second;
+    actor.laser_command.d =
+        static_cast<uint8_t>(actor.laser_command.d + args.first);
+    actor.laser_command.dw =
+        static_cast<uint8_t>(actor.laser_command.dw + args.second);
     break;
   }
   case EclOpcode::AimLaserAtPlayer:
@@ -778,10 +794,12 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     actor.laser_command.d = actor.d;
     break;
   case EclOpcode::SetLaserCount:
-    actor.laser_command.n = Args<EclByteArguments>(instruction).value;
+    actor.laser_command.n =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::AddLaserCount:
-    actor.laser_command.n += Args<EclSignedByteArguments>(instruction).value;
+    actor.laser_command.n = static_cast<uint8_t>(
+        actor.laser_command.n + Args<EclSignedByteArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserSpeed:
   case EclOpcode::AddLaserSpeed:
@@ -789,10 +807,12 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     actor.laser_command.v = Args<EclSignedDwordArguments>(instruction).value;
     break;
   case EclOpcode::SetLaserColor:
-    actor.laser_command.c = Args<EclByteArguments>(instruction).value;
+    actor.laser_command.c =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserType:
-    actor.laser_command.type = Args<EclByteArguments>(instruction).value;
+    actor.laser_command.type =
+        static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserWidth:
     actor.laser_command.w = Args<EclSignedDwordArguments>(instruction).value;
@@ -806,7 +826,7 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
   case EclOpcode::SpawnLongLaser:
     if (host_.Bullets().SpawnLongLaser(LongLaserSpawnInfo{
             .enemy = &actor,
-            .enemy_id = actor.long_laser_count,
+            .enemy_id = static_cast<std::size_t>(actor.long_laser_count),
             .dx = actor.laser_command.x,
             .dy = actor.laser_command.y,
             .v = actor.laser_command.v,
@@ -1112,10 +1132,11 @@ void EclVm::CheckInterrupts(EnemyActor &actor) {
     bool should_trigger = false;
     switch (kind) {
     case EclInterrupt::BossCount:
-      should_trigger = host_.BossCount() <= interrupt.threshold;
+      should_trigger =
+          std::cmp_less_equal(host_.BossCount(), interrupt.threshold);
       break;
     case EclInterrupt::Hp:
-      should_trigger = actor.hp <= interrupt.threshold;
+      should_trigger = std::cmp_less_equal(actor.hp, interrupt.threshold);
       break;
     case EclInterrupt::Timer:
       should_trigger = actor.script.interrupt_timer > interrupt.threshold;
@@ -1193,58 +1214,58 @@ void EclVm::WriteValue(EnemyActor &actor, EclValue destination,
   }
   switch (destination) {
   case EclValue::LaserAngle:
-    actor.laser_command.d = value;
+    actor.laser_command.d = static_cast<uint8_t>(value);
     break;
   case EclValue::LaserAngleDelta:
-    actor.laser_command.dw = value;
+    actor.laser_command.dw = static_cast<uint8_t>(value);
     break;
   case EclValue::LaserCount:
-    actor.laser_command.n = value;
+    actor.laser_command.n = static_cast<uint8_t>(value);
     break;
   case EclValue::LaserColor:
-    actor.laser_command.c = value;
+    actor.laser_command.c = static_cast<uint8_t>(value);
     break;
   case EclValue::LaserLength:
-    actor.laser_command.l = value;
+    actor.laser_command.l = static_cast<int>(value);
     break;
   case EclValue::LaserSpeed:
-    actor.laser_command.v = value;
+    actor.laser_command.v = static_cast<int>(value);
     break;
   case EclValue::BulletAngle:
-    actor.bullet_command.d = value;
+    actor.bullet_command.d = static_cast<uint8_t>(value);
     break;
   case EclValue::BulletAngleDelta:
-    actor.bullet_command.dw = value;
+    actor.bullet_command.dw = static_cast<uint8_t>(value);
     break;
   case EclValue::BulletCount:
-    actor.bullet_command.n = value;
+    actor.bullet_command.n = static_cast<uint8_t>(value);
     break;
   case EclValue::BulletRapidCount:
-    actor.bullet_command.ns = value;
+    actor.bullet_command.ns = static_cast<uint8_t>(value);
     break;
   case EclValue::BulletSpeed:
-    actor.bullet_command.v = value;
+    actor.bullet_command.v = static_cast<uint8_t>(value);
     break;
   case EclValue::BulletColor:
-    actor.bullet_command.c = value;
+    actor.bullet_command.c = static_cast<uint8_t>(value);
     break;
   case EclValue::BulletAcceleration:
-    actor.bullet_command.a = value;
+    actor.bullet_command.a = static_cast<int8_t>(value);
     break;
   case EclValue::BulletRepeat:
-    actor.bullet_command.rep = value;
+    actor.bullet_command.rep = static_cast<uint8_t>(value);
     break;
   case EclValue::BulletAngularVelocity:
-    actor.bullet_command.vd = value;
+    actor.bullet_command.vd = static_cast<int8_t>(value);
     break;
   case EclValue::ActorX:
-    actor.x = value;
+    actor.x = static_cast<int>(value);
     break;
   case EclValue::ActorY:
-    actor.y = value;
+    actor.y = static_cast<int>(value);
     break;
   case EclValue::ActorAngle:
-    actor.d = value;
+    actor.d = static_cast<uint8_t>(value);
     break;
   default:
     break;

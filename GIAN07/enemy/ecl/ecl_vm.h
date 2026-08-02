@@ -57,6 +57,6 @@ private:
   EclHost &host_;
   EffectManager &effects_;
   audio::AudioSystem &audio_;
-  uint8_t sequence_angle_ = 0;
-  uint8_t sequence_angle_delta_ = 0;
+  int sequence_angle_ = 0;
+  int sequence_angle_delta_ = 0;
 };

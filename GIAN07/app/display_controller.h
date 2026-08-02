@@ -20,8 +20,8 @@ public:
   [[nodiscard]] bool Initialize(GraphicsConfig &config);
   [[nodiscard]] bool ApplyConfig(const GraphicsConfig &config);
 
-  static void SetFrameRate(uint8_t divisor);
-  static void SetScreenshotEffort(uint8_t effort);
+  static void SetFrameRate(int divisor);
+  static void SetScreenshotEffort(int effort);
 
 private:
   [[nodiscard]] bool Apply(GraphicsParams requested);

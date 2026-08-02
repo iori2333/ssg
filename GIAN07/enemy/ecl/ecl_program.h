@@ -31,12 +31,12 @@ struct EclJumpArguments {
 
 struct EclLoopArguments {
   size_t target;
-  uint16_t count;
+  int count;
 };
 
 struct EclConditionalJumpArguments {
   size_t target;
-  uint32_t value;
+  int value;
 };
 
 struct EclDifficultyJumpArguments {
@@ -46,7 +46,7 @@ struct EclDifficultyJumpArguments {
 struct EclSetInterruptArguments {
   size_t target;
   EclInterrupt interrupt;
-  uint32_t threshold;
+  int threshold;
 };
 
 struct EclInterruptArguments {
@@ -54,106 +54,106 @@ struct EclInterruptArguments {
 };
 
 struct EclDurationArguments {
-  uint16_t frames;
+  int frames;
 };
 
 struct EclRotateArguments {
-  int8_t angle_delta;
-  uint16_t frames;
+  int angle_delta;
+  int frames;
 };
 
 struct EclLinearRotateArguments {
-  int32_t velocity_x;
-  int32_t velocity_y;
-  int8_t angle_delta;
-  uint16_t frames;
+  int velocity_x;
+  int velocity_y;
+  int angle_delta;
+  int frames;
 };
 
 struct EclWaveArguments {
-  int32_t velocity;
-  uint8_t amplitude;
-  int8_t angle_delta;
-  uint16_t frames;
+  int velocity;
+  int amplitude;
+  int angle_delta;
+  int frames;
 };
 
 struct EclAxisMoveArguments {
-  uint16_t coordinate;
-  uint16_t frames;
+  int coordinate;
+  int frames;
 };
 
 struct EclPointMoveArguments {
-  uint16_t x;
-  uint16_t y;
-  uint16_t frames;
+  int x;
+  int y;
+  int frames;
 };
 
 struct EclAccelerationArguments {
-  int8_t acceleration;
-  uint16_t frames;
+  int acceleration;
+  int frames;
 };
 
 struct EclAccelerationPointArguments {
-  int16_t x;
-  int16_t y;
-  int16_t velocity;
+  int x;
+  int y;
+  int velocity;
 };
 
 struct EclByteArguments {
-  uint8_t value;
+  int value;
 };
 
 struct EclSignedByteArguments {
-  int8_t value;
+  int value;
 };
 
 struct EclSignedWordArguments {
-  int16_t value;
+  int value;
 };
 
 struct EclSignedDwordArguments {
-  int32_t value;
+  int value;
 };
 
 struct EclPointArguments {
-  int16_t x;
-  int16_t y;
+  int x;
+  int y;
 };
 
 struct EclBytePairArguments {
-  uint8_t first;
-  uint8_t second;
+  int first;
+  int second;
 };
 
 struct EclSignedBytePairArguments {
-  int8_t first;
-  int8_t second;
+  int first;
+  int second;
 };
 
 struct EclByteSignedByteArguments {
-  uint8_t first;
-  int8_t second;
+  int first;
+  int second;
 };
 
 struct EclLongLaserArguments {
-  uint8_t id;
-  int8_t angle_delta = 0;
+  std::size_t id;
+  int angle_delta = 0;
 };
 
 struct EclAnimationArguments {
-  uint8_t pattern;
-  int8_t speed;
+  std::size_t pattern;
+  int speed;
 };
 
 struct EclSpawnEnemyArguments {
-  int16_t offset_x;
-  int16_t offset_y;
+  int offset_x;
+  int offset_y;
   std::optional<EclValue> angle_source;
   uint32_t script_id;
 };
 
 struct EclHitboxArguments {
-  uint16_t width;
-  uint16_t height;
+  int width;
+  int height;
 };
 
 struct EclScriptArguments {
@@ -170,12 +170,12 @@ struct EclBitLaserArguments {
 
 struct EclCommandValueArguments {
   EclBitCommand command;
-  int32_t value;
+  int value;
 };
 
 struct EclCircleEffectArguments {
-  int16_t offset_x;
-  int16_t offset_y;
+  int offset_x;
+  int offset_y;
   CircleEffectKind effect;
 };
 
@@ -195,7 +195,7 @@ struct EclRegisterConstantArguments {
 
 struct EclRegisterSignedConstantArguments {
   EclValue destination;
-  int32_t value;
+  int value;
 };
 
 struct EclRegisterValueArguments {

@@ -35,7 +35,7 @@ constexpr PlayerTraits kLaserTraits{
 
 LaserLoadout::LaserLoadout() : PlayerLoadout(kLaserTraits) {}
 
-void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
+void LaserLoadout::FireMain(Player &player, int tier, bool focused) {
   switch (tier) {
   case 0: {
     player.SpawnShot({.x = player.X(),
@@ -100,7 +100,7 @@ void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
                       .y = player.Y(),
                       .direction = 192,
                       .direction_step = static_cast<uint8_t>(focused ? 2 : 6),
-                      .count = static_cast<uint8_t>(focused ? 4 : 5),
+                      .count = focused ? 4 : 5,
                       .speed = 13.5_px,
                       .acceleration = 0,
                       .kind = PlayerShotKind::LaserSub});
@@ -109,7 +109,7 @@ void LaserLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   }
 }
 
-void LaserLoadout::StartBeam(const Player &player, uint16_t time) {
+void LaserLoadout::StartBeam(const Player &player, int time) {
   if (player.IsBombActive() || player.IsMovementDisabled()) {
     Reset();
     return;
@@ -155,7 +155,7 @@ void LaserLoadout::ApplyContinuousAttack(const Player &player,
       damage));
 }
 
-uint8_t LaserLoadout::BombAngle(uint16_t remaining) const {
+uint8_t LaserLoadout::BombAngle(int remaining) const {
   return static_cast<uint8_t>(((BombDuration() - remaining) * 3) / 2);
 }
 
@@ -176,7 +176,7 @@ uint8_t LaserLoadout::LeftAngle(uint8_t angle, int index) {
 }
 
 void LaserLoadout::UpdateBomb(Player &player, EnemyManager &enemies,
-                              EffectManager & /*effects*/, uint16_t remaining) {
+                              EffectManager & /*effects*/, int remaining) {
   const auto angle = BombAngle(remaining);
 
   const int right_x = player.OpX() + PixelToWorld(OptionOffset(false));
@@ -193,7 +193,7 @@ void LaserLoadout::UpdateBomb(Player &player, EnemyManager &enemies,
 }
 
 void LaserLoadout::DrawBombForeground(const Player &player,
-                                      uint16_t remaining) const {
+                                      int remaining) const {
   if (remaining == 0) {
     return;
   }

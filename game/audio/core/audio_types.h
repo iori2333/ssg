@@ -58,7 +58,7 @@ struct BgmSnapshot {
   PlaybackState state = PlaybackState::Idle;
   std::string title;
   std::chrono::milliseconds play_time{};
-  int8_t tempo = 0;
+  int tempo = 0;
 };
 
 using Volume = uint8_t;

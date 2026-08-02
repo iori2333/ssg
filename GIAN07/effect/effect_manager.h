@@ -30,7 +30,7 @@ public:
   void UpdateGameOver();
 
   void SpawnString(int x, int y, std::string_view text);
-  void SpawnPointValue(int x, int y, uint32_t points);
+  void SpawnPointValue(int x, int y, int points);
   void SpawnGameOver();
   void SetMusicTitle(int y, std::string_view title);
   void SpawnCircle(int x, int y, CircleEffectKind kind);
@@ -72,8 +72,8 @@ private:
     int y = 0;
     int velocity_x = 0;
     int velocity_y = 0;
-    uint32_t time = 0;
-    uint32_t points = 0;
+    int time = 0;
+    int points = 0;
     StringEffectState state = StringEffectState::Inactive;
     char character = 0;
   };
@@ -83,7 +83,7 @@ private:
     int y = 0;
     int radius = 0;
     int end_radius = 0;
-    uint32_t age = 0;
+    int age = 0;
     CircleEffectKind kind = CircleEffectKind::Star;
     uint8_t angle = 0;
     bool active = false;
@@ -94,7 +94,7 @@ private:
     int y = 0;
     int velocity_x = 0;
     int velocity_y = 0;
-    uint8_t remaining = 0;
+    int remaining = 0;
     FragmentKind kind = FragmentKind::Graze;
   };
 
@@ -103,20 +103,20 @@ private:
     int y = 0;
     int velocity_x = 0;
     int velocity_y = 0;
-    uint8_t frame = 0;
+    int frame = 0;
   };
 
   struct BombExplosion {
     int x = 0;
     int y = 0;
-    uint32_t age = 0;
+    int age = 0;
     std::array<BombParticle, kBombParticleCount> particles{};
     bool active = false;
   };
 
   struct ScreenEffect {
     ScreenTransition transition = ScreenTransition::CircleFadeIn;
-    uint32_t age = 0;
+    int age = 0;
     bool active = false;
   };
 
@@ -151,7 +151,7 @@ private:
   static void DrawBombExplosion(const BombExplosion &effect);
 
   void InitializeWarningText();
-  void UpdateWarningText(uint8_t age);
+  void UpdateWarningText(int age);
   void RotateWarningText(int amount);
   void DrawWarningText();
 
@@ -174,7 +174,7 @@ private:
   std::array<WorldPoint, 9> warning_n_right_{};
   std::array<WorldPoint, 17> warning_g_{};
   std::array<WarningLine, 8> warning_lines_{};
-  uint16_t warning_age_ = 0;
-  mutable uint16_t warning_pulse_ = 0;
+  int warning_age_ = 0;
+  mutable int warning_pulse_ = 0;
   bool warning_active_ = false;
 };

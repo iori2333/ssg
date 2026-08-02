@@ -47,9 +47,6 @@ constexpr uint16_t kScoreVersion = 1;
 constexpr auto kScoreDirectory = "scores";
 constexpr auto kMaxSignedRecordValue =
     static_cast<uint64_t>(std::numeric_limits<int64_t>::max());
-constexpr uint8_t kInputFlagJoypad = 1 << 0;
-constexpr uint8_t kInputFlagMessageSkip = 1 << 1;
-constexpr uint8_t kInputFlagSpeedDown = 1 << 2;
 
 struct ScoreRecordFile {
   std::array<uint8_t, 4> magic{};
@@ -82,45 +79,75 @@ void WritePlayerProgress(util::ByteWriter &writer,
                          const PlayerProgress &progress) {
   writer.Write<uint64_t>(static_cast<uint64_t>(progress.score));
   writer.Write<uint64_t>(static_cast<uint64_t>(progress.pending_score));
-  writer.Write(progress.graze_sum);
+  writer.Write<uint32_t>(static_cast<uint32_t>(progress.graze_sum));
   writer.Write<uint32_t>(static_cast<uint32_t>(progress.pending_graze_score));
-  writer.Write(progress.star_counter);
-  writer.Write(progress.star_threshold);
-  writer.Write(progress.graze_count);
-  writer.Write(progress.graze_wait);
-  writer.Write(progress.power_progress);
-  writer.Write(progress.miss_count);
-  writer.Write(progress.bomb_used);
-  writer.Write(progress.deathbomb_count);
-  writer.Write(progress.player_type);
-  writer.Write(progress.power);
-  writer.Write(progress.bombs);
-  writer.Write(progress.lives);
-  writer.Write(progress.credits);
-  writer.Write(progress.star_extend_count);
-  writer.Write(progress.initial_bomb_stock);
+  writer.Write<uint32_t>(static_cast<uint32_t>(progress.star_counter));
+  writer.Write<uint32_t>(static_cast<uint32_t>(progress.star_threshold));
+  writer.Write<uint16_t>(static_cast<uint16_t>(progress.graze_count));
+  writer.Write<uint16_t>(static_cast<uint16_t>(progress.graze_wait));
+  writer.Write<uint16_t>(static_cast<uint16_t>(progress.power_progress));
+  writer.Write<uint16_t>(static_cast<uint16_t>(progress.miss_count));
+  writer.Write<uint16_t>(static_cast<uint16_t>(progress.bomb_used));
+  writer.Write<uint16_t>(static_cast<uint16_t>(progress.deathbomb_count));
+  writer.Write<uint8_t>(std::to_underlying(progress.player_type));
+  writer.Write<uint8_t>(static_cast<uint8_t>(progress.power));
+  writer.Write<uint8_t>(static_cast<uint8_t>(progress.bombs));
+  writer.Write<uint8_t>(static_cast<uint8_t>(progress.lives));
+  writer.Write<uint8_t>(static_cast<uint8_t>(progress.credits));
+  writer.Write<uint8_t>(static_cast<uint8_t>(progress.star_extend_count));
+  writer.Write<uint8_t>(static_cast<uint8_t>(progress.initial_bomb_stock));
 }
 
 bool ReadPlayerProgress(util::ByteReader &reader, PlayerProgress &progress) {
-  return ReadValue(reader, progress.score) &&
-         ReadValue(reader, progress.pending_score) &&
-         ReadValue(reader, progress.graze_sum) &&
-         ReadValue(reader, progress.pending_graze_score) &&
-         ReadValue(reader, progress.star_counter) &&
-         ReadValue(reader, progress.star_threshold) &&
-         ReadValue(reader, progress.graze_count) &&
-         ReadValue(reader, progress.graze_wait) &&
-         ReadValue(reader, progress.power_progress) &&
-         ReadValue(reader, progress.miss_count) &&
-         ReadValue(reader, progress.bomb_used) &&
-         ReadValue(reader, progress.deathbomb_count) &&
-         ReadValue(reader, progress.player_type) &&
-         ReadValue(reader, progress.power) &&
-         ReadValue(reader, progress.bombs) &&
-         ReadValue(reader, progress.lives) &&
-         ReadValue(reader, progress.credits) &&
-         ReadValue(reader, progress.star_extend_count) &&
-         ReadValue(reader, progress.initial_bomb_stock);
+  uint8_t player_type = 0;
+  uint16_t graze_count = 0;
+  uint16_t graze_wait = 0;
+  uint16_t power_progress = 0;
+  uint16_t miss_count = 0;
+  uint16_t bomb_used = 0;
+  uint16_t deathbomb_count = 0;
+  uint8_t power = 0;
+  uint8_t bombs = 0;
+  uint8_t lives = 0;
+  uint8_t credits = 0;
+  uint8_t star_extend_count = 0;
+  uint8_t initial_bomb_stock = 0;
+  if (!ReadValue(reader, progress.score) ||
+      !ReadValue(reader, progress.pending_score) ||
+      !ReadValue(reader, progress.graze_sum) ||
+      !ReadValue(reader, progress.pending_graze_score) ||
+      !ReadValue(reader, progress.star_counter) ||
+      !ReadValue(reader, progress.star_threshold) ||
+      !ReadValue(reader, graze_count) ||
+      !ReadValue(reader, graze_wait) ||
+      !ReadValue(reader, power_progress) ||
+      !ReadValue(reader, miss_count) ||
+      !ReadValue(reader, bomb_used) ||
+      !ReadValue(reader, deathbomb_count) ||
+      !ReadValue(reader, player_type) ||
+      player_type > std::to_underlying(PlayerType::Laser) ||
+      !ReadValue(reader, power) ||
+      !ReadValue(reader, bombs) ||
+      !ReadValue(reader, lives) ||
+      !ReadValue(reader, credits) ||
+      !ReadValue(reader, star_extend_count) ||
+      !ReadValue(reader, initial_bomb_stock)) {
+    return false;
+  }
+  progress.player_type = static_cast<PlayerType>(player_type);
+  progress.graze_count = graze_count;
+  progress.graze_wait = graze_wait;
+  progress.power_progress = power_progress;
+  progress.miss_count = miss_count;
+  progress.bomb_used = bomb_used;
+  progress.deathbomb_count = deathbomb_count;
+  progress.power = power;
+  progress.bombs = bombs;
+  progress.lives = lives;
+  progress.credits = credits;
+  progress.star_extend_count = star_extend_count;
+  progress.initial_bomb_stock = initial_bomb_stock;
+  return true;
 }
 
 std::string ReplayFilename(bool extra_stage,
@@ -136,7 +163,7 @@ UniqueReplayPath(bool extra_stage, std::chrono::system_clock::time_point now) {
   const auto filename = ReplayFilename(extra_stage, now);
   const auto stem = std::filesystem::path{filename}.stem().string();
   auto path = std::filesystem::path{kReplayDirectory} / filename;
-  for (uint32_t suffix = 1; std::filesystem::exists(path, error); ++suffix) {
+  for (int suffix = 1; std::filesystem::exists(path, error); ++suffix) {
     if (error) {
       return std::nullopt;
     }
@@ -186,10 +213,10 @@ std::optional<ScoreRecord> LoadScoreRecord(const std::filesystem::path &path) {
       .name = std::string{file.name.data(), file.name_length},
       .created_at = static_cast<int64_t>(file.created_at),
       .score = static_cast<int64_t>(file.score),
-      .graze = file.graze,
-      .miss_count = file.miss_count,
-      .bomb_used = file.bomb_used,
-      .deathbomb_count = file.deathbomb_count,
+      .graze = static_cast<int>(file.graze),
+      .miss_count = static_cast<int>(file.miss_count),
+      .bomb_used = static_cast<int>(file.bomb_used),
+      .deathbomb_count = static_cast<int>(file.deathbomb_count),
       .difficulty = static_cast<GameLevel>(file.difficulty),
       .stage = static_cast<StageId>(file.stage),
       .player_type = static_cast<PlayerType>(file.player_type),
@@ -260,7 +287,7 @@ RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) {
                            .count();
   auto path = std::filesystem::path{kScoreDirectory} /
               std::format("score_{}.dat", file_id);
-  for (uint32_t suffix = 1; std::filesystem::exists(path, error); suffix++) {
+  for (int suffix = 1; std::filesystem::exists(path, error); suffix++) {
     if (error) {
       return RecordSaveResult::IoError;
     }
@@ -276,10 +303,10 @@ RecordSaveResult RecordSystem::SaveScore(const ScoreRecord &record) {
       .version = kScoreVersion,
       .created_at = static_cast<uint64_t>(record.created_at),
       .score = static_cast<uint64_t>(record.score),
-      .graze = record.graze,
-      .miss_count = record.miss_count,
-      .bomb_used = record.bomb_used,
-      .deathbomb_count = record.deathbomb_count,
+      .graze = static_cast<uint32_t>(record.graze),
+      .miss_count = static_cast<uint16_t>(record.miss_count),
+      .bomb_used = static_cast<uint16_t>(record.bomb_used),
+      .deathbomb_count = static_cast<uint16_t>(record.deathbomb_count),
       .difficulty = std::to_underlying(record.difficulty),
       .stage = std::to_underlying(record.stage),
       .player_type = std::to_underlying(record.player_type),
@@ -323,11 +350,15 @@ void RecordSystem::BeginCapture(const Player &player,
               .practice_mode = config.game.practice_mode,
               .player_stock = config.game.player_stock,
               .bomb_stock = config.game.bomb_stock,
-              .input_flags = static_cast<uint8_t>(
-                  (config.input.joypad_enabled ? kInputFlagJoypad : 0) |
-                  (config.input.z_msg_skip_enabled ? kInputFlagMessageSkip
-                                                   : 0) |
-                  (config.input.z_spd_down_enabled ? kInputFlagSpeedDown : 0)),
+              .input_flags =
+                  (config.input.joypad_enabled ? ReplayInputFlags::Joypad
+                                               : ReplayInputFlags::None) |
+                  (config.input.z_msg_skip_enabled
+                       ? ReplayInputFlags::MessageSkip
+                       : ReplayInputFlags::None) |
+                  (config.input.z_spd_down_enabled
+                       ? ReplayInputFlags::SpeedDown
+                       : ReplayInputFlags::None),
           },
       .demo_capture = demo_capture,
   });
@@ -388,8 +419,7 @@ void RecordSystem::FlushStage() {
     return;
   }
 
-  recording->current_checkpoint.frame_count =
-      static_cast<uint32_t>(recording->current_inputs.size());
+  recording->current_checkpoint.frame_count = recording->current_inputs.size();
   recording->stages.push_back({.checkpoint = recording->current_checkpoint,
                                .inputs = std::move(recording->current_inputs)});
   recording->current_inputs.clear();
@@ -498,18 +528,17 @@ RecordSaveResult RecordSystem::SaveRecording(std::string_view replay_name,
   manifest.Write<uint64_t>(static_cast<uint64_t>(created_at));
   manifest.Write(std::to_underlying(recording->settings.difficulty));
   manifest.Write(std::to_underlying(recording->settings.practice_mode));
-  manifest.Write(recording->settings.player_stock);
-  manifest.Write(recording->settings.bomb_stock);
-  manifest.Write(recording->settings.input_flags);
+  manifest.Write<uint8_t>(recording->settings.player_stock);
+  manifest.Write<uint8_t>(recording->settings.bomb_stock);
+  manifest.Write(static_cast<uint8_t>(recording->settings.input_flags));
   manifest.Write(static_cast<uint8_t>(replay_name.size()));
-  manifest.WriteBytes({reinterpret_cast<const uint8_t *>(replay_name.data()),
-                       replay_name.size()});
+  manifest.WriteString(replay_name);
   manifest.Write(static_cast<uint8_t>(recording->stages.size()));
 
   for (const auto &stage : recording->stages) {
     const auto &checkpoint = stage.checkpoint;
     manifest.Write(std::to_underlying(checkpoint.stage));
-    manifest.Write(checkpoint.frame_count);
+    manifest.Write<uint32_t>(static_cast<uint32_t>(checkpoint.frame_count));
     manifest.Write(checkpoint.rng.seed);
     manifest.Write(checkpoint.rng.draw_count);
     manifest.Write<uint32_t>(static_cast<uint32_t>(checkpoint.rank));
@@ -621,20 +650,23 @@ bool RecordSystem::LoadArchive(const data::PbgArchive &archive,
   for (uint8_t i = 0; i < stage_count; i++) {
     StageCheckpoint checkpoint;
     uint8_t stage_id = 0;
+    uint32_t frame_count = 0;
     uint32_t rank = 0;
     if (!ReadValue(reader, stage_id) ||
         stage_id > std::to_underlying(StageId::Extra) ||
-        !ReadValue(reader, checkpoint.frame_count) ||
-        checkpoint.frame_count > kReplayBufferCapacity ||
+        !ReadValue(reader, frame_count) ||
+        frame_count > static_cast<uint32_t>(kReplayBufferCapacity) ||
         !ReadValue(reader, checkpoint.rng.seed) ||
         !ReadValue(reader, checkpoint.rng.draw_count) ||
         !ReadValue(reader, rank) ||
         !ReadPlayerProgress(reader, checkpoint.player) ||
-        checkpoint.player.player_type > std::to_underlying(PlayerType::Laser)) {
+        std::to_underlying(checkpoint.player.player_type) >
+            std::to_underlying(PlayerType::Laser)) {
       return false;
     }
+    checkpoint.frame_count = frame_count;
     checkpoint.stage = static_cast<StageId>(stage_id);
-    checkpoint.rank = static_cast<int32_t>(rank);
+    checkpoint.rank = static_cast<int>(rank);
     if ((checkpoint.stage == StageId::Extra && stage_count != 1) ||
         (!stage_ids.empty() &&
          stage_id != std::to_underlying(stage_ids.back()) + 1)) {
@@ -642,7 +674,7 @@ bool RecordSystem::LoadArchive(const data::PbgArchive &archive,
     }
     stage_ids.push_back(checkpoint.stage);
     if (i == 0) {
-      player_type = static_cast<PlayerType>(checkpoint.player.player_type);
+      player_type = checkpoint.player.player_type;
     }
 
     ReplayStage replay_stage{.checkpoint = checkpoint};
@@ -654,12 +686,12 @@ bool RecordSystem::LoadArchive(const data::PbgArchive &archive,
       }
       util::ByteReader input_reader{input_data};
       replay_stage.inputs.reserve(checkpoint.frame_count);
-      for (uint32_t frame = 0; frame < checkpoint.frame_count; frame++) {
+      for (std::size_t frame = 0; frame < checkpoint.frame_count; ++frame) {
         uint16_t input = 0;
         if (!ReadValue(input_reader, input)) {
           return false;
         }
-        replay_stage.inputs.push_back(static_cast<InputBits>(input));
+        replay_stage.inputs.push_back(input);
       }
     }
     parsed_stages.push_back(std::move(replay_stage));
@@ -685,7 +717,7 @@ bool RecordSystem::LoadArchive(const data::PbgArchive &archive,
         .practice_mode = static_cast<PracticeMode>(practice_mode),
         .player_stock = player_stock,
         .bomb_stock = bomb_stock,
-        .input_flags = input_flags,
+        .input_flags = static_cast<ReplayInputFlags>(input_flags),
     };
   }
   if (stages != nullptr) {
@@ -740,7 +772,8 @@ bool RecordSystem::ConfigurePlayback(Player &player, GameSession &session) {
           ? PracticeMode::Off
           : playback->settings.practice_mode;
   player.Configure(practice_mode,
-                   (playback->settings.input_flags & kInputFlagSpeedDown) != 0);
+                   HasReplayInputFlag(playback->settings.input_flags,
+                                      ReplayInputFlags::SpeedDown));
   session.level = playback->settings.difficulty;
   session.stage = CurrentPlaybackStage();
   return true;

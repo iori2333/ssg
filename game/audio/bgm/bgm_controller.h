@@ -35,7 +35,7 @@ public:
   void FadeOut(float volume_start, std::chrono::milliseconds duration);
 
   void SetVolume(Volume volume);
-  void SetTempo(std::int8_t tempo);
+  void SetTempo(int tempo);
 
   void Tick(std::chrono::milliseconds delta);
 
@@ -54,7 +54,7 @@ private:
   PlaybackState state_ = PlaybackState::Idle;
   std::atomic<bool> playing_ = false;
   Volume volume_ = kMaxVolume;
-  std::int8_t tempo_ = 0;
+  int tempo_ = 0;
 };
 
 } // namespace audio::bgm

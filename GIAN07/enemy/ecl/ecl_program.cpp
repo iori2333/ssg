@@ -328,7 +328,7 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
     }
     return MakeInstruction(opcode,
                            EclConditionalJumpArguments{.target = *position,
-                                                       .value = reader.U32()});
+                                                       .value = static_cast<int>(reader.U32())});
   }
 
   case EclOpcode::JumpDifficulty: {
@@ -353,7 +353,7 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
         opcode, EclSetInterruptArguments{
                     .target = *position,
                     .interrupt = static_cast<EclInterrupt>(raw_interrupt),
-                    .threshold = reader.U32()});
+                    .threshold = static_cast<int>(reader.U32())});
   }
 
   case EclOpcode::ClearInterrupt: {

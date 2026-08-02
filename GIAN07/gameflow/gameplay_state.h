@@ -59,7 +59,7 @@ private:
   Mode mode_ = Mode::Live;
   Phase phase_ = Phase::Running;
   int game_over_timer_ = 0;
-  uint8_t overlay_timer_ = 0;
+  int overlay_timer_ = 0;
   bool demo_visible_ = false;
 };
 

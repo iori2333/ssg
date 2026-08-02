@@ -42,8 +42,8 @@
 namespace {
 
 struct GraphicsState {
-  uint8_t frame_rate_divisor = 0;
-  uint8_t screenshot_effort = 0;
+  int frame_rate_divisor = 0;
+  int screenshot_effort = 0;
   unsigned int screenshot_number = 0;
   std::string screenshot_prefix;
   bool screenshot_requested = false;
@@ -56,11 +56,11 @@ GraphicsState &State() {
 
 } // namespace
 
-void SetFrameRateDivisor(uint8_t divisor) {
+void SetFrameRateDivisor(int divisor) {
   State().frame_rate_divisor = divisor;
 }
 
-uint8_t FrameRateDivisor() { return State().frame_rate_divisor; }
+int FrameRateDivisor() { return State().frame_rate_divisor; }
 
 // Paletted graphics //
 // ----------------- //
@@ -191,7 +191,7 @@ bool ScreenshotSaveBMP(SDL_Surface *src) {
   const auto bpp = (SDL_BYTESPERPIXEL(src->format) * 8);
 
   const auto pixels =
-      std::span(static_cast<std::byte *>(src->pixels),
+      std::span(static_cast<uint8_t *>(src->pixels),
                 (static_cast<size_t>(src->h) * static_cast<size_t>(src->pitch)));
   return BmpSave(stream, bmp_size, 1, bpp, palette, pixels);
 }
@@ -321,7 +321,7 @@ bool GraphicsScreenshotSave(SDL_Surface *src) {
   return ret;
 }
 
-void GraphicsScreenshotSetEffort(uint8_t effort) {
+void GraphicsScreenshotSetEffort(int effort) {
   State().screenshot_effort = std::min(effort, kScreenshotEffortMax);
 }
 // -----------
@@ -340,7 +340,7 @@ bool GraphicsParams::ScaleGeometry() const {
   return !!(flags & GraphicsParamFlags::ScaleGeometry);
 }
 
-uint8_t GraphicsParams::Scale4x() const {
+int GraphicsParams::Scale4x() const {
   const auto fs = FullscreenFlags();
   if (fs.fullscreen) {
     return (fs.exclusive ? 4 : 0);
@@ -387,7 +387,7 @@ void GraphicsParams::SetFlag(GraphicsParamFlags flag,
   SetEnumFlag(flags, flag, value);
 }
 
-uint8_t GraphicsWindowScale4xMax() {
+int GraphicsWindowScale4xMax() {
   const auto factors =
       ((GraphicsBackendDisplaySize(false) * 4) / kGameResolution);
   return std::min(factors.w, factors.h);
@@ -415,8 +415,8 @@ GraphicsInitOrFallback(GraphicsParams params) {
 
   const auto api_it =
       ((api_count > 0)
-           ? std::views::iota(int8_t{-1}, api_count)
-           : std::views::iota(params.api, static_cast<int8_t>(params.api + 1)));
+           ? std::views::iota(-1, api_count)
+           : std::views::iota(params.api, params.api + 1));
 
   for (const auto api : api_it) {
     params.api = api;

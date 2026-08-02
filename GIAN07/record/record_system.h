@@ -13,6 +13,7 @@
 #include "gameplay/game_rules.h"
 #include "player/player.h"
 #include "sys/input.h"
+#include "util/enum_flags.h"
 #include "util/math_utils.h"
 
 namespace data {
@@ -23,6 +24,20 @@ class PbgArchive;
 struct ConfigData;
 struct GameSession;
 
+enum class ReplayInputFlags : uint8_t {
+  None = 0,
+  Joypad = 1 << 0,
+  MessageSkip = 1 << 1,
+  SpeedDown = 1 << 2,
+};
+
+template <> inline constexpr bool util::EnableEnumFlags<ReplayInputFlags> = true;
+
+[[nodiscard]] inline constexpr bool
+HasReplayInputFlag(ReplayInputFlags flags, ReplayInputFlags flag) {
+  return (static_cast<uint8_t>(flags) & static_cast<uint8_t>(flag)) != 0;
+}
+
 inline constexpr auto kReplayBufferCapacity = 60 * 60 * 30;
 inline constexpr auto kReplayStageCapacity = 6;
 inline constexpr auto kRecordNameLength = 8;
@@ -31,10 +46,10 @@ struct ScoreRecord {
   std::string name;
   int64_t created_at;
   int64_t score;
-  uint32_t graze;
-  uint16_t miss_count;
-  uint16_t bomb_used;
-  uint16_t deathbomb_count;
+  int graze;
+  int miss_count;
+  int bomb_used;
+  int deathbomb_count;
   GameLevel difficulty;
   StageId stage;
   PlayerType player_type;
@@ -101,17 +116,17 @@ private:
   struct ReplaySettings {
     GameLevel difficulty = GameLevel::Normal;
     PracticeMode practice_mode = PracticeMode::Off;
-    uint8_t player_stock = 0;
-    uint8_t bomb_stock = 0;
-    uint8_t input_flags = 0;
+    int player_stock = 0;
+    int bomb_stock = 0;
+    ReplayInputFlags input_flags = ReplayInputFlags::None;
   };
 
   struct StageCheckpoint {
     StageId stage = StageId::Stage1;
-    uint32_t frame_count = 0;
+    std::size_t frame_count = 0;
     math::RandomState rng{};
     PlayerProgress player{};
-    int32_t rank = 0;
+    int rank = 0;
   };
 
   struct ReplayStage {

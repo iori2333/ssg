@@ -235,7 +235,7 @@ void StageVisuals::StartRocks() {
             .y = -250_px - y_offset,
             .velocity_y = (4 - sprite) * 16,
             .speed = (4 - sprite) * 16,
-            .sprite = static_cast<uint8_t>(sprite)};
+            .sprite = sprite};
   }
 }
 
@@ -319,12 +319,12 @@ void StageVisuals::CommandRocks(Stage4RockCommand command) {
     switch (command) {
     case Stage4RockCommand::Accelerate:
       rock.state = RockState::Accelerating;
-      rock.acceleration = static_cast<int8_t>(rock.speed / 24);
+      rock.acceleration = rock.speed / 24;
       rock.age = 0;
       break;
     case Stage4RockCommand::Reverse:
       rock.state = RockState::Reversing;
-      rock.acceleration = static_cast<int8_t>(rock.speed / 12);
+      rock.acceleration = rock.speed / 12;
       rock.age = 0;
       break;
     case Stage4RockCommand::Leave:
@@ -345,13 +345,13 @@ void StageVisuals::StartRasters() {
     const int x = math::RandomInt() % (640 - 256) + 128;
     const int y = -(math::RandomInt() % (480 + 160));
     const auto angle = static_cast<uint8_t>(math::RandomInt());
-    const auto amplitude = static_cast<uint8_t>(math::RandomInt() % 80 + 70);
-    const auto velocity_y = static_cast<int8_t>(2 + math::RandomInt() % 3);
+    const int amplitude = math::RandomInt() % 80 + 70;
+    const int velocity_y = 2 + math::RandomInt() % 3;
     rasters_[index] = {
         .x = x,
         .y = y,
         .velocity_y = velocity_y,
-        .type = static_cast<uint8_t>(index % 3),
+        .type = static_cast<int>(index % 3),
         .angle = angle,
         .amplitude = amplitude,
     };
@@ -372,7 +372,7 @@ void StageVisuals::UpdateRasters() {
       raster.x = math::RandomInt() % (640 - 256) + 128;
       raster.y = -160;
       raster.angle = static_cast<uint8_t>(math::RandomInt());
-      raster.amplitude = static_cast<uint8_t>(math::RandomInt() % 80 + 70);
+      raster.amplitude = math::RandomInt() % 80 + 70;
     }
   }
   for (auto &star : raster_stars_) {

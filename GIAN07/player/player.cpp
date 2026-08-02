@@ -49,23 +49,23 @@ Player::Player(EffectManager &effects, GameSession &session,
     : loadout_(std::make_unique<WideLoadout>()), effects_(effects),
       audio_(audio), session_(session), stage_(stage) {}
 
-bool Player::IsMainShotFrame(uint16_t t) {
+bool Player::IsMainShotFrame(int t) {
   return (t == kMainShotFrame || t == kMainShotFrame * 2 ||
           t == kMainShotFrame * 3);
 }
 
-bool Player::IsSubShotFrame(uint16_t t) const {
+bool Player::IsSubShotFrame(int t) const {
   return (t == 0 || t == kSubShotFrame) && bomb_time_ == 0;
 }
 
 void Player::SpawnShot(const PlayerShotSpawnInfo &si) {
-  for (uint8_t i = 0; i < si.count; i++) {
+  for (int i = 0; i < si.count; i++) {
     auto *t = maid_tama_.Alloc();
     if (t == nullptr) {
       return;
     }
 
-    uint8_t di = i % si.count;
+    int di = i % si.count;
     di++;
     uint8_t d = 0;
     if ((si.count & 1) != 0) {
@@ -134,8 +134,8 @@ void Player::Draw() {
        PixelLtrb{504, 152, 504 + 24, 152 + 24}}, // temp
   }};
 
-  static uint8_t draw_flag = 0;
-  static uint8_t draw_flag2 = 0;
+  static int draw_flag = 0;
+  static int draw_flag2 = 0;
 
   const auto sx = ((x_ >> 6) - 16);
   const auto sy = ((y_ >> 6) - 24);
@@ -150,7 +150,7 @@ void Player::Draw() {
     draw_flag = 0;
   }
 
-  if (!IsInvincible() || (draw_flag != 0U)) {
+  if (!IsInvincible() || (draw_flag != 0)) {
     src = PixelLtwh{(384 + (grp_id_ * 32)), 128, (16 * 2), (16 * 3)};
     GraphicsSurfaceBlit({sx, sy}, SurfaceId::System, src);
   }
@@ -349,7 +349,7 @@ void Player::Initialize(int player_stock, int bomb_stock) {
   dscore_ = 0;
   exp_ = 0;
   exp2_ = 0;
-  initial_bomb_stock_ = static_cast<uint8_t>(bomb_stock);
+  initial_bomb_stock_ = bomb_stock;
   bomb_ = initial_bomb_stock_;
   left_ = player_stock;
   credit_ = 4;
@@ -439,7 +439,7 @@ void Player::EnterDeathbombWindow() {
                       (static_cast<int>(GameLevel::Lunatic) -
                        static_cast<int>(std::to_underlying(session_.level))) *
                           2;
-  deathbomb_time_ = static_cast<uint16_t>(window);
+  deathbomb_time_ = window;
   life_state_ = LifeState::DeathbombWindow;
 }
 
@@ -459,7 +459,7 @@ bool Player::ActivateBomb(BombTrigger trigger) {
 
   bomb_time_ = loadout_->BombDuration();
   invincibility_time_ = kBombEndInvincibilityDuration;
-  const uint8_t bomb_cost =
+  const int bomb_cost =
       trigger == BombTrigger::Deathbomb && bomb_ >= kDeathbombCost
           ? kDeathbombCost
           : 1;
@@ -506,9 +506,9 @@ void Player::CommitDeath() {
   clear_bullets_requested_ = true;
 }
 
-void Player::AddEvade(uint8_t n) { AddEvadeEx(x_, y_, n); }
+void Player::AddEvade(int n) { AddEvadeEx(x_, y_, n); }
 
-void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
+void Player::AddEvadeEx(int ex, int ey, int n) {
   if (n != 0U) {
     if (!buzz_sound_) {
       audio_.PlaySfx(SfxId::Buzz, ex);
@@ -519,7 +519,7 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
     effects_.SpawnFragment(ex, ey, FragmentKind::Graze);
   }
 
-  for (uint8_t i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     if (evade_ == 999) {
       evade_c_ = 1;
       return;
@@ -530,17 +530,16 @@ void Player::AddEvadeEx(int ex, int ey, uint8_t n) {
   }
 
   if (evade_ != 0U) {
-    evade_c_ = std::min(static_cast<uint16_t>(evade_c_ + kGrazeWaitIncrement),
-                        kGrazeWaitMax);
+    evade_c_ = std::min(evade_c_ + kGrazeWaitIncrement, kGrazeWaitMax);
   }
 }
 
 void Player::AddScore(int sc) { dscore_ += sc; }
 
-void Player::PowerUp(uint8_t damage) {
+void Player::PowerUp(int damage) {
   exp2_ += damage;
 
-  switch ((static_cast<uint16_t>(exp_) + 1) >> 5) {
+  switch ((exp_ + 1) >> 5) {
   case 0:
     if (exp2_ > 5 - 3) {
       exp_++, exp2_ = 0;
@@ -609,7 +608,7 @@ void Player::RotateType(int dir) {
   SelectType(static_cast<PlayerType>((current + (dir < 0 ? 2 : 1)) % 3));
 }
 
-PlayerReward Player::AddStar(uint32_t n) {
+PlayerReward Player::AddStar(int n) {
   star_counter_ += n;
   if (star_counter_ >= star_threshold_) {
     star_threshold_ += kStarThresholdIncrement;
@@ -652,7 +651,7 @@ PlayerProgress Player::CaptureProgress() const {
       .miss_count = miss_count_,
       .bomb_used = bomb_used_,
       .deathbomb_count = deathbomb_count_,
-      .player_type = std::to_underlying(Type()),
+      .player_type = Type(),
       .power = exp_,
       .bombs = bomb_,
       .lives = left_,
@@ -663,8 +662,10 @@ PlayerProgress Player::CaptureProgress() const {
 }
 
 void Player::RestoreProgress(const PlayerProgress &progress) {
-  SelectType(
-      static_cast<PlayerType>(std::min<uint8_t>(progress.player_type, 2)));
+  if (std::to_underlying(progress.player_type) <=
+      std::to_underlying(PlayerType::Laser)) {
+    SelectType(progress.player_type);
+  }
   PrepareNextStage();
 
   score_ = progress.score;

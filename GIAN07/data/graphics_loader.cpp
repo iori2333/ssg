@@ -41,7 +41,7 @@ bool GraphicsLoader::Load(Set set) {
     break;
   case Set::Ending:
     loaded = LoadBmp(32, SurfaceId::EndingCredits);
-    for (uint8_t i = 0; loaded && i < graphics_assets::kEndingPictureCount;
+    for (std::size_t i = 0; loaded && i < graphics_assets::kEndingPictureCount;
          ++i) {
       loaded = LoadBmp(33 + i, graphics_assets::EndingPictureSurface(i));
     }
@@ -94,7 +94,7 @@ bool GraphicsLoader::LoadBulletGallery() { return Load(Set::BulletGallery); }
 
 bool GraphicsLoader::Reload() { return loaded_set_ && Load(*loaded_set_); }
 
-bool GraphicsLoader::SwapEnemySurface(uint8_t image_no) {
+bool GraphicsLoader::SwapEnemySurface(uint32_t image_no) {
   return LoadBmp(image_no, SurfaceId::Enemy);
 }
 
@@ -122,7 +122,7 @@ bool GraphicsLoader::LoadGalleryEnemySurface() const {
     }
     for (int x = 0; x < copy_w; ++x) {
       const auto pixel = src_pixels[src_y * src_stride + x];
-      if (pixel != std::byte{0}) {
+      if (pixel != 0) {
         dst_pixels[dst_y * dst_stride + x] = pixel;
       }
     }
@@ -130,9 +130,10 @@ bool GraphicsLoader::LoadGalleryEnemySurface() const {
   return GraphicsSurfaceLoad(SurfaceId::Enemy, std::move(*bmp29));
 }
 
-bool GraphicsLoader::LoadFace(uint8_t face_id, uint8_t file_no) {
+bool GraphicsLoader::LoadFace(std::size_t face_id, std::size_t file_no) {
   return face_id < graphics_assets::kFaceSurfaceCount &&
-         LoadBmp(13 + file_no, graphics_assets::FaceSurface(face_id));
+         LoadBmp(static_cast<uint32_t>(13 + file_no),
+                 graphics_assets::FaceSurface(face_id));
 }
 
 } // namespace data

@@ -24,16 +24,16 @@ public:
 
 private:
   struct Lens {
-    [[nodiscard]] static Lens Create(uint16_t radius, uint16_t bulge);
+    [[nodiscard]] static Lens Create(int radius, int bulge);
     void Draw(WindowPoint center);
 
-    uint16_t radius;
-    uint16_t diameter;
-    std::vector<uint32_t> table;
-    std::vector<std::byte> field_of_view;
+    int radius;
+    int diameter;
+    std::vector<std::size_t> table;
+    std::vector<uint8_t> field_of_view;
   };
 
   data::GraphicsLoader &graphics_;
   std::optional<Lens> lens_;
-  uint16_t timer_ = 0;
+  int timer_ = 0;
 };

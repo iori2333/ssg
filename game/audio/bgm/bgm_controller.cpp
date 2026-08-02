@@ -123,8 +123,8 @@ void BgmController::SetVolume(Volume volume) {
   }
 }
 
-void BgmController::SetTempo(std::int8_t tempo) {
-  tempo_ = std::clamp(tempo, std::int8_t{-100}, std::int8_t{100});
+void BgmController::SetTempo(int tempo) {
+  tempo_ = std::clamp(tempo, -100, 100);
   if (active_ != nullptr) {
     active_->SetTempo(tempo_);
   }

@@ -20,7 +20,7 @@ namespace audio {
 class AudioSystem;
 }
 
-inline constexpr std::size_t kBitCapacity = 6;
+inline constexpr int kBitCapacity = 6;
 
 struct BitLink {
   PixelPoint from{};
@@ -39,7 +39,7 @@ public:
       : enemies_(enemies), bullets_(bullets), player_(player), audio_(audio) {}
 
   void Reset();
-  void Spawn(BossActor &parent, uint8_t count, uint32_t script_id);
+  void Spawn(BossActor &parent, int count, uint32_t script_id);
   void Update();
   void Destroy();
   [[nodiscard]] BitLinkGeometry LinkGeometry() const;
@@ -68,9 +68,9 @@ private:
   struct Part {
     EnemyActor *actor = nullptr;
     uint32_t hp = 0;
-    uint8_t id = 0;
+    int id = 0;
     uint8_t angle = 0;
-    int8_t force = 0;
+    int force = 0;
   };
 
   void UpdateRadius();
@@ -84,13 +84,13 @@ private:
   int speed_ = 0;
   int acceleration_ = 0;
   uint8_t direction_ = 64;
-  uint8_t count_ = 0;
+  int count_ = 0;
   int radius_ = 0;
   int target_radius_ = 0;
-  int8_t rotation_speed_ = 0;
+  int rotation_speed_ = 0;
   MotionState motion_ = MotionState::Disabled;
   LaserPattern laser_pattern_ = LaserPattern::Disabled;
-  uint16_t base_angle_ = 0;
+  int base_angle_ = 0;
   bool laser_active_ = false;
 
   EnemyManager &enemies_;

@@ -29,7 +29,7 @@ constexpr PlayerTraits kHomingTraits{
 
 HomingLoadout::HomingLoadout() : PlayerLoadout(kHomingTraits) {}
 
-void HomingLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
+void HomingLoadout::FireMain(Player &player, int tier, bool focused) {
   if (focused) {
     FireMainFocused(player, tier);
   } else {
@@ -37,7 +37,7 @@ void HomingLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   }
 }
 
-void HomingLoadout::FireSub(Player &player, uint8_t tier, bool focused) {
+void HomingLoadout::FireSub(Player &player, int tier, bool focused) {
   if (focused) {
     FireSubFocused(player, tier);
   } else {
@@ -45,13 +45,13 @@ void HomingLoadout::FireSub(Player &player, uint8_t tier, bool focused) {
   }
 }
 
-void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
+void HomingLoadout::FireMainNormal(Player &player_, int tier) {
   switch (tier) {
   case 0: {
     shot_phase_ += 32;
-    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
-        4.0F)));
+        4.0F));
     PlayerShotSpawnInfo const si{.x = player_.X(),
                                  .y = player_.Y(),
                                  .direction = static_cast<uint8_t>(-64 + dd),
@@ -105,7 +105,7 @@ void HomingLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
 }
 
-void HomingLoadout::FireSubNormal(Player &player_, uint8_t tier) {
+void HomingLoadout::FireSubNormal(Player &player_, int tier) {
   if (tier == 0) {
     return;
   }
@@ -143,7 +143,7 @@ void HomingLoadout::FireSubNormal(Player &player_, uint8_t tier) {
 
 void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
                                EffectManager & /*effects*/,
-                               uint16_t remaining) {
+                               int remaining) {
   if (remaining % 30 == 1) {
     PlayerShotSpawnInfo const si{
         .x = player_.X(),
@@ -161,7 +161,7 @@ void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
   }
 }
 
-void HomingLoadout::FireMainFocused(Player &player_, uint8_t tier) {
+void HomingLoadout::FireMainFocused(Player &player_, int tier) {
   int count = 1;
   if (tier > 0 && tier <= 2) {
     count = 2;
@@ -186,7 +186,7 @@ void HomingLoadout::FireMainFocused(Player &player_, uint8_t tier) {
   }
 }
 
-void HomingLoadout::FireSubFocused(Player &player_, uint8_t tier) {
+void HomingLoadout::FireSubFocused(Player &player_, int tier) {
   if (tier == 0) {
     return;
   }

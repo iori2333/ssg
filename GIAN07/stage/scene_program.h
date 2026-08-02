@@ -69,15 +69,15 @@ enum class SceneWaitCondition : uint8_t {
 
 struct SceneInstruction {
   SceneOpcode opcode{};
-  int32_t value = 0;
-  int16_t x = 0;
-  int16_t y = 0;
-  uint8_t script_id = 0;
-  uint8_t face_id = 0;
-  uint8_t track_id = 0;
-  uint8_t staff_id = 0;
-  uint8_t surface_id = 0;
-  uint8_t file_id = 0;
+  int value = 0;
+  int x = 0;
+  int y = 0;
+  std::size_t script_id = 0;
+  std::size_t face_id = 0;
+  std::size_t track_id = 0;
+  std::size_t staff_id = 0;
+  std::size_t surface_id = 0;
+  std::size_t file_id = 0;
   uint32_t text_id = 0;
   SceneEffect effect = SceneEffect::Warning;
   SceneWaitCondition wait_condition = SceneWaitCondition::BossCount;
@@ -106,23 +106,23 @@ public:
     return program_.Instructions();
   }
   [[nodiscard]] size_t Position() const { return position_; }
-  [[nodiscard]] uint32_t Frame() const { return frame_; }
+  [[nodiscard]] int Frame() const { return frame_; }
   [[nodiscard]] bool MessageActive() const { return message_active_; }
   [[nodiscard]] bool ReturnLatched() const { return return_latched_; }
 
-  [[nodiscard]] bool TimeReady(uint32_t target, bool skip_pressed);
+  [[nodiscard]] bool TimeReady(int target, bool skip_pressed);
   [[nodiscard]] bool KeyReady(bool pressed);
 
   void Advance() { ++position_; }
   void AdvanceFrame() { ++frame_; }
-  void SetFrame(uint32_t frame) { frame_ = frame; }
+  void SetFrame(int frame) { frame_ = frame; }
   void SetMessageActive(bool active) { message_active_ = active; }
   void SetReturnLatched(bool latched) { return_latched_ = latched; }
 
 private:
   SceneProgram program_;
   size_t position_ = 0;
-  uint32_t frame_ = 0;
+  int frame_ = 0;
   int key_wait_count_ = 0;
   bool message_active_ = false;
   bool return_latched_ = false;

@@ -36,12 +36,12 @@ struct PlayerShot {
   int x_{}, y_{};
   int velocity_x_{}, velocity_y_{};
   int speed_{};
-  int8_t acceleration_{};
+  int acceleration_{};
   float direction_{};
-  int8_t turn_rate_{};
+  int turn_rate_{};
   PlayerShotKind kind_{};
   PlayerShotMotion motion_{};
-  uint16_t age_{};
+  int age_{};
   bool pending_removal_{};
 
   [[nodiscard]] bool Move(const EnemyHomingTarget &target);
@@ -51,10 +51,10 @@ struct PlayerShotSpawnInfo {
   int x{}, y{};
   uint8_t direction{};
   uint8_t direction_step{};
-  uint8_t count{};
+  int count{};
   int speed{};
-  int8_t acceleration{};
+  int acceleration{};
   PlayerShotKind kind{};
   PlayerShotMotion motion = PlayerShotMotion::Straight;
-  int8_t turn_rate = 0;
+  int turn_rate = 0;
 };

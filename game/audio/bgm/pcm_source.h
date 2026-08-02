@@ -72,8 +72,8 @@ struct PcmPart {
   PcmFormat pcmf;
 
   // Single decoding call. Should return the number of bytes actually decoded
-  // (which can be less than [buf.size_bytes()]) or -1 if an error occurred.
-  virtual size_t PartDecodeSingle(std::span<std::byte> buf) = 0;
+  // (which can be less than [buf.size()]) or -1 if an error occurred.
+  virtual size_t PartDecodeSingle(std::span<uint8_t> buf) = 0;
 
   // Seeks to the given raw decoded audio sample. Guaranteed to be less than
   // the total number of samples in the stream.
@@ -100,9 +100,9 @@ struct PcmStream {
   // *Always* fills [buf] entirely. Returns `true` if successful, or `false`
   // in case of an unrecoverable decoding error, in which case [buf] is
   // filled with zeroes.
-  bool Decode(std::span<std::byte> buf);
+  bool Decode(std::span<uint8_t> buf);
 
-  size_t DecodeSingle(std::span<std::byte> buf);
+  size_t DecodeSingle(std::span<uint8_t> buf);
 
   auto FadeVolumeLinear() const { return vol.FadeVolumeLinear(); }
 

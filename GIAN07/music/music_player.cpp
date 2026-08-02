@@ -24,7 +24,7 @@ static constexpr std::string_view kBgmRoot = "bgm/";
 // Track switching
 // ---------------------------------------------------------------------------
 
-bool MusicPlayer::Play(unsigned int id) {
+bool MusicPlayer::Play(std::size_t id) {
   if (!audio_.IsEnabled()) {
     return false;
   }

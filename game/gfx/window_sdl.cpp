@@ -31,7 +31,7 @@ namespace {
 
 struct WindowState {
   SDL_Window *window = nullptr;
-  std::optional<std::pair<int16_t, int16_t>> topleft_before_fullscreen;
+  std::optional<std::pair<int, int>> topleft_before_fullscreen;
 };
 
 WindowState &State() {
@@ -41,19 +41,15 @@ WindowState &State() {
 
 } // namespace
 
-void WindowBackendRememberTopleft(std::pair<int16_t, int16_t> position) {
+void WindowBackendRememberTopleft(std::pair<int, int> position) {
   State().topleft_before_fullscreen = position;
 }
 
-std::pair<int16_t, int16_t> HelpGetWindowPosition(SDL_Window *window) {
+std::pair<int, int> HelpGetWindowPosition(SDL_Window *window) {
   int left{};
   int top{};
   SDL_GetWindowPosition(window, &left, &top);
-  assert(left > (std::numeric_limits<int16_t>::min)());
-  assert(top > (std::numeric_limits<int16_t>::min)());
-  assert(left <= (std::numeric_limits<int16_t>::max)());
-  assert(top <= (std::numeric_limits<int16_t>::max)());
-  return std::make_pair(static_cast<int16_t>(left), static_cast<int16_t>(top));
+  return std::make_pair(left, top);
 }
 
 SDL_DisplayID HelpGetDisplayForWindow() {
@@ -137,7 +133,7 @@ HelpSetFullscreenMode(SDL_Window *window, GraphicsFullscreenFlags fs) {
   }
 }
 
-int8_t WindowBackendValidateRenderDriver(std::string_view hint) {
+int WindowBackendValidateRenderDriver(std::string_view hint) {
   const auto id = GraphicsBackendAPIID(hint);
   if (id >= 0) {
     return id;
@@ -159,7 +155,7 @@ int8_t WindowBackendValidateRenderDriver(std::string_view hint) {
   return -1;
 }
 
-std::string_view WindowBackendSDLRendererName(int8_t id) {
+std::string_view WindowBackendSDLRendererName(int id) {
   assert(id < SDL_GetNumRenderDrivers());
   if (id >= 0) {
     return GraphicsBackendAPIString(id);
@@ -247,7 +243,7 @@ std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
     State().topleft_before_fullscreen = {params.left, params.top};
   }
 
-  const auto real_pos = [](int16_t pos) -> int {
+  const auto real_pos = [](int pos) -> int {
     return ((pos == kGraphicsTopleftUndefined) ? SDL_WINDOWPOS_CENTERED : pos);
   };
 
@@ -306,7 +302,7 @@ void WindowBackendCleanup() {
   }
 }
 
-std::optional<std::pair<int16_t, int16_t>> WindowBackendTopleft() {
+std::optional<std::pair<int, int>> WindowBackendTopleft() {
   // A fullscreen window is always positioned at (0, 0), and we don't want to
   // override any previous windowed position.
   if ((State().window == nullptr) ||

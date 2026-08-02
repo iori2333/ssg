@@ -56,7 +56,7 @@ void EffectManager::InitializeBombExplosion(BombExplosion &effect) {
     effect.particles[index] = {
         .x = effect.x,
         .y = effect.y,
-        .frame = static_cast<uint8_t>(index % 14),
+        .frame = static_cast<int>(index % 14),
     };
   }
 }

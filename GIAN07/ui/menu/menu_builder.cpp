@@ -155,7 +155,7 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
   std::vector<std::string> labels;
   labels.reserve(kScreenshotEffortMax + 1);
   labels.emplace_back("BMP");
-  for (auto i : std::views::iota(1U, kScreenshotEffortMax + 1U)) {
+  for (auto i : std::views::iota(1, kScreenshotEffortMax + 1)) {
     labels.push_back(std::format("WebP z{}", i - 1));
   }
   ch.push_back(std::make_unique<ChoiceNode>(
@@ -238,7 +238,7 @@ std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg,
     std::vector<MenuText> labels;
     labels.reserve(max_scale + 1);
     labels.push_back(Localized(localization, "ui.value.screen"));
-    for (uint8_t scale = 1; scale <= max_scale; scale++) {
+    for (int scale = 1; scale <= max_scale; scale++) {
       labels.emplace_back(
           std::format("{:3}.{:02}x", scale / 4, (scale % 4) * 25));
     }
@@ -672,7 +672,7 @@ BuildMainMenuTree(ConfigData &cfg, MainMenuServices services,
         return true;
       });
   extra_start->BindEnabled(
-      [&cfg] { return cfg.progress.extra_stg_flags != 0; });
+      [&cfg] { return cfg.progress.extra_stg_flags != ExtraStageFlag::None; });
   ch.push_back(std::move(extra_start));
 
   ch.push_back(std::make_unique<ActionNode>(

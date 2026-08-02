@@ -215,7 +215,8 @@ enum class EclBitLaserCommand : uint8_t {
 
 inline constexpr size_t kEclRegisterCount = 8;
 inline constexpr size_t kEclInterruptCount = 4;
-inline constexpr uint8_t kEclAllLongLasers = 0xff;
+// ECL addresses long lasers with a byte id; 0xff targets every laser.
+inline constexpr std::size_t kEclAllLongLasers = 0xff;
 
 [[nodiscard]] constexpr bool IsEclRegister(EclValue value) {
   return static_cast<uint8_t>(value) < kEclRegisterCount;

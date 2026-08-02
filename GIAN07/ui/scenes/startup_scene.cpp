@@ -19,36 +19,35 @@
 #include "gfx/graphics_backend.h"
 #include "util/math_utils.h"
 
-StartupScene::Lens StartupScene::Lens::Create(uint16_t radius, uint16_t bulge) {
+StartupScene::Lens StartupScene::Lens::Create(int radius, int bulge) {
   assert(radius > 0);
   assert(radius > bulge);
 
-  const auto diameter = static_cast<uint16_t>(radius * 2);
+  const auto diameter = radius * 2;
   const auto area = static_cast<std::size_t>(diameter) * diameter;
   Lens lens{
       .radius = radius,
       .diameter = diameter,
-      .table = std::vector<uint32_t>(area),
-      .field_of_view = std::vector<std::byte>(area * sizeof(uint32_t)),
+      .table = std::vector<std::size_t>(area),
+      .field_of_view = std::vector<uint8_t>(area * sizeof(uint32_t)),
   };
 
   auto *table = lens.table.data();
   const auto rounded_sqrt = [](auto value) {
-    return static_cast<int32_t>(std::lround(std::sqrt(value)));
+    return static_cast<int>(std::lround(std::sqrt(value)));
   };
-  const auto radius_squared = static_cast<int32_t>(radius) * radius;
+  const auto radius_squared = radius * radius;
   const auto sphere_radius =
-      rounded_sqrt(radius_squared - static_cast<int32_t>(bulge) * bulge);
-  for (auto row = -static_cast<int32_t>(radius); std::cmp_less(row, radius);
-       ++row) {
+      rounded_sqrt(radius_squared - bulge * bulge);
+  for (auto row = -radius; row < radius; ++row) {
     auto half_width = sphere_radius * sphere_radius - row * row;
     int width = 0;
     if (half_width > 0) {
       half_width = rounded_sqrt(half_width);
       width = half_width * 2;
-      *table++ = static_cast<uint32_t>(width);
-      *table++ =
-          static_cast<uint32_t>((radius - half_width) * sizeof(uint32_t));
+      *table++ = static_cast<std::size_t>(width);
+      *table++ = static_cast<std::size_t>((radius - half_width) *
+                                          sizeof(uint32_t));
     } else {
       half_width = 0;
       *table++ = 0;
@@ -61,7 +60,7 @@ StartupScene::Lens StartupScene::Lens::Create(uint16_t radius, uint16_t bulge) {
           rounded_sqrt(radius_squared - column * column - row * row);
       const auto source_y = ((row * bulge) / depth) + radius;
       const auto source_x = ((column * bulge) / depth) + radius;
-      *table++ = static_cast<uint32_t>(source_y * diameter + source_x);
+      *table++ = static_cast<std::size_t>(source_y * diameter + source_x);
     }
   }
   return lens;
@@ -75,8 +74,8 @@ void StartupScene::Lens::Draw(WindowPoint center) {
     return;
   }
 
-  GraphicsBackendPixelAccessEdit([&]<class Pixel>(std::byte *pixels,
-                                                  std::size_t pitch) {
+  GraphicsBackendPixelAccessEdit([&](uint8_t *pixels, std::size_t pitch) {
+    using Pixel = uint32_t;
     auto *captured = reinterpret_cast<Pixel *>(field_of_view.data());
     const std::span field{captured,
                           static_cast<std::size_t>(diameter) * diameter};
@@ -89,7 +88,7 @@ void StartupScene::Lens::Draw(WindowPoint center) {
       source += pitch;
     }
 
-    for (uint16_t row = 0; row < diameter; ++row) {
+    for (int row = 0; row < diameter; ++row) {
       auto width = *table_cursor++;
       auto *output = reinterpret_cast<Pixel *>(destination + *table_cursor++);
       while (width-- != 0U) {
@@ -139,7 +138,7 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
   } else if (timer_ > 192) {
     fade(timer_ * 4);
   } else if (lens_) {
-    const uint8_t offset = timer_ - 64;
+    const int offset = timer_ - 64;
     const int x =
         math::RoundedPolarVector(
             static_cast<float>(offset - 64) * math::kLegacyAngleStep, 240.0F)

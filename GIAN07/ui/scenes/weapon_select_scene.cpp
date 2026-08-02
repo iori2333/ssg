@@ -28,7 +28,7 @@
 
 namespace {
 
-constexpr uint8_t PlayerTypeIndex(PlayerType type) {
+constexpr int PlayerTypeIndex(PlayerType type) {
   return std::to_underlying(type);
 }
 
@@ -100,8 +100,9 @@ WeaponSelectSceneResult WeaponSelectScene::Update(InputBits input,
       break;
     }
     if (session_.stage == StageId::Extra &&
-        ((1U << PlayerTypeIndex(player_.Type())) &
-         config_.progress.extra_stg_flags) == 0) {
+        !HasExtraStageFlag(
+            config_.progress.extra_stg_flags,
+            ExtraStageFlagForIndex(PlayerTypeIndex(player_.Type())))) {
       audio_.PlaySfx(SfxId::Buzz);
       break;
     }
@@ -148,7 +149,7 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
                       {0, 264 - 8, 224, 296 - 24});
   GraphicsSurfaceBlit({120 - 32, 260 - 12}, SurfaceId::System,
                       PixelLtwh{0, 272, 64, 24});
-  const uint8_t prompt_offset = ((count_ / 8) % 2) << 3;
+  const int prompt_offset = ((count_ / 8) % 2) << 3;
   GraphicsSurfaceBlit({400 - 28 + 4, 420}, SurfaceId::System,
                       PixelLtwh{72, 272 + prompt_offset, 56, 8});
 
@@ -165,7 +166,8 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
   geometry::SetAlphaNorm(128);
   for (int i = 0; i < 3; i++) {
     if (session_.stage != StageId::Extra ||
-        ((1U << i) & config_.progress.extra_stg_flags) != 0) {
+        HasExtraStageFlag(config_.progress.extra_stg_flags,
+                          ExtraStageFlagForIndex(static_cast<size_t>(i)))) {
       continue;
     }
     const int direction =
@@ -176,7 +178,7 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
     geometry::DrawBoxA(x, y, x + 56, y + 48);
   }
 
-  player_.SetPower(static_cast<uint8_t>(std::min(count_, 255)));
+  player_.SetPower(std::min(count_, 255));
   if (player_.Power() < 31) {
     player_.ClearContinuousAttack();
   }
@@ -206,7 +208,7 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
   player_.DrawProjectiles();
   GraphicsSurfaceBlit({468, 400}, SurfaceId::System, PixelLtwh{72, 288, 56, 8});
   DrawScore(500, 400,
-            std::format("{}", (static_cast<uint16_t>(player_.Power()) + 1) >> 5)
+            std::format("{}", (player_.Power() + 1) >> 5)
                 .c_str());
 
   GraphicsBackendSetClip(kGameResolutionRect);

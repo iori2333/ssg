@@ -73,7 +73,7 @@ private:
   std::optional<ScoreRecord> current_record_;
   std::size_t selected_ = 0;
   std::size_t pending_rank_ = 0;
-  uint8_t current_difficulty_ = 0;
+  int current_difficulty_ = 0;
   bool input_locked_ = false;
   bool detail_open_ = false;
   bool save_failed_ = false;

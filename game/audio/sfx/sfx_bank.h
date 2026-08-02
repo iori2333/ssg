@@ -12,12 +12,13 @@
 #include <miniaudio.h>
 
 #include "audio/core/audio_types.h"
+#include "audio/sfx.h"
 
 struct SDL_AudioSpec;
 
 namespace audio::sfx {
 
-inline constexpr std::uint8_t kSfxObjectCount = 30;
+inline constexpr std::size_t kSfxObjectCount = 30;
 
 class SfxBank {
 public:
@@ -31,15 +32,15 @@ public:
   AudioResult Initialize();
   void Shutdown();
 
-  AudioResult Load(std::uint8_t id, const SDL_AudioSpec &spec,
+  AudioResult Load(SfxId id, const SDL_AudioSpec &spec,
                    std::span<const std::uint8_t> pcm,
-                   std::uint8_t max_instances);
-  void Play(std::uint8_t id, float pan = 0.0F, bool loop = false);
-  void Stop(std::uint8_t id);
+                   int max_instances);
+  void Play(SfxId id, float pan = 0.0F, bool loop = false);
+  void Stop(SfxId id);
   void StopAll();
   void SetVolume(float linear);
 
-  [[nodiscard]] bool IsLoaded(std::uint8_t id) const;
+  [[nodiscard]] bool IsLoaded(SfxId id) const;
 
 private:
   struct Instance {
@@ -55,10 +56,10 @@ private:
   };
 
   struct Effect {
-    std::vector<std::byte> resampled_buffer;
+    std::vector<uint8_t> resampled_buffer;
     std::vector<std::unique_ptr<Instance>> instances;
-    std::uint32_t max = 0;
-    std::uint32_t now = 0;
+    int max = 0;
+    int now = 0;
 
     void Clear();
     [[nodiscard]] bool Loaded() const;

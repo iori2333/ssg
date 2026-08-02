@@ -47,8 +47,7 @@ private:
     void RenderVersion(WindowPoint topleft, std::string_view value) const;
     void RenderMidDev(WindowPoint topleft, std::string_view value) const;
     void RenderTitle(WindowPoint topleft, std::size_t track_id,
-                     std::string_view track_title,
-                     uint32_t marquee_frame) const;
+                     std::string_view track_title, int marquee_frame) const;
     void RenderComment(WindowPoint topleft,
                        std::string_view comment_text) const;
   };
@@ -60,9 +59,9 @@ private:
   std::optional<Text> text_;
   InputBits previous_input_ = 0;
   bool device_change_wait_ = false;
-  uint32_t title_marquee_frame_ = 0;
-  std::array<uint16_t, 144> spectrum_peaks_{};
-  uint8_t spectrum_decay_frame_ = 0;
+  int title_marquee_frame_ = 0;
+  std::array<int, 144> spectrum_peaks_{};
+  int spectrum_decay_frame_ = 0;
   audio::bgm::Visualization midi_visualization_{};
 
   data::GraphicsLoader &graphics_;

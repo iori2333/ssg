@@ -22,8 +22,8 @@ BulletPattern DecodePattern(uint8_t command) {
   }
 }
 
-float CalcSpreadAngle(uint16_t i, BulletPattern pattern, uint8_t n,
-                      float base_angle, uint8_t dw) {
+float CalcSpreadAngle(int i, BulletPattern pattern, int n, float base_angle,
+                      int dw) {
   if (n == 0) {
     return base_angle;
   }
@@ -49,7 +49,7 @@ float CalcSpreadAngle(uint16_t i, BulletPattern pattern, uint8_t n,
 
 // — Difficulty scaling ————————————————————————————
 
-void ApplyEasyCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
+void ApplyEasyCountSpread(BulletPattern pattern, int &n, int &dw) {
   switch (pattern) {
   case BulletPattern::Spread:
     if (n >= 3) {
@@ -64,14 +64,14 @@ void ApplyEasyCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
   }
 }
 
-void ApplyHardCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
+void ApplyHardCountSpread(BulletPattern pattern, int &n, int &dw) {
   switch (pattern) {
   case BulletPattern::Spread:
     n += 2;
     dw -= (dw >> 3);
     return;
   case BulletPattern::Circle:
-    n += std::min<uint8_t>(n >> 2, 6);
+    n += std::min<int>(n >> 2, 6);
     return;
   case BulletPattern::Random:
     n += (n >> 1);
@@ -79,17 +79,17 @@ void ApplyHardCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
   }
 }
 
-void ApplyLunaticCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw) {
+void ApplyLunaticCountSpread(BulletPattern pattern, int &n, int &dw) {
   switch (pattern) {
   case BulletPattern::Spread:
     n += 4;
     dw -= (dw / 3);
     return;
   case BulletPattern::Circle:
-    n += std::min<uint8_t>(n / 3, 12);
+    n += std::min<int>(n / 3, 12);
     return;
   case BulletPattern::Random:
-    n <<= 1;
+    n *= 2;
     return;
   }
 }
@@ -100,15 +100,15 @@ int ScaleLengthHard(int l) { return l + (l >> 2); }
 
 int ScaleLengthLunatic(int l) { return l + (l >> 1); }
 
-void ApplyEasyRapid(uint8_t &ns) {
+void ApplyEasyRapid(int &ns) {
   if (ns >= 2) {
     ns--;
   }
 }
 
-void ApplyHardRapid(uint8_t &ns) { ns++; }
+void ApplyHardRapid(int &ns) { ns++; }
 
-void ApplyLunaticRapid(uint8_t &ns) { ns += 2; }
+void ApplyLunaticRapid(int &ns) { ns += 2; }
 
 float ScaleVelocityByRank(float v, int rank) {
   return (v * 0.5F * static_cast<float>(rank) / 8192.0F) + (v * 0.5F);

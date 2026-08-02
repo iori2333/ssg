@@ -60,7 +60,7 @@ StageSession::RunScene(StageUpdateContext &context, InputBits input) {
       return {.advance_frame = true};
 
     case SceneOpcode::Time: {
-      const auto target = static_cast<uint32_t>(instruction->value);
+      const auto target = instruction->value;
       if (!scene_.TimeReady(target,
                             (input & (KeyTama | KeyReturn | KeyBomb)) != 0)) {
         return {.advance_frame = true};
@@ -168,8 +168,8 @@ StageSession::RunScene(StageUpdateContext &context, InputBits input) {
 
     case SceneOpcode::Wait:
       if (instruction->wait_condition == SceneWaitCondition::BossHp) {
-        if (context.enemies.BossHpSum() >
-            static_cast<uint32_t>(instruction->value)) {
+        if (std::cmp_greater(context.enemies.BossHpSum(),
+                             instruction->value)) {
           return {};
         }
       } else if (instruction->wait_condition == SceneWaitCondition::BossCount) {
@@ -201,8 +201,8 @@ StageSession::RunScene(StageUpdateContext &context, InputBits input) {
   return {};
 }
 
-int32_t StageSession::FindBossTimeout() const {
-  int32_t timeout = -1;
+int StageSession::FindBossTimeout() const {
+  int timeout = -1;
   const auto &instructions = scene_.Instructions();
   for (size_t i = scene_.Position(); i < instructions.size(); ++i) {
     const auto &instruction = instructions[i];

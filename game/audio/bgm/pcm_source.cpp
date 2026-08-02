@@ -21,7 +21,7 @@ namespace audio::bgm {
 
 namespace {
 
-void ApplyVolumeError(std::span<std::byte> /*unused*/, uint16_t /*unused*/,
+void ApplyVolumeError(std::span<uint8_t> /*unused*/, uint16_t /*unused*/,
                       PcmVolume & /*unused*/) {
   assert(!"missing fade implementation");
 }
@@ -33,10 +33,10 @@ void PcmVolume::SetVolumeLinear(float v) { ramp.Set(v); }
 namespace {
 
 template <typename BitDepth>
-void ApplyVolume(std::span<std::byte> buf, uint16_t channels, PcmVolume &vol) {
+void ApplyVolume(std::span<uint8_t> buf, uint16_t channels, PcmVolume &vol) {
   const auto samples =
       std::span<BitDepth>{reinterpret_cast<BitDepth *>(buf.data()),
-                          (buf.size_bytes() / sizeof(BitDepth))};
+                          (buf.size() / sizeof(BitDepth))};
   auto it = samples.begin();
 
   while (it != samples.end()) {
@@ -49,17 +49,17 @@ void ApplyVolume(std::span<std::byte> buf, uint16_t channels, PcmVolume &vol) {
 
 } // namespace
 
-bool PcmStream::Decode(std::span<std::byte> buf) {
+bool PcmStream::Decode(std::span<uint8_t> buf) {
   size_t offset = 0;
-  auto size_left = buf.size_bytes();
+  auto size_left = buf.size();
   while (size_left > 0) {
     const auto ret = DecodeSingle(buf.subspan(offset, size_left));
     if (ret == 0) {
-      std::ranges::fill(buf.subspan(offset, size_left), std::byte{0});
+      std::ranges::fill(buf.subspan(offset, size_left), uint8_t{0});
       return true;
     }
     if ((std::cmp_equal(ret, -1)) || (ret > size_left)) {
-      std::ranges::fill(buf, std::byte{0});
+      std::ranges::fill(buf, uint8_t{0});
       return false;
     }
     offset += ret;
@@ -82,7 +82,7 @@ void PcmStream::FadeOut(float volume_start,
   vol.StartFade(volume_start, 0.0F, sample_count);
 }
 
-size_t PcmStream::DecodeSingle(std::span<std::byte> buf) {
+size_t PcmStream::DecodeSingle(std::span<uint8_t> buf) {
   const auto ret = cur->PartDecodeSingle(buf);
   if (ret == 0) {
     if ((cur == intro_part.get()) && (loop_part != nullptr)) {

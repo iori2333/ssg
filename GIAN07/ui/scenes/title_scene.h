@@ -53,5 +53,5 @@ private:
   audio::AudioSystem &audio_;
   TextRenderRectId version_rect_{};
   WindowCoord version_left_ = 0;
-  uint16_t demo_timer_ = 0;
+  int demo_timer_ = 0;
 };

@@ -11,16 +11,16 @@
 
 struct GameplayHudModel {
   int64_t score = 0;
-  uint8_t bombs = 0;
-  uint8_t lives = 0;
-  uint8_t credits = 0;
-  uint16_t graze_count = 0;
-  uint16_t graze_wait_time = 0;
-  uint16_t miss_count = 0;
-  uint16_t bomb_used = 0;
-  uint16_t deathbomb_count = 0;
-  uint32_t star_counter = 0;
-  uint32_t star_threshold = 0;
+  int bombs = 0;
+  int lives = 0;
+  int credits = 0;
+  int graze_count = 0;
+  int graze_wait_time = 0;
+  int miss_count = 0;
+  int bomb_used = 0;
+  int deathbomb_count = 0;
+  int star_counter = 0;
+  int star_threshold = 0;
   int rank = 0;
   std::string_view level_name;
   PracticeMode practice_mode = PracticeMode::Off;
@@ -32,7 +32,7 @@ public:
   void DrawSidebars(const GameplayHudModel &model);
 
 private:
-  uint32_t fps_sample_start_ = 0;
-  uint32_t fps_ = 0;
-  uint32_t frame_count_ = 0;
+  int64_t fps_sample_start_ = 0;
+  int fps_ = 0;
+  int frame_count_ = 0;
 };

@@ -78,10 +78,10 @@ SceneProgram::Parse(std::span<const uint8_t> bytes) {
     switch (instruction.opcode) {
     case SceneOpcode::Time: {
       const auto value = reader.ReadU32();
-      if (!value || *value > std::numeric_limits<int32_t>::max()) {
+      if (!value || *value > std::numeric_limits<int>::max()) {
         return std::nullopt;
       }
-      instruction.value = static_cast<int32_t>(*value);
+      instruction.value = static_cast<int>(*value);
       break;
     }
     case SceneOpcode::Enemy:
@@ -168,11 +168,11 @@ SceneProgram::Parse(std::span<const uint8_t> bytes) {
       const auto option = reader.ReadU32();
       if (!condition || !option ||
           *condition > std::to_underlying(SceneWaitCondition::BossHp) ||
-          *option > std::numeric_limits<int32_t>::max()) {
+          *option > std::numeric_limits<int>::max()) {
         return std::nullopt;
       }
       instruction.wait_condition = static_cast<SceneWaitCondition>(*condition);
-      instruction.value = static_cast<int32_t>(*option);
+      instruction.value = static_cast<int>(*option);
       break;
     }
     case SceneOpcode::End:
@@ -214,7 +214,7 @@ const SceneInstruction *SceneRunner::Current() const {
   return position_ < instructions.size() ? &instructions[position_] : nullptr;
 }
 
-bool SceneRunner::TimeReady(uint32_t target, bool skip_pressed) {
+bool SceneRunner::TimeReady(int target, bool skip_pressed) {
   if (message_active_) {
     if (skip_pressed) {
       if (!return_latched_) {

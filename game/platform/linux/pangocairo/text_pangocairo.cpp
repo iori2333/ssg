@@ -287,7 +287,7 @@ TextRenderSession::~TextRenderSession() {
   const PixelLtwh subrect = {tex_origin.x, tex_origin.y, size.w, size.h};
   const auto sid = SurfaceId::Text;
   GraphicsSurfaceUpdate(sid, &subrect,
-                        {std::bit_cast<const std::byte *>(buf), stride});
+                        {std::bit_cast<const uint8_t *>(buf), stride});
 }
 
 PixelSize TextRenderSession::RectSize() const { return size; }

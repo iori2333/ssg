@@ -72,7 +72,7 @@ void ItemSystem::Update() {
   int ty = 0;
   int l = 0;
 
-  const uint32_t point =
+  const int point =
       (((((playfield::kWorldBottom - 10_px) - player_.Y()) >> 6) +
         (player_.GrazeCount() * 4)) *
        160);
@@ -127,7 +127,7 @@ void ItemSystem::Update() {
             effects_.SpawnFragment(ip.x, ip.y, FragmentKind::RisingStar);
           }
 
-          const uint32_t star_amt = (player_.GrazeCount() != 0U) ? 2 : 1;
+          const int star_amt = (player_.GrazeCount() != 0U) ? 2 : 1;
           const auto reward = player_.AddStar(star_amt);
           switch (reward) {
           case PlayerReward::Extend:
@@ -180,7 +180,7 @@ void ItemSystem::Draw() const {
   PixelLtrb src;
 
   for (const auto &ip : pool_) {
-    const uint8_t ptn = ((ip.count >> 2) & 3);
+    const int ptn = ((ip.count >> 2) & 3);
     switch (ip.kind) {
     case ItemKind::Score:
       src = PixelLtwh{(384 + (ptn << 4)), (256 + 16), 16, 16};

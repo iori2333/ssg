@@ -64,7 +64,7 @@ EnemyManager::EnemyManager(BulletManager &bullets, ItemSystem &items,
 bool EnemyManager::InstallStageAssets(EclProgram program,
                                       EnemyAnimationSet animations) {
   for (const auto &instruction : program.Instructions()) {
-    uint8_t animation = 0;
+    std::size_t animation = 0;
     switch (instruction.Opcode()) {
     case EclOpcode::SetAnimation:
       animation = instruction.ArgumentsAs<EclAnimationArguments>().pattern;
@@ -285,7 +285,7 @@ void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
           LongLaserUpdateInfo{.command =
                                   LongLaserUpdateInfo::Command::ForceClose});
     }
-    player_.PowerUp(static_cast<uint8_t>(actor.hp));
+    player_.PowerUp(static_cast<int>(actor.hp));
     actor.BeginExplosion();
     player_.AddScore(actor.score);
     if (actor.item != ItemKind::None) {
@@ -337,7 +337,7 @@ void EnemyManager::InitializeActor(EnemyActor &actor, WorldPoint position,
   actor.d = 64;
   actor.flags = EnemyActorFlags::Damageable | EnemyActorFlags::Draw |
                 EnemyActorFlags::CollidesWithPlayer;
-  actor.auto_fire_frame = static_cast<uint8_t>(math::RandomInt());
+  actor.auto_fire_frame = static_cast<int>(math::RandomInt() & 0xff);
   actor.item = ItemKind::Score;
   actor.v = 64;
   const auto velocity =
@@ -366,7 +366,8 @@ EnemyActor *EnemyManager::SpawnRegular(WorldPoint position,
   return actor;
 }
 
-void EnemyManager::SpawnFromScene(int16_t x, int16_t y, uint8_t script_id) {
+void EnemyManager::SpawnFromScene(int x, int y,
+                                  uint32_t script_id) {
   WorldPoint position;
   position.x = x == kRandomCoordinate ? RandomWorldX() : PixelToWorld(x);
   position.y = y == kRandomCoordinate ? RandomWorldY() : PixelToWorld(y);

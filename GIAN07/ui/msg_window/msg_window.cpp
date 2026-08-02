@@ -3,6 +3,7 @@
 ///
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 
@@ -21,18 +22,7 @@
 
 namespace {
 
-constexpr auto kFaceColumns = 6;
-
-inline constexpr auto kMsgWindowDead = 0x00;
-inline constexpr auto kMsgWindowOpen = 0x01;
-inline constexpr auto kMsgWindowClose = 0x02;
-inline constexpr auto kMsgWindowFree = 0x03;
-
-inline constexpr auto kMsgFaceNone = 0x00;
-inline constexpr auto kMsgFaceOpen = 0x01;
-inline constexpr auto kMsgFaceClose = 0x02;
-inline constexpr auto kMsgFaceNext = 0x03;
-inline constexpr auto kMsgFaceWait = 0x04;
+constexpr std::size_t kFaceColumns = 6;
 
 constexpr PixelCoord kFaceWidth = 96;
 constexpr PixelCoord kFaceHeight = 96;
@@ -69,13 +59,13 @@ void MsgWindow::Init(const WindowLtrb &rc, MsgWindowFlags flags) {
 }
 
 void MsgWindow::Open() {
-  if (state != kMsgWindowDead) {
+  if (state != State::Dead) {
     return;
   }
 
   // Set state and final values
-  state = kMsgWindowOpen;
-  face_state = kMsgFaceNone; // Display nothing
+  state = State::Open;
+  face_state = FaceState::None; // Display nothing
   face_id = 0;
   face_time = 0;
 
@@ -96,38 +86,40 @@ void MsgWindow::Open() {
 void MsgWindow::Close() {
   //	if(state != kMsgWindowFree) return;
 
-  face_state = kMsgFaceClose;
-  state = kMsgWindowClose;
+  face_state = FaceState::Close;
+  state = State::Close;
 }
 
 // Force close the message window
 void MsgWindow::ForceClose() {
-  face_state = kMsgFaceNone;
-  state = kMsgWindowDead;
+  face_state = FaceState::None;
+  state = State::Dead;
 }
 
 // Tick the message window
 void MsgWindow::Tick() {
+  const auto advance_face = [this] {
+    face_time = (face_time + kFaceFrameStep) % kFaceFrameCount;
+    return face_time == 0;
+  };
+
   switch (face_state) {
-  case kMsgFaceOpen: // Attempting to display face
-    face_time += 16;
-    if (face_time == 0) {
-      face_state = kMsgFaceWait;
+  case FaceState::Open: // Attempting to display face
+    if (advance_face()) {
+      face_state = FaceState::Wait;
     }
     break;
 
-  case kMsgFaceNext:
-    face_time += 16;
-    if (face_time == 0) {
-      face_state = kMsgFaceOpen;
+  case FaceState::Next:
+    if (advance_face()) {
+      face_state = FaceState::Open;
       face_id = next_face;
     }
     break;
 
-  case kMsgFaceClose: // Attempting to hide face
-    face_time += 16;
-    if (face_time == 0) {
-      face_state = kMsgFaceNone;
+  case FaceState::Close: // Attempting to hide face
+    if (advance_face()) {
+      face_state = FaceState::None;
     }
     break;
 
@@ -136,18 +128,18 @@ void MsgWindow::Tick() {
   }
 
   switch (state) {
-  case kMsgWindowOpen:
+  case State::Open:
     now_size.top -= 2;
     now_size.bottom += 2;
 
     // When fully opened
     if (now_size.top <= max_size.top) {
       now_size = max_size;
-      state = kMsgWindowFree;
+      state = State::Free;
     }
     break;
 
-  case kMsgWindowClose:
+  case State::Close:
     now_size.top += 3;
     now_size.bottom -= 3;
     now_size.right += 6;
@@ -155,12 +147,12 @@ void MsgWindow::Tick() {
 
     // When fully closed
     if (now_size.top >= now_size.bottom) {
-      state = kMsgWindowDead;
+      state = State::Dead;
     }
     break;
 
-  case kMsgWindowDead:
-  case kMsgWindowFree:
+  case State::Dead:
+  case State::Free:
   default:
     break;
   }
@@ -179,7 +171,7 @@ void MsgWindow::Draw() {
   int oy = 0;
 
   // Do nothing if the message window is dead
-  if (state == kMsgWindowDead) {
+  if (state == State::Dead) {
     return;
   }
 
@@ -190,14 +182,14 @@ void MsgWindow::Draw() {
 
   // Display text only when window is [FREE]
   // -> Otherwise a Surface for text would have to be created...
-  if ((state == kMsgWindowFree) && trr) {
+  if ((state == State::Free) && trr) {
     const auto topleft = (WindowPoint{x, y} + text_topleft);
     const auto trr = this->trr.value();
     const auto &text = this->text;
     TextRenderer().Render(topleft, trr, text, [this](TextRenderSession &s) {
       // Draw with the set font
       s.SetFont(font_id);
-      for (auto i = 0; std::cmp_less(i, line); i++) {
+      for (std::size_t i = 0; i < line; i++) {
         const auto m = msg[i];
 
         // Safety measure
@@ -223,14 +215,15 @@ void MsgWindow::Draw() {
   // Draw face (only when display is requested)
   const auto sid = data::graphics_assets::FaceSurface(face_id / kFaceColumns);
   switch (face_state) {
-  case kMsgFaceWait:
+  case FaceState::Wait:
     oy = max_size.bottom - 100;
-    src = PixelLtwh{((face_id % kFaceColumns) * kFaceWidth), 0, kFaceWidth,
-                    kFaceHeight};
+    src = PixelLtwh{
+        static_cast<int>((face_id % kFaceColumns) * kFaceWidth), 0, kFaceWidth,
+        kFaceHeight};
     GraphicsSurfaceBlit({(x + 2), oy}, sid, src);
     break;
 
-  case kMsgFaceOpen:
+  case FaceState::Open:
     time = face_time >> 2;
     oy = max_size.bottom - 100;
     for (auto i = 0; i < kFaceHeight; i++) {
@@ -238,13 +231,14 @@ void MsgWindow::Draw() {
                                          math::kLegacyAngleStep,
                                      static_cast<float>(64 - time) / 2.0F)
                 .x;
-      src =
-          PixelLtwh{((face_id % kFaceColumns) * kFaceWidth), i, kFaceWidth, 1};
+      src = PixelLtwh{
+          static_cast<int>((face_id % kFaceColumns) * kFaceWidth), i,
+          kFaceWidth, 1};
       GraphicsSurfaceBlit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
 
-  case kMsgFaceNext:
+  case FaceState::Next:
     time = (255 - face_time) >> 2;
     oy = max_size.bottom - 100;
     for (auto i = 0; i < kFaceHeight; i++) {
@@ -252,13 +246,14 @@ void MsgWindow::Draw() {
                                          math::kLegacyAngleStep,
                                      static_cast<float>(64 - time) / 2.0F)
                 .x;
-      src =
-          PixelLtwh{((face_id % kFaceColumns) * kFaceWidth), i, kFaceWidth, 1};
+      src = PixelLtwh{
+          static_cast<int>((face_id % kFaceColumns) * kFaceWidth), i,
+          kFaceWidth, 1};
       GraphicsSurfaceBlit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
 
-  case kMsgFaceClose:
+  case FaceState::Close:
     time = face_time >> 1;
     oy = max_size.bottom - 100;
     for (auto i = 0; i < kFaceHeight; i++) {
@@ -266,8 +261,9 @@ void MsgWindow::Draw() {
                                          math::kLegacyAngleStep,
                                      static_cast<float>(time))
                 .x;
-      src =
-          PixelLtwh{((face_id % kFaceColumns) * kFaceWidth), i, kFaceWidth, 1};
+      src = PixelLtwh{
+          static_cast<int>((face_id % kFaceColumns) * kFaceWidth), i,
+          kFaceWidth, 1};
       if ((i & 1) != 0) {
         GraphicsSurfaceBlit({(x - len + 2), (oy + i)}, sid, src);
       } else {
@@ -281,17 +277,18 @@ void MsgWindow::Draw() {
 }
 
 void MsgWindow::AppendMessage(std::string_view message) {
-  int Line = 0;
-  int i = 0;
-
-  Line = line;
+  const auto Line = line;
 
   if (std::cmp_equal(Line, max_line)) {
     // When already exceeding max display lines
-    for (i = 1; i < max_line - 1; i++) {
-      msg[i] = msg[i + 1];
+    if (max_line > 1) {
+      for (std::size_t i = 1; i < max_line - 1; i++) {
+        msg[i] = msg[i + 1];
+      }
     }
-    msg[Line - 1] = message;
+    if (Line > 0) {
+      msg[Line - 1] = message;
+    }
   } else {
     // Set pointer and update line count
     msg[Line] = message;
@@ -299,15 +296,15 @@ void MsgWindow::AppendMessage(std::string_view message) {
   }
 
   text.clear();
-  for (decltype(line) i = 0; i < line; i++) {
+  for (std::size_t i = 0; i < line; i++) {
     text += msg[i];
     text += '\n';
   }
 }
 
 // Set the face
-void MsgWindow::SetFace(uint8_t face_id) {
-  if (state == kMsgWindowDead) {
+void MsgWindow::SetFace(std::size_t face_id) {
+  if (state == State::Dead) {
     return; // Cannot display
   }
   if (face_id / kFaceColumns >= data::graphics_assets::kFaceSurfaceCount) {
@@ -316,11 +313,11 @@ void MsgWindow::SetFace(uint8_t face_id) {
 
   assert(text_topleft.x == kFaceWidth);
 
-  if (face_state == kMsgFaceNone) {
-    face_state = kMsgFaceOpen;
+  if (face_state == FaceState::None) {
+    face_state = FaceState::Open;
     this->face_id = face_id;
   } else {
-    face_state = kMsgFaceNext;
+    face_state = FaceState::Next;
     next_face = face_id;
   }
 

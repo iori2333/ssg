@@ -29,7 +29,7 @@ void WindowBackendCleanup();
 // --------------
 
 // Returns the current top-left position of the game window.
-std::optional<std::pair<int16_t, int16_t>> WindowBackendTopleft();
+std::optional<std::pair<int, int>> WindowBackendTopleft();
 
 // Runs the main loop each frame, calling [frame_func] for each iteration, and
 // returns the exit code after the game was quit.

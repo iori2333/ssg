@@ -146,7 +146,7 @@ ma_result PcmTrack::Source::Read(ma_data_source *data_source, void *frames_out,
   }
   const auto buffer_size = static_cast<std::size_t>(frame_count * sample_size);
   if (!self->source_->Decode(
-          {static_cast<std::byte *>(frames_out), buffer_size})) {
+          {static_cast<uint8_t *>(frames_out), buffer_size})) {
     return MA_INVALID_DATA;
   }
   *frames_read = frame_count;
@@ -222,8 +222,8 @@ void PcmTrack::SetVolume(Volume volume) {
   ApplyVolume();
 }
 
-void PcmTrack::SetTempo(std::int8_t tempo) {
-  tempo_ = std::clamp(tempo, std::int8_t{-100}, std::int8_t{100});
+void PcmTrack::SetTempo(int tempo) {
+  tempo_ = std::clamp(tempo, -100, 100);
   if (!IsLoaded()) {
     return;
   }

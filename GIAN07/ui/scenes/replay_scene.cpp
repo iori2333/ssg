@@ -207,7 +207,7 @@ void ReplayScene::OpenStageSelect() {
   const auto &replay = replays_[selected_];
   std::vector<std::unique_ptr<menu::IMenuNode>> items;
   items.reserve(kStageNames.size());
-  for (uint8_t id = 0; id <= std::to_underlying(StageId::Extra); id++) {
+  for (int id = 0; id <= std::to_underlying(StageId::Extra); id++) {
     const auto stage = static_cast<StageId>(id);
     auto item = std::make_unique<menu::ActionNode>(
         menu::MenuText(

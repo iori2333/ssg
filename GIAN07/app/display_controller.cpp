@@ -32,7 +32,7 @@ bool DisplayController::Initialize(GraphicsConfig &config) {
               std::to_underlying(config.fullscreen_fit));
   const GraphicsParams requested{
       .flags = flags,
-      .api = static_cast<int8_t>(GraphicsBackendAPIID(config.graphics_api)),
+      .api = GraphicsBackendAPIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,
       .top = config.window_top,
@@ -101,17 +101,17 @@ bool DisplayController::ApplyConfig(const GraphicsConfig &config) {
               std::to_underlying(config.fullscreen_fit));
   return Apply({
       .flags = flags,
-      .api = static_cast<int8_t>(GraphicsBackendAPIID(config.graphics_api)),
+      .api = GraphicsBackendAPIID(config.graphics_api),
       .window_scale_4x = config.window_scale_4x,
       .left = config.window_left,
       .top = config.window_top,
   });
 }
 
-void DisplayController::SetFrameRate(uint8_t divisor) {
+void DisplayController::SetFrameRate(int divisor) {
   SetFrameRateDivisor(divisor);
 }
 
-void DisplayController::SetScreenshotEffort(uint8_t effort) {
+void DisplayController::SetScreenshotEffort(int effort) {
   GraphicsScreenshotSetEffort(effort);
 }

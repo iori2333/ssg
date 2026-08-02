@@ -3,6 +3,7 @@
 ///
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 
@@ -24,8 +25,8 @@ public:
   [[nodiscard]] bool LoadProjectScreen();
   [[nodiscard]] bool LoadEnding();
   [[nodiscard]] bool LoadBulletGallery();
-  [[nodiscard]] bool LoadFace(uint8_t face_id, uint8_t file_no);
-  [[nodiscard]] bool SwapEnemySurface(uint8_t image_no);
+  [[nodiscard]] bool LoadFace(std::size_t face_id, std::size_t file_no);
+  [[nodiscard]] bool SwapEnemySurface(uint32_t image_no);
   [[nodiscard]] bool Reload();
 
 private:

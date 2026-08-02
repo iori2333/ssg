@@ -58,14 +58,14 @@ void BossHealthGauge::Reset() {
   stage_timeout_end_ = -1;
 }
 
-void BossHealthGauge::SetCombatState(int32_t phase_threshold_hp,
-                                     int32_t timer_max, int32_t timer_now) {
+void BossHealthGauge::SetCombatState(int phase_threshold_hp, int timer_max,
+                                     int timer_now) {
   phase_threshold_hp_ = phase_threshold_hp;
   timer_max_ = timer_max;
   timer_now_ = timer_now;
 }
 
-void BossHealthGauge::SetStageTimeout(int32_t timeout_end) {
+void BossHealthGauge::SetStageTimeout(int timeout_end) {
   stage_timeout_end_ = timeout_end;
 }
 
@@ -161,7 +161,7 @@ void BossHealthGauge::Update(uint32_t now) {
 
 void BossHealthGauge::Close() { state_ = State::Closing; }
 
-void BossHealthGauge::Draw(uint32_t stage_frame) {
+void BossHealthGauge::Draw(int stage_frame) {
   PixelLtrb src;
   int i = 0;
 
@@ -209,9 +209,9 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
 
     if (phase_threshold_hp_ > 0 && max_hp_ > 0) {
       const auto separator_x =
-          left +
-          static_cast<int32_t>(
-              (static_cast<uint64_t>(phase_threshold_hp_) * 30 * 8) / max_hp_);
+          left + static_cast<int>(
+                     (static_cast<uint64_t>(phase_threshold_hp_) * 30 * 8) /
+                     max_hp_);
       if (separator_x > left && separator_x < (left + 30 * 8)) {
         geometry::SetAlphaNorm(224);
         geometry::SetColor({5, 5, 5});
@@ -235,8 +235,8 @@ void BossHealthGauge::Draw(uint32_t stage_frame) {
         }
       }
     } else if (stage_timeout_end_ > 0) {
-      const int remain = std::min(
-          (stage_timeout_end_ - static_cast<int32_t>(stage_frame)) / 60, 99);
+      const int remain =
+          std::min((stage_timeout_end_ - stage_frame) / 60, 99);
       if (remain >= 0) {
         if (remain <= 10 && remain != previous_timer_seconds_) {
           audio_.PlaySfx(SfxId::Sblaser);

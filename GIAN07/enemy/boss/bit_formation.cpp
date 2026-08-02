@@ -44,12 +44,12 @@ void BitFormation::Reset() {
 
   parts_ = {};
   for (size_t index = 0; index < parts_.size(); ++index) {
-    parts_[index].id = static_cast<uint8_t>(index);
+    parts_[index].id = static_cast<int>(index);
   }
 }
 
 // Set bits
-void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
+void BitFormation::Spawn(BossActor &parent, int count, uint32_t script_id) {
   static constexpr std::array<uint8_t, kBitCapacity> hp_multipliers = {1, 4, 2,
                                                                        5, 3, 6};
 
@@ -81,7 +81,7 @@ void BitFormation::Spawn(BossActor &parent, uint8_t count, uint32_t script_id) {
   laser_pattern_ = LaserPattern::Disabled;
   laser_active_ = false;
   const WorldPoint position{&center_x_, &center_y_};
-  for (i = 0; std::cmp_less(i, count); i++) {
+  for (i = 0; i < count; i++) {
     if (auto *e = enemies_.SpawnRegular(position, script_id)) {
       e->hp = kBitVirtualHp;
       e->d = i * (256 / count);
@@ -205,7 +205,7 @@ void BitFormation::Update() {
 
       // Apply force before and after the destroyed bit
       // Note: count is already decremented at this point
-      if (count_ != 0U) {
+      if (count_ != 0) {
         j = i - 1 + count_;
         parts_[j % count_].force -= 30;
         parts_[i % count_].force += 30;
@@ -234,18 +234,18 @@ void BitFormation::Update() {
 }
 
 void BitFormation::PruneInvalidParts() {
-  std::size_t output = 0;
-  for (std::size_t input = 0; input < count_; ++input) {
+  int output = 0;
+  for (int input = 0; input < count_; ++input) {
     if (parts_[input].actor == nullptr) {
       continue;
     }
     if (output != input) {
       parts_[output] = parts_[input];
     }
-    parts_[output].id = static_cast<uint8_t>(output);
+    parts_[output].id = output;
     ++output;
   }
-  count_ = static_cast<uint8_t>(output);
+  count_ = output;
   if (count_ == 0) {
     Reset();
   }
@@ -304,7 +304,8 @@ void BitFormation::UpdateRotation() {
     }
 
     // Find target angle
-    const uint8_t d = ((base_angle_ >> 1) + (delta * bit->id));
+    const uint8_t d =
+        static_cast<uint8_t>((base_angle_ >> 1) + (delta * bit->id));
 
     // Normal angle convergence processing
     dir = (static_cast<int>(d) - static_cast<int>(bit->angle));
@@ -559,9 +560,9 @@ void BitFormation::Command(EclBitCommand command, int param) {
   case EclBitCommand::ChangeSpeed:
     // Change speed in the same direction
     if (rotation_speed_ > 0) {
-      rotation_speed_ = static_cast<int8_t>(param);
+      rotation_speed_ = param;
     } else {
-      rotation_speed_ = static_cast<int8_t>(-param);
+      rotation_speed_ = -param;
     }
     break;
 

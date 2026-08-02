@@ -24,22 +24,21 @@ namespace {
 constexpr auto kConfigFileName = "SSG.TOML";
 constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
 constexpr auto kMaxLoadedBombStock = kMaxBombStock + 1;
-constexpr uint8_t kExtraStageFlagMask = 0x07;
 
 // Validation helpers
 
-constexpr bool ValidPlayerStock(uint8_t v) {
-  return v <= kMaxLoadedPlayerStock;
+constexpr bool ValidPlayerStock(int v) {
+  return v >= 0 && v <= kMaxLoadedPlayerStock;
 }
-constexpr bool ValidBombStock(uint8_t v) {
-  return v <= kMaxLoadedBombStock;
+constexpr bool ValidBombStock(int v) {
+  return v >= 0 && v <= kMaxLoadedBombStock;
 }
 constexpr bool ValidPracticeMode(PracticeMode v) {
   return std::to_underlying(v) <= std::to_underlying(PracticeMode::Invincible);
 }
-constexpr bool ValidFPSDivisor(uint8_t v) { return v <= kMaxFpsDivisor; }
-constexpr bool ValidScreenshotEffort(uint8_t v) {
-  return v <= kScreenshotEffortMax;
+constexpr bool ValidFPSDivisor(int v) { return v >= 0 && v <= kMaxFpsDivisor; }
+constexpr bool ValidScreenshotEffort(int v) {
+  return v >= 0 && v <= kScreenshotEffortMax;
 }
 constexpr bool ValidVolume(audio::Volume v) {
   return v <= audio::kMaxVolume;
@@ -48,8 +47,9 @@ constexpr bool ValidMidiVariant(MidiVariant v) {
   return v <= MidiVariant::Arranged;
 }
 constexpr bool ValidWinMMPad(InputPadButton v) { return v <= 32; }
-constexpr bool ValidExtraStageFlags(uint8_t v) {
-  return (v & ~kExtraStageFlagMask) == 0;
+constexpr bool ValidExtraStageFlags(ExtraStageFlag v) {
+  return (std::to_underlying(v) &
+          ~std::to_underlying(ExtraStageFlag::Mask)) == 0;
 }
 
 namespace {
@@ -265,7 +265,8 @@ void TOMLSave(const char *fn, const ConfigData &cfg) {
   // [progress]
   {
     toml::table sec;
-    sec.emplace("extra_stg_flags", cfg.progress.extra_stg_flags);
+    sec.emplace("extra_stg_flags",
+                std::to_underlying(cfg.progress.extra_stg_flags));
     tbl.emplace("progress", std::move(sec));
   }
 

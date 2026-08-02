@@ -29,16 +29,16 @@ inline constexpr auto kCmdMask = 0x03;
 
 // Calculate the direction for bullet/laser i of n. base_angle includes the
 // player-aim offset (ZSET) if applicable.
-[[nodiscard]] float CalcSpreadAngle(uint16_t i, BulletPattern pattern,
-                                    uint8_t n, float base_angle, uint8_t dw);
+[[nodiscard]] float CalcSpreadAngle(int i, BulletPattern pattern, int n,
+                                    float base_angle, int dw);
 
 // — Difficulty scaling ——————————————————————
 
 // Common: modifies n and dw based on difficulty level.
 // Returns true if the command type was recognized.
-void ApplyEasyCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw);
-void ApplyHardCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw);
-void ApplyLunaticCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw);
+void ApplyEasyCountSpread(BulletPattern pattern, int &n, int &dw);
+void ApplyHardCountSpread(BulletPattern pattern, int &n, int &dw);
+void ApplyLunaticCountSpread(BulletPattern pattern, int &n, int &dw);
 
 // Reflect laser length scaling.
 [[nodiscard]] int ScaleLengthEasy(int l);
@@ -46,9 +46,9 @@ void ApplyLunaticCountSpread(BulletPattern pattern, uint8_t &n, uint8_t &dw);
 [[nodiscard]] int ScaleLengthLunatic(int l);
 
 // Bullet rapid-fire count scaling.
-void ApplyEasyRapid(uint8_t &ns);
-void ApplyHardRapid(uint8_t &ns);
-void ApplyLunaticRapid(uint8_t &ns);
+void ApplyEasyRapid(int &ns);
+void ApplyHardRapid(int &ns);
+void ApplyLunaticRapid(int &ns);
 
 // Bullet velocity scaling by rank: (v/2)*rank/8192 + v/2
 // Only used for normal bullet motion.

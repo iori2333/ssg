@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 #include "bullet/bullet_common.h"
@@ -26,7 +27,7 @@ enum class LongLaserType : uint8_t {
 // ── Spawn parameter struct ──────────────────────────────────────
 struct LongLaserSpawnInfo {
   const EnemyActor *enemy{};
-  uint8_t enemy_id{};
+  std::size_t enemy_id{};
   int dx{};
   int dy{};
   int v{};
@@ -80,7 +81,8 @@ struct LaserLong {
   void RenderDebugHitbox(int mode) const;
 
   [[nodiscard]] int X() const;
-  [[nodiscard]] bool BelongsTo(const EnemyActor *enemy, uint8_t id) const;
+  [[nodiscard]] bool BelongsTo(const EnemyActor *enemy,
+                               std::size_t id) const;
 
 private:
   void MarkDead() {
@@ -93,7 +95,7 @@ private:
   float v_{};
   float angle_{};
   uint8_t c_{};
-  uint32_t count_{};
+  int count_{};
 
   const EnemyActor *e_{};
   float dx_{};
@@ -107,7 +109,7 @@ private:
   float w_{};
   float wmax_{};
   std::array<VertexXy, 4> p_{};
-  uint8_t enemy_id_{};
+  std::size_t enemy_id_{};
 
   LongLaserType subtype_{LongLaserType::Long};
   LongState state_{LongState::Inactive};

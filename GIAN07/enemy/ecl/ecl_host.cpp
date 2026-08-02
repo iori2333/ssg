@@ -30,7 +30,7 @@ void EclHost::ClearRegular() const { enemies_.ClearRegular(); }
 
 void EclHost::ClearBossProjectiles() const { enemies_.ClearBossProjectiles(); }
 
-uint16_t EclHost::BossCount() const { return enemies_.BossCount(); }
+int EclHost::BossCount() const { return enemies_.BossCount(); }
 
 int EclHost::BitCount(const EnemyActor &actor) const {
   return enemies_.BitCount(actor);

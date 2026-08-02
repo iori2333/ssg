@@ -5,6 +5,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <span>
 #include <vector>
 
@@ -61,8 +62,8 @@ bool SurfaceGdi::Save(SDL_IOStream *stream) const {
 
     // GetDIBits() will write the color table after the BITMAPINFOHEADER
     // structure.
-    std::vector<std::byte> info_buf(sizeof(BITMAPINFOHEADER) +
-                                    (sizeof(RGBQUAD) * palette_size));
+    std::vector<uint8_t> info_buf(sizeof(BITMAPINFOHEADER) +
+                                  (sizeof(RGBQUAD) * palette_size));
 
     auto *info = reinterpret_cast<BmpInfoHeader *>(info_buf.data());
     const std::span<Bgra> palette = {reinterpret_cast<Bgra *>(&info[1]),
@@ -80,7 +81,7 @@ bool SurfaceGdi::Save(SDL_IOStream *stream) const {
     };
     info->biSizeImage = (info->Stride() * info->biHeight);
 
-    std::vector<std::byte> pixels(info->biSizeImage);
+    std::vector<uint8_t> pixels(info->biSizeImage);
     auto *bmi = reinterpret_cast<BITMAPINFO *>(info);
     if (GetDIBits(dc, img, 0, size.h, pixels.data(), bmi, DIB_RGB_COLORS) ==
         0) {
@@ -99,8 +100,8 @@ bool SurfaceGdi::Save(SDL_IOStream *stream) const {
   if (color_table_ret == palette_size) {
     palette = bgra;
   }
-  const std::span<const std::byte> pixels = {
-      static_cast<const std::byte *>(dib.dsBm.bmBits),
+  const std::span<const uint8_t> pixels = {
+      static_cast<const uint8_t *>(dib.dsBm.bmBits),
 
       // Negative values are checked above.
       static_cast<size_t>(dib.dsBm.bmWidthBytes * dib.dsBm.bmHeight)};

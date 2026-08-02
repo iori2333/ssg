@@ -42,10 +42,10 @@ public:
   void StopBgm();
   void PauseBgm();
   void ResumeBgm();
-  void FadeOutBgm(std::uint8_t speed);
+  void FadeOutBgm(int speed);
   void SetBgmVolume(Volume volume);
   void SetSfxVolume(Volume volume);
-  void SetBgmTempo(std::int8_t tempo);
+  void SetBgmTempo(int tempo);
 
   [[nodiscard]] BgmSnapshot BgmSnapshot() const;
   [[nodiscard]] bgm::Visualization MidiVisualization() const;
@@ -60,10 +60,9 @@ public:
   AudioResult ChangeMidiDevice(int direction);
   void SetMidiFixSysExBugs(bool enabled);
 
-  AudioResult LoadSfx(std::uint8_t id, std::span<const std::uint8_t> wav,
-                      std::uint8_t max_instances);
+  AudioResult LoadSfx(SfxId id, std::span<const std::uint8_t> wav,
+                      int max_instances);
   void PlaySfx(SfxId id, int x = kSoundFieldCenterX, bool loop = false);
-  void PlaySfx(std::uint8_t id, float pan = 0.0F, bool loop = false);
   void StopSfx(SfxId id);
   void StopAllSfx();
 

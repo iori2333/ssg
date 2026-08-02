@@ -64,7 +64,7 @@ public:
     background_.CommandRocks(command);
   }
 
-  [[nodiscard]] uint32_t Frame() const { return scene_.Frame(); }
+  [[nodiscard]] int Frame() const { return scene_.Frame(); }
   [[nodiscard]] bool DialogueActive() const { return scene_.MessageActive(); }
 
 private:
@@ -75,7 +75,7 @@ private:
 
   [[nodiscard]] SceneStepResult RunScene(StageUpdateContext &context,
                                          InputBits input);
-  [[nodiscard]] int32_t FindBossTimeout() const;
+  [[nodiscard]] int FindBossTimeout() const;
   void ExecuteEffect(SceneEffect effect, StageUpdateContext &context);
 
   SceneRunner scene_;

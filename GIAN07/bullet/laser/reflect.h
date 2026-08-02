@@ -25,8 +25,9 @@ struct ReflectSpawnInfo {
   float v{};
   int w{}, l{}, l2{};
   float angle{};
-  uint8_t dw{};
-  uint8_t n{}, c{};
+  int dw{};
+  int n{};
+  uint8_t c{};
   bool aimed{};
   BulletPattern pattern{BulletPattern::Spread};
   ReflectLaserType type{ReflectLaserType::Short};
@@ -85,7 +86,7 @@ private:
   float v_{};
   float angle_{};
   uint8_t c_{};
-  uint32_t count_{};
+  int count_{};
   bool grazed_{};
 
   float vx_{};

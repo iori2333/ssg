@@ -49,39 +49,39 @@ enum class EnemyAnimationMode : uint8_t {
 
 struct EclInterruptState {
   std::optional<size_t> target;
-  uint32_t threshold = 0;
+  int threshold = 0;
 };
 
 struct EclScriptState {
   size_t position = 0;
   size_t return_position = 0;
-  uint32_t interrupt_timer = 0;
+  int interrupt_timer = 0;
   std::array<uint32_t, kEclRegisterCount> registers{};
   std::array<EclInterruptState, kEclInterruptCount> interrupts{};
-  uint16_t loop_counter = 0;
-  uint16_t wait_counter = 0;
+  int loop_counter = 0;
+  int wait_counter = 0;
 };
 
 struct EnemyAnimation {
   EnemyAnimationMode mode = EnemyAnimationMode::Loop;
-  uint8_t n = 0;
+  std::size_t n = 0;
   PixelSize size{};
   std::array<PixelLtrb, kEnemyAnimationFrameCapacity> ptn{};
 
-  void SetSheet(PixelPoint topleft, uint8_t frame_count, PixelSize frame_size,
+  void SetSheet(PixelPoint topleft, std::size_t frame_count,
+                PixelSize frame_size,
                 EnemyAnimationMode animation_mode) {
     size = frame_size;
-    n = static_cast<uint8_t>(
-        std::min<std::size_t>(frame_count, kEnemyAnimationFrameCapacity));
+    n = std::min<std::size_t>(frame_count, kEnemyAnimationFrameCapacity);
     mode = animation_mode;
 
-    for (uint8_t frame = 0; frame < n; ++frame) {
+    for (std::size_t frame = 0; frame < n; ++frame) {
       ptn[frame] = PixelLtwh{topleft.x, topleft.y, frame_size.w, frame_size.h};
       topleft.x += frame_size.w;
     }
   }
 
-  void SetSquareSheet(PixelPoint topleft, uint8_t frame_count,
+  void SetSquareSheet(PixelPoint topleft, std::size_t frame_count,
                       PixelCoord frame_size,
                       EnemyAnimationMode animation_mode) {
     SetSheet(topleft, frame_count, {.w = frame_size, .h = frame_size},
@@ -89,8 +89,8 @@ struct EnemyAnimation {
   }
 
   void SetDirectionalSheet(PixelPoint topleft, PixelCoord frame_size) {
-    SetSquareSheet(topleft, static_cast<uint8_t>(kEnemyAnimationFrameCapacity),
-                   frame_size, EnemyAnimationMode::Directional);
+    SetSquareSheet(topleft, kEnemyAnimationFrameCapacity, frame_size,
+                   EnemyAnimationMode::Directional);
   }
 };
 
@@ -120,30 +120,30 @@ struct EnemyActor {
 
   uint32_t hp{}; // Remaining HP (too large?)
   ItemKind item{};
-  uint32_t count{}; // Multipurpose frame counter
+  int count{}; // Multipurpose frame counter
 
-  uint32_t score{}; // Score (time-based score variation?)
-  uint32_t graze_score{};
+  int score{}; // Score (time-based score variation?)
+  int graze_score{};
 
   EclScriptState script{};
 
-  uint16_t hitbox_half_width{};
-  uint16_t hitbox_half_height{};
-  uint16_t animation_frame{};
+  int hitbox_half_width{};
+  int hitbox_half_height{};
+  int animation_frame{};
 
   uint8_t d{};   // Direction angle 256
-  int8_t vd{};   // Angular velocity 128
-  uint8_t amp{}; // Amplitude 256
-  uint8_t animation{};
-  uint8_t damage_animation{};
-  int8_t animation_speed{};
-  uint8_t damage_flash{};
+  int vd{};      // Angular velocity
+  int amp{}; // Amplitude 256
+  std::size_t animation{};
+  std::size_t damage_animation{};
+  int animation_speed{};
+  int damage_flash{};
 
   EnemyActorFlags flags = EnemyActorFlags::None;
-  uint8_t auto_fire_frame{};
-  uint8_t auto_fire_interval{};
+  int auto_fire_frame{};
+  int auto_fire_interval{};
 
-  uint8_t long_laser_count{};
+  int long_laser_count{};
 
   EclBulletState bullet_command{};
   EclLaserState laser_command{};

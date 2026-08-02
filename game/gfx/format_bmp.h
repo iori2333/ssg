@@ -64,9 +64,8 @@ struct BmpOwned {
   size_t pixel_offset;
   size_t pixel_size;
 
-  [[nodiscard]] std::span<std::byte> Pixels() {
-    return {reinterpret_cast<std::byte *>(buffer.data() + pixel_offset),
-            pixel_size};
+  [[nodiscard]] std::span<uint8_t> Pixels() {
+    return {buffer.data() + pixel_offset, pixel_size};
   }
 };
 
@@ -83,4 +82,4 @@ bool BmpSaveSupports(SDL_PixelFormat format);
 
 bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
              uint16_t bpp, std::span<Bgra> palette,
-             std::span<const std::byte> pixels);
+             std::span<const uint8_t> pixels);

@@ -11,7 +11,7 @@
 
 namespace util {
 
-uint32_t SteadyTicksMs() {
+int64_t SteadyTicksMs() {
   const auto now = (std::chrono::steady_clock::now().time_since_epoch());
   return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 }
@@ -39,12 +39,12 @@ TimeOfDay LocalTime() {
   assert(tm.tm_sec >= 0);
 
   return TimeOfDay{
-      .year = static_cast<uint32_t>(1900 + tm.tm_year),
-      .month = static_cast<uint8_t>(1 + tm.tm_mon),
-      .day = static_cast<uint8_t>(tm.tm_mday),
-      .hour = static_cast<uint8_t>(tm.tm_hour),
-      .minute = static_cast<uint8_t>(tm.tm_min),
-      .second = static_cast<uint8_t>(tm.tm_sec),
+      .year = 1900 + tm.tm_year,
+      .month = 1 + tm.tm_mon,
+      .day = tm.tm_mday,
+      .hour = tm.tm_hour,
+      .minute = tm.tm_min,
+      .second = tm.tm_sec,
   };
 }
 

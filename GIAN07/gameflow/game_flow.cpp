@@ -415,7 +415,7 @@ struct GameFlow::Impl {
 
 private:
   [[nodiscard]] bool ShouldDraw() {
-    if (FrameRateDivisor() != 0U) {
+    if (FrameRateDivisor() != 0) {
       draw_count_++;
       return (draw_count_ % FrameRateDivisor()) == 0U;
     }
@@ -532,7 +532,7 @@ private:
   GameContext &context_;
   FlowState state_;
   InputBits current_input_ = 0;
-  uint32_t draw_count_ = 0;
+  int draw_count_ = 0;
   bool quit_ = false;
 };
 

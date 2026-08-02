@@ -193,7 +193,7 @@ void AudioSystem::ResumeBgm() {
   }
 }
 
-void AudioSystem::FadeOutBgm(std::uint8_t speed) {
+void AudioSystem::FadeOutBgm(int speed) {
   if (!impl_->initialized) {
     return;
   }
@@ -218,7 +218,7 @@ void AudioSystem::SetSfxVolume(Volume volume) {
   }
 }
 
-void AudioSystem::SetBgmTempo(std::int8_t tempo) {
+void AudioSystem::SetBgmTempo(int tempo) {
   if (impl_->initialized) {
     impl_->bgm.SetTempo(tempo);
   }
@@ -266,9 +266,9 @@ void AudioSystem::SetMidiFixSysExBugs(bool enabled) {
   impl_->sequencer.SetFixSysExBugs(enabled);
 }
 
-AudioResult AudioSystem::LoadSfx(std::uint8_t id,
+AudioResult AudioSystem::LoadSfx(SfxId id,
                                  std::span<const std::uint8_t> wav,
-                                 std::uint8_t max_instances) {
+                                 int max_instances) {
   if (!impl_->sfx_initialized) {
     return AudioResult::Fail(AudioError::NotInitialized,
                              "Sound effects are not initialized");
@@ -296,18 +296,14 @@ AudioResult AudioSystem::LoadSfx(std::uint8_t id,
 }
 
 void AudioSystem::PlaySfx(SfxId id, int x, bool loop) {
-  PlaySfx(static_cast<std::uint8_t>(id), SoundPanForWorldX(x), loop);
-}
-
-void AudioSystem::PlaySfx(std::uint8_t id, float pan, bool loop) {
   if (impl_->sfx_initialized) {
-    impl_->sfx.Play(id, pan, loop);
+    impl_->sfx.Play(id, SoundPanForWorldX(x), loop);
   }
 }
 
 void AudioSystem::StopSfx(SfxId id) {
   if (impl_->sfx_initialized) {
-    impl_->sfx.Stop(static_cast<std::uint8_t>(id));
+    impl_->sfx.Stop(id);
   }
 }
 

@@ -37,7 +37,7 @@ constexpr PlayerTraits kWideTraits{
 
 WideLoadout::WideLoadout() : PlayerLoadout(kWideTraits) {}
 
-void WideLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
+void WideLoadout::FireMain(Player &player, int tier, bool focused) {
   if (focused) {
     FireMainFocused(player, tier);
   } else {
@@ -45,7 +45,7 @@ void WideLoadout::FireMain(Player &player, uint8_t tier, bool focused) {
   }
 }
 
-void WideLoadout::FireSub(Player &player, uint8_t tier, bool focused) {
+void WideLoadout::FireSub(Player &player, int tier, bool focused) {
   if (focused) {
     FireSubFocused(player, tier);
   } else {
@@ -53,7 +53,7 @@ void WideLoadout::FireSub(Player &player, uint8_t tier, bool focused) {
   }
 }
 
-void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
+void WideLoadout::FireMainNormal(Player &player_, int tier) {
   switch (tier) {
   case 0: {
     PlayerShotSpawnInfo const si{.x = player_.X(),
@@ -69,9 +69,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   case 1: {
     shot_phase_ += 32;
-    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
-        6.0F)));
+        6.0F));
     PlayerShotSpawnInfo const si{.x = player_.X(),
                                  .y = player_.Y(),
                                  .direction = static_cast<uint8_t>(-64 + dd),
@@ -85,9 +85,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   case 2: {
     shot_phase_ += 32;
-    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
-        6.0F)));
+        6.0F));
     PlayerShotSpawnInfo si{.x = player_.X() - 6_px,
                            .y = player_.Y(),
                            .direction = static_cast<uint8_t>(-64 + dd),
@@ -105,9 +105,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   case 4:
   case 5: {
     shot_phase_ += 32;
-    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
-        6.0F)));
+        6.0F));
     PlayerShotSpawnInfo const si{.x = player_.X(),
                                  .y = player_.Y(),
                                  .direction = static_cast<uint8_t>(-64 + dd),
@@ -121,9 +121,9 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
   default: {
     shot_phase_ += 32;
-    const auto dd = static_cast<int8_t>(static_cast<int>(std::lround(
+    const auto dd = static_cast<int>(std::lround(
         std::sin(static_cast<float>(shot_phase_) * math::kLegacyAngleStep) *
-        6.0F)));
+        6.0F));
     PlayerShotSpawnInfo const si{.x = player_.X(),
                                  .y = player_.Y(),
                                  .direction = static_cast<uint8_t>(-64 + dd),
@@ -138,7 +138,7 @@ void WideLoadout::FireMainNormal(Player &player_, uint8_t tier) {
   }
 }
 
-void WideLoadout::FireSubNormal(Player &player_, uint8_t tier) {
+void WideLoadout::FireSubNormal(Player &player_, int tier) {
   switch (tier) {
   case 0:
     break;
@@ -214,7 +214,7 @@ void WideLoadout::FireSubNormal(Player &player_, uint8_t tier) {
 }
 
 void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
-                             EffectManager &effects, uint16_t remaining) {
+                             EffectManager &effects, int remaining) {
   int dx = 0;
   int dy = 0;
   int l = 0;
@@ -223,7 +223,7 @@ void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
     return;
   }
 
-  const auto d = static_cast<uint8_t>(remaining * 3U);
+  const auto d = static_cast<uint8_t>(remaining * 3);
   l = (BombDuration() - remaining) * 26;
   const auto x_offset =
       math::RoundedPolarVector(math::AngleFromLegacy(d), l << 1);
@@ -241,7 +241,7 @@ void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
   enemies.ApplyPlayerAttack(PlayerAttack::AllEnemies(1));
 }
 
-void WideLoadout::FireMainFocused(Player &player_, uint8_t tier) {
+void WideLoadout::FireMainFocused(Player &player_, int tier) {
   switch (tier) {
   case 0:
   case 1: {
@@ -290,7 +290,7 @@ void WideLoadout::FireMainFocused(Player &player_, uint8_t tier) {
   }
 }
 
-void WideLoadout::FireSubFocused(Player &player_, uint8_t tier) {
+void WideLoadout::FireSubFocused(Player &player_, int tier) {
   switch (tier) {
   case 0:
     break;
@@ -366,7 +366,7 @@ void WideLoadout::FireSubFocused(Player &player_, uint8_t tier) {
 }
 
 void WideLoadout::DrawBombBackground(const Player & /*player*/,
-                                     uint16_t remaining) const {
+                                     int remaining) const {
   static constexpr std::array<PixelLtrb, 6> frames = {
       PixelLtrb{0, 0, 210, 240},
       PixelLtrb{210, 0, 210 * 2, 240},

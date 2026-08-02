@@ -25,7 +25,7 @@ void GameplayHud::DrawTop(const GameplayHudModel &model) {
   geometry::DrawBoxA(playfield::kLeft, playfield::kTop, playfield::kRight + 1,
                      40);
 
-  if (model.graze_wait_time != 0U) {
+  if (model.graze_wait_time != 0) {
     geometry::SetColor({5, 1, 0});
     geometry::SetAlphaOne();
     for (int i = 0; i <= 10; i++) {
@@ -44,15 +44,15 @@ void GameplayHud::DrawTop(const GameplayHudModel &model) {
   constexpr PixelLtwh life_icon = {448, 272, 16, 16};
   constexpr PixelLtwh bomb_icon = {512, 272, 16, 16};
   constexpr PixelLtwh star_icon = {624, 432, 16, 16};
-  for (int i = 0; std::cmp_less(i, model.lives); i++) {
+  for (int i = 0; i < model.lives; i++) {
     GraphicsSurfaceBlit({280 + i * 14, 0}, SurfaceId::System, life_icon);
   }
-  for (int i = 0; std::cmp_less(i, model.bombs); i++) {
+  for (int i = 0; i < model.bombs; i++) {
     GraphicsSurfaceBlit({280 + i * 14, 0}, SurfaceId::System, bomb_icon);
   }
   GraphicsSurfaceBlit({408, 0}, SurfaceId::System, star_icon);
   DrawFont16(424, 0,
-             std::format("{:<4}", std::min(model.star_counter, 9999U)).c_str());
+             std::format("{:<4}", std::min(model.star_counter, 9999)).c_str());
 }
 
 void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
@@ -79,15 +79,15 @@ void GameplayHud::DrawSidebars(const GameplayHudModel &model) {
              std::format("DthB {:4}", model.deathbomb_count).c_str());
   DrawFont16(left_column, 180, "Stars");
   DrawFont16(left_column, 200,
-             std::format("{:4}/{:4}", std::min(model.star_counter, 9999U),
-                         std::min(model.star_threshold, 9999U))
+             std::format("{:4}/{:4}", std::min(model.star_counter, 9999),
+                         std::min(model.star_threshold, 9999))
                  .c_str());
 
   const auto local_time = util::LocalTime();
   DrawFont16(right_column, 0, "Date");
   DrawFont16(right_column, 20,
              std::format("{:02}/{:02}/{:02}", local_time.month, local_time.day,
-                         local_time.year % 100U)
+                         local_time.year % 100)
                  .c_str());
   DrawFont16(right_column, 50, "Time");
   DrawFont16(right_column, 70,

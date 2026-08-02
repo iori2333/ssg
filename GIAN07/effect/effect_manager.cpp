@@ -98,10 +98,10 @@ void EffectManager::UpdateScreenTransition() {
     }
     break;
   case ScreenTransition::CircleFadeOut:
-    screen_.age = std::min<uint32_t>(screen_.age + 10, 600);
+    screen_.age = std::min(screen_.age + 10, 600);
     break;
   case ScreenTransition::WhiteIn:
-    screen_.age = std::min<uint32_t>(screen_.age + 10, 150);
+    screen_.age = std::min(screen_.age + 10, 150);
     break;
   case ScreenTransition::WhiteOut:
     screen_.age += 10;
@@ -119,12 +119,11 @@ void EffectManager::DrawScreenTransition() const {
 
   switch (screen_.transition) {
   case ScreenTransition::CircleFadeIn:
-    DrawCircleFade(playfield::kCenterX, playfield::kCenterY,
-                   static_cast<int>(screen_.age));
+    DrawCircleFade(playfield::kCenterX, playfield::kCenterY, screen_.age);
     return;
   case ScreenTransition::CircleFadeOut:
     DrawCircleFade(playfield::kCenterX, playfield::kCenterY,
-                   400 - static_cast<int>(screen_.age));
+                   400 - screen_.age);
     return;
   case ScreenTransition::WhiteIn:
   case ScreenTransition::WhiteOut:
@@ -132,8 +131,8 @@ void EffectManager::DrawScreenTransition() const {
   }
 
   const int frame = screen_.transition == ScreenTransition::WhiteIn
-                        ? 15 - static_cast<int>(screen_.age / 10)
-                        : static_cast<int>(screen_.age / 10);
+                        ? 15 - screen_.age / 10
+                        : screen_.age / 10;
   const PixelLtwh source = {frame * 16, 144, 16, 16};
   for (int x = playfield::kLeft; x <= playfield::kRight; x += 16) {
     for (int y = playfield::kTop; y <= playfield::kBottom; y += 16) {
@@ -191,7 +190,7 @@ void EffectManager::UpdateBossWarning() {
   }
 
   if (warning_age_ < 192) {
-    UpdateWarningText(static_cast<uint8_t>(warning_age_));
+    UpdateWarningText(warning_age_);
   } else {
     RotateWarningText(-1);
   }
@@ -288,7 +287,7 @@ void EffectManager::InitializeWarningText() {
   }
 }
 
-void EffectManager::UpdateWarningText(uint8_t age) {
+void EffectManager::UpdateWarningText(int age) {
   for (auto &line : warning_lines_) {
     line.angle_x = age < 64 ? static_cast<uint8_t>((64 - age) * 2) : 0;
     line.angle_y = age < 64 ? static_cast<uint8_t>(64 - age) : 0;

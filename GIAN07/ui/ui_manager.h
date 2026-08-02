@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -38,7 +39,7 @@ public:
   void TickMessageWindow();
   void DrawMessageWindow();
   void ShowMessage(std::string_view message);
-  void SetMessageFace(uint8_t face_id);
+  void SetMessageFace(std::size_t face_id);
   void SetLargeMessageFont();
   void NewMessagePage();
 
@@ -50,7 +51,7 @@ public:
     gameplay_hud_.DrawSidebars(model);
   }
   void UpdateBossHud(const BossHudModel &model) { boss_health_.Sync(model); }
-  void DrawBossHud(uint32_t stage_frame) { boss_health_.Draw(stage_frame); }
+  void DrawBossHud(int stage_frame) { boss_health_.Draw(stage_frame); }
 
   // --- Menu window access ---
   menu::MenuController &Main() { return main_window_; }

@@ -47,8 +47,8 @@ bool EndingScene::Enter() {
 }
 
 bool EndingScene::Update(bool should_draw) {
-  if (flash_state != 0U) {
-    flash_state -= 32;
+  if (flash_state > 0) {
+    flash_state = std::max(0, flash_state - 32);
   }
 
   if (SCLDecode()) {
@@ -147,8 +147,11 @@ void EndingScene::DrawStfInfo() {
   };
 
   Blit({stf_task.ox, stf_task.oy}, staff_label[stf_task.TitleID]);
-  for (decltype(stf_task.NumStf) i = 0; i < stf_task.NumStf; i++) {
-    const WindowPoint dst = {stf_task.ox, (stf_task.oy + (i * 30) + 50)};
+  for (std::size_t i = 0; i < stf_task.NumStf; i++) {
+    const WindowPoint dst = {
+        stf_task.ox,
+        static_cast<int>(stf_task.oy + (i * 30) + 50),
+    };
     Blit(dst, staff_member[stf_task.StfID[i]]);
   }
 }
@@ -202,7 +205,7 @@ void EndingScene::DrawFadeInfo() const {
       geometry::DrawBoxA(0, 0, (320 - 50), 300);
     }
   }
-  if (flash_state != 0U) {
+  if (flash_state > 0) {
     geometry::SetAlphaNorm(255 - flash_state);
     geometry::SetColor({5, 5, 5});
     geometry::DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
@@ -214,7 +217,7 @@ bool EndingScene::SCLDecode() {
   while (const auto *instruction = scene_.Current()) {
     switch (instruction->opcode) {
     case stage::SceneOpcode::Time:
-      if (static_cast<uint32_t>(instruction->value) > scene_.Frame()) {
+      if (instruction->value > scene_.Frame()) {
         scene_.AdvanceFrame();
         return false;
       }

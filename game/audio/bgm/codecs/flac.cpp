@@ -54,7 +54,7 @@ ma_result FlacSeek(ma_decoder *decoder, ma_int64 offset,
 struct FlacPcmPart : public PcmPart {
   std::unique_ptr<ma_decoder> decoder;
 
-  size_t PartDecodeSingle(std::span<std::byte> buf) override;
+  size_t PartDecodeSingle(std::span<uint8_t> buf) override;
   void PartSeekToSample(size_t sample) override;
 
   FlacPcmPart(std::unique_ptr<ma_decoder> decoder, const PcmFormat &pcmf)
@@ -66,9 +66,9 @@ struct FlacPcmPart : public PcmPart {
   ~FlacPcmPart() override;
 };
 
-size_t FlacPcmPart::PartDecodeSingle(std::span<std::byte> buf) {
+size_t FlacPcmPart::PartDecodeSingle(std::span<uint8_t> buf) {
   const auto sample_size = pcmf.SampleSize();
-  const auto frames = (buf.size_bytes() / sample_size);
+  const auto frames = (buf.size() / sample_size);
   ma_uint64 frames_read = 0;
   const auto result = ma_decoder_read_pcm_frames(decoder.get(), buf.data(),
                                                  frames, &frames_read);

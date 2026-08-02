@@ -132,7 +132,7 @@ void Bullet::DrawEffect() const {
           Data[3], Data[4], Data[5], Data[0], Data[0], Data[0], Data[0],
           Data[0], Data[0], Data[0], Data[0], Data[0], Data[0],
       }};
-  const int ptn = (static_cast<int>(count_) / 4 % 5);
+  const int ptn = (count_ / 4 % 5);
   int const x = WorldToPixel(x_) - Width[ptn];
   int const y = WorldToPixel(y_) - Width[ptn];
   PixelLtrb temp;
@@ -187,7 +187,7 @@ BulletSpawnInfo MakeBulletSpawnInfo(const EclBulletState &cmd, int ox, int oy,
       .visual = cmd.c,
       .speed_variance = static_cast<BulletSpeedVariance>((cmd.v & 0xc0) >> 6),
       .option = DecodeOption(cmd.option),
-      .option_count = static_cast<uint8_t>(cmd.option & 0x0f),
+      .option_count = cmd.option & 0x0f,
       .motion = DecodeMotion(cmd.type),
       .repeat = cmd.rep,
       .angular_velocity = cmd.vd,
@@ -269,7 +269,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
-    if (rep_ == static_cast<uint8_t>(count_)) {
+    if (rep_ == count_) {
       RevertToNormal();
     }
     return;
@@ -305,7 +305,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
-    if (rep_ == static_cast<uint8_t>(count_)) {
+    if (rep_ == count_) {
       RevertToNormal();
     }
     return;
@@ -316,7 +316,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       tx_ += velocity.x;
       ty_ += velocity.y;
     }
-    if (rep_ == static_cast<uint8_t>(count_)) {
+    if (rep_ == count_) {
       RevertToNormal();
     }
     return;
@@ -367,7 +367,7 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
   case BulletMotion::ChangeDirection:
     tx_ += vx_;
     ty_ += vy_;
-    if (rep_ == static_cast<uint8_t>(count_)) {
+    if (rep_ == count_) {
       angle_ = math::AngleFromLegacy(static_cast<uint8_t>(vd_));
       RevertToNormal();
     }
@@ -429,7 +429,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
   case BulletOptionKind::Wave:
     op_temp =
         std::sin(static_cast<float>(count_ << 2) * math::kLegacyAngleStep) *
-        static_cast<float>(option_count_ << 7);
+        static_cast<float>(option_count_ * 128);
     {
       const auto offset = math::PolarVector(angle_, op_temp);
       x_ = tx_ - offset.y;
@@ -439,7 +439,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
   case BulletOptionKind::Orbit: {
     const auto angle =
         angle_ + static_cast<float>(count_ << 1) * math::kLegacyAngleStep;
-    op_temp = option_count_ << 8;
+    op_temp = static_cast<float>(option_count_ * 256);
     const auto offset = math::PolarVector(angle, op_temp);
     x_ = tx_ + offset.x;
     y_ = ty_ + offset.y;
@@ -526,9 +526,10 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
       const int cx = static_cast<int>(std::lround(tx_ + velocity.x));
       const int cy = static_cast<int>(std::lround(ty_ + velocity.y));
       constexpr uint8_t kCircleEffect = 0x50;
-      const uint8_t ecmd = option_count_ | kCircleEffect;
-      uint8_t n = 0;
-      uint8_t dw = 0;
+      const uint8_t ecmd =
+          static_cast<uint8_t>(option_count_ | kCircleEffect);
+      int n = 0;
+      int dw = 0;
       int sv = 0;
       switch (bullet_common::DecodePattern(ecmd)) {
       case BulletPattern::Spread:
@@ -629,11 +630,11 @@ void Bullet::Render() const {
     if (is_small) {
       GraphicsSurfaceBlit(
           {x, y}, SurfaceId::System,
-          PixelLtwh{384 + ((static_cast<int>(count_) / 6) << 3), 120, 8, 8});
+          PixelLtwh{384 + ((count_ / 6) << 3), 120, 8, 8});
     } else {
       GraphicsSurfaceBlit(
           {x, y}, SurfaceId::System,
-          PixelLtwh{384 + ((static_cast<int>(count_) / 6) << 4), 104, 16, 16});
+          PixelLtwh{384 + ((count_ / 6) << 4), 104, 16, 16});
     }
     return;
   case BulletEffect::Circle1:

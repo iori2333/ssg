@@ -96,20 +96,20 @@ private:
     int x = 0;
     int y = 0;
     int velocity_y = 0;
-    uint32_t age = 0;
+    int age = 0;
     int speed = 0;
-    int8_t acceleration = 0;
-    uint8_t sprite = 0;
+    int acceleration = 0;
+    int sprite = 0;
     RockState state = RockState::Normal;
   };
 
   struct Raster {
     int x = 0;
     int y = 0;
-    int8_t velocity_y = 0;
-    uint8_t type = 0;
+    int velocity_y = 0;
+    int type = 0;
     uint8_t angle = 0;
-    uint8_t amplitude = 0;
+    int amplitude = 0;
   };
 
   static void Transform(Point3D &point, uint8_t angle_x, uint8_t angle_y,
@@ -118,7 +118,7 @@ private:
 
   std::array<Cube, kCubeCount> cubes_{};
   std::array<Star, kCubeStarCount> cube_stars_{};
-  uint16_t cube_phase_ = 0;
+  int cube_phase_ = 0;
   uint16_t cube_angle_x_ = 0;
   uint16_t cube_angle_y_ = 0;
   uint16_t cube_angle_z_ = 0;

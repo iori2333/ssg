@@ -16,7 +16,7 @@
 bool GraphicsBackendEnum();
 
 // Rendering APIs.
-int8_t GraphicsBackendAPICount();
+int GraphicsBackendAPICount();
 std::string_view GraphicsBackendAPILabel(std::string_view api);
 
 // Maps an API string back to its ID. Returns -1 for an unavailable API.
@@ -24,7 +24,7 @@ int GraphicsBackendAPIID(std::string_view api);
 
 // Maps an API ID to its string representation. Returns the empty string for
 // -1.
-std::string_view GraphicsBackendAPIString(int8_t id);
+std::string_view GraphicsBackendAPIString(int id);
 
 // Returns the maximum usable display size in windowed or fullscreen mode.
 PixelSize GraphicsBackendDisplaySize(bool fullscreen);
@@ -85,7 +85,7 @@ bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp);
 // [pixels] have to match the surface's format.
 bool GraphicsSurfaceUpdate(
     SurfaceId sid, const PixelLtwh *subrect,
-    std::tuple<const std::byte *, size_t> pixels) noexcept;
+    std::tuple<const uint8_t *, size_t> pixels) noexcept;
 
 // Returns the size of the given surface.
 PixelSize GraphicsSurfaceSize(SurfaceId sid);
@@ -158,7 +158,7 @@ bool GraphicsBackendPixelAccessEnd();
 // Should return a pitch of 0 on failure.
 // On success, the returned buffer has a size of [kGameResolution.h] times the
 // returned pitch, and always uses a 32-bit Bgra pixel format.
-std::tuple<std::byte *, size_t> GraphicsBackendPixelAccessLock();
+std::tuple<uint8_t *, size_t> GraphicsBackendPixelAccessLock();
 
 // Unlocks the backbuffer.
 void GraphicsBackendPixelAccessUnlock();
@@ -169,7 +169,7 @@ void GraphicsBackendPixelAccessEdit(auto func) {
   if (pitch == 0) {
     return;
   }
-  func.template operator()<uint32_t>(pixels, pitch);
+  func(pixels, pitch);
   GraphicsBackendPixelAccessUnlock();
 }
 /// ------------------------------------

@@ -44,5 +44,5 @@ private:
   int count_ = 0;
   int angle_ = 0;
   int speed_ = 0;
-  uint8_t key_wait_ = 0;
+  int key_wait_ = 0;
 };

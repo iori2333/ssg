@@ -71,7 +71,7 @@ void MusicRoomScene::Text::RenderMidDev(WindowPoint topleft,
 void MusicRoomScene::Text::RenderTitle(WindowPoint topleft,
                                        std::size_t track_id,
                                        std::string_view track_title,
-                                       uint32_t marquee_frame) const {
+                                       int marquee_frame) const {
   // Some modders might assign the same title to consecutive tracks, but it's
   // not possible to change the track title without switching to a different
   // track first.
@@ -162,8 +162,8 @@ bool MusicRoomScene::Enter() {
 
 // Spectrum analyzer drawing
 void MusicRoomScene::DrawSpectrum(int x, int y) {
-  std::array<uint16_t, 128 + 8 + 8> ftable{};
-  std::array<uint16_t, 128> ftable2{};
+  std::array<int, 128 + 8 + 8> ftable{};
+  std::array<int, 128> ftable2{};
 
   constexpr PixelLtrb src = {(16 * 16), 0, ((16 * 16) + (8 * 21)), 8}; // ,,,8*4
 

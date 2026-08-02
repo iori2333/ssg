@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <span>
+#include <utility>
 
 #include <SDL3/SDL_audio.h>
 #include <miniaudio.h>
@@ -10,6 +11,7 @@
 #include "sfx_bank.h"
 
 #include "audio/core/audio_types.h"
+#include "audio/sfx.h"
 
 namespace audio::sfx {
 namespace {
@@ -72,10 +74,11 @@ void SfxBank::Shutdown() {
   }
 }
 
-AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
+AudioResult SfxBank::Load(SfxId id, const SDL_AudioSpec &spec,
                           std::span<const std::uint8_t> pcm,
-                          std::uint8_t max_instances) {
-  if (id >= kSfxObjectCount) {
+                          int max_instances) {
+  const auto effect_index = std::to_underlying(id);
+  if (effect_index >= kSfxObjectCount) {
     return AudioResult::Fail(AudioError::InvalidArgument,
                              "Sound effect id out of range");
   }
@@ -84,7 +87,7 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
                              "Sound effect requires at least one instance");
   }
 
-  auto &effect = effects_[id];
+  auto &effect = effects_[effect_index];
   effect.Clear();
   effect.instances.resize(max_instances);
   effect.max = max_instances;
@@ -128,7 +131,7 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
   }
   ma_data_converter_uninit(&converter, nullptr);
 
-  for (std::uint8_t i = 0; i < max_instances; i++) {
+  for (int i = 0; i < max_instances; i++) {
     if (!effect.instances[i]) {
       effect.instances[i] = std::make_unique<Instance>();
     }
@@ -152,11 +155,12 @@ AudioResult SfxBank::Load(std::uint8_t id, const SDL_AudioSpec &spec,
   return AudioResult::Ok();
 }
 
-void SfxBank::Play(std::uint8_t id, float pan, bool loop) {
-  if (id >= kSfxObjectCount || !effects_[id].Loaded()) {
+void SfxBank::Play(SfxId id, float pan, bool loop) {
+  const auto effect_index = std::to_underlying(id);
+  if (effect_index >= kSfxObjectCount || !effects_[effect_index].Loaded()) {
     return;
   }
-  auto &effect = effects_[id];
+  auto &effect = effects_[effect_index];
   auto &instance = *effect.instances[effect.now];
   ma_sound_stop(&instance.sound);
   ma_sound_set_looping(&instance.sound, static_cast<ma_bool32>(loop));
@@ -166,18 +170,19 @@ void SfxBank::Play(std::uint8_t id, float pan, bool loop) {
   effect.now = ((effect.now + 1) % effect.max);
 }
 
-void SfxBank::Stop(std::uint8_t id) {
-  if (id >= kSfxObjectCount || !effects_[id].Loaded()) {
+void SfxBank::Stop(SfxId id) {
+  const auto effect_index = std::to_underlying(id);
+  if (effect_index >= kSfxObjectCount || !effects_[effect_index].Loaded()) {
     return;
   }
-  for (std::uint32_t i = 0; i < effects_[id].max; i++) {
-    ma_sound_stop(&effects_[id].instances[i]->sound);
+  for (int i = 0; i < effects_[effect_index].max; i++) {
+    ma_sound_stop(&effects_[effect_index].instances[i]->sound);
   }
 }
 
 void SfxBank::StopAll() {
-  for (std::uint8_t id = 0; id < kSfxObjectCount; id++) {
-    Stop(id);
+  for (std::size_t id = 0; id < kSfxObjectCount; id++) {
+    Stop(static_cast<SfxId>(id));
   }
 }
 
@@ -187,8 +192,9 @@ void SfxBank::SetVolume(float linear) {
   }
 }
 
-bool SfxBank::IsLoaded(std::uint8_t id) const {
-  return id < kSfxObjectCount && effects_[id].Loaded();
+bool SfxBank::IsLoaded(SfxId id) const {
+  const auto effect_index = std::to_underlying(id);
+  return effect_index < kSfxObjectCount && effects_[effect_index].Loaded();
 }
 
 } // namespace audio::sfx

@@ -55,13 +55,13 @@ public:
   void DrawBosses();
   void DrawRegular();
 
-  void SpawnFromScene(int16_t x, int16_t y, uint8_t script_id);
+  void SpawnFromScene(int x, int y, uint32_t script_id);
   void SpawnBoss(PixelPoint position, uint32_t script_id);
   void KillBosses();
-  void SetBossTimeout(int32_t timeout_end);
+  void SetBossTimeout(int timeout_end);
 
-  [[nodiscard]] uint16_t BossCount() const {
-    return static_cast<uint16_t>(bosses_.Size());
+  [[nodiscard]] int BossCount() const {
+    return static_cast<int>(bosses_.Size());
   }
   [[nodiscard]] uint32_t BossHpSum() const { return TotalBossHp(); }
   [[nodiscard]] const BossHudModel &BossHud() const { return boss_hud_; }

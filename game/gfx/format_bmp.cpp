@@ -106,8 +106,8 @@ bool BmpSaveSupports(SDL_PixelFormat format) {
 
 bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
              uint16_t bpp, std::span<Bgra> palette,
-             std::span<const std::byte> pixels) {
-  assert(pixels.size_bytes() <= std::numeric_limits<uint32_t>::max());
+             std::span<const uint8_t> pixels) {
+  assert(pixels.size() <= std::numeric_limits<uint32_t>::max());
   assert(palette.size() <= std::numeric_limits<uint32_t>::max());
   const BmpInfoHeader header_info = {
       .biSize = sizeof(BmpInfoHeader),
@@ -116,7 +116,7 @@ bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
       .biPlanes = planes,
       .biBitCount = bpp,
       .biCompression = 0, // BI_RGB
-      .biSizeImage = static_cast<uint32_t>(pixels.size_bytes()),
+      .biSizeImage = static_cast<uint32_t>(pixels.size()),
       .biClrUsed = static_cast<uint32_t>(palette.size()),
   };
   const uint32_t pixel_offset =
@@ -132,5 +132,5 @@ bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
           WriteExact(stream, &header_file, sizeof(header_file)) &&
           WriteExact(stream, &header_info, sizeof(header_info)) &&
           WriteExact(stream, palette.data(), palette.size_bytes()) &&
-          WriteExact(stream, pixels.data(), pixels.size_bytes()));
+          WriteExact(stream, pixels.data(), pixels.size()));
 }

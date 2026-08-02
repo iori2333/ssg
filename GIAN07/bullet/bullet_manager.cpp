@@ -58,7 +58,7 @@ void BulletManager::SpawnBullet(const BulletSpawnInfo &si) {
 
 void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
   const auto n = si.count;
-  const uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
+  const int setmax = n * (si.rapid ? si.rapid_count : 1);
 
   auto base_angle = si.aimed
                         ? math::AngleTo(static_cast<float>(player_.X() - si.x),
@@ -66,7 +66,7 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
                         : 0.0F;
   base_angle += si.angle;
 
-  for (uint16_t i = 0; i < setmax; i++) {
+  for (int i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
     if (t == nullptr) {
       return;
@@ -99,9 +99,9 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
 
 void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
   const auto n = si.count;
-  uint16_t const setmax = n * (si.rapid ? si.rapid_count : 1U);
+  int const setmax = n * (si.rapid ? si.rapid_count : 1);
 
-  for (uint16_t i = 0; i < setmax; i++) {
+  for (int i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
     if (t == nullptr) {
       return;
@@ -110,7 +110,7 @@ void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
     si2.angle = bullet_common::CalcSpreadAngle(i % n, BulletPattern::Spread, n,
                                                si.angle, si.spread);
 
-    const int i_mod = (i % n) + 1;
+    const auto i_mod = (i % n) + 1;
     const auto relative_angle = math::ShortestAngleDelta(si2.angle, si.angle);
     float v_ret = si.speed / std::cos(relative_angle);
     if (si.rapid) {
@@ -124,9 +124,9 @@ void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
 
 void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
   const auto n = si.count;
-  const uint16_t setmax = n * (si.rapid ? si.rapid_count : 1U);
+  const int setmax = n * (si.rapid ? si.rapid_count : 1);
 
-  for (uint16_t i = 0; i < setmax; i++) {
+  for (int i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
     if (t == nullptr) {
       return;
@@ -189,7 +189,7 @@ void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
                         : 0.0F;
   base_angle += cmd.angle;
 
-  for (uint8_t i = 0; i < cmd.n; i++) {
+  for (int i = 0; i < cmd.n; i++) {
     auto *r = reflect_lasers_.Alloc();
     if (r == nullptr) {
       return;
@@ -217,7 +217,7 @@ bool BulletManager::SpawnLongLaser(const LongLaserSpawnInfo &info) {
 }
 
 void BulletManager::SpawnHoming(const HomingSpawnInfo &info) {
-  for (int i = 0; std::cmp_less(i, info.n); i++) {
+  for (int i = 0; i < info.n; i++) {
     auto *p = homing_lasers_.Alloc();
     if (p == nullptr) {
       return;
@@ -396,9 +396,9 @@ void BulletManager::Clear() {
   homing_lasers_.Compact([](const LaserHoming &h) { return h.IsDead(); });
 }
 
-uint32_t BulletManager::ConvertBulletsToScore() {
-  uint32_t sum = 0;
-  uint32_t score = kBulletClearScoreStart + player_.GrazeCount() * 100;
+int BulletManager::ConvertBulletsToScore() {
+  int sum = 0;
+  int score = kBulletClearScoreStart + player_.GrazeCount() * 100;
   for (auto &b : bullets_) {
     if (!b.IsSmall()) {
       continue;
@@ -427,7 +427,7 @@ uint32_t BulletManager::ConvertBulletsToScore() {
   return sum;
 }
 
-void BulletManager::ConvertBulletsToItems(uint8_t frequency) {
+void BulletManager::ConvertBulletsToItems(int frequency) {
   if (frequency == 0) {
     Clear();
     return;
@@ -448,7 +448,7 @@ void BulletManager::ConvertBulletsToItems(uint8_t frequency) {
 
 // ── Laser control ─────────────────────────────────────────────────
 
-void BulletManager::ControlLongLaser(const EnemyActor *e, uint8_t id,
+void BulletManager::ControlLongLaser(const EnemyActor *e, std::size_t id,
                                      const LongLaserUpdateInfo &info) {
   for (auto &ll : long_lasers_) {
     if (!ll.BelongsTo(e, id)) {

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -32,13 +33,18 @@ public:
   void Tick();       // Run message window logic
   void Draw();       // Draw the message window
   void AppendMessage(std::string_view message);
-  void SetFace(uint8_t face_id);
+  void SetFace(std::size_t face_id);
   void SetFont(FontId font);
   void NewPage();
   void ShowHelp(std::string_view help);
 
 private:
+  enum class State : uint8_t { Dead, Open, Close, Free };
+  enum class FaceState : uint8_t { None, Open, Close, Next, Wait };
+
   static constexpr auto kMessageLines = 5;
+  static constexpr int kFaceFrameStep = 16;
+  static constexpr int kFaceFrameCount = 256;
 
   void MsgBlank(); // Clear strings and reset to first line
 
@@ -48,15 +54,15 @@ private:
 
   MsgWindowFlags flags{};
   FontId font_id{};   // Font to use
-  uint8_t font_dy{};  // Font Y increment
-  uint8_t state{};    // State
-  uint8_t max_line{}; // Max displayable lines
-  uint8_t line{};     // Next line index
+  int font_dy{};      // Font Y increment
+  State state = State::Dead;
+  std::size_t max_line{}; // Max displayable lines
+  std::size_t line{};     // Next line index
 
-  uint8_t face_id{};    // Current face ID
-  uint8_t next_face{};  // Next face ID to show
-  uint8_t face_state{}; // Face state
-  uint8_t face_time{};  // Face display counter
+  std::size_t face_id{};   // Current face ID
+  std::size_t next_face{}; // Next face ID to show
+  FaceState face_state = FaceState::None;
+  int face_time{};        // Face display counter
 
   std::array<std::string_view, kMessageLines> msg{}; // Displayed messages
 

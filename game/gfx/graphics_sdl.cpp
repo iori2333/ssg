@@ -322,7 +322,7 @@ bool GraphicsBackendEnum() {
   return true;
 }
 
-int8_t GraphicsBackendAPICount() { return SDL_GetNumRenderDrivers(); }
+int GraphicsBackendAPICount() { return SDL_GetNumRenderDrivers(); }
 
 std::string_view GraphicsBackendAPILabel(std::string_view api) {
   for (const auto &nice : kApiNiceNames) {
@@ -346,7 +346,7 @@ int GraphicsBackendAPIID(std::string_view api) {
   return -1;
 }
 
-std::string_view GraphicsBackendAPIString(int8_t id) {
+std::string_view GraphicsBackendAPIString(int id) {
   const auto *ret = SDL_GetRenderDriver(id);
   return ((ret != nullptr) ? ret : std::string_view{});
 }
@@ -890,7 +890,7 @@ bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp) {
 
 bool GraphicsSurfaceUpdate(
     SurfaceId sid, const PixelLtwh *subrect,
-    std::tuple<const std::byte *, size_t> pixels) noexcept {
+    std::tuple<const uint8_t *, size_t> pixels) noexcept {
   const auto [buf, pitch] = pixels;
   if (pitch > std::numeric_limits<int>::max()) {
     logging::Critical(kLogCat, "Pitch of {} bytes does not fit into an integer",
@@ -1043,7 +1043,7 @@ bool GraphicsSurfaceGdiTextUpdate(const PixelLtwh &r) noexcept {
   }
 
   auto *pixels =
-      (static_cast<std::byte *>(dib.dsBm.bmBits) +
+      (static_cast<uint8_t *>(dib.dsBm.bmBits) +
        (static_cast<std::ptrdiff_t>(r.top) * dib.dsBm.bmWidthBytes) +
        (static_cast<std::ptrdiff_t>(r.left) * (dib.dsBmih.biBitCount / 8)));
 
@@ -1245,7 +1245,7 @@ bool GraphicsBackendPixelAccessEnd() {
   return true;
 }
 
-std::tuple<std::byte *, size_t> GraphicsBackendPixelAccessLock() {
+std::tuple<uint8_t *, size_t> GraphicsBackendPixelAccessLock() {
   // Necessary in SDL 3!
   SDL_FlushRenderer(RenderState().software_renderer);
 
@@ -1256,7 +1256,7 @@ std::tuple<std::byte *, size_t> GraphicsBackendPixelAccessLock() {
     }
   }
   auto *pixels =
-      static_cast<std::byte *>(RenderState().software_surface->pixels);
+      static_cast<uint8_t *>(RenderState().software_surface->pixels);
   return {pixels, RenderState().software_surface->pitch};
 }
 

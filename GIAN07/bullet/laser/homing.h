@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 #include "bullet/bullet_common.h"
@@ -22,8 +23,8 @@ enum class HomingType : uint8_t {
 struct HomingSpawnInfo {
   int x{}, y{};
   float angle{};
-  uint8_t dw{};
-  uint8_t n{};
+  int dw{};
+  int n{};
   uint8_t c{};
   HomingType type{HomingType::None};
 
@@ -67,7 +68,7 @@ private:
 
   float v_{};
   uint8_t c_{};
-  uint32_t count_{};
+  int count_{};
 
   int current_{};
   float a_{};

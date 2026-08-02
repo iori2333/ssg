@@ -110,7 +110,7 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
       static_cast<unsigned int>(player_.IsBombActive()) != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
     const PixelLtrb spirit = PixelLtwh{
-        160 + (static_cast<int32_t>(boss.count / 2) % 4) * 40, 80, 40, 40};
+        160 + (boss.count / 2) % 4 * 40, 80, 40, 40};
     GraphicsBackendSetClip(kGameResolutionRect);
     GraphicsSurfaceBlit({center.x - 20, center.y - 20}, surface, spirit);
     GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
@@ -121,7 +121,7 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
   if (boss.mode == BossMode::BombShield &&
       static_cast<unsigned int>(player_.IsBombActive()) != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
-    for (uint8_t layer = 0; layer <= 5; ++layer) {
+    for (int layer = 0; layer <= 5; ++layer) {
       geometry::SetColor({static_cast<uint8_t>(5U - layer),
                           static_cast<uint8_t>(5U - layer), 5U});
       geometry::DrawCircle(
@@ -136,8 +136,7 @@ bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
 
   switch (boss.mode) {
   case BossMode::ButterflyWings: {
-    const auto offset =
-        std::max((static_cast<int>(boss.mode_frame) - 72) << 2, 0);
+    const auto offset = std::max((boss.mode_frame - 72) << 2, 0);
     GraphicsSurfaceBlit({center.x - 64 - offset, center.y - 92}, surface,
                         {0, 176, 128, 360});
     GraphicsSurfaceBlit({center.x - 64 + offset, center.y - 92}, surface,

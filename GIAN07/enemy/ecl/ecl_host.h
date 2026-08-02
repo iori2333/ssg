@@ -40,7 +40,7 @@ public:
   void ClearRegular() const;
   void ClearBossProjectiles() const;
 
-  [[nodiscard]] uint16_t BossCount() const;
+  [[nodiscard]] int BossCount() const;
   [[nodiscard]] int BitCount(const EnemyActor &actor) const;
   void HandleBossAction(EnemyActor &actor, EclBossAction action) const;
   void SetBitAttack(EnemyActor &actor, uint32_t script_id) const;

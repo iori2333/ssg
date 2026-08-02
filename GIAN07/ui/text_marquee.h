@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <string_view>
 
@@ -10,9 +9,9 @@
 
 namespace ui {
 
-inline constexpr uint32_t kMarqueeStepFrames = 10;
+inline constexpr int kMarqueeStepFrames = 10;
 
 std::string MarqueeWindow(TextRenderSession &session, std::string_view text,
-                          int available_width, uint32_t frame);
+                          int available_width, int frame);
 
 } // namespace ui
