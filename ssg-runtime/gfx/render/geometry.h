@@ -10,8 +10,49 @@
 #include <ranges>
 #include <span>
 
-#include "gfx/graphics.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/pixelformat.h"
 #include "util/math_utils.h"
+
+// Geometry vertex types
+// ---------------------
+
+struct VertexXy {
+  float x{};
+  float y{};
+
+  [[nodiscard]] constexpr VertexXy DivInt(int scalar) const {
+    return {
+        .x = static_cast<float>(static_cast<int>(x) / scalar),
+        .y = static_cast<float>(static_cast<int>(y) / scalar),
+    };
+  }
+
+  constexpr VertexXy operator+(const VertexXy &other) const {
+    return {(x + other.x), (y + other.y)};
+  }
+};
+
+struct VertexRgba {
+  float r;
+  float g;
+  float b;
+  float a;
+
+  VertexRgba() = default;
+  VertexRgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+      : r(r / 255.0F), g(g / 255.0F), b(b / 255.0F), a(a / 255.0F) {}
+  VertexRgba(const Rgba &o)
+      : r(o.r / 255.0F), g(o.g / 255.0F), b(o.b / 255.0F), a(o.a / 255.0F) {}
+};
+
+template <size_t N = std::dynamic_extent>
+using VertexXySpan = std::span<const VertexXy, N>;
+template <size_t N = std::dynamic_extent>
+using VertexRgbaSpan = std::span<const VertexRgba, N>;
+
+enum class TrianglePrimitive : uint8_t { Fan, Strip, Count };
+// ---------------------
 
 namespace geometry {
 

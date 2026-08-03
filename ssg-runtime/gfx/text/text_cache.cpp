@@ -9,6 +9,7 @@
 
 #include "text_renderer.h"
 
+#include "gfx/render/graphics_sdl.h"
 #include "sys/log.h"
 
 namespace {
@@ -227,5 +228,5 @@ bool TextRender::Blit(PixelPoint dst, TextRenderRectId rect_id,
   if (!rect) {
     return false;
   }
-  return GraphicsSurfaceBlit(dst, SurfaceId::Text, *rect);
+  return SdlTextTextureBlit(dst, *rect);
 }

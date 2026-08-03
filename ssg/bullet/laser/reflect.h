@@ -10,6 +10,7 @@
 
 #include "bullet/bullet_common.h"
 #include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 
 struct LaserLong;
 

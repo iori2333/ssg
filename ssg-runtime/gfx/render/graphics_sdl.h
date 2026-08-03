@@ -3,16 +3,22 @@
 ///
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <optional>
+#include <tuple>
 
 #include "gfx/graphics.h"
 
-struct SDL_Surface;
-
-PixelPoint SdlGraphicsDisplaySize(bool fullscreen);
 std::optional<GraphicsInitResult>
 SdlGraphicsInit(std::optional<const GraphicsParams> previous,
                 GraphicsParams requested);
 void SdlGraphicsFlip(bool take_screenshot);
 
-bool GraphicsScreenshotSave(SDL_Surface *surface);
+// Text atlas texture, owned by the render backend on behalf of the text
+// module. The atlas is destroyed with the renderer and recreated lazily.
+PixelPoint SdlTextTextureSize();
+bool SdlTextTexturePrepare(PixelPoint size);
+bool SdlTextTextureUpdate(const Rect *subrect,
+                          std::tuple<const uint8_t *, size_t> pixels);
+bool SdlTextTextureBlit(PixelPoint topleft, const Rect &src);

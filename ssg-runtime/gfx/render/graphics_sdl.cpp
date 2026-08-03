@@ -35,11 +35,14 @@
 #include "gfx/core/coords.h"
 #include "gfx/core/pixelformat.h"
 #include "gfx/graphics.h"
+#include "gfx/graphics_system.h"
 #include "gfx/image/format_bmp.h"
+#include "gfx/image/screenshot.h"
 #include "gfx/window/window_sdl.h"
 #include "sys/log.h"
 #include "util/enum_array.h"
 #include "util/guard.h"
+#include "util/sdl_resource.h"
 
 using SdlColor = SDL_FColor;
 
@@ -47,79 +50,7 @@ constexpr auto kLogCat = logging::Channel::Graphics;
 
 namespace {
 
-namespace api_versions {
-
-struct Version {
-  std::string_view name_sdl;
-  const char *name_pretty = nullptr;
-  void (*update)(Version &self) = nullptr;
-  std::array<char, 64> buf{};
-};
-
-void UpdateGpu(Version &self);
-void UpdateOpenGl(Version &self);
-
-class VersionCatalog {
-  static void SetName(Version &version, std::string_view name) {
-    std::ranges::copy(name, version.buf.begin());
-  }
-
-public:
-  VersionCatalog() noexcept {
-    versions_[0] = {
-        .name_sdl = "gpu", .name_pretty = nullptr, .update = UpdateGpu};
-    SetName(versions_[0], "GPU");
-    versions_[1] = {
-        .name_sdl = "opengl", .name_pretty = "OpenGL", .update = UpdateOpenGl};
-    SetName(versions_[1], "OpenGL ~2.1");
-    versions_[2] = {.name_sdl = "opengles2",
-                    .name_pretty = "OpenGL ES",
-                    .update = UpdateOpenGl};
-    SetName(versions_[2], "OpenGL ES ~2.0");
-  }
-
-  void Update(std::string_view driver_str) {
-    auto version = std::ranges::find(versions_, driver_str, &Version::name_sdl);
-    if (version == std::end(versions_)) {
-      return;
-    }
-    version->update(*version);
-  }
-
-  [[nodiscard]] std::string_view Label(std::string_view api) const {
-    for (const auto &version : versions_) {
-      if (version.name_sdl == api) {
-        return {version.buf.data()};
-      }
-    }
-    return {};
-  }
-
-private:
-  std::array<Version, 3> versions_;
-};
-
-} // namespace api_versions
-
-struct RendererState {
-  SDL_ScaleMode texture_scale_mode = SDL_SCALEMODE_NEAREST;
-  SDL_Renderer *primary_renderer = nullptr;
-  std::span<const SDL_PixelFormat> primary_formats;
-  SDL_Texture *primary_texture = nullptr;
-  SDL_Renderer *software_renderer = nullptr;
-  SDL_Surface *software_surface = nullptr;
-  SDL_Texture *software_texture = nullptr;
-  SDL_Renderer **renderer = &primary_renderer;
-  util::EnumArray<SDL_Texture *, SurfaceId> textures{};
-  api_versions::VersionCatalog versions;
-  Rgba color = {.r = 0, .g = 0, .b = 0, .a = 0xFF};
-  SDL_BlendMode alpha_mode = SDL_BLENDMODE_NONE;
-};
-
-RendererState &RenderState() {
-  static RendererState state;
-  return state;
-}
+gfx::RendererState &RenderState() { return gfx::ActiveGraphics().renderer; }
 
 } // namespace
 
@@ -181,14 +112,6 @@ SDL_Texture *TexturePostInit(SDL_Texture &tex, SDL_Renderer * /*renderer*/) {
   return &tex;
 }
 
-template <typename T> [[nodiscard]] T *SafeDestroy(void Destroy(T *), T *v) {
-  if (v) {
-    Destroy(v);
-    v = nullptr;
-  }
-  return v;
-}
-
 bool SetRenderTargetFor(const SDL_Renderer *renderer) {
   if (renderer == RenderState().software_renderer) {
     return SDL_SetRenderTarget(RenderState().primary_renderer, nullptr);
@@ -201,18 +124,18 @@ bool SetRenderTargetFor(const SDL_Renderer *renderer) {
   return true;
 }
 
-void SwitchActiveRenderer(SDL_Renderer **new_renderer) {
+void SwitchActiveRenderer(SDL_Renderer *new_renderer) {
   for (auto &tex : RenderState().textures) {
     if (tex == nullptr) {
       continue;
     }
     const auto *renderer = SDL_GetRendererFromTexture(tex);
-    if ((tex != nullptr) && (renderer == *RenderState().renderer)) {
-      tex = SafeDestroy(SDL_DestroyTexture, tex);
+    if ((renderer != nullptr) && (renderer == RenderState().active_renderer)) {
+      tex.Reset();
     }
   }
-  SetRenderTargetFor(*new_renderer);
-  RenderState().renderer = new_renderer;
+  SetRenderTargetFor(new_renderer);
+  RenderState().active_renderer = new_renderer;
 }
 
 std::optional<WindowFullscreenState>
@@ -250,8 +173,11 @@ constexpr std::array<std::pair<std::string_view, std::string_view>, 5>
         {"software", "Software"},
         {"vulkan", "Vulkan"},
     }};
+// --------------------------
 
-namespace api_versions {
+} // namespace
+
+namespace gfx::api_versions {
 void UpdateGpu(Version &self) {
   const auto props = SDL_GetRendererProperties(RenderState().primary_renderer);
   auto *gpu_device = static_cast<SDL_GPUDevice *>(SDL_GetPointerProperty(
@@ -277,13 +203,26 @@ void UpdateOpenGl(Version &self) {
   (void)std::snprintf(self.buf.data(), self.buf.size(), "%s %d.%d",
                       self.name_pretty, major, minor);
 }
-} // namespace api_versions
-// --------------------------
-
-} // namespace
+} // namespace gfx::api_versions
 
 /// Enumeration and pre-initialization queries
 /// ------------------------------------------
+
+int GraphicsRenderDriverCount() { return SDL_GetNumRenderDrivers(); }
+
+int GraphicsRenderDriverId(std::string_view driver) {
+  for (const auto id : std::views::iota(0, SDL_GetNumRenderDrivers())) {
+    if (GraphicsRenderDriverName(id) == driver) {
+      return id;
+    }
+  }
+  return -1;
+}
+
+std::string_view GraphicsRenderDriverName(int id) {
+  const auto *name = SDL_GetRenderDriver(id);
+  return name != nullptr ? std::string_view{name} : std::string_view{};
+}
 
 std::string_view GraphicsRenderDriverLabel(std::string_view api) {
   for (const auto &nice : kApiNiceNames) {
@@ -297,25 +236,6 @@ std::string_view GraphicsRenderDriverLabel(std::string_view api) {
   }
   return api;
 }
-
-PixelPoint SdlGraphicsDisplaySize(bool fullscreen) {
-  SDL_Rect rect{};
-  const auto display_i = SdlDisplayForWindow();
-  if (fullscreen) {
-    const auto *display_mode = SDL_GetDesktopDisplayMode(display_i);
-    if (display_mode == nullptr) {
-      logging::SdlError(kLogCat, "Error retrieving display size");
-      return kGameResolution;
-    }
-    return {.x = display_mode->w, .y = display_mode->h};
-  }
-
-  if (!SDL_GetDisplayUsableBounds(display_i, &rect)) {
-    logging::SdlError(kLogCat, "Error retrieving display size");
-    return kGameResolution;
-  }
-  return {.x = rect.w, .y = rect.h};
-}
 /// ------------------------------------------
 
 /// Initialization and cleanup
@@ -324,23 +244,20 @@ PixelPoint SdlGraphicsDisplaySize(bool fullscreen) {
 namespace {
 
 bool DestroySoftwareRenderer() {
-  RenderState().software_renderer =
-      SafeDestroy(SDL_DestroyRenderer, RenderState().software_renderer);
-  RenderState().software_texture =
-      SafeDestroy(SDL_DestroyTexture, RenderState().software_texture);
+  RenderState().software_renderer.Reset();
+  RenderState().software_texture.Reset();
   return false;
 }
 
 std::nullopt_t PrimaryCleanup() {
   for (auto &tex : RenderState().textures) {
-    tex = SafeDestroy(SDL_DestroyTexture, tex);
+    tex.Reset();
   }
-  RenderState().software_texture =
-      SafeDestroy(SDL_DestroyTexture, RenderState().software_texture);
-  RenderState().primary_texture =
-      SafeDestroy(SDL_DestroyTexture, RenderState().primary_texture);
-  RenderState().primary_renderer =
-      SafeDestroy(SDL_DestroyRenderer, RenderState().primary_renderer);
+  RenderState().software_texture.Reset();
+  RenderState().text_atlas.Reset();
+  RenderState().primary_texture.Reset();
+  RenderState().primary_renderer.Reset();
+  RenderState().active_renderer = nullptr;
 
   // On my system, switching from any Direct3D version to OpenGL sometimes
   // breaks rendering and freezes the window on the last frame rendered by
@@ -354,8 +271,7 @@ std::nullopt_t PrimaryCleanup() {
 // Returns the new `SCALE_GEOMETRY` flag.
 bool PrimarySetScale(bool geometry, const PixelPoint &scaled_res) {
   const auto set_geometry = [] {
-    RenderState().primary_texture =
-        SafeDestroy(SDL_DestroyTexture, RenderState().primary_texture);
+    RenderState().primary_texture.Reset();
     SDL_SetRenderLogicalPresentation(RenderState().primary_renderer,
                                      kGameResolution.x, kGameResolution.y,
                                      SDL_LOGICAL_PRESENTATION_STRETCH);
@@ -422,7 +338,7 @@ bool PrimarySetScale(bool geometry, const PixelPoint &scaled_res) {
   }
 
   // We might be software-rendering.
-  if (!SetRenderTargetFor(*RenderState().renderer)) {
+  if (!SetRenderTargetFor(RenderState().active_renderer)) {
     logging::SdlError(kLogCat, "Error setting texture as render target");
     return set_geometry();
   }
@@ -544,8 +460,6 @@ std::optional<GraphicsInitResult> PrimaryInitFull(GraphicsParams params) {
   if ((RenderState().software_surface == nullptr) ||
       (RenderState().software_surface->format != sdl_format)) {
     RenderState().software_surface =
-        SafeDestroy(SDL_DestroySurface, RenderState().software_surface);
-    RenderState().software_surface =
         SDL_CreateSurface(kGameResolution.x, kGameResolution.y, sdl_format);
     if (RenderState().software_surface == nullptr) {
       logging::SdlError(kLogCat,
@@ -554,7 +468,8 @@ std::optional<GraphicsInitResult> PrimaryInitFull(GraphicsParams params) {
     }
   }
 
-  const auto res_new = params.ScaledRes();
+  const auto res_new =
+      params.ScaledRes(SdlGraphicsDisplaySize(params.fullscreen));
   params.scale_geometry = PrimarySetScale(params.scale_geometry, res_new);
   PrimarySetBorderlessFullscreenFit(params, res_new);
 
@@ -634,7 +549,8 @@ SdlGraphicsInit(std::optional<const GraphicsParams> maybe_prev,
   PixelPoint res_prev{};
   SDL_GetWindowSize(window, &res_prev.x, &res_prev.y);
 
-  const auto res_new = params.ScaledRes();
+  const auto res_new =
+      params.ScaledRes(SdlGraphicsDisplaySize(params.fullscreen));
   const bool res_changed = (res_prev != res_new);
   if (res_changed && !requested_fullscreen.enabled) {
     PixelPoint topleft{};
@@ -668,8 +584,7 @@ SdlGraphicsInit(std::optional<const GraphicsParams> maybe_prev,
 void GraphicsCleanup() {
   PrimaryCleanup();
   DestroySoftwareRenderer();
-  RenderState().software_surface =
-      SafeDestroy(SDL_DestroySurface, RenderState().software_surface);
+  RenderState().software_surface.Reset();
 }
 /// --------------------------
 
@@ -677,16 +592,16 @@ void GraphicsCleanup() {
 /// -------
 
 void GraphicsClear(Rgb col) {
-  SDL_SetRenderDrawColor(*RenderState().renderer, col.r, col.g, col.b, 0xFF);
-  SDL_RenderClear(*RenderState().renderer);
+  SDL_SetRenderDrawColor(RenderState().active_renderer, col.r, col.g, col.b, 0xFF);
+  SDL_RenderClear(RenderState().active_renderer);
 }
 
 void GraphicsSetClip(const Rect &rect) {
-  if ((*RenderState().renderer) == nullptr) {
+  if ((RenderState().active_renderer) == nullptr) {
     return;
   }
   const auto sdl_rect = HelpRectTo<SDL_Rect>(rect);
-  SDL_SetRenderClipRect(*RenderState().renderer, &sdl_rect);
+  SDL_SetRenderClipRect(RenderState().active_renderer, &sdl_rect);
 }
 
 std::string_view GraphicsActiveRenderDriver() {
@@ -706,12 +621,12 @@ std::string_view GraphicsActiveRenderDriver() {
 namespace {
 
 void TakeScreenshot() {
-  SDL_FlushRenderer(*RenderState().renderer);
+  SDL_FlushRenderer(RenderState().active_renderer);
 
   if (RenderState().software_renderer != nullptr) {
     // Software rendering is the ideal case for screenshots, because we
     // already have a system-memory surface we can save.
-    GraphicsScreenshotSave(RenderState().software_surface);
+    image::ScreenshotSave(RenderState().software_surface);
     return;
   }
 
@@ -722,7 +637,7 @@ void TakeScreenshot() {
     return;
   }
   auto src_guard = util::MakeGuard(src, SDL_DestroySurface);
-  GraphicsScreenshotSave(src);
+  image::ScreenshotSave(src);
 }
 
 } // namespace
@@ -789,18 +704,18 @@ namespace {
 bool CreateTextureWithFormat(SurfaceId sid, SDL_PixelFormat fmt,
                              const PixelPoint &size) {
   auto &tex = RenderState().textures[sid];
-  tex = SafeDestroy(SDL_DestroyTexture, tex);
+  tex.Reset();
 
-  tex = SDL_CreateTexture(*RenderState().renderer, fmt,
+  tex = SDL_CreateTexture(RenderState().active_renderer, fmt,
                           SDL_TEXTUREACCESS_STREAMING, size.x, size.y);
   if (tex == nullptr) {
     logging::SdlError(kLogCat, "Error creating blank texture");
     return false;
   }
-  TexturePostInit(*tex, *RenderState().renderer);
+  TexturePostInit(*tex, RenderState().active_renderer);
   if (!SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND)) {
     logging::SdlError(kLogCat, "Error enabling alpha blending for texture");
-    tex = SafeDestroy(SDL_DestroyTexture, tex);
+    tex.Reset();
     return false;
   }
   return true;
@@ -814,7 +729,7 @@ bool GraphicsSurfaceCreateUninitialized(SurfaceId sid, const PixelPoint &size) {
 
 bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp) {
   auto &tex = RenderState().textures[sid];
-  tex = SafeDestroy(SDL_DestroyTexture, tex);
+  tex.Reset();
 
   auto *rwops = SDL_IOFromMem(bmp.buffer.data(), bmp.buffer.size());
   if (rwops == nullptr) {
@@ -842,35 +757,18 @@ bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp) {
     SDL_SetSurfaceColorKey(surf, true, key);
   }
 
-  tex = SDL_CreateTextureFromSurface(*RenderState().renderer, surf);
+  tex = SDL_CreateTextureFromSurface(RenderState().active_renderer, surf);
   if (tex == nullptr) {
     logging::SdlError(kLogCat, "Error loading .BMP as texture");
     return false;
   }
-  TexturePostInit(*tex, *RenderState().renderer);
+  TexturePostInit(*tex, RenderState().active_renderer);
   return true;
 }
 
-bool GraphicsSurfaceUpdate(
-    SurfaceId sid, const Rect *subrect,
-    std::tuple<const uint8_t *, size_t> pixels) noexcept {
-  const auto [buf, pitch] = pixels;
-  if (pitch > std::numeric_limits<int>::max()) {
-    logging::Critical(kLogCat, "Pitch of {} bytes does not fit into an integer",
-                      pitch);
-    return false;
-  }
+namespace {
 
-  auto *tex = RenderState().textures[sid];
-  if (subrect == nullptr) {
-    return SDL_UpdateTexture(tex, nullptr, buf, static_cast<int>(pitch));
-  }
-  const auto rect = HelpRectTo<SDL_Rect>(*subrect);
-  return SDL_UpdateTexture(tex, &rect, buf, static_cast<int>(pitch));
-}
-
-PixelPoint GraphicsSurfaceSize(SurfaceId sid) {
-  auto *tex = RenderState().textures[sid];
+PixelPoint TextureSize(SDL_Texture *tex) {
   if (tex == nullptr) {
     return {.x = 0, .y = 0};
   }
@@ -885,8 +783,22 @@ PixelPoint GraphicsSurfaceSize(SurfaceId sid) {
   };
 }
 
-bool GraphicsSurfaceBlit(PixelPoint topleft, SurfaceId sid, const Rect &src) {
-  auto *const tex = RenderState().textures[sid];
+bool UpdateTexture(SDL_Texture *tex, const Rect *subrect,
+                   std::tuple<const uint8_t *, size_t> pixels) noexcept {
+  const auto [buf, pitch] = pixels;
+  if (pitch > std::numeric_limits<int>::max()) {
+    logging::Critical(kLogCat, "Pitch of {} bytes does not fit into an integer",
+                      pitch);
+    return false;
+  }
+  if (subrect == nullptr) {
+    return SDL_UpdateTexture(tex, nullptr, buf, static_cast<int>(pitch));
+  }
+  const auto rect = HelpRectTo<SDL_Rect>(*subrect);
+  return SDL_UpdateTexture(tex, &rect, buf, static_cast<int>(pitch));
+}
+
+bool BlitTexture(SDL_Texture *tex, PixelPoint topleft, const Rect &src) {
   const auto rect_src = HelpRectTo<SDL_FRect>(src);
   const SDL_FRect rect_dst = {
       .x = static_cast<float>(topleft.x),
@@ -894,12 +806,59 @@ bool GraphicsSurfaceBlit(PixelPoint topleft, SurfaceId sid, const Rect &src) {
       .w = static_cast<float>(rect_src.w),
       .h = static_cast<float>(rect_src.h),
   };
-  return SDL_RenderTexture(*RenderState().renderer, tex, &rect_src, &rect_dst);
+  return SDL_RenderTexture(RenderState().active_renderer, tex, &rect_src,
+                           &rect_dst);
+}
+
+} // namespace
+
+bool GraphicsSurfaceUpdate(
+    SurfaceId sid, const Rect *subrect,
+    std::tuple<const uint8_t *, size_t> pixels) noexcept {
+  return UpdateTexture(RenderState().textures[sid].get(), subrect, pixels);
+}
+
+PixelPoint GraphicsSurfaceSize(SurfaceId sid) {
+  return TextureSize(RenderState().textures[sid].get());
+}
+
+bool GraphicsSurfaceBlit(PixelPoint topleft, SurfaceId sid, const Rect &src) {
+  return BlitTexture(RenderState().textures[sid].get(), topleft, src);
+}
+
+PixelPoint SdlTextTextureSize() { return TextureSize(RenderState().text_atlas); }
+
+bool SdlTextTexturePrepare(PixelPoint size) {
+  auto &tex = RenderState().text_atlas;
+  tex.Reset();
+  tex = SDL_CreateTexture(RenderState().active_renderer,
+                          SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                          size.x, size.y);
+  if (tex == nullptr) {
+    logging::SdlError(kLogCat, "Error creating text atlas texture");
+    return false;
+  }
+  TexturePostInit(*tex, RenderState().active_renderer);
+  if (!SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND)) {
+    logging::SdlError(kLogCat, "Error enabling alpha blending for text texture");
+    tex.Reset();
+    return false;
+  }
+  return true;
+}
+
+bool SdlTextTextureUpdate(const Rect *subrect,
+                          std::tuple<const uint8_t *, size_t> pixels) noexcept {
+  return UpdateTexture(RenderState().text_atlas, subrect, pixels);
+}
+
+bool SdlTextTextureBlit(PixelPoint topleft, const Rect &src) {
+  return BlitTexture(RenderState().text_atlas, topleft, src);
 }
 
 void GraphicsSurfaceBlitOpaque(PixelPoint topleft, SurfaceId sid,
                                const Rect &src) {
-  auto *tex = RenderState().textures[sid];
+  auto *tex = RenderState().textures[sid].get();
   SDL_BlendMode prev{};
   SDL_GetTextureBlendMode(tex, &prev);
   SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_NONE);
@@ -952,7 +911,7 @@ void DrawGeometry(TrianglePrimitive tp, VertexXySpan<> xys,
   // Work around SDL's weird -0.5f offset...
   float offset_x = NAN;
   float offset_y = NAN;
-  SDL_GetRenderScale(*RenderState().renderer, &offset_x, &offset_y);
+  SDL_GetRenderScale(RenderState().active_renderer, &offset_x, &offset_y);
   offset_x = (1.0F / (2.0F * offset_x));
   offset_y = (1.0F / (2.0F * offset_y));
   auto *sdl = sdl_vertices.data();
@@ -961,20 +920,20 @@ void DrawGeometry(TrianglePrimitive tp, VertexXySpan<> xys,
   }
 
   SDL_RenderGeometryRaw(
-      *RenderState().renderer, nullptr, &sdl_vertices[0].x, sizeof(SDL_FPoint),
+      RenderState().active_renderer, nullptr, &sdl_vertices[0].x, sizeof(SDL_FPoint),
       sdl_colors.data(), ((colors.size() == 1) ? 0 : sizeof(SdlColor)), nullptr,
       0, vertex_count, indices.data(), index_count, sizeof(IndexType));
 }
 
 void DrawWithAlpha(auto func) {
-  SDL_SetRenderDrawBlendMode(*RenderState().renderer, RenderState().alpha_mode);
-  SDL_SetRenderDrawColor(*RenderState().renderer, RenderState().color.r,
+  SDL_SetRenderDrawBlendMode(RenderState().active_renderer, RenderState().alpha_mode);
+  SDL_SetRenderDrawColor(RenderState().active_renderer, RenderState().color.r,
                          RenderState().color.g, RenderState().color.b,
                          RenderState().color.a);
   func();
-  SDL_SetRenderDrawColor(*RenderState().renderer, RenderState().color.r,
+  SDL_SetRenderDrawColor(RenderState().active_renderer, RenderState().color.r,
                          RenderState().color.g, RenderState().color.b, 0xFF);
-  SDL_SetRenderDrawBlendMode(*RenderState().renderer, SDL_BLENDMODE_NONE);
+  SDL_SetRenderDrawBlendMode(RenderState().active_renderer, SDL_BLENDMODE_NONE);
 }
 
 } // namespace
@@ -984,7 +943,7 @@ void geometry::SetColor(Rgb216 col) {
   RenderState().color.r = rgb.r;
   RenderState().color.g = rgb.g;
   RenderState().color.b = rgb.b;
-  SDL_SetRenderDrawColor(*RenderState().renderer, RenderState().color.r,
+  SDL_SetRenderDrawColor(RenderState().active_renderer, RenderState().color.r,
                          RenderState().color.g, RenderState().color.b, 0xFF);
 }
 
@@ -999,7 +958,7 @@ void geometry::SetAlphaOne() {
 }
 
 void geometry::DrawLine(int x1, int y1, int x2, int y2) {
-  SDL_RenderLine(*RenderState().renderer, x1, y1, x2, y2);
+  SDL_RenderLine(RenderState().active_renderer, x1, y1, x2, y2);
 }
 
 void geometry::DrawBox(int x1, int y1, int x2, int y2) {
@@ -1009,7 +968,7 @@ void geometry::DrawBox(int x1, int y1, int x2, int y2) {
       .w = static_cast<float>(x2 - x1),
       .h = static_cast<float>(y2 - y1),
   };
-  SDL_RenderFillRect(*RenderState().renderer, &rect);
+  SDL_RenderFillRect(RenderState().active_renderer, &rect);
 }
 
 void geometry::DrawBoxA(int x1, int y1, int x2, int y2) {
@@ -1026,7 +985,7 @@ void geometry::DrawLineStrip(VertexXySpan<> xys) {
   std::ranges::transform(xys, points.begin(), [](const auto &point) {
     return SDL_FPoint{.x = point.x, .y = point.y};
   });
-  SDL_RenderLines(*RenderState().renderer, points.data(), xys.size());
+  SDL_RenderLines(RenderState().active_renderer, points.data(), xys.size());
 }
 
 void geometry::DrawTriangles(TrianglePrimitive tp, VertexXySpan<> xys,
@@ -1103,7 +1062,7 @@ bool GraphicsPixelAccessStart() {
     logging::SdlError(kLogCat, "Error creating software renderer");
     return DestroySoftwareRenderer();
   }
-  SwitchActiveRenderer(&RenderState().software_renderer);
+  SwitchActiveRenderer(RenderState().software_renderer.get());
   return (EnsureSoftwareTexture() != nullptr);
 }
 
@@ -1111,7 +1070,7 @@ bool GraphicsPixelAccessEnd() {
   if (RenderState().software_renderer == nullptr) {
     return true;
   }
-  SwitchActiveRenderer(&RenderState().primary_renderer);
+  SwitchActiveRenderer(RenderState().primary_renderer.get());
   DestroySoftwareRenderer();
   return true;
 }

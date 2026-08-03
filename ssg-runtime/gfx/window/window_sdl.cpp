@@ -6,6 +6,7 @@
 #include <functional>
 #include <optional>
 #include <ranges>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -23,37 +24,31 @@
 
 #include "gfx/core/constants.h"
 #include "gfx/graphics.h"
+#include "gfx/graphics_system.h"
 #include "sys/log.h"
+#include "util/sdl_resource.h"
 
 constexpr auto kLogCat = logging::Channel::Graphics;
 
-int GraphicsRenderDriverCount() { return SDL_GetNumRenderDrivers(); }
+// At least on Windows, SDL 3's default graphics API (Direct3D 11) also appears
+// to be the most performant choice:
+//
+// 	https://rec98.nmlgc.net/blog/2025-04-09#sdl3-2025-04-09
+//
+// Hence, Windows builds also get pixel-perfect line rendering compared to
+// pbg's original build by default:
+//
+// 	https://rec98.nmlgc.net/blog/2024-10-22#lines-2024-10-22
+constexpr const char *kSdlDefaultApi = nullptr;
 
-int GraphicsRenderDriverId(std::string_view driver) {
-  for (const auto id : std::views::iota(0, SDL_GetNumRenderDrivers())) {
-    if (GraphicsRenderDriverName(id) == driver) {
-      return id;
-    }
-  }
-  return -1;
-}
+namespace {
 
-std::string_view GraphicsRenderDriverName(int id) {
+std::string_view SdlRawRenderDriverName(int id) {
   const auto *name = SDL_GetRenderDriver(id);
   return name != nullptr ? std::string_view{name} : std::string_view{};
 }
 
-namespace {
-
-struct WindowState {
-  SDL_Window *window = nullptr;
-  std::optional<std::pair<int, int>> topleft_before_fullscreen;
-};
-
-WindowState &State() {
-  static WindowState state;
-  return state;
-}
+gfx::WindowState &State() { return gfx::ActiveGraphics().window; }
 
 } // namespace
 
@@ -77,6 +72,25 @@ SDL_DisplayID SdlDisplayForWindow() {
     return SDL_GetPrimaryDisplay();
   }
   return ret;
+}
+
+PixelPoint SdlGraphicsDisplaySize(bool fullscreen) {
+  SDL_Rect rect{};
+  const auto display_i = SdlDisplayForWindow();
+  if (fullscreen) {
+    const auto *display_mode = SDL_GetDesktopDisplayMode(display_i);
+    if (display_mode == nullptr) {
+      logging::SdlError(kLogCat, "Error retrieving display size");
+      return kGameResolution;
+    }
+    return {.x = display_mode->w, .y = display_mode->h};
+  }
+
+  if (!SDL_GetDisplayUsableBounds(display_i, &rect)) {
+    logging::SdlError(kLogCat, "Error retrieving display size");
+    return kGameResolution;
+  }
+  return {.x = rect.w, .y = rect.h};
 }
 
 // Don't do a ZUN.
@@ -150,13 +164,14 @@ SdlSetFullscreen(SDL_Window *window, WindowFullscreenState state) {
 }
 
 int SdlValidateRenderDriver(std::string_view hint) {
-  const auto id = GraphicsRenderDriverId(hint);
-  if (id >= 0) {
-    return id;
+  for (const auto id : std::views::iota(0, SDL_GetNumRenderDrivers())) {
+    if (SdlRawRenderDriverName(id) == hint) {
+      return id;
+    }
   }
   const auto *default_driver =
       ((kSdlDefaultApi != nullptr) ? kSdlDefaultApi
-                                   : GraphicsRenderDriverName(0).data());
+                                   : SdlRawRenderDriverName(0).data());
   logging::Warning(
       kLogCat,
       "Unsupported renderer \"{}\" specified in " SDL_HINT_RENDER_DRIVER
@@ -174,7 +189,7 @@ int SdlValidateRenderDriver(std::string_view hint) {
 std::string_view SdlRenderDriverName(int id) {
   const auto driver_count = SDL_GetNumRenderDrivers();
   if (id >= 0 && id < driver_count) {
-    return GraphicsRenderDriverName(id);
+    return SdlRawRenderDriverName(id);
   }
   if (id >= 0) {
     logging::Warning(
@@ -188,16 +203,16 @@ std::string_view SdlRenderDriverName(int id) {
   }
   if ((hint == nullptr) || (hint[0] == '\0')) {
     // SDL tries to initialize drivers in order.
-    return GraphicsRenderDriverName(0);
+    return SdlRawRenderDriverName(0);
   }
   id = SdlValidateRenderDriver(hint);
   if (id < 0) {
     if constexpr (kSdlDefaultApi != nullptr) {
       return kSdlDefaultApi;
     }
-    return GraphicsRenderDriverName(0);
+    return SdlRawRenderDriverName(0);
   }
-  return GraphicsRenderDriverName(id);
+  return SdlRawRenderDriverName(id);
 }
 
 SDL_Window *SdlWindow() { return State().window; }
@@ -273,7 +288,7 @@ std::optional<GraphicsParams> SdlWindowCreate(GraphicsParams params) {
     return ((pos == kGraphicsTopleftUndefined) ? SDL_WINDOWPOS_CENTERED : pos);
   };
 
-  const auto res = params.ScaledRes();
+  const auto res = params.ScaledRes(SdlGraphicsDisplaySize(params.fullscreen));
   const WindowFullscreenState fullscreen = {
       .enabled = params.fullscreen,
       .exclusive = params.exclusive_fullscreen,
@@ -309,8 +324,7 @@ std::optional<GraphicsParams> SdlWindowCreate(GraphicsParams params) {
   }
   const auto maybe_fs_actual = SdlSetFullscreen(State().window, fullscreen);
   if (!maybe_fs_actual) {
-    SDL_DestroyWindow(State().window);
-    State().window = nullptr;
+    State().window.Reset();
     return std::nullopt;
   }
   const auto actual = *maybe_fs_actual;
@@ -320,12 +334,7 @@ std::optional<GraphicsParams> SdlWindowCreate(GraphicsParams params) {
   return params;
 }
 
-void SdlWindowCleanup() {
-  if (State().window != nullptr) {
-    SDL_DestroyWindow(State().window);
-    State().window = nullptr;
-  }
-}
+void SdlWindowCleanup() { State().window.Reset(); }
 
 std::optional<std::pair<int, int>> WindowPosition() {
   // A fullscreen window is always positioned at (0, 0), and we don't want to

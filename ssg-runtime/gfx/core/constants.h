@@ -24,16 +24,8 @@ constexpr auto kMaxTriangles = 66;
 // Yup, the game is supposed to be running at 62.5 FPS.
 constexpr auto kFrameTimeTarget = 16;
 
-// At least on Windows, SDL 3's default graphics API (Direct3D 11) also appears
-// to be the most performant choice:
-//
-// 	https://rec98.nmlgc.net/blog/2025-04-09#sdl3-2025-04-09
-//
-// Hence, Windows builds also get pixel-perfect line rendering compared to
-// pbg's original build by default:
-//
-// 	https://rec98.nmlgc.net/blog/2024-10-22#lines-2024-10-22
-constexpr const char *kSdlDefaultApi = nullptr;
+// 0 = BMP, 10 = max-effort WebP.
+constexpr int kScreenshotEffortMax = 10;
 
 // Surface layer IDs for the blitting pipeline
 enum class SurfaceId : uint8_t {
@@ -61,12 +53,7 @@ enum class SurfaceId : uint8_t {
   EndingCredits = 1,
   EndingPicture = 2,
 
-  // Rendered text. Since this one is procedurally generated and therefore
-  // doesn't have a palette, it must come last to ensure that DirectDraw
-  // initializes it with the implicit palette loaded for an earlier surface.
-  Text = 8,
-
-  Count = 9,
+  Count = 8,
 };
 
 // Font IDs for text rendering
