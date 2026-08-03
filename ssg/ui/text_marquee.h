@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include "gfx/text.h"
+#include "gfx/text/text.h"
 
 namespace ui {
 

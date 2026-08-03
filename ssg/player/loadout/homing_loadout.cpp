@@ -9,7 +9,7 @@
 #include "player_loadout.h"
 
 #include "enemy/enemy_manager.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "player/player.h"
 #include "player/player_shot.h"
 #include "util/math_utils.h"
@@ -58,7 +58,7 @@ void HomingLoadout::FireMainNormal(Player &player_, int tier) {
                                  .direction_step = 0,
                                  .count = 1,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
@@ -70,7 +70,7 @@ void HomingLoadout::FireMainNormal(Player &player_, int tier) {
                            .direction_step = 0,
                            .count = 1,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     si.x += 12_px;
@@ -85,7 +85,7 @@ void HomingLoadout::FireMainNormal(Player &player_, int tier) {
                                  .direction_step = 7,
                                  .count = 3,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
@@ -97,7 +97,7 @@ void HomingLoadout::FireMainNormal(Player &player_, int tier) {
                                  .direction_step = 7,
                                  .count = 5,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::HomingMain};
     player_.SpawnShot(si);
     break;
@@ -114,7 +114,7 @@ void HomingLoadout::FireSubNormal(Player &player_, int tier) {
   si.motion = PlayerShotMotion::Homing;
   si.turn_rate = 5;
   si.speed = 7_px;
-  si.acceleration = 4;
+  si.acceleration = WorldCoord::FromRaw(4);
   si.kind = PlayerShotKind::HomingSub;
 
   si.x = player_.OpX() + PixelToWorld(OptionOffset(false));
@@ -142,8 +142,7 @@ void HomingLoadout::FireSubNormal(Player &player_, int tier) {
 }
 
 void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
-                               EffectManager & /*effects*/,
-                               int remaining) {
+                               EffectManager & /*effects*/, int remaining) {
   if (remaining % 30 == 1) {
     PlayerShotSpawnInfo const si{
         .x = player_.X(),
@@ -152,7 +151,7 @@ void HomingLoadout::UpdateBomb(Player &player_, EnemyManager & /*enemies*/,
         .direction_step = 16,
         .count = 8,
         .speed = 7_px,
-        .acceleration = 4,
+        .acceleration = WorldCoord::FromRaw(4),
         .kind = PlayerShotKind::HomingBomb,
         .motion = PlayerShotMotion::Homing,
         .turn_rate = 5,
@@ -170,7 +169,7 @@ void HomingLoadout::FireMainFocused(Player &player_, int tier) {
   } else if (tier > 4) {
     count = 4;
   }
-  const int spread = (count - 1) * 12_px;
+  const WorldCoord spread = (count - 1) * 12_px;
 
   PlayerShotSpawnInfo si{.x = player_.X() - spread / 2,
                          .y = player_.Y(),
@@ -178,7 +177,7 @@ void HomingLoadout::FireMainFocused(Player &player_, int tier) {
                          .direction_step = 0,
                          .count = 1,
                          .speed = 13.5_px,
-                         .acceleration = 0,
+                         .acceleration = {},
                          .kind = PlayerShotKind::HomingFocusMain};
   for (int i = 0; i < count; i++) {
     player_.SpawnShot(si);
@@ -197,7 +196,7 @@ void HomingLoadout::FireSubFocused(Player &player_, int tier) {
                          .direction_step = 0,
                          .count = 1,
                          .speed = 13.5_px,
-                         .acceleration = 0,
+                         .acceleration = {},
                          .kind = PlayerShotKind::HomingFocusSub};
   player_.SpawnShot(si);
 

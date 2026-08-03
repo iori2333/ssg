@@ -9,6 +9,7 @@
 #include <cstdint>
 
 #include "bullet/bullet_common.h"
+#include "gfx/core/coords.h"
 
 namespace audio {
 class AudioSystem;
@@ -21,7 +22,7 @@ enum class HomingType : uint8_t {
 
 // ── Spawn parameter struct ─────────────────────────────────────
 struct HomingSpawnInfo {
-  int x{}, y{};
+  WorldCoord x{}, y{};
   float angle{};
   int dw{};
   int n{};
@@ -43,7 +44,7 @@ enum class HomingState : uint8_t {
 };
 
 struct HomingUpdateInfo {
-  int player_x, player_y;
+  WorldCoord player_x, player_y;
 };
 
 // ── LaserHoming ─────────────────────────────────────────────────
@@ -55,7 +56,8 @@ struct LaserHoming {
   [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const HomingSpawnInfo &info);
-  [[nodiscard]] HitResult CheckHit(int px, int py, int player_radius) const;
+  [[nodiscard]] HitResult CheckHit(WorldCoord px, WorldCoord py,
+                                   WorldCoord player_radius) const;
   void Update(audio::AudioSystem &audio, const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
@@ -74,7 +76,7 @@ private:
   float a_{};
   uint8_t left_{};
   std::array<TrailPoint,
-             static_cast<size_t>(kHomingTrailLength * kHomingSection)>
+             static_cast<size_t>(kHomingTrailLength *kHomingSection)>
       p_{};
 
   HomingType subtype_{HomingType::None};

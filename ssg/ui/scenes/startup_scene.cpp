@@ -11,11 +11,10 @@
 #include "startup_scene.h"
 
 #include "data/graphics_loader.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/render/geometry.h"
 #include "util/math_utils.h"
 
 StartupScene::Lens StartupScene::Lens::Create(int radius, int bulge) {
@@ -33,8 +32,7 @@ StartupScene::Lens StartupScene::Lens::Create(int radius, int bulge) {
     return static_cast<int>(std::lround(std::sqrt(value)));
   };
   const auto radius_squared = radius * radius;
-  const auto sphere_radius =
-      rounded_sqrt(radius_squared - bulge * bulge);
+  const auto sphere_radius = rounded_sqrt(radius_squared - bulge * bulge);
   for (auto row = -radius; row < radius; ++row) {
     auto half_width = sphere_radius * sphere_radius - row * row;
     int width = 0;
@@ -42,8 +40,8 @@ StartupScene::Lens StartupScene::Lens::Create(int radius, int bulge) {
       half_width = rounded_sqrt(half_width);
       width = half_width * 2;
       *table++ = static_cast<std::size_t>(width);
-      *table++ = static_cast<std::size_t>((radius - half_width) *
-                                          sizeof(uint32_t));
+      *table++ =
+          static_cast<std::size_t>((radius - half_width) * sizeof(uint32_t));
     } else {
       half_width = 0;
       *table++ = 0;
@@ -62,15 +60,15 @@ StartupScene::Lens StartupScene::Lens::Create(int radius, int bulge) {
   return lens;
 }
 
-void StartupScene::Lens::Draw(WindowPoint center) {
-  const WindowCoord left = center.x - radius;
-  const WindowCoord top = center.y - radius;
-  if (left < 0 || top < 0 || left + diameter > kGameResolution.w - 1 ||
-      top + diameter > kGameResolution.h - 1) {
+void StartupScene::Lens::Draw(PixelPoint center) {
+  const int left = center.x - radius;
+  const int top = center.y - radius;
+  if (left < 0 || top < 0 || left + diameter > kGameResolution.x - 1 ||
+      top + diameter > kGameResolution.y - 1) {
     return;
   }
 
-  GraphicsBackendPixelAccessEdit([&](uint8_t *pixels, std::size_t pitch) {
+  (void)GraphicsPixelAccessEdit([&](uint8_t *pixels, std::size_t pitch) {
     using Pixel = uint32_t;
     auto *captured = reinterpret_cast<Pixel *>(field_of_view.data());
     const std::span field{captured,
@@ -96,7 +94,9 @@ void StartupScene::Lens::Draw(WindowPoint center) {
 }
 
 bool StartupScene::Enter() {
-  GraphicsBackendPixelAccessStart();
+  if (!GraphicsPixelAccessStart()) {
+    return false;
+  }
   if (!graphics_.LoadProjectScreen()) {
     return false;
   }
@@ -106,9 +106,9 @@ bool StartupScene::Enter() {
 }
 
 StartupSceneResult StartupScene::Update(bool should_draw) {
-  constexpr PixelSize logo_size = {.w = 320, .h = 42};
-  constexpr WindowLtrb logo = WindowLtwh{(320 - (logo_size.w / 2)), (240 + 40),
-                                         logo_size.w, logo_size.h};
+  constexpr PixelPoint logo_size = {.x = 320, .y = 42};
+  constexpr Rect logo = Rect::FromLtwh((320 - (logo_size.x / 2)), (240 + 40),
+                                       logo_size.x, logo_size.y);
 
   timer_++;
   if (timer_ >= 256) {
@@ -119,8 +119,8 @@ StartupSceneResult StartupScene::Update(bool should_draw) {
     return StartupSceneResult::Running;
   }
 
-  GraphicsBackendClear();
-  constexpr PixelLtrb source = {0, 0, logo_size.w, logo_size.h};
+  GraphicsClear();
+  constexpr Rect source = {0, 0, logo_size.x, logo_size.y};
   GraphicsSurfaceBlit({logo.left, logo.top}, SurfaceId::Project, source);
 
   const auto fade = [logo](uint8_t black_alpha) {

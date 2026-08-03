@@ -10,7 +10,7 @@
 #include "game_data.h"
 
 #include "gameplay/game_rules.h"
-#include "gfx/constants.h"
+#include "gfx/core/constants.h"
 
 namespace data {
 

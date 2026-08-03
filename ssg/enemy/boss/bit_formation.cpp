@@ -19,7 +19,8 @@
 #include "enemy/actor/enemy_actor.h"
 #include "enemy/ecl/ecl.h"
 #include "enemy/enemy_manager.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 #include "player/player.h"
 #include "util/math_utils.h"
 
@@ -27,13 +28,13 @@ static constexpr auto kBitVirtualHp = 990000;
 
 // Initialize bit array
 void BitFormation::Reset() {
-  center_x_ = 0;
-  center_y_ = 0;
+  center_x_ = {};
+  center_y_ = {};
   base_angle_ = 0;
-  radius_ = 0;
-  target_radius_ = 0;
-  speed_ = 0;
-  acceleration_ = 0;
+  radius_ = {};
+  target_radius_ = {};
+  speed_ = {};
+  acceleration_ = {};
   direction_ = 64;
   rotation_speed_ = 0;
   count_ = 0;
@@ -73,14 +74,14 @@ void BitFormation::Spawn(BossActor &parent, int count, uint32_t script_id) {
   center_x_ = parent.x;
   center_y_ = parent.y;
 
-  radius_ = 0;
+  radius_ = {};
   target_radius_ = 80_px;
   count_ = count;
   rotation_speed_ = (((math::RandomInt() >> 1) & 1) != 0) ? 2 : -2;
   base_angle_ = 0;
   laser_pattern_ = LaserPattern::Disabled;
   laser_active_ = false;
-  const WorldPoint position{&center_x_, &center_y_};
+  const WorldPoint position{center_x_, center_y_};
   for (i = 0; i < count; i++) {
     if (auto *e = enemies_.SpawnRegular(position, script_id)) {
       e->hp = kBitVirtualHp;
@@ -267,10 +268,10 @@ void BitFormation::UpdateRadius() {
 // Basic bit rotation processing
 void BitFormation::UpdateRotation() {
   int i = 0;
-  int ox = 0;
-  int oy = 0;
+  WorldCoord ox{};
+  WorldCoord oy{};
   int n = 0;
-  int l = 0;
+  WorldCoord l{};
 
   int dir = 0;
   uint8_t LaserDeg = 0;
@@ -441,10 +442,8 @@ BitLinkGeometry BitFormation::LinkGeometry() const {
     const auto next = index + (actor_count >= 5 ? 2 : 1);
     geometry.links[geometry.count++] = {
         .from =
-            WorldPoint::FromWorld(references[index]->x, references[index]->y)
-                .ToPixel(),
-        .to = WorldPoint::FromWorld(references[next]->x, references[next]->y)
-                  .ToPixel(),
+            WorldPoint{references[index]->x, references[index]->y}.ToPixel(),
+        .to = WorldPoint{references[next]->x, references[next]->y}.ToPixel(),
     };
   }
   return geometry;
@@ -479,8 +478,8 @@ void BitFormation::LaserCommand(EclBitLaserCommand command) {
 
     LongLaserSpawnInfo info{
         .enemy = e,
-        .dx = 0,
-        .dy = 0,
+        .dx = {},
+        .dy = {},
         .v = 1_px,
         .w = 8_px,
         .angle = math::AngleFromLegacy(e->d),
@@ -571,15 +570,14 @@ void BitFormation::Command(EclBitCommand command, int param) {
     break;
 
   case EclBitCommand::ChangeRadius:
-    target_radius_ = param;
+    target_radius_ = WorldCoord::FromRaw(param);
     break;
 
   case EclBitCommand::MoveTowardPlayer:
     speed_ = 10_px;
-    acceleration_ = -8;
-    direction_ = math::AngleToLegacy(
-        math::AngleTo(static_cast<float>(player_.X() - center_x_),
-                      static_cast<float>(player_.Y() - center_y_)));
+    acceleration_ = WorldCoord::FromRaw(-8);
+    direction_ = math::AngleToLegacy(math::AngleTo(
+        WorldPoint{player_.X() - center_x_, player_.Y() - center_y_}));
     motion_ = MotionState::MoveTowardPlayer;
     break;
 

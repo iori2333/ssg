@@ -12,9 +12,9 @@
 #include "graphics_loader.h"
 
 #include "gameplay/game_rules.h"
-#include "gfx/constants.h"
-#include "gfx/format_bmp.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/graphics.h"
+#include "gfx/image/format_bmp.h"
 
 namespace data {
 

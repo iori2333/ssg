@@ -7,7 +7,7 @@
 #include <optional>
 #include <vector>
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 
 namespace data {
 class GraphicsLoader;
@@ -25,7 +25,7 @@ public:
 private:
   struct Lens {
     [[nodiscard]] static Lens Create(int radius, int bulge);
-    void Draw(WindowPoint center);
+    void Draw(PixelPoint center);
 
     int radius;
     int diameter;

@@ -5,10 +5,11 @@
 #include "effect_manager.h"
 #include "effect_types.h"
 
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
+#include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 #include "util/math_utils.h"
 
 void EffectManager::ResetFragments() {
@@ -18,16 +19,17 @@ void EffectManager::ResetFragments() {
   next_fragment_ = 0;
 }
 
-void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
+void EffectManager::SpawnFragment(WorldCoord x, WorldCoord y,
+                                  FragmentKind kind) {
   auto &fragment = fragments_[next_fragment_];
   fragment = {.x = x, .y = y, .kind = kind};
 
   float angle = 0.0F;
-  int speed = 0;
+  WorldCoord speed{};
   switch (kind) {
   case FragmentKind::Hit:
     angle = math::RandomAngle();
-    speed = 1_px + math::RandomInt() % 3_px;
+    speed = 1_px + math::RandomWorldBelow(3_px);
     fragment.remaining = 24;
     {
       const auto velocity = math::RoundedPolarVector(angle, speed);
@@ -37,7 +39,7 @@ void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
     break;
   case FragmentKind::Graze:
     angle = math::RandomAngle();
-    speed = 4_px + math::RandomInt() % 3_px;
+    speed = 4_px + math::RandomWorldBelow(3_px);
     fragment.remaining = 24;
     {
       const auto velocity = math::RoundedPolarVector(angle, speed);
@@ -50,7 +52,7 @@ void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
     break;
   case FragmentKind::SmallStar:
     angle = math::RandomAngle();
-    speed = 5_px + math::RandomInt() % 3_px;
+    speed = 5_px + math::RandomWorldBelow(3_px);
     fragment.remaining = 64;
     {
       const auto velocity = math::RoundedPolarVector(angle, speed);
@@ -60,7 +62,7 @@ void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
     break;
   case FragmentKind::LargeStar:
     angle = math::RandomAngle();
-    speed = 4_px + math::RandomInt() % 3_px;
+    speed = 4_px + math::RandomWorldBelow(3_px);
     fragment.remaining = 64;
     {
       const auto velocity = math::RoundedPolarVector(angle, speed);
@@ -71,7 +73,7 @@ void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
   case FragmentKind::RisingStar:
     angle = static_cast<float>(-112 + math::RandomInt() % 96) *
             math::kLegacyAngleStep;
-    speed = 6_px + math::RandomInt() % 4_px;
+    speed = 6_px + math::RandomWorldBelow(4_px);
     fragment.remaining = 64;
     {
       const auto velocity = math::RoundedPolarVector(angle, speed);
@@ -81,7 +83,7 @@ void EffectManager::SpawnFragment(int x, int y, FragmentKind kind) {
     break;
   case FragmentKind::Heart:
     angle = math::RandomAngle();
-    speed = 2_px + math::RandomInt() % 5_px;
+    speed = 2_px + math::RandomWorldBelow(5_px);
     fragment.remaining = 105;
     {
       const auto velocity = math::RoundedPolarVector(angle, speed);
@@ -114,36 +116,36 @@ void EffectManager::DrawFragments() const {
       continue;
     }
 
-    const int x = fragment.x >> 6;
-    const int y = fragment.y >> 6;
+    const int x = fragment.x.ToPixels();
+    const int y = fragment.y.ToPixels();
     switch (fragment.kind) {
     case FragmentKind::Graze:
       GraphicsSurfaceBlit(
           {x - 4, y - 4}, SurfaceId::System,
-          PixelLtwh{592 + ((24 - fragment.remaining) >> 2) * 8, 8, 8, 8});
+          Rect::FromLtwh(592 + ((24 - fragment.remaining) >> 2) * 8, 8, 8, 8));
       break;
     case FragmentKind::Hit:
       GraphicsSurfaceBlit(
           {x - 4, y - 4}, SurfaceId::System,
-          PixelLtwh{592 + ((24 - fragment.remaining) >> 2) * 8, 16, 8, 8});
+          Rect::FromLtwh(592 + ((24 - fragment.remaining) >> 2) * 8, 16, 8, 8));
       break;
     case FragmentKind::Smoke:
       GraphicsSurfaceBlit(
           {x - 4, y - 4}, SurfaceId::System,
-          PixelLtwh{592 + ((24 - fragment.remaining) >> 2) * 8, 0, 8, 8});
+          Rect::FromLtwh(592 + ((24 - fragment.remaining) >> 2) * 8, 0, 8, 8));
       break;
     case FragmentKind::SmallStar:
       GraphicsSurfaceBlit({x - 8, y - 8}, SurfaceId::System,
-                          PixelLtwh{624, 432, 16, 16});
+                          Rect::FromLtwh(624, 432, 16, 16));
       break;
     case FragmentKind::LargeStar:
     case FragmentKind::RisingStar:
       GraphicsSurfaceBlit({x - 16, y - 16}, SurfaceId::System,
-                          PixelLtwh{608, 448, 32, 32});
+                          Rect::FromLtwh(608, 448, 32, 32));
       break;
     case FragmentKind::Heart:
       GraphicsSurfaceBlit({x - 16, y - 16}, SurfaceId::System,
-                          PixelLtwh{576, 448, 32, 32});
+                          Rect::FromLtwh(576, 448, 32, 32));
       break;
     case FragmentKind::ExpandingCircle:
       geometry::SetColor({4, 0, 0});

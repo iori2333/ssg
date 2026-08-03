@@ -14,10 +14,10 @@
 #include "enemy/boss/bit_formation.h"
 #include "enemy/boss/boss.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 #include "player/player.h"
 #include "util/math_utils.h"
 #include "util/object_pool.h"
@@ -29,7 +29,7 @@ void EnemyRenderer::DrawActor(const EnemyActor &actor) const {
 
   constexpr auto surface = SurfaceId::Enemy;
   const auto &animation = animations_[actor.animation];
-  const WorldPoint center = WorldPoint::FromWorld(actor.x, actor.y);
+  const WorldPoint center{actor.x, actor.y};
   const auto topleft = center.ToPixel(animation.size);
 
   const auto frame = animation.mode == EnemyAnimationMode::Directional
@@ -65,9 +65,9 @@ void EnemyRenderer::DrawRegular(
 
 void EnemyRenderer::DrawExplosion(const EnemyActor &actor) {
   const auto frame = actor.count / kEnemyExplosionSpeed;
-  const PixelLtrb source = {static_cast<PixelCoord>(frame * 48), 296,
-                            static_cast<PixelCoord>((frame + 1) * 48), 344};
-  const PixelPoint center = WorldPoint::FromWorld(actor.x, actor.y).ToPixel();
+  const Rect source = {static_cast<int>(frame * 48), 296,
+                       static_cast<int>((frame + 1) * 48), 344};
+  const PixelPoint center = WorldPoint{actor.x, actor.y}.ToPixel();
   GraphicsSurfaceBlit({center.x - 24, center.y - 24}, SurfaceId::System,
                       source);
 }
@@ -104,17 +104,17 @@ void EnemyRenderer::DrawBossLinks(const BitFormation &formation) {
 
 bool EnemyRenderer::DrawBossSpecialState(const BossActor &boss) const {
   constexpr auto surface = SurfaceId::Enemy;
-  const auto center = WorldPoint::FromWorld(boss.x, boss.y).ToPixel();
+  const auto center = WorldPoint{boss.x, boss.y}.ToPixel();
 
   if (boss.mode == BossMode::BombSpirit &&
       static_cast<unsigned int>(player_.IsBombActive()) != 0U &&
       boss.HasFlag(EnemyActorFlags::Draw)) {
-    const PixelLtrb spirit = PixelLtwh{
-        160 + (boss.count / 2) % 4 * 40, 80, 40, 40};
-    GraphicsBackendSetClip(kGameResolutionRect);
+    const Rect spirit =
+        Rect::FromLtwh(160 + (boss.count / 2) % 4 * 40, 80, 40, 40);
+    GraphicsSetClip(kGameResolutionRect);
     GraphicsSurfaceBlit({center.x - 20, center.y - 20}, surface, spirit);
-    GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
-                            playfield::kRight + 1, playfield::kBottom + 1});
+    GraphicsSetClip({playfield::kLeft, playfield::kTop, playfield::kRight + 1,
+                     playfield::kBottom + 1});
     return true;
   }
 

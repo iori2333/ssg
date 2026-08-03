@@ -11,9 +11,9 @@
 #include <string_view>
 #include <vector>
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/text_ttf.h"
+#include "gfx/text/text_renderer.h"
 #include "stage/scene_program.h"
 
 class MusicPlayer;
@@ -80,7 +80,7 @@ private:
       TextStr.clear();
     }
 
-    void Render(WindowPoint topleft);
+    void Render(PixelPoint topleft);
   };
 
   // === Data members ===
@@ -90,24 +90,24 @@ private:
   Text text;
   int flash_state = 0;
 
-  static constexpr std::array<PixelLtrb, 7> staff_label = {{
-      PixelLtrb{0, 0, 160, 24},
-      PixelLtrb{0, 24, 104, 48},
-      PixelLtrb{0, 48, 160, 72},
-      PixelLtrb{0, 72, 232, 96},
-      PixelLtrb{0, 96, 168, 120},
-      PixelLtrb{0, 144, 104, 168},
-      PixelLtrb{0, (480 - 32), (9 * 32), 480},
+  static constexpr std::array<Rect, 7> staff_label = {{
+      Rect{0, 0, 160, 24},
+      Rect{0, 24, 104, 48},
+      Rect{0, 48, 160, 72},
+      Rect{0, 72, 232, 96},
+      Rect{0, 96, 168, 120},
+      Rect{0, 144, 104, 168},
+      Rect{0, (480 - 32), (9 * 32), 480},
   }};
 
-  static constexpr std::array<PixelLtrb, 7> staff_member = {{
-      PixelLtrb{0, 168, 72, 192},
-      PixelLtrb{96, 168, 168, 192},
-      PixelLtrb{192, 168, 264, 192},
-      PixelLtrb{288, 168, 360, 192},
-      PixelLtrb{0, 192, 144, 216},
-      PixelLtrb{168, 192, 320, 216},
-      PixelLtrb{0, 216, 336, 264},
+  static constexpr std::array<Rect, 7> staff_member = {{
+      Rect{0, 168, 72, 192},
+      Rect{96, 168, 168, 192},
+      Rect{192, 168, 264, 192},
+      Rect{288, 168, 360, 192},
+      Rect{0, 192, 144, 216},
+      Rect{168, 192, 320, 216},
+      Rect{0, 216, 336, 264},
   }};
 
   void Draw();

@@ -10,7 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "gfx/text.h"
+#include "gfx/core/coords.h"
+#include "gfx/text/text.h"
 #include "record/record_system.h"
 #include "ui/menu/menu_controller.h"
 #include "ui/menu/menu_tree.h"
@@ -72,8 +73,8 @@ private:
   void DrawNameEntry() const;
 
   struct DisplayRow {
-    int x = 0;
-    int y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
     bool moving = false;
   };
 
@@ -88,7 +89,7 @@ private:
   InputBits previous_input_ = 0;
   std::array<TextRenderRectId, kPageSize> stage_text_{};
   std::array<TextRenderRectId, kPageSize> player_text_{};
-  TextRenderRectId ui_text_ = 0;
+  TextRenderRectId ui_text_{};
   std::array<DisplayRow, kPageSize> rows_{};
 
   std::unique_ptr<menu::EntryNode> stage_menu_root_;

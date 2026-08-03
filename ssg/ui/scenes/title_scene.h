@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "gfx/coords.h"
-#include "gfx/text.h"
+#include "gfx/core/coords.h"
+#include "gfx/text/text.h"
 #include "sys/input.h"
 
 class GameSession;
@@ -44,7 +44,7 @@ public:
 
 private:
   void InitVersion();
-  void DrawVersion(PixelCoord top) const;
+  void DrawVersion(int top) const;
 
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
@@ -52,6 +52,6 @@ private:
   UiManager &ui_;
   audio::AudioSystem &audio_;
   TextRenderRectId version_rect_{};
-  WindowCoord version_left_ = 0;
+  int version_left_ = 0;
   int demo_timer_ = 0;
 };

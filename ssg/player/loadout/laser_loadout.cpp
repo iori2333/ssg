@@ -10,11 +10,11 @@
 #include "player_loadout.h"
 
 #include "enemy/enemy_manager.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/pixelformat.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/pixelformat.h"
+#include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "player/player_shot.h"
@@ -44,7 +44,7 @@ void LaserLoadout::FireMain(Player &player, int tier, bool focused) {
                       .direction_step = 0,
                       .count = 1,
                       .speed = 13.5_px,
-                      .acceleration = 0,
+                      .acceleration = {},
                       .kind = PlayerShotKind::LaserSub});
     break;
   }
@@ -56,7 +56,7 @@ void LaserLoadout::FireMain(Player &player, int tier, bool focused) {
                              .direction_step = 0,
                              .count = 1,
                              .speed = 13.5_px,
-                             .acceleration = 0,
+                             .acceleration = {},
                              .kind = PlayerShotKind::LaserSub};
     player.SpawnShot(shot);
     shot.x += 12_px;
@@ -72,7 +72,7 @@ void LaserLoadout::FireMain(Player &player, int tier, bool focused) {
                       .direction_step = static_cast<uint8_t>(focused ? 2 : 6),
                       .count = 3,
                       .speed = 13.5_px,
-                      .acceleration = 0,
+                      .acceleration = {},
                       .kind = PlayerShotKind::LaserSub});
     StartBeam(player, 64 + 100);
     break;
@@ -86,7 +86,7 @@ void LaserLoadout::FireMain(Player &player, int tier, bool focused) {
         .direction_step = static_cast<uint8_t>(focused ? 4 : 10),
         .count = 2,
         .speed = 13.5_px,
-        .acceleration = 0,
+        .acceleration = {},
         .kind = PlayerShotKind::LaserSub};
     player.SpawnShot(shot);
     shot.x += 12_px;
@@ -102,7 +102,7 @@ void LaserLoadout::FireMain(Player &player, int tier, bool focused) {
                       .direction_step = static_cast<uint8_t>(focused ? 2 : 6),
                       .count = focused ? 4 : 5,
                       .speed = 13.5_px,
-                      .acceleration = 0,
+                      .acceleration = {},
                       .kind = PlayerShotKind::LaserSub});
     StartBeam(player, 64 + 200);
     break;
@@ -148,11 +148,9 @@ void LaserLoadout::ApplyContinuousAttack(const Player &player,
   const int offset = OptionOffset(focused);
   const int damage = (beam_group_ / 3) + 1;
   enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
-      WorldPoint::FromWorld(player.OpX() + PixelToWorld(offset), player.OpY()),
-      damage));
+      WorldPoint{player.OpX() + PixelToWorld(offset), player.OpY()}, damage));
   enemies.ApplyPlayerAttack(PlayerAttack::VerticalBeam(
-      WorldPoint::FromWorld(player.OpX() - PixelToWorld(offset), player.OpY()),
-      damage));
+      WorldPoint{player.OpX() - PixelToWorld(offset), player.OpY()}, damage));
 }
 
 uint8_t LaserLoadout::BombAngle(int remaining) const {
@@ -179,16 +177,16 @@ void LaserLoadout::UpdateBomb(Player &player, EnemyManager &enemies,
                               EffectManager & /*effects*/, int remaining) {
   const auto angle = BombAngle(remaining);
 
-  const int right_x = player.OpX() + PixelToWorld(OptionOffset(false));
+  const WorldCoord right_x = player.OpX() + PixelToWorld(OptionOffset(false));
   for (int i = -3; i <= 3; i++) {
     enemies.ApplyPlayerAttack(PlayerAttack::DirectedBeam(
-        WorldPoint::FromWorld(right_x, player.OpY()), RightAngle(angle, i)));
+        WorldPoint{right_x, player.OpY()}, RightAngle(angle, i)));
   }
 
-  const int left_x = player.OpX() - PixelToWorld(OptionOffset(false));
+  const WorldCoord left_x = player.OpX() - PixelToWorld(OptionOffset(false));
   for (int i = -3; i <= 3; i++) {
     enemies.ApplyPlayerAttack(PlayerAttack::DirectedBeam(
-        WorldPoint::FromWorld(left_x, player.OpY()), LeftAngle(angle, i)));
+        WorldPoint{left_x, player.OpY()}, LeftAngle(angle, i)));
   }
 }
 
@@ -223,8 +221,9 @@ void LaserLoadout::DrawBombForeground(const Player &player,
             math::RoundedPolarVector(math::AngleFromLegacy(direction), 850.0F);
         const auto beam_width = math::RoundedPolarVector(
             math::AngleFromLegacy(static_cast<uint8_t>(direction + 64)), width);
-        const int origin_x = (player.OpX() >> 6) + side * OptionOffset(false);
-        const int origin_y = player.OpY() >> 6;
+        const int origin_x =
+            player.OpX().ToPixels() + side * OptionOffset(false);
+        const int origin_y = player.OpY().ToPixels();
         set_points(origin_x, origin_y, length.x, length.y, beam_width.x,
                    beam_width.y);
         geometry::DrawGradientRect(points, color, true);
@@ -246,17 +245,17 @@ void LaserLoadout::DrawContinuousAttack(const Player &player,
   }
 
   const int offset = OptionOffset(focused);
-  auto source = PixelLtwh{384 + ((beam_group_ - 1) << 4), 240, 8, 16};
+  auto source = Rect::FromLtwh(384 + ((beam_group_ - 1) << 4), 240, 8, 16);
   for (const int side : {-1, 1}) {
-    GraphicsSurfaceBlit(
-        {(player.OpX() >> 6) - 4 + side * offset, (player.OpY() >> 6) - 20},
-        SurfaceId::System, source);
+    GraphicsSurfaceBlit({player.OpX().ToPixels() - 4 + side * offset,
+                         player.OpY().ToPixels() - 20},
+                        SurfaceId::System, source);
   }
 
-  source = PixelLtwh{384 + 8 + ((beam_group_ - 1) << 4), 240, 8, 16};
+  source = Rect::FromLtwh(384 + 8 + ((beam_group_ - 1) << 4), 240, 8, 16);
   for (const int side : {-1, 1}) {
-    for (int y = (player.OpY() >> 6) - 36; y > -16; y -= 16) {
-      GraphicsSurfaceBlit({(player.OpX() >> 6) - 4 + side * offset, y},
+    for (int y = player.OpY().ToPixels() - 36; y > -16; y -= 16) {
+      GraphicsSurfaceBlit({player.OpX().ToPixels() - 4 + side * offset, y},
                           SurfaceId::System, source);
     }
   }

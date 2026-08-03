@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 
 enum class PlayerAttackShape : uint8_t {
   Point,

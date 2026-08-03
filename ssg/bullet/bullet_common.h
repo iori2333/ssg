@@ -4,9 +4,10 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstdint>
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 
 enum class HitResult : uint8_t { Miss, Graze, Hit };
 inline constexpr auto kBulletEvadeValue = 1;
@@ -14,6 +15,20 @@ inline constexpr auto kBulletEvadeValue = 1;
 enum class BulletPattern : uint8_t { Spread, Circle, Random };
 
 namespace bullet_common {
+
+// Bullet and laser integrators retain the original floating-point values in
+// raw world units. Keep conversion to that private representation centralized.
+[[nodiscard]] inline float ToSimulationUnits(WorldCoord value) {
+  return static_cast<float>(value.Raw());
+}
+
+[[nodiscard]] inline WorldCoord FromSimulationUnits(int value) {
+  return WorldCoord::FromRaw(value);
+}
+
+[[nodiscard]] inline WorldCoord RoundSimulationUnits(float value) {
+  return WorldCoord::FromRaw(static_cast<int>(std::lround(value)));
+}
 
 inline constexpr auto kZSet = 0x08;
 
@@ -41,9 +56,9 @@ void ApplyHardCountSpread(BulletPattern pattern, int &n, int &dw);
 void ApplyLunaticCountSpread(BulletPattern pattern, int &n, int &dw);
 
 // Reflect laser length scaling.
-[[nodiscard]] int ScaleLengthEasy(int l);
-[[nodiscard]] int ScaleLengthHard(int l);
-[[nodiscard]] int ScaleLengthLunatic(int l);
+[[nodiscard]] WorldCoord ScaleLengthEasy(WorldCoord length);
+[[nodiscard]] WorldCoord ScaleLengthHard(WorldCoord length);
+[[nodiscard]] WorldCoord ScaleLengthLunatic(WorldCoord length);
 
 // Bullet rapid-fire count scaling.
 void ApplyEasyRapid(int &ns);

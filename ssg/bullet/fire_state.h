@@ -2,12 +2,14 @@
 
 #include <cstdint>
 
-// Raw ECL accumulators. Convert these values to typed spawn data before
-// creating a bullet or laser.
+#include "gfx/core/coords.h"
+
+// ECL command accumulators. Coordinate fields retain the script format's raw
+// world-unit values through WorldCoord.
 
 struct EclBulletState {
-  int x{};
-  int y{};
+  WorldCoord x{};
+  WorldCoord y{};
   uint8_t d{};
   uint8_t dw{};
   uint8_t n{};
@@ -23,12 +25,12 @@ struct EclBulletState {
 };
 
 struct EclLaserState {
-  int x{};
-  int y{};
-  int v{};
-  int w{};
-  int l{};
-  int l2{};
+  WorldCoord x{};
+  WorldCoord y{};
+  WorldCoord v{};
+  WorldCoord w{};
+  WorldCoord l{};
+  WorldCoord l2{};
   uint8_t d{};
   uint8_t dw{};
   uint8_t n{};

@@ -23,10 +23,11 @@
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
+#include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
 #include "util/math_utils.h"
@@ -97,9 +98,7 @@ void Player::DrawBombBackground() const {
   loadout_->DrawBombBackground(*this, bomb_time_);
 }
 
-int Player::HitRadiusPixels() const {
-  return (HitRadius() + kWorldCoordScale - 1) / kWorldCoordScale;
-}
+int Player::HitRadiusPixels() const { return HitRadius().ToPixelsCeil(); }
 
 void Player::DrawFocusHitbox() const {
   if (!focus_hitbox_visible_ || !focused_ ||
@@ -107,7 +106,7 @@ void Player::DrawFocusHitbox() const {
     return;
   }
 
-  const WindowPoint center{x_ >> kWorldCoordBits, y_ >> kWorldCoordBits};
+  const PixelPoint center{x_.ToPixels(), y_.ToPixels()};
 
   geometry::SetColor({5, 5, 5});
   geometry::DrawFilledCircle(center, HitRadiusPixels(), false);
@@ -116,32 +115,32 @@ void Player::DrawFocusHitbox() const {
 }
 
 void Player::DrawDebugHitbox() const {
-  const WindowPoint center{x_ >> kWorldCoordBits, y_ >> kWorldCoordBits};
+  const PixelPoint center{x_.ToPixels(), y_.ToPixels()};
   geometry::SetColor({0, 0, 0});
   geometry::SetAlphaNorm(204);
   geometry::DrawFilledCircle(center, HitRadiusPixels(), true);
 }
 
 void Player::Draw() {
-  static const std::array<std::array<PixelLtrb, 2>, 4> VivBit = {{
-      {PixelLtrb{480, 128, 480 + 24, 128 + 24},
-       PixelLtrb{504, 128, 504 + 24, 128 + 24}}, // wide
-      {PixelLtrb{480, 152, 480 + 24, 152 + 24},
-       PixelLtrb{504, 152, 504 + 24, 152 + 24}}, // homing
-      {PixelLtrb{528, 152, 528 + 24, 152 + 24},
-       PixelLtrb{552, 152, 552 + 24, 152 + 24}}, // laser
-      {PixelLtrb{480, 152, 480 + 24, 152 + 24},
-       PixelLtrb{504, 152, 504 + 24, 152 + 24}}, // temp
+  static const std::array<std::array<Rect, 2>, 4> VivBit = {{
+      {Rect{480, 128, 480 + 24, 128 + 24},
+       Rect{504, 128, 504 + 24, 128 + 24}}, // wide
+      {Rect{480, 152, 480 + 24, 152 + 24},
+       Rect{504, 152, 504 + 24, 152 + 24}}, // homing
+      {Rect{528, 152, 528 + 24, 152 + 24},
+       Rect{552, 152, 552 + 24, 152 + 24}}, // laser
+      {Rect{480, 152, 480 + 24, 152 + 24},
+       Rect{504, 152, 504 + 24, 152 + 24}}, // temp
   }};
 
   static int draw_flag = 0;
   static int draw_flag2 = 0;
 
-  const auto sx = ((x_ >> 6) - 16);
-  const auto sy = ((y_ >> 6) - 24);
-  const auto ox = ((opx_ >> 6) - 12);
-  const auto oy = ((opy_ >> 6) - 12);
-  PixelLtrb src;
+  const auto sx = x_.ToPixels() - 16;
+  const auto sy = y_.ToPixels() - 24;
+  const auto ox = opx_.ToPixels() - 12;
+  const auto oy = opy_.ToPixels() - 12;
+  Rect src;
 
   draw_flag = 1 - draw_flag;
   draw_flag2++;
@@ -151,7 +150,7 @@ void Player::Draw() {
   }
 
   if (!IsInvincible() || (draw_flag != 0)) {
-    src = PixelLtwh{(384 + (grp_id_ * 32)), 128, (16 * 2), (16 * 3)};
+    src = Rect::FromLtwh((384 + (grp_id_ * 32)), 128, (16 * 2), (16 * 3));
     GraphicsSurfaceBlit({sx, sy}, SurfaceId::System, src);
   }
 
@@ -245,12 +244,12 @@ InputBits Player::PrepareInput(InputBits input) {
 }
 
 void Player::UpdateMovement(InputBits input) {
-  int vx = 0;
-  int vy = 0;
-  int v = 0;
+  WorldCoord vx{};
+  WorldCoord vy{};
+  WorldCoord v{};
 
   if (!IsMovementDisabled()) {
-    vx = vy = 0;
+    vx = vy = {};
     v = loadout_->MoveSpeed(focused_);
     if ((input & KeyUp) != 0) {
       vy -= v;
@@ -265,12 +264,12 @@ void Player::UpdateMovement(InputBits input) {
       vx += v;
     }
 
-    if ((vx != 0) && (vy != 0)) {
+    if ((vx != WorldCoord{}) && (vy != WorldCoord{})) {
       x_ += (vx / 6);
       y_ += (vy / 6);
     } else {
-      x_ += (vx >> 2);
-      y_ += (vy >> 2);
+      x_ += vx.DivPow2Floor(2);
+      y_ += vy.DivPow2Floor(2);
     }
 
     if (y_ < kMovementTop) {
@@ -285,14 +284,14 @@ void Player::UpdateMovement(InputBits input) {
       x_ = kMovementRight;
     }
   } else {
-    vx = 0;
-    vy = -(64 + 32);
+    vx = {};
+    vy = -1.5_px;
     y_ += vy;
   }
 
-  if (vx > 0) {
+  if (vx > WorldCoord{}) {
     grp_id_ = 2;
-  } else if (vx < 0) {
+  } else if (vx < WorldCoord{}) {
     grp_id_ = 0;
   } else {
     grp_id_ = 1;
@@ -301,20 +300,21 @@ void Player::UpdateMovement(InputBits input) {
   UpdateOptionPosition(vx, vy);
 }
 
-void Player::UpdateOptionPosition(int movement_x, int movement_y) {
+void Player::UpdateOptionPosition(WorldCoord movement_x,
+                                  WorldCoord movement_y) {
   option_lag_x_ -= std::clamp(option_lag_x_, -1_px, 1_px);
   option_lag_y_ -= std::clamp(option_lag_y_, -1_px, 1_px);
 
-  if (movement_x < 0 && option_lag_x_ < 6_px) {
+  if (movement_x < WorldCoord{} && option_lag_x_ < 6_px) {
     option_lag_x_ += 2_px;
   }
-  if (movement_x > 0 && option_lag_x_ > -6_px) {
+  if (movement_x > WorldCoord{} && option_lag_x_ > -6_px) {
     option_lag_x_ -= 2_px;
   }
-  if (movement_y < 0 && option_lag_y_ < 10_px) {
+  if (movement_y < WorldCoord{} && option_lag_y_ < 10_px) {
     option_lag_y_ += 2_px;
   }
-  if (movement_y > 0 && option_lag_y_ > -10_px) {
+  if (movement_y > WorldCoord{} && option_lag_y_ > -10_px) {
     option_lag_y_ -= 2_px;
   }
 
@@ -384,7 +384,7 @@ void Player::Initialize(int player_stock, int bomb_stock) {
 void Player::PrepareNextStage() {
   x_ = opx_ = kStartX;
   y_ = opy_ = kStartY;
-  option_lag_x_ = option_lag_y_ = 0;
+  option_lag_x_ = option_lag_y_ = {};
 
   toge_time_ = 0;
   loadout_->Reset();
@@ -481,7 +481,7 @@ void Player::CommitDeath() {
 
   x_ = opx_ = kStartX;
   y_ = opy_ = kStartY;
-  option_lag_x_ = option_lag_y_ = 0;
+  option_lag_x_ = option_lag_y_ = {};
 
   loadout_->Reset();
 
@@ -508,7 +508,7 @@ void Player::CommitDeath() {
 
 void Player::AddEvade(int n) { AddEvadeEx(x_, y_, n); }
 
-void Player::AddEvadeEx(int ex, int ey, int n) {
+void Player::AddEvadeEx(WorldCoord ex, WorldCoord ey, int n) {
   if (n != 0U) {
     if (!buzz_sound_) {
       audio_.PlaySfx(SfxId::Buzz, ex);

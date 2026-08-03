@@ -17,9 +17,9 @@
 #include "effect/effect_manager.h"
 #include "effect/effect_types.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/graphics.h"
 #include "util/math_utils.h"
 
 namespace stage {
@@ -105,8 +105,7 @@ void TileMapScroller::Draw(const std::array<int, kVisibleMapRows> &raster_dx,
         const int y = (row_y << 4) + position.dy;
         const int source_x = (tile % (640 / 16)) << 4;
         const int source_y = (tile / (640 / 16)) << 4;
-        const PixelLtrb source = {source_x, source_y, source_x + 16,
-                                  source_y + 16};
+        const Rect source = {source_x, source_y, source_x + 16, source_y + 16};
         GraphicsSurfaceBlit({x, y}, SurfaceId::MapChip, source);
       }
     }
@@ -339,9 +338,9 @@ void StageBackground::UpdateRaster(bool opening) {
 }
 
 void StageBackground::DrawStage3Boss() const {
-  for (int y = playfield::kTop - effect_count_;
-       y < playfield::kBottom; y += 208) {
-    constexpr PixelLtrb source = {0, 272, (640 - 256), (272 + 208)};
+  for (int y = playfield::kTop - effect_count_; y < playfield::kBottom;
+       y += 208) {
+    constexpr Rect source = {0, 272, (640 - 256), (272 + 208)};
     GraphicsSurfaceBlit({playfield::kLeft, y}, SurfaceId::MapChip, source);
   }
 }

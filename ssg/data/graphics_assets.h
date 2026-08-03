@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <utility>
 
-#include "gfx/constants.h"
+#include "gfx/core/constants.h"
 
 namespace data::graphics_assets {
 

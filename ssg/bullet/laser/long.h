@@ -9,7 +9,7 @@
 #include <cstdint>
 
 #include "bullet/bullet_common.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/graphics.h"
 
 struct EnemyActor;
 
@@ -28,15 +28,15 @@ enum class LongLaserType : uint8_t {
 struct LongLaserSpawnInfo {
   const EnemyActor *enemy{};
   std::size_t enemy_id{};
-  int dx{};
-  int dy{};
-  int v{};
-  int w{};
+  WorldCoord dx{};
+  WorldCoord dy{};
+  WorldCoord v{};
+  WorldCoord w{};
   float angle{};
   uint8_t c{};
   LongLaserType type{LongLaserType::Long};
-  int player_x{};
-  int player_y{};
+  WorldCoord player_x{};
+  WorldCoord player_y{};
 };
 
 // ── State machine ────────────────────────────────────────────────
@@ -76,13 +76,13 @@ struct LaserLong {
   [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const LongLaserSpawnInfo &info);
-  [[nodiscard]] HitResult CheckHit(int px, int py, int player_radius) const;
+  [[nodiscard]] HitResult CheckHit(WorldCoord px, WorldCoord py,
+                                   WorldCoord player_radius) const;
   void Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
-  [[nodiscard]] int X() const;
-  [[nodiscard]] bool BelongsTo(const EnemyActor *enemy,
-                               std::size_t id) const;
+  [[nodiscard]] WorldCoord X() const;
+  [[nodiscard]] bool BelongsTo(const EnemyActor *enemy, std::size_t id) const;
 
 private:
   void MarkDead() {

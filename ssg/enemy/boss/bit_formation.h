@@ -79,14 +79,14 @@ private:
 
   std::array<Part, kBitCapacity> parts_{};
   EnemyActor *parent_ = nullptr;
-  int center_x_ = 0;
-  int center_y_ = 0;
-  int speed_ = 0;
-  int acceleration_ = 0;
+  WorldCoord center_x_{};
+  WorldCoord center_y_{};
+  WorldCoord speed_{};
+  WorldCoord acceleration_{};
   uint8_t direction_ = 64;
   int count_ = 0;
-  int radius_ = 0;
-  int target_radius_ = 0;
+  WorldCoord radius_{};
+  WorldCoord target_radius_{};
   int rotation_speed_ = 0;
   MotionState motion_ = MotionState::Disabled;
   LaserPattern laser_pattern_ = LaserPattern::Disabled;

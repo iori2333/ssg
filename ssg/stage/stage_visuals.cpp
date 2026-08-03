@@ -9,28 +9,36 @@
 #include "stage_visuals.h"
 
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
+#include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 #include "util/math_utils.h"
 
 namespace stage {
 
+namespace {
+
+constexpr auto kRockPositionJitter = WorldCoord::FromRaw(250);
+constexpr auto kRockAcceleration = WorldCoord::FromRaw(2);
+
+} // namespace
+
 void StageVisuals::Transform(Point3D &point, uint8_t angle_x, uint8_t angle_y,
                              uint8_t angle_z) {
   auto rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_x),
-                                           point.y, point.z);
+                                           WorldPoint{point.y, point.z});
   point.y = rotated.x;
   point.z = rotated.y;
 
-  rotated = math::RoundedRotateVector(-math::AngleFromLegacy(angle_y), point.x,
-                                      point.z);
+  rotated = math::RoundedRotateVector(-math::AngleFromLegacy(angle_y),
+                                      WorldPoint{point.x, point.z});
   point.x = rotated.x;
   point.z = rotated.y;
 
-  rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_z), point.x,
-                                      point.y);
+  rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_z),
+                                      WorldPoint{point.x, point.y});
   point.x = rotated.x;
   point.y = rotated.y;
 }
@@ -53,7 +61,7 @@ void StageVisuals::StartCubes() {
                                  200_px);
     cube.position.x = position.x;
     cube.position.y = position.y;
-    cube.position.z = 0;
+    cube.position.z = {};
   }
   for (auto &star : cube_stars_) {
     star.x = math::RandomInt() % (640 - 256) + 128;
@@ -73,14 +81,15 @@ void StageVisuals::UpdateCubes() {
                                    math::kLegacyAngleStep,
                                512.0F / static_cast<float>(cube_count))
           .y;
-  const int radius =
+  const WorldCoord radius =
       math::RoundedPolarVector(
           static_cast<float>(cube_phase_ >> 7) * math::kLegacyAngleStep, 100_px)
           .y +
       180_px;
   for (std::size_t index = 0; index < cubes_.size(); ++index) {
     auto &cube = cubes_[index];
-    cube.half_size = 15_px + (radius >> 4) + static_cast<int>(index) * 128;
+    cube.half_size =
+        15_px + radius.DivPow2Floor(4) + static_cast<int>(index) * 2_px;
     cube.rotation.x += 4;
     cube.rotation.y -= 4;
     const auto position = math::RoundedPolarVector(
@@ -109,7 +118,7 @@ void StageVisuals::UpdateCubes() {
 void StageVisuals::DrawCubes() const {
   for (const auto &star : cube_stars_) {
     GraphicsSurfaceBlit({star.x, star.y}, SurfaceId::System,
-                        PixelLtwh{136, 272, 16, 24});
+                        Rect::FromLtwh(136, 272, 16, 24));
   }
   for (const auto &cube : cubes_) {
     DrawCube(cube);
@@ -119,11 +128,12 @@ void StageVisuals::DrawCubes() const {
 void StageVisuals::DrawCube(const Cube &cube) {
   const auto project = [&cube](Point3D point) {
     Transform(point, cube.rotation.x, cube.rotation.y, cube.rotation.z);
-    point.x = ((point.x + cube.position.x) >> 6) + 320;
-    point.y = ((point.y + cube.position.y) >> 6) + 240;
-    return point;
+    return PixelPoint{
+        .x = (point.x + cube.position.x).ToPixels() + 320,
+        .y = (point.y + cube.position.y).ToPixels() + 240,
+    };
   };
-  const int length = cube.half_size;
+  const WorldCoord length = cube.half_size;
 
   geometry::SetColor({1, 1, 3});
   for (int x = -1; x <= 1; ++x) {
@@ -158,17 +168,17 @@ void StageVisuals::DrawCube(const Cube &cube) {
 }
 
 void StageVisuals::StartFakeEcl() {
-  grid_offset_x_ = 320_px;
-  grid_offset_y_ = 240_px;
+  grid_offset_x_ = 0;
+  grid_offset_y_ = 0;
   for (auto &line : fake_ecl_) {
     // Preserve the established RNG sequence used by later stage effects.
     (void)math::RandomInt();
-    const int speed = math::RandomInt() % 5_px + 5_px;
+    const WorldCoord speed = 5_px + math::RandomWorldBelow(5_px);
     line.source_x = math::RandomInt() % 7 * 9 * 8;
     line.source_y = math::RandomInt() % 16 * 16;
     line.x = PixelToWorld(28 + math::RandomInt() % 484);
     line.y = -PixelToWorld(math::RandomInt() % 640);
-    line.velocity_x = 0;
+    line.velocity_x = {};
     line.velocity_y = speed;
   }
 }
@@ -184,12 +194,12 @@ void StageVisuals::UpdateFakeEcl() {
     }
     // Preserve the established RNG sequence used by later stage effects.
     (void)math::RandomInt();
-    const int speed = math::RandomInt() % 5_px + 5_px;
+    const WorldCoord speed = 5_px + math::RandomWorldBelow(5_px);
     line.source_x = math::RandomInt() % 7 * 9 * 8;
     line.source_y = math::RandomInt() % 16 * 16;
     line.x = PixelToWorld(28 + math::RandomInt() % 484);
     line.y = -PixelToWorld(math::RandomInt() % 640);
-    line.velocity_x = 0;
+    line.velocity_x = {};
     line.velocity_y = speed;
   }
 }
@@ -211,37 +221,37 @@ void StageVisuals::DrawFakeEcl() const {
   }
 
   for (const auto &line : fake_ecl_) {
-    GraphicsSurfaceBlit({line.x >> 6, line.y >> 6}, SurfaceId::MapChip,
-                        PixelLtwh{line.source_x, line.source_y, 72, 16});
+    GraphicsSurfaceBlit({line.x.ToPixels(), line.y.ToPixels()},
+                        SurfaceId::MapChip,
+                        Rect::FromLtwh(line.source_x, line.source_y, 72, 16));
   }
-  GraphicsSurfaceBlit({128, 400}, SurfaceId::MapChip,
-                      PixelLtrb{0, 272, 416, 352});
+  GraphicsSurfaceBlit({128, 400}, SurfaceId::MapChip, Rect{0, 272, 416, 352});
 }
 
 void StageVisuals::StartRocks() {
-  constexpr int row_spacing = 500 * (64 / 4);
+  constexpr WorldCoord row_spacing = 125_px;
   int sprite = 2;
   for (std::size_t index = 0; index < rocks_.size(); ++index) {
     if (index == rocks_.size() * 5 / 8 || index == rocks_.size() * 7 / 8) {
       --sprite;
     }
-    const int y_offset = static_cast<int>(index % 4) * row_spacing +
-                         math::RandomInt() % (row_spacing / 2);
-    const int x = math::RandomInt() % 500_px - 250_px;
+    const WorldCoord y_offset = static_cast<int>(index % 4) * row_spacing +
+                                math::RandomWorldBelow(row_spacing / 2);
+    const WorldCoord x = math::RandomWorldBelow(500_px) - 250_px;
     // Depth was never rendered, but this draw must remain in the RNG stream.
     (void)math::RandomInt();
     auto &rock = rocks_[index];
     rock = {.x = x,
             .y = -250_px - y_offset,
-            .velocity_y = (4 - sprite) * 16,
-            .speed = (4 - sprite) * 16,
+            .velocity_y = (4 - sprite) * 0.25_px,
+            .speed = (4 - sprite) * 0.25_px,
             .sprite = sprite};
   }
 }
 
 void StageVisuals::UpdateRocks() {
-  const auto reset_above = [](Rock &rock, int velocity_scale) {
-    rock.x = math::RandomInt() % 500_px - 250_px;
+  const auto reset_above = [](Rock &rock, WorldCoord velocity_scale) {
+    rock.x = math::RandomWorldBelow(500_px) - 250_px;
     rock.y = -PixelToWorld(290 + math::RandomInt() % 250);
     rock.velocity_y = (4 - rock.sprite) * velocity_scale;
     rock.speed = rock.velocity_y;
@@ -253,7 +263,7 @@ void StageVisuals::UpdateRocks() {
     case RockState::Normal:
       rock.y += rock.velocity_y;
       if (rock.y > 290_px) {
-        reset_above(rock, 16);
+        reset_above(rock, 0.25_px);
       }
       break;
     case RockState::Accelerating:
@@ -261,8 +271,8 @@ void StageVisuals::UpdateRocks() {
       rock.velocity_y = rock.speed;
       rock.y += rock.velocity_y;
       if (rock.y > 290_px) {
-        reset_above(rock, 96);
-        rock.acceleration = 0;
+        reset_above(rock, 1.5_px);
+        rock.acceleration = {};
       }
       break;
     case RockState::Reversing:
@@ -271,18 +281,18 @@ void StageVisuals::UpdateRocks() {
       rock.y += rock.velocity_y;
       if (rock.age > 120) {
         if (rock.y > 290_px || rock.y < -290_px) {
-          reset_above(rock, 32);
+          reset_above(rock, 0.5_px);
         }
-        rock.velocity_y = (4 - rock.sprite) * 32;
+        rock.velocity_y = (4 - rock.sprite) * 0.5_px;
         rock.speed = rock.velocity_y;
-        rock.acceleration = 2;
+        rock.acceleration = kRockAcceleration;
         rock.state = RockState::Accelerating;
       } else if (rock.y > 290_px || rock.y < -290_px) {
-        rock.x = math::RandomInt() % 500_px - 250_px;
-        rock.y = 290_px + math::RandomInt() % 250;
-        rock.velocity_y = -(4 - rock.sprite) * 96;
+        rock.x = math::RandomWorldBelow(500_px) - 250_px;
+        rock.y = 290_px + math::RandomWorldBelow(kRockPositionJitter);
+        rock.velocity_y = -(4 - rock.sprite) * 1.5_px;
         rock.speed = rock.velocity_y;
-        rock.acceleration = 0;
+        rock.acceleration = {};
       }
       break;
     case RockState::Leaving:
@@ -292,7 +302,7 @@ void StageVisuals::UpdateRocks() {
       break;
     case RockState::Ending:
       if (rock.y <= 540_px) {
-        rock.y += (4 - rock.sprite) * 192;
+        rock.y += (4 - rock.sprite) * 3_px;
       }
       break;
     }
@@ -300,14 +310,13 @@ void StageVisuals::UpdateRocks() {
 }
 
 void StageVisuals::DrawRocks() const {
-  static constexpr std::array sources = {PixelLtrb{0, 224, 80, 288},
-                                         PixelLtrb{0, 288, 48, 336},
-                                         PixelLtrb{48, 288, 80, 320}};
+  static constexpr std::array sources = {
+      Rect{0, 224, 80, 288}, Rect{0, 288, 48, 336}, Rect{48, 288, 80, 320}};
   static constexpr std::array half_widths = {40, 24, 16};
   static constexpr std::array half_heights = {32, 24, 16};
   for (const auto &rock : rocks_) {
-    const int x = (rock.x + playfield::kWorldCenterX) >> 6;
-    const int y = (rock.y + playfield::kWorldCenterY) >> 6;
+    const int x = (rock.x + playfield::kWorldCenterX).ToPixels();
+    const int y = (rock.y + playfield::kWorldCenterY).ToPixels();
     GraphicsSurfaceBlit(
         {x - half_widths[rock.sprite], y - half_heights[rock.sprite]},
         SurfaceId::MapChip, sources[rock.sprite]);
@@ -386,12 +395,12 @@ void StageVisuals::UpdateRasters() {
 }
 
 void StageVisuals::DrawRasters() const {
-  static constexpr std::array sources = {PixelLtrb{608, 272, 640, 352},
-                                         PixelLtrb{592, 160, 640, 272},
-                                         PixelLtrb{576, 0, 640, 160}};
+  static constexpr std::array sources = {Rect{608, 272, 640, 352},
+                                         Rect{592, 160, 640, 272},
+                                         Rect{576, 0, 640, 160}};
   for (const auto &star : raster_stars_) {
     GraphicsSurfaceBlit({star.x, star.y}, SurfaceId::MapChip,
-                        PixelLtrb{624, 352, 640, 368});
+                        Rect{624, 352, 640, 368});
   }
   for (const auto &raster : rasters_) {
     const auto target = sources[raster.type];
@@ -405,7 +414,7 @@ void StageVisuals::DrawRasters() const {
               .y;
       GraphicsSurfaceBlit(
           {raster.x + offset - half_width, raster.y + row}, SurfaceId::MapChip,
-          PixelLtrb{target.left, target.top + row, target.right, row + 2});
+          Rect{target.left, target.top + row, target.right, row + 2});
     }
   }
 }
@@ -432,7 +441,7 @@ void StageVisuals::UpdateStars() {
 void StageVisuals::DrawStars() const {
   for (const auto &star : fast_stars_) {
     GraphicsSurfaceBlit({star.x, star.y}, SurfaceId::MapChip,
-                        PixelLtrb{624, 0, 640, 16});
+                        Rect{624, 0, 640, 16});
   }
 }
 

@@ -14,9 +14,10 @@
 #include "effect/effect_types.h"
 #include "enemy/enemy_manager.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
+#include "gfx/graphics.h"
 #include "player/player.h"
 #include "player/player_attack.h"
 #include "player/player_shot.h"
@@ -62,7 +63,7 @@ void WideLoadout::FireMainNormal(Player &player_, int tier) {
                                  .direction_step = 0,
                                  .count = 1,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
@@ -78,7 +79,7 @@ void WideLoadout::FireMainNormal(Player &player_, int tier) {
                                  .direction_step = 0,
                                  .count = 1,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
@@ -94,7 +95,7 @@ void WideLoadout::FireMainNormal(Player &player_, int tier) {
                            .direction_step = 0,
                            .count = 1,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     si.x += 12_px;
@@ -114,7 +115,7 @@ void WideLoadout::FireMainNormal(Player &player_, int tier) {
                                  .direction_step = 4,
                                  .count = 3,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
@@ -130,7 +131,7 @@ void WideLoadout::FireMainNormal(Player &player_, int tier) {
                                  .direction_step = 3,
                                  .count = 5,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::WideMain};
     player_.SpawnShot(si);
     break;
@@ -152,7 +153,7 @@ void WideLoadout::FireSubNormal(Player &player_, int tier) {
                            .direction_step = 0,
                            .count = 1,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -169,7 +170,7 @@ void WideLoadout::FireSubNormal(Player &player_, int tier) {
                            .direction_step = 7,
                            .count = 2,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -186,7 +187,7 @@ void WideLoadout::FireSubNormal(Player &player_, int tier) {
                            .direction_step = 8,
                            .count = 3,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -202,7 +203,7 @@ void WideLoadout::FireSubNormal(Player &player_, int tier) {
                            .direction_step = 8,
                            .count = 4,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -215,24 +216,22 @@ void WideLoadout::FireSubNormal(Player &player_, int tier) {
 
 void WideLoadout::UpdateBomb(Player & /*player*/, EnemyManager &enemies,
                              EffectManager &effects, int remaining) {
-  int dx = 0;
-  int dy = 0;
-  int l = 0;
+  WorldCoord dx{};
+  WorldCoord dy{};
 
   if (remaining > BombDuration() - 30) {
     return;
   }
 
   const auto d = static_cast<uint8_t>(remaining * 3);
-  l = (BombDuration() - remaining) * 26;
+  const WorldCoord length =
+      WorldCoord::FromRaw((BombDuration() - remaining) * 26);
   const auto x_offset =
-      math::RoundedPolarVector(math::AngleFromLegacy(d), l << 1);
-  const auto y_offset =
-      std::sin(static_cast<float>(d << 1) * math::kLegacyAngleStep) *
-      static_cast<float>(l);
+      math::RoundedPolarVector(math::AngleFromLegacy(d), length * 2);
+  const auto y_offset = math::RoundedPolarVector(
+      static_cast<float>(d << 1) * math::kLegacyAngleStep, length);
   dx = playfield::kWorldCenterX + 35_px + x_offset.x;
-  dy = playfield::kWorldCenterY - 45_px +
-       static_cast<int>(std::lround(y_offset));
+  dy = playfield::kWorldCenterY - 45_px + y_offset.y;
 
   effects.SpawnFragment(dx, dy, FragmentKind::SmallStar);
   effects.SpawnFragment(dx, dy, FragmentKind::SmallStar);
@@ -251,7 +250,7 @@ void WideLoadout::FireMainFocused(Player &player_, int tier) {
                                  .direction_step = 0,
                                  .count = 1,
                                  .speed = 13.5_px,
-                                 .acceleration = 0,
+                                 .acceleration = {},
                                  .kind = PlayerShotKind::WideFocusMain};
     player_.SpawnShot(si);
     break;
@@ -263,7 +262,7 @@ void WideLoadout::FireMainFocused(Player &player_, int tier) {
                            .direction_step = 0,
                            .count = 1,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideFocusMain};
     player_.SpawnShot(si);
     si.x += 12_px;
@@ -272,14 +271,14 @@ void WideLoadout::FireMainFocused(Player &player_, int tier) {
   }
   default: {
     const int count = (tier <= 5) ? 3 : 4;
-    const int spread = (count - 1) * 12_px;
+    const WorldCoord spread = (count - 1) * 12_px;
     PlayerShotSpawnInfo si{.x = player_.X() - spread / 2,
                            .y = player_.Y(),
                            .direction = 192,
                            .direction_step = 0,
                            .count = 1,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideFocusMain};
     for (int i = 0; i < count; i++) {
       player_.SpawnShot(si);
@@ -304,7 +303,7 @@ void WideLoadout::FireSubFocused(Player &player_, int tier) {
                            .direction_step = 0,
                            .count = 1,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -321,7 +320,7 @@ void WideLoadout::FireSubFocused(Player &player_, int tier) {
                            .direction_step = 1,
                            .count = 2,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -338,7 +337,7 @@ void WideLoadout::FireSubFocused(Player &player_, int tier) {
                            .direction_step = 2,
                            .count = 3,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -354,7 +353,7 @@ void WideLoadout::FireSubFocused(Player &player_, int tier) {
                            .direction_step = 2,
                            .count = 4,
                            .speed = 13.5_px,
-                           .acceleration = 0,
+                           .acceleration = {},
                            .kind = PlayerShotKind::WideFocusSub};
     player_.SpawnShot(si);
     si.x = player_.OpX() - PixelToWorld(OptionOffset(false));
@@ -367,13 +366,10 @@ void WideLoadout::FireSubFocused(Player &player_, int tier) {
 
 void WideLoadout::DrawBombBackground(const Player & /*player*/,
                                      int remaining) const {
-  static constexpr std::array<PixelLtrb, 6> frames = {
-      PixelLtrb{0, 0, 210, 240},
-      PixelLtrb{210, 0, 210 * 2, 240},
-      PixelLtrb{210 * 2, 0, 210 * 3, 240},
-      PixelLtrb{0, 240, 210, 480},
-      PixelLtrb{210, 240, 210 * 2, 480},
-      PixelLtrb{210 * 2, 240, 210 * 3, 480}};
+  static constexpr std::array<Rect, 6> frames = {
+      Rect{0, 0, 210, 240},           Rect{210, 0, 210 * 2, 240},
+      Rect{210 * 2, 0, 210 * 3, 240}, Rect{0, 240, 210, 480},
+      Rect{210, 240, 210 * 2, 480},   Rect{210 * 2, 240, 210 * 3, 480}};
 
   if (remaining == 0) {
     return;

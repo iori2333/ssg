@@ -10,17 +10,16 @@
 #include "bullet/bullet_manager.h"
 #include "data/graphics_loader.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/font_uty.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text.h"
-#include "gfx/text_ttf.h"
+#include "gfx/text/text.h"
+#include "gfx/text/text_renderer.h"
 #include "i18n/localization.h"
 #include "player/player.h"
 #include "settings/config.h"
 #include "sys/input.h"
+#include "ui/bitmap_font.h"
 
 namespace {
 
@@ -45,7 +44,7 @@ bool BulletGalleryScene::Enter() {
   bullets_.Init();
   bullets_.Clear();
   TextRenderer().Clear();
-  help_text_ = TextRenderer().Register({.w = 480, .h = 20});
+  help_text_ = TextRenderer().Register({.x = 480, .y = 20});
   for (int row = 0; row < 5; row++) {
     for (int column = 0; column < 6; column++) {
       const auto type = kGalleryGrid[row][column];
@@ -70,7 +69,7 @@ BulletGallerySceneResult BulletGalleryScene::Update(InputBits input,
     return BulletGallerySceneResult::Running;
   }
 
-  GraphicsBackendClear();
+  GraphicsClear();
   bullets_.Render();
   if (config_.debug.hitbox_display != 0) {
     bullets_.RenderDebugHitboxes(config_.debug.hitbox_display);
@@ -81,12 +80,13 @@ BulletGallerySceneResult BulletGalleryScene::Update(InputBits input,
       const auto type = kGalleryGrid[row][column];
       if (type != 0xFF) {
         const auto label = std::format("{:02X}", type);
-        DrawFont16(kGalleryX + column * kGalleryDx - 4,
-                   kGalleryY + row * kGalleryDy + 16, label.c_str());
+        ui::Draw16({kGalleryX + column * kGalleryDx - 4,
+                    kGalleryY + row * kGalleryDy + 16},
+                   label);
       }
     }
   }
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   const auto help =
       localization_.Text(i18n::TextIdFromKey("ui.bullet_gallery.exit_help"));
   TextRenderer().Render(
@@ -96,8 +96,8 @@ BulletGallerySceneResult BulletGalleryScene::Update(InputBits input,
         s.Put({.x = x + 1, .y = 1}, help, Rgb{.r = 96, .g = 96, .b = 96});
         s.Put({.x = x, .y = 0}, help, Rgb{.r = 255, .g = 255, .b = 255});
       });
-  GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
-                          playfield::kRight + 1, playfield::kBottom + 1});
+  GraphicsSetClip({playfield::kLeft, playfield::kTop, playfield::kRight + 1,
+                   playfield::kBottom + 1});
   GraphicsFlip();
   return BulletGallerySceneResult::Running;
 }

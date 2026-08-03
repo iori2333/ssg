@@ -29,8 +29,7 @@
 #include "data/sfx_loader.h"
 #include "gameplay/game_rules.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text_ttf.h"
+#include "gfx/text/text_renderer.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
 #include "settings/config.h"
@@ -91,8 +90,7 @@ std::unique_ptr<ListNode> BuildLanguageMenu(UiConfig &ui_cfg,
       },
       [&ui_cfg, &localization](size_t index) {
         const auto language = localization.LanguageAt(index);
-        if (!localization.SetLanguage(language) ||
-            !TextBackendSetLanguage(language)) {
+        if (!localization.SetLanguage(language) || !TextSetLanguage(language)) {
           return true;
         }
         ui_cfg.language = language;
@@ -182,23 +180,23 @@ BuildScreenshotMenu(GraphicsConfig &gfx_cfg, DisplayController &display,
 std::unique_ptr<ListNode> BuildApiMenu(GraphicsConfig &gfx_cfg,
                                        DisplayController &display,
                                        i18n::Localization &localization) {
-  auto init_sel = GraphicsBackendAPIID(gfx_cfg.graphics_api);
+  auto init_sel = GraphicsRenderDriverId(gfx_cfg.graphics_api);
   auto node = std::make_unique<ListNode>(
       Localized(localization, "ui.menu.api.title"),
       Localized(localization, "ui.menu.api.help"),
-      [] { return GraphicsBackendAPICount(); },
+      [] { return GraphicsRenderDriverCount(); },
       [](size_t i) {
         return std::string(
-            GraphicsBackendAPILabel(GraphicsBackendAPIString(i)));
+            GraphicsRenderDriverLabel(GraphicsRenderDriverName(i)));
       },
       [&gfx_cfg, &display](size_t i) {
-        gfx_cfg.graphics_api = GraphicsBackendAPIString(i);
+        gfx_cfg.graphics_api = GraphicsRenderDriverName(i);
         (void)display.ApplyConfig(gfx_cfg);
         return false;
       },
       init_sel);
   node->BindSelection(
-      [&gfx_cfg] { return GraphicsBackendAPIID(gfx_cfg.graphics_api); });
+      [&gfx_cfg] { return GraphicsRenderDriverId(gfx_cfg.graphics_api); });
   return node;
 }
 
@@ -299,7 +297,7 @@ std::unique_ptr<EntryNode> BuildGraphicsMenu(GraphicsConfig &gfx_cfg,
 
   {
     auto api_entry = BuildApiMenu(gfx_cfg, display, localization);
-    api_entry->BindEnabled([] { return GraphicsBackendAPICount() >= 2; });
+    api_entry->BindEnabled([] { return GraphicsRenderDriverCount() >= 2; });
     ch.push_back(std::move(api_entry));
   }
 

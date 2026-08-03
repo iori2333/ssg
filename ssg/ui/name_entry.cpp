@@ -8,9 +8,9 @@
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
-#include "gfx/constants.h"
-#include "gfx/geometry.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 #include "sys/input.h"
 
 namespace {
@@ -168,11 +168,11 @@ void NameEntry::Draw(int name_x, int name_y) const {
   GraphicsSurfaceBlit({120, 0}, surface, {0, 0, 400, 64});
   GraphicsSurfaceBlit({112, 420}, surface, {0, 432, 416, 480});
 
-  PixelLtrb cursor_src;
+  Rect cursor_src;
   if (cursor_x_ >= 20 && cursor_y_ == 2) {
-    cursor_src = PixelLtwh{432, 432 + ((cursor_frame_ >> 3) << 4), 32, 16};
+    cursor_src = Rect::FromLtwh(432, 432 + ((cursor_frame_ >> 3) << 4), 32, 16);
   } else {
-    cursor_src = PixelLtwh{416, 432 + ((cursor_frame_ >> 3) << 4), 16, 16};
+    cursor_src = Rect::FromLtwh(416, 432 + ((cursor_frame_ >> 3) << 4), 16, 16);
   }
   GraphicsSurfaceBlit({112 + (cursor_x_ << 4), 420 + (cursor_y_ << 4)}, surface,
                       cursor_src);

@@ -12,8 +12,8 @@
 
 #include "effect_types.h"
 
-#include "gfx/coords.h"
-#include "gfx/text.h"
+#include "gfx/core/coords.h"
+#include "gfx/text/text.h"
 
 namespace audio {
 class AudioSystem;
@@ -30,12 +30,12 @@ public:
   void UpdateGameOver();
 
   void SpawnString(int x, int y, std::string_view text);
-  void SpawnPointValue(int x, int y, int points);
+  void SpawnPointValue(WorldCoord x, WorldCoord y, int points);
   void SpawnGameOver();
   void SetMusicTitle(int y, std::string_view title);
-  void SpawnCircle(int x, int y, CircleEffectKind kind);
-  void SpawnFragment(int x, int y, FragmentKind kind);
-  void SpawnBombExplosion(int x, int y);
+  void SpawnCircle(WorldCoord x, WorldCoord y, CircleEffectKind kind);
+  void SpawnFragment(WorldCoord x, WorldCoord y, FragmentKind kind);
+  void SpawnBombExplosion(WorldCoord x, WorldCoord y);
   void StartScreenTransition(ScreenTransition transition);
   void StartBossWarning();
 
@@ -68,10 +68,11 @@ private:
   };
 
   struct StringEffect {
-    int x = 0;
-    int y = 0;
-    int velocity_x = 0;
-    int velocity_y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
+    WorldCoord velocity_x{};
+    WorldCoord velocity_y{};
+    PixelPoint extent{};
     int time = 0;
     int points = 0;
     StringEffectState state = StringEffectState::Inactive;
@@ -90,25 +91,25 @@ private:
   };
 
   struct Fragment {
-    int x = 0;
-    int y = 0;
-    int velocity_x = 0;
-    int velocity_y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
+    WorldCoord velocity_x{};
+    WorldCoord velocity_y{};
     int remaining = 0;
     FragmentKind kind = FragmentKind::Graze;
   };
 
   struct BombParticle {
-    int x = 0;
-    int y = 0;
-    int velocity_x = 0;
-    int velocity_y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
+    WorldCoord velocity_x{};
+    WorldCoord velocity_y{};
     int frame = 0;
   };
 
   struct BombExplosion {
-    int x = 0;
-    int y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
     int age = 0;
     std::array<BombParticle, kBombParticleCount> particles{};
     bool active = false;
@@ -144,7 +145,7 @@ private:
 
   void DrawStrings();
   void DrawBossWarning();
-  void RenderMusicTitle(WindowPoint top_left, const PixelLtwh &subrect);
+  void RenderMusicTitle(PixelPoint top_left, const Rect &subrect);
   static void DrawCircleFade(int x, int y, int radius);
   static void InitializeBombExplosion(BombExplosion &effect);
   static void UpdateBombExplosion(BombExplosion &effect);

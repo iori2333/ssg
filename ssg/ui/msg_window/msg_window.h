@@ -11,7 +11,7 @@
 #include <string>
 #include <string_view>
 
-#include "gfx/text.h"
+#include "gfx/text/text.h"
 #include "util/enum_flags.h"
 
 // Message window flags
@@ -26,7 +26,7 @@ template <> inline constexpr bool util::EnableEnumFlags<MsgWindowFlags> = true;
 
 class MsgWindow {
 public:
-  void Init(const WindowLtrb &rc, MsgWindowFlags flags = MsgWindowFlags::None);
+  void Init(const Rect &rc, MsgWindowFlags flags = MsgWindowFlags::None);
   void Open();       // Open the message window
   void Close();      // Close the message window
   void ForceClose(); // Force close the message window
@@ -48,13 +48,13 @@ private:
 
   void MsgBlank(); // Clear strings and reset to first line
 
-  WindowLtrb max_size{}; // Final window size
-  WindowLtrb now_size{}; // Current window size
+  Rect max_size{}; // Final window size
+  Rect now_size{}; // Current window size
   PixelPoint text_topleft{};
 
   MsgWindowFlags flags{};
-  FontId font_id{};   // Font to use
-  int font_dy{};      // Font Y increment
+  FontId font_id{}; // Font to use
+  int font_dy{};    // Font Y increment
   State state = State::Dead;
   std::size_t max_line{}; // Max displayable lines
   std::size_t line{};     // Next line index
@@ -62,7 +62,7 @@ private:
   std::size_t face_id{};   // Current face ID
   std::size_t next_face{}; // Next face ID to show
   FaceState face_state = FaceState::None;
-  int face_time{};        // Face display counter
+  int face_time{}; // Face display counter
 
   std::array<std::string_view, kMessageLines> msg{}; // Displayed messages
 

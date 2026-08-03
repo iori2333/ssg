@@ -14,8 +14,8 @@
 #include "msg_window/msg_window.h"
 #include "ui_manager.h"
 
-#include "gfx/constants.h"
-#include "gfx/coords.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "i18n/localization.h"
 #include "settings/config.h"
 
@@ -101,8 +101,7 @@ void UiManager::ConfigureMain(ConfigData &config,
   game_over_window_.SetExitText(std::move(exit_title), std::move(exit_help));
 }
 
-void UiManager::InitMessageWindow(const WindowLtrb &rect,
-                                  MsgWindowFlags flags) {
+void UiManager::InitMessageWindow(const Rect &rect, MsgWindowFlags flags) {
   msg_window_.Init(rect, flags);
 }
 

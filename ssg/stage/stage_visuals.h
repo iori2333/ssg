@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "gfx/core/coords.h"
+
 namespace stage {
 
 enum class Stage4RockCommand : uint8_t {
@@ -52,9 +54,9 @@ private:
   static constexpr std::size_t kFastStarCount = 180;
 
   struct Point3D {
-    int x = 0;
-    int y = 0;
-    int z = 0;
+    WorldCoord x{};
+    WorldCoord y{};
+    WorldCoord z{};
   };
 
   struct Rotation3D {
@@ -66,7 +68,7 @@ private:
   struct Cube {
     Point3D position;
     Rotation3D rotation;
-    int half_size = 0;
+    WorldCoord half_size{};
   };
 
   struct Star {
@@ -78,10 +80,10 @@ private:
   struct FakeEclLine {
     int source_x = 0;
     int source_y = 0;
-    int x = 0;
-    int y = 0;
-    int velocity_x = 0;
-    int velocity_y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
+    WorldCoord velocity_x{};
+    WorldCoord velocity_y{};
   };
 
   enum class RockState : uint8_t {
@@ -93,12 +95,12 @@ private:
   };
 
   struct Rock {
-    int x = 0;
-    int y = 0;
-    int velocity_y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
+    WorldCoord velocity_y{};
     int age = 0;
-    int speed = 0;
-    int acceleration = 0;
+    WorldCoord speed{};
+    WorldCoord acceleration{};
     int sprite = 0;
     RockState state = RockState::Normal;
   };

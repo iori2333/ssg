@@ -26,7 +26,8 @@
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 #include "item/item_system.h"
 #include "player/player.h"
 #include "stage/stage_background.h"
@@ -41,6 +42,14 @@ const Arguments &Args(const EclInstruction &instruction) {
 }
 
 size_t RegisterIndex(EclValue value) { return static_cast<size_t>(value); }
+
+uint32_t EncodeWorldCoord(WorldCoord value) {
+  return std::bit_cast<uint32_t>(static_cast<int32_t>(value.Raw()));
+}
+
+WorldCoord DecodeWorldCoord(uint32_t value) {
+  return WorldCoord::FromRaw(std::bit_cast<int32_t>(value));
+}
 
 } // namespace
 
@@ -223,9 +232,8 @@ EclVm::ExecuteControlInstruction(EnemyActor &actor,
   }
 
   case EclOpcode::JumpDirection: {
-    const auto target =
-        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
-                      static_cast<float>(host_.GetPlayer().Y() - actor.y));
+    const auto target = math::AngleTo(WorldPoint{
+        host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y});
     const auto difference = std::abs(
         math::ShortestAngleDelta(target, math::AngleFromLegacy(actor.d)));
     if (difference < 4.0F * math::kLegacyAngleStep) {
@@ -270,9 +278,7 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
                                                             : velocity;
   };
   const auto relative_angle = [&actor](int angle) -> int {
-    return actor.HasFlag(EnemyActorFlags::HorizontalMirror)
-               ? -angle
-               : angle;
+    return actor.HasFlag(EnemyActorFlags::HorizontalMirror) ? -angle : angle;
   };
   const auto continue_duration = [&actor](int frames) {
     if (actor.script.wait_counter == 0) {
@@ -326,8 +332,8 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     const auto &args = Args<EclLinearRotateArguments>(instruction);
     if (actor.script.wait_counter == 0) {
       actor.script.wait_counter = args.frames + 1;
-      actor.vx = absolute_velocity_x(args.velocity_x);
-      actor.vy = args.velocity_y;
+      actor.vx = WorldCoord::FromRaw(absolute_velocity_x(args.velocity_x));
+      actor.vy = WorldCoord::FromRaw(args.velocity_y);
       actor.vd = relative_angle(args.angle_delta);
     }
     if (--actor.script.wait_counter != 0) {
@@ -349,10 +355,10 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.amp = args.amplitude;
       actor.vd = args.angle_delta;
       if (instruction.Opcode() == EclOpcode::WaveX) {
-        actor.vx = absolute_velocity_x(args.velocity);
+        actor.vx = WorldCoord::FromRaw(absolute_velocity_x(args.velocity));
         actor.vy = actor.y;
       } else {
-        actor.vy = args.velocity;
+        actor.vy = WorldCoord::FromRaw(args.velocity);
         actor.vx = actor.x;
       }
     }
@@ -384,11 +390,11 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       if (instruction.Opcode() == EclOpcode::MoveX) {
         actor.vx = (PixelToWorld(args.coordinate) - actor.x) /
                    actor.script.wait_counter;
-        actor.vy = 0;
+        actor.vy = {};
       } else {
         actor.vy = (PixelToWorld(args.coordinate) - actor.y) /
                    actor.script.wait_counter;
-        actor.vx = 0;
+        actor.vx = {};
       }
     }
     if (--actor.script.wait_counter != 0) {
@@ -425,11 +431,11 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.script.wait_counter = frames + 1;
       actor.vx =
           instruction.Opcode() == EclOpcode::MoveToPlayerY
-              ? 0
+              ? WorldCoord{}
               : (host_.GetPlayer().X() - actor.x) / actor.script.wait_counter;
       actor.vy =
           instruction.Opcode() == EclOpcode::MoveToPlayerX
-              ? 0
+              ? WorldCoord{}
               : (host_.GetPlayer().Y() - actor.y) / actor.script.wait_counter;
     }
     if (--actor.script.wait_counter != 0) {
@@ -446,7 +452,7 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
       actor.script.wait_counter = args.frames + 1;
     }
     if (--actor.script.wait_counter != 0) {
-      actor.v += args.acceleration;
+      actor.v += WorldCoord::FromRaw(args.acceleration);
       const auto velocity =
           math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
       actor.x += velocity.x;
@@ -472,7 +478,7 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     } else {
       actor.x += actor.vx;
       actor.y += actor.vy;
-      actor.vy += actor.vd;
+      actor.vy += WorldCoord::FromRaw(actor.vd);
       if (actor.x < playfield::kWorldLeft || actor.x > playfield::kWorldRight) {
         actor.vx = -actor.vx;
         actor.x += actor.vx;
@@ -494,21 +500,23 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     return Step::Advance;
   case EclOpcode::AddAngle:
     actor.d = static_cast<uint8_t>(
-        actor.d + relative_angle(Args<EclSignedByteArguments>(instruction).value));
+        actor.d +
+        relative_angle(Args<EclSignedByteArguments>(instruction).value));
     return Step::Advance;
   case EclOpcode::RandomAngle:
     actor.d = math::RandomInt() & 0xff;
     return Step::Advance;
   case EclOpcode::AimAtPlayer:
-    actor.d = math::AngleToLegacy(
-        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
-                      static_cast<float>(host_.GetPlayer().Y() - actor.y)));
+    actor.d = math::AngleToLegacy(math::AngleTo(WorldPoint{
+        host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y}));
     return Step::Advance;
   case EclOpcode::SetSpeed:
-    actor.v = Args<EclSignedDwordArguments>(instruction).value;
+    actor.v =
+        WorldCoord::FromRaw(Args<EclSignedDwordArguments>(instruction).value);
     return Step::Advance;
   case EclOpcode::AddSpeed:
-    actor.v += Args<EclSignedDwordArguments>(instruction).value;
+    actor.v +=
+        WorldCoord::FromRaw(Args<EclSignedDwordArguments>(instruction).value);
     return Step::Advance;
   case EclOpcode::SetPosition: {
     const auto &args = Args<EclPointArguments>(instruction);
@@ -538,35 +546,35 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     return Step::Advance;
 
   case EclOpcode::RandomBoundedAngle: {
-    const PixelLtrb bounds = {
-        playfield::kWorldLeft + 150_px,
+    const WorldCoord left = playfield::kWorldLeft + 150_px;
+    const WorldCoord top =
         playfield::kWorldTop +
-            ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3),
-        playfield::kWorldRight - 150_px,
+        ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3);
+    const WorldCoord right = playfield::kWorldRight - 150_px;
+    const WorldCoord bottom =
         playfield::kWorldCenterY -
-            ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3) -
-            40_px};
+        ((playfield::kWorldCenterY - playfield::kWorldTop - 40_px) / 3) - 40_px;
     int base = 0;
     constexpr int range = 32;
-    if (actor.y < bounds.top) {
-      if (actor.x < bounds.left) {
+    if (actor.y < top) {
+      if (actor.x < left) {
         base = 16;
-      } else if (actor.x > bounds.right) {
+      } else if (actor.x > right) {
         base = 80;
       } else {
         base = 16 + 64 * ((math::RandomInt() >> 1) & 1);
       }
-    } else if (actor.y > bounds.bottom) {
-      if (actor.x < bounds.left) {
+    } else if (actor.y > bottom) {
+      if (actor.x < left) {
         base = -48;
-      } else if (actor.x > bounds.right) {
+      } else if (actor.x > right) {
         base = 144;
       } else {
         base = 176;
       }
-    } else if (actor.x < bounds.left) {
+    } else if (actor.x < left) {
       base = -16;
-    } else if (actor.x > bounds.right) {
+    } else if (actor.x > right) {
       base = 112;
     } else {
       base = ((math::RandomInt() >> 1) & 1) != 0 ? -16 : 112;
@@ -579,13 +587,15 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     if (actor.x > playfield::kWorldCenterX) {
       actor.x =
           PixelToWorld(playfield::kCenterX) -
-          ((math::RandomInt() % (playfield::kRight - playfield::kLeft - 100)) *
-           32);
+          WorldCoord::FromRaw((math::RandomInt() %
+                               (playfield::kRight - playfield::kLeft - 100)) *
+                              32);
     } else {
       actor.x =
           PixelToWorld(playfield::kCenterX) +
-          ((math::RandomInt() % (playfield::kRight - playfield::kLeft - 100)) *
-           32);
+          WorldCoord::FromRaw((math::RandomInt() %
+                               (playfield::kRight - playfield::kLeft - 100)) *
+                              32);
     }
     actor.y = PixelToWorld(math::RandomInt() %
                            (playfield::kCenterY - playfield::kTop - 160)) +
@@ -657,9 +667,8 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::AimBulletAtPlayer:
-    actor.bullet_command.d = math::AngleToLegacy(
-        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
-                      static_cast<float>(host_.GetPlayer().Y() - actor.y)));
+    actor.bullet_command.d = math::AngleToLegacy(math::AngleTo(WorldPoint{
+        host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y}));
     break;
   case EclOpcode::SyncBulletAngle:
     actor.bullet_command.d = actor.d;
@@ -687,8 +696,8 @@ EclVm::Step EclVm::ExecuteBulletInstruction(EnemyActor &actor,
   case EclOpcode::AddBulletSpeed: {
     const auto &args = Args<EclSignedBytePairArguments>(instruction);
     const auto previous = actor.bullet_command.v;
-    actor.bullet_command.v = static_cast<uint8_t>(
-        ((previous & 0x3f) + args.first) & 0x3f);
+    actor.bullet_command.v =
+        static_cast<uint8_t>(((previous & 0x3f) + args.first) & 0x3f);
     actor.bullet_command.v |= static_cast<uint8_t>(previous & 0xc0);
     actor.bullet_command.a =
         static_cast<int8_t>(actor.bullet_command.a + args.second);
@@ -736,7 +745,7 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         .no_scaling = unscaled,
         .x = actor.x + actor.laser_command.x,
         .y = actor.y + actor.laser_command.y,
-        .v = static_cast<float>(actor.laser_command.v),
+        .v = bullet_common::ToSimulationUnits(actor.laser_command.v),
         .w = actor.laser_command.w,
         .l = actor.laser_command.l,
         .l2 = actor.laser_command.l2,
@@ -763,13 +772,16 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserLength:
-    actor.laser_command.l = Args<EclSignedDwordArguments>(instruction).value;
+    actor.laser_command.l =
+        WorldCoord::FromRaw(Args<EclSignedDwordArguments>(instruction).value);
     break;
   case EclOpcode::AddLaserLength:
-    actor.laser_command.l += Args<EclSignedDwordArguments>(instruction).value;
+    actor.laser_command.l +=
+        WorldCoord::FromRaw(Args<EclSignedDwordArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserStartLength:
-    actor.laser_command.l2 = Args<EclSignedDwordArguments>(instruction).value;
+    actor.laser_command.l2 =
+        WorldCoord::FromRaw(Args<EclSignedDwordArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserAngle: {
     const auto &args = Args<EclBytePairArguments>(instruction);
@@ -786,9 +798,8 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::AimLaserAtPlayer:
-    actor.laser_command.d = math::AngleToLegacy(
-        math::AngleTo(static_cast<float>(host_.GetPlayer().X() - actor.x),
-                      static_cast<float>(host_.GetPlayer().Y() - actor.y)));
+    actor.laser_command.d = math::AngleToLegacy(math::AngleTo(WorldPoint{
+        host_.GetPlayer().X() - actor.x, host_.GetPlayer().Y() - actor.y}));
     break;
   case EclOpcode::SyncLaserAngle:
     actor.laser_command.d = actor.d;
@@ -798,13 +809,15 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::AddLaserCount:
-    actor.laser_command.n = static_cast<uint8_t>(
-        actor.laser_command.n + Args<EclSignedByteArguments>(instruction).value);
+    actor.laser_command.n =
+        static_cast<uint8_t>(actor.laser_command.n +
+                             Args<EclSignedByteArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserSpeed:
   case EclOpcode::AddLaserSpeed:
     // The original runtime assigned in both cases; preserve that format quirk.
-    actor.laser_command.v = Args<EclSignedDwordArguments>(instruction).value;
+    actor.laser_command.v =
+        WorldCoord::FromRaw(Args<EclSignedDwordArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserColor:
     actor.laser_command.c =
@@ -815,7 +828,8 @@ EclVm::Step EclVm::ExecuteLaserInstruction(EnemyActor &actor,
         static_cast<uint8_t>(Args<EclByteArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserWidth:
-    actor.laser_command.w = Args<EclSignedDwordArguments>(instruction).value;
+    actor.laser_command.w =
+        WorldCoord::FromRaw(Args<EclSignedDwordArguments>(instruction).value);
     break;
   case EclOpcode::SetLaserOffset: {
     const auto &args = Args<EclPointArguments>(instruction);
@@ -936,8 +950,10 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     }
     actor.animation = actor.damage_animation = args.pattern;
     actor.animation_speed = args.speed;
-    actor.hitbox_half_height = host_.Animations()[actor.animation].size.h << 5;
-    actor.hitbox_half_width = host_.Animations()[actor.animation].size.w << 5;
+    actor.hitbox_half_height =
+        WorldCoord::FromPixels(host_.Animations()[actor.animation].size.y) / 2;
+    actor.hitbox_half_width =
+        WorldCoord::FromPixels(host_.Animations()[actor.animation].size.x) / 2;
     actor.animation_frame = 0;
     break;
   }
@@ -955,7 +971,7 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
   case EclOpcode::SpawnEnemy:
   case EclOpcode::SpawnEnemyWithAngle: {
     const auto &args = Args<EclSpawnEnemyArguments>(instruction);
-    WorldPoint position{&actor.x, &actor.y};
+    WorldPoint position{actor.x, actor.y};
     position.x += PixelToWorld(args.offset_x);
     position.y += PixelToWorld(args.offset_y);
     auto *spawned = host_.SpawnRegular(position, args.script_id);
@@ -1005,7 +1021,7 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
     break;
   }
   case EclOpcode::SpawnBoss: {
-    const WorldPoint position{&actor.x, &actor.y};
+    const WorldPoint position{actor.x, actor.y};
     host_.SpawnBoss(position, Args<EclScriptArguments>(instruction).script_id);
     break;
   }
@@ -1174,9 +1190,9 @@ uint32_t EclVm::ReadValue(const EnemyActor &actor, EclValue value) {
   case EclValue::LaserColor:
     return actor.laser_command.c;
   case EclValue::LaserLength:
-    return actor.laser_command.l;
+    return EncodeWorldCoord(actor.laser_command.l);
   case EclValue::LaserSpeed:
-    return actor.laser_command.v;
+    return EncodeWorldCoord(actor.laser_command.v);
   case EclValue::BulletAngle:
     return actor.bullet_command.d;
   case EclValue::BulletAngleDelta:
@@ -1196,9 +1212,9 @@ uint32_t EclVm::ReadValue(const EnemyActor &actor, EclValue value) {
   case EclValue::BulletAngularVelocity:
     return actor.bullet_command.vd;
   case EclValue::ActorX:
-    return actor.x;
+    return EncodeWorldCoord(actor.x);
   case EclValue::ActorY:
-    return actor.y;
+    return EncodeWorldCoord(actor.y);
   case EclValue::ActorAngle:
     return actor.d;
   default:
@@ -1226,10 +1242,10 @@ void EclVm::WriteValue(EnemyActor &actor, EclValue destination,
     actor.laser_command.c = static_cast<uint8_t>(value);
     break;
   case EclValue::LaserLength:
-    actor.laser_command.l = static_cast<int>(value);
+    actor.laser_command.l = DecodeWorldCoord(value);
     break;
   case EclValue::LaserSpeed:
-    actor.laser_command.v = static_cast<int>(value);
+    actor.laser_command.v = DecodeWorldCoord(value);
     break;
   case EclValue::BulletAngle:
     actor.bullet_command.d = static_cast<uint8_t>(value);
@@ -1259,10 +1275,10 @@ void EclVm::WriteValue(EnemyActor &actor, EclValue destination,
     actor.bullet_command.vd = static_cast<int8_t>(value);
     break;
   case EclValue::ActorX:
-    actor.x = static_cast<int>(value);
+    actor.x = DecodeWorldCoord(value);
     break;
   case EclValue::ActorY:
-    actor.y = static_cast<int>(value);
+    actor.y = DecodeWorldCoord(value);
     break;
   case EclValue::ActorAngle:
     actor.d = static_cast<uint8_t>(value);

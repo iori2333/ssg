@@ -12,10 +12,9 @@
 #include "audio/sfx.h"
 #include "bullet/bullet_common.h"
 #include "gameplay/playfield.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/render/geometry.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -53,7 +52,7 @@ void DrawTriangleFanAlpha(std::span<const VertexXy, 4> src) {
 // ── Spawn ────────────────────────────────────────────────────────────
 
 void LaserHoming::Spawn(const HomingSpawnInfo &info) {
-  v_ = 4_px;
+  v_ = bullet_common::ToSimulationUnits(4_px);
   a_ = 10;
   count_ = 0;
   current_ = 0;
@@ -66,8 +65,8 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
       info.bullet_index, BulletPattern::Spread, info.n, info.angle, info.dw);
 
   for (auto &j : p_) {
-    j.x = static_cast<float>(info.x);
-    j.y = static_cast<float>(info.y);
+    j.x = bullet_common::ToSimulationUnits(info.x);
+    j.y = bullet_common::ToSimulationUnits(info.y);
     j.angle = angle;
   }
 }
@@ -85,16 +84,16 @@ void LaserHoming::Update(audio::AudioSystem &audio, const UpdateInfo &info) {
   switch (subtype_) {
   case HomingType::Type1: {
     const auto target =
-        math::AngleTo(static_cast<float>(info.player_x) - prev_x,
-                      static_cast<float>(info.player_y) - prev_y);
+        math::AngleTo(bullet_common::ToSimulationUnits(info.player_x) - prev_x,
+                      bullet_common::ToSimulationUnits(info.player_y) - prev_y);
     const auto angle_delta = math::ShortestAngleDelta(target, prev_angle);
 
     if (std::abs(angle_delta) < 8.0F * math::kLegacyAngleStep) {
       subtype_ = HomingType::None;
       audio.PlaySfx(SfxId::Hlaser,
-                    static_cast<int>(std::lround(p_[current_].x)));
+                    bullet_common::RoundSimulationUnits(p_[current_].x));
     } else {
-      if (v_ > 2_px) {
+      if (v_ > bullet_common::ToSimulationUnits(2_px)) {
         v_ -= a_;
       }
       const auto turn =
@@ -128,8 +127,10 @@ void LaserHoming::Update(audio::AudioSystem &audio, const UpdateInfo &info) {
   int const tail_i = GetNext(current_);
   const float tx = p_[tail_i].x;
   const float ty = p_[tail_i].y;
-  if (tx < playfield::kWorldLeft - 4_px || tx > playfield::kWorldRight + 4_px ||
-      ty < playfield::kWorldTop - 4_px || ty > playfield::kWorldBottom + 4_px) {
+  if (tx < bullet_common::ToSimulationUnits(playfield::kWorldLeft - 4_px) ||
+      tx > bullet_common::ToSimulationUnits(playfield::kWorldRight + 4_px) ||
+      ty < bullet_common::ToSimulationUnits(playfield::kWorldTop - 4_px) ||
+      ty > bullet_common::ToSimulationUnits(playfield::kWorldBottom + 4_px)) {
     state_ = HomingState::Dead;
   }
 }
@@ -144,7 +145,7 @@ void LaserHoming::Render() const {
   geometry::SetColor(kOuterColor);
   geometry::SetAlphaOne();
 
-  int w = kHomingWidth;
+  WorldCoord w = kHomingWidth;
   int cur = current_;
   const auto *pt = &p_[cur];
   const auto edge = [](const TrailPoint &point, float width) {
@@ -157,17 +158,17 @@ void LaserHoming::Render() const {
   };
 
   std::array<VertexXy, 4> src{};
-  const auto first_edge = edge(*pt, static_cast<float>(w));
+  const auto first_edge = edge(*pt, bullet_common::ToSimulationUnits(w));
   src[0] = first_edge[0];
   src[1] = first_edge[1];
 
-  DrawCircleA16(pt->x, pt->y, static_cast<float>(w), pt->angle);
+  DrawCircleA16(pt->x, pt->y, bullet_common::ToSimulationUnits(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
     pt = &p_[cur];
 
-    const auto next_edge = edge(*pt, static_cast<float>(w));
+    const auto next_edge = edge(*pt, bullet_common::ToSimulationUnits(w));
     src[2] = next_edge[1];
     src[3] = next_edge[0];
     DrawTriangleFanAlpha(src);
@@ -176,7 +177,7 @@ void LaserHoming::Render() const {
     src[1] = src[2];
 
     if (w > 2_px) {
-      w -= 64;
+      w -= 1_px;
     }
   }
 
@@ -187,17 +188,17 @@ void LaserHoming::Render() const {
   cur = current_;
   pt = &p_[cur];
 
-  const auto highlight_edge = edge(*pt, static_cast<float>(w));
+  const auto highlight_edge = edge(*pt, bullet_common::ToSimulationUnits(w));
   src[0] = highlight_edge[0];
   src[1] = highlight_edge[1];
 
-  DrawCircleA16(pt->x, pt->y, static_cast<float>(w), pt->angle);
+  DrawCircleA16(pt->x, pt->y, bullet_common::ToSimulationUnits(w), pt->angle);
 
   for (int i = 0; i < kHomingTrailLength - 1; i++) {
     cur = GetPrev(cur, kHomingSection);
     pt = &p_[cur];
 
-    const auto next_edge = edge(*pt, static_cast<float>(w));
+    const auto next_edge = edge(*pt, bullet_common::ToSimulationUnits(w));
     src[2] = next_edge[1];
     src[3] = next_edge[0];
     DrawTriangleFanAlpha(src);
@@ -205,8 +206,8 @@ void LaserHoming::Render() const {
     src[0] = src[3];
     src[1] = src[2];
 
-    if (w > 64) {
-      w -= 64;
+    if (w > 1_px) {
+      w -= 1_px;
     } else {
       break;
     }
@@ -219,19 +220,24 @@ void LaserHoming::Kill() { state_ = HomingState::Dead; }
 
 // ── Hit detection ──────────────────────────────────────────────────
 
-HitResult LaserHoming::CheckHit(int px, int py, int player_radius) const {
+HitResult LaserHoming::CheckHit(WorldCoord px, WorldCoord py,
+                                WorldCoord player_radius) const {
   if (state_ == HomingState::Dead) {
     return HitResult::Miss;
   }
 
   bool grazed = false;
   for (const auto &j : p_) {
-    if (std::abs(j.x - static_cast<float>(px)) < kHomingWidth + 15_px &&
-        std::abs(j.y - static_cast<float>(py)) < kHomingWidth + 15_px) {
-      if (std::abs(j.x - static_cast<float>(px)) <
-              static_cast<float>(kHomingWidth * 2 / 3) + player_radius &&
-          std::abs(j.y - static_cast<float>(py)) <
-              static_cast<float>(kHomingWidth * 2 / 3) + player_radius) {
+    if (std::abs(j.x - bullet_common::ToSimulationUnits(px)) <
+            bullet_common::ToSimulationUnits(kHomingWidth + 15_px) &&
+        std::abs(j.y - bullet_common::ToSimulationUnits(py)) <
+            bullet_common::ToSimulationUnits(kHomingWidth + 15_px)) {
+      if (std::abs(j.x - bullet_common::ToSimulationUnits(px)) <
+              bullet_common::ToSimulationUnits(kHomingWidth * 2 / 3 +
+                                               player_radius) &&
+          std::abs(j.y - bullet_common::ToSimulationUnits(py)) <
+              bullet_common::ToSimulationUnits(kHomingWidth * 2 / 3 +
+                                               player_radius)) {
         return HitResult::Hit;
       }
       grazed = true;
@@ -246,8 +252,8 @@ void LaserHoming::RenderDebugHitbox(int mode) const {
   if (state_ == HomingState::Dead) {
     return;
   }
-  const int hit_r = (kHomingWidth * 2 / 3) >> 6;
-  const int evade_r = (kHomingWidth + 15_px) >> 6;
+  const int hit_r = (kHomingWidth * 2 / 3).ToPixels();
+  const int evade_r = (kHomingWidth + 15_px).ToPixels();
 
   int current = current_;
   for (int j = 0; j < kHomingTrailLength; j++) {

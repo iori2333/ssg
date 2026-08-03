@@ -16,20 +16,19 @@
 #include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/font_uty.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text.h"
-#include "gfx/text_ttf.h"
+#include "gfx/render/geometry.h"
+#include "gfx/text/text.h"
+#include "gfx/text/text_renderer.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
 #include "sys/log.h"
+#include "ui/bitmap_font.h"
 #include "ui/name_entry.h"
 #include "ui/ui_manager.h"
 #include "util/time_api.h"
@@ -77,7 +76,7 @@ std::string RecordDate(int64_t timestamp) {
                      util::LocalTime(util::UtcTime(timestamp)));
 }
 
-void RenderUiText(WindowPoint position, TextRenderRectId rect,
+void RenderUiText(PixelPoint position, TextRenderRectId rect,
                   std::string_view text, bool centered = false) {
   TextRenderer().Render(
       position, rect, text, [text, centered](TextRenderSession &s) {
@@ -88,7 +87,7 @@ void RenderUiText(WindowPoint position, TextRenderRectId rect,
       });
 }
 
-void RenderDetailRow(WindowPoint position, TextRenderRectId rect,
+void RenderDetailRow(PixelPoint position, TextRenderRectId rect,
                      std::string_view label, std::string_view value) {
   const auto cache_key = std::format("{}\x1F{}", label, value);
   TextRenderer().Render(
@@ -101,8 +100,7 @@ void RenderDetailRow(WindowPoint position, TextRenderRectId rect,
         constexpr Rgb value_color{.r = 255, .g = 255, .b = 255};
 
         s.SetFont(FontId::Normal);
-        const auto label_x =
-            std::max(0, label_right - TextRenderSession::Extent(label).w);
+        const auto label_x = std::max(0, label_right - s.Extent(label).x);
         s.Put({.x = label_x + 1, .y = 1}, label, shadow);
         s.Put({.x = label_x, .y = 0}, label, label_color);
         s.Put({.x = separator_x + 1, .y = 1}, ":", shadow);
@@ -126,7 +124,7 @@ bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty,
   LoadLeaderboard(static_cast<GameLevel>(current_difficulty_));
 
   ui_.ForceCloseMessageWindow();
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsFlip();
   if (!graphics_.LoadNameRegistration()) {
     logging::Error(logging::Channel::Ui,
@@ -134,9 +132,9 @@ bool ScoreScene::ShowLeaderboard(GameLevel initial_difficulty,
     return false;
   }
 
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   TextRenderer().Clear();
-  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
+  ui_text_ = TextRenderer().Register({.x = 480, .y = 24});
   input_locked_ = initial_input != 0U;
   return true;
 }
@@ -211,7 +209,7 @@ ScoreScene::StartNameRegistration(ScoreRecord record, InputBits initial_input,
   audio_.StopSfx(SfxId::Warning);
   audio_.StopAllSfx();
   ui_.ForceCloseMessageWindow();
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsFlip();
   if (!graphics_.LoadNameRegistration()) {
     logging::Error(logging::Channel::Ui,
@@ -222,9 +220,9 @@ ScoreScene::StartNameRegistration(ScoreRecord record, InputBits initial_input,
 
   current_difficulty_ = std::to_underlying(current_record_->difficulty);
   ResetRows();
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   TextRenderer().Clear();
-  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
+  ui_text_ = TextRenderer().Register({.x = 480, .y = 24});
   name_entry_.Begin(true, initial_input);
   save_failed_ = false;
   if (change_music) {
@@ -255,8 +253,8 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(InputBits input,
 
   if (should_draw) {
     DrawLeaderboard(false);
-    const auto gx = rows_[pending_rank_].x >> 6;
-    const auto gy = rows_[pending_rank_].y >> 6;
+    const auto gx = rows_[pending_rank_].x.ToPixels();
+    const auto gy = rows_[pending_rank_].y.ToPixels();
     name_entry_.Draw(gx + 88, gy + 4);
     if (save_failed_) {
       const auto failed = Text(localization_, "ui.score.save_failed");
@@ -270,18 +268,18 @@ ScoreSceneResult ScoreScene::UpdateNameRegistration(InputBits input,
 void ScoreScene::ResetRows() {
   for (std::size_t i = 0; i < rows_.size(); i++) {
     rows_[i] = {
-        .x = static_cast<int>((640 + 50 + (i * 24 * 20)) << 6),
-        .y = static_cast<int>((100 + (i * 48)) << 6),
+        .x = WorldCoord::FromPixels(static_cast<int>(640 + 50 + (i * 24 * 20))),
+        .y = WorldCoord::FromPixels(static_cast<int>(100 + (i * 48))),
         .moving = true,
     };
   }
 }
 
 void ScoreScene::DrawLeaderboard(bool show_selection) {
-  GraphicsBackendClear();
+  GraphicsClear();
   for (std::size_t i = 0; i < rows_.size(); i++) {
     auto &row = rows_[i];
-    const auto target_x = static_cast<int>((50 + i * 24) << 6);
+    const auto target_x = WorldCoord::FromPixels(static_cast<int>(50 + i * 24));
     const auto velocity = (row.x - target_x) / 12;
     if (velocity > 2_px) {
       row.x -= velocity;
@@ -289,10 +287,11 @@ void ScoreScene::DrawLeaderboard(bool show_selection) {
       row.moving = false;
     }
 
-    const int x = row.x >> 6;
-    const int y = row.y >> 6;
-    GraphicsSurfaceBlit({x, y}, SurfaceId::NameRegistration,
-                        PixelLtwh{0, 64 + static_cast<int>(32 * i), 400, 32});
+    const int x = row.x.ToPixels();
+    const int y = row.y.ToPixels();
+    GraphicsSurfaceBlit(
+        {x, y}, SurfaceId::NameRegistration,
+        Rect::FromLtwh(0, 64 + static_cast<int>(32 * i), 400, 32));
     if (i >= scores_.size()) {
       continue;
     }
@@ -303,26 +302,27 @@ void ScoreScene::DrawLeaderboard(bool show_selection) {
     }
 
     const auto &record = scores_[i];
-    DrawFont16C2(x + 88, y + 4, record.name.c_str());
+    ui::Draw16({x + 88, y + 4}, record.name, 16);
     const auto score = std::format("{:11}", record.score);
-    DrawFont16C2(x + 216, y + 4, score.c_str());
+    ui::Draw16({x + 216, y + 4}, score, 16);
     const auto graze = std::format("{:6}", record.graze);
-    DrawScore(x + 120, y + 25, graze.c_str());
+    ui::DrawScore({x + 120, y + 25}, graze);
     if (record.stage == StageId::Extra) {
       GraphicsSurfaceBlit({x + 224, y + 24}, SurfaceId::System,
-                          PixelLtwh{288, 88, 16, 8});
+                          Rect::FromLtwh(288, 88, 16, 8));
     } else {
       const auto stage =
           std::format("{}", std::to_underlying(record.stage) + 1);
-      DrawScore(x + 224, y + 25, stage.c_str());
+      ui::DrawScore({x + 224, y + 25}, stage);
     }
     GraphicsSurfaceBlit(
         {x + 304, y + 24}, SurfaceId::NameRegistration,
-        PixelLtwh{0, 400 + std::to_underlying(record.player_type) * 8, 48, 8});
+        Rect::FromLtwh(0, 400 + std::to_underlying(record.player_type) * 8, 48,
+                       8));
   }
   const auto difficulty =
       std::string{GameLevelName(static_cast<GameLevel>(current_difficulty_))};
-  DrawFont16(320, 450, difficulty.c_str());
+  ui::Draw16({320, 450}, difficulty);
 }
 
 void ScoreScene::DrawDetail() const {

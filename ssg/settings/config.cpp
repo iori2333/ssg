@@ -17,13 +17,29 @@
 #include "gfx/graphics.h"
 #include "music/music_player.h"
 #include "sys/input.h"
-#include "util/enum_flags.h"
 
 namespace {
 
 constexpr auto kConfigFileName = "SSG.TOML";
 constexpr auto kMaxLoadedPlayerStock = kMaxPlayerStock + 2;
 constexpr auto kMaxLoadedBombStock = kMaxBombStock + 1;
+
+constexpr uint32_t kFullscreenFlag = 0x01;
+constexpr uint32_t kExclusiveFullscreenFlag = 0x02;
+constexpr uint32_t kFullscreenFitShift = 2;
+constexpr uint32_t kFullscreenFitMask = 0x0C;
+constexpr uint32_t kScaleGeometryFlag = 0x10;
+constexpr uint32_t kGraphicsFlagsMask = 0x1F;
+
+constexpr GraphicsFullscreenFit FullscreenFitFromFlags(uint32_t flags) {
+  return static_cast<GraphicsFullscreenFit>((flags & kFullscreenFitMask) >>
+                                            kFullscreenFitShift);
+}
+
+constexpr bool ValidGraphicsFlags(uint32_t flags) {
+  return (flags & ~kGraphicsFlagsMask) == 0 &&
+         FullscreenFitFromFlags(flags) < GraphicsFullscreenFit::Count;
+}
 
 // Validation helpers
 
@@ -40,16 +56,14 @@ constexpr bool ValidFPSDivisor(int v) { return v >= 0 && v <= kMaxFpsDivisor; }
 constexpr bool ValidScreenshotEffort(int v) {
   return v >= 0 && v <= kScreenshotEffortMax;
 }
-constexpr bool ValidVolume(audio::Volume v) {
-  return v <= audio::kMaxVolume;
-}
+constexpr bool ValidVolume(audio::Volume v) { return v <= audio::kMaxVolume; }
 constexpr bool ValidMidiVariant(MidiVariant v) {
   return v <= MidiVariant::Arranged;
 }
 constexpr bool ValidWinMMPad(InputPadButton v) { return v <= 32; }
 constexpr bool ValidExtraStageFlags(ExtraStageFlag v) {
-  return (std::to_underlying(v) &
-          ~std::to_underlying(ExtraStageFlag::Mask)) == 0;
+  return (std::to_underlying(v) & ~std::to_underlying(ExtraStageFlag::Mask)) ==
+         0;
 }
 
 namespace {
@@ -105,24 +119,19 @@ void TOMLLoad(const char *fn, ConfigData &cfg) {
     LoadToml(*sec, "window_left", cfg.graphics.window_left);
     LoadToml(*sec, "window_top", cfg.graphics.window_top);
     LoadToml(*sec, "fps_divisor", cfg.graphics.fps_divisor, ValidFPSDivisor);
-    GraphicsParamFlags stored_flags{};
-    LoadToml(*sec, "graphics_param_flags", stored_flags,
-             [](GraphicsParamFlags f) {
-               return (std::to_underlying(f) &
-                       ~std::to_underlying(GraphicsParamFlags::Mask)) == 0;
-             });
-    const auto fullscreen =
-        GraphicsParams{.flags = stored_flags}.FullscreenFlags();
-    cfg.graphics.display_mode =
-        fullscreen.fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed;
-    cfg.graphics.fullscreen_mode = fullscreen.exclusive
-                                       ? FullscreenMode::Exclusive
-                                       : FullscreenMode::Borderless;
-    cfg.graphics.fullscreen_fit = fullscreen.fit;
-    cfg.graphics.scaling_mode =
-        !!(stored_flags & GraphicsParamFlags::ScaleGeometry)
-            ? ScalingMode::Geometry
-            : ScalingMode::Framebuffer;
+    uint32_t stored_flags = 0;
+    LoadToml(*sec, "graphics_param_flags", stored_flags, ValidGraphicsFlags);
+    cfg.graphics.display_mode = (stored_flags & kFullscreenFlag) != 0
+                                    ? DisplayMode::Fullscreen
+                                    : DisplayMode::Windowed;
+    cfg.graphics.fullscreen_mode =
+        (stored_flags & kExclusiveFullscreenFlag) != 0
+            ? FullscreenMode::Exclusive
+            : FullscreenMode::Borderless;
+    cfg.graphics.fullscreen_fit = FullscreenFitFromFlags(stored_flags);
+    cfg.graphics.scaling_mode = (stored_flags & kScaleGeometryFlag) != 0
+                                    ? ScalingMode::Geometry
+                                    : ScalingMode::Framebuffer;
     LoadToml(*sec, "screenshot_effort", cfg.graphics.screenshot_effort,
              ValidScreenshotEffort);
 
@@ -207,19 +216,19 @@ void TOMLSave(const char *fn, const ConfigData &cfg) {
     sec.emplace("window_left", cfg.graphics.window_left);
     sec.emplace("window_top", cfg.graphics.window_top);
     sec.emplace("fps_divisor", cfg.graphics.fps_divisor);
-    GraphicsParamFlags flags{};
+    uint32_t flags = 0;
     if (cfg.graphics.display_mode == DisplayMode::Fullscreen) {
-      flags |= GraphicsParamFlags::Fullscreen;
+      flags |= kFullscreenFlag;
     }
     if (cfg.graphics.fullscreen_mode == FullscreenMode::Exclusive) {
-      flags |= GraphicsParamFlags::FullscreenExclusive;
+      flags |= kExclusiveFullscreenFlag;
     }
     if (cfg.graphics.scaling_mode == ScalingMode::Geometry) {
-      flags |= GraphicsParamFlags::ScaleGeometry;
+      flags |= kScaleGeometryFlag;
     }
-    SetEnumFlag(flags, GraphicsParamFlags::FullscreenFit,
-                std::to_underlying(cfg.graphics.fullscreen_fit));
-    sec.emplace("graphics_param_flags", std::to_underlying(flags));
+    flags |= std::to_underlying(cfg.graphics.fullscreen_fit)
+             << kFullscreenFitShift;
+    sec.emplace("graphics_param_flags", flags);
     sec.emplace("screenshot_effort", cfg.graphics.screenshot_effort);
     tbl.emplace("graphics", std::move(sec));
   }

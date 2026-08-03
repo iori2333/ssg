@@ -9,12 +9,11 @@
 #include "audio/audio_system.h"
 #include "data/graphics_assets.h"
 #include "data/graphics_loader.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text_ttf.h"
+#include "gfx/render/geometry.h"
+#include "gfx/text/text_renderer.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
 #include "stage/scene_program.h"
@@ -23,10 +22,10 @@
 // Ending initialization
 
 bool EndingScene::Enter() {
-  GraphicsBackendSetClip(kGameResolutionRect);
-  GraphicsBackendClear();
+  GraphicsSetClip(kGameResolutionRect);
+  GraphicsClear();
   GraphicsFlip();
-  GraphicsBackendClear();
+  GraphicsClear();
 
   if (!graphics_.LoadEnding() || !stage::StageLoader::LoadEnding(scene_)) {
     return false;
@@ -40,7 +39,7 @@ bool EndingScene::Enter() {
 
   TextRenderer().Clear();
   text.Blank();
-  text.Rect = TextRenderer().Register({.w = kGameResolution.w, .h = 131});
+  text.Rect = TextRenderer().Register({.x = kGameResolution.x, .y = 131});
 
   return true;
 }
@@ -65,7 +64,7 @@ bool EndingScene::Update(bool should_draw) {
 // Ending draw processing
 void EndingScene::Draw() {
   // Clear screen
-  GraphicsBackendClear(255, Rgb{.r = 0, .g = 0, .b = 0});
+  GraphicsClear();
 
   // Draw each graphic
   DrawGrpInfo();
@@ -140,14 +139,14 @@ void EndingScene::DrawStfInfo() {
     return;
   }
 
-  auto Blit = [](WindowPoint dst, const PixelLtrb &src) {
+  auto Blit = [](PixelPoint dst, const Rect &src) {
     dst -= (src.Size() / 2);
     GraphicsSurfaceBlit({dst.x, dst.y}, SurfaceId::EndingCredits, src);
   };
 
   Blit({stf_task.ox, stf_task.oy}, staff_label[stf_task.TitleID]);
   for (std::size_t i = 0; i < stf_task.NumStf; i++) {
-    const WindowPoint dst = {
+    const PixelPoint dst = {
         stf_task.ox,
         static_cast<int>(stf_task.oy + (i * 30) + 50),
     };
@@ -156,16 +155,16 @@ void EndingScene::DrawStfInfo() {
 }
 
 // Text drawing
-void EndingScene::Text::Render(WindowPoint topleft) {
+void EndingScene::Text::Render(PixelPoint topleft) {
   TextRenderer().Render(topleft, Rect, TextStr, [this](TextRenderSession &s) {
     int max_px = 0;
 
     s.SetFont(FontId::Normal);
     for (auto i : Text) {
-      max_px = (std::max)(max_px, s.Extent(i).w);
+      max_px = (std::max)(max_px, s.Extent(i).x);
     }
 
-    const auto dx = std::max(0, (s.RectSize().w - max_px) / 2);
+    const auto dx = std::max(0, (s.RectSize().x - max_px) / 2);
 
     s.SetColor({.r = 128, .g = 128, .b = 128});
     for (size_t i = 0; i < Text.size(); i++) {
@@ -197,9 +196,9 @@ void EndingScene::DrawFadeInfo() const {
     geometry::SetAlphaNorm(255 - stf_task.alpha);
     geometry::SetColor({0, 0, 0});
     if (stf_task.ox == 320) {
-      geometry::DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
+      geometry::DrawBoxA(0, 0, kGameResolution.x, kGameResolution.y);
     } else if (stf_task.ox > 320) {
-      geometry::DrawBoxA(320, 0, kGameResolution.w, 300);
+      geometry::DrawBoxA(320, 0, kGameResolution.x, 300);
     } else {
       geometry::DrawBoxA(0, 0, (320 - 50), 300);
     }
@@ -207,7 +206,7 @@ void EndingScene::DrawFadeInfo() const {
   if (flash_state > 0) {
     geometry::SetAlphaNorm(255 - flash_state);
     geometry::SetColor({5, 5, 5});
-    geometry::DrawBoxA(0, 0, kGameResolution.w, kGameResolution.h);
+    geometry::DrawBoxA(0, 0, kGameResolution.x, kGameResolution.y);
   }
 }
 

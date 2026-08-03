@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 
@@ -17,15 +18,30 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
 
-#include "constants.h"
-#include "graphics.h"
-#include "graphics_backend.h"
-#include "window_backend.h"
+#include "window.h"
 #include "window_sdl.h"
 
+#include "gfx/core/constants.h"
+#include "gfx/graphics.h"
 #include "sys/log.h"
 
 constexpr auto kLogCat = logging::Channel::Graphics;
+
+int GraphicsRenderDriverCount() { return SDL_GetNumRenderDrivers(); }
+
+int GraphicsRenderDriverId(std::string_view driver) {
+  for (const auto id : std::views::iota(0, SDL_GetNumRenderDrivers())) {
+    if (GraphicsRenderDriverName(id) == driver) {
+      return id;
+    }
+  }
+  return -1;
+}
+
+std::string_view GraphicsRenderDriverName(int id) {
+  const auto *name = SDL_GetRenderDriver(id);
+  return name != nullptr ? std::string_view{name} : std::string_view{};
+}
 
 namespace {
 
@@ -41,18 +57,18 @@ WindowState &State() {
 
 } // namespace
 
-void WindowBackendRememberTopleft(std::pair<int, int> position) {
+void SdlWindowRememberPosition(std::pair<int, int> position) {
   State().topleft_before_fullscreen = position;
 }
 
-std::pair<int, int> HelpGetWindowPosition(SDL_Window *window) {
+std::pair<int, int> SdlWindowPosition(SDL_Window *window) {
   int left{};
   int top{};
   SDL_GetWindowPosition(window, &left, &top);
   return std::make_pair(left, top);
 }
 
-SDL_DisplayID HelpGetDisplayForWindow() {
+SDL_DisplayID SdlDisplayForWindow() {
   if (State().window == nullptr) {
     return SDL_GetPrimaryDisplay();
   }
@@ -104,43 +120,43 @@ SDL_Rect ClampWindowRect(SDL_Rect window_rect) {
 }
 } // namespace
 
-std::optional<GraphicsFullscreenFlags>
-HelpSetFullscreenMode(SDL_Window *window, GraphicsFullscreenFlags fs) {
+std::optional<WindowFullscreenState>
+SdlSetFullscreen(SDL_Window *window, WindowFullscreenState state) {
   for (;;) {
-    if (fs.fullscreen && fs.exclusive) {
+    if (state.enabled && state.exclusive) {
 #pragma warning(suppress : 26494) // type.5
       SDL_DisplayMode mode;
 
       constexpr auto rate = (1000.0F / kFrameTimeTarget);
       if (!SDL_GetClosestFullscreenDisplayMode(
-              HelpGetDisplayForWindow(), kGameResolution.w, kGameResolution.h,
-              rate, false, &mode)) {
+              SdlDisplayForWindow(), kGameResolution.x, kGameResolution.y, rate,
+              false, &mode)) {
         logging::SdlError(kLogCat,
                           "Could not find a display mode for exclusive "
                           "fullscreen, falling back on borderless");
-        fs.exclusive = false;
+        state.exclusive = false;
         continue;
       }
       SDL_SetWindowFullscreenMode(window, &mode);
     } else {
       SDL_SetWindowFullscreenMode(window, nullptr);
     }
-    if (!SDL_SetWindowFullscreen(window, fs.fullscreen)) {
+    if (!SDL_SetWindowFullscreen(window, state.enabled)) {
       logging::SdlError(kLogCat, "Error changing display mode");
       return std::nullopt;
     }
-    return fs;
+    return state;
   }
 }
 
-int WindowBackendValidateRenderDriver(std::string_view hint) {
-  const auto id = GraphicsBackendAPIID(hint);
+int SdlValidateRenderDriver(std::string_view hint) {
+  const auto id = GraphicsRenderDriverId(hint);
   if (id >= 0) {
     return id;
   }
   const auto *default_driver =
       ((kSdlDefaultApi != nullptr) ? kSdlDefaultApi
-                                   : GraphicsBackendAPIString(0).data());
+                                   : GraphicsRenderDriverName(0).data());
   logging::Warning(
       kLogCat,
       "Unsupported renderer \"{}\" specified in " SDL_HINT_RENDER_DRIVER
@@ -155,15 +171,14 @@ int WindowBackendValidateRenderDriver(std::string_view hint) {
   return -1;
 }
 
-std::string_view WindowBackendSDLRendererName(int id) {
+std::string_view SdlRenderDriverName(int id) {
   const auto driver_count = SDL_GetNumRenderDrivers();
   if (id >= 0 && id < driver_count) {
-    return GraphicsBackendAPIString(id);
+    return GraphicsRenderDriverName(id);
   }
   if (id >= 0) {
-    logging::Warning(kLogCat,
-                     "Renderer index {} is out of range; using the default",
-                     id);
+    logging::Warning(
+        kLogCat, "Renderer index {} is out of range; using the default", id);
     id = -1;
   }
 
@@ -173,21 +188,21 @@ std::string_view WindowBackendSDLRendererName(int id) {
   }
   if ((hint == nullptr) || (hint[0] == '\0')) {
     // SDL tries to initialize drivers in order.
-    return GraphicsBackendAPIString(0);
+    return GraphicsRenderDriverName(0);
   }
-  id = WindowBackendValidateRenderDriver(hint);
+  id = SdlValidateRenderDriver(hint);
   if (id < 0) {
     if constexpr (kSdlDefaultApi != nullptr) {
       return kSdlDefaultApi;
     }
-    return GraphicsBackendAPIString(0);
+    return GraphicsRenderDriverName(0);
   }
-  return GraphicsBackendAPIString(id);
+  return GraphicsRenderDriverName(id);
 }
 
-SDL_Window *WindowBackendSDL() { return State().window; }
+SDL_Window *SdlWindow() { return State().window; }
 
-std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
+std::optional<GraphicsParams> SdlWindowCreate(GraphicsParams params) {
   if (State().window != nullptr) {
     logging::Critical(kLogCat,
                       "Cannot create an SDL window while one already exists");
@@ -197,7 +212,7 @@ std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
   // The driver/API parameter takes precedence over the environment variable,
   // which is a bad idea in case the user is stuck on an API that might
   // initialize successfully but refuses to render properly. Let's reverse
-  // that behavior to provide a way of overriding [params.api] with a
+  // that behavior to provide a way of overriding [params.render_driver] with a
   // specific renderer.
   // Note that we need to directly access the environment variable because
   // SDL's hint system does not indicate where the hint came from. Also, we
@@ -210,9 +225,10 @@ std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
 
   // We can actually get empty strings on SDL 2 here!
   if ((driver_env_ptr != nullptr) && (driver_env_ptr[0] != '\0')) {
-    params.api = WindowBackendValidateRenderDriver(driver_env_ptr);
+    params.render_driver = SdlValidateRenderDriver(driver_env_ptr);
   } else if (kSdlDefaultApi != nullptr) {
-    if ((params.api < 0) && (SDL_GetHint(SDL_HINT_RENDER_DRIVER) == nullptr)) {
+    if ((params.render_driver < 0) &&
+        (SDL_GetHint(SDL_HINT_RENDER_DRIVER) == nullptr)) {
       SDL_SetHint(SDL_HINT_RENDER_DRIVER, kSdlDefaultApi);
     }
   }
@@ -220,7 +236,7 @@ std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
   // Set the necessary window flags for certain APIs to avoid
   // SDL_CreateRenderer()'s janky closing and reopening of the window with
   // the correct flags.
-  const auto name = WindowBackendSDLRendererName(params.api);
+  const auto name = SdlRenderDriverName(params.render_driver);
   uint32_t flags = 0;
   if (name.starts_with("opengl")) {
     flags |= SDL_WINDOW_OPENGL;
@@ -249,8 +265,8 @@ std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, min);
   }
 
-  if ((params.left != 0) || (params.top != 0)) {
-    State().topleft_before_fullscreen = {params.left, params.top};
+  if ((params.window_left != 0) || (params.window_top != 0)) {
+    State().topleft_before_fullscreen = {params.window_left, params.window_top};
   }
 
   const auto real_pos = [](int pos) -> int {
@@ -258,14 +274,17 @@ std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
   };
 
   const auto res = params.ScaledRes();
-  const auto fs = params.FullscreenFlags();
-  SDL_Rect rect = {
-      .x = real_pos(params.left),
-      .y = real_pos(params.top),
-      .w = res.w,
-      .h = res.h,
+  const WindowFullscreenState fullscreen = {
+      .enabled = params.fullscreen,
+      .exclusive = params.exclusive_fullscreen,
   };
-  if (!fs.fullscreen) {
+  SDL_Rect rect = {
+      .x = real_pos(params.window_left),
+      .y = real_pos(params.window_top),
+      .w = res.x,
+      .h = res.y,
+  };
+  if (!fullscreen.enabled) {
     rect = ClampWindowRect(rect);
   }
 
@@ -288,49 +307,45 @@ std::optional<GraphicsParams> WindowBackendCreate(GraphicsParams params) {
     logging::SdlError(kLogCat, "Error creating SDL window");
     return std::nullopt;
   }
-  const auto maybe_fs_actual = HelpSetFullscreenMode(State().window, fs);
+  const auto maybe_fs_actual = SdlSetFullscreen(State().window, fullscreen);
   if (!maybe_fs_actual) {
     SDL_DestroyWindow(State().window);
+    State().window = nullptr;
     return std::nullopt;
   }
-  const auto fs_actual = maybe_fs_actual.value();
-  using F = GraphicsParamFlags;
-  params.SetFlag(F::Fullscreen,
-                 static_cast<std::underlying_type_t<GraphicsParamFlags>>(
-                     fs_actual.fullscreen));
-  params.SetFlag(F::FullscreenExclusive,
-                 static_cast<std::underlying_type_t<GraphicsParamFlags>>(
-                     fs_actual.exclusive));
+  const auto actual = *maybe_fs_actual;
+  params.fullscreen = actual.enabled;
+  params.exclusive_fullscreen = actual.exclusive;
   SDL_ShowWindow(State().window);
   return params;
 }
 
-void WindowBackendCleanup() {
+void SdlWindowCleanup() {
   if (State().window != nullptr) {
     SDL_DestroyWindow(State().window);
     State().window = nullptr;
   }
 }
 
-std::optional<std::pair<int, int>> WindowBackendTopleft() {
+std::optional<std::pair<int, int>> WindowPosition() {
   // A fullscreen window is always positioned at (0, 0), and we don't want to
   // override any previous windowed position.
   if ((State().window == nullptr) ||
       ((SDL_GetWindowFlags(State().window) & SDL_WINDOW_FULLSCREEN) != 0U)) {
     return State().topleft_before_fullscreen;
   }
-  return HelpGetWindowPosition(State().window);
+  return SdlWindowPosition(State().window);
 }
 
-int WindowBackendRun(const std::function<void()> &input_func,
-                     const std::function<bool()> &frame_func) {
+int WindowRun(const std::function<void()> &poll_input,
+              const std::function<bool()> &run_frame) {
   bool quit = false;
   uint64_t ticks_last = 0;
 
   while (!quit) {
     // Read input events first to remove them from the queue
     SDL_PumpEvents();
-    input_func();
+    poll_input();
 
     SDL_Event event;
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_EVENT_FIRST,
@@ -343,7 +358,7 @@ int WindowBackendRun(const std::function<void()> &input_func,
     const auto ticks_start = SDL_GetTicks();
     if ((FrameRateDivisor() == 0) ||
         ((ticks_start - ticks_last) >= kFrameTimeTarget)) {
-      quit = !frame_func();
+      quit = !run_frame();
       if (FrameRateDivisor() != 0) {
         // Since SDL_Delay() works at not-even-exact millisecond
         // granularity, we subtract 1 and spin for the last

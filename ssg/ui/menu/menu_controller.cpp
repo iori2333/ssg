@@ -15,11 +15,11 @@
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/text.h"
-#include "gfx/text_ttf.h"
+#include "gfx/render/geometry.h"
+#include "gfx/text/text.h"
+#include "gfx/text/text_renderer.h"
 #include "sys/input.h"
 #include "ui/text_marquee.h"
 
@@ -55,7 +55,7 @@ void MenuController::Init(int window_width) {
   RegisterTRRs();
 }
 
-void MenuController::Open(WindowPoint topleft, int select,
+void MenuController::Open(PixelPoint topleft, int select,
                           InputBits initial_input) {
   ResetNavigation(select);
 
@@ -303,7 +303,7 @@ void MenuController::RegisterTRRs() {
   int const needed = 1 + kMaxVisibleItems;
   for (int i = 0; i < needed; i++) {
     slots_.push_back(
-        {.trr = TextRenderer().Register({.w = w_, .h = kMenuItemH})});
+        {.trr = TextRenderer().Register({.x = w_, .y = kMenuItemH})});
   }
 }
 
@@ -399,7 +399,7 @@ void MenuController::RenderPage() {
     }
   }
 
-  WindowPoint pos = {x_, y_};
+  PixelPoint pos = {x_, y_};
   const auto title_str =
       page.owner != nullptr ? page.owner->Title() : std::string_view{};
   auto &title_slot = slots_[0];
@@ -558,7 +558,7 @@ void MenuController::RenderList() {
     }
   }
 
-  WindowPoint pos = {x_, y_};
+  PixelPoint pos = {x_, y_};
   auto &title_slot = slots_[0];
   const auto title = view->title.Get();
   std::string const title_key =
@@ -610,12 +610,10 @@ void MenuController::DrawTitle(TextRenderSession &s, std::string_view title,
   s.SetFont(kMenuFont);
   constexpr int kTitlePad = kMenuItemPadX;
   const int available_width = rect_w - kTitlePad * 2;
-  const bool scroll = TextRenderSession::Extent(title).w > available_width;
+  const bool scroll = s.Extent(title).x > available_width;
   const auto display_title =
       ui::MarqueeWindow(s, title, available_width, marquee_frame);
-  const int x = scroll
-                    ? kTitlePad
-                    : (rect_w - TextRenderSession::Extent(display_title).w) / 2;
+  const int x = scroll ? kTitlePad : (rect_w - s.Extent(display_title).x) / 2;
   Rgb white{.r = 255, .g = 255, .b = 255};
   s.Put({.x = x + 1, .y = 0}, display_title, Rgb{.r = 128, .g = 128, .b = 128});
   s.Put({.x = x, .y = 0}, display_title, white);
@@ -641,7 +639,7 @@ void MenuController::DrawItem(TextRenderSession &s, std::string_view title,
   int const title_left = kMenuItemPadX;
 
   const std::string display_title(title);
-  const int title_width = TextRenderSession::Extent(display_title).w;
+  const int title_width = s.Extent(display_title).x;
   const int title_x =
       centered ? TextLayoutXCenter(s, display_title) : title_left;
 
@@ -650,13 +648,13 @@ void MenuController::DrawItem(TextRenderSession &s, std::string_view title,
                                ? title_left
                                : title_x + title_width + kMenuTitleValueGap;
     const std::string bracketed = std::format("[{}]", value);
-    if (TextRenderSession::Extent(bracketed).w <= value_right - value_left) {
-      const int value_x = value_right - TextRenderSession::Extent(bracketed).w;
+    if (s.Extent(bracketed).x <= value_right - value_left) {
+      const int value_x = value_right - s.Extent(bracketed).x;
       s.Put({.x = value_x + 1, .y = 0}, bracketed, shadow);
       s.Put({.x = value_x, .y = 0}, bracketed, text);
     } else {
-      const int open_width = TextRenderSession::Extent("[").w;
-      const int close_width = TextRenderSession::Extent("]").w;
+      const int open_width = s.Extent("[").x;
+      const int close_width = s.Extent("]").x;
       const int content_left = value_left + open_width;
       const int close_x = value_right - close_width;
       const auto display_value =

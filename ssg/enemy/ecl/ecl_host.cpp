@@ -9,7 +9,7 @@
 
 #include "enemy/actor/enemy_actor.h"
 #include "enemy/enemy_manager.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 
 const EnemyAnimationSet &EclHost::Animations() const {
   return enemies_.animations_;

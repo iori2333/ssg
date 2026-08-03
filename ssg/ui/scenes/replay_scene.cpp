@@ -17,19 +17,18 @@
 #include "audio/sfx.h"
 #include "data/graphics_loader.h"
 #include "gameplay/game_rules.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/font_uty.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text.h"
-#include "gfx/text_ttf.h"
+#include "gfx/render/geometry.h"
+#include "gfx/text/text.h"
+#include "gfx/text/text_renderer.h"
 #include "i18n/localization.h"
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "sys/input.h"
 #include "sys/log.h"
+#include "ui/bitmap_font.h"
 #include "ui/menu/menu_controller.h"
 #include "ui/menu/menu_tree.h"
 #include "ui/name_entry.h"
@@ -77,14 +76,14 @@ std::string StageList(const ReplayRecord &replay) {
   return result;
 }
 
-uint8_t DetailGradient(PixelCoord y) {
+uint8_t DetailGradient(int y) {
   if (y <= 3) {
     return 254;
   }
   return y <= 6 ? 220 : 180;
 }
 
-void RenderUiText(WindowPoint position, TextRenderRectId rect,
+void RenderUiText(PixelPoint position, TextRenderRectId rect,
                   std::string_view text, bool centered = false) {
   TextRenderer().Render(
       position, rect, text, [text, centered](TextRenderSession &s) {
@@ -98,7 +97,7 @@ void RenderUiText(WindowPoint position, TextRenderRectId rect,
 
 bool ReplayScene::EnterBrowser(InputBits initial_input) {
   ui_.ForceCloseMessageWindow();
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsFlip();
   if (!graphics_.LoadNameRegistration()) {
     logging::Error(logging::Channel::Ui,
@@ -106,15 +105,15 @@ bool ReplayScene::EnterBrowser(InputBits initial_input) {
     return false;
   }
 
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   TextRenderer().Clear();
   for (auto &text : stage_text_) {
-    text = TextRenderer().Register({.w = 80, .h = 10});
+    text = TextRenderer().Register({.x = 80, .y = 10});
   }
   for (auto &text : player_text_) {
-    text = TextRenderer().Register({.w = 80, .h = 10});
+    text = TextRenderer().Register({.x = 80, .y = 10});
   }
-  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
+  ui_text_ = TextRenderer().Register({.x = 480, .y = 24});
   replays_ = RecordSystem::ListReplays();
   selected_ = 0;
   previous_input_ = initial_input;
@@ -125,16 +124,16 @@ bool ReplayScene::EnterBrowser(InputBits initial_input) {
 
 bool ReplayScene::BeginSave(bool extra_stage, InputBits initial_input) {
   ui_.ForceCloseMessageWindow();
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsFlip();
   if (!graphics_.LoadNameRegistration()) {
     record_system_.CancelRecording();
     return false;
   }
 
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   TextRenderer().Clear();
-  ui_text_ = TextRenderer().Register({.w = 480, .h = 24});
+  ui_text_ = TextRenderer().Register({.x = 480, .y = 24});
   save_extra_stage_ = extra_stage;
   save_failed_ = false;
   name_entry_.Begin(true, initial_input);
@@ -288,22 +287,23 @@ ReplaySceneResult ReplayScene::UpdateNameEntry(InputBits input,
 void ReplayScene::ResetRows() {
   for (std::size_t i = 0; i < rows_.size(); i++) {
     rows_[i] = {
-        .x = static_cast<int>((640 + 50 + (i * 24 * 20)) << 6),
-        .y = static_cast<int>((100 + (i * 48)) << 6),
+        .x = WorldCoord::FromPixels(static_cast<int>(640 + 50 + (i * 24 * 20))),
+        .y = WorldCoord::FromPixels(static_cast<int>(100 + (i * 48))),
         .moving = true,
     };
   }
 }
 
 void ReplayScene::DrawBrowser() {
-  GraphicsBackendClear();
+  GraphicsClear();
 
   const auto page = replays_.empty() ? 0 : selected_ / kPageSize;
   const auto first = page * kPageSize;
   const auto last = std::min(first + kPageSize, replays_.size());
   for (std::size_t row = 0; row < rows_.size(); row++) {
     auto &display = rows_[row];
-    const auto target_x = static_cast<int>((50 + (row * 24)) << 6);
+    const auto target_x =
+        WorldCoord::FromPixels(static_cast<int>(50 + (row * 24)));
     const auto velocity = (display.x - target_x) / 12;
     if (velocity > 2_px) {
       display.x -= velocity;
@@ -311,10 +311,11 @@ void ReplayScene::DrawBrowser() {
       display.moving = false;
     }
 
-    const int x = display.x >> 6;
-    const int y = display.y >> 6;
-    GraphicsSurfaceBlit({x, y}, SurfaceId::NameRegistration,
-                        PixelLtwh{0, 64 + static_cast<int>(row * 32), 400, 32});
+    const int x = display.x.ToPixels();
+    const int y = display.y.ToPixels();
+    GraphicsSurfaceBlit(
+        {x, y}, SurfaceId::NameRegistration,
+        Rect::FromLtwh(0, 64 + static_cast<int>(row * 32), 400, 32));
     const auto index = first + row;
     if (index >= last) {
       continue;
@@ -327,32 +328,32 @@ void ReplayScene::DrawBrowser() {
       geometry::DrawBoxA(x, y, x + 400, y + 32);
     }
     const auto &replay = replays_[index];
-    DrawFont16C2(x + 88, y + 4, replay.name.c_str());
+    ui::Draw16({x + 88, y + 4}, replay.name, 16);
 
     const auto difficulty = GameLevelName(replay.difficulty);
     const auto difficulty_x =
         x + 384 - static_cast<int>(difficulty.size() * 14);
-    DrawFont16(difficulty_x, y + 4, std::string(difficulty).c_str());
+    ui::Draw16({difficulty_x, y + 4}, difficulty);
 
     const auto date = std::format(
         "{:%Y/%m/%d %H:%M}", util::LocalTime(util::UtcTime(replay.created_at)));
     constexpr int detail_y = 25;
-    DrawScore(x + 88, y + detail_y, date.c_str());
+    ui::DrawScore({x + 88, y + detail_y}, date);
 
     const auto stages = StageList(replay);
     TextRenderer().Render({x + 224, y + detail_y - 2}, stage_text_[row], stages,
                           [&stages](TextRenderSession &session) {
                             std::array<std::string_view, 1> text = {stages};
-                            DrawGrdFont(session, text, FontId::Tiny, false,
-                                        DetailGradient);
+                            ui::DrawGradient(session, text, FontId::Tiny, false,
+                                             DetailGradient);
                           });
 
     const auto player = PlayerName(localization_, replay.player_type);
     TextRenderer().Render({x + 304, y + detail_y - 2}, player_text_[row],
                           player, [player](TextRenderSession &session) {
                             std::array<std::string_view, 1> text = {player};
-                            DrawGrdFont(session, text, FontId::Tiny, false,
-                                        DetailGradient);
+                            ui::DrawGradient(session, text, FontId::Tiny, false,
+                                             DetailGradient);
                           });
   }
 
@@ -369,7 +370,7 @@ void ReplayScene::DrawBrowser() {
 }
 
 void ReplayScene::DrawNameEntry() const {
-  GraphicsBackendClear();
+  GraphicsClear();
   const int x = 120;
   const int y = 176;
   geometry::SetColor({2, 0, 0});
@@ -381,6 +382,6 @@ void ReplayScene::DrawNameEntry() const {
     const auto failed = Text(localization_, "ui.replay.save_failed");
     RenderUiText({80, 150}, ui_text_, failed, true);
   }
-  DrawFont16C2(x + 88, y + 4, std::string{name_entry_.Name()}.c_str());
+  ui::Draw16({x + 88, y + 4}, name_entry_.Name(), 16);
   name_entry_.Draw(x + 88, y + 4);
 }

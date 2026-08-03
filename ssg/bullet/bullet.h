@@ -7,7 +7,7 @@
 #include "bullet_common.h"
 #include "fire_state.h"
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "util/enum_flags.h"
 
 struct GameSession;
@@ -25,13 +25,13 @@ inline constexpr auto kDirectionalBulletVisual = 0x20;
 inline constexpr auto kExtraBulletVisual = 0x30;
 inline constexpr auto kLargeExtraBulletVisual = 0x40;
 inline constexpr auto kSpecialDirectionalBulletVisual = 0x25;
-inline constexpr int kSmallBulletHitRadius = 2.5_px;
-inline constexpr int kMediumBulletHitRadius = 4.5_px;
-inline constexpr int kLargeBulletHitRadius = 7.5_px;
-inline constexpr int kExtraLargeBulletHitRadius = 10.5_px;
+inline constexpr auto kSmallBulletHitRadius = 2.5_px;
+inline constexpr auto kMediumBulletHitRadius = 4.5_px;
+inline constexpr auto kLargeBulletHitRadius = 7.5_px;
+inline constexpr auto kExtraLargeBulletHitRadius = 10.5_px;
 
-int GetBulletHitRadius(uint8_t c);
-int GetBulletEvadeRadius(uint8_t c);
+WorldCoord GetBulletHitRadius(uint8_t c);
+WorldCoord GetBulletEvadeRadius(uint8_t c);
 
 inline constexpr auto kBulletCapacity = 2048;
 
@@ -81,8 +81,8 @@ enum class BulletEffect : uint8_t {
 enum class BulletSpeedVariance : uint8_t { None, Small, Medium, Large };
 
 struct BulletSpawnInfo {
-  int x{};
-  int y{};
+  WorldCoord x{};
+  WorldCoord y{};
   float speed{};
   float acceleration{};
   float angle{};
@@ -106,16 +106,16 @@ struct BulletSpawnInfo {
 struct BulletManager;
 
 struct BulletUpdateInfo {
-  int player_x, player_y;
+  WorldCoord player_x, player_y;
   bool enemy_homing_valid;
-  int enemy_homing_x, enemy_homing_y;
+  WorldCoord enemy_homing_x, enemy_homing_y;
 
   struct UpdateResult {
     bool smoke_spawn = false;
-    int smoke_x = 0, smoke_y = 0;
+    WorldCoord smoke_x{}, smoke_y{};
     bool division_requested = false;
     BulletSpawnInfo division_info;
-    int division_cx = 0, division_cy = 0;
+    WorldCoord division_cx{}, division_cy{};
   };
 };
 
@@ -128,13 +128,13 @@ struct Bullet {
   [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const BulletSpawnInfo &info);
-  [[nodiscard]] HitResult CheckHit(int player_x, int player_y,
-                                   int player_radius) const;
+  [[nodiscard]] HitResult CheckHit(WorldCoord player_x, WorldCoord player_y,
+                                   WorldCoord player_radius) const;
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
-  [[nodiscard]] int X() const;
-  [[nodiscard]] int Y() const;
+  [[nodiscard]] WorldCoord X() const;
+  [[nodiscard]] WorldCoord Y() const;
 
   [[nodiscard]] bool IsSmall() const;
   [[nodiscard]] bool IsClearing() const;
@@ -189,7 +189,7 @@ private:
 };
 
 [[nodiscard]] BulletSpawnInfo
-MakeBulletSpawnInfo(const EclBulletState &cmd, int ox, int oy, bool scaling,
-                    const GameSession &game,
+MakeBulletSpawnInfo(const EclBulletState &cmd, WorldCoord ox, WorldCoord oy,
+                    bool scaling, const GameSession &game,
                     BulletSpawnType spawn_type = BulletSpawnType::Normal);
 void ScaleBulletSpawnInfo(BulletSpawnInfo &info, const GameSession &game);

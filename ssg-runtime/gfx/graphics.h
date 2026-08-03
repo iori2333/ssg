@@ -4,21 +4,22 @@
 #pragma once
 
 #include <algorithm>
-#include <array>
 #include <compare>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <string_view>
-#include <type_traits>
+#include <tuple>
 #include <utility>
 
-#include "coords.h"
-#include "pixelformat.h"
-
-#include "util/enum_flags.h"
+#include "core/constants.h"
+#include "core/coords.h"
+#include "core/pixelformat.h"
+#include "core/rect.h"
 
 // Setting the divisor to 0 disables frame rate limiting.
 
@@ -40,14 +41,6 @@ struct Rgb {
   constexpr bool operator==(const Rgb &other) const = default;
 };
 
-struct Palette : public std::array<Rgba, 256> {
-  // Builds a new palette with the given fade [alpha] value applied onto the
-  // given inclusive (!) range of colors. Returns the rest of the palette
-  // unchanged.
-  [[nodiscard]] Palette Fade(uint8_t alpha, uint8_t first = 0,
-                             uint8_t last = 255) const;
-};
-
 // (6 * 6 * 6) = 216 standard colors, available in both channeled and
 // palettized modes.
 struct Rgb216 {
@@ -66,10 +59,6 @@ struct Rgb216 {
 
   static Rgb216 Clamped(uint8_t r, uint8_t g, uint8_t b) {
     return Rgb216{std::min(r, Max), std::min(g, Max), std::min(b, Max)};
-  }
-
-  [[nodiscard]] constexpr uint8_t PaletteIndex() const {
-    return (20 + r + (g * (Max + 1)) + (b * ((Max + 1) * (Max + 1))));
   }
 
   [[nodiscard]] constexpr Rgb ToRgb() const {
@@ -107,12 +96,17 @@ void GraphicsScreenshotSetEffort(int effort);
 void GraphicsScreenshotSetPrefix(std::string_view prefix);
 void GraphicsRequestScreenshot(bool requested);
 
-struct SDL_Surface;
-
-// Saves the given surface to a file with the screenshot prefix. [t_start]
-// represents the very beginning of the backend's capturing process.
-bool GraphicsScreenshotSave(SDL_Surface *src);
 // -----------
+
+// Rendering drivers
+// -----------------
+
+int GraphicsRenderDriverCount();
+std::string_view GraphicsRenderDriverLabel(std::string_view driver);
+int GraphicsRenderDriverId(std::string_view driver);
+std::string_view GraphicsRenderDriverName(int id);
+std::string_view GraphicsActiveRenderDriver();
+// -----------------
 
 enum class GraphicsFullscreenFit : uint8_t {
   // Scale to largest integer resolution
@@ -127,53 +121,25 @@ enum class GraphicsFullscreenFit : uint8_t {
   Count,
 };
 
-enum class GraphicsParamFlags : uint8_t {
-  None = 0x00,
-  Fullscreen = 0x01,
-  FullscreenExclusive = 0x02,
-
-  // A GraphicsFullscreenFit value
-  FullscreenFit = (std::to_underlying(GraphicsFullscreenFit::Count) << 2),
-
-  // Render at the window's resolution instead of at [kGameResolution]
-  ScaleGeometry = 0x10,
-
-  Mask = (Fullscreen | FullscreenExclusive | FullscreenFit | ScaleGeometry),
-};
-
-template <>
-inline constexpr bool util::EnableEnumFlags<GraphicsParamFlags> = true;
-
-struct GraphicsFullscreenFlags {
-  bool fullscreen;
-  bool exclusive;
-  GraphicsFullscreenFit fit;
-
-  std::strong_ordering
-  operator<=>(const GraphicsFullscreenFlags &) const = default;
-};
-
 constexpr auto kGraphicsTopleftUndefined = std::numeric_limits<int>::min();
 
 struct GraphicsParams {
-  GraphicsParamFlags flags;
-  int api;                  // Negative = "use default API"
-  int window_scale_4x;      // Scale factor in window mode ×4. 0 = fit display.
+  bool fullscreen = false;
+  bool exclusive_fullscreen = false;
+  GraphicsFullscreenFit fullscreen_fit = GraphicsFullscreenFit::Integer;
+  bool scale_geometry = false;
+  int render_driver = -1;        // Negative = use the default renderer.
+  int window_scale_quarters = 0; // 0 = fit the current display.
 
   // Across all displays. Can be [kGraphicsTopleftUndefined], in which case
   // the window backend should pick a reasonable default position.
-  int left;
-  int top;
+  int window_left = kGraphicsTopleftUndefined;
+  int window_top = kGraphicsTopleftUndefined;
 
   std::strong_ordering operator<=>(const GraphicsParams &) const = default;
 
-  [[nodiscard]] GraphicsFullscreenFlags FullscreenFlags() const;
-  [[nodiscard]] bool ScaleGeometry() const;
   [[nodiscard]] int Scale4x() const;
-  [[nodiscard]] WindowSize ScaledRes() const;
-
-  void SetFlag(GraphicsParamFlags flag,
-               std::underlying_type_t<GraphicsParamFlags> value);
+  [[nodiscard]] PixelPoint ScaledRes() const;
 };
 
 // Returns the maximum 4× scaling factor for the game window on the current
@@ -183,17 +149,10 @@ int GraphicsWindowScale4xMax();
 struct GraphicsInitResult {
   GraphicsParams live;
   bool reload_surfaces;
-
-  static std::optional<GraphicsInitResult>
-  From(std::optional<GraphicsParams> o) {
-    return std::move(o).transform([](auto &&o) {
-      return GraphicsInitResult{.live = o, .reload_surfaces = false};
-    });
-  }
 };
 
 // Validates and clamps [params] to the supported ranges before passing them on
-// to GraphicsBackendInit().
+// to the SDL renderer.
 std::optional<GraphicsInitResult>
 GraphicsInit(std::optional<const GraphicsParams> maybe_prev,
              GraphicsParams params);
@@ -203,5 +162,86 @@ GraphicsInit(std::optional<const GraphicsParams> maybe_prev,
 // with, or `std::nullopt` on failure.
 std::optional<GraphicsInitResult> GraphicsInitOrFallback(GraphicsParams params);
 
-// Wraps screenshot handling around GraphicsBackendFlip().
+// Presents the current frame and handles a pending screenshot request.
 void GraphicsFlip();
+
+void GraphicsCleanup();
+
+void GraphicsClear(Rgb color = {.r = 0, .g = 0, .b = 0});
+void GraphicsSetClip(const Rect &rect);
+
+// Textures
+// --------
+
+struct BmpOwned;
+
+bool GraphicsSurfaceCreateUninitialized(SurfaceId sid, const PixelPoint &size);
+bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp);
+bool GraphicsSurfaceUpdate(SurfaceId sid, const Rect *subrect,
+                           std::tuple<const uint8_t *, size_t> pixels) noexcept;
+PixelPoint GraphicsSurfaceSize(SurfaceId sid);
+bool GraphicsSurfaceBlit(PixelPoint topleft, SurfaceId sid, const Rect &src);
+void GraphicsSurfaceBlitOpaque(PixelPoint topleft, SurfaceId sid,
+                               const Rect &src);
+void GraphicsSurfaceSetColorMod(SurfaceId sid, uint8_t r, uint8_t g, uint8_t b);
+// --------
+
+// Geometry vertex types
+// ---------------------
+
+struct VertexXy {
+  float x{};
+  float y{};
+
+  [[nodiscard]] constexpr VertexXy DivInt(int scalar) const {
+    return {
+        .x = static_cast<float>(static_cast<int>(x) / scalar),
+        .y = static_cast<float>(static_cast<int>(y) / scalar),
+    };
+  }
+
+  constexpr VertexXy operator+(const VertexXy &other) const {
+    return {(x + other.x), (y + other.y)};
+  }
+};
+
+struct VertexRgba {
+  float r;
+  float g;
+  float b;
+  float a;
+
+  VertexRgba() = default;
+  VertexRgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+      : r(r / 255.0F), g(g / 255.0F), b(b / 255.0F), a(a / 255.0F) {}
+  VertexRgba(const Rgba &o)
+      : r(o.r / 255.0F), g(o.g / 255.0F), b(o.b / 255.0F), a(o.a / 255.0F) {}
+};
+
+template <size_t N = std::dynamic_extent>
+using VertexXySpan = std::span<const VertexXy, N>;
+template <size_t N = std::dynamic_extent>
+using VertexRgbaSpan = std::span<const VertexRgba, N>;
+
+enum class TrianglePrimitive : uint8_t { Fan, Strip, Count };
+// ---------------------
+
+// Software pixel access
+// ---------------------
+
+bool GraphicsPixelAccessStart();
+bool GraphicsPixelAccessEnd();
+std::tuple<uint8_t *, size_t> GraphicsPixelAccessLock();
+void GraphicsPixelAccessUnlock();
+
+template <typename Func>
+[[nodiscard]] bool GraphicsPixelAccessEdit(Func &&func) {
+  const auto [pixels, pitch] = GraphicsPixelAccessLock();
+  if (pitch == 0) {
+    return false;
+  }
+  std::forward<Func>(func)(pixels, pitch);
+  GraphicsPixelAccessUnlock();
+  return true;
+}
+// ---------------------

@@ -32,8 +32,8 @@ public:
 
 private:
   struct TrailPoint {
-    int x{};
-    int y{};
+    WorldCoord x{};
+    WorldCoord y{};
     uint8_t direction{};
   };
 

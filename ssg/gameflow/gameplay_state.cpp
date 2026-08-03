@@ -15,19 +15,18 @@
 #include "effect/effect_types.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/font_uty.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text_ttf.h"
+#include "gfx/render/geometry.h"
+#include "gfx/text/text_renderer.h"
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
 #include "settings/config.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
 #include "sys/log.h"
+#include "ui/bitmap_font.h"
 #include "ui/gameplay/gameplay_hud.h"
 #include "ui/msg_window/msg_window.h"
 #include "util/math_utils.h"
@@ -90,7 +89,7 @@ void GameplayState::InitializeGameplayView(bool interactive) {
     context.ui.InitExit();
     context.ui.InitGameOver();
   }
-  GraphicsBackendSetClip(playfield::kClip);
+  GraphicsSetClip(playfield::kClip);
 }
 
 bool GameplayState::EnterLive() {
@@ -111,7 +110,7 @@ bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
     return false;
   }
 
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsFlip();
   mode_ = Mode::Replay;
   phase_ = Phase::Running;
@@ -132,7 +131,7 @@ bool GameplayState::EnterReplay(std::string_view path, StageId stage) {
 bool GameplayState::EnterDemo() {
   auto &context = context_;
   previous_level_ = context.session.level;
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsFlip();
   mode_ = Mode::Demo;
   phase_ = Phase::Running;
@@ -346,7 +345,7 @@ FlowEvent GameplayState::UpdateLive(const FrameInput &frame) {
   if (frame.should_draw) {
     Draw();
     if (context.records.IsRecording()) {
-      constexpr PixelLtrb rc = PixelLtwh{288, 80, 24, 8};
+      constexpr Rect rc = Rect::FromLtwh(288, 80, 24, 8);
       GraphicsSurfaceBlit({128, 470}, SurfaceId::System, rc);
     }
     GraphicsFlip();
@@ -382,9 +381,9 @@ FlowEvent GameplayState::UpdatePause(const FrameInput &frame) {
 
   if (frame.should_draw) {
     Draw();
-    GraphicsBackendSetClip(kGameResolutionRect);
+    GraphicsSetClip(kGameResolutionRect);
     context.ui.Exit().Draw();
-    GraphicsBackendSetClip(playfield::kClip);
+    GraphicsSetClip(playfield::kClip);
     GraphicsFlip();
   }
   return NoEvent{};
@@ -518,13 +517,13 @@ FlowEvent GameplayState::UpdateReplay(const FrameInput &frame) {
 
   if (frame.should_draw) {
     Draw();
-    constexpr PixelLtwh replay_label = {312, 80, 32, 8};
+    constexpr Rect replay_label = Rect::FromLtwh(312, 80, 32, 8);
     GraphicsSurfaceBlit({128, 470}, SurfaceId::System, replay_label);
     if (overlay_timer_ < 96) {
       geometry::SetAlphaNorm(128);
       geometry::SetColor({0, 0, 0});
       geometry::DrawBoxA(170, 473, 245, 478);
-      constexpr PixelLtwh skip_label = {312, 88, 72, 8};
+      constexpr Rect skip_label = Rect::FromLtwh(312, 88, 72, 8);
       GraphicsSurfaceBlit({173, 474}, SurfaceId::System, skip_label);
     }
     GraphicsFlip();
@@ -563,7 +562,7 @@ FlowEvent GameplayState::UpdateDemo(const FrameInput &frame) {
   if (frame.should_draw && demo_visible_) {
     Draw();
     if (overlay_timer_ < 64) {
-      DrawFont16(200, 200, "D E M O   P L A Y");
+      ui::Draw16({200, 200}, "D E M O   P L A Y");
     }
     GraphicsFlip();
   }
@@ -589,7 +588,7 @@ void GameplayState::Draw() const {
       .practice_mode = context.player.Practice(),
   };
 
-  GraphicsBackendClear();
+  GraphicsClear();
   context.stage.Draw();
   context.effects.DrawCircles();
   context.enemies.DrawBosses();
@@ -610,10 +609,10 @@ void GameplayState::Draw() const {
   context.ui.DrawBossHud(context.stage.Frame());
   context.effects.DrawScreenTransition();
   context.ui.DrawMessageWindow();
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   context.ui.DrawSidebarHud(hud_model);
-  GraphicsBackendSetClip({playfield::kLeft, playfield::kTop,
-                          playfield::kRight + 1, playfield::kBottom + 1});
+  GraphicsSetClip({playfield::kLeft, playfield::kTop, playfield::kRight + 1,
+                   playfield::kBottom + 1});
 }
 
 } // namespace gameflow

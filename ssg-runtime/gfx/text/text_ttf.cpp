@@ -20,7 +20,7 @@
 #include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "text_ttf.h"
+#include "text_renderer.h"
 
 #include "sys/log.h"
 #include "util/enum_array.h"
@@ -85,7 +85,6 @@ class TextState {
   bool initialized_ = false;
   TTF_TextEngine *engine_ = nullptr;
   SDL_Surface *scratch_ = nullptr;
-  FontId current_font_ = FontId::Count;
   util::EnumArray<TTF_Font *, FontId> fonts_{};
   util::EnumArray<TTF_Font *, FontId> fallback_fonts_{};
 
@@ -331,8 +330,8 @@ public:
 #else
     std::optional<std::string_view> configured_path;
     auto *environment = SDL_GetEnvironment();
-    const char *override_path = SDL_GetEnvironmentVariable(
-        environment, kCjkFontEnvironmentVariable);
+    const char *override_path =
+        SDL_GetEnvironmentVariable(environment, kCjkFontEnvironmentVariable);
     if (override_path != nullptr && override_path[0] != '\0') {
       configured_path = override_path;
     } else {
@@ -422,16 +421,12 @@ public:
     return id == FontId::Count ? nullptr : fonts_[id];
   }
 
-  void SetCurrentFont(FontId id) { current_font_ = id; }
-
-  [[nodiscard]] FontId CurrentFont() const { return current_font_; }
-
-  [[nodiscard]] bool PrepareScratch(PixelSize size) {
-    if (scratch_ != nullptr && scratch_->w >= size.w && scratch_->h >= size.h) {
+  [[nodiscard]] bool PrepareScratch(PixelPoint size) {
+    if (scratch_ != nullptr && scratch_->w >= size.x && scratch_->h >= size.y) {
       return true;
     }
-    const int width = std::max(size.w, scratch_ != nullptr ? scratch_->w : 0);
-    const int height = std::max(size.h, scratch_ != nullptr ? scratch_->h : 0);
+    const int width = std::max(size.x, scratch_ != nullptr ? scratch_->w : 0);
+    const int height = std::max(size.y, scratch_ != nullptr ? scratch_->h : 0);
     auto *replacement =
         SDL_CreateSurface(width, height, SDL_PIXELFORMAT_ARGB8888);
     if (replacement == nullptr) {
@@ -444,23 +439,23 @@ public:
     return true;
   }
 
-  [[nodiscard]] PixelSize Measure(FontId id, std::string_view text) const {
-    PixelSize size = {};
+  [[nodiscard]] PixelPoint Measure(FontId id, std::string_view text) const {
+    PixelPoint size = {};
     if (Font(id) == nullptr) {
       return size;
     }
     const bool measured =
         ForEachFontRun(id, text, [&size](TTF_Font *font, std::string_view run) {
-          PixelSize run_size = {};
-          if (!TTF_GetStringSize(font, run.data(), run.size(), &run_size.w,
-                                 &run_size.h)) {
+          PixelPoint run_size = {};
+          if (!TTF_GetStringSize(font, run.data(), run.size(), &run_size.x,
+                                 &run_size.y)) {
             return false;
           }
-          size.w += run_size.w;
-          size.h = std::max(size.h, run_size.h);
+          size.x += run_size.x;
+          size.y = std::max(size.y, run_size.y);
           return true;
         });
-    return measured ? size : PixelSize{};
+    return measured ? size : PixelPoint{};
   }
 
   [[nodiscard]] bool Draw(FontId id, std::string_view text, PixelPoint topleft,
@@ -516,10 +511,17 @@ TextRender &TextRenderer() {
 
 uint32_t &
 TextRenderSession::PixelSession::PixelAt(const PixelPoint &xy_rel) const {
+  if (xy_rel.x < 0 || xy_rel.y < 0 || xy_rel.x >= size_.x ||
+      xy_rel.y >= size_.y) {
+    logging::Critical(logging::Channel::Graphics,
+                      "Text pixel coordinate ({}, {}) is outside {}x{}",
+                      xy_rel.x, xy_rel.y, size_.x, size_.y);
+    std::abort();
+  }
   return reinterpret_cast<uint32_t *>(pixels_ + (pitch_ * xy_rel.y))[xy_rel.x];
 }
 
-TextRenderSession::PixelSession::PixelSession() {
+TextRenderSession::PixelSession::PixelSession(PixelPoint size) : size_(size) {
   auto *surface = State().Scratch();
   if (surface == nullptr) {
     logging::Critical(logging::Channel::Graphics,
@@ -570,16 +572,15 @@ void TextRenderSession::PixelSession::Set(const PixelPoint &xy_rel,
                      (static_cast<uint32_t>(color.g) << 8U) | color.b);
 }
 
-TextRenderSession::TextRenderSession(const PixelLtwh rect)
-    : texture_origin_{.x = rect.left, .y = rect.top},
-      size_{.w = rect.w, .h = rect.h} {
+TextRenderSession::TextRenderSession(const Rect rect)
+    : texture_origin_{.x = rect.left, .y = rect.top}, size_(rect.Size()) {
   auto *surface = State().Scratch();
   if (surface == nullptr) {
     logging::Critical(logging::Channel::Graphics,
                       "Text rendering requires a scratch surface");
     std::abort();
   }
-  const SDL_Rect clip = {.x = 0, .y = 0, .w = rect.w, .h = rect.h};
+  const SDL_Rect clip = {.x = 0, .y = 0, .w = rect.Width(), .h = rect.Height()};
   (void)SDL_SetSurfaceClipRect(surface, &clip);
   (void)SDL_FillSurfaceRect(surface, &clip, 0);
 }
@@ -589,24 +590,23 @@ TextRenderSession::~TextRenderSession() {
   if (surface == nullptr) {
     return;
   }
-  const PixelLtwh destination = {texture_origin_.x, texture_origin_.y, size_.w,
-                                 size_.h};
-  (void)GraphicsSurfaceUpdate(SurfaceId::Text, &destination,
-                              {static_cast<const uint8_t *>(surface->pixels),
-                               static_cast<size_t>(surface->pitch)});
+  const Rect destination = Rect::FromPositionAndSize(texture_origin_, size_);
+  if (!GraphicsSurfaceUpdate(SurfaceId::Text, &destination,
+                             {static_cast<const uint8_t *>(surface->pixels),
+                              static_cast<size_t>(surface->pitch)})) {
+    logging::SdlError(logging::Channel::Graphics,
+                      "Failed to upload rendered text");
+  }
 }
 
-PixelSize TextRenderSession::RectSize() const { return size_; }
+PixelPoint TextRenderSession::RectSize() const { return size_; }
 
-void TextRenderSession::SetFont(FontId font) {
-  font_ = font;
-  State().SetCurrentFont(font);
-}
+void TextRenderSession::SetFont(FontId font) { font_ = font; }
 
 void TextRenderSession::SetColor(Rgb color) { color_ = color; }
 
-PixelSize TextRenderSession::Extent(std::string_view text) {
-  return State().Measure(State().CurrentFont(), text);
+PixelPoint TextRenderSession::Extent(std::string_view text) const {
+  return State().Measure(font_, text);
 }
 
 void TextRenderSession::Put(const PixelPoint &topleft_rel,
@@ -618,46 +618,45 @@ void TextRenderSession::Put(const PixelPoint &topleft_rel,
 }
 
 std::optional<TextRenderSession> TextRender::Session(TextRenderRectId rect_id) {
-  if (rect_id >= rects.size()) {
-    logging::Critical(logging::Channel::Graphics,
-                      "Invalid text rectangle ID: {}", rect_id);
+  auto *entry = Find(rect_id);
+  if (entry == nullptr) {
     return std::nullopt;
   }
   if (!State().Initialized()) {
     return std::nullopt;
   }
-  const auto &rect = rects[rect_id].rect;
-  if (!State().PrepareScratch({.w = rect.w, .h = rect.h})) {
+  const auto &rect = entry->rect;
+  if (!State().PrepareScratch(rect.Size())) {
     return std::nullopt;
   }
-  if (GraphicsSurfaceSize(SurfaceId::Text) != bounds) {
-    TextRenderPacked::Wipe();
-    if (!GraphicsSurfaceCreateUninitialized(SurfaceId::Text, bounds)) {
+  if (GraphicsSurfaceSize(SurfaceId::Text) != bounds_) {
+    Wipe();
+    if (!GraphicsSurfaceCreateUninitialized(SurfaceId::Text, bounds_)) {
       return std::nullopt;
     }
   }
   return std::optional<TextRenderSession>{std::in_place, rect};
 }
 
-void TextRender::WipeBeforeNextRender() { TextRenderPacked::Wipe(); }
+void TextRender::WipeBeforeNextRender() { Wipe(); }
 
-PixelSize TextRender::TextExtent(FontId font, std::string_view text) {
+PixelPoint TextRender::TextExtent(FontId font, std::string_view text) {
   return State().Measure(font, text);
 }
 
-bool TextBackendInitialize(std::string_view language) {
+bool TextInitialize(std::string_view language) {
   return State().Initialize(language);
 }
 
-bool TextBackendSetLanguage(std::string_view language) {
+bool TextSetLanguage(std::string_view language) {
   if (!State().SetLanguage(language)) {
     return false;
   }
-  (void)TextRenderer().Wipe();
+  TextRenderer().Wipe();
   return true;
 }
 
-void TextBackendCleanup() {
+void TextCleanup() {
   TextRenderer().Clear();
   State().Cleanup();
 }

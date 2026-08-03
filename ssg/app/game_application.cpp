@@ -14,9 +14,8 @@
 #include "data/game_data.h"
 #include "gameflow/game_flow.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text_ttf.h"
-#include "gfx/window_backend.h"
+#include "gfx/text/text_renderer.h"
+#include "gfx/window/window.h"
 #include "i18n/localization.h"
 #include "settings/config.h"
 #include "sys/input.h"
@@ -73,7 +72,7 @@ bool GameApplication::Initialize() {
     return false;
   }
   display_initialized_ = true;
-  if (!TextBackendInitialize(context_.localization.Language())) {
+  if (!TextInitialize(context_.localization.Language())) {
     logging::Critical(logging::Channel::Graphics,
                       "Failed to initialize the text rendering backend");
     return false;
@@ -137,8 +136,8 @@ bool GameApplication::Initialize() {
 }
 
 int GameApplication::Run() {
-  return WindowBackendRun([this] { input_snapshot_ = input_.Poll(); },
-                          [this] { return Tick(); });
+  return WindowRun([this] { input_snapshot_ = input_.Poll(); },
+                   [this] { return Tick(); });
 }
 
 bool GameApplication::Tick() {
@@ -157,8 +156,8 @@ void GameApplication::Shutdown() {
 
   context_.audio.Shutdown();
   if (display_initialized_) {
-    TextBackendCleanup();
-    GraphicsBackendCleanup();
+    TextCleanup();
+    GraphicsCleanup();
     display_initialized_ = false;
   }
 }

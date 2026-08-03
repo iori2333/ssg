@@ -10,7 +10,8 @@
 
 #include "bullet/fire_state.h"
 #include "enemy/ecl/ecl.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/rect.h"
 #include "util/enum_flags.h"
 
 inline constexpr std::size_t kEnemyCapacity = 50;
@@ -35,7 +36,7 @@ enum class EnemyActorState : uint8_t {
 inline constexpr int kEnemyExplosionSpeed = 4;
 
 // Homing constants
-inline constexpr int kNoHomingDistance = 500_px;
+inline constexpr auto kNoHomingDistance = 500_px;
 
 // Animation constants
 inline constexpr std::size_t kEnemyAnimationCapacity = 50;
@@ -65,30 +66,29 @@ struct EclScriptState {
 struct EnemyAnimation {
   EnemyAnimationMode mode = EnemyAnimationMode::Loop;
   std::size_t n = 0;
-  PixelSize size{};
-  std::array<PixelLtrb, kEnemyAnimationFrameCapacity> ptn{};
+  PixelPoint size{};
+  std::array<Rect, kEnemyAnimationFrameCapacity> ptn{};
 
   void SetSheet(PixelPoint topleft, std::size_t frame_count,
-                PixelSize frame_size,
-                EnemyAnimationMode animation_mode) {
+                PixelPoint frame_size, EnemyAnimationMode animation_mode) {
     size = frame_size;
     n = std::min<std::size_t>(frame_count, kEnemyAnimationFrameCapacity);
     mode = animation_mode;
 
     for (std::size_t frame = 0; frame < n; ++frame) {
-      ptn[frame] = PixelLtwh{topleft.x, topleft.y, frame_size.w, frame_size.h};
-      topleft.x += frame_size.w;
+      ptn[frame] =
+          Rect::FromLtwh(topleft.x, topleft.y, frame_size.x, frame_size.y);
+      topleft.x += frame_size.x;
     }
   }
 
   void SetSquareSheet(PixelPoint topleft, std::size_t frame_count,
-                      PixelCoord frame_size,
-                      EnemyAnimationMode animation_mode) {
-    SetSheet(topleft, frame_count, {.w = frame_size, .h = frame_size},
+                      int frame_size, EnemyAnimationMode animation_mode) {
+    SetSheet(topleft, frame_count, {.x = frame_size, .y = frame_size},
              animation_mode);
   }
 
-  void SetDirectionalSheet(PixelPoint topleft, PixelCoord frame_size) {
+  void SetDirectionalSheet(PixelPoint topleft, int frame_size) {
     SetSquareSheet(topleft, kEnemyAnimationFrameCapacity, frame_size,
                    EnemyAnimationMode::Directional);
   }
@@ -114,9 +114,9 @@ struct EnemyActor {
   EnemyActorState state = EnemyActorState::Active;
 
   WorldCoord x{}, y{}; // Display coordinates
-  int vx{}, vy{};      // Velocity (x,y) components (x64)
+  WorldCoord vx{}, vy{};
 
-  int v{}; // Velocity component (x64)
+  WorldCoord v{};
 
   uint32_t hp{}; // Remaining HP (too large?)
   ItemKind item{};
@@ -127,13 +127,13 @@ struct EnemyActor {
 
   EclScriptState script{};
 
-  int hitbox_half_width{};
-  int hitbox_half_height{};
+  WorldCoord hitbox_half_width{};
+  WorldCoord hitbox_half_height{};
   int animation_frame{};
 
-  uint8_t d{};   // Direction angle 256
-  int vd{};      // Angular velocity
-  int amp{}; // Amplitude 256
+  uint8_t d{}; // Direction angle 256
+  int vd{};    // Angular velocity
+  int amp{};   // Amplitude 256
   std::size_t animation{};
   std::size_t damage_animation{};
   int animation_speed{};

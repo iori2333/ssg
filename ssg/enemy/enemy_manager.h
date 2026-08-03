@@ -15,7 +15,7 @@
 #include "ecl/ecl_vm.h"
 #include "render/enemy_renderer.h"
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "util/object_pool.h"
 
 struct BulletManager;
@@ -35,8 +35,8 @@ class StageSession;
 
 struct EnemyHomingTarget {
   bool active = false;
-  int x = 0;
-  int y = 0;
+  WorldCoord x{};
+  WorldCoord y{};
 };
 
 class EnemyManager {
@@ -123,7 +123,7 @@ private:
   BossHudModel boss_hud_{};
 
   EnemyHomingTarget homing_target_;
-  int homing_distance_ = kNoHomingDistance;
+  WorldCoord homing_distance_ = kNoHomingDistance;
 
   BulletManager &bullets_;
   GameSession &session_;

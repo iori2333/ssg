@@ -266,8 +266,7 @@ void AudioSystem::SetMidiFixSysExBugs(bool enabled) {
   impl_->sequencer.SetFixSysExBugs(enabled);
 }
 
-AudioResult AudioSystem::LoadSfx(SfxId id,
-                                 std::span<const std::uint8_t> wav,
+AudioResult AudioSystem::LoadSfx(SfxId id, std::span<const std::uint8_t> wav,
                                  int max_instances) {
   if (!impl_->sfx_initialized) {
     return AudioResult::Fail(AudioError::NotInitialized,
@@ -295,7 +294,7 @@ AudioResult AudioSystem::LoadSfx(SfxId id,
   return impl_->sfx.Load(id, spec, {pcm, pcm_len}, max_instances);
 }
 
-void AudioSystem::PlaySfx(SfxId id, int x, bool loop) {
+void AudioSystem::PlaySfx(SfxId id, WorldCoord x, bool loop) {
   if (impl_->sfx_initialized) {
     impl_->sfx.Play(id, SoundPanForWorldX(x), loop);
   }

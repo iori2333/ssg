@@ -28,16 +28,15 @@
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 
-#include "constants.h"
-#include "coords.h"
-#include "format_bmp.h"
 #include "geometry.h"
-#include "graphics.h"
-#include "graphics_backend.h"
-#include "pixelformat.h"
-#include "window_backend.h"
-#include "window_sdl.h"
+#include "graphics_sdl.h"
 
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/pixelformat.h"
+#include "gfx/graphics.h"
+#include "gfx/image/format_bmp.h"
+#include "gfx/window/window_sdl.h"
 #include "sys/log.h"
 #include "util/enum_array.h"
 #include "util/guard.h"
@@ -168,21 +167,12 @@ constexpr util::EnumArray<std::span<const IndexType>, TrianglePrimitive>
 // Helpers
 // -------
 
-template <typename Rect> Rect HelpRectTo(const PixelLtwh &o) noexcept {
-  return Rect{
-      .x = static_cast<decltype(Rect::x)>(o.left),
-      .y = static_cast<decltype(Rect::y)>(o.top),
-      .w = static_cast<decltype(Rect::w)>(o.w),
-      .h = static_cast<decltype(Rect::h)>(o.h),
-  };
-}
-
-template <typename Rect> Rect HelpRectTo(const PixelLtrb &o) {
-  return Rect{
-      .x = static_cast<decltype(Rect::x)>(o.left),
-      .y = static_cast<decltype(Rect::y)>(o.top),
-      .w = static_cast<decltype(Rect::w)>(o.right - o.left),
-      .h = static_cast<decltype(Rect::h)>(o.bottom - o.top),
+template <typename SdlRect> SdlRect HelpRectTo(const Rect &o) noexcept {
+  return SdlRect{
+      .x = static_cast<decltype(SdlRect::x)>(o.left),
+      .y = static_cast<decltype(SdlRect::y)>(o.top),
+      .w = static_cast<decltype(SdlRect::w)>(o.Width()),
+      .h = static_cast<decltype(SdlRect::h)>(o.Height()),
   };
 }
 
@@ -225,27 +215,27 @@ void SwitchActiveRenderer(SDL_Renderer **new_renderer) {
   RenderState().renderer = new_renderer;
 }
 
-std::optional<GraphicsFullscreenFlags>
-HelpSwitchFullscreen(const GraphicsFullscreenFlags &fs_prev,
-                     const GraphicsFullscreenFlags &fs_new) {
-  auto *window = WindowBackendSDL();
+std::optional<WindowFullscreenState>
+HelpSwitchFullscreen(const WindowFullscreenState &previous,
+                     const WindowFullscreenState &requested) {
+  auto *window = SdlWindow();
 
-  if (!fs_prev.fullscreen && fs_new.fullscreen) {
-    WindowBackendRememberTopleft(HelpGetWindowPosition(window));
+  if (!previous.enabled && requested.enabled) {
+    SdlWindowRememberPosition(SdlWindowPosition(window));
   }
 
-  const auto fs_actual = HelpSetFullscreenMode(window, fs_new);
-  if (!fs_actual) {
+  const auto actual = SdlSetFullscreen(window, requested);
+  if (!actual) {
     return std::nullopt;
   }
 
   // If we come out of fullscreen mode, recenter the window.
-  if (fs_prev.fullscreen && !fs_new.fullscreen) {
-    const auto display_i = HelpGetDisplayForWindow();
+  if (previous.enabled && !requested.enabled) {
+    const auto display_i = SdlDisplayForWindow();
     const auto center = SDL_WINDOWPOS_CENTERED_DISPLAY(display_i);
     SDL_SetWindowPosition(window, center, center);
   }
-  return fs_actual;
+  return actual;
 }
 // -------
 
@@ -295,15 +285,7 @@ void UpdateOpenGl(Version &self) {
 /// Enumeration and pre-initialization queries
 /// ------------------------------------------
 
-bool GraphicsBackendEnum() {
-  // Any SDL-specific initialization was already done as part of
-  // SDL_Init(SDL_INIT_VIDEO).
-  return true;
-}
-
-int GraphicsBackendAPICount() { return SDL_GetNumRenderDrivers(); }
-
-std::string_view GraphicsBackendAPILabel(std::string_view api) {
+std::string_view GraphicsRenderDriverLabel(std::string_view api) {
   for (const auto &nice : kApiNiceNames) {
     if (nice.first == api) {
       return nice.second;
@@ -316,37 +298,23 @@ std::string_view GraphicsBackendAPILabel(std::string_view api) {
   return api;
 }
 
-int GraphicsBackendAPIID(std::string_view api) {
-  for (const auto i : std::views::iota(0, SDL_GetNumRenderDrivers())) {
-    if (GraphicsBackendAPIString(i) == api) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-std::string_view GraphicsBackendAPIString(int id) {
-  const auto *ret = SDL_GetRenderDriver(id);
-  return ((ret != nullptr) ? ret : std::string_view{});
-}
-
-PixelSize GraphicsBackendDisplaySize(bool fullscreen) {
+PixelPoint SdlGraphicsDisplaySize(bool fullscreen) {
   SDL_Rect rect{};
-  const auto display_i = HelpGetDisplayForWindow();
+  const auto display_i = SdlDisplayForWindow();
   if (fullscreen) {
     const auto *display_mode = SDL_GetDesktopDisplayMode(display_i);
     if (display_mode == nullptr) {
       logging::SdlError(kLogCat, "Error retrieving display size");
       return kGameResolution;
     }
-    return {.w = display_mode->w, .h = display_mode->h};
+    return {.x = display_mode->w, .y = display_mode->h};
   }
 
   if (!SDL_GetDisplayUsableBounds(display_i, &rect)) {
     logging::SdlError(kLogCat, "Error retrieving display size");
     return kGameResolution;
   }
-  return {.w = rect.w, .h = rect.h};
+  return {.x = rect.w, .y = rect.h};
 }
 /// ------------------------------------------
 
@@ -378,26 +346,26 @@ std::nullopt_t PrimaryCleanup() {
   // breaks rendering and freezes the window on the last frame rendered by
   // Direct3D. So it makes sense to unconditionally destroy and recreate the
   // window when switching APIs. (Also feels more effective, in a way.)
-  WindowBackendCleanup();
+  SdlWindowCleanup();
 
   return std::nullopt;
 }
 
 // Returns the new `SCALE_GEOMETRY` flag.
-bool PrimarySetScale(bool geometry, const WindowSize &scaled_res) {
+bool PrimarySetScale(bool geometry, const PixelPoint &scaled_res) {
   const auto set_geometry = [] {
     RenderState().primary_texture =
         SafeDestroy(SDL_DestroyTexture, RenderState().primary_texture);
     SDL_SetRenderLogicalPresentation(RenderState().primary_renderer,
-                                     kGameResolution.w, kGameResolution.h,
+                                     kGameResolution.x, kGameResolution.y,
                                      SDL_LOGICAL_PRESENTATION_STRETCH);
     return true;
   };
 
   // Update texture filters
   // ----------------------
-  if (((scaled_res.w % kGameResolution.w) != 0) ||
-      ((scaled_res.h % kGameResolution.h) != 0)) {
+  if (((scaled_res.x % kGameResolution.x) != 0) ||
+      ((scaled_res.y % kGameResolution.y) != 0)) {
     RenderState().texture_scale_mode = SDL_SCALEMODE_LINEAR;
   } else {
     RenderState().texture_scale_mode = SDL_SCALEMODE_NEAREST;
@@ -428,8 +396,8 @@ bool PrimarySetScale(bool geometry, const WindowSize &scaled_res) {
   //   to apply to the primary texture blit going forward!!!
   SDL_SetRenderTarget(RenderState().primary_renderer, nullptr);
   SDL_SetRenderClipRect(RenderState().primary_renderer, nullptr);
-  SDL_SetRenderLogicalPresentation(RenderState().primary_renderer, scaled_res.w,
-                                   scaled_res.h,
+  SDL_SetRenderLogicalPresentation(RenderState().primary_renderer, scaled_res.x,
+                                   scaled_res.y,
                                    SDL_LOGICAL_PRESENTATION_DISABLED);
 
   if (RenderState().primary_texture == nullptr) {
@@ -444,7 +412,7 @@ bool PrimarySetScale(bool geometry, const WindowSize &scaled_res) {
     const auto &res = kGameResolution;
     RenderState().primary_texture =
         SDL_CreateTexture(RenderState().primary_renderer, format,
-                          SDL_TEXTUREACCESS_TARGET, res.w, res.h);
+                          SDL_TEXTUREACCESS_TARGET, res.x, res.y);
     if (RenderState().primary_texture == nullptr) {
       logging::SdlError(kLogCat, "Error creating native resolution texture");
       return set_geometry();
@@ -464,13 +432,13 @@ bool PrimarySetScale(bool geometry, const WindowSize &scaled_res) {
 // Re-centers the window to remain fully on-screen after changing the
 // windowed-mode scale factor
 PixelPoint RepositionAfterScale(const PixelPoint &topleft_prev,
-                                const WindowSize &res_prev,
-                                const WindowSize &res_new) {
-  auto *window = WindowBackendSDL();
-  PixelCoord border_left{};
-  PixelCoord border_top{};
-  PixelCoord border_right{};
-  PixelCoord border_bottom{};
+                                const PixelPoint &res_prev,
+                                const PixelPoint &res_new) {
+  auto *window = SdlWindow();
+  int border_left{};
+  int border_top{};
+  int border_right{};
+  int border_bottom{};
   SDL_GetWindowBordersSize(window, &border_top, &border_left, &border_bottom,
                            &border_right);
 
@@ -490,9 +458,9 @@ PixelPoint RepositionAfterScale(const PixelPoint &topleft_prev,
   // The window might have been moved to a display with a resolution
   // smaller than [res_new].
   const auto max_left =
-      std::max(display_r.x, (display_r.x + display_r.w - res_new.w));
+      std::max(display_r.x, (display_r.x + display_r.w - res_new.x));
   const auto max_top =
-      std::max(display_r.y, (display_r.y + display_r.h - res_new.h));
+      std::max(display_r.y, (display_r.y + display_r.h - res_new.y));
 
   auto topleft = ((topleft_prev + (res_prev / 2)) - (res_new / 2));
   topleft.x = std::clamp(topleft.x, display_r.x, max_left);
@@ -502,14 +470,13 @@ PixelPoint RepositionAfterScale(const PixelPoint &topleft_prev,
 }
 
 void PrimarySetBorderlessFullscreenFit(GraphicsParams params,
-                                       const WindowSize & /*scaled_res*/) {
+                                       const PixelPoint & /*scaled_res*/) {
   using Fit = GraphicsFullscreenFit;
-  const auto fs = params.FullscreenFlags();
 
   auto *target = SDL_GetRenderTarget(RenderState().primary_renderer);
   SDL_SetRenderTarget(RenderState().primary_renderer, nullptr);
 
-  if (fs.fullscreen && !fs.exclusive) {
+  if (params.fullscreen && !params.exclusive_fullscreen) {
     constexpr auto kModes = [] {
       util::EnumArray<SDL_RendererLogicalPresentation, Fit> ret;
       ret[Fit::Integer] = SDL_LOGICAL_PRESENTATION_INTEGER_SCALE;
@@ -518,33 +485,32 @@ void PrimarySetBorderlessFullscreenFit(GraphicsParams params,
       return ret;
     }();
     SDL_SetRenderLogicalPresentation(RenderState().primary_renderer,
-                                     kGameResolution.w, kGameResolution.h,
-                                     kModes[fs.fit]);
+                                     kGameResolution.x, kGameResolution.y,
+                                     kModes[params.fullscreen_fit]);
   }
   SDL_SetRenderTarget(RenderState().primary_renderer, target);
 }
 
 std::optional<GraphicsInitResult> PrimaryInitFull(GraphicsParams params) {
-  const auto maybe_params = WindowBackendCreate(params);
+  const auto maybe_params = SdlWindowCreate(params);
   if (!maybe_params) {
     return std::nullopt;
   }
   params = maybe_params.value();
 
-  const auto *driver = SDL_GetRenderDriver(params.api);
-  RenderState().primary_renderer =
-      SDL_CreateRenderer(WindowBackendSDL(), driver);
+  const auto *driver = SDL_GetRenderDriver(params.render_driver);
+  RenderState().primary_renderer = SDL_CreateRenderer(SdlWindow(), driver);
   if (RenderState().primary_renderer == nullptr) {
-    const auto driver_str = WindowBackendSDLRendererName(params.api);
-    const auto label = GraphicsBackendAPILabel(driver_str);
+    const auto driver_str = SdlRenderDriverName(params.render_driver);
+    const auto label = GraphicsRenderDriverLabel(driver_str);
     const auto *api = label.data();
     logging::Critical(kLogCat, "Error creating {} renderer: {}", api,
                       SDL_GetError());
     return PrimaryCleanup();
   }
-  const auto driver_str = GraphicsBackendAPIString();
+  const auto driver_str = GraphicsActiveRenderDriver();
   logging::Info(kLogCat, "Using SDL renderer: {}",
-                GraphicsBackendAPILabel(driver_str));
+                GraphicsRenderDriverLabel(driver_str));
 
   const auto props = SDL_GetRendererProperties(RenderState().primary_renderer);
   const auto *formats_start =
@@ -562,7 +528,7 @@ std::optional<GraphicsInitResult> PrimaryInitFull(GraphicsParams params) {
   // Verify the renderer supports BGRA8888 (SDL ARGB8888).
   constexpr auto sdl_format = SDL_PIXELFORMAT_ARGB8888;
   if (!std::ranges::contains(RenderState().primary_formats, sdl_format)) {
-    const auto label = GraphicsBackendAPILabel(driver_str);
+    const auto label = GraphicsRenderDriverLabel(driver_str);
     logging::Critical(
         kLogCat,
         "The \"{}\" renderer does not support the BGRA8888 pixel format "
@@ -580,7 +546,7 @@ std::optional<GraphicsInitResult> PrimaryInitFull(GraphicsParams params) {
     RenderState().software_surface =
         SafeDestroy(SDL_DestroySurface, RenderState().software_surface);
     RenderState().software_surface =
-        SDL_CreateSurface(kGameResolution.w, kGameResolution.h, sdl_format);
+        SDL_CreateSurface(kGameResolution.x, kGameResolution.y, sdl_format);
     if (RenderState().software_surface == nullptr) {
       logging::SdlError(kLogCat,
                         "Error creating surface for software rendering");
@@ -589,10 +555,7 @@ std::optional<GraphicsInitResult> PrimaryInitFull(GraphicsParams params) {
   }
 
   const auto res_new = params.ScaledRes();
-  const auto scale_geometry = PrimarySetScale(params.ScaleGeometry(), res_new);
-  params.SetFlag(
-      GraphicsParamFlags::ScaleGeometry,
-      static_cast<std::underlying_type_t<GraphicsParamFlags>>(scale_geometry));
+  params.scale_geometry = PrimarySetScale(params.scale_geometry, res_new);
   PrimarySetBorderlessFullscreenFit(params, res_new);
 
   return GraphicsInitResult{.live = params, .reload_surfaces = true};
@@ -601,18 +564,21 @@ std::optional<GraphicsInitResult> PrimaryInitFull(GraphicsParams params) {
 } // namespace
 
 std::optional<GraphicsInitResult>
-GraphicsBackendInit(std::optional<const GraphicsParams> maybe_prev,
-                    GraphicsParams params) {
+SdlGraphicsInit(std::optional<const GraphicsParams> maybe_prev,
+                GraphicsParams params) {
   const auto reinit_full = [](const GraphicsParams &params) {
     PrimaryCleanup();
     return PrimaryInitFull(params);
   };
 
-  const auto fs_new = params.FullscreenFlags();
+  const WindowFullscreenState requested_fullscreen = {
+      .enabled = params.fullscreen,
+      .exclusive = params.exclusive_fullscreen,
+  };
 
   // This is the only place that applies to both a full init and a partial
   // update later...
-  if (fs_new.fullscreen && fs_new.exclusive) {
+  if (requested_fullscreen.enabled && requested_fullscreen.exclusive) {
     SDL_HideCursor();
   } else {
     SDL_ShowCursor();
@@ -622,20 +588,23 @@ GraphicsBackendInit(std::optional<const GraphicsParams> maybe_prev,
     return PrimaryInitFull(params);
   }
   const auto &prev = maybe_prev.value();
-  const auto fs_prev = prev.FullscreenFlags();
+  const WindowFullscreenState previous_fullscreen = {
+      .enabled = prev.fullscreen,
+      .exclusive = prev.exclusive_fullscreen,
+  };
 
   // API changes need a complete reinit.
-  if (prev.api != params.api) {
+  if (prev.render_driver != params.render_driver) {
     return reinit_full(params);
   }
 
   // As do a few things when switching to exclusive fullscreen.
-  if (fs_new.fullscreen && fs_new.exclusive) {
+  if (requested_fullscreen.enabled && requested_fullscreen.exclusive) {
     // The Direct3D renderer can only launch into exclusive fullscreen on
     // the same display the window was spawned on, so let's just throw it
     // away.
-    const auto name = WindowBackendSDLRendererName(params.api);
-    if (!fs_prev.fullscreen && (name == "direct3d")) {
+    const auto name = SdlRenderDriverName(params.render_driver);
+    if (!previous_fullscreen.enabled && (name == "direct3d")) {
       return reinit_full(params);
     }
   }
@@ -643,68 +612,60 @@ GraphicsBackendInit(std::optional<const GraphicsParams> maybe_prev,
   // The following parameters can be changed on the fly, but we don't want to
   // reflect modifications of any parameters we don't care about.
   GraphicsInitResult ret = {.live = prev, .reload_surfaces = false};
-  using F = GraphicsParamFlags;
 
   // Apply fullscreen changes first, as exclusive fullscreen affects the
   // display size calculated by ScaledRes().
-  if ((fs_prev.fullscreen != fs_new.fullscreen) ||
-      (fs_prev.exclusive != fs_new.exclusive)) {
-    const auto maybe_fs_actual = HelpSwitchFullscreen(fs_prev, fs_new);
-    if (maybe_fs_actual) {
-      const auto &fs_actual = maybe_fs_actual.value();
+  if (previous_fullscreen.enabled != requested_fullscreen.enabled ||
+      previous_fullscreen.exclusive != requested_fullscreen.exclusive) {
+    const auto actual =
+        HelpSwitchFullscreen(previous_fullscreen, requested_fullscreen);
+    if (actual) {
 
       // If we clipped on the raw renderer, the clipping rectangle won't
       // match the current resolution anymore.
       SDL_SetRenderClipRect(RenderState().primary_renderer, nullptr);
 
-      ret.live.SetFlag(F::Fullscreen,
-                       static_cast<std::underlying_type_t<GraphicsParamFlags>>(
-                           fs_actual.fullscreen));
-      ret.live.SetFlag(F::FullscreenExclusive,
-                       static_cast<std::underlying_type_t<GraphicsParamFlags>>(
-                           fs_actual.exclusive));
+      ret.live.fullscreen = actual->enabled;
+      ret.live.exclusive_fullscreen = actual->exclusive;
     }
   }
 
-  auto *window = WindowBackendSDL();
-  WindowSize res_prev{};
-  SDL_GetWindowSize(window, &res_prev.w, &res_prev.h);
+  auto *window = SdlWindow();
+  PixelPoint res_prev{};
+  SDL_GetWindowSize(window, &res_prev.x, &res_prev.y);
 
   const auto res_new = params.ScaledRes();
   const bool res_changed = (res_prev != res_new);
-  if (res_changed && !fs_new.fullscreen) {
+  if (res_changed && !requested_fullscreen.enabled) {
     PixelPoint topleft{};
     SDL_GetWindowPosition(window, &topleft.x, &topleft.y);
-    SDL_SetWindowSize(window, res_new.w, res_new.h);
+    SDL_SetWindowSize(window, res_new.x, res_new.y);
 
     // Necessary for the X11 backend.
     SDL_SyncWindow(window);
 
     topleft = RepositionAfterScale(topleft, res_prev, res_new);
-    ret.live.left = topleft.x;
-    ret.live.top = topleft.y;
+    ret.live.window_left = topleft.x;
+    ret.live.window_top = topleft.y;
   } else {
-    ret.live.left = params.left;
-    ret.live.top = params.top;
+    ret.live.window_left = params.window_left;
+    ret.live.window_top = params.window_top;
   }
 
   // Should always be applied unconditionally so that the user can change
   // from the maximum scale value to 0, both of which result in the same
   // scaled resolution.
-  ret.live.window_scale_4x = params.window_scale_4x;
+  ret.live.window_scale_quarters = params.window_scale_quarters;
 
-  const auto scale_geometry = PrimarySetScale(params.ScaleGeometry(), res_new);
-  ret.live.SetFlag(
-      F::ScaleGeometry,
-      static_cast<std::underlying_type_t<GraphicsParamFlags>>(scale_geometry));
+  ret.live.scale_geometry = PrimarySetScale(params.scale_geometry, res_new);
 
   PrimarySetBorderlessFullscreenFit(params, res_new);
-  ret.live.SetFlag(F::FullscreenFit, std::to_underlying(fs_new.fit));
+  ret.live.fullscreen_fit = params.fullscreen_fit;
 
   return ret;
 }
 
-void GraphicsBackendCleanup() {
+void GraphicsCleanup() {
   PrimaryCleanup();
   DestroySoftwareRenderer();
   RenderState().software_surface =
@@ -715,12 +676,12 @@ void GraphicsBackendCleanup() {
 /// General
 /// -------
 
-void GraphicsBackendClear(uint8_t /*unused*/, Rgb col) {
+void GraphicsClear(Rgb col) {
   SDL_SetRenderDrawColor(*RenderState().renderer, col.r, col.g, col.b, 0xFF);
   SDL_RenderClear(*RenderState().renderer);
 }
 
-void GraphicsBackendSetClip(const WindowLtrb &rect) {
+void GraphicsSetClip(const Rect &rect) {
   if ((*RenderState().renderer) == nullptr) {
     return;
   }
@@ -728,7 +689,7 @@ void GraphicsBackendSetClip(const WindowLtrb &rect) {
   SDL_SetRenderClipRect(*RenderState().renderer, &sdl_rect);
 }
 
-std::string_view GraphicsBackendAPIString() {
+std::string_view GraphicsActiveRenderDriver() {
   // More efficient than the hash table insertion done by
   // SDL_GetRendererName().
   if (RenderState().primary_renderer == nullptr) {
@@ -766,17 +727,19 @@ void TakeScreenshot() {
 
 } // namespace
 
-void GraphicsBackendFlip(bool take_screenshot) {
+void SdlGraphicsFlip(bool take_screenshot) {
   if (take_screenshot) {
     TakeScreenshot();
   }
   if (RenderState().software_renderer != nullptr) {
     SDL_FlushRenderer(RenderState().software_renderer);
-    if (SDL_MUSTLOCK(RenderState().software_surface)) {
-      SDL_LockSurface(RenderState().software_surface);
+    const bool must_lock = SDL_MUSTLOCK(RenderState().software_surface);
+    if (must_lock && !SDL_LockSurface(RenderState().software_surface)) {
+      logging::SdlError(kLogCat, "Error locking software backbuffer");
+      return;
     }
     auto unlock_guard = util::MakeGuard([&] {
-      if (SDL_MUSTLOCK(RenderState().software_surface)) {
+      if (must_lock) {
         SDL_UnlockSurface(RenderState().software_surface);
       }
     });
@@ -800,7 +763,7 @@ void GraphicsBackendFlip(bool take_screenshot) {
     //    GPUs can use clearing as a performance hint.
     // Let's measure the performance impact on windowed mode some other
     // time...
-    GraphicsBackendClear(0, Rgb{.r = 0, .g = 0, .b = 0});
+    GraphicsClear();
 
     SDL_RenderTexture(RenderState().primary_renderer,
                       RenderState().primary_texture, nullptr, nullptr);
@@ -824,12 +787,12 @@ void GraphicsBackendFlip(bool take_screenshot) {
 namespace {
 
 bool CreateTextureWithFormat(SurfaceId sid, SDL_PixelFormat fmt,
-                             const PixelSize &size) {
+                             const PixelPoint &size) {
   auto &tex = RenderState().textures[sid];
   tex = SafeDestroy(SDL_DestroyTexture, tex);
 
   tex = SDL_CreateTexture(*RenderState().renderer, fmt,
-                          SDL_TEXTUREACCESS_STREAMING, size.w, size.h);
+                          SDL_TEXTUREACCESS_STREAMING, size.x, size.y);
   if (tex == nullptr) {
     logging::SdlError(kLogCat, "Error creating blank texture");
     return false;
@@ -837,6 +800,7 @@ bool CreateTextureWithFormat(SurfaceId sid, SDL_PixelFormat fmt,
   TexturePostInit(*tex, *RenderState().renderer);
   if (!SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND)) {
     logging::SdlError(kLogCat, "Error enabling alpha blending for texture");
+    tex = SafeDestroy(SDL_DestroyTexture, tex);
     return false;
   }
   return true;
@@ -844,7 +808,7 @@ bool CreateTextureWithFormat(SurfaceId sid, SDL_PixelFormat fmt,
 
 } // namespace
 
-bool GraphicsSurfaceCreateUninitialized(SurfaceId sid, const PixelSize &size) {
+bool GraphicsSurfaceCreateUninitialized(SurfaceId sid, const PixelPoint &size) {
   return CreateTextureWithFormat(sid, SDL_PIXELFORMAT_ARGB8888, size);
 }
 
@@ -853,16 +817,26 @@ bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp) {
   tex = SafeDestroy(SDL_DestroyTexture, tex);
 
   auto *rwops = SDL_IOFromMem(bmp.buffer.data(), bmp.buffer.size());
+  if (rwops == nullptr) {
+    logging::SdlError(kLogCat, "Error opening .BMP memory stream");
+    return false;
+  }
   auto *surf = SDL_LoadBMP_IO(rwops, true);
+  if (surf == nullptr) {
+    logging::SdlError(kLogCat, "Error decoding .BMP surface");
+    return false;
+  }
   auto surf_guard = util::MakeGuard(surf, SDL_DestroySurface);
 
   if (surf->format == SDL_PIXELFORMAT_INDEX8) {
     // The transparent pixel is in the top-left corner.
-    if (SDL_MUSTLOCK(surf)) {
-      SDL_LockSurface(surf);
+    const bool must_lock = SDL_MUSTLOCK(surf);
+    if (must_lock && !SDL_LockSurface(surf)) {
+      logging::SdlError(kLogCat, "Error locking indexed .BMP surface");
+      return false;
     }
     const auto key = static_cast<uint8_t *>(surf->pixels)[0];
-    if (SDL_MUSTLOCK(surf)) {
+    if (must_lock) {
       SDL_UnlockSurface(surf);
     }
     SDL_SetSurfaceColorKey(surf, true, key);
@@ -878,7 +852,7 @@ bool GraphicsSurfaceLoad(SurfaceId sid, BmpOwned bmp) {
 }
 
 bool GraphicsSurfaceUpdate(
-    SurfaceId sid, const PixelLtwh *subrect,
+    SurfaceId sid, const Rect *subrect,
     std::tuple<const uint8_t *, size_t> pixels) noexcept {
   const auto [buf, pitch] = pixels;
   if (pitch > std::numeric_limits<int>::max()) {
@@ -889,30 +863,29 @@ bool GraphicsSurfaceUpdate(
 
   auto *tex = RenderState().textures[sid];
   if (subrect == nullptr) {
-    return (static_cast<int>(SDL_UpdateTexture(tex, nullptr, buf, pitch)) == 0);
+    return SDL_UpdateTexture(tex, nullptr, buf, static_cast<int>(pitch));
   }
   const auto rect = HelpRectTo<SDL_Rect>(*subrect);
-  return (static_cast<int>(SDL_UpdateTexture(tex, &rect, buf, pitch)) == 0);
+  return SDL_UpdateTexture(tex, &rect, buf, static_cast<int>(pitch));
 }
 
-PixelSize GraphicsSurfaceSize(SurfaceId sid) {
+PixelPoint GraphicsSurfaceSize(SurfaceId sid) {
   auto *tex = RenderState().textures[sid];
   if (tex == nullptr) {
-    return {.w = 0, .h = 0};
+    return {.x = 0, .y = 0};
   }
   float w = 0;
   float h = 0;
   if (!SDL_GetTextureSize(tex, &w, &h)) {
-    return {.w = 0, .h = 0};
+    return {.x = 0, .y = 0};
   }
   return {
-      .w = static_cast<PixelCoord>(w),
-      .h = static_cast<PixelCoord>(h),
+      .x = static_cast<int>(w),
+      .y = static_cast<int>(h),
   };
 }
 
-bool GraphicsSurfaceBlit(WindowPoint topleft, SurfaceId sid,
-                         const PixelLtrb &src) {
+bool GraphicsSurfaceBlit(PixelPoint topleft, SurfaceId sid, const Rect &src) {
   auto *const tex = RenderState().textures[sid];
   const auto rect_src = HelpRectTo<SDL_FRect>(src);
   const SDL_FRect rect_dst = {
@@ -924,8 +897,8 @@ bool GraphicsSurfaceBlit(WindowPoint topleft, SurfaceId sid,
   return SDL_RenderTexture(*RenderState().renderer, tex, &rect_src, &rect_dst);
 }
 
-void GraphicsSurfaceBlitOpaque(WindowPoint topleft, SurfaceId sid,
-                               const PixelLtrb &src) {
+void GraphicsSurfaceBlitOpaque(PixelPoint topleft, SurfaceId sid,
+                               const Rect &src) {
   auto *tex = RenderState().textures[sid];
   SDL_BlendMode prev{};
   SDL_GetTextureBlendMode(tex, &prev);
@@ -989,8 +962,8 @@ void DrawGeometry(TrianglePrimitive tp, VertexXySpan<> xys,
 
   SDL_RenderGeometryRaw(
       *RenderState().renderer, nullptr, &sdl_vertices[0].x, sizeof(SDL_FPoint),
-      sdl_colors.data(), ((colors.size() == 1) ? 0 : sizeof(SdlColor)),
-      nullptr, 0, vertex_count, indices.data(), index_count, sizeof(IndexType));
+      sdl_colors.data(), ((colors.size() == 1) ? 0 : sizeof(SdlColor)), nullptr,
+      0, vertex_count, indices.data(), index_count, sizeof(IndexType));
 }
 
 void DrawWithAlpha(auto func) {
@@ -1084,10 +1057,10 @@ void geometry::DrawGrdLineEx(int x, int y1, Rgb c1, int y2, Rgb c2) {
   const auto c1a = c1.WithAlpha(0xFF);
   const auto c2a = c2.WithAlpha(0xFF);
   const std::array<VertexXy, 4> xys = {
-      VertexXy{static_cast<VertexCoord>(x + 0), static_cast<VertexCoord>(y1)},
-      VertexXy{static_cast<VertexCoord>(x + 0), static_cast<VertexCoord>(y2)},
-      VertexXy{static_cast<VertexCoord>(x + 1), static_cast<VertexCoord>(y1)},
-      VertexXy{static_cast<VertexCoord>(x + 1), static_cast<VertexCoord>(y2)},
+      VertexXy{static_cast<float>(x + 0), static_cast<float>(y1)},
+      VertexXy{static_cast<float>(x + 0), static_cast<float>(y2)},
+      VertexXy{static_cast<float>(x + 1), static_cast<float>(y1)},
+      VertexXy{static_cast<float>(x + 1), static_cast<float>(y2)},
   };
   const std::array<VertexRgba, 4> colors = {c1a, c2a, c1a, c2a};
   DrawGeometry(TrianglePrimitive::Strip, xys, colors);
@@ -1120,7 +1093,7 @@ SDL_Texture *EnsureSoftwareTexture() {
 
 } // namespace
 
-bool GraphicsBackendPixelAccessStart() {
+bool GraphicsPixelAccessStart() {
   if (RenderState().software_renderer != nullptr) {
     return true;
   }
@@ -1134,7 +1107,7 @@ bool GraphicsBackendPixelAccessStart() {
   return (EnsureSoftwareTexture() != nullptr);
 }
 
-bool GraphicsBackendPixelAccessEnd() {
+bool GraphicsPixelAccessEnd() {
   if (RenderState().software_renderer == nullptr) {
     return true;
   }
@@ -1143,7 +1116,13 @@ bool GraphicsBackendPixelAccessEnd() {
   return true;
 }
 
-std::tuple<uint8_t *, size_t> GraphicsBackendPixelAccessLock() {
+std::tuple<uint8_t *, size_t> GraphicsPixelAccessLock() {
+  if (RenderState().software_renderer == nullptr ||
+      RenderState().software_surface == nullptr) {
+    logging::Critical(kLogCat,
+                      "Pixel access requires an active software renderer");
+    return {nullptr, 0};
+  }
   // Necessary in SDL 3!
   SDL_FlushRenderer(RenderState().software_renderer);
 
@@ -1153,12 +1132,14 @@ std::tuple<uint8_t *, size_t> GraphicsBackendPixelAccessLock() {
       return {nullptr, 0};
     }
   }
-  auto *pixels =
-      static_cast<uint8_t *>(RenderState().software_surface->pixels);
+  auto *pixels = static_cast<uint8_t *>(RenderState().software_surface->pixels);
   return {pixels, RenderState().software_surface->pitch};
 }
 
-void GraphicsBackendPixelAccessUnlock() {
+void GraphicsPixelAccessUnlock() {
+  if (RenderState().software_surface == nullptr) {
+    return;
+  }
   if (SDL_MUSTLOCK(RenderState().software_surface)) {
     SDL_UnlockSurface(RenderState().software_surface);
   }

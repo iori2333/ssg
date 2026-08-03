@@ -14,8 +14,8 @@
 
 #include "menu_tree.h"
 
-#include "gfx/coords.h"
-#include "gfx/text.h"
+#include "gfx/core/coords.h"
+#include "gfx/text/text.h"
 #include "sys/input.h"
 
 namespace audio {
@@ -51,7 +51,7 @@ public:
   explicit MenuController(audio::AudioSystem &audio) : audio_(audio) {}
 
   void Init(int window_width);
-  void Open(WindowPoint topleft, int select, InputBits initial_input);
+  void Open(PixelPoint topleft, int select, InputBits initial_input);
   void Navigate(IMenuNode &root_node, int initial_select = 0);
 
   void Tick(InputBits key);

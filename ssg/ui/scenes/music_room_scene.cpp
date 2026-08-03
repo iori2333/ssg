@@ -19,18 +19,17 @@
 #include "audio/audio_system.h"
 #include "audio/core/audio_types.h"
 #include "data/graphics_loader.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/font_uty.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text.h"
-#include "gfx/text_ttf.h"
+#include "gfx/render/geometry.h"
+#include "gfx/text/text.h"
+#include "gfx/text/text_renderer.h"
 #include "i18n/localization.h"
 #include "music/music_player.h"
 #include "sys/input.h"
 #include "sys/log.h"
+#include "ui/bitmap_font.h"
 #include "ui/text_marquee.h"
 #include "util/math_utils.h"
 
@@ -45,7 +44,7 @@ static constexpr int TitleAreaWidth = 232;
 // State
 // -----
 
-void MusicRoomScene::Text::RenderVersion(WindowPoint topleft,
+void MusicRoomScene::Text::RenderVersion(PixelPoint topleft,
                                          std::string_view value) const {
   TextRenderer().Render(topleft, version, value, [value](TextRenderSession &s) {
     s.SetFont(FontId::Small);
@@ -54,7 +53,7 @@ void MusicRoomScene::Text::RenderVersion(WindowPoint topleft,
   });
 }
 
-void MusicRoomScene::Text::RenderMidDev(WindowPoint topleft,
+void MusicRoomScene::Text::RenderMidDev(PixelPoint topleft,
                                         std::string_view value) const {
   if (value.empty()) {
     return;
@@ -67,8 +66,7 @@ void MusicRoomScene::Text::RenderMidDev(WindowPoint topleft,
   });
 }
 
-void MusicRoomScene::Text::RenderTitle(WindowPoint topleft,
-                                       std::size_t track_id,
+void MusicRoomScene::Text::RenderTitle(PixelPoint topleft, std::size_t track_id,
                                        std::string_view track_title,
                                        int marquee_frame) const {
   // Some modders might assign the same title to consecutive tracks, but it's
@@ -84,10 +82,10 @@ void MusicRoomScene::Text::RenderTitle(WindowPoint topleft,
       [&num, track_title, marquee_frame](TextRenderSession &s) {
         s.SetFont(FontId::Normal);
         // GDI would calculate a trailing space as 4 pixels wide, not 8.
-        const auto title_left = (s.Extent(num).w + 8);
+        const auto title_left = (s.Extent(num).x + 8);
 
         const auto display_title = ui::MarqueeWindow(
-            s, track_title, s.RectSize().w - title_left - 1, marquee_frame);
+            s, track_title, s.RectSize().x - title_left - 1, marquee_frame);
         s.Put({.x = 1, .y = 0}, num, ColorHighlight);
         s.Put({.x = (title_left + 1), .y = 0}, display_title, ColorHighlight);
         s.Put({.x = 0, .y = 0}, num, ColorDefault);
@@ -95,7 +93,7 @@ void MusicRoomScene::Text::RenderTitle(WindowPoint topleft,
       });
 }
 
-void MusicRoomScene::Text::RenderComment(WindowPoint topleft,
+void MusicRoomScene::Text::RenderComment(PixelPoint topleft,
                                          std::string_view comment_text) const {
   if (comment_text.empty()) {
     return;
@@ -124,7 +122,7 @@ void MusicRoomScene::Text::RenderComment(WindowPoint topleft,
 
 bool MusicRoomScene::Enter() {
   TextRenderer().Clear();
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsFlip();
 
   if (!graphics_.LoadMusicRoom()) {
@@ -132,7 +130,7 @@ bool MusicRoomScene::Enter() {
     return false;
   }
 
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
 
   track_id_ = 0;
   previous_input_ = 0;
@@ -150,10 +148,10 @@ bool MusicRoomScene::Enter() {
   }
 
   text_ = Text{
-      .mid_dev = TextRenderer().Register({.w = 98, .h = 13}),
-      .title = TextRenderer().Register({.w = TitleAreaWidth, .h = 16}),
-      .comment = TextRenderer().Register({.w = 272, .h = 192}),
-      .version = TextRenderer().Register({.w = 490, .h = 13}),
+      .mid_dev = TextRenderer().Register({.x = 98, .y = 13}),
+      .title = TextRenderer().Register({.x = TitleAreaWidth, .y = 16}),
+      .comment = TextRenderer().Register({.x = 272, .y = 192}),
+      .version = TextRenderer().Register({.x = 490, .y = 13}),
   };
 
   return true;
@@ -164,7 +162,7 @@ void MusicRoomScene::DrawSpectrum(int x, int y) {
   std::array<int, 128 + 8 + 8> ftable{};
   std::array<int, 128> ftable2{};
 
-  constexpr PixelLtrb src = {(16 * 16), 0, ((16 * 16) + (8 * 21)), 8}; // ,,,8*4
+  constexpr Rect src = {(16 * 16), 0, ((16 * 16) + (8 * 21)), 8}; // ,,,8*4
 
   spectrum_decay_frame_ = ((spectrum_decay_frame_ + 1) % 5);
 
@@ -248,47 +246,47 @@ void MusicRoomScene::DrawNotes() {
   // o#o#oo#o#o#o
   // o o oo o o o
 
-  constexpr std::array<PixelLtrb, 12> src = {
-      PixelLtrb{0, 464, 3, 474}, // white
-      PixelLtrb{0, 456, 3, 461}, // black
+  constexpr std::array<Rect, 12> src = {
+      Rect{0, 464, 3, 474}, // white
+      Rect{0, 456, 3, 461}, // black
 
-      PixelLtrb{4, 464, 7, 474}, // white
-      PixelLtrb{0, 456, 3, 461}, // black
+      Rect{4, 464, 7, 474}, // white
+      Rect{0, 456, 3, 461}, // black
 
-      PixelLtrb{8, 464, 11, 474},  // white
-      PixelLtrb{12, 464, 15, 474}, // white
+      Rect{8, 464, 11, 474},  // white
+      Rect{12, 464, 15, 474}, // white
 
-      PixelLtrb{0, 456, 3, 461},   // black
-      PixelLtrb{16, 464, 19, 474}, // white
+      Rect{0, 456, 3, 461},   // black
+      Rect{16, 464, 19, 474}, // white
 
-      PixelLtrb{0, 456, 3, 461},   // black
-      PixelLtrb{20, 464, 23, 474}, // white
+      Rect{0, 456, 3, 461},   // black
+      Rect{20, 464, 23, 474}, // white
 
-      PixelLtrb{0, 456, 3, 461},   // black
-      PixelLtrb{24, 464, 27, 474}, // white
+      Rect{0, 456, 3, 461},   // black
+      Rect{24, 464, 27, 474}, // white
   };
 
-  constexpr std::array<PixelLtrb, 12> src2 = {
-      PixelLtrb{0, (464 - 24), 3, (474 - 24)}, // white
-      PixelLtrb{0, (456 - 24), 3, (461 - 24)}, // black
+  constexpr std::array<Rect, 12> src2 = {
+      Rect{0, (464 - 24), 3, (474 - 24)}, // white
+      Rect{0, (456 - 24), 3, (461 - 24)}, // black
 
-      PixelLtrb{4, (464 - 24), 7, (474 - 24)}, // white
-      PixelLtrb{0, (456 - 24), 3, (461 - 24)}, // black
+      Rect{4, (464 - 24), 7, (474 - 24)}, // white
+      Rect{0, (456 - 24), 3, (461 - 24)}, // black
 
-      PixelLtrb{8, (464 - 24), 11, (474 - 24)},  // white
-      PixelLtrb{12, (464 - 24), 15, (474 - 24)}, // white
+      Rect{8, (464 - 24), 11, (474 - 24)},  // white
+      Rect{12, (464 - 24), 15, (474 - 24)}, // white
 
-      PixelLtrb{0, (456 - 24), 3, (461 - 24)},   // black
-      PixelLtrb{16, (464 - 24), 19, (474 - 24)}, // white
+      Rect{0, (456 - 24), 3, (461 - 24)},   // black
+      Rect{16, (464 - 24), 19, (474 - 24)}, // white
 
-      PixelLtrb{0, (456 - 24), 3, (461 - 24)},   // black
-      PixelLtrb{20, (464 - 24), 23, (474 - 24)}, // white
+      Rect{0, (456 - 24), 3, (461 - 24)},   // black
+      Rect{20, (464 - 24), 23, (474 - 24)}, // white
 
-      PixelLtrb{0, (456 - 24), 3, (461 - 24)},   // black
-      PixelLtrb{24, (464 - 24), 27, (474 - 24)}, // white
+      Rect{0, (456 - 24), 3, (461 - 24)},   // black
+      Rect{24, (464 - 24), 27, (474 - 24)}, // white
   };
 
-  constexpr std::array<PixelCoord, 12> destX = {
+  constexpr std::array<int, 12> destX = {
       0, // white
       2, // black
 
@@ -308,14 +306,14 @@ void MusicRoomScene::DrawNotes() {
       24, // white
   };
 
-  PixelLtrb rc;
+  Rect rc;
 
   for (const auto Track : std::views::iota(0, 16)) {
     const auto top = (22 + (Track * 24));
     const auto pan = (static_cast<int8_t>(midi_visualization_.pan[Track]) - 64);
-    DrawFontMid(50, top, midi_visualization_.volume[Track]);
-    DrawFontMid(125, top, midi_visualization_.expression[Track]);
-    DrawFontMid(181, top, pan);
+    ui::DrawMidiValue({50, top}, midi_visualization_.volume[Track]);
+    ui::DrawMidiValue({125, top}, midi_visualization_.expression[Track]);
+    ui::DrawMidiValue({181, top}, pan);
 
     int LevelSum = 0;
     int num = 0;
@@ -338,7 +336,7 @@ void MusicRoomScene::DrawNotes() {
     }
 
     if (num != 0) {
-      rc = PixelLtwh{80, 456, (std::min)((LevelSum / num), 96), 5};
+      rc = Rect::FromLtwh(80, 456, (std::min)((LevelSum / num), 96), 5);
       GraphicsSurfaceBlit({240, (22 + (Track * 24))}, SurfaceId::Music, rc);
     }
   }
@@ -407,14 +405,14 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
 
   if (should_draw) {
     midi_visualization_ = audio.MidiVisualization();
-    GraphicsBackendClear();
+    GraphicsClear();
 
-    auto BlitBG = [](const PixelLtwh &rect) {
+    auto BlitBG = [](const Rect &rect) {
       GraphicsSurfaceBlit({rect.left, rect.top}, SurfaceId::Music, rect);
     };
 
-    auto BlitLegend = [](const PixelLtwh &rect) {
-      const PixelLtrb src = (rect + PixelPoint{.x = 0, .y = 392});
+    auto BlitLegend = [](const Rect &rect) {
+      const Rect src = (rect + PixelPoint{.x = 0, .y = 392});
       GraphicsSurfaceBlit({(8 + rect.left), (410 + rect.top)}, SurfaceId::Music,
                           src);
     };
@@ -438,19 +436,19 @@ bool MusicRoomScene::Update(InputBits input, InputBits system_input,
     const auto millis = snapshot.play_time.count();
     const auto m = ((millis / 1000) / 60);
     const auto s = ((millis / 1000) % 60);
-    DrawFont7B(560, 44, std::format("{:02} : {:02}", m, s).c_str());
+    ui::DrawMusicDigits({560, 44}, std::format("{:02} : {:02}", m, s));
     // TextOut(hdc,561,40+2,buf,strlen(buf));
 
     if (midi_visualization_.loaded) {
       BlitBG({504, 59, 136, 24}); // MIDI TIMER
-      DrawFont7B(
-          560, 68,
-          std::format("{:07}", midi_visualization_.play_time.pulse_interpolated)
-              .c_str());
+      ui::DrawMusicDigits(
+          {560, 68},
+          std::format("{:07}",
+                      midi_visualization_.play_time.pulse_interpolated));
       // TextOut(hdc,561,64+2,buf,strlen(buf));
     }
 
-    DrawFont7B(560, 116, std::format("{:3}", snapshot.tempo).c_str());
+    ui::DrawMusicDigits({560, 116}, std::format("{:3}", snapshot.tempo));
     // TextOut(hdc,561,112+2,buf,strlen(buf));
     // SetTextColor(hdc,Rgb(255*5/5,255*2/5,255*1/5));
 

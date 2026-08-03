@@ -11,7 +11,7 @@
 #include "player_shot.h"
 
 #include "gameplay/game_rules.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "sys/input.h"
 #include "util/object_pool.h"
 
@@ -108,18 +108,18 @@ public:
 
   // --- Graze / score / power ---
   void AddEvade(int n);
-  void AddEvadeEx(int x, int y, int n);
+  void AddEvadeEx(WorldCoord x, WorldCoord y, int n);
   void AddScore(int sc);
   void PowerUp(int damage);
 
   // --- Read-only accessors ---
-  [[nodiscard]] int X() const { return x_; }
-  [[nodiscard]] int Y() const { return y_; }
-  [[nodiscard]] int OpX() const { return opx_; }
-  [[nodiscard]] int OpY() const { return opy_; }
+  [[nodiscard]] WorldCoord X() const { return x_; }
+  [[nodiscard]] WorldCoord Y() const { return y_; }
+  [[nodiscard]] WorldCoord OpX() const { return opx_; }
+  [[nodiscard]] WorldCoord OpY() const { return opy_; }
   [[nodiscard]] int64_t Score() const { return score_; }
   [[nodiscard]] PlayerType Type() const { return loadout_->Type(); }
-  [[nodiscard]] int HitRadius() const { return loadout_->HitRadius(); }
+  [[nodiscard]] WorldCoord HitRadius() const { return loadout_->HitRadius(); }
   [[nodiscard]] int Power() const { return exp_; }
   [[nodiscard]] int Bombs() const { return bomb_; }
   [[nodiscard]] int Lives() const { return left_; }
@@ -157,7 +157,7 @@ public:
     life_state_ = LifeState::Active;
   }
   void ClearContinuousAttack() { loadout_->ClearContinuousAttack(); }
-  void SetPosition(int nx, int ny) {
+  void SetPosition(WorldCoord nx, WorldCoord ny) {
     x_ = nx;
     y_ = ny;
   }
@@ -182,7 +182,7 @@ private:
   void UpdateStatus();
   InputBits PrepareInput(InputBits input);
   void UpdateMovement(InputBits input);
-  void UpdateOptionPosition(int movement_x, int movement_y);
+  void UpdateOptionPosition(WorldCoord movement_x, WorldCoord movement_y);
   void UpdateProjectiles(EnemyManager &enemies);
   void UpdateWeapons(EnemyManager &enemies, InputBits input);
   bool ActivateBomb(BombTrigger trigger);
@@ -191,9 +191,9 @@ private:
   void CommitDeath();
 
   // --- Coordinates ---
-  int x_ = 0, y_ = 0;
-  int opx_ = 0, opy_ = 0;
-  int option_lag_x_ = 0, option_lag_y_ = 0;
+  WorldCoord x_{}, y_{};
+  WorldCoord opx_{}, opy_{};
+  WorldCoord option_lag_x_{}, option_lag_y_{};
 
   // --- Score ---
   int64_t score_ = 0;

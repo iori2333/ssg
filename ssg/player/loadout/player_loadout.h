@@ -9,6 +9,8 @@
 #include <string_view>
 #include <utility>
 
+#include "gfx/core/coords.h"
+
 class Player;
 class EnemyManager;
 class EffectManager;
@@ -25,9 +27,9 @@ inline constexpr std::array<std::string_view, 3> kPlayerTypeNames = {
 
 struct PlayerTraits {
   PlayerType type;
-  int move_speed;
-  int focus_move_speed;
-  int hit_radius;
+  WorldCoord move_speed;
+  WorldCoord focus_move_speed;
+  WorldCoord hit_radius;
   int bomb_duration;
   int option_sprite;
   int option_offset;
@@ -43,10 +45,10 @@ public:
   virtual ~PlayerLoadout() = default;
 
   [[nodiscard]] PlayerType Type() const { return traits_.type; }
-  [[nodiscard]] int MoveSpeed(bool focused) const {
+  [[nodiscard]] WorldCoord MoveSpeed(bool focused) const {
     return focused ? traits_.focus_move_speed : traits_.move_speed;
   }
-  [[nodiscard]] int HitRadius() const { return traits_.hit_radius; }
+  [[nodiscard]] WorldCoord HitRadius() const { return traits_.hit_radius; }
   [[nodiscard]] int BombDuration() const { return traits_.bomb_duration; }
   [[nodiscard]] int OptionSprite() const { return traits_.option_sprite; }
   [[nodiscard]] int OptionOffset(bool focused) const {
@@ -56,8 +58,7 @@ public:
   virtual void FireMain(Player &player, int tier, bool focused) = 0;
   virtual void FireSub(Player &player, int tier, bool focused) = 0;
   virtual void UpdateBomb(Player & /*player*/, EnemyManager & /*enemies*/,
-                          EffectManager & /*effects*/, int /*remaining*/) {
-  }
+                          EffectManager & /*effects*/, int /*remaining*/) {}
   virtual void Tick(Player & /*player*/) {}
   virtual void ApplyContinuousAttack(const Player & /*player*/,
                                      EnemyManager & /*enemies*/,

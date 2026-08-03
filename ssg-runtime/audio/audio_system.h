@@ -62,7 +62,7 @@ public:
 
   AudioResult LoadSfx(SfxId id, std::span<const std::uint8_t> wav,
                       int max_instances);
-  void PlaySfx(SfxId id, int x = kSoundFieldCenterX, bool loop = false);
+  void PlaySfx(SfxId id, WorldCoord x = kSoundFieldCenterX, bool loop = false);
   void StopSfx(SfxId id);
   void StopAllSfx();
 

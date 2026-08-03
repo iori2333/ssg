@@ -9,9 +9,10 @@
 
 #include "effect_manager.h"
 
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
+#include "gfx/graphics.h"
 #include "util/math_utils.h"
 
 void EffectManager::ResetBombExplosions() {
@@ -20,7 +21,7 @@ void EffectManager::ResetBombExplosions() {
   }
 }
 
-void EffectManager::SpawnBombExplosion(int x, int y) {
+void EffectManager::SpawnBombExplosion(WorldCoord x, WorldCoord y) {
   const auto found =
       std::ranges::find(bomb_explosions_, false, &BombExplosion::active);
   if (found == bomb_explosions_.end()) {
@@ -66,19 +67,18 @@ void EffectManager::DrawBombExplosion(const BombExplosion &effect) {
     if (particle.frame > 14) {
       continue;
     }
-    GraphicsSurfaceBlit({(particle.x >> 6) - 24, (particle.y >> 6) - 24},
-                        SurfaceId::System,
-                        PixelLtwh{(particle.frame >> 1) * 48, 296, 48, 48});
+    GraphicsSurfaceBlit(
+        {particle.x.ToPixels() - 24, particle.y.ToPixels() - 24},
+        SurfaceId::System,
+        Rect::FromLtwh((particle.frame >> 1) * 48, 296, 48, 48));
   }
 }
 
 void EffectManager::UpdateBombExplosion(BombExplosion &effect) {
-  const int speed =
-      static_cast<int>(
-          std::lround(std::sin((static_cast<float>(effect.age) / 2.0F - 64.0F) *
-                               math::kLegacyAngleStep) *
-                      200_px)) +
-      200_px;
+  const auto speed_angle =
+      (static_cast<float>(effect.age) / 2.0F - 64.0F) * math::kLegacyAngleStep;
+  const WorldCoord speed =
+      math::RoundedPolarVector(speed_angle, 200_px).y + 200_px;
   int spawned = 0;
   for (auto &particle : effect.particles) {
     if (particle.frame > 14) {
@@ -86,7 +86,8 @@ void EffectManager::UpdateBombExplosion(BombExplosion &effect) {
         continue;
       }
       const auto direction = math::RandomAngle();
-      const int velocity = math::RandomInt() % 256 + 128;
+      const WorldCoord velocity =
+          WorldCoord::FromRaw(math::RandomInt() % 256 + 128);
       const auto movement = math::RoundedPolarVector(direction, velocity);
       particle.velocity_x = movement.x;
       particle.velocity_y = movement.y;
@@ -94,7 +95,8 @@ void EffectManager::UpdateBombExplosion(BombExplosion &effect) {
       const auto angle =
           static_cast<float>(effect.age * 2 + (spawned % 8) * 32) *
           math::kLegacyAngleStep;
-      const int radius = speed - math::RandomInt() % (speed >> 2);
+      const WorldCoord radius =
+          speed - math::RandomWorldBelow(speed.DivPow2Floor(2));
       const auto offset = math::RoundedPolarVector(angle, radius);
       particle.x = offset.x + effect.x;
       particle.y = offset.y + effect.y;
@@ -106,7 +108,7 @@ void EffectManager::UpdateBombExplosion(BombExplosion &effect) {
     ++particle.frame;
     particle.x += particle.velocity_x;
     particle.y += particle.velocity_y;
-    particle.velocity_x -= particle.velocity_x >> 3;
-    particle.velocity_y -= particle.velocity_y >> 3;
+    particle.velocity_x -= particle.velocity_x.DivPow2Floor(3);
+    particle.velocity_y -= particle.velocity_y.DivPow2Floor(3);
   }
 }

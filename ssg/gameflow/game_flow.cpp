@@ -15,10 +15,9 @@
 
 #include "app/game_context.h"
 #include "gameplay/game_rules.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text_ttf.h"
+#include "gfx/text/text_renderer.h"
 #include "i18n/localization.h"
 #include "player/loadout/player_loadout.h"
 #include "record/record_system.h"
@@ -112,7 +111,7 @@ public:
   }
 
   void Enter(bool extra_stage) {
-    GraphicsBackendClear();
+    GraphicsClear();
     GraphicsFlip();
     extra_stage_ = extra_stage;
     phase_ = Phase::WeaponSelect;
@@ -195,7 +194,7 @@ private:
   }
 
   void OpenDifficultyMenu(InputBits initial_input) {
-    constexpr WindowPoint kTopLeft = {240, 192};
+    constexpr PixelPoint kTopLeft = {240, 192};
     constexpr int kWidth = 160;
     constexpr int kInitialSelection = std::to_underlying(GameLevel::Normal);
 
@@ -440,8 +439,7 @@ private:
   }
 
   void EnterScoreRegistration(const FinishRun &finish) {
-    auto score =
-        RecordSystem::CaptureScore(context_.player, context_.session);
+    auto score = RecordSystem::CaptureScore(context_.player, context_.session);
     auto &state = state_.emplace<ScoreFlowState>(context_);
     const auto start = state.EnterRegistration(
         std::move(score), current_input_, finish.change_music,

@@ -94,11 +94,17 @@ void ApplyLunaticCountSpread(BulletPattern pattern, int &n, int &dw) {
   }
 }
 
-int ScaleLengthEasy(int l) { return l - (l >> 2); }
+WorldCoord ScaleLengthEasy(WorldCoord length) {
+  return length - length.DivPow2Floor(2);
+}
 
-int ScaleLengthHard(int l) { return l + (l >> 2); }
+WorldCoord ScaleLengthHard(WorldCoord length) {
+  return length + length.DivPow2Floor(2);
+}
 
-int ScaleLengthLunatic(int l) { return l + (l >> 1); }
+WorldCoord ScaleLengthLunatic(WorldCoord length) {
+  return length + length.DivPow2Floor(1);
+}
 
 void ApplyEasyRapid(int &ns) {
   if (ns >= 2) {

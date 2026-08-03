@@ -9,8 +9,8 @@
 #include <string_view>
 
 #include "audio/bgm/midi/midi_sequencer.h"
-#include "gfx/coords.h"
-#include "gfx/text_ttf.h"
+#include "gfx/core/coords.h"
+#include "gfx/text/text_renderer.h"
 #include "sys/input.h"
 
 class MusicPlayer;
@@ -44,12 +44,11 @@ private:
     TextRenderRectId title;
     TextRenderRectId comment;
     TextRenderRectId version;
-    void RenderVersion(WindowPoint topleft, std::string_view value) const;
-    void RenderMidDev(WindowPoint topleft, std::string_view value) const;
-    void RenderTitle(WindowPoint topleft, std::size_t track_id,
+    void RenderVersion(PixelPoint topleft, std::string_view value) const;
+    void RenderMidDev(PixelPoint topleft, std::string_view value) const;
+    void RenderTitle(PixelPoint topleft, std::size_t track_id,
                      std::string_view track_title, int marquee_frame) const;
-    void RenderComment(WindowPoint topleft,
-                       std::string_view comment_text) const;
+    void RenderComment(PixelPoint topleft, std::string_view comment_text) const;
   };
 
   void DrawNotes();

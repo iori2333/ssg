@@ -15,12 +15,11 @@
 #include "audio/sfx.h"
 #include "enemy/boss/boss.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/font_uty.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/render/geometry.h"
+#include "ui/bitmap_font.h"
 
 static constexpr auto kBossHealthGaugeWidth = 256;
 static constexpr auto kBossHealthGaugeStartX = playfield::kRight;
@@ -162,7 +161,7 @@ void BossHealthGauge::Update(uint32_t now) {
 void BossHealthGauge::Close() { state_ = State::Closing; }
 
 void BossHealthGauge::Draw(int stage_frame) {
-  PixelLtrb src;
+  Rect src;
   int i = 0;
 
   switch (state_) {
@@ -177,9 +176,9 @@ void BossHealthGauge::Draw(int stage_frame) {
   case State::Filling:
   case State::Ready:
   case State::Refilling: {
-    constexpr WindowCoord left = (kBossHealthGaugeEndX + 3);
-    constexpr WindowCoord top = (16 + 3);
-    constexpr WindowCoord bottom = (top + 11);
+    constexpr int left = (kBossHealthGaugeEndX + 3);
+    constexpr int top = (16 + 3);
+    constexpr int bottom = (top + 11);
     const auto x1 = (left + ((target_hp_ * 30 * 8) / max_hp_));
     const auto x2 = (left + ((current_hp_ * 30 * 8) / max_hp_));
     constexpr uint8_t alpha = (128 + 64);
@@ -209,9 +208,9 @@ void BossHealthGauge::Draw(int stage_frame) {
 
     if (phase_threshold_hp_ > 0 && max_hp_ > 0) {
       const auto separator_x =
-          left + static_cast<int>(
-                     (static_cast<uint64_t>(phase_threshold_hp_) * 30 * 8) /
-                     max_hp_);
+          left +
+          static_cast<int>(
+              (static_cast<uint64_t>(phase_threshold_hp_) * 30 * 8) / max_hp_);
       if (separator_x > left && separator_x < (left + 30 * 8)) {
         geometry::SetAlphaNorm(224);
         geometry::SetColor({5, 5, 5});
@@ -229,14 +228,13 @@ void BossHealthGauge::Draw(int stage_frame) {
         if (remain < 10) {
           GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 64, 64);
         }
-        DrawFont16(476, 0, std::format("{:>2}", remain).c_str());
+        ui::Draw16({476, 0}, std::format("{:>2}", remain));
         if (remain < 10) {
           GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 255, 255);
         }
       }
     } else if (stage_timeout_end_ > 0) {
-      const int remain =
-          std::min((stage_timeout_end_ - stage_frame) / 60, 99);
+      const int remain = std::min((stage_timeout_end_ - stage_frame) / 60, 99);
       if (remain >= 0) {
         if (remain <= 10 && remain != previous_timer_seconds_) {
           audio_.PlaySfx(SfxId::Sblaser);
@@ -245,7 +243,7 @@ void BossHealthGauge::Draw(int stage_frame) {
         if (remain < 10) {
           GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 64, 64);
         }
-        DrawFont16(476, 0, std::format("{:>2}", remain).c_str());
+        ui::Draw16({476, 0}, std::format("{:>2}", remain));
         if (remain < 10) {
           GraphicsSurfaceSetColorMod(SurfaceId::System, 255, 255, 255);
         }

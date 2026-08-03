@@ -13,10 +13,10 @@
 #include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_pixels.h>
 
-#include "coords.h"
 #include "format_bmp.h"
-#include "pixelformat.h"
 
+#include "gfx/core/coords.h"
+#include "gfx/core/pixelformat.h"
 #include "util/byte_io.h"
 
 namespace {
@@ -95,7 +95,7 @@ bool BmpSaveSupports(SDL_PixelFormat format) {
   }
 }
 
-bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
+bool BmpSave(SDL_IOStream *stream, PixelPoint size, uint16_t planes,
              uint16_t bpp, std::span<Bgra> palette,
              std::span<const uint8_t> pixels) {
   if (pixels.size() > std::numeric_limits<uint32_t>::max() ||
@@ -104,8 +104,8 @@ bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
   }
   const BmpInfoHeader header_info = {
       .biSize = sizeof(BmpInfoHeader),
-      .biWidth = size.w,
-      .biHeight = size.h,
+      .biWidth = size.x,
+      .biHeight = size.y,
       .biPlanes = planes,
       .biBitCount = bpp,
       .biCompression = 0, // BI_RGB

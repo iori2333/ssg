@@ -12,10 +12,9 @@
 
 #include "bullet/bullet_common.h"
 #include "gameplay/playfield.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/render/geometry.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -86,11 +85,11 @@ LaserReflect::CheckLongLaser(const LaserReflect &self, const LaserLong &ll,
   return UpdateResult{.spawn_requested = true,
                       .spawn_info = ReflectSpawnInfo{
                           .no_scaling = true,
-                          .x = static_cast<int>(std::lround(lx)),
-                          .y = static_cast<int>(std::lround(ly)),
+                          .x = bullet_common::RoundSimulationUnits(lx),
+                          .y = bullet_common::RoundSimulationUnits(ly),
                           .v = self.v_,
-                          .w = static_cast<int>(std::lround(self.w_)),
-                          .l = static_cast<int>(std::lround(self.lmax_)),
+                          .w = bullet_common::RoundSimulationUnits(self.w_),
+                          .l = bullet_common::RoundSimulationUnits(self.lmax_),
                           .angle = -self.angle_ + (long_angle * 2.0F),
                           .n = 1,
                           .c = self.c_,
@@ -105,13 +104,14 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
   angle_ = bullet_common::CalcSpreadAngle(info.bullet_index, info.pattern,
                                           info.n, info.base_angle, info.dw);
 
-  if (info.l2 != 0) {
-    const auto offset = math::PolarVector(angle_, static_cast<float>(info.l2));
-    x_ = static_cast<float>(info.x) + offset.x;
-    y_ = static_cast<float>(info.y) + offset.y;
+  if (info.l2 != WorldCoord{}) {
+    const auto offset =
+        math::PolarVector(angle_, bullet_common::ToSimulationUnits(info.l2));
+    x_ = bullet_common::ToSimulationUnits(info.x) + offset.x;
+    y_ = bullet_common::ToSimulationUnits(info.y) + offset.y;
   } else {
-    x_ = static_cast<float>(info.x);
-    y_ = static_cast<float>(info.y);
+    x_ = bullet_common::ToSimulationUnits(info.x);
+    y_ = bullet_common::ToSimulationUnits(info.y);
   }
 
   v_ = info.v;
@@ -119,8 +119,8 @@ void LaserReflect::Spawn(const ReflectSpawnInfo &info) {
   vx_ = velocity.x;
   vy_ = velocity.y;
 
-  w_ = info.w;
-  lmax_ = info.l;
+  w_ = bullet_common::ToSimulationUnits(info.w);
+  lmax_ = bullet_common::ToSimulationUnits(info.l);
 
   lx_ = 0;
   ly_ = 0;
@@ -171,8 +171,10 @@ auto LaserReflect::Update(const UpdateInfo &info) -> UpdateResult {
     break;
   }
 
-  if (x_ < playfield::kWorldLeft || x_ > playfield::kWorldRight ||
-      y_ < playfield::kWorldTop || y_ > playfield::kWorldBottom) {
+  if (x_ < bullet_common::ToSimulationUnits(playfield::kWorldLeft) ||
+      x_ > bullet_common::ToSimulationUnits(playfield::kWorldRight) ||
+      y_ < bullet_common::ToSimulationUnits(playfield::kWorldTop) ||
+      y_ > bullet_common::ToSimulationUnits(playfield::kWorldBottom)) {
     MarkDead();
   }
 
@@ -290,13 +292,14 @@ void LaserReflect::UpdateClearing() {
 
 // ── Hit detection ───────────────────────────────────────────────────
 
-HitResult LaserReflect::CheckHit(int px, int py, int player_radius) const {
+HitResult LaserReflect::CheckHit(WorldCoord px, WorldCoord py,
+                                 WorldCoord player_radius) const {
   if (state_ == ReflectState::Dead || state_ == ReflectState::Clearing) {
     return HitResult::Miss;
   }
 
-  const float tx = static_cast<float>(px) - x_;
-  const float ty = static_cast<float>(py) - y_;
+  const float tx = bullet_common::ToSimulationUnits(px) - x_;
+  const float ty = bullet_common::ToSimulationUnits(py) - y_;
   const float angle_cos = std::cos(angle_);
   const float angle_sin = std::sin(angle_);
   const float len = angle_cos * tx + angle_sin * ty;
@@ -305,10 +308,10 @@ HitResult LaserReflect::CheckHit(int px, int py, int player_radius) const {
   if (len <= 0 || len > l_) {
     return HitResult::Miss;
   }
-  if (dist <= w_ + player_radius) {
+  if (dist <= w_ + bullet_common::ToSimulationUnits(player_radius)) {
     return HitResult::Hit;
   }
-  if (dist <= w_ + kLaserEvadeWidth) {
+  if (dist <= w_ + bullet_common::ToSimulationUnits(kLaserEvadeWidth)) {
     return HitResult::Graze;
   }
   return HitResult::Miss;
@@ -339,9 +342,13 @@ void LaserReflect::DrawOuter() const {
 
 bool LaserReflect::IsDead() const { return state_ == ReflectState::Dead; }
 
-int LaserReflect::X() const { return static_cast<int>(std::lround(x_)); }
+WorldCoord LaserReflect::X() const {
+  return bullet_common::RoundSimulationUnits(x_);
+}
 
-int LaserReflect::Y() const { return static_cast<int>(std::lround(y_)); }
+WorldCoord LaserReflect::Y() const {
+  return bullet_common::RoundSimulationUnits(y_);
+}
 
 bool LaserReflect::RegisterGraze() { return !std::exchange(grazed_, true); }
 
@@ -364,7 +371,8 @@ void LaserReflect::RenderDebugHitbox(int mode) const {
   if (mode >= 2 && w_ > 0) {
     const float bx = x_ / kWorldCoordScale;
     const float by = y_ / kWorldCoordScale;
-    const float scale = w_ + kDebugLaserEvadeWidth;
+    const float scale =
+        w_ + bullet_common::ToSimulationUnits(kDebugLaserEvadeWidth);
     const float wx2 = wx_ * scale / w_;
     const float wy2 = wy_ * scale / w_;
     std::array<VertexXy, 4> ep{};

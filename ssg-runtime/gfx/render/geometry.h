@@ -10,8 +10,7 @@
 #include <ranges>
 #include <span>
 
-#include "graphics_backend.h"
-
+#include "gfx/graphics.h"
 #include "util/math_utils.h"
 
 namespace geometry {
@@ -43,20 +42,20 @@ constexpr size_t kCirclePointCount = 33;
 constexpr uint8_t kCircleStep = (0x100 / (kCirclePointCount - 1));
 
 inline void ApproximateCircle(std::span<VertexXy, kCirclePointCount> ret,
-                              WindowPoint center, PixelCoord radius) {
+                              PixelPoint center, int radius) {
   auto i = 0;
   for (auto &v : ret) {
     const uint8_t angle = (i++ * kCircleStep);
     const auto offset =
         math::RoundedPolarVector(math::AngleFromLegacy(angle), radius);
-    v.x = static_cast<VertexCoord>(center.x + offset.x);
-    v.y = static_cast<VertexCoord>(center.y + offset.y);
+    v.x = static_cast<float>(center.x + offset.x);
+    v.y = static_cast<float>(center.y + offset.y);
   }
 }
 
 inline void
 ApproximateFatCircle(std::span<VertexXy, (kCirclePointCount * 2)> ret,
-                     WindowPoint center, PixelCoord r, PixelCoord w) {
+                     PixelPoint center, int r, int w) {
   auto v = ret.begin();
   for (const auto i : std::views::iota(0U, kCirclePointCount)) {
     const uint8_t angle = (i * kCircleStep);
@@ -65,12 +64,12 @@ ApproximateFatCircle(std::span<VertexXy, (kCirclePointCount * 2)> ret,
     const auto [wx, wy] =
         math::RoundedPolarVector(math::AngleFromLegacy(angle), w);
     v[0] = {
-        static_cast<VertexCoord>(center.x + lx - wx),
-        static_cast<VertexCoord>(center.y + ly - wy),
+        static_cast<float>(center.x + lx - wx),
+        static_cast<float>(center.y + ly - wy),
     };
     v[1] = {
-        static_cast<VertexCoord>(center.x + lx + wx),
-        static_cast<VertexCoord>(center.y + ly + wy),
+        static_cast<float>(center.x + lx + wx),
+        static_cast<float>(center.y + ly + wy),
     };
     v += 2;
   }
@@ -80,17 +79,16 @@ ApproximateFatCircle(std::span<VertexXy, (kCirclePointCount * 2)> ret,
 // Implementations
 // ---------------
 
-inline void DrawCircle(WindowPoint center, PixelCoord radius) {
+inline void DrawCircle(PixelPoint center, int radius) {
   std::array<VertexXy, kCirclePointCount> xys{};
   ApproximateCircle(xys, center, radius);
   geometry::DrawLineStrip(xys);
 }
 
-inline void DrawFilledCircle(WindowPoint center, PixelCoord radius,
-                             bool alpha) {
+inline void DrawFilledCircle(PixelPoint center, int radius, bool alpha) {
   std::array<VertexXy, (1 + kCirclePointCount)> xys{};
-  xys[0].x = static_cast<VertexCoord>(center.x);
-  xys[0].y = static_cast<VertexCoord>(center.y);
+  xys[0].x = static_cast<float>(center.x);
+  xys[0].y = static_cast<float>(center.y);
   ApproximateCircle(std::span(xys).template subspan<1, kCirclePointCount>(),
                     center, radius);
   if (alpha) {
@@ -100,10 +98,11 @@ inline void DrawFilledCircle(WindowPoint center, PixelCoord radius,
   }
 }
 
-inline void DrawAlphaFatCircle(WindowPoint center, PixelCoord r, PixelCoord w) {
+inline void DrawAlphaFatCircle(PixelPoint center, int r, int w) {
   // When it becomes a regular circle
   if (w >= r) {
     geometry::DrawFilledCircle(center, (r + w), true);
+    return;
   }
   std::array<VertexXy, (kCirclePointCount * 2)> xys{};
   ApproximateFatCircle(xys, center, r, w);

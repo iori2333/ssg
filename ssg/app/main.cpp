@@ -24,7 +24,7 @@
 
 #include "game_application.h"
 
-#include "gfx/constants.h"
+#include "gfx/core/constants.h"
 #include "sys/crash_handler.h"
 #include "sys/log.h"
 #include "sys/path.h"

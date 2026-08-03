@@ -19,7 +19,7 @@
 #include "bullet/laser/long.h"
 #include "effect/effect_manager.h"
 #include "effect/effect_types.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "item/item_system.h"
 #include "player/player.h"
 #include "player/player_attack.h"

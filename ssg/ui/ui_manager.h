@@ -31,7 +31,7 @@ public:
   enum class GameOverAction : uint8_t { Continue, SaveReplayAndExit, Exit };
 
   // --- Message window ---
-  void InitMessageWindow(const WindowLtrb &rect,
+  void InitMessageWindow(const Rect &rect,
                          MsgWindowFlags flags = MsgWindowFlags::None);
   void OpenMessageWindow();
   void CloseMessageWindow();

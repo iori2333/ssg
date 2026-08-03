@@ -14,16 +14,16 @@
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/font_uty.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/render/geometry.h"
 #include "player/loadout/player_loadout.h"
 #include "player/player.h"
 #include "settings/config.h"
 #include "sys/input.h"
+#include "ui/bitmap_font.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -35,7 +35,7 @@ constexpr int PlayerTypeIndex(PlayerType type) {
 } // namespace
 
 void WeaponSelectScene::Enter() {
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   key_wait_ = 1;
   count_ = 0;
   angle_ = 0;
@@ -138,20 +138,20 @@ WeaponSelectSceneResult WeaponSelectScene::Update(InputBits input,
 
 void WeaponSelectScene::DrawPreview(InputBits preview_input) {
   constexpr std::array sprites = {
-      PixelLtwh{0, 344, 56, 48},
-      PixelLtwh{0, 392, 56, 48},
-      PixelLtwh{56, 344, 56, 48},
-      PixelLtwh{56, 392, 56, 48},
+      Rect::FromLtwh(0, 344, 56, 48),
+      Rect::FromLtwh(0, 392, 56, 48),
+      Rect::FromLtwh(56, 344, 56, 48),
+      Rect::FromLtwh(56, 392, 56, 48),
   };
 
-  GraphicsBackendClear();
+  GraphicsClear();
   GraphicsSurfaceBlit({320 - 112, 20}, SurfaceId::System,
                       {0, 264 - 8, 224, 296 - 24});
   GraphicsSurfaceBlit({120 - 32, 260 - 12}, SurfaceId::System,
-                      PixelLtwh{0, 272, 64, 24});
+                      Rect::FromLtwh(0, 272, 64, 24));
   const int prompt_offset = ((count_ / 8) % 2) << 3;
   GraphicsSurfaceBlit({400 - 28 + 4, 420}, SurfaceId::System,
-                      PixelLtwh{72, 272 + prompt_offset, 56, 8});
+                      Rect::FromLtwh(72, 272 + prompt_offset, 56, 8));
 
   for (int i = 0; i < 3; i++) {
     const int direction =
@@ -184,11 +184,11 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
   }
   enemies_.ResetHomingTarget();
   player_.ClearInvincibility();
-  const int player_x =
+  const WorldCoord player_x =
       math::RoundedPolarVector(
           static_cast<float>(count_ / 3) * 6 * math::kLegacyAngleStep, 60_px)
           .y;
-  const int player_y =
+  const WorldCoord player_y =
       math::RoundedPolarVector(
           static_cast<float>(count_ / 3) * 4 * math::kLegacyAngleStep, 30_px)
           .y;
@@ -196,22 +196,21 @@ void WeaponSelectScene::DrawPreview(InputBits preview_input) {
   // The preview only needs the update's visual side effects.
   (void)player_.Update(enemies_, preview_input);
 
-  GraphicsBackendSetClip({400 - 110, 400 - 300 + 2, 400 + 110, 400 + 10});
+  GraphicsSetClip({400 - 110, 400 - 300 + 2, 400 + 110, 400 + 10});
   for (int x = 400 - 110 - 2; x < 400 + 110; x += 32) {
     for (int y = 400 - 300 + 2 + ((count_ * 2) % 32) - 32; y < 400 + 10;
          y += 32) {
       GraphicsSurfaceBlit({x, y}, SurfaceId::System,
-                          PixelLtwh{224, 256, 32, 32});
+                          Rect::FromLtwh(224, 256, 32, 32));
     }
   }
   player_.Draw();
   player_.DrawProjectiles();
-  GraphicsSurfaceBlit({468, 400}, SurfaceId::System, PixelLtwh{72, 288, 56, 8});
-  DrawScore(500, 400,
-            std::format("{}", (player_.Power() + 1) >> 5)
-                .c_str());
+  GraphicsSurfaceBlit({468, 400}, SurfaceId::System,
+                      Rect::FromLtwh(72, 288, 56, 8));
+  ui::DrawScore({500, 400}, std::format("{}", (player_.Power() + 1) >> 5));
 
-  GraphicsBackendSetClip(kGameResolutionRect);
+  GraphicsSetClip(kGameResolutionRect);
   geometry::SetColor({0, 0, 4});
   geometry::DrawLine(290, 100, 510, 100);
   geometry::DrawLine(290, 410, 510, 410);

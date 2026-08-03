@@ -9,13 +9,12 @@
 #include "msg_window.h"
 
 #include "data/graphics_assets.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
-#include "gfx/text.h"
-#include "gfx/text_ttf.h"
+#include "gfx/render/geometry.h"
+#include "gfx/text/text.h"
+#include "gfx/text/text_renderer.h"
 #include "sys/log.h"
 #include "util/math_utils.h"
 
@@ -23,8 +22,8 @@ namespace {
 
 constexpr std::size_t kFaceColumns = 6;
 
-constexpr PixelCoord kFaceWidth = 96;
-constexpr PixelCoord kFaceHeight = 96;
+constexpr int kFaceWidth = 96;
+constexpr int kFaceHeight = 96;
 
 void DrawWindowFrame(int x, int y, int w, int h) {
   w >>= 1;
@@ -47,7 +46,7 @@ void MsgWindow::MsgBlank() {
   text.clear();
 }
 
-void MsgWindow::Init(const WindowLtrb &rc, MsgWindowFlags flags) {
+void MsgWindow::Init(const Rect &rc, MsgWindowFlags flags) {
   max_size = rc;
   this->flags = flags;
   text_topleft = {
@@ -159,7 +158,7 @@ void MsgWindow::Tick() {
 
 // Draw the message window (same as above)
 void MsgWindow::Draw() {
-  PixelLtrb src;
+  Rect src;
 
   const auto x = now_size.left;         // Window top-left X
   const auto y = now_size.top;          // Window top-left Y
@@ -182,7 +181,7 @@ void MsgWindow::Draw() {
   // Display text only when window is [FREE]
   // -> Otherwise a Surface for text would have to be created...
   if ((state == State::Free) && trr) {
-    const auto topleft = (WindowPoint{x, y} + text_topleft);
+    const auto topleft = (PixelPoint{x, y} + text_topleft);
     const auto trr = this->trr.value();
     const auto &text = this->text;
     TextRenderer().Render(topleft, trr, text, [this](TextRenderSession &s) {
@@ -195,7 +194,7 @@ void MsgWindow::Draw() {
         if (m.empty()) {
           continue;
         }
-        const PixelCoord top = (i * font_dy);
+        const int top = (i * font_dy);
         const auto left =
             (!!(flags & MsgWindowFlags::Center) ? TextLayoutXCenter(s, m) : 0);
 
@@ -216,9 +215,9 @@ void MsgWindow::Draw() {
   switch (face_state) {
   case FaceState::Wait:
     oy = max_size.bottom - 100;
-    src = PixelLtwh{
-        static_cast<int>((face_id % kFaceColumns) * kFaceWidth), 0, kFaceWidth,
-        kFaceHeight};
+    src =
+        Rect::FromLtwh(static_cast<int>((face_id % kFaceColumns) * kFaceWidth),
+                       0, kFaceWidth, kFaceHeight);
     GraphicsSurfaceBlit({(x + 2), oy}, sid, src);
     break;
 
@@ -230,9 +229,9 @@ void MsgWindow::Draw() {
                                          math::kLegacyAngleStep,
                                      static_cast<float>(64 - time) / 2.0F)
                 .x;
-      src = PixelLtwh{
+      src = Rect::FromLtwh(
           static_cast<int>((face_id % kFaceColumns) * kFaceWidth), i,
-          kFaceWidth, 1};
+          kFaceWidth, 1);
       GraphicsSurfaceBlit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
@@ -245,9 +244,9 @@ void MsgWindow::Draw() {
                                          math::kLegacyAngleStep,
                                      static_cast<float>(64 - time) / 2.0F)
                 .x;
-      src = PixelLtwh{
+      src = Rect::FromLtwh(
           static_cast<int>((face_id % kFaceColumns) * kFaceWidth), i,
-          kFaceWidth, 1};
+          kFaceWidth, 1);
       GraphicsSurfaceBlit({(x + len + 2), (oy + i)}, sid, src);
     }
     break;
@@ -260,9 +259,9 @@ void MsgWindow::Draw() {
                                          math::kLegacyAngleStep,
                                      static_cast<float>(time))
                 .x;
-      src = PixelLtwh{
+      src = Rect::FromLtwh(
           static_cast<int>((face_id % kFaceColumns) * kFaceWidth), i,
-          kFaceWidth, 1};
+          kFaceWidth, 1);
       if ((i & 1) != 0) {
         GraphicsSurfaceBlit({(x - len + 2), (oy + i)}, sid, src);
       } else {

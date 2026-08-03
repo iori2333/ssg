@@ -8,7 +8,8 @@
 #include <optional>
 #include <vector>
 
-#include "gfx/text.h"
+#include "gfx/core/coords.h"
+#include "gfx/text/text.h"
 #include "record/record_system.h"
 #include "ui/name_entry.h"
 
@@ -57,8 +58,8 @@ private:
   static constexpr std::size_t kRowCount = 5;
 
   struct DisplayRow {
-    int x = 0;
-    int y = 0;
+    WorldCoord x{};
+    WorldCoord y{};
     bool moving = false;
   };
 
@@ -77,7 +78,7 @@ private:
   bool input_locked_ = false;
   bool detail_open_ = false;
   bool save_failed_ = false;
-  TextRenderRectId ui_text_ = 0;
+  TextRenderRectId ui_text_{};
   data::GraphicsLoader &graphics_;
   MusicPlayer &music_;
   UiManager &ui_;

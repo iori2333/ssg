@@ -9,7 +9,7 @@
 #include "ecl.h"
 
 #include "enemy/actor/enemy_actor.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 
 struct BulletManager;
 struct GameSession;

@@ -13,35 +13,35 @@
 #include "effect_types.h"
 
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 #include "gfx/graphics.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/render/geometry.h"
 #include "util/math_utils.h"
 
 namespace {
 
 struct Point3D {
-  int x = 0;
-  int y = 0;
-  int z = 0;
+  WorldCoord x{};
+  WorldCoord y{};
+  WorldCoord z{};
 };
 
 void RotatePoint(Point3D &point, uint8_t angle_x, uint8_t angle_y,
                  uint8_t angle_z) {
   auto rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_x),
-                                           point.y, point.z);
+                                           WorldPoint{point.y, point.z});
   point.y = rotated.x;
   point.z = rotated.y;
 
-  rotated = math::RoundedRotateVector(-math::AngleFromLegacy(angle_y), point.x,
-                                      point.z);
+  rotated = math::RoundedRotateVector(-math::AngleFromLegacy(angle_y),
+                                      WorldPoint{point.x, point.z});
   point.x = rotated.x;
   point.z = rotated.y;
 
-  rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_z), point.x,
-                                      point.y);
+  rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_z),
+                                      WorldPoint{point.x, point.y});
   point.x = rotated.x;
   point.y = rotated.y;
 }
@@ -78,7 +78,7 @@ void EffectManager::DrawForeground() {
 
 void EffectManager::ResetScreenTransition() {
   screen_ = {};
-  GraphicsBackendSetClip(playfield::kClip);
+  GraphicsSetClip(playfield::kClip);
 }
 
 void EffectManager::StartScreenTransition(ScreenTransition transition) {
@@ -122,8 +122,7 @@ void EffectManager::DrawScreenTransition() const {
     DrawCircleFade(playfield::kCenterX, playfield::kCenterY, screen_.age);
     return;
   case ScreenTransition::CircleFadeOut:
-    DrawCircleFade(playfield::kCenterX, playfield::kCenterY,
-                   400 - screen_.age);
+    DrawCircleFade(playfield::kCenterX, playfield::kCenterY, 400 - screen_.age);
     return;
   case ScreenTransition::WhiteIn:
   case ScreenTransition::WhiteOut:
@@ -133,7 +132,7 @@ void EffectManager::DrawScreenTransition() const {
   const int frame = screen_.transition == ScreenTransition::WhiteIn
                         ? 15 - screen_.age / 10
                         : screen_.age / 10;
-  const PixelLtwh source = {frame * 16, 144, 16, 16};
+  const Rect source = Rect::FromLtwh(frame * 16, 144, 16, 16);
   for (int x = playfield::kLeft; x <= playfield::kRight; x += 16) {
     for (int y = playfield::kTop; y <= playfield::kBottom; y += 16) {
       GraphicsSurfaceBlit({x, y}, SurfaceId::System, source);
@@ -143,28 +142,29 @@ void EffectManager::DrawScreenTransition() const {
 
 void EffectManager::DrawCircleFade(int x, int y, int radius) {
   radius = std::max(radius, 0);
-  for (int tile_x = 0; tile_x < kGameResolution.w; tile_x += 16) {
-    for (int tile_y = 0; tile_y < kGameResolution.h; tile_y += 16) {
+  for (int tile_x = 0; tile_x < kGameResolution.x; tile_x += 16) {
+    for (int tile_y = 0; tile_y < kGameResolution.y; tile_y += 16) {
       const int dx = tile_x - x;
       const int dy = tile_y - y;
       const int distance =
           static_cast<int>(std::lround(std::sqrt(dx * dx + dy * dy)));
       if (distance < radius && radius - distance < 8 * 16) {
-        const PixelLtwh source = {((radius - distance) >> 3) << 4, 128, 16, 16};
+        const Rect source =
+            Rect::FromLtwh(((radius - distance) >> 3) << 4, 128, 16, 16);
         GraphicsSurfaceBlit({tile_x, tile_y}, SurfaceId::System, source);
       } else if (distance >= radius) {
         GraphicsSurfaceBlit({tile_x, tile_y}, SurfaceId::System,
-                            PixelLtwh{0, 128, 16, 16});
+                            Rect::FromLtwh(0, 128, 16, 16));
       }
     }
   }
 
   if (radius == 0) {
-    GraphicsBackendSetClip({playfield::kCenterX, playfield::kCenterY,
-                            playfield::kCenterX, playfield::kCenterY});
+    GraphicsSetClip({playfield::kCenterX, playfield::kCenterY,
+                     playfield::kCenterX, playfield::kCenterY});
     return;
   }
-  GraphicsBackendSetClip(
+  GraphicsSetClip(
       {std::clamp(x - radius, playfield::kLeft, playfield::kRight + 1),
        std::max(y - radius, playfield::kTop),
        std::clamp(x + radius + 1, playfield::kLeft, playfield::kRight + 1),
@@ -225,27 +225,38 @@ void EffectManager::DrawBossWarning() {
 }
 
 void EffectManager::InitializeWarningText() {
-  warning_w_ = {PixelPoint{.x = 0, .y = 15},  PixelPoint{.x = 15, .y = 66},
-                PixelPoint{.x = 32, .y = 47}, PixelPoint{.x = 48, .y = 66},
-                PixelPoint{.x = 63, .y = 14}, PixelPoint{.x = 52, .y = 11},
-                PixelPoint{.x = 42, .y = 38}, PixelPoint{.x = 32, .y = 26},
-                PixelPoint{.x = 21, .y = 38}, PixelPoint{.x = 11, .y = 10},
-                PixelPoint{.x = 0, .y = 15}};
-  warning_a_outer_ = {
-      PixelPoint{.x = 96, .y = 12},  PixelPoint{.x = 66, .y = 61},
-      PixelPoint{.x = 75, .y = 67},  PixelPoint{.x = 83, .y = 56},
-      PixelPoint{.x = 107, .y = 56}, PixelPoint{.x = 115, .y = 67},
-      PixelPoint{.x = 125, .y = 61}, PixelPoint{.x = 96, .y = 12}};
-  warning_a_inner_ = {
-      PixelPoint{.x = 96, .y = 34}, PixelPoint{.x = 90, .y = 44},
-      PixelPoint{.x = 101, .y = 44}, PixelPoint{.x = 96, .y = 34}};
-  warning_r_ = {PixelPoint{.x = 132, .y = 14}, PixelPoint{.x = 132, .y = 64},
-                PixelPoint{.x = 145, .y = 64}, PixelPoint{.x = 145, .y = 27},
-                PixelPoint{.x = 164, .y = 27}, PixelPoint{.x = 150, .y = 42},
-                PixelPoint{.x = 171, .y = 66}, PixelPoint{.x = 173, .y = 66},
-                PixelPoint{.x = 181, .y = 57}, PixelPoint{.x = 167, .y = 43},
-                PixelPoint{.x = 180, .y = 29}, PixelPoint{.x = 180, .y = 27},
-                PixelPoint{.x = 170, .y = 14}, PixelPoint{.x = 132, .y = 14}};
+  const auto assign_pixels = [](auto &world, const auto &pixels) {
+    std::ranges::transform(pixels, world.begin(),
+                           [](PixelPoint point) { return WorldPoint{point}; });
+  };
+
+  assign_pixels(
+      warning_w_,
+      std::array{PixelPoint{.x = 0, .y = 15}, PixelPoint{.x = 15, .y = 66},
+                 PixelPoint{.x = 32, .y = 47}, PixelPoint{.x = 48, .y = 66},
+                 PixelPoint{.x = 63, .y = 14}, PixelPoint{.x = 52, .y = 11},
+                 PixelPoint{.x = 42, .y = 38}, PixelPoint{.x = 32, .y = 26},
+                 PixelPoint{.x = 21, .y = 38}, PixelPoint{.x = 11, .y = 10},
+                 PixelPoint{.x = 0, .y = 15}});
+  assign_pixels(
+      warning_a_outer_,
+      std::array{PixelPoint{.x = 96, .y = 12}, PixelPoint{.x = 66, .y = 61},
+                 PixelPoint{.x = 75, .y = 67}, PixelPoint{.x = 83, .y = 56},
+                 PixelPoint{.x = 107, .y = 56}, PixelPoint{.x = 115, .y = 67},
+                 PixelPoint{.x = 125, .y = 61}, PixelPoint{.x = 96, .y = 12}});
+  assign_pixels(warning_a_inner_, std::array{PixelPoint{.x = 96, .y = 34},
+                                             PixelPoint{.x = 90, .y = 44},
+                                             PixelPoint{.x = 101, .y = 44},
+                                             PixelPoint{.x = 96, .y = 34}});
+  assign_pixels(
+      warning_r_,
+      std::array{PixelPoint{.x = 132, .y = 14}, PixelPoint{.x = 132, .y = 64},
+                 PixelPoint{.x = 145, .y = 64}, PixelPoint{.x = 145, .y = 27},
+                 PixelPoint{.x = 164, .y = 27}, PixelPoint{.x = 150, .y = 42},
+                 PixelPoint{.x = 171, .y = 66}, PixelPoint{.x = 173, .y = 66},
+                 PixelPoint{.x = 181, .y = 57}, PixelPoint{.x = 167, .y = 43},
+                 PixelPoint{.x = 180, .y = 29}, PixelPoint{.x = 180, .y = 27},
+                 PixelPoint{.x = 170, .y = 14}, PixelPoint{.x = 132, .y = 14}});
   const std::array n_points = {
       PixelPoint{.x = 189, .y = 12}, PixelPoint{.x = 189, .y = 64},
       PixelPoint{.x = 201, .y = 64}, PixelPoint{.x = 201, .y = 40},
@@ -255,18 +266,22 @@ void EffectManager::InitializeWarningText() {
   std::ranges::transform(n_points, warning_n_left_.begin(),
                          [](PixelPoint point) { return WorldPoint{point}; });
   warning_n_right_ = warning_n_left_;
-  warning_i_ = {PixelPoint{.x = 248, .y = 14}, PixelPoint{.x = 248, .y = 64},
-                PixelPoint{.x = 262, .y = 64}, PixelPoint{.x = 262, .y = 14},
-                PixelPoint{.x = 248, .y = 14}};
-  warning_g_ = {PixelPoint{.x = 354, .y = 11}, PixelPoint{.x = 328, .y = 22},
-                PixelPoint{.x = 328, .y = 57}, PixelPoint{.x = 354, .y = 68},
-                PixelPoint{.x = 380, .y = 59}, PixelPoint{.x = 380, .y = 34},
-                PixelPoint{.x = 355, .y = 34}, PixelPoint{.x = 354, .y = 45},
-                PixelPoint{.x = 367, .y = 46}, PixelPoint{.x = 367, .y = 51},
-                PixelPoint{.x = 355, .y = 55}, PixelPoint{.x = 342, .y = 50},
-                PixelPoint{.x = 342, .y = 29}, PixelPoint{.x = 354, .y = 24},
-                PixelPoint{.x = 372, .y = 30}, PixelPoint{.x = 377, .y = 19},
-                PixelPoint{.x = 354, .y = 11}};
+  assign_pixels(warning_i_, std::array{PixelPoint{.x = 248, .y = 14},
+                                       PixelPoint{.x = 248, .y = 64},
+                                       PixelPoint{.x = 262, .y = 64},
+                                       PixelPoint{.x = 262, .y = 14},
+                                       PixelPoint{.x = 248, .y = 14}});
+  assign_pixels(
+      warning_g_,
+      std::array{PixelPoint{.x = 354, .y = 11}, PixelPoint{.x = 328, .y = 22},
+                 PixelPoint{.x = 328, .y = 57}, PixelPoint{.x = 354, .y = 68},
+                 PixelPoint{.x = 380, .y = 59}, PixelPoint{.x = 380, .y = 34},
+                 PixelPoint{.x = 355, .y = 34}, PixelPoint{.x = 354, .y = 45},
+                 PixelPoint{.x = 367, .y = 46}, PixelPoint{.x = 367, .y = 51},
+                 PixelPoint{.x = 355, .y = 55}, PixelPoint{.x = 342, .y = 50},
+                 PixelPoint{.x = 342, .y = 29}, PixelPoint{.x = 354, .y = 24},
+                 PixelPoint{.x = 372, .y = 30}, PixelPoint{.x = 377, .y = 19},
+                 PixelPoint{.x = 354, .y = 11}});
 
   warning_lines_ = {
       WarningLine{.center = {.x = 192, .y = 39}, .points = warning_w_},
@@ -315,8 +330,7 @@ void EffectManager::DrawWarningText() {
     geometry::SetColor({5, 0, 0});
     geometry::DrawBoxA(129, 46, 512, 66);
     geometry::DrawBoxA(129, 136, 512, 156);
-    GraphicsSurfaceBlit({129, 61}, SurfaceId::System,
-                        PixelLtrb{0, 168, 384, 248});
+    GraphicsSurfaceBlit({129, 61}, SurfaceId::System, Rect{0, 168, 384, 248});
     return;
   }
 
@@ -333,9 +347,9 @@ void EffectManager::DrawWarningText() {
   const auto draw_lines = [this] {
     for (const auto &line : warning_lines_) {
       const auto rotate = [&line](const WorldPoint &point) {
-        Point3D transformed{.x = point.x, .y = point.y, .z = 0};
+        Point3D transformed{.x = point.x, .y = point.y};
         RotatePoint(transformed, line.angle_x, line.angle_y, line.angle_z);
-        return WorldPoint::FromWorld(transformed.x, transformed.y);
+        return WorldPoint{transformed.x, transformed.y};
       };
       auto previous = rotate(line.points.front());
       for (const auto &point : line.points | std::views::drop(1)) {

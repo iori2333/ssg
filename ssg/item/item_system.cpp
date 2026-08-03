@@ -12,13 +12,21 @@
 #include "effect/effect_manager.h"
 #include "effect/effect_types.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
+#include "gfx/graphics.h"
 #include "player/player.h"
 #include "util/math_utils.h"
 
-int ItemSystem::HitRadius(ItemKind kind) {
+namespace {
+
+constexpr auto kCollectDistanceStep = WorldCoord::FromRaw(500);
+constexpr auto kBombCollectDistanceStep = WorldCoord::FromRaw(700);
+
+} // namespace
+
+WorldCoord ItemSystem::HitRadius(ItemKind kind) {
   switch (kind) {
   case ItemKind::Bomb:
   case ItemKind::Extend:
@@ -28,7 +36,7 @@ int ItemSystem::HitRadius(ItemKind kind) {
   }
 }
 
-void ItemSystem::Spawn(int x, int y, ItemKind kind) {
+void ItemSystem::Spawn(WorldCoord x, WorldCoord y, ItemKind kind) {
   if (kind == ItemKind::None) {
     return;
   }
@@ -68,12 +76,12 @@ void ItemSystem::Spawn(int x, int y, ItemKind kind) {
 }
 
 void ItemSystem::Update() {
-  int tx = 0;
-  int ty = 0;
+  WorldCoord tx{};
+  WorldCoord ty{};
   int l = 0;
 
   const int point =
-      (((((playfield::kWorldBottom - 10_px) - player_.Y()) >> 6) +
+      (((playfield::kWorldBottom - 10_px - player_.Y()).ToPixels() +
         (player_.GrazeCount() * 4)) *
        160);
 
@@ -85,11 +93,8 @@ void ItemSystem::Update() {
         ip.auto_collect = true;
         tx = (player_.X() - ip.x);
         ty = (player_.Y() - ip.y);
-        const auto distance_squared =
-            static_cast<int64_t>(tx) * tx + static_cast<int64_t>(ty) * ty;
-        const auto distance =
-            static_cast<int>(std::lround(std::sqrt(distance_squared)));
-        l = 1 + (distance / 500);
+        const WorldCoord distance = math::RoundedLength({tx, ty});
+        l = 1 + distance.Ratio(kCollectDistanceStep);
         ip.x += tx / l;
         ip.y += ty / l;
       } else {
@@ -99,11 +104,8 @@ void ItemSystem::Update() {
     } else {
       tx = (player_.X() - ip.x);
       ty = (player_.Y() - ip.y);
-      const auto distance_squared =
-          static_cast<int64_t>(tx) * tx + static_cast<int64_t>(ty) * ty;
-      const auto distance =
-          static_cast<int>(std::lround(std::sqrt(distance_squared)));
-      l = 1 + (distance / 700); // 512(3+6)
+      const WorldCoord distance = math::RoundedLength({tx, ty});
+      l = 1 + distance.Ratio(kBombCollectDistanceStep); // 512(3+6)
       ip.x += tx / l;
       ip.y += ty / l;
     }
@@ -113,10 +115,8 @@ void ItemSystem::Update() {
     }
     ip.count++;
     {
-      const int64_t dx = static_cast<int64_t>(ip.x) - player_.X();
-      const int64_t dy = static_cast<int64_t>(ip.y) - player_.Y();
-      const int r = HitRadius(ip.kind);
-      if ((dx * dx + dy * dy) < (static_cast<int64_t>(r) * r)) {
+      if (math::WithinRadius({ip.x, ip.y}, {player_.X(), player_.Y()},
+                             HitRadius(ip.kind))) {
         switch (ip.kind) {
         case ItemKind::Score: {
           audio_.PlaySfx(SfxId::Select, ip.x);
@@ -177,27 +177,27 @@ void ItemSystem::Draw() const {
   int j = 0;
   int x = 0;
   int y = 0;
-  PixelLtrb src;
+  Rect src;
 
   for (const auto &ip : pool_) {
     const int ptn = ((ip.count >> 2) & 3);
     switch (ip.kind) {
     case ItemKind::Score:
-      src = PixelLtwh{(384 + (ptn << 4)), (256 + 16), 16, 16};
-      x = (ip.x >> 6) - 8;
-      y = (ip.y >> 6) - 8;
+      src = Rect::FromLtwh((384 + (ptn << 4)), (256 + 16), 16, 16);
+      x = ip.x.ToPixels() - 8;
+      y = ip.y.ToPixels() - 8;
       GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
       break;
 
     case ItemKind::Extend:
       for (j = 0; j < 8; j++) {
-        src = PixelLtwh{(384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16};
+        src = Rect::FromLtwh((384 + (16 * 4) + (ptn << 4)), (256 + 16), 16, 16);
         const auto offset = math::RoundedPolarVector(
             static_cast<float>(ip.count + static_cast<float>(j * 256 / 8)) *
                 math::kLegacyAngleStep,
             12.0F);
-        x = (ip.x >> 6) - 8 + offset.x;
-        y = (ip.y >> 6) - 8 + offset.y;
+        x = ip.x.ToPixels() - 8 + offset.x;
+        y = ip.y.ToPixels() - 8 + offset.y;
         GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
       }
 
@@ -205,14 +205,14 @@ void ItemSystem::Draw() const {
 
     case ItemKind::Bomb:
       for (j = 0; j < 8; j++) {
-        src = PixelLtwh{(384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16};
+        src = Rect::FromLtwh((384 + (16 * 8) + (ptn << 4)), (256 + 16), 16, 16);
         const auto offset = math::RoundedPolarVector(
             static_cast<float>((-2 * ip.count) +
                                static_cast<float>(j * 256 / 8)) *
                 math::kLegacyAngleStep,
             12.0F);
-        x = (ip.x >> 6) - 8 + offset.x;
-        y = (ip.y >> 6) - 8 + offset.y;
+        x = ip.x.ToPixels() - 8 + offset.x;
+        y = ip.y.ToPixels() - 8 + offset.y;
         GraphicsSurfaceBlit({x, y}, SurfaceId::System, src);
       }
 

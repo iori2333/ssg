@@ -61,7 +61,7 @@ public:
   void RenderDebugHitboxes(int mode) const;
 
   // --- Gallery ---
-  void PlaceDisplayBullet(int x, int y, uint8_t color);
+  void PlaceDisplayBullet(WorldCoord x, WorldCoord y, uint8_t color);
   void RotateDisplayAngles();
 
 private:

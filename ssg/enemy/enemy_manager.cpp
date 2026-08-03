@@ -22,7 +22,8 @@
 #include "bullet/laser/long.h"
 #include "gameplay/game_session.h"
 #include "gameplay/playfield.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 #include "item/item_system.h"
 #include "player/player.h"
 #include "player/player_attack.h"
@@ -32,13 +33,13 @@ namespace {
 
 constexpr int kRandomCoordinate = -30000;
 
-int RandomWorldX() {
+WorldCoord RandomWorldX() {
   return PixelToWorld(playfield::kLeft +
                       math::RandomInt() %
                           (playfield::kRight - playfield::kLeft));
 }
 
-int RandomWorldY() {
+WorldCoord RandomWorldY() {
   return PixelToWorld(playfield::kTop +
                       math::RandomInt() %
                           (playfield::kBottom - playfield::kTop));
@@ -109,9 +110,9 @@ void EnemyManager::SpawnBoss(PixelPoint position, uint32_t script_id) {
 }
 
 void EnemyManager::ConsiderHomingTarget(const EnemyActor &actor) {
-  const int temp = player_.Y() - actor.y;
+  const WorldCoord temp = player_.Y() - actor.y;
 
-  if (temp < 0) {
+  if (temp < WorldCoord{}) {
     return;
   }
 
@@ -142,13 +143,11 @@ void EnemyManager::BeginActorFrame(EnemyActor &actor,
 }
 
 void EnemyManager::CheckPlayerCollision(const EnemyActor &actor) const {
-  const int dx =
-      std::max(std::abs(player_.X() - actor.x) - actor.hitbox_half_width, 0);
-  const int dy =
-      std::max(std::abs(player_.Y() - actor.y) - actor.hitbox_half_height, 0);
-  const auto radius = static_cast<int64_t>(player_.HitRadius());
-  if (static_cast<int64_t>(dx) * dx + static_cast<int64_t>(dy) * dy <=
-          radius * radius &&
+  const WorldCoord dx = std::max(
+      (player_.X() - actor.x).Abs() - actor.hitbox_half_width, WorldCoord{});
+  const WorldCoord dy = std::max(
+      (player_.Y() - actor.y).Abs() - actor.hitbox_half_height, WorldCoord{});
+  if (math::WithinRadiusOrBoundary({dx, dy}, {}, player_.HitRadius()) &&
       !player_.IsInvincible() &&
       actor.HasFlag(EnemyActorFlags::CollidesWithPlayer)) {
     player_.OnHit();
@@ -339,7 +338,7 @@ void EnemyManager::InitializeActor(EnemyActor &actor, WorldPoint position,
                 EnemyActorFlags::CollidesWithPlayer;
   actor.auto_fire_frame = static_cast<int>(math::RandomInt() & 0xff);
   actor.item = ItemKind::Score;
-  actor.v = 64;
+  actor.v = 1_px;
   const auto velocity =
       math::RoundedPolarVector(math::AngleFromLegacy(actor.d), actor.v);
   actor.vx = velocity.x;
@@ -366,8 +365,7 @@ EnemyActor *EnemyManager::SpawnRegular(WorldPoint position,
   return actor;
 }
 
-void EnemyManager::SpawnFromScene(int x, int y,
-                                  uint32_t script_id) {
+void EnemyManager::SpawnFromScene(int x, int y, uint32_t script_id) {
   WorldPoint position;
   position.x = x == kRandomCoordinate ? RandomWorldX() : PixelToWorld(x);
   position.y = y == kRandomCoordinate ? RandomWorldY() : PixelToWorld(y);

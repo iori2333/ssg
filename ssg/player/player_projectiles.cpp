@@ -19,9 +19,10 @@
 #include "effect/effect_types.h"
 #include "enemy/enemy_manager.h"
 #include "gameplay/playfield.h"
-#include "gfx/constants.h"
-#include "gfx/coords.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/core/constants.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
+#include "gfx/graphics.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
 #include "util/math_utils.h"
@@ -93,18 +94,17 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
 
   case PlayerShotMotion::Homing: {
     const bool spawn_smoke = (age_ & 1) != 0;
-    const int previous_x = x_;
-    const int previous_y = y_;
+    const WorldCoord previous_x = x_;
+    const WorldCoord previous_y = y_;
     x_ += velocity_x_;
     y_ += velocity_y_;
     if (age_ < 70 && target.active) {
-      const auto target_angle =
-          math::AngleTo(static_cast<float>(target.x - previous_x),
-                        static_cast<float>(target.y - previous_y));
+      const auto target_angle = math::AngleTo(
+          WorldPoint{target.x - previous_x, target.y - previous_y});
       angle_delta = math::ShortestAngleDelta(target_angle, direction_);
     } else if (age_ < 70) {
       const auto target_angle =
-          math::AngleTo(0.0F, static_cast<float>(-20_px - previous_y));
+          math::AngleTo(WorldPoint{WorldCoord{}, -20_px - previous_y});
       angle_delta = math::ShortestAngleDelta(target_angle, direction_);
     } else {
       angle_delta = 0.0F;
@@ -120,8 +120,7 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
       }
       speed_ -= acceleration_;
     }
-    direction_ += angle_delta *
-                  static_cast<float>(turn_rate_) / 255.0F;
+    direction_ += angle_delta * static_cast<float>(turn_rate_) / 255.0F;
     const auto velocity = math::RoundedPolarVector(direction_, speed_);
     velocity_x_ = velocity.x;
     velocity_y_ = velocity.y;
@@ -139,8 +138,8 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
 void Player::UpdateProjectiles(EnemyManager &enemies) {
   for (auto &t : maid_tama_) {
     if (t.kind_ == PlayerShotKind::HomingBombBlast) {
-      enemies.ApplyPlayerAttack(PlayerAttack::Point(
-          WorldPoint::FromWorld(t.x_, t.y_), ShotDamage(t.kind_)));
+      enemies.ApplyPlayerAttack(
+          PlayerAttack::Point(WorldPoint{t.x_, t.y_}, ShotDamage(t.kind_)));
       t.age_++;
       if (t.age_ >= 19) {
         t.pending_removal_ = true;
@@ -157,8 +156,8 @@ void Player::UpdateProjectiles(EnemyManager &enemies) {
       t.pending_removal_ = true;
     }
 
-    if (enemies.ApplyPlayerAttack(PlayerAttack::Point(
-            WorldPoint::FromWorld(t.x_, t.y_), ShotDamage(t.kind_)))) {
+    if (enemies.ApplyPlayerAttack(
+            PlayerAttack::Point(WorldPoint{t.x_, t.y_}, ShotDamage(t.kind_)))) {
       if (t.kind_ == PlayerShotKind::HomingBomb) {
         PlayerShotSpawnInfo const si{
             .x = t.x_,
@@ -167,7 +166,7 @@ void Player::UpdateProjectiles(EnemyManager &enemies) {
             .direction_step = 16,
             .count = 1,
             .speed = 2.5_px,
-            .acceleration = 0,
+            .acceleration = {},
             .kind = PlayerShotKind::HomingBombBlast,
             .motion = PlayerShotMotion::Stationary,
         };
@@ -187,53 +186,51 @@ void Player::UpdateProjectiles(EnemyManager &enemies) {
 void Player::DrawProjectiles() const {
   int x = 0;
   int y = 0;
-  PixelLtrb src;
-  static constexpr std::array<PixelLtrb, 5> HomingBomb = {
-      PixelLtrb{520, 104, 520 + 8, 104 + 8},
-      PixelLtrb{528, 104, 528 + 16, 104 + 16},
-      PixelLtrb{544, 104, 544 + 24, 104 + 24},
-      PixelLtrb{568, 104, 568 + 32, 104 + 32},
-      PixelLtrb{600, 104, 600 + 40, 104 + 40}};
+  Rect src;
+  static constexpr std::array<Rect, 5> HomingBomb = {
+      Rect{520, 104, 520 + 8, 104 + 8}, Rect{528, 104, 528 + 16, 104 + 16},
+      Rect{544, 104, 544 + 24, 104 + 24}, Rect{568, 104, 568 + 32, 104 + 32},
+      Rect{600, 104, 600 + 40, 104 + 40}};
 
   for (const auto &t : maid_tama_) {
 
-    x = (t.x_ >> 6) - 8;
-    y = (t.y_ >> 6) - 8;
+    x = t.x_.ToPixels() - 8;
+    y = t.y_.ToPixels() - 8;
     const auto display_angle = math::AngleToLegacy(t.direction_);
 
     switch (t.kind_) {
     case PlayerShotKind::WideMain:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 176, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 176, 16, 16);
       break;
     case PlayerShotKind::WideSub:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 192, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 192, 16, 16);
       break;
     case PlayerShotKind::HomingMain:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 208, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 208, 16, 16);
       break;
     case PlayerShotKind::HomingSub:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 224, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 224, 16, 16);
       break;
     case PlayerShotKind::HomingBomb:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 288, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 288, 16, 16);
       break;
     case PlayerShotKind::LaserSub:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 256, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 256, 16, 16);
       break;
     case PlayerShotKind::HomingBombBlast:
       src = HomingBomb[(static_cast<int>(t.age_) / 4) % 5];
       break;
     case PlayerShotKind::WideFocusMain:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 176, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 176, 16, 16);
       break;
     case PlayerShotKind::WideFocusSub:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 192, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 192, 16, 16);
       break;
     case PlayerShotKind::HomingFocusMain:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 208, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 208, 16, 16);
       break;
     case PlayerShotKind::HomingFocusSub:
-      src = PixelLtwh{(384 + ((display_angle + 8) & 0xf0)), 224, 16, 16};
+      src = Rect::FromLtwh((384 + ((display_angle + 8) & 0xf0)), 224, 16, 16);
       break;
     case PlayerShotKind::Count:
       continue;

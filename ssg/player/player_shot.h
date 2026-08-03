@@ -7,6 +7,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "gfx/core/coords.h"
+
 struct EnemyHomingTarget;
 
 inline constexpr std::size_t kPlayerShotCapacity = 200;
@@ -33,10 +35,10 @@ enum class PlayerShotMotion : uint8_t {
 };
 
 struct PlayerShot {
-  int x_{}, y_{};
-  int velocity_x_{}, velocity_y_{};
-  int speed_{};
-  int acceleration_{};
+  WorldCoord x_{}, y_{};
+  WorldCoord velocity_x_{}, velocity_y_{};
+  WorldCoord speed_{};
+  WorldCoord acceleration_{};
   float direction_{};
   int turn_rate_{};
   PlayerShotKind kind_{};
@@ -48,12 +50,12 @@ struct PlayerShot {
 };
 
 struct PlayerShotSpawnInfo {
-  int x{}, y{};
+  WorldCoord x{}, y{};
   uint8_t direction{};
   uint8_t direction_step{};
   int count{};
-  int speed{};
-  int acceleration{};
+  WorldCoord speed{};
+  WorldCoord acceleration{};
   PlayerShotKind kind{};
   PlayerShotMotion motion = PlayerShotMotion::Straight;
   int turn_rate = 0;

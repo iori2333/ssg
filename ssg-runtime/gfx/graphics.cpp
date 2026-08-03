@@ -28,14 +28,13 @@
 #include <SDL3/SDL_surface.h>
 #include <webp/encode.h>
 
-#include "constants.h"
-#include "coords.h"
-#include "format_bmp.h"
+#include "core/constants.h"
+#include "core/coords.h"
+#include "core/pixelformat.h"
 #include "graphics.h"
-#include "graphics_backend.h"
-#include "pixelformat.h"
+#include "image/format_bmp.h"
+#include "render/graphics_sdl.h"
 
-#include "util/enum_flags.h"
 #include "util/guard.h"
 
 namespace {
@@ -55,28 +54,11 @@ GraphicsState &State() {
 
 } // namespace
 
-void SetFrameRateDivisor(int divisor) {
-  State().frame_rate_divisor = divisor;
-}
+void SetFrameRateDivisor(int divisor) { State().frame_rate_divisor = divisor; }
 
 int FrameRateDivisor() { return State().frame_rate_divisor; }
 
 // Paletted graphics //
-// ----------------- //
-
-Palette Palette::Fade(uint8_t alpha, uint8_t first, uint8_t last) const {
-  Palette ret = *this;
-  const uint16_t a16 = alpha;
-  const auto src_end = (cbegin() + last + 1);
-  for (auto src_it = (cbegin() + first); src_it < src_end; src_it++) {
-    ret[src_it - cbegin()] = Rgba{
-        .r = static_cast<uint8_t>((src_it->r * a16) / 255),
-        .g = static_cast<uint8_t>((src_it->g * a16) / 255),
-        .b = static_cast<uint8_t>((src_it->b * a16) / 255),
-    };
-  }
-  return ret;
-}
 // ----------------- //
 
 // Screenshots
@@ -186,15 +168,15 @@ bool ScreenshotSaveBMP(SDL_Surface *src) {
     return SDL_SaveBMP_IO(src, stream, false);
   }
 
-  const PixelSize bmp_size = {.w = src->w, .h = -src->h};
+  const PixelPoint bmp_size = {.x = src->w, .y = -src->h};
 
   // SDL_BITSPERPIXEL() for `SDL_PIXELFORMAT_XRGB8888` would return 24, not
   // 32!
   const auto bpp = (SDL_BYTESPERPIXEL(src->format) * 8);
 
-  const auto pixels =
-      std::span(static_cast<uint8_t *>(src->pixels),
-                (static_cast<size_t>(src->h) * static_cast<size_t>(src->pitch)));
+  const auto pixels = std::span(
+      static_cast<uint8_t *>(src->pixels),
+      (static_cast<size_t>(src->h) * static_cast<size_t>(src->pitch)));
   return BmpSave(stream, bmp_size, 1, bpp, palette, pixels);
 }
 
@@ -306,9 +288,15 @@ bool GraphicsScreenshotSave(SDL_Surface *src) {
   if (src == nullptr || src->w <= 0 || src->h <= 0) {
     return false;
   }
-  if (SDL_MUSTLOCK(src)) {
-    SDL_LockSurface(src);
+  const bool must_lock = SDL_MUSTLOCK(src);
+  if (must_lock && !SDL_LockSurface(src)) {
+    return false;
   }
+  auto unlock = util::MakeGuard([&] {
+    if (must_lock) {
+      SDL_UnlockSurface(src);
+    }
+  });
 
   auto ret = false;
   const auto effort = State().screenshot_effort;
@@ -319,61 +307,41 @@ bool GraphicsScreenshotSave(SDL_Surface *src) {
     ret = ScreenshotSaveBMP(src);
   }
 
-  if (SDL_MUSTLOCK(src)) {
-    SDL_UnlockSurface(src);
-  }
-
   return ret;
 }
 
 void GraphicsScreenshotSetEffort(int effort) {
-  State().screenshot_effort = std::min(effort, kScreenshotEffortMax);
+  State().screenshot_effort = std::clamp(effort, 0, kScreenshotEffortMax);
 }
 // -----------
 
-GraphicsFullscreenFlags GraphicsParams::FullscreenFlags() const {
-  using F = GraphicsParamFlags;
-  return {
-      .fullscreen = !!(flags & F::Fullscreen),
-      .exclusive = !!(flags & F::FullscreenExclusive),
-      .fit = static_cast<GraphicsFullscreenFit>(
-          std::to_underlying(flags & F::FullscreenFit) >> 2),
-  };
-}
-
-bool GraphicsParams::ScaleGeometry() const {
-  return !!(flags & GraphicsParamFlags::ScaleGeometry);
-}
-
 int GraphicsParams::Scale4x() const {
-  const auto fs = FullscreenFlags();
-  if (fs.fullscreen) {
-    return (fs.exclusive ? 4 : 0);
+  if (fullscreen) {
+    return exclusive_fullscreen ? 4 : 0;
   }
-  return window_scale_4x;
+  return window_scale_quarters;
 }
 
-WindowSize GraphicsParams::ScaledRes() const {
-  const auto fs = FullscreenFlags();
-  if (fs.fullscreen) {
-    if (fs.exclusive) {
+PixelPoint GraphicsParams::ScaledRes() const {
+  if (fullscreen) {
+    if (exclusive_fullscreen) {
       return kGameResolution;
     }
-    const auto display_s = GraphicsBackendDisplaySize(true);
-    switch (fs.fit) {
+    const auto display_s = SdlGraphicsDisplaySize(true);
+    switch (fullscreen_fit) {
     case GraphicsFullscreenFit::Integer: {
       const auto factors = (display_s / kGameResolution);
-      return (kGameResolution * std::min(factors.w, factors.h));
+      return (kGameResolution * std::min(factors.x, factors.y));
     }
     case GraphicsFullscreenFit::Aspect: {
       const auto factor_w =
-          (static_cast<float>(display_s.w) / kGameResolution.w);
+          (static_cast<float>(display_s.x) / kGameResolution.x);
       const auto factor_h =
-          (static_cast<float>(display_s.h) / kGameResolution.h);
+          (static_cast<float>(display_s.y) / kGameResolution.y);
       const auto scale = std::min(factor_w, factor_h);
       return {
-          .w = static_cast<PixelCoord>(kGameResolution.w * scale),
-          .h = static_cast<PixelCoord>(kGameResolution.h * scale),
+          .x = static_cast<int>(kGameResolution.x * scale),
+          .y = static_cast<int>(kGameResolution.y * scale),
       };
     }
     case GraphicsFullscreenFit::Stretch:
@@ -382,30 +350,31 @@ WindowSize GraphicsParams::ScaledRes() const {
       std::unreachable();
     }
   }
-  const auto scale =
-      ((window_scale_4x == 0) ? GraphicsWindowScale4xMax() : window_scale_4x);
+  const auto scale = ((window_scale_quarters == 0) ? GraphicsWindowScale4xMax()
+                                                   : window_scale_quarters);
   return ((kGameResolution * scale) / 4);
 }
 
-void GraphicsParams::SetFlag(GraphicsParamFlags flag,
-                             std::underlying_type_t<GraphicsParamFlags> value) {
-  SetEnumFlag(flags, flag, value);
-}
-
 int GraphicsWindowScale4xMax() {
-  const auto factors =
-      ((GraphicsBackendDisplaySize(false) * 4) / kGameResolution);
-  return std::min(factors.w, factors.h);
+  const auto factors = ((SdlGraphicsDisplaySize(false) * 4) / kGameResolution);
+  return std::max(1, std::min(factors.x, factors.y));
 }
 
 std::optional<GraphicsInitResult>
 GraphicsInit(std::optional<const GraphicsParams> maybe_prev,
              GraphicsParams params) {
-  const auto api_count = GraphicsBackendAPICount();
-  if ((api_count > 0) && (params.api >= api_count)) {
-    params.api = -1;
+  const auto api_count = GraphicsRenderDriverCount();
+  if (params.render_driver < -1 ||
+      ((api_count > 0) && (params.render_driver >= api_count))) {
+    params.render_driver = -1;
   }
-  return GraphicsBackendInit(maybe_prev, params);
+  params.exclusive_fullscreen &= params.fullscreen;
+  if (params.fullscreen_fit >= GraphicsFullscreenFit::Count) {
+    params.fullscreen_fit = GraphicsFullscreenFit::Integer;
+  }
+  params.window_scale_quarters =
+      std::clamp(params.window_scale_quarters, 0, GraphicsWindowScale4xMax());
+  return SdlGraphicsInit(maybe_prev, params);
 }
 
 std::optional<GraphicsInitResult>
@@ -416,15 +385,19 @@ GraphicsInitOrFallback(GraphicsParams params) {
 
   // Start with the defaults and try looking for a different working
   // configuration
-  const auto api_count = GraphicsBackendAPICount();
+  const auto api_count = GraphicsRenderDriverCount();
 
   const auto api_it =
       ((api_count > 0)
            ? std::views::iota(-1, api_count)
-           : std::views::iota(params.api, params.api + 1));
+           : std::views::iota(params.render_driver, params.render_driver + 1));
 
+  const auto failed_driver = params.render_driver;
   for (const auto api : api_it) {
-    params.api = api;
+    if (api == failed_driver) {
+      continue;
+    }
+    params.render_driver = api;
     if (const auto ret = GraphicsInit(std::nullopt, params)) {
       return ret;
     }
@@ -434,8 +407,8 @@ GraphicsInitOrFallback(GraphicsParams params) {
 
 void GraphicsFlip() {
   const auto &state = State();
-  GraphicsBackendFlip(state.screenshot_requested &&
-                      !state.screenshot_prefix.empty());
+  SdlGraphicsFlip(state.screenshot_requested &&
+                  !state.screenshot_prefix.empty());
 }
 
 void GraphicsRequestScreenshot(bool requested) {

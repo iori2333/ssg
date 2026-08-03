@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 #include "util/object_pool.h"
 
 class EffectManager;
@@ -25,15 +25,15 @@ enum class ItemKind : uint8_t {
   Bomb,
 };
 
-inline constexpr auto kItemGravity = 3;
+inline constexpr auto kItemGravity = WorldCoord::FromRaw(3);
 inline constexpr auto kItemHitRadius = 16_px;
 inline constexpr auto kLargeItemHitRadius = 28_px;
 
 struct ItemData {
-  int x = 0;
-  int y = 0;
-  int vx = 0;
-  int vy = 0;
+  WorldCoord x{};
+  WorldCoord y{};
+  WorldCoord vx{};
+  WorldCoord vy{};
   int count = 0;
   ItemKind kind = ItemKind::None;
   bool auto_collect = false;
@@ -45,12 +45,12 @@ public:
       : player_(player), effects_(effects), audio_(audio) {}
 
   void Reset();
-  void Spawn(int x, int y, ItemKind kind);
+  void Spawn(WorldCoord x, WorldCoord y, ItemKind kind);
   void Update();
   void Draw() const;
 
 private:
-  [[nodiscard]] static int HitRadius(ItemKind kind);
+  [[nodiscard]] static WorldCoord HitRadius(ItemKind kind);
 
   Player &player_;
   EffectManager &effects_;

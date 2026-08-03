@@ -7,7 +7,7 @@
 
 #include "text_marquee.h"
 
-#include "gfx/text_ttf.h"
+#include "gfx/text/text_renderer.h"
 
 namespace ui {
 namespace {
@@ -38,21 +38,21 @@ void RemoveFirstUtf8CodePoint(std::string &text) {
 
 } // namespace
 
-std::string MarqueeWindow(TextRenderSession & /*unused*/, std::string_view text,
+std::string MarqueeWindow(TextRenderSession &session, std::string_view text,
                           int available_width, int frame) {
   if (available_width <= 0) {
     return {};
   }
 
   std::string suffix(text);
-  if (TextRenderSession::Extent(suffix).w <= available_width) {
+  if (session.Extent(suffix).x <= available_width) {
     return suffix;
   }
 
   std::string final_suffix = suffix;
   int shift_count = 0;
   while (!final_suffix.empty() &&
-         TextRenderSession::Extent(final_suffix).w > available_width) {
+         session.Extent(final_suffix).x > available_width) {
     RemoveFirstUtf8CodePoint(final_suffix);
     shift_count++;
   }
@@ -72,7 +72,7 @@ std::string MarqueeWindow(TextRenderSession & /*unused*/, std::string_view text,
     RemoveFirstUtf8CodePoint(suffix);
   }
 
-  while (!suffix.empty() && TextRenderSession::Extent(suffix).w > available_width) {
+  while (!suffix.empty() && session.Extent(suffix).x > available_width) {
     RemoveLastUtf8CodePoint(suffix);
   }
   return suffix;

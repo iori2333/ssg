@@ -6,18 +6,18 @@
 
 #include <cstdlib>
 
-#include "gfx/constants.h"
+#include "gfx/core/constants.h"
 
 namespace playfield {
 
-inline constexpr WindowCoord kLeft = 128;
-inline constexpr WindowCoord kRight = 511;
-inline constexpr WindowCoord kCenterX = (kLeft + kRight) / 2;
-inline constexpr WindowCoord kTop = 0;
-inline constexpr WindowCoord kBottom = kGameResolution.h - 1;
-inline constexpr WindowCoord kCenterY = (kTop + kBottom) / 2;
+inline constexpr int kLeft = 128;
+inline constexpr int kRight = 511;
+inline constexpr int kCenterX = (kLeft + kRight) / 2;
+inline constexpr int kTop = 0;
+inline constexpr int kBottom = kGameResolution.y - 1;
+inline constexpr int kCenterY = (kTop + kBottom) / 2;
 
-inline constexpr WindowLtrb kClip = {kLeft, kTop, kRight + 1, kBottom + 1};
+inline constexpr Rect kClip = {kLeft, kTop, kRight + 1, kBottom + 1};
 
 inline constexpr WorldCoord kWorldLeft = PixelToWorld(kLeft);
 inline constexpr WorldCoord kWorldRight = PixelToWorld(kRight);
@@ -28,7 +28,7 @@ inline constexpr WorldCoord kWorldCenterY = (kWorldTop + kWorldBottom) / 2;
 
 [[nodiscard]] inline bool WithinAxisDistance(WorldCoord lhs, WorldCoord rhs,
                                              WorldCoord distance) {
-  return std::abs(lhs - rhs) < distance;
+  return (lhs - rhs).Abs() < distance;
 }
 
 } // namespace playfield

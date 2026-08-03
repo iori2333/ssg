@@ -5,7 +5,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 
 enum class SfxId : uint8_t {
   Kebari = 0x00,
@@ -30,12 +30,12 @@ enum class SfxId : uint8_t {
   Warp = 0x13,
 };
 
-inline constexpr int kSoundFieldCenterX = PixelToWorld(320);
-inline constexpr int kSoundWorldUnitsPerDecibel = PixelToWorld(25);
+inline constexpr WorldCoord kSoundFieldCenterX = PixelToWorld(320);
+inline constexpr WorldCoord kSoundWorldUnitsPerDecibel = PixelToWorld(25);
 
-[[nodiscard]] inline float SoundPanForWorldX(int x) {
+[[nodiscard]] inline float SoundPanForWorldX(WorldCoord x) {
   const auto relative = x - kSoundFieldCenterX;
-  const auto power = relative / (kSoundWorldUnitsPerDecibel * 20.0F);
-  return relative < 0 ? (std::pow(10.0F, power) - 1.0F)
-                      : (1.0F - std::pow(10.0F, -power));
+  const auto power = relative.RatioFloat(kSoundWorldUnitsPerDecibel) / 20.0F;
+  return relative < WorldCoord{} ? (std::pow(10.0F, power) - 1.0F)
+                                 : (1.0F - std::pow(10.0F, -power));
 }

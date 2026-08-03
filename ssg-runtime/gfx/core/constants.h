@@ -7,12 +7,13 @@
 #include <string_view>
 
 #include "coords.h"
+#include "rect.h"
 
 // The game's native resolution.
 
-constexpr WindowSize kGameResolution = {.w = 640, .h = 480};
-inline constexpr WindowLtrb kGameResolutionRect = {{.x = 0, .y = 0},
-                                                   kGameResolution};
+constexpr PixelPoint kGameResolution = {.x = 640, .y = 480};
+inline constexpr Rect kGameResolutionRect =
+    Rect::FromPositionAndSize({}, kGameResolution);
 
 constexpr std::string_view kGameTitle = "秋霜玉";
 constexpr std::string_view kVersionTag = GAME_VERSION;

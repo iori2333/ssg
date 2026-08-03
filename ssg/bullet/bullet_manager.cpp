@@ -23,9 +23,10 @@
 #include "enemy/enemy_manager.h"
 #include "gameplay/game_rules.h"
 #include "gameplay/game_session.h"
-#include "gfx/coords.h"
-#include "gfx/geometry.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 #include "gfx/graphics.h"
+#include "gfx/render/geometry.h"
 #include "item/item_system.h"
 #include "player/player.h"
 #include "util/math_utils.h"
@@ -60,10 +61,10 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
   const auto n = si.count;
   const int setmax = n * (si.rapid ? si.rapid_count : 1);
 
-  auto base_angle = si.aimed
-                        ? math::AngleTo(static_cast<float>(player_.X() - si.x),
-                                        static_cast<float>(player_.Y() - si.y))
-                        : 0.0F;
+  auto base_angle =
+      si.aimed
+          ? math::AngleTo(WorldPoint{player_.X() - si.x, player_.Y() - si.y})
+          : 0.0F;
   base_angle += si.angle;
 
   for (int i = 0; i < setmax; i++) {
@@ -183,10 +184,10 @@ void BulletManager::SpawnReflect(const ReflectSpawnInfo &info) {
     cmd.v = bullet_common::ScaleVelocityByRank(cmd.v, session_.Rank());
   }
 
-  auto base_angle = cmd.aimed
-                        ? math::AngleTo(static_cast<float>(player_.X() - cmd.x),
-                                        static_cast<float>(player_.Y() - cmd.y))
-                        : 0.0F;
+  auto base_angle =
+      cmd.aimed
+          ? math::AngleTo(WorldPoint{player_.X() - cmd.x, player_.Y() - cmd.y})
+          : 0.0F;
   base_angle += cmd.angle;
 
   for (int i = 0; i < cmd.n; i++) {
@@ -300,9 +301,9 @@ void BulletManager::HitCheck() {
   if (player_.IsInvincible()) {
     return;
   }
-  const int px = player_.X();
-  const int py = player_.Y();
-  const int player_radius = player_.HitRadius();
+  const WorldCoord px = player_.X();
+  const WorldCoord py = player_.Y();
+  const WorldCoord player_radius = player_.HitRadius();
 
   for (auto &b : bullets_) {
     switch (b.CheckHit(px, py, player_radius)) {
@@ -472,7 +473,8 @@ void BulletManager::ControlLongLaser(const EnemyActor *e, std::size_t id,
 
 // ── Gallery / debug helpers ───────────────────────────────────────
 
-void BulletManager::PlaceDisplayBullet(int x, int y, uint8_t color) {
+void BulletManager::PlaceDisplayBullet(WorldCoord x, WorldCoord y,
+                                       uint8_t color) {
   auto *t = bullets_.Alloc();
   if (t != nullptr) {
     t->Spawn(BulletSpawnInfo{.x = x, .y = y, .visual = color});

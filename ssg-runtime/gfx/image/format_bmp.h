@@ -12,9 +12,8 @@
 
 #include <SDL3/SDL_pixels.h>
 
-#include "coords.h"
-#include "pixelformat.h"
-
+#include "gfx/core/coords.h"
+#include "gfx/core/pixelformat.h"
 #include "util/endian.h"
 
 struct SDL_IOStream;
@@ -80,6 +79,6 @@ std::optional<BmpOwned> BmpLoad(std::vector<uint8_t> buffer);
 // Returns `true` if BmpSave() supports the given [format].
 bool BmpSaveSupports(SDL_PixelFormat format);
 
-bool BmpSave(SDL_IOStream *stream, PixelSize size, uint16_t planes,
+bool BmpSave(SDL_IOStream *stream, PixelPoint size, uint16_t planes,
              uint16_t bpp, std::span<Bgra> palette,
              std::span<const uint8_t> pixels);

@@ -13,7 +13,7 @@
 #include "bullet/laser/long.h"
 #include "enemy/ecl/ecl.h"
 #include "enemy/enemy_manager.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
 
 void SnakeFormation::Reset() {
   for (auto &snake : snakes_) {
@@ -36,7 +36,7 @@ void SnakeFormation::Spawn(BossActor &parent, uint32_t tail_script) {
     point = {.x = parent.x, .y = parent.y, .direction = parent.d};
   }
 
-  const WorldPoint position{&parent.x, &parent.y};
+  const WorldPoint position{parent.x, parent.y};
   for (auto &segment : snake->segments) {
     if (auto *actor = enemies_.SpawnRegular(position, tail_script)) {
       segment = actor;

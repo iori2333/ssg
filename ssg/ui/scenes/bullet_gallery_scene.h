@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#include "gfx/text.h"
+#include "gfx/text/text.h"
 #include "sys/input.h"
 
 class BulletManager;
@@ -39,5 +39,5 @@ private:
   BulletManager &bullets_;
   const Player &player_;
   i18n::Localization &localization_;
-  TextRenderRectId help_text_ = 0;
+  TextRenderRectId help_text_{};
 };

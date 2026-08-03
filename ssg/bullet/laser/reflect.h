@@ -9,7 +9,7 @@
 #include <span>
 
 #include "bullet/bullet_common.h"
-#include "gfx/graphics_backend.h"
+#include "gfx/graphics.h"
 
 struct LaserLong;
 
@@ -21,9 +21,9 @@ enum class ReflectLaserType : uint8_t {
 // ── Spawn parameter struct ────────────────────────────────────
 struct ReflectSpawnInfo {
   bool no_scaling = false;
-  int x{}, y{};
+  WorldCoord x{}, y{};
   float v{};
-  int w{}, l{}, l2{};
+  WorldCoord w{}, l{}, l2{};
   float angle{};
   int dw{};
   int n{};
@@ -70,12 +70,13 @@ struct LaserReflect {
   [[nodiscard]] bool IsDead() const;
   void Kill();
   void Spawn(const ReflectSpawnInfo &info);
-  [[nodiscard]] HitResult CheckHit(int px, int py, int player_radius) const;
+  [[nodiscard]] HitResult CheckHit(WorldCoord px, WorldCoord py,
+                                   WorldCoord player_radius) const;
   [[nodiscard]] UpdateResult Update(const UpdateInfo &info = {});
   void RenderDebugHitbox(int mode) const;
 
-  [[nodiscard]] int X() const;
-  [[nodiscard]] int Y() const;
+  [[nodiscard]] WorldCoord X() const;
+  [[nodiscard]] WorldCoord Y() const;
   [[nodiscard]] bool RegisterGraze();
 
 private:

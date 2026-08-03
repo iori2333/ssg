@@ -8,7 +8,8 @@
 #include "enemy_actor.h"
 
 #include "gameplay/playfield.h"
-#include "gfx/coords.h"
+#include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 #include "player/player_attack.h"
 #include "util/math_utils.h"
 
@@ -65,15 +66,14 @@ bool EnemyActor::IsHitBy(const PlayerAttack &attack) const {
            attack.origin.y > y;
 
   case PlayerAttackShape::DirectedBeam: {
-    const int hit_width =
+    const WorldCoord hit_width =
         std::min(hitbox_half_height, hitbox_half_width) + PixelToWorld(3);
-    const int offset_x = x - attack.origin.x;
-    const int offset_y = y - attack.origin.y;
-    const auto projected = math::RoundedRotateVector(
-        -math::AngleFromLegacy(attack.direction), offset_x, offset_y);
-    const int length = projected.x;
-    const int width = std::abs(projected.y);
-    return length > 0 && width < hit_width;
+    const WorldCoord offset_x = x - attack.origin.x;
+    const WorldCoord offset_y = y - attack.origin.y;
+    const auto projected =
+        math::RoundedRotateVector(-math::AngleFromLegacy(attack.direction),
+                                  WorldPoint{offset_x, offset_y});
+    return projected.x > WorldCoord{} && projected.y.Abs() < hit_width;
   }
 
   case PlayerAttackShape::AllEnemies:
