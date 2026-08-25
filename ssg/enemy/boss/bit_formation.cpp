@@ -88,7 +88,7 @@ void BitFormation::Spawn(BossActor &parent, int count, uint32_t script_id) {
       e->d = i * (256 / count);
       e->script.registers[0] = i;
       e->script.registers[1] = count;
-      enemies_.ecl_.Execute(*e);
+      enemies_.RunScriptOnce(*e);
 
       // Associate this structure with the created enemy
       parts_[i].actor = e;
@@ -455,7 +455,7 @@ void BitFormation::SelectAttack(uint32_t script_id) {
 
   for (i = 0; std::cmp_less(i, count_); i++) {
     if (auto *actor = parts_[i].actor) {
-      if (!enemies_.ecl_.Jump(*actor, script_id)) {
+      if (!enemies_.JumpScript(*actor, script_id)) {
         actor->state = EnemyActorState::PendingRemoval;
       }
     }

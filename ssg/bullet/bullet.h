@@ -145,7 +145,6 @@ struct Bullet {
 private:
   enum class Flags : uint8_t {
     None = 0,
-    KeepOutsidePlayfield = 1 << 0,
     Grazed = 1 << 1,
     PendingRemoval = 1 << 7,
   };
@@ -184,6 +183,7 @@ private:
   void MoveByOption(UpdateResult &result);
   void MoveByEffect();
   void RevertToNormal();
+  void ApplyReflect(float new_angle, bool flip_x, bool flip_y);
   void DrawEffect() const;
   [[nodiscard]] uint8_t DisplayAngle() const;
 };

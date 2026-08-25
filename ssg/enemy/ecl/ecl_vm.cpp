@@ -2,11 +2,14 @@
 /// ECL runtime - typed instruction dispatch and per-frame execution
 ///
 
+#include <algorithm>
 #include <bit>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <utility>
+#include <variant>
 
 #include "ecl.h"
 #include "ecl_host.h"
@@ -38,7 +41,12 @@ namespace {
 
 template <typename Arguments>
 const Arguments &Args(const EclInstruction &instruction) {
-  return instruction.ArgumentsAs<Arguments>();
+  const auto *args = instruction.ArgumentsAs<Arguments>();
+  // A decoder/VM type-table mismatch would otherwise throw bad_variant_access
+  // mid-gameplay. Surface it in debug and fall back safely in release.
+  assert(args != nullptr);
+  static const Arguments fallback{};
+  return args != nullptr ? *args : fallback;
 }
 
 size_t RegisterIndex(EclValue value) { return static_cast<size_t>(value); }
@@ -462,6 +470,9 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     return Step::Advance;
   }
 
+  // Reserved/unimplemented in the original engine: arguments are decoded but
+  // no motion is performed. No shipped script uses this opcode. Kept as a
+  // no-op yield rather than silently advancing so its intent stays visible.
   case EclOpcode::AccelerateTo:
     return Step::Yield;
 
@@ -537,8 +548,8 @@ EclVm::ExecuteMovementInstruction(EnemyActor &actor,
     actor.d = math::RandomInt() & 0x7f;
     return Step::Advance;
   case EclOpcode::SetSequenceAngle:
-    actor.d = static_cast<uint8_t>(sequence_angle_);
-    sequence_angle_ += sequence_angle_delta_;
+    actor.d = static_cast<uint8_t>(actor.script.sequence_angle);
+    actor.script.sequence_angle += actor.script.sequence_angle_delta;
     return Step::Advance;
   case EclOpcode::MoveToPlayerPosition:
     actor.x = host_.GetPlayer().X();
@@ -966,7 +977,7 @@ EclVm::Step EclVm::ExecuteActorInstruction(EnemyActor &actor,
                            Args<EclBossActionArguments>(instruction).action);
     break;
   case EclOpcode::SetSequenceAngleDelta:
-    sequence_angle_delta_ = Args<EclByteArguments>(instruction).value;
+    actor.script.sequence_angle_delta = Args<EclByteArguments>(instruction).value;
     break;
   case EclOpcode::SpawnEnemy:
   case EclOpcode::SpawnEnemyWithAngle: {

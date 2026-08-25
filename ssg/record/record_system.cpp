@@ -168,10 +168,8 @@ std::optional<std::filesystem::path> UniqueReplayPath(bool extra_stage,
 }
 
 bool IsReplayFilename(std::string_view name) {
-  const auto replay_prefix = name.starts_with("replay_");
-  const auto extra_prefix = name.starts_with("replay_ex_");
   const auto extension = std::filesystem::path{name}.extension().string();
-  return (replay_prefix || extra_prefix) && extension == ".dat";
+  return name.starts_with("replay_") && extension == ".dat";
 }
 
 std::filesystem::path DemoPath(StageId stage) {
@@ -459,7 +457,7 @@ RecordSaveResult RecordSystem::SaveReplay(std::string_view name,
 
   std::string replay_name{name.substr(0, kRecordNameLength)};
   if (replay_name.empty()) {
-    replay_name = "Vivit!";
+    replay_name = std::string(kDefaultScoreName);
   }
 
   const auto now = util::UtcTime();
@@ -767,13 +765,16 @@ bool RecordSystem::ConfigurePlayback(Player &player, GameSession &session) {
 }
 
 void RecordSystem::RestorePlaybackStage(Player &player, GameSession &session) {
-  auto &playback = std::get<PlaybackState>(state_);
-  const auto &checkpoint = playback.stages[playback.stage_index].checkpoint;
+  auto *playback = std::get_if<PlaybackState>(&state_);
+  if (playback == nullptr) {
+    return;
+  }
+  const auto &checkpoint = playback->stages[playback->stage_index].checkpoint;
   session.stage = checkpoint.stage;
   player.RestoreProgress(checkpoint.player);
   math::RestoreRandomState(checkpoint.rng);
-  playback.frame_cursor = 0;
-  playback.active = true;
+  playback->frame_cursor = 0;
+  playback->active = true;
 }
 
 bool RecordSystem::HasNextPlaybackStage() const {
@@ -786,16 +787,22 @@ bool RecordSystem::AdvancePlaybackStage() {
   if (!HasNextPlaybackStage()) {
     return false;
   }
-  auto &playback = std::get<PlaybackState>(state_);
-  ++playback.stage_index;
-  playback.frame_cursor = 0;
-  playback.active = false;
+  auto *playback = std::get_if<PlaybackState>(&state_);
+  if (playback == nullptr) {
+    return false;
+  }
+  ++playback->stage_index;
+  playback->frame_cursor = 0;
+  playback->active = false;
   return true;
 }
 
 StageId RecordSystem::CurrentPlaybackStage() const {
-  const auto &playback = std::get<PlaybackState>(state_);
-  return playback.stages[playback.stage_index].checkpoint.stage;
+  const auto *playback = std::get_if<PlaybackState>(&state_);
+  if (playback == nullptr) {
+    return StageId::Stage1;
+  }
+  return playback->stages[playback->stage_index].checkpoint.stage;
 }
 
 bool RecordSystem::HasStageDemo(StageId stage) const {

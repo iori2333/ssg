@@ -1,6 +1,9 @@
 add_executable(script_tool
     tools/script_tool.cpp
 )
+target_include_directories(script_tool PRIVATE
+    ${PROJECT_SOURCE_DIR}/ssg
+)
 target_link_libraries(script_tool PRIVATE
     ssg::runtime
 )

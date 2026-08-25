@@ -73,26 +73,31 @@ always used; `data.pak` is only opened when the directory is absent. An invalid
 directory is an error and does not silently fall back to the archive.
 
 The directory uses `maps/*.map`, `images/*.bmp`, `music/*.mid`,
-`sounds/*.wav`, and `demos/*.dat`. Entries in each section are numbered
-contiguously from `000`. Music titles and comments live only in the embedded
-i18n catalogs.
+`music-arranged/*.mid`, `sounds/*.wav`, and `demos/*.dat`. Entries in each
+section are numbered contiguously from `000`. Music titles and comments live
+only in the embedded i18n catalogs.
 
 Archive entry 0 is a versioned manifest; the remaining entries contain the
-same five sections in manifest order.
+same six sections in manifest order.
 
-Manifest v2 uses little-endian integers:
+Manifest v3 uses little-endian integers:
 
 ```
 magic[8] = "SSGDATA\x1a"
-version:u32 = 2
-section_count:u32 = 5
+version:u32 = 3
+section_count:u32 = 6
 repeat section_count:
   section_id:u32
   first_entry:u32
   entry_count:u32
 ```
 
-Use `pack_tool extract data.pak <directory>` to produce the five section
+Section ids follow `data::DataSectionId`: 0=Maps, 1=Images, 2=Music,
+3=MusicArranged, 4=Sounds, 5=Demos. The `Music` and `MusicArranged` counts
+must match. The magic/version constants are `data::kDataManifestMagic` /
+`data::kDataManifestVersion` in `ssg/data/data_manifest.h`.
+
+Use `pack_tool extract data.pak <directory>` to produce the six section
 directories and `pack_tool pack <directory> data.pak` to rebuild the archive.
 Debug Demo Recording writes local Replay v2 files to `demos/`; it never edits
 `data.pak`. Local demos take precedence during Debug Demo Play and are copied

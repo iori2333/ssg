@@ -109,12 +109,19 @@ void MenuController::ResetNavigation(int initial_select) {
     p.selected = 0;
   }
   if (!p.items.empty() && !p.items[p.selected]->Enabled()) {
+    // Bound the scan: an all-disabled root page must not leave the selection
+    // stuck on a disabled item (nor loop forever).
     int const n = static_cast<int>(p.items.size());
+    bool found = false;
     for (int i = 0; i < n; i++) {
       p.selected = (p.selected + 1) % n;
       if (p.items[p.selected]->Enabled()) {
+        found = true;
         break;
       }
+    }
+    if (!found) {
+      p.selected = 0;
     }
   }
 }
@@ -136,12 +143,12 @@ void MenuController::Tick(InputBits key) {
 // Input handling
 // ---------------------------------------------------------------------------
 
-void MenuController::ProcessInput(InputBits key) {
-  auto &page = stack_.back();
-
+// Returns false when the caller should stop processing this frame (a held key
+// during first-wait, or input released during a key wait).
+bool MenuController::DebounceInput(InputBits key) {
   if (first_wait_) {
     if (key != 0) {
-      return;
+      return false;
     }
     first_wait_ = false;
   }
@@ -149,12 +156,46 @@ void MenuController::ProcessInput(InputBits key) {
   if (key == 0 && key_wait_ != 0) {
     last_key_ = 0;
     key_wait_ = 0;
+    return false;
+  }
+  return true;
+}
+
+// Counts down an active key wait; returns false while the wait is still in
+// effect.
+bool MenuController::KeyWaitTick() {
+  if (key_wait_ == 0) {
+    return true;
+  }
+  key_wait_--;
+  if (key_wait_ == 0) {
+    last_key_ = 0;
+  }
+  return false;
+}
+
+void MenuController::ProcessInput(InputBits key) {
+  auto &page = stack_.back();
+
+  if (!DebounceInput(key)) {
     return;
   }
 
-  while (std::cmp_less(page.selected, page.items.size()) &&
-         !page.items[page.selected]->Enabled()) {
-    page.selected = (page.selected + 1) % static_cast<int>(page.items.size());
+  if (!page.items.empty() && !page.items[page.selected]->Enabled()) {
+    // Scan forward for the first enabled item. Bound the scan so an
+    // all-disabled page cannot loop forever.
+    int const n = static_cast<int>(page.items.size());
+    bool found = false;
+    for (int i = 0; i < n; i++) {
+      page.selected = (page.selected + 1) % n;
+      if (page.items[page.selected]->Enabled()) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return;
+    }
   }
   if (page.items.empty()) {
     return;
@@ -162,11 +203,7 @@ void MenuController::ProcessInput(InputBits key) {
 
   auto *node = page.items[page.selected];
 
-  if (key_wait_ != 0) {
-    key_wait_--;
-    if (key_wait_ == 0) {
-      last_key_ = 0;
-    }
+  if (!KeyWaitTick()) {
     return;
   }
   if (node->FastRepeat() && InputOptionKeyDelta(last_key_) != 0) {
@@ -197,8 +234,16 @@ void MenuController::ProcessInput(InputBits key) {
     int const n = static_cast<int>(page.items.size());
     int cur = page.selected;
     cur = (cur + n + dir) % n;
-    while (!page.items[cur]->Enabled()) {
+    bool found = false;
+    for (int i = 0; i < n; i++) {
+      if (page.items[cur]->Enabled()) {
+        found = true;
+        break;
+      }
       cur = (cur + n + dir) % n;
+    }
+    if (!found) {
+      return; // all items disabled; nothing to move to
     }
     page.selected = cur;
     frame_count_ = 0;
@@ -462,24 +507,11 @@ void MenuController::DeactivateListView() {
 // ---------------------------------------------------------------------------
 
 void MenuController::ProcessListInput(InputBits key) {
-  if (first_wait_) {
-    if (key != 0) {
-      return;
-    }
-    first_wait_ = false;
-  }
-
-  if (key == 0 && key_wait_ != 0) {
-    last_key_ = 0;
-    key_wait_ = 0;
+  if (!DebounceInput(key)) {
     return;
   }
 
-  if (key_wait_ != 0) {
-    key_wait_--;
-    if (key_wait_ == 0) {
-      last_key_ = 0;
-    }
+  if (!KeyWaitTick()) {
     return;
   }
 

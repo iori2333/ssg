@@ -8,20 +8,20 @@
 			"name": "Debug",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"preLaunchTask": "Build regular binary (Debug)",
-			"program": "${workspaceFolder}/bin/GIAN07d.exe",
+			"preLaunchTask": "CMake: Build (Debug)",
+			"program": "${workspaceFolder}/build/bin/GIAN07.exe",
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}/bin/",
+			"cwd": "${workspaceFolder}/build/bin/",
 			"console": "internalConsole"
 		},
 		{
 			"name": "Release",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"preLaunchTask": "Build regular binary (Release)",
-			"program": "${workspaceFolder}/bin/GIAN07.exe",
+			"preLaunchTask": "CMake: Build (Release)",
+			"program": "${workspaceFolder}/build/bin/GIAN07.exe",
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}/bin/",
+			"cwd": "${workspaceFolder}/build/bin/",
 			"console": "internalConsole"
 		},
 		{

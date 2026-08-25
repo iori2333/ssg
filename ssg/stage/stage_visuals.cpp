@@ -27,20 +27,7 @@ constexpr auto kRockAcceleration = WorldCoord::FromRaw(2);
 
 void StageVisuals::Transform(Point3D &point, uint8_t angle_x, uint8_t angle_y,
                              uint8_t angle_z) {
-  auto rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_x),
-                                           WorldPoint{point.y, point.z});
-  point.y = rotated.x;
-  point.z = rotated.y;
-
-  rotated = math::RoundedRotateVector(-math::AngleFromLegacy(angle_y),
-                                      WorldPoint{point.x, point.z});
-  point.x = rotated.x;
-  point.z = rotated.y;
-
-  rotated = math::RoundedRotateVector(math::AngleFromLegacy(angle_z),
-                                      WorldPoint{point.x, point.y});
-  point.x = rotated.x;
-  point.y = rotated.y;
+  math::RotatePoint3D(point, angle_x, angle_y, angle_z);
 }
 
 void StageVisuals::StartCubes() {

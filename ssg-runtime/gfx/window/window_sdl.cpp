@@ -280,7 +280,8 @@ std::optional<GraphicsParams> SdlWindowCreate(GraphicsParams params) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, min);
   }
 
-  if ((params.window_left != 0) || (params.window_top != 0)) {
+  if ((params.window_left != kGraphicsTopleftUndefined) ||
+      (params.window_top != kGraphicsTopleftUndefined)) {
     State().topleft_before_fullscreen = {params.window_left, params.window_top};
   }
 

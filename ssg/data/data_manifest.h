@@ -13,6 +13,14 @@
 
 namespace data {
 
+// On-disk manifest format version. Bump whenever the manifest layout changes;
+// kept here so packers and parsers share a single contract.
+inline constexpr uint32_t kDataManifestVersion = 3;
+
+// Fixed 8-byte magic preceding the version word: "SSGDATA" + 0x1A.
+inline constexpr std::array<uint8_t, 8> kDataManifestMagic = {
+    'S', 'S', 'G', 'D', 'A', 'T', 'A', 0x1a};
+
 enum class DataSectionId : uint8_t {
   Maps,
   Images,

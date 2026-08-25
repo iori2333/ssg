@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "gfx/core/coords.h"
+#include "gfx/core/world_math.h"
 
 enum class HitResult : uint8_t { Miss, Graze, Hit };
 inline constexpr auto kBulletEvadeValue = 1;
@@ -30,8 +31,6 @@ namespace bullet_common {
   return WorldCoord::FromRaw(static_cast<int>(std::lround(value)));
 }
 
-inline constexpr auto kZSet = 0x08;
-
 inline constexpr auto kCmdMask = 0x03;
 
 [[nodiscard]] inline int DecodeSpeed(uint8_t value) {
@@ -42,10 +41,41 @@ inline constexpr auto kCmdMask = 0x03;
 
 // — Direction calculation ————————————————————
 
+// Shared homing turn-rate/speed adjustment, used by player shots and
+// SpecialHoming bullets so their steering behavior cannot drift apart.
+// Returns the adjusted turn rate; the caller applies it to its own angle
+// representation. Speeds up while on-angle, slows while off-angle.
+template <typename Speed>
+[[nodiscard]] inline int SteerHoming(int turn_rate, float angle_delta,
+                                     Speed &speed, Speed acceleration) {
+  if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5F) {
+    if (turn_rate != 0) {
+      turn_rate--;
+    }
+    speed += acceleration;
+  } else {
+    if (turn_rate < INT8_MAX) {
+      turn_rate++;
+    }
+    speed -= acceleration;
+  }
+  return turn_rate;
+}
+
 // Calculate the direction for bullet/laser i of n. base_angle includes the
 // player-aim offset (ZSET) if applicable.
 [[nodiscard]] float CalcSpreadAngle(int i, BulletPattern pattern, int n,
                                     float base_angle, int dw);
+
+// Legacy direction-byte offset for shot i of n with step [dw], alternating
+// around the base direction and centering even counts. Shared by the player's
+// shot spawning and CalcSpreadAngle so the spread layout cannot drift.
+[[nodiscard]] inline int SpreadOffset(int i, int n, int dw) {
+  const int count = i + 1;
+  const int direction = 1 - ((count & 1) << 1);
+  const int offset = (count >> 1) * dw * direction;
+  return ((n & 1) != 0) ? offset : offset - (dw >> 1);
+}
 
 // — Difficulty scaling ——————————————————————
 

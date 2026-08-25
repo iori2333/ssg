@@ -25,6 +25,11 @@ public:
   [[nodiscard]] int Run();
 
 private:
+  [[nodiscard]] bool InitializeConfig();
+  [[nodiscard]] bool InitializeLocalization();
+  [[nodiscard]] bool InitializeGraphics();
+  [[nodiscard]] bool InitializeAudio();
+  [[nodiscard]] bool LoadGameData();
   [[nodiscard]] bool Tick();
   void Shutdown();
   void PersistConfig();

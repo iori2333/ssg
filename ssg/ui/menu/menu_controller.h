@@ -96,6 +96,9 @@ private:
 
   void ProcessInput(InputBits key);
   void ProcessListInput(InputBits key);
+  // Shared input-debounce helpers used by both input paths.
+  [[nodiscard]] bool DebounceInput(InputBits key);
+  [[nodiscard]] bool KeyWaitTick();
   void BuildPageFromEntry(EntryNode &entry);
   void ResetNavigation(int initial_select);
   void InvalidateAllSlots();

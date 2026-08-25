@@ -33,6 +33,7 @@
 #include "i18n/localization.h"
 #include "music/music_player.h"
 #include "settings/config.h"
+#include "ui/scene_common.h"
 #include "sys/input.h"
 
 namespace menu {
@@ -46,10 +47,7 @@ std::string PadButtonLabel(InputPadButton v) {
   return "--------";
 }
 
-MenuText Localized(i18n::Localization &localization, std::string_view key) {
-  const auto id = i18n::TextIdFromKey(key);
-  return {[&localization, id] { return localization.Text(id); }};
-}
+using ui::Localized;
 
 ChoiceLabels LocalizedLabels(i18n::Localization &localization,
                              std::initializer_list<std::string_view> keys) {

@@ -56,7 +56,6 @@ void LaserHoming::Spawn(const HomingSpawnInfo &info) {
   a_ = 10;
   count_ = 0;
   current_ = 0;
-  left_ = 1;
   c_ = info.c;
   subtype_ = info.type;
   state_ = HomingState::Normal;

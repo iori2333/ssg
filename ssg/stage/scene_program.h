@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <optional>
 #include <span>
-#include <string_view>
+#include <string>
 #include <vector>
 
 namespace stage {
@@ -81,7 +81,9 @@ struct SceneInstruction {
   uint32_t text_id = 0;
   SceneEffect effect = SceneEffect::Warning;
   SceneWaitCondition wait_condition = SceneWaitCondition::BossCount;
-  std::string_view text;
+  // Owned copy: the parse buffer may be transient, so message text must not be
+  // kept as a view into it.
+  std::string text;
 };
 
 class SceneProgram {
@@ -107,8 +109,7 @@ public:
   }
   [[nodiscard]] size_t Position() const { return position_; }
   [[nodiscard]] int Frame() const { return frame_; }
-  [[nodiscard]] bool MessageActive() const { return message_active_; }
-  [[nodiscard]] bool ReturnLatched() const { return return_latched_; }
+[[nodiscard]] bool MessageActive() const { return message_active_; }
 
   [[nodiscard]] bool TimeReady(int target, bool skip_pressed);
   [[nodiscard]] bool KeyReady(bool pressed);
@@ -117,7 +118,6 @@ public:
   void AdvanceFrame() { ++frame_; }
   void SetFrame(int frame) { frame_ = frame; }
   void SetMessageActive(bool active) { message_active_ = active; }
-  void SetReturnLatched(bool latched) { return_latched_ = latched; }
 
 private:
   SceneProgram program_;

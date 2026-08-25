@@ -74,7 +74,6 @@ private:
 
   int current_{};
   float a_{};
-  uint8_t left_{};
   std::array<TrailPoint,
              static_cast<size_t>(kHomingTrailLength *kHomingSection)>
       p_{};

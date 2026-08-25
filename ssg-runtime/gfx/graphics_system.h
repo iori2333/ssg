@@ -40,7 +40,10 @@ void UpdateOpenGl(Version &self);
 
 class VersionCatalog {
   static void SetName(Version &version, std::string_view name) {
-    std::ranges::copy(name, version.buf.begin());
+    // Bounded copy: never overflow the fixed-size buffer, always NUL-terminate.
+    const auto n = std::min(name.size(), version.buf.size() - 1);
+    std::ranges::copy_n(name.begin(), n, version.buf.begin());
+    version.buf[n] = '\0';
   }
 
 public:

@@ -18,6 +18,7 @@
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
+#include "bullet/bullet_common.h"
 #include "effect/effect_manager.h"
 #include "effect/effect_types.h"
 #include "gameplay/game_rules.h"
@@ -30,6 +31,7 @@
 #include "gfx/render/geometry.h"
 #include "stage/stage_session.h"
 #include "sys/input.h"
+#include "sys/log.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -63,19 +65,14 @@ void Player::SpawnShot(const PlayerShotSpawnInfo &si) {
   for (int i = 0; i < si.count; i++) {
     auto *t = maid_tama_.Alloc();
     if (t == nullptr) {
+      logging::Warning(logging::Channel::Gameplay,
+                       "Player shot pool exhausted; shot truncated");
       return;
     }
 
-    int di = i % si.count;
-    di++;
-    uint8_t d = 0;
-    if ((si.count & 1) != 0) {
-      d = si.direction +
-          ((di >> 1) * si.direction_step * (1 - ((di & 1) << 1)));
-    } else {
-      d = si.direction - (si.direction_step >> 1) +
-          ((di >> 1) * si.direction_step * (1 - ((di & 1) << 1)));
-    }
+    const auto offset =
+        bullet_common::SpreadOffset(i, si.count, si.direction_step);
+    const uint8_t d = static_cast<uint8_t>(si.direction + offset);
 
     t->x_ = si.x;
     t->y_ = si.y;
@@ -122,15 +119,13 @@ void Player::DrawDebugHitbox() const {
 }
 
 void Player::Draw() {
-  static const std::array<std::array<Rect, 2>, 4> VivBit = {{
+  static const std::array<std::array<Rect, 2>, 3> VivBit = {{
       {Rect{480, 128, 480 + 24, 128 + 24},
        Rect{504, 128, 504 + 24, 128 + 24}}, // wide
       {Rect{480, 152, 480 + 24, 152 + 24},
        Rect{504, 152, 504 + 24, 152 + 24}}, // homing
       {Rect{528, 152, 528 + 24, 152 + 24},
        Rect{552, 152, 552 + 24, 152 + 24}}, // laser
-      {Rect{480, 152, 480 + 24, 152 + 24},
-       Rect{504, 152, 504 + 24, 152 + 24}}, // temp
   }};
 
   static int draw_flag = 0;

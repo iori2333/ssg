@@ -20,20 +20,19 @@ namespace data {
 
 namespace {
 
-constexpr std::array<uint8_t, 8> kMagic = {'S', 'S', 'G', 'D',
-                                           'A', 'T', 'A', 0x1a};
-constexpr uint32_t kVersion = 3;
+static_assert(kDataManifestMagic.size() == 8);
+static_assert(kDataManifestVersion == 3);
 
 } // namespace
 
 std::optional<DataManifest> ParseDataManifest(std::span<const uint8_t> bytes,
                                               uint32_t archive_entry_count) {
   util::ByteReader reader{bytes};
-  const auto magic = reader.ReadBytes(kMagic.size());
+  const auto magic = reader.ReadBytes(kDataManifestMagic.size());
   const auto version = reader.Read<uint32_t>();
   const auto section_count = reader.Read<uint32_t>();
-  if (!magic || !std::ranges::equal(*magic, kMagic) || !version ||
-      *version != kVersion || !section_count ||
+  if (!magic || !std::ranges::equal(*magic, kDataManifestMagic) || !version ||
+      *version != kDataManifestVersion || !section_count ||
       *section_count != std::to_underlying(DataSectionId::Count) ||
       archive_entry_count == 0) {
     return std::nullopt;
@@ -48,7 +47,7 @@ std::optional<DataManifest> ParseDataManifest(std::span<const uint8_t> bytes,
     const auto first_entry = reader.Read<uint32_t>();
     const auto entry_count = reader.Read<uint32_t>();
     if (!raw_id || *raw_id >= seen_sections.size() || !first_entry ||
-        !entry_count || seen_sections[*raw_id] ||
+        seen_sections[*raw_id] ||
         *first_entry > archive_entry_count ||
         *entry_count > archive_entry_count - *first_entry) {
       return std::nullopt;
@@ -88,8 +87,8 @@ std::vector<uint8_t> BuildDataManifest(
   }
 
   util::ByteWriter writer;
-  writer.WriteBytes(kMagic);
-  writer.Write(kVersion);
+  writer.WriteBytes(kDataManifestMagic);
+  writer.Write(kDataManifestVersion);
   writer.Write(static_cast<uint32_t>(section_counts.size()));
   first_entry = 1;
   for (uint32_t id = 0; id < section_counts.size(); ++id) {

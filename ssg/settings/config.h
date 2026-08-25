@@ -133,4 +133,5 @@ struct ConfigData {
 };
 
 [[nodiscard]] ConfigData LoadConfig();
-void SaveConfig(const ConfigData &config);
+// Returns false (and logs) if the config could not be written.
+[[nodiscard]] bool SaveConfig(const ConfigData &config);

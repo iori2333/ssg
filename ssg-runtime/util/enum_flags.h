@@ -59,6 +59,13 @@ constexpr T &operator&=(T &a, const std::underlying_type_t<T> &b) noexcept {
 
 template <typename T>
   requires util::EnableEnumFlags<T>
+constexpr T &operator&=(T &a, const T &b) noexcept {
+  a = static_cast<T>(std::to_underlying(a) & std::to_underlying(b));
+  return a;
+}
+
+template <typename T>
+  requires util::EnableEnumFlags<T>
 constexpr T &operator^=(T &a, const T &b) noexcept {
   a = static_cast<T>(a ^ b);
   return a;

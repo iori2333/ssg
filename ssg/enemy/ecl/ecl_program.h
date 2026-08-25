@@ -16,7 +16,7 @@
 #include "ecl.h"
 
 #include "effect/effect_types.h"
-#include "stage/stage_visuals.h"
+#include "stage/stage_commands.h"
 
 struct EclNoArguments {};
 
@@ -235,8 +235,10 @@ public:
   [[nodiscard]] EclOpcode Opcode() const { return opcode_; }
 
   template <typename Arguments>
-  [[nodiscard]] const Arguments &ArgumentsAs() const {
-    return std::get<Arguments>(arguments_);
+  [[nodiscard]] const Arguments *ArgumentsAs() const {
+    // Non-throwing checked access. Returns nullptr on a type mismatch between
+    // the decoder and the VM instead of throwing bad_variant_access at runtime.
+    return std::get_if<Arguments>(&arguments_);
   }
 
 private:

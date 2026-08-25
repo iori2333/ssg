@@ -29,6 +29,7 @@
 #include "gfx/render/geometry.h"
 #include "item/item_system.h"
 #include "player/player.h"
+#include "sys/log.h"
 #include "util/math_utils.h"
 
 // ── BulletManager: Init ──────────────────────────────────────────
@@ -70,6 +71,8 @@ void BulletManager::SpawnBulletNormal(const BulletSpawnInfo &si) {
   for (int i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
     if (t == nullptr) {
+      logging::Warning(logging::Channel::Gameplay,
+                       "Bullet pool exhausted; pattern truncated");
       return;
     }
     auto si2 = si;
@@ -105,6 +108,8 @@ void BulletManager::SpawnBulletLine(const BulletSpawnInfo &si) {
   for (int i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
     if (t == nullptr) {
+      logging::Warning(logging::Channel::Gameplay,
+                       "Bullet pool exhausted; pattern truncated");
       return;
     }
     auto si2 = si;
@@ -130,6 +135,8 @@ void BulletManager::SpawnBulletExtra01(const BulletSpawnInfo &si) {
   for (int i = 0; i < setmax; i++) {
     auto *t = bullets_.Alloc();
     if (t == nullptr) {
+      logging::Warning(logging::Channel::Gameplay,
+                       "Bullet pool exhausted; pattern truncated");
       return;
     }
     auto si2 = si;

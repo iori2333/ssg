@@ -195,7 +195,11 @@ StageSession::RunScene(StageUpdateContext &context, InputBits input) {
       break;
 
     case SceneOpcode::Staff:
-      return {};
+      // Staff instructions belong to the ending credits, which are driven by
+      // the ending scene's own runner. Stage SCL never emits them, so skip to
+      // avoid freezing the stage scene on a stray occurrence.
+      scene_.Advance();
+      break;
     }
   }
   return {};

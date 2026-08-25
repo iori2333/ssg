@@ -12,6 +12,7 @@
 #include "menu/menu_builder.h"
 #include "menu/menu_tree.h"
 #include "msg_window/msg_window.h"
+#include "scene_common.h"
 #include "ui_manager.h"
 
 #include "gfx/core/constants.h"
@@ -21,11 +22,7 @@
 
 namespace {
 
-menu::MenuText Localized(i18n::Localization &localization,
-                         std::string_view key) {
-  const auto id = i18n::TextIdFromKey(key);
-  return {[&localization, id] { return localization.Text(id); }};
-}
+using ui::Localized;
 
 } // namespace
 

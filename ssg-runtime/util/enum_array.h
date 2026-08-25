@@ -49,12 +49,16 @@ public:
   }
 
   constexpr T &operator[](Id id) noexcept {
+#ifdef _MSC_VER
 #pragma warning(suppress : 26445) // gsl.view
+#endif
     return data_[std::to_underlying(id)];
   }
 
   constexpr const T &operator[](Id id) const noexcept {
+#ifdef _MSC_VER
 #pragma warning(suppress : 26445) // gsl.view
+#endif
     return data_[std::to_underlying(id)];
   }
 

@@ -449,6 +449,7 @@ void MidiSequencer::Tick(std::chrono::nanoseconds delta, MidiSynth &sink,
   if (!still_playing && !impl_->loop.enabled) {
     time.pulse_interpolated = time.pulse_of_last_event_processed;
     impl_->Rewind();
+    impl_->finished = true;
     return;
   }
 

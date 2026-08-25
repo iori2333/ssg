@@ -3,6 +3,7 @@
 ///
 
 #include <algorithm>
+#include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -64,14 +65,32 @@ EnemyManager::EnemyManager(BulletManager &bullets, ItemSystem &items,
 
 bool EnemyManager::InstallStageAssets(EclProgram program,
                                       EnemyAnimationSet animations) {
+  if (!ValidateStageAssets(program, animations)) {
+    return false;
+  }
+
+  ecl_.Install(std::move(program));
+  animations_ = animations;
+  return true;
+}
+
+bool EnemyManager::ValidateStageAssets(const EclProgram &program,
+                                       const EnemyAnimationSet &animations) {
   for (const auto &instruction : program.Instructions()) {
     std::size_t animation = 0;
     switch (instruction.Opcode()) {
     case EclOpcode::SetAnimation:
-      animation = instruction.ArgumentsAs<EclAnimationArguments>().pattern;
+      if (const auto *args =
+              instruction.ArgumentsAs<EclAnimationArguments>();
+          args != nullptr) {
+        animation = args->pattern;
+      }
       break;
     case EclOpcode::SetDamageAnimation:
-      animation = instruction.ArgumentsAs<EclByteArguments>().value;
+      if (const auto *args = instruction.ArgumentsAs<EclByteArguments>();
+          args != nullptr) {
+        animation = args->value;
+      }
       break;
     default:
       continue;
@@ -80,9 +99,6 @@ bool EnemyManager::InstallStageAssets(EclProgram program,
       return false;
     }
   }
-
-  ecl_.Install(std::move(program));
-  animations_ = animations;
   return true;
 }
 
@@ -217,14 +233,7 @@ void EnemyManager::ClearRegular() {
 
     if (e->HasFlag(EnemyActorFlags::Draw)) {
       e->BeginExplosion();
-      if (e->long_laser_count != 0U) {
-        bullets_.ControlLongLaser(
-            e, kEclAllLongLasers,
-            LongLaserUpdateInfo{
-                .command =
-                    LongLaserUpdateInfo::Command::ForceClose}); // Force close
-                                                                // laser
-      }
+      ForceCloseLasers(*e);
       audio_.PlaySfx(SfxId::Bomb, e->x);
     } else {
       // Erasing non-drawing type enemies differs from other cases:
@@ -232,14 +241,7 @@ void EnemyManager::ClearRegular() {
       e->state = EnemyActorState::PendingRemoval;
       e->hp = 0;
       e->count = 0;
-      if (e->long_laser_count != 0U) {
-        bullets_.ControlLongLaser(
-            e, kEclAllLongLasers,
-            LongLaserUpdateInfo{
-                .command =
-                    LongLaserUpdateInfo::Command::ForceClose}); // Force close
-                                                                // laser
-      }
+      ForceCloseLasers(*e);
       // Do not play explosion sound
     }
   }
@@ -274,18 +276,30 @@ void EnemyManager::ResetRegular() {
   regular_enemies_.Reset();
 }
 
+void EnemyManager::ForceCloseLasers(EnemyActor &actor) {
+  if (actor.long_laser_count != 0U) {
+    bullets_.ControlLongLaser(
+        &actor, kEclAllLongLasers,
+        LongLaserUpdateInfo{.command = LongLaserUpdateInfo::Command::ForceClose});
+  }
+}
+
+void EnemyManager::AwardDefeat(EnemyActor &actor) {
+  ForceCloseLasers(actor);
+  // actor.hp defaults to UINT32_MAX until Setup runs; guard the cast so an
+  // uninitialized sentinel can never wrap to a negative power award.
+  const auto hp_award = std::cmp_less(actor.hp, INT_MAX)
+                            ? static_cast<int>(actor.hp)
+                            : INT_MAX;
+  player_.PowerUp(hp_award);
+  actor.BeginExplosion();
+}
+
 void EnemyManager::ApplyRegularDamage(EnemyActor &actor, int damage) {
   actor.damage_flash = actor.count & 1;
   if (std::cmp_less_equal(actor.hp, damage)) {
     audio_.PlaySfx(SfxId::Bomb, actor.x);
-    if (actor.long_laser_count != 0U) {
-      bullets_.ControlLongLaser(
-          &actor, kEclAllLongLasers,
-          LongLaserUpdateInfo{.command =
-                                  LongLaserUpdateInfo::Command::ForceClose});
-    }
-    player_.PowerUp(static_cast<int>(actor.hp));
-    actor.BeginExplosion();
+    AwardDefeat(actor);
     player_.AddScore(actor.score);
     if (actor.item != ItemKind::None) {
       items_.Spawn(actor.x, actor.y, actor.item);

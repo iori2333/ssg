@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "ecl.h"
+#include "ecl_opcode_table.h"
 #include "ecl_program.h"
 
 #include "effect/effect_types.h"
@@ -59,163 +60,8 @@ private:
 };
 
 std::optional<size_t> EncodedSize(uint8_t raw_opcode) {
-  const auto opcode = static_cast<EclOpcode>(raw_opcode);
-  switch (opcode) {
-  case EclOpcode::End:
-  case EclOpcode::Return:
-  case EclOpcode::RandomAngle:
-  case EclOpcode::AimAtPlayer:
-  case EclOpcode::RandomAngleUp:
-  case EclOpcode::RandomAngleDown:
-  case EclOpcode::SetSequenceAngle:
-  case EclOpcode::MoveToPlayerPosition:
-  case EclOpcode::RandomBoundedAngle:
-  case EclOpcode::RandomPosition:
-  case EclOpcode::FireBullet:
-  case EclOpcode::AimBulletAtPlayer:
-  case EclOpcode::SyncBulletAngle:
-  case EclOpcode::FireBulletUnscaled:
-  case EclOpcode::ClearBullets:
-  case EclOpcode::FireBulletLine:
-  case EclOpcode::FireExtraBullet:
-  case EclOpcode::FireLaser:
-  case EclOpcode::AimLaserAtPlayer:
-  case EclOpcode::SyncLaserAngle:
-  case EclOpcode::FireLaserUnscaled:
-  case EclOpcode::SpawnLongLaser:
-  case EclOpcode::FireHomingLaser:
-  case EclOpcode::EnableDraw:
-  case EclOpcode::DisableDraw:
-  case EclOpcode::EnableClip:
-  case EclOpcode::DisableClip:
-  case EclOpcode::EnableDamage:
-  case EclOpcode::DisableDamage:
-  case EclOpcode::EnablePlayerCollision:
-  case EclOpcode::DisablePlayerCollision:
-  case EclOpcode::EnableHorizontalMirror:
-  case EclOpcode::DisableHorizontalMirror:
-  case EclOpcode::Stage3Effect:
-    return 1;
-
-  case EclOpcode::ClearInterrupt:
-  case EclOpcode::GravityBounce:
-  case EclOpcode::SetAngle:
-  case EclOpcode::AddAngle:
-  case EclOpcode::SetAutoFire:
-  case EclOpcode::SetBulletCommand:
-  case EclOpcode::SetBulletOption:
-  case EclOpcode::SetBulletType:
-  case EclOpcode::SetBulletColor:
-  case EclOpcode::SetBulletAngularVelocity:
-  case EclOpcode::SetBulletRepeat:
-  case EclOpcode::BulletsToItems:
-  case EclOpcode::SetLaserCommand:
-  case EclOpcode::SetLaserCount:
-  case EclOpcode::AddLaserCount:
-  case EclOpcode::SetLaserColor:
-  case EclOpcode::SetLaserType:
-  case EclOpcode::OpenLongLaser:
-  case EclOpcode::CloseLongLaser:
-  case EclOpcode::CloseLongLaserToLine:
-  case EclOpcode::PlaySound:
-  case EclOpcode::BossAction:
-  case EclOpcode::SetSequenceAngleDelta:
-  case EclOpcode::SetItem:
-  case EclOpcode::Stage4Effect:
-  case EclOpcode::SetDamageAnimation:
-  case EclOpcode::BitLaser:
-  case EclOpcode::SpawnBoss:
-  case EclOpcode::Random:
-  case EclOpcode::Increment:
-  case EclOpcode::Decrement:
-    return 2;
-
-  case EclOpcode::Wait:
-  case EclOpcode::WaitScroll:
-  case EclOpcode::Move:
-  case EclOpcode::MoveToPlayerX:
-  case EclOpcode::MoveToPlayerY:
-  case EclOpcode::MoveToPlayer:
-  case EclOpcode::MovePolar:
-  case EclOpcode::SetBulletAngle:
-  case EclOpcode::AddBulletAngle:
-  case EclOpcode::SetBulletCount:
-  case EclOpcode::AddBulletCount:
-  case EclOpcode::SetBulletSpeed:
-  case EclOpcode::AddBulletSpeed:
-  case EclOpcode::SetLaserAngle:
-  case EclOpcode::AddLaserAngle:
-  case EclOpcode::AddLongLaserAngle:
-  case EclOpcode::SetAnimation:
-  case EclOpcode::MoveValue:
-  case EclOpcode::AddValue:
-  case EclOpcode::SubtractValue:
-  case EclOpcode::Sine:
-  case EclOpcode::Cosine:
-  case EclOpcode::CompareRegisters:
-    return 3;
-
-  case EclOpcode::Rotate:
-  case EclOpcode::Accelerate:
-    return 4;
-
-  case EclOpcode::Jump:
-  case EclOpcode::Call:
-  case EclOpcode::JumpDirection:
-  case EclOpcode::MoveX:
-  case EclOpcode::MoveY:
-  case EclOpcode::SetSpeed:
-  case EclOpcode::AddSpeed:
-  case EclOpcode::SetPosition:
-  case EclOpcode::AddPosition:
-  case EclOpcode::SetBulletOffset:
-  case EclOpcode::SetLaserLength:
-  case EclOpcode::AddLaserLength:
-  case EclOpcode::SetLaserStartLength:
-  case EclOpcode::SetLaserSpeed:
-  case EclOpcode::AddLaserSpeed:
-  case EclOpcode::SetLaserWidth:
-  case EclOpcode::SetLaserOffset:
-  case EclOpcode::SetHitbox:
-  case EclOpcode::BitAttack:
-  case EclOpcode::JumpGreater:
-  case EclOpcode::JumpLess:
-  case EclOpcode::JumpEqual:
-    return 5;
-
-  case EclOpcode::SpawnEnemy:
-  case EclOpcode::BitCommand:
-  case EclOpcode::SpawnCircleEffect:
-  case EclOpcode::SetRegister:
-  case EclOpcode::Modulo:
-  case EclOpcode::CompareConstant:
-    return 6;
-
-  case EclOpcode::Loop:
-  case EclOpcode::MoveXY:
-  case EclOpcode::AccelerateTo:
-  case EclOpcode::SpawnEnemyWithAngle:
-    return 7;
-
-  case EclOpcode::Setup:
-  case EclOpcode::JumpHpGreater:
-  case EclOpcode::JumpHpLess:
-  case EclOpcode::JumpFrameGreater:
-  case EclOpcode::JumpFrameLess:
-  case EclOpcode::WaveX:
-  case EclOpcode::WaveY:
-    return 9;
-
-  case EclOpcode::SetInterrupt:
-    return 10;
-
-  case EclOpcode::LinearRotate:
-    return 12;
-
-  case EclOpcode::JumpDifficulty:
-    return 17;
-  }
-  return std::nullopt;
+  const auto size = ecl::kEclOpcodeSizes[raw_opcode];
+  return size == 0 ? std::nullopt : std::optional<size_t>(size);
 }
 
 std::optional<EclValue> DecodeValue(uint8_t raw) {
@@ -411,6 +257,8 @@ DecodeInstruction(std::span<const uint8_t> bytes, size_t address,
                            EclAccelerationArguments{.acceleration = reader.I8(),
                                                     .frames = reader.U16()});
 
+  // Unimplemented opcode: decoded for format fidelity, but the VM treats it as
+  // a no-op yield (see ecl_vm.cpp). Reserved for future use.
   case EclOpcode::AccelerateTo:
     return MakeInstruction(
         opcode, EclAccelerationPointArguments{.x = reader.I16(),

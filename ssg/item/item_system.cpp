@@ -17,6 +17,7 @@
 #include "gfx/core/world_math.h"
 #include "gfx/graphics.h"
 #include "player/player.h"
+#include "sys/log.h"
 #include "util/math_utils.h"
 
 namespace {
@@ -42,6 +43,8 @@ void ItemSystem::Spawn(WorldCoord x, WorldCoord y, ItemKind kind) {
   }
   auto *ip = pool_.Alloc();
   if (ip == nullptr) {
+    logging::Warning(logging::Channel::Gameplay,
+                     "Item pool exhausted; item dropped");
     return;
   }
 

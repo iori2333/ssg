@@ -312,7 +312,6 @@ bool EndingScene::SCLDecode() {
         }
         stf_task.alpha = 0;
         stf_task.timer = 0;
-        stf_task.timer = 0;
         stf_task.NumStf = 0;
         stf_task.TitleID = instruction->staff_id - 128;
         stf_task.bWantDisp = true;

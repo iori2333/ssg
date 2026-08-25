@@ -9,17 +9,9 @@
 #include <cstdint>
 
 #include "gfx/core/coords.h"
+#include "stage_commands.h"
 
 namespace stage {
-
-enum class Stage4RockCommand : uint8_t {
-  Normal = 0,
-  Accelerate = 1,
-  Reverse = 2,
-  Rotate = 3,
-  Leave = 4,
-  End = 5,
-};
 
 class StageVisuals {
 public:

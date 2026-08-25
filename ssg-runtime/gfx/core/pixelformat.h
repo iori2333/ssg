@@ -7,6 +7,7 @@
 #include <concepts>
 #include <cstdint>
 #include <ranges>
+#include <stdexcept>
 
 // Same as the standard Win32 PALETTEENTRY structure.
 
@@ -53,7 +54,7 @@ struct Rgb216 {
   constexpr Rgb216() = default;
   constexpr Rgb216(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {
     if ((r > Max) || (g > Max) || (b > Max)) {
-      throw "216-color component out of range";
+      throw std::out_of_range("216-color component out of range");
     }
   }
 

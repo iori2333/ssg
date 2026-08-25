@@ -12,7 +12,7 @@
 #include "gfx/core/coords.h"
 
 const EnemyAnimationSet &EclHost::Animations() const {
-  return enemies_.animations_;
+  return enemies_.Animations();
 }
 
 EnemyActor *EclHost::SpawnRegular(WorldPoint position,

@@ -168,16 +168,15 @@ private:
     DifficultySelect,
   };
 
+  static constexpr std::array kDifficulties = {GameLevel::Easy,
+                                               GameLevel::Normal,
+                                               GameLevel::Hard,
+                                               GameLevel::Lunatic};
+
   void BuildDifficultyMenu() {
-    constexpr std::array difficulties = {
-        GameLevel::Easy,
-        GameLevel::Normal,
-        GameLevel::Hard,
-        GameLevel::Lunatic,
-    };
     std::vector<std::unique_ptr<menu::IMenuNode>> items;
-    items.reserve(difficulties.size());
-    for (const auto difficulty : difficulties) {
+    items.reserve(kDifficulties.size());
+    for (const auto difficulty : kDifficulties) {
       items.push_back(std::make_unique<menu::ActionNode>(
           std::string(GameLevelName(difficulty)), "",
           [this, difficulty](menu::MenuController &) {
@@ -196,7 +195,15 @@ private:
   void OpenDifficultyMenu(InputBits initial_input) {
     constexpr PixelPoint kTopLeft = {240, 192};
     constexpr int kWidth = 160;
-    constexpr int kInitialSelection = std::to_underlying(GameLevel::Normal);
+    // Derive the default row from the array contents, not from enum values.
+    constexpr auto kInitialSelection = [] {
+      for (std::size_t i = 0; i < kDifficulties.size(); ++i) {
+        if (kDifficulties[i] == GameLevel::Normal) {
+          return static_cast<int>(i);
+        }
+      }
+      return 0;
+    }();
 
     TextRenderer().Clear();
     selected_difficulty_.reset();

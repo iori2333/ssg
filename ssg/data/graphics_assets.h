@@ -13,6 +13,13 @@ namespace data::graphics_assets {
 inline constexpr std::size_t kFaceSurfaceCount = 3;
 inline constexpr std::size_t kEndingPictureCount = 6;
 
+// Reserved contiguous ranges in SurfaceId must fit within the enum's Count.
+static_assert(std::to_underlying(SurfaceId::EndingPicture) +
+                      kEndingPictureCount <=
+                  std::to_underlying(SurfaceId::Count));
+static_assert(std::to_underlying(SurfaceId::Face) + kFaceSurfaceCount <=
+              std::to_underlying(SurfaceId::Count));
+
 inline SurfaceId FaceSurface(std::size_t index) {
   return static_cast<SurfaceId>(std::to_underlying(SurfaceId::Face) + index);
 }

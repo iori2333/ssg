@@ -11,7 +11,6 @@ public:
   LaserLoadout();
 
   void FireMain(Player &player, int tier, bool focused) override;
-  void FireSub(Player &player, int tier, bool focused) override {}
   void UpdateBomb(Player &player, EnemyManager &enemies, EffectManager &effects,
                   int remaining) override;
   void Tick(Player &player) override;

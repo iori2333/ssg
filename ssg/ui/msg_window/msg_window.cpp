@@ -2,6 +2,7 @@
 /// MsgWindow - Message window processing
 ///
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -347,7 +348,9 @@ void MsgWindow::SetFont(FontId font) {
   }
 
   const int text_height = max_size.bottom - max_size.top - 16;
-  max_line = text_height / font_height;
+  // Guard against a window too short to hold a single line: at least one line
+  // must fit and the divisor must be non-zero.
+  max_line = std::max(1, text_height / font_height);
   font_dy = ((text_height % font_height) / max_line) + font_height + 1;
   font_id = font;
   NewPage();

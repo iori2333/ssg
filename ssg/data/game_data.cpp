@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "data_format.h"
 #include "data_manifest.h"
 #include "game_data.h"
 #include "pbg_archive.h"
@@ -30,39 +31,6 @@ constexpr std::string_view kDirectoryName = "data";
 constexpr std::string_view kArchiveName = "data.pak";
 constexpr std::array<uint32_t, std::to_underlying(data::DataSectionId::Count)>
     kMinimumEntries = {7, 39, 20, 20, 20, 0};
-
-bool IsStandardMidi(std::span<const uint8_t> data) {
-  static constexpr std::array<uint8_t, 8> kHeader = {'M', 'T', 'h', 'd',
-                                                     0,   0,   0,   6};
-  return data.size() >= 14 &&
-         std::ranges::equal(data.first(kHeader.size()), kHeader);
-}
-
-bool IsBitmap(std::span<const uint8_t> data) {
-  return data.size() >= 14 && data[0] == 'B' && data[1] == 'M';
-}
-
-bool IsWave(std::span<const uint8_t> data) {
-  return data.size() >= 12 && data[0] == 'R' && data[1] == 'I' &&
-         data[2] == 'F' && data[3] == 'F' && data[8] == 'W' && data[9] == 'A' &&
-         data[10] == 'V' && data[11] == 'E';
-}
-
-std::optional<uint32_t> ParseEntryIndex(const std::filesystem::path &path,
-                                        std::string_view extension) {
-  if (path.extension() != extension) {
-    return std::nullopt;
-  }
-  const auto stem = path.stem().string();
-  uint32_t index = 0;
-  const auto [end, error] =
-      std::from_chars(stem.data(), stem.data() + stem.size(), index);
-  if (stem.empty() || error != std::errc{} ||
-      end != stem.data() + stem.size()) {
-    return std::nullopt;
-  }
-  return index;
-}
 
 std::optional<uint32_t>
 CountDirectoryEntries(const std::filesystem::path &directory,
@@ -78,7 +46,7 @@ CountDirectoryEntries(const std::filesystem::path &directory,
     if (!it->is_regular_file(error)) {
       continue;
     }
-    const auto index = ParseEntryIndex(it->path(), extension);
+    const auto index = data::ParseEntryIndex(it->path(), extension);
     if (!index) {
       return std::nullopt;
     }

@@ -25,6 +25,28 @@ namespace math {
   return {WorldCoord::FromRaw(rotated.x), WorldCoord::FromRaw(rotated.y)};
 }
 
+// Rotates a 3D point (any type exposing WorldCoord .x/.y/.z) around X, Y, and
+// Z in the legacy 256-angle system. Shared by the stage visuals and the effect
+// manager so the rotation order cannot drift.
+template <typename Point>
+inline void RotatePoint3D(Point &point, uint8_t angle_x, uint8_t angle_y,
+                          uint8_t angle_z) {
+  auto rotated = RoundedRotateVector(AngleFromLegacy(angle_x),
+                                     WorldPoint{point.y, point.z});
+  point.y = rotated.x;
+  point.z = rotated.y;
+
+  rotated = RoundedRotateVector(-AngleFromLegacy(angle_y),
+                                WorldPoint{point.x, point.z});
+  point.x = rotated.x;
+  point.z = rotated.y;
+
+  rotated = RoundedRotateVector(AngleFromLegacy(angle_z),
+                                WorldPoint{point.x, point.y});
+  point.x = rotated.x;
+  point.y = rotated.y;
+}
+
 [[nodiscard]] inline float AngleTo(WorldPoint vector) {
   return AngleTo(static_cast<float>(vector.x.Raw()),
                  static_cast<float>(vector.y.Raw()));

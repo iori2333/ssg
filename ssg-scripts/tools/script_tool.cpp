@@ -34,24 +34,18 @@
 
 #include "util/byte_io.h"
 #include "util/endian.h"
+#include "util/text_catalog.h"
 #include "util/text_id.h"
+
+#include "enemy/ecl/ecl_opcode_table.h"
 
 namespace {
 
 // ============================================================================
-// ECL command length table (from ECL_LEN.h)
+// ECL command length table (shared with the runtime decoder)
 // ============================================================================
 
-const std::array<uint8_t, 256> ecl_cmd_len = {
-    9, 1, 5, 7, 5, 1, 9, 9, 17, 5, 9, 9, 10, 2, 0, 0, 3, 3, 3, 4, 12, 9, 9, 5,
-    5, 7, 3, 3, 3, 4, 7, 2, 2,  2, 1, 1, 5,  5, 5, 5, 1, 1, 1, 1, 1,  1, 3, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 1, 2, 5, 2, 3,  3, 3, 3,
-    3, 3, 2, 2, 2, 2, 2, 1, 1,  1, 1, 1, 2,  1, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0,
-    1, 2, 5, 5, 5, 3, 3, 2, 2,  5, 5, 2, 2,  5, 1, 1, 5, 1, 0, 0, 0,  0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 1,  2, 2, 2, 3,  1, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0,
-    1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 0, 0, 0,  0, 0, 0, 3, 2, 2, 2, 6,  7, 5, 2,
-    2, 2, 2, 5, 6, 2, 6, 1, 3,  6, 3, 3, 3,  3, 6, 2, 3, 6, 5, 5, 2,  2, 5, 0,
-};
+const std::array<uint8_t, 256> &ecl_cmd_len = ecl::kEclOpcodeSizes;
 
 // ============================================================================
 // Operand type descriptors
@@ -890,14 +884,27 @@ bool cmd_asm_scl(const char *in_file, const char *out_file) {
       // Build key→value map from tokens
       std::unordered_map<std::string, int64_t> arg_map;
       std::string pending_key;
+      std::string key;
+      const auto resolve_key = [&]() {
+        if (pending_key.empty() &&
+            arg_map.size() >= static_cast<size_t>(info->arg_count)) {
+          std::println(stderr,
+                       "Line {}: too many positional arguments for {}",
+                       lineno, info->name);
+          return false;
+        }
+        key = pending_key.empty() ? info->args[arg_map.size()].name
+                                  : pending_key;
+        return true;
+      };
       for (size_t ti = 1; ti < tokens.size(); ti++) {
         if (tokens[ti].kind == TokenKind::Key) {
           pending_key = tokens[ti].text;
         } else if (tokens[ti].kind == TokenKind::Number ||
                    tokens[ti].kind == TokenKind::LabelRef) {
-          std::string const key = pending_key.empty()
-                                      ? info->args[arg_map.size()].name
-                                      : pending_key;
+          if (!resolve_key()) {
+            return false;
+          }
           pending_key.clear();
           if (tokens[ti].kind == TokenKind::LabelRef && op != 0x17) {
             std::println(stderr,
@@ -909,9 +916,9 @@ bool cmd_asm_scl(const char *in_file, const char *out_file) {
                              ? text_id_hash(tokens[ti].text)
                              : tokens[ti].numval;
         } else if (tokens[ti].kind == TokenKind::Mnemonic) {
-          std::string const key = pending_key.empty()
-                                      ? info->args[arg_map.size()].name
-                                      : pending_key;
+          if (!resolve_key()) {
+            return false;
+          }
           pending_key.clear();
           if (op == 0x03 && key == "type") {
             int const ev = efc_value(tokens[ti].text);
@@ -989,8 +996,9 @@ void append_u32(std::vector<uint8_t> &out, uint32_t value) {
 bool write_text_catalog(std::vector<TextSourceEntry> entries,
                                const char *out_file) {
   std::ranges::sort(entries, {}, &TextSourceEntry::id);
-  std::vector<uint8_t> out = {'S', 'S', 'T', 'X'};
-  append_u32(out, 2);
+  std::vector<uint8_t> out(i18n::kCatalogMagic.begin(),
+                           i18n::kCatalogMagic.end());
+  append_u32(out, i18n::kCatalogVersion);
   append_u32(out, static_cast<uint32_t>(entries.size()));
   for (const auto &entry : entries) {
     append_u32(out, entry.id);

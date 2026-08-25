@@ -65,7 +65,8 @@ void BitWriter::WriteBit(uint8_t bit) {
 }
 
 void BitWriter::WriteBits(uint32_t bits, unsigned int bit_count) {
-  if (bit_count == 0) {
+  if (bit_count == 0 || bit_count > 32) {
+    // bit_count > 32 would make `1U << (bit_count - 1)` shift out of range (UB).
     return;
   }
   uint32_t mask = 1U << (bit_count - 1);

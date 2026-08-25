@@ -71,6 +71,15 @@ bool StageLoader::Load(StageId stage, EnemyManager &enemies,
   EnemyAnimationSet animations{};
   anime_data::SetupStageAnime(stage, animations);
 
+  // Validate enemy assets before mutating the session, so a failure here never
+  // leaves the session half-loaded (new map/SCL but old enemy program).
+  if (!enemies.ValidateStageAssets(*enemy_program, animations)) {
+    logging::Error(logging::Channel::Stage,
+                   "Failed to validate enemy assets for stage {}",
+                   stage_index + 1);
+    return false;
+  }
+
   if (!session.Load(map, scl)) {
     logging::Error(logging::Channel::Stage,
                    "Failed to load MAP {} or SCL {} for stage {}", map_index,

@@ -611,8 +611,7 @@ void GameplayState::Draw() const {
   context.ui.DrawMessageWindow();
   GraphicsSetClip(kGameResolutionRect);
   context.ui.DrawSidebarHud(hud_model);
-  GraphicsSetClip({playfield::kLeft, playfield::kTop, playfield::kRight + 1,
-                   playfield::kBottom + 1});
+  GraphicsSetClip(playfield::kClip);
 }
 
 } // namespace gameflow

@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "data/data_format.h"
 #include "data/data_manifest.h"
 #include "data/pbg_archive.h"
 #include "sys/input.h"
@@ -36,6 +37,11 @@ namespace fs = std::filesystem;
 namespace {
 
 using EntryList = std::vector<std::vector<uint8_t>>;
+
+using data::IsBitmap;
+using data::IsStandardMidi;
+using data::IsWave;
+using data::ParseEntryIndex;
 
 constexpr auto kSectionCount = std::to_underlying(data::DataSectionId::Count);
 
@@ -76,24 +82,6 @@ bool WriteFile(const fs::path &path, std::span<const uint8_t> bytes) {
                  static_cast<std::streamsize>(bytes.size()));
   }
   return static_cast<bool>(stream);
-}
-
-std::optional<uint32_t> ParseEntryIndex(const fs::path &path,
-                                        std::string_view extension) {
-  if (path.extension() != extension) {
-    return std::nullopt;
-  }
-  const auto stem = path.stem().string();
-  if (stem.empty()) {
-    return std::nullopt;
-  }
-  uint32_t index = 0;
-  const auto [end, error] =
-      std::from_chars(stem.data(), stem.data() + stem.size(), index);
-  if (error != std::errc{} || end != stem.data() + stem.size()) {
-    return std::nullopt;
-  }
-  return index;
 }
 
 std::optional<EntryList> ReadEntryDirectory(const fs::path &directory,
@@ -148,23 +136,6 @@ std::optional<EntryList> ReadEntryDirectory(const fs::path &directory,
     entries.push_back(std::move(*bytes));
   }
   return entries;
-}
-
-bool IsStandardMidi(std::span<const uint8_t> bytes) {
-  static constexpr std::array<uint8_t, 8> kHeader = {'M', 'T', 'h', 'd',
-                                                     0,   0,   0,   6};
-  return bytes.size() >= 14 &&
-         std::ranges::equal(bytes.first(kHeader.size()), kHeader);
-}
-
-bool IsBitmap(std::span<const uint8_t> bytes) {
-  return bytes.size() >= 14 && bytes[0] == 'B' && bytes[1] == 'M';
-}
-
-bool IsWave(std::span<const uint8_t> bytes) {
-  return bytes.size() >= 12 && bytes[0] == 'R' && bytes[1] == 'I' &&
-         bytes[2] == 'F' && bytes[3] == 'F' && bytes[8] == 'W' &&
-         bytes[9] == 'A' && bytes[10] == 'V' && bytes[11] == 'E';
 }
 
 std::optional<std::vector<uint8_t>>

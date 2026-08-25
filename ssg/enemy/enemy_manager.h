@@ -47,6 +47,10 @@ public:
 
   [[nodiscard]] bool InstallStageAssets(EclProgram program,
                                         EnemyAnimationSet animations);
+  // Pure pre-flight check (no mutation) so callers can validate before
+  // committing other stage state. See stage::StageLoader.
+  [[nodiscard]] bool ValidateStageAssets(const EclProgram &program,
+                                         const EnemyAnimationSet &animations);
 
   void Reset();
   void ResetRegular();
@@ -72,11 +76,24 @@ public:
 
   bool ApplyPlayerAttack(const PlayerAttack &attack);
 
-private:
-  friend class BitFormation;
-  friend class EclHost;
-  friend class SnakeFormation;
+  // Service seams used by EclHost and the boss formations. Exposed as public
+  // API so those collaborators do not need friend access to internals.
+  [[nodiscard]] const EnemyAnimationSet &Animations() const { return animations_; }
+  EnemyActor *SpawnRegular(WorldPoint position, uint32_t script_id);
+  void SpawnBossFromEcl(WorldPoint position, uint32_t script_id);
+  void ClearRegular();
+  void ClearBossProjectiles();
+  [[nodiscard]] int BitCount(const EnemyActor &actor) const;
+  void HandleBossAction(EnemyActor &actor, EclBossAction action);
+  void SetBitAttack(EnemyActor &actor, uint32_t script_id);
+  void ControlBitLaser(EnemyActor &actor, EclBitLaserCommand command);
+  void ControlBits(EnemyActor &actor, EclBitCommand command, int parameter);
+  void RunScriptOnce(EnemyActor &actor) { ecl_.Execute(actor); }
+  bool JumpScript(EnemyActor &actor, uint32_t script_id) {
+    return ecl_.Jump(actor, script_id);
+  }
 
+private:
   // Shared actor operations.
   void BeginActorFrame(EnemyActor &actor, bool allow_fire_with_zero_hp);
   void CheckPlayerCollision(const EnemyActor &actor) const;
@@ -85,21 +102,19 @@ private:
                        uint32_t script_id);
   void RetireActor(EnemyActor &actor);
   void ConsiderHomingTarget(const EnemyActor &actor);
+  void ForceCloseLasers(EnemyActor &actor);
+  void AwardDefeat(EnemyActor &actor);
 
   // Regular enemies.
-  void ClearRegular();
   void CompactRegular();
-  EnemyActor *SpawnRegular(WorldPoint position, uint32_t script_id);
   void UpdateRegular();
   void ApplyRegularDamage(EnemyActor &actor, int damage);
 
   // Bosses and their formations.
   void ResetBosses();
   void UpdateBosses();
-  void ClearBossProjectiles();
   void SpawnBossActor(WorldPoint position, uint32_t script_id,
                       bool starts_encounter);
-  void SpawnBossFromEcl(WorldPoint position, uint32_t script_id);
   void RemoveFinishedBosses();
   void OnActorRetired(const EnemyActor &actor);
 
@@ -107,11 +122,6 @@ private:
   bool ApplyPlayerAttackToBosses(const PlayerAttack &attack);
   [[nodiscard]] uint32_t TotalBossHp() const;
 
-  void HandleBossAction(EnemyActor &actor, EclBossAction action);
-  void SetBitAttack(EnemyActor &actor, uint32_t script_id);
-  void ControlBitLaser(EnemyActor &actor, EclBitLaserCommand command);
-  void ControlBits(EnemyActor &actor, EclBitCommand command, int parameter);
-  [[nodiscard]] int BitCount(const EnemyActor &actor) const;
   [[nodiscard]] BitFormation *AcquireBits(BossActor &boss);
   [[nodiscard]] BitFormation *FindBits(const EnemyActor &actor);
   [[nodiscard]] const BitFormation *FindBits(const EnemyActor &actor) const;

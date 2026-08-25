@@ -116,7 +116,9 @@ bool BmpSave(SDL_IOStream *stream, PixelPoint size, uint16_t planes,
       (sizeof(BmpFileHeader) + header_info.biSize + palette.size_bytes());
   const BmpFileHeader header_file = {
       .bfType = 0x4D42, // "BM"
-      .bfSize = pixel_offset,
+      // Total file size = headers + palette + pixel data. Decoders rely on
+      // bfSize to locate/validate the data, so it must include the pixels.
+      .bfSize = pixel_offset + static_cast<uint32_t>(pixels.size()),
       .bfReserved1 = 0,
       .bfReserved2 = 0,
       .bfOffBits = pixel_offset,

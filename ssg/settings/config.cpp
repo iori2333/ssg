@@ -17,6 +17,7 @@
 #include "gfx/graphics.h"
 #include "music/music_player.h"
 #include "sys/input.h"
+#include "sys/log.h"
 
 namespace {
 
@@ -114,8 +115,7 @@ void TOMLLoad(const char *fn, ConfigData &cfg) {
   // [graphics]
   if (auto *sec = tbl["graphics"].as_table()) {
     LoadToml(*sec, "api", cfg.graphics.graphics_api);
-    LoadToml(*sec, "window_scale_4x", cfg.graphics.window_scale_4x,
-             [](auto) { return true; });
+    LoadToml(*sec, "window_scale_4x", cfg.graphics.window_scale_4x);
     LoadToml(*sec, "window_left", cfg.graphics.window_left);
     LoadToml(*sec, "window_top", cfg.graphics.window_top);
     LoadToml(*sec, "fps_divisor", cfg.graphics.fps_divisor, ValidFPSDivisor);
@@ -195,7 +195,7 @@ void TOMLLoad(const char *fn, ConfigData &cfg) {
   }
 }
 
-void TOMLSave(const char *fn, const ConfigData &cfg) {
+bool TOMLSave(const char *fn, const ConfigData &cfg) {
   toml::table tbl;
 
   // [difficulty]
@@ -281,9 +281,17 @@ void TOMLSave(const char *fn, const ConfigData &cfg) {
 
   std::ofstream file(fn, std::ios::binary | std::ios::trunc);
   if (!file) {
-    return;
+    logging::Error(logging::Channel::Config,
+                   "Failed to open config file for writing: {}", fn);
+    return false;
   }
   file << tbl;
+  if (!file) {
+    logging::Error(logging::Channel::Config,
+                   "Failed to write config file: {}", fn);
+    return false;
+  }
+  return true;
 }
 
 } // namespace
@@ -294,4 +302,6 @@ ConfigData LoadConfig() {
   return config;
 }
 
-void SaveConfig(const ConfigData &config) { TOMLSave(kConfigFileName, config); }
+bool SaveConfig(const ConfigData &config) {
+  return TOMLSave(kConfigFileName, config);
+}

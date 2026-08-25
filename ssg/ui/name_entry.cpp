@@ -8,6 +8,7 @@
 
 #include "audio/audio_system.h"
 #include "audio/sfx.h"
+#include "gameplay/game_rules.h"
 #include "gfx/core/constants.h"
 #include "gfx/graphics.h"
 #include "gfx/render/geometry.h"
@@ -147,7 +148,8 @@ NameEntryResult NameEntry::Update(InputBits input) {
 
   if (finish) {
     if (name_[0] == '\0') {
-      std::copy_n("Vivit!", 7, name_.data());
+      std::copy_n(kDefaultScoreName.data(), kDefaultScoreName.size() + 1,
+                  name_.data());
     }
     name_.back() = '\0';
     awaiting_release_ = true;

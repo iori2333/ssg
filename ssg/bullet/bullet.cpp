@@ -233,12 +233,11 @@ BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
   if (effect_ == BulletEffect::None) {
     MoveByType(info, result);
     MoveByOption(result);
-    if (!HasFlag(Flags::KeepOutsidePlayfield) &&
-        (x_ < bullet_common::ToSimulationUnits(playfield::kWorldLeft - 4_px) ||
-         x_ > bullet_common::ToSimulationUnits(playfield::kWorldRight + 4_px) ||
-         y_ < bullet_common::ToSimulationUnits(playfield::kWorldTop - 4_px) ||
-         y_ > bullet_common::ToSimulationUnits(playfield::kWorldBottom +
-                                               4_px))) {
+    if (x_ < bullet_common::ToSimulationUnits(playfield::kWorldLeft - 4_px) ||
+        x_ > bullet_common::ToSimulationUnits(playfield::kWorldRight + 4_px) ||
+        y_ < bullet_common::ToSimulationUnits(playfield::kWorldTop - 4_px) ||
+        y_ > bullet_common::ToSimulationUnits(playfield::kWorldBottom +
+                                              4_px)) {
       SetFlag(Flags::PendingRemoval, true);
     }
   } else {
@@ -250,7 +249,6 @@ BulletUpdateInfo::UpdateResult Bullet::Update(const BulletUpdateInfo &info) {
 
 void Bullet::RevertToNormal() {
   motion_ = BulletMotion::Normal;
-  SetFlag(Flags::KeepOutsidePlayfield, false);
   const auto velocity = math::PolarVector(angle_, v_);
   vx_ = velocity.x;
   vy_ = velocity.y;
@@ -397,16 +395,10 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       flags_ = Flags::None;
       angle_delta = 0.0F;
     }
-    if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5F) {
-      if (vd_ != 0) {
-        vd_--;
-      }
-      v_ += a_;
-    } else {
-      if (vd_ < INT8_MAX) {
-        vd_++;
-      }
-      v_ -= a_;
+    {
+      int turn_rate = vd_;
+      turn_rate = bullet_common::SteerHoming(turn_rate, angle_delta, v_, a_);
+      vd_ = static_cast<int8_t>(turn_rate);
     }
     angle_ +=
         angle_delta * static_cast<float>(static_cast<uint8_t>(vd_)) / 255.0F;
@@ -421,6 +413,24 @@ void Bullet::MoveByType(const BulletUpdateInfo &info,
       SetFlag(Flags::PendingRemoval, true);
     }
     return;
+  }
+}
+
+void Bullet::ApplyReflect(float new_angle, bool flip_x, bool flip_y) {
+  angle_ = new_angle;
+  if (flip_x) {
+    vx_ = -vx_;
+  }
+  if (flip_y) {
+    vy_ = -vy_;
+  }
+  const auto velocity = math::PolarVector(angle_, v_);
+  x_ = tx_ + velocity.x;
+  y_ = ty_ + velocity.y;
+  if (option_count_ == 0) {
+    option_ = BulletOptionKind::None;
+  } else {
+    --option_count_;
   }
 }
 
@@ -455,16 +465,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
   case BulletOptionKind::ReflectX:
     if (tx_ < bullet_common::ToSimulationUnits(playfield::kWorldLeft) ||
         tx_ > bullet_common::ToSimulationUnits(playfield::kWorldRight)) {
-      angle_ = (math::kFullAngle / 2.0F) - angle_;
-      vx_ = -vx_;
-      const auto velocity = math::PolarVector(angle_, v_);
-      x_ = tx_ + velocity.x;
-      y_ = ty_ + velocity.y;
-      if (option_count_ == 0) {
-        option_ = BulletOptionKind::None;
-      } else {
-        --option_count_;
-      }
+      ApplyReflect((math::kFullAngle / 2.0F) - angle_, true, false);
     } else {
       x_ = tx_;
       y_ = ty_;
@@ -472,16 +473,7 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
     return;
   case BulletOptionKind::ReflectY:
     if (ty_ < bullet_common::ToSimulationUnits(playfield::kWorldTop)) {
-      angle_ = -angle_;
-      vy_ = -vy_;
-      const auto velocity = math::PolarVector(angle_, v_);
-      x_ = tx_ + velocity.x;
-      y_ = ty_ + velocity.y;
-      if (option_count_ == 0) {
-        option_ = BulletOptionKind::None;
-      } else {
-        --option_count_;
-      }
+      ApplyReflect(-angle_, false, true);
     } else {
       x_ = tx_;
       y_ = ty_;
@@ -490,27 +482,9 @@ void Bullet::MoveByOption(BulletUpdateInfo::UpdateResult &result) {
   case BulletOptionKind::ReflectXY:
     if (tx_ < bullet_common::ToSimulationUnits(playfield::kWorldLeft) ||
         tx_ > bullet_common::ToSimulationUnits(playfield::kWorldRight)) {
-      angle_ = (math::kFullAngle / 2.0F) - angle_;
-      vx_ = -vx_;
-      const auto velocity = math::PolarVector(angle_, v_);
-      x_ = tx_ + velocity.x;
-      y_ = ty_ + velocity.y;
-      if (option_count_ == 0) {
-        option_ = BulletOptionKind::None;
-      } else {
-        --option_count_;
-      }
+      ApplyReflect((math::kFullAngle / 2.0F) - angle_, true, false);
     } else if (ty_ < bullet_common::ToSimulationUnits(playfield::kWorldTop)) {
-      angle_ = -angle_;
-      vy_ = -vy_;
-      const auto velocity = math::PolarVector(angle_, v_);
-      x_ = tx_ + velocity.x;
-      y_ = ty_ + velocity.y;
-      if (option_count_ == 0) {
-        option_ = BulletOptionKind::None;
-      } else {
-        --option_count_;
-      }
+      ApplyReflect(-angle_, false, true);
     } else {
       x_ = tx_;
       y_ = ty_;
@@ -651,7 +625,7 @@ void Bullet::Render() const {
   }
 
   if (is_small) {
-    if (c_ != 0x25) {
+    if (c_ != kSpecialDirectionalBulletVisual) {
       GraphicsSurfaceBlit({x, y}, SurfaceId::System,
                           Rect::FromLtwh((c_ << 3) + 384, 0, 8, 8));
     } else {
@@ -682,7 +656,7 @@ void Bullet::Render() const {
     break;
   }
   case kDirectionalBulletVisual:
-    if (c_ != 32 + 5) {
+    if (c_ != kSpecialDirectionalBulletVisual) {
       GraphicsSurfaceBlit({x, y}, SurfaceId::System,
                           Rect::FromLtwh(((display_angle + 8) & 0xf0) + 384,
                                          24 + ((c_ & 0x0f) << 4), 16, 16));

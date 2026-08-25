@@ -15,6 +15,7 @@
 #include "player_attack.h"
 #include "player_shot.h"
 
+#include "bullet/bullet_common.h"
 #include "effect/effect_manager.h"
 #include "effect/effect_types.h"
 #include "enemy/enemy_manager.h"
@@ -109,17 +110,8 @@ bool PlayerShot::Move(const EnemyHomingTarget &target) {
     } else {
       angle_delta = 0.0F;
     }
-    if (std::abs(angle_delta) < math::kLegacyAngleStep * 0.5F) {
-      if (turn_rate_ != 0) {
-        turn_rate_--;
-      }
-      speed_ += acceleration_;
-    } else {
-      if (turn_rate_ < 127) {
-        turn_rate_++;
-      }
-      speed_ -= acceleration_;
-    }
+    turn_rate_ =
+        bullet_common::SteerHoming(turn_rate_, angle_delta, speed_, acceleration_);
     direction_ += angle_delta * static_cast<float>(turn_rate_) / 255.0F;
     const auto velocity = math::RoundedPolarVector(direction_, speed_);
     velocity_x_ = velocity.x;

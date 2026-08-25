@@ -61,6 +61,10 @@ struct EclScriptState {
   std::array<EclInterruptState, kEclInterruptCount> interrupts{};
   int loop_counter = 0;
   int wait_counter = 0;
+  // Sequence-angle animation state. Per-actor so concurrently running scripts
+  // (multiple enemies through the shared EclVm) do not overwrite each other.
+  int sequence_angle = 0;
+  int sequence_angle_delta = 0;
 };
 
 struct EnemyAnimation {
@@ -123,7 +127,6 @@ struct EnemyActor {
   int count{}; // Multipurpose frame counter
 
   int score{}; // Score (time-based score variation?)
-  int graze_score{};
 
   EclScriptState script{};
 

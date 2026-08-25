@@ -56,7 +56,10 @@ public:
   }
 
   virtual void FireMain(Player &player, int tier, bool focused) = 0;
-  virtual void FireSub(Player &player, int tier, bool focused) = 0;
+  // Sub-weapons are optional; default to a no-op so loadouts without one do
+  // not need an empty override.
+  virtual void FireSub(Player & /*player*/, int /*tier*/,
+                       bool /*focused*/) {}
   virtual void UpdateBomb(Player & /*player*/, EnemyManager & /*enemies*/,
                           EffectManager & /*effects*/, int /*remaining*/) {}
   virtual void Tick(Player & /*player*/) {}

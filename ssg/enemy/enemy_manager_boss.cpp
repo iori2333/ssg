@@ -3,6 +3,7 @@
 ///
 
 #include <algorithm>
+#include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -131,12 +132,7 @@ void EnemyManager::KillBosses() {
     effects_.SpawnFragment(boss.x, boss.y, FragmentKind::ExpandingCircle);
     effects_.SpawnBombExplosion(boss.x, boss.y);
     audio_.PlaySfx(SfxId::Bossbomb, boss.x);
-    if (boss.long_laser_count != 0U) {
-      bullets_.ControlLongLaser(
-          &boss, kEclAllLongLasers,
-          LongLaserUpdateInfo{.command =
-                                  LongLaserUpdateInfo::Command::ForceClose});
-    }
+    ForceCloseLasers(boss);
     boss.BeginExplosion();
     RetireActor(boss);
   }
@@ -157,14 +153,7 @@ void EnemyManager::ApplyBossDamage(BossActor &boss, int damage) {
     effects_.SpawnBombExplosion(actor.x, actor.y);
     stage_.Command(stage::BackgroundCommand::Quake, effects_);
     audio_.PlaySfx(SfxId::Bossbomb, actor.x);
-    if (actor.long_laser_count != 0U) {
-      bullets_.ControlLongLaser(
-          &actor, kEclAllLongLasers,
-          LongLaserUpdateInfo{.command =
-                                  LongLaserUpdateInfo::Command::ForceClose});
-    }
-    player_.PowerUp(static_cast<int>(actor.hp));
-    actor.BeginExplosion();
+    AwardDefeat(actor);
 
     // If it was the last one //
     if (std::ranges::all_of(

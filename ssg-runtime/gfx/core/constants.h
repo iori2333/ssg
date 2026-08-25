@@ -27,33 +27,25 @@ constexpr auto kFrameTimeTarget = 16;
 // 0 = BMP, 10 = max-effort WebP.
 constexpr int kScreenshotEffortMax = 10;
 
-// Surface layer IDs for the blitting pipeline
+// Surface layer IDs for the blitting pipeline. Each value must be unique:
+// RendererState::textures is an EnumArray indexed by SurfaceId, so duplicate
+// values would alias the same texture slot.
 enum class SurfaceId : uint8_t {
-  System = 0, // System
-
-  // Title Screen
-  Title = 2, // Title screen
-
-  // Music Room
-  Music = 2, // Music room
-
-  // Name Registration
-  NameRegistration = 2, // Name registration
-
-  // In-game
-  MapChip = 1, // Background
-  Enemy = 2,   // Enemies (trash & bosses)
-  Face = 3,    // Face graphics
-  Bomber = 6,  // Bomb graphics
-
-  // Splash screen
-  Project = 1, // Western Project display
-
-  // Endings
-  EndingCredits = 1,
-  EndingPicture = 2,
-
-  Count = 8,
+  System = 0,          // System surface (fonts, small sprites)
+  MapChip = 1,         // Background tiles
+  Title = 2,           // Title screen
+  Music = 3,           // Music room
+  NameRegistration = 4, // Name registration
+  Enemy = 5,           // Enemies (trash & bosses)
+  Bomber = 6,          // Bomb graphics
+  Project = 7,         // Western Project display (splash)
+  EndingCredits = 8,   // Ending credits
+  // Multi-surface ranges (see data::graphics_assets):
+  //   EndingPicture = 9 .. 14 (6 pictures)
+  //   Face = 15 .. 17        (3 face graphics)
+  EndingPicture = 9,
+  Face = 15,
+  Count = 18,
 };
 
 // Font IDs for text rendering

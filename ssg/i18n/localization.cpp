@@ -12,6 +12,7 @@
 #include "localization.h"
 
 #include "messages_data.h"
+#include "util/text_catalog.h"
 #include "util/byte_io.h"
 
 namespace {
@@ -96,14 +97,13 @@ namespace i18n {
 
 bool Localization::ParseCatalog(std::span<const uint8_t> bytes,
                                 Catalog &catalog) {
-  static constexpr std::array<uint8_t, 4> kMagic = {'S', 'S', 'T', 'X'};
   CatalogReader reader(bytes);
-  if (!reader.ReadMagic(kMagic)) {
+  if (!reader.ReadMagic(kCatalogMagic)) {
     return false;
   }
   const auto version = reader.ReadU32();
   const auto entry_count = reader.ReadU32();
-  if (!version || *version != 2 || !entry_count) {
+  if (!version || *version != kCatalogVersion || !entry_count) {
     return false;
   }
 

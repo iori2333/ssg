@@ -29,13 +29,9 @@ float CalcSpreadAngle(int i, BulletPattern pattern, int n, float base_angle,
   }
 
   switch (pattern) {
-  case BulletPattern::Spread: {
-    i++;
-    const auto direction = 1 - ((i & 1) << 1);
-    const auto offset = static_cast<int>(i >> 1) * dw * direction;
-    const auto centered = (n & 1) != 0 ? offset : offset - (dw >> 1);
-    return base_angle + static_cast<float>(centered) * math::kLegacyAngleStep;
-  }
+  case BulletPattern::Spread:
+    return base_angle +
+           static_cast<float>(SpreadOffset(i, n, dw)) * math::kLegacyAngleStep;
   case BulletPattern::Circle:
     return base_angle +
            (static_cast<float>(i) * math::kFullAngle / static_cast<float>(n));
